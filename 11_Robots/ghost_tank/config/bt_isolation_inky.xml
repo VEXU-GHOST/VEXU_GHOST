@@ -29,13 +29,15 @@
       <!-- (2.349, 0.975, 0) is the init/start pose, not driven. -->
              <LittleWillCmd little_will_active="false"/>
         <SwitcherCmd switcher_active="true"/>
+      <MoveToPoint kp="1.6" kd="0.0" max_effort_percent="1.0" timeout_ms="3000"
+        backwards="true" distance_tiles="1.0" />
 
-      <!-- Waypoint 0: (2.349, 1.2) @ 180 deg
+      <!-- Waypoint 0: (2.349, 1.2) @ 180 deg -->
       <Logging message="finally_works: -> (2.349, 1.2, 180)" />
       <GeneratePlannerPath end_x_tiles="2.349" end_y_tiles="1.2" end_theta_deg="180"
         backwards="false" planner_id="GridBased" timeout_ms="3000" />
       <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
-        controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="15000" /> -->
+        controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="3000" />
 
               <AutoSortCmd active="true"/>
       <!-- Waypoint 1: (1.29, 1) @ 45 deg -->
@@ -60,11 +62,14 @@
       <MoveToPoint kp="1.6" kd="0.0" max_effort_percent="0.9" timeout_ms="3000"
         backwards="false" distance_tiles="0.3" />
 
-                <SubTree ID="score" _autoremap="true"/>
+
+        <MoveToPoint kp="1.6" kd="0.0" max_effort_percent="0.1" timeout_ms="3000"
+        backwards="false" distance_tiles="0.3" />
+        <SubTree ID="score" _autoremap="true"/>
 
       <Logging message="finally_works: MoveToPoint backward 0.5 tile" />
       <MoveToPoint kp="1.6" kd="0.0" max_effort_percent="0.9" timeout_ms="3000"
-        backwards="true" distance_tiles="0.3" />
+        backwards="true" distance_tiles="0.6" />
 
                 <AutoSortCmd active="true"/>
  
@@ -86,11 +91,41 @@
 
         <SwitcherCmd switcher_active="false"/>
       <WaitCmd seconds="1.0"/>
+        <MoveToPoint kp="1.6" kd="0.0" max_effort_percent="0.1" timeout_ms="3000"
+        backwards="false" distance_tiles="0.3" />
+
                 <SubTree ID="score" _autoremap="true"/>
 
       <Logging message="finally_works: sequence complete" />
 
-      <WaitCmd seconds="300.0"/>
+      <!-- Hold here forever running the distance-sensor blocker loop instead of
+           reads inside [0, 100] mm, otherwise retracts. The Fallbacks always
+           a plain wait. KeepRunningUntilFailure re-ticks the Parallel every
+           control loop: each side extends its blocker while its distance sensor
+           return SUCCESS, so this never exits. -->
+      <KeepRunningUntilFailure>
+        <Parallel success_count="2" failure_count="2">
+
+          <!-- ===== LEFT: distance in [0, 100] mm -> extend left blocker ===== -->
+          <Fallback>
+            <Sequence>
+              <DistanceThreshold sensor_name="left" min_mm="0" max_mm="100"/>
+              <LeftBlockerCmd left_blocker_active="true"/>
+            </Sequence>
+            <LeftBlockerCmd left_blocker_active="false"/>
+          </Fallback>
+
+          <!-- ===== RIGHT: distance in [0, 100] mm -> extend right blocker ===== -->
+          <Fallback>
+            <Sequence>
+              <DistanceThreshold sensor_name="right" min_mm="0" max_mm="100"/>
+              <RightBlockerCmd right_blocker_active="true"/>
+            </Sequence>
+            <RightBlockerCmd right_blocker_active="false"/>
+          </Fallback>
+
+        </Parallel>
+      </KeepRunningUntilFailure>
     </Sequence>
   </BehaviorTree>
 
@@ -671,6 +706,20 @@
     </Action>
     <Action ID="ShutoffNode"
       editable="true" />
+    <Action ID="DistanceThreshold"
+      editable="true">
+      <input_port name="sensor_name" />
+      <input_port name="min_mm" />
+      <input_port name="max_mm" />
+    </Action>
+    <Action ID="LeftBlockerCmd"
+      editable="true">
+      <input_port name="left_blocker_active" />
+    </Action>
+    <Action ID="RightBlockerCmd"
+      editable="true">
+      <input_port name="right_blocker_active" />
+    </Action>
   </TreeNodesModel>
 
 </root>

@@ -27,12 +27,12 @@ port_configuration:
             reversed: false
             config: intake_motor_config
         intake_motor:
-            port: 15
+            port: 9
             type: MOTOR
             reversed: true
             config: intake_motor_config
         ejector_motor:
-            port: 5
+            port: 15
             type: MOTOR
             reversed: false
             config: intake_motor_config
@@ -47,7 +47,7 @@ port_configuration:
             reversed: false
             config: drive_motor_config
         drive_l3:
-            port: 9
+            port: 5 
             type: MOTOR
             reversed: true
             config: drive_motor_config

@@ -7,9 +7,9 @@ competition_state_machine_node:
       is_red_alliance: false
 
       #normal auton init
-      init_x_tiles: 2.349
-      init_y_tiles: 1.2
-      init_theta_degrees: 180.0
+      init_x_tiles: 3.0
+      init_y_tiles: 0.5
+      init_theta_degrees: 0.0
       # prog init
       # init_theta_degrees: 160.0
       # init_x_tiles: 0.5
