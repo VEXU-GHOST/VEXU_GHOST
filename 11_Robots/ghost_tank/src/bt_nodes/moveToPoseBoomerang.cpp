@@ -143,7 +143,7 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 		&& (abs(tank_model_ptr_->getWorldTwist().x()) < threshold_vel) && (abs(tank_model_ptr_->getWorldTwist().z())*ghost_util::RAD_TO_DEG < angle_threshold_vel))
 		{
 			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
-			tank_model_ptr_->driveCommand(0.0, 0.0);
+			// tank_model_ptr_->driveCommand(0.0, 0.0);
 			return BT::NodeStatus::SUCCESS;
 		}
 	} else {
@@ -151,7 +151,7 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 		&& (abs(tank_model_ptr_->getWorldTwist().x()) < threshold_vel) && (abs(tank_model_ptr_->getWorldTwist().z())*ghost_util::RAD_TO_DEG < angle_threshold_vel))
 		{
 			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
-			tank_model_ptr_->driveCommand(0.0, 0.0);
+			// tank_model_ptr_->driveCommand(0.0, 0.0);
 			return BT::NodeStatus::SUCCESS;
 		}
 	}
@@ -172,7 +172,7 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 		else{ // negative timeout means how long to wait until move on to the next command
 			if(time_elapsed > abs(timeout)){
 				RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPoseBoomerang: Skipped");
-				tank_model_ptr_->driveCommand(0.0, 0.0);
+				// tank_model_ptr_->driveCommand(0.0, 0.0);
 				return BT::NodeStatus::SUCCESS;
 			}
 		}
