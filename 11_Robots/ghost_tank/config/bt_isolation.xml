@@ -24,10 +24,10 @@
         <BiteCmd bite_closed="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
-        <SubTree ID="intake_middle_ring" _autoremap="true"/>
+        <!-- <SubTree ID="intake_middle_ring" _autoremap="true"/> -->
 
-        <!-- <SubTree ID="skip_middle_ring"
-          _autoremap="true"/> -->
+        <SubTree ID="skip_middle_ring"
+          _autoremap="true"/>
 
         <SetMirrored mirrored="true"/>
         <SubTree ID="clear_negative_corner"

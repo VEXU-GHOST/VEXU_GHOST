@@ -7,7 +7,7 @@
         <NeutralStakeCmd state="0"
           timeout_ms="10"/>
         <Sequence>
-          <IntakeCmd auto="false"
+          <IntakeCmd auto="true"
             ground_intake="true"/>
           <GenerateBezierPath end_x_tiles="0.8"
             end_y_tiles="1.5"
@@ -142,7 +142,7 @@
           max_effort_percent="0.3"
           timeout_ms="1500"
           backwards="false"
-          distance_tiles="0.7"/>
+          distance_tiles="1.0"/>
         <ShutoffNode/>
       </Sequence>
       <ShutoffNode/>

@@ -36,10 +36,12 @@
           backwards="false"
           angle_exit_threshold_deg="1.0"/>
 
+        <BiteCmd bite_closed="true"/>
+
         <GenerateBezierPath end_x_tiles="0.9"
-          end_y_tiles="2.0"
-          end_theta_deg="90.0"
-          lead_tiles="1.0"
+          end_y_tiles="1.9"
+          end_theta_deg="135.0"
+          lead_tiles="0.5"
           backwards="false"
           type="QUADRATIC_BEZIER"
           num_points="250"/>
@@ -47,7 +49,7 @@
           angle_exit_threshold_deg="5.0"
           lin_vel_exit_threshold_tps="1.0"
           ang_vel_exit_threshold_dps="10.0"
-          max_speed_linear_percent="0.6"
+          max_speed_linear_percent="0.5"
           max_speed_angular_percent="1.0"
           timeout_ms="2000"
           use_theta="true"
