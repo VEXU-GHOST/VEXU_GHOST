@@ -108,7 +108,7 @@ void lv_tutorial_responsive(void)
     // lv_disp_get_scr_act(disp);
 
 
-    btn3 = lv_btn_create(lv_scr_act(), screen2);
+    btn3 = lv_btn_create(lv_scr_act(), screen2); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
     lv_obj_set_pos(btn3, LV_DPI - 80, LV_DPI / 10); 
     lv_obj_set_size(btn3, LV_DPI, LV_DPI / 2);     
     label3 = lv_label_create(btn3, NULL);
