@@ -94,9 +94,9 @@ competition_state_machine_node:
       map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
 
       # Initial position
-      init_x: 0.28
+      init_x: 0.56
       init_y: 0.28
-      init_r: 1.5708
+      init_r: 0.7853
       
       # Initial cloud distribution
       init_x_sigma: 0.05 #
@@ -113,20 +113,28 @@ competition_state_machine_node:
       # Remember that LIDAR will correct periodically, so these can be a bit generous.
       # Too generous though, and you are either losing resolution or wasting computation.
 
-      # MAKE SURE THESE MATCH IN THE SWERVE MODEL
+      # Maxx Gains (Doesnt seem to matter too much)
+      #k1: 0.30  # x error from x motion       # % error in primary direction. Wheel odom can slip a lot, so this should be large.
+      #k2: 0.001 # x error from y motion       # Non-holonomic robot doesn't move in Y, 0.1% for tolerance. 
+      #k3: 0.003 # x error from rotation       # 99% within 2.5" for 360°: (2.5"*IN2M/3)/(2π)
+      #k5: 0.001 # y error from y motion       # Non-holonomic robot doesn't move in Y, 0.1% for tolerance. 
+      #k6: 0.003 # y error from rotation       # 99% within 2.5" for 360°: (2.5"*IN2M/3)/(2π)
+      #k7: 0.095 # theta error from x motion   # After 2ft of travel, 99% of samples should be within 10°. std = (10°*DEG2RAD/3) / (24" * IN2M)
+      #k8: 0.001 # theta error from y motion   # Non-holonomic robot doesn't move in Y, 0.1% for tolerance. 
+
+      # Melissa Gains
       k1: 0.08 # x error from x motion         # % error in primary direction
       k2: 0.05 # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
       k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
-      k4: 0.05 # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k5: 0.0703 # y error from y motion         # % error in primary direction
-      k6: 0.1 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k4: 0.05 # y error from x motion         # If heading is 2.5° off, Y can drift by around sin(2.5) = 4.36%
+      k5: 0.0703 # y error from y motion       # % error in primary direction
+      k6: 0.1 # y error from rotation          # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k7: 0.05 # theta error from x motion     # After 2ft of travel, 99% are within by 5°
       k8: 0.05 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
-      k9: 0.015 # theta error from rotation     # % error in primary direction
+      k9: 0.015 # theta error from rotation    # % error in primary direction. IMU is very good and main source of heading, so this is small.
 
-      rviz_set_pose_topic: "/set_pf_pose"
 
     behavior_tree:
       trajectory_topic: "/motion_planner/trajectory"
@@ -148,8 +156,8 @@ ekf_pf_node:
       # You can tune this up and down based on performance, but I recommend starting from some initial guess based on robot config or data
 
       # Robot Constants
-      laser_offset_x: -0.15875
-      laser_offset_y: -0.15875
+      laser_offset_x: -0.1143
+      laser_offset_y: 0.1525
       laser_angle_offset: 0.0
 
       # RPLidar A1 datasheet
