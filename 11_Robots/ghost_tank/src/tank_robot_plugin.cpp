@@ -305,7 +305,11 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("pd_control_ptr", m_pd_control);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
-  bt_->init_tree();
+  try {
+    bt_->init_tree();
+  } catch (std::exception &e) {
+    std::cout << "Error init_tree: " << e.what() << std::endl;
+  }
 }
 
 /////////////////////
@@ -372,7 +376,11 @@ void TankRobotPlugin::autonomous(double current_time)
     // m_odom_ptr->resetPose();
   }
 
-  bt_->tick_tree();
+  try {
+    bt_->tick_tree();
+  } catch (std::exception &e) {
+    std::cout << "Error tick_tree: " << e.what() << std::endl;
+  }
 
   // Get best state estimate
   // auto curr_pose = m_tank_model_ptr->getWorldPose();
