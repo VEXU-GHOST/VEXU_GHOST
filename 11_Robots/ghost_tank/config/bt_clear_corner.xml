@@ -26,8 +26,8 @@
             use_theta="false"
             min_pursuit_radius_tiles="0.3"
             k_lookahead="0.3"
-            deceleration_start_distance_tiles="1.0"
-            deceleration_exponent="1.5"
+            deceleration_start_distance_tiles="0.8"
+            deceleration_exponent="1.25"
             min_approach_velocity_tps="0.00"/>
 
           <GenerateBezierPath end_x_tiles="1.25"

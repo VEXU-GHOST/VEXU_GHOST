@@ -96,11 +96,11 @@
 
         <Logging message="shoving ring under"/>
         
-        <Repeat num_cycles="3">
+        <Repeat num_cycles="2">
           <Sequence>
             <MoveToPoint kp="5.0"
               kd="0.0"
-              max_effort_percent="0.5"
+              max_effort_percent="0.4"
               timeout_ms="2000"
               backwards="true"
               distance_tiles="0.6"/>
