@@ -62,8 +62,9 @@
 
       <!-- path -->
       <ShutoffNode/>
-      <Logging message="Go to high stakes ">
-      <IntakeCmd active="true"/> 
+      <Logging message="Go to high stakes "/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <MoveToPoseBezier posX_tiles="2.0"
                               posY_tiles="3.0"
                               theta_deg="45.0"

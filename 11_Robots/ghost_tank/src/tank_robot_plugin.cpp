@@ -514,11 +514,10 @@ void TankRobotPlugin::teleop(double current_time)
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
 
   toggleBagRecorder(joy_data);
-  if (joy_data->btn_b ==1){
-  updateNeutralStakeArm(joy_data);
-  updateIntake(false, joy_data->btn_r1, false, false, current_time);
-  }
-  else{
+  if (joy_data->btn_b){
+    updateNeutralStakeArm(joy_data);
+    updateIntake(false, joy_data->btn_r1, false, false, current_time);
+  } else {
     updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
   }
   //updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
@@ -526,7 +525,6 @@ void TankRobotPlugin::teleop(double current_time)
   updateClamp(joy_data);
   updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
-  updateNewButtons(joy_data);
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red)
@@ -732,7 +730,7 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
   if (joy_data->btn_l1 && m_arm_mode != 4 && !btn_l1_pressed) {
     m_arm_mode++;
     btn_l1_pressed = true;
-  } else if (!joy_data->btn_b) {
+  } else if (!joy_data->btn_l1) {
     btn_l1_pressed = false;
   }
 
@@ -740,7 +738,7 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
   if (joy_data->btn_l2 && m_arm_mode != 0 && !btn_l2_pressed) {
     m_arm_mode--;
     btn_l2_pressed = true;
-  } else if (!joy_data->btn_d) {
+  } else if (!joy_data->btn_l2) {
     btn_l2_pressed = false;
   }
 
@@ -848,39 +846,6 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
 
   m_loop_current_limits.push_back(ground_pickup_current);
   m_loop_current_limits.push_back(conveyor_current);
-}
-
-uint32_t test =0;
-void TankRobotPlugin::updateNewButtons(std::shared_ptr<JoystickDeviceData> joy_data){
-  while(joy_data->btn_b ==1){
-    if(joy_data->btn_r1 ==1){
-      test=1; 
-    }
-    if(joy_data->btn_r2 ==1){
-      test=2; 
-    }
-    if(joy_data->btn_l1 ==1){
-      test=3; 
-    }
-    if(joy_data->btn_l2 ==1){
-      test=4; 
-    }
-  }
-  if((joy_data->btn_d)==1){
-    if(joy_data->btn_r1 ==1){
-      test=1; 
-    }
-    if(joy_data->btn_r2 ==1){
-      test=2; 
-    }
-    if(joy_data->btn_l1 ==1){
-      test=3; 
-    }
-    if(joy_data->btn_l2 ==1){
-      test=4; 
-    }
-  }
-
 }
 
 void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)

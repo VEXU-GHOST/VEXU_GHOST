@@ -1,99 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-  <BehaviorTree ID="basic_auton_1_end">
+  <BehaviorTree ID="neutral_stake">
     <Sequence>
-    <!-- put donut on cone  -->
-      <Logging message="basic auton 1"/>
-      <Logging message="Go to corner stack"/>
-      <GoalRushCmd arm_down="true"
-                  clamp="false"/>
-      <MoveToPoseBezier posX_tiles="1.9"
-                            posY_tiles="1.75"
-                            theta_deg="-70.0"
+      <Logging message="neutral stake"/>
+        <MoveToPoseBezier  posX_tiles="3.0"
+                            posY_tiles="1.0"
+                            theta_deg="90.0"
+                            search_radius_m="0.25"
+                            threshold_m="0.02"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.3"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-3000"
+                            use_theta="true"
+                            backwards="false"/>
+      <ShutoffNode/>
+      <Logging message="pulling_back"/>
+      <MoveToPoseBezier posX_tiles="3.0"
+                            posY_tiles="0.1"
+                            theta_deg="90.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.0"
+                            max_speed_linear_pct="0.4"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-1000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+
+      <Logging message="scoring"/>
+      <ConveyorCmd fwd="true"/>
+      <WaitCmd seconds="0.500"
+                shutoff_motors="false"/>
+      <ConveyorCmd fwd="true"/>
+      <MoveToPoseBezier posX_tiles="3.0"
+                            posY_tiles="1.0"
+                            theta_deg="90.0"
                             search_radius_m="0.3"
                             threshold_m="0.20"
                             angle_threshold_deg="3.0"
                             threshold_vel_mps="0.1"
                             angle_threshold_vel_dps="1.0"
-                            lead="0.75"
+                            lead="0.0"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
-                            timeout_ms="-2000"
+                            timeout_ms="-1000"
                             use_theta="true"
-                            backwards="true"/>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
-      <Logging message="Back Up and Clamp Goal"/>
-      <ParallelAll>
-        <Fallback>
-          <Delay delay_msec="1000">
-            <!-- <KeepRunningUntilFailure> -->
-              <ClampCmd clamp_closed="false"/>
-            <!-- </KeepRunningUntilFailure> -->
-          </Delay>
-            <ClampCmd clamp_closed="true"/>
-        </Fallback>
-        <MoveToPoseBezier posX_tiles="1.7"
-                            posY_tiles="2.7"
-                            theta_deg="-90.0"
-                            search_radius_m="0.3"
-                            threshold_m="0.05"
-                            angle_threshold_deg="3.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
-                            lead="1.0"
-                            max_speed_linear_pct="0.4"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-2000"
-                            use_theta="true"
-                            backwards="true"/>
-      </ParallelAll>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
-      <ClampCmd clamp_closed="true"/>
-      <ShutoffNode/>
-      <!-- donut on cone done -->
-
-      <Logging message="move to clear corner start pos"/>
-      <ClampCmd clamp_closed= "false"/>  
-      <MoveToPoseBezier posX_tiles="1.0"
-                            posY_tiles="1.0"
-                            theta_deg="-45.0" 
-                            search_radius_m="0.3"
-                            threshold_m="0.05"
-                            angle_threshold_deg="3.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
-                            lead="0.5"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-2000"
-                            use_theta="false"
                             backwards="false"/>
-      <ClampCmd clamp_closed= "true"/>  
-      <ShutoffNode/>
-
-      <!-- <WaitCmd seconds="100.00" -->
-                <!-- shutoff_motors="true"/> -->
-   
-      <Logging message="Processing stack2"/>
-      <IntakeCmd auto="true"
-                 ground_intake="false"/>
-      <MoveToPoseBezier posX_tiles="1.0"
-                              posY_tiles="1.0"
-                              theta_deg="-90.0"
-                              search_radius_m="0.05"
-                              threshold_m="0.02"
-                              angle_threshold_deg="1.0"
-                              threshold_vel_mps="0.1"
-                              angle_threshold_vel_dps="1.0"
-                              lead="0.5"
-                              max_speed_linear_pct="0.8"
-                              max_speed_angular_pct="1.0"
-                              timeout_ms="-2000"
-                              use_theta="true"
-                              backwards="false"/>
-      <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
 
@@ -114,6 +74,7 @@
     <Action ID="GoalRushCmd"
             editable="true">
       <input_port name="arm_down"/>
+      <input_port name="clamp"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">
@@ -121,7 +82,8 @@
     </Action>
     <Action ID="IntakeCmd"
             editable="true">
-      <input_port name="active"/>
+      <input_port name="auto"/>
+      <input_port name="ground_intake"/>
     </Action>
     <Action ID="Logging"
             editable="true">
@@ -157,6 +119,8 @@
                   default="false"/>
     </Action>
     <Action ID="ShutoffNode"
+            editable="true"/>
+    <Action ID="GoalRushDetected"
             editable="true"/>
   </TreeNodesModel>
 

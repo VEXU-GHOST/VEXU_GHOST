@@ -54,8 +54,8 @@
       <ShutoffNode/>
       <!-- donut on cone done -->
 
-      <Logging message="back into goal infront of neutral">
-      <ClampCmd clamp_close= "false"/>  
+      <Logging message="back into goal infront of neutral"/>
+      <ClampCmd clamp_closed= "false"/>  
       <MoveToPoseBezier posX_tiles="3.0"
                             posY_tiles="1.0"
                             theta_deg="45.0" 
@@ -70,11 +70,12 @@
                             timeout_ms="-2000"
                             use_theta="false"
                             backwards="false"/>
-      <ClampCmd clamp_close= "true"/>  
+      <ClampCmd clamp_closed= "true"/>  
       <ShutoffNode/>
 
-      <Logging message="grab goal infront of neutral">
-      <IntakeCmd active="true"/>
+      <Logging message="grab goal infront of neutral"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <BiteCmd bite_closed="true"/>
       <MoveToPoseBezier posX_tiles="3.0"
                             posY_tiles="0.4"
@@ -90,7 +91,7 @@
                             timeout_ms="-2000"
                             use_theta="false"
                             backwards="false"/>
-      <ClampCmd clamp_close= "true"/>  
+      <ClampCmd clamp_closed= "true"/>  
       <ShutoffNode/>
 
       
@@ -100,8 +101,9 @@
       <!-- <WaitCmd seconds="100.00" -->
                 <!-- shutoff_motors="true"/> -->
    
-      <Logging message="Processing stack2">
-      <IntakeCmd active="true"/> 
+      <Logging message="Processing stack2"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <MoveToPoseBezier posX_tiles="1.0"
                               posY_tiles="1.0"
                               theta_deg="-90.0"
@@ -117,7 +119,8 @@
                               use_theta="true"
                               backwards="false"/>
       <ShutoffNode/>
-      
+    </Sequence>
+  </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
