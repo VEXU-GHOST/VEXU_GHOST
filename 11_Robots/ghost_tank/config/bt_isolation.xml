@@ -6,15 +6,15 @@
       <SetMirrored mirrored="false"/>
       <Logging message="goal_rush"/>
       <GoalRushCmd arm_down="false"/>
-      <MoveToPoseBoomerang  posX_tiles="1.45"
+      <MoveToPoseBoomerang  posX_tiles="1.5"
                             posY_tiles="2.35"
-                            theta_deg="110.0"
+                            theta_deg="115.0"
                             search_radius_m="0.3"
                             threshold_m="0.1"
                             angle_threshold_deg="8.0"
                             threshold_vel_mps="100.0"
                             angle_threshold_vel_dps="1000.0"
-                            lead="0.5"
+                            lead="0.25"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
                             timeout_ms="-2000"
@@ -23,117 +23,59 @@
       <GoalRushCmd arm_down="true"/>
       <ShutoffNode/>
       <Delay delay_msec="150">
-      <ShutoffNode/>
+        <ShutoffNode/>
       </Delay>
+
       <Logging message="pulling_back"/>
       <MoveToPoseBoomerang posX_tiles="2.0"
                             posY_tiles="1.0"
                             theta_deg="-90.0"
                             search_radius_m="0.5"
                             threshold_m="0.10"
-                            angle_threshold_deg="5.0"
+                            angle_threshold_deg="10.0"
                             threshold_vel_mps="100.0"
                             angle_threshold_vel_dps="1000.0"
-                            lead="0.5"
+                            lead="0.75"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
                             timeout_ms="-500"
                             use_theta="true"
                             backwards="true"/>
-        <Logging message="retract arm"/>
-        <GoalRushCmd arm_down="false"/>
+      <ShutoffNode/>
+
+      <Logging message="retract arm"/>
+      <GoalRushCmd arm_down="false"/>
+      <Delay delay_msec="200">
         <ShutoffNode/>
-        <Delay delay_msec="200">
-          <ShutoffNode/>
-        </Delay>
-        <Logging message="Going to goal"/>
-        <BiteCmd bite_closed="true"/>
-        <MoveToPoseBoomerang posX_tiles="2.2"
-                              posY_tiles="1.0"
-                              theta_deg="0.0"
-                              search_radius_m="0.3"
-                              threshold_m="0.10"
-                              angle_threshold_deg="5.0"
-                              threshold_vel_mps="100.0"
-                              angle_threshold_vel_dps="1000.0"
-                              lead="1.0"
-                              max_speed_linear_pct="1.0"
-                              max_speed_angular_pct="1.0"
-                              timeout_ms="-1250"
-                              use_theta="true"
-                              backwards="true"/>
-        <ShutoffNode/>
-        <Logging message="Bite Goal"/>
-        <Delay delay_msec="500">
-        <BiteCmd bite_closed="true"/>
-        </Delay>
-        <Logging message="Back Up Further"/>
-        <MoveToPoseBoomerang posX_tiles="3.2"
-                              posY_tiles="1.0"
-                              theta_deg="0.0"
-                              search_radius_m="0.3"
-                              threshold_m="0.10"
-                              angle_threshold_deg="5.0"
-                              threshold_vel_mps="100.0"
-                              angle_threshold_vel_dps="1000.0"
-                              lead="1.0"
-                              max_speed_linear_pct="0.6"
-                              max_speed_angular_pct="1.0"
-                              timeout_ms="-1000"
-                              use_theta="true"
-                              backwards="true"/>
-        <ShutoffNode/>
-        <ClampCmd clamp_closed="true"/>
-        <Logging message="Turn to face stack"/>
-        <ReactiveSequence>
-          <ConveyorCmd fwd="true"/>
-          <MoveToPoseBoomerang posX_tiles="3.5"
-                                posY_tiles="1.0"
-                                theta_deg="45.0"
-                                search_radius_m="0.3"
-                                threshold_m="0.10"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
-                                lead="1.0"
-                                max_speed_linear_pct="0.6"
-                                max_speed_angular_pct="1.0"
-                                timeout_ms="-1000"
-                                use_theta="true"
-                                backwards="true"/>
-        </ReactiveSequence>
-        <ShutoffNode/>
-        <Delay delay_msec="500">
-          <ShutoffNode/>
-        </Delay>
-        <ConveyorCmd fwd="false"/>
-        <Logging message="Grab Stack"/>
-        <ReactiveSequence>
-          <IntakeCmd lower="true" red="false"/>
-          <Sequence>
-            <MoveToPoseBoomerang posX_tiles="3.0"
-                                  posY_tiles="0.5"
-                                  theta_deg="-135.0"
-                                  search_radius_m="0.3"
-                                  threshold_m="0.10"
-                                  angle_threshold_deg="5.0"
-                                  threshold_vel_mps="100.0"
-                                  angle_threshold_vel_dps="1000.0"
-                                  lead="0.5"
-                                  max_speed_linear_pct="0.4"
-                                  max_speed_angular_pct="0.5"
-                                  timeout_ms="-1000"
-                                  use_theta="true"
-                                  backwards="false"/>
-            <ShutoffNode/>
-            <Logging message="Wait for Ring"/>
-            <Delay delay_msec="500">
-              <ShutoffNode/>
-            </Delay>
-            <Logging message="Backup"/>
-            <MoveToPoseBoomerang posX_tiles="3.5"
+      </Delay>
+
+      <Logging message="Going to goal"/>
+      <BiteCmd bite_closed="true"/>
+      <MoveToPoseBoomerang posX_tiles="2.2"
                             posY_tiles="1.0"
-                            theta_deg="45.0"
+                            theta_deg="0.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="100.0"
+                            angle_threshold_vel_dps="1000.0"
+                            lead="1.0"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-1000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+
+      <Logging message="Bite Goal"/>
+      <Delay delay_msec="500">
+        <BiteCmd bite_closed="true"/>
+      </Delay>
+
+      <Logging message="Back Up Further"/>
+      <MoveToPoseBoomerang posX_tiles="3.2"
+                            posY_tiles="1.0"
+                            theta_deg="0.0"
                             search_radius_m="0.3"
                             threshold_m="0.10"
                             angle_threshold_deg="5.0"
@@ -145,84 +87,167 @@
                             timeout_ms="-1000"
                             use_theta="true"
                             backwards="true"/>
-            </Delay>
-          </Sequence>
+      <ShutoffNode/>
+      <ClampCmd clamp_closed="true"/>
+
+      <Logging message="Turn to face stack"/>
+      <ReactiveSequence>
+        <ConveyorCmd fwd="true"/>
+        <MoveToPoseBoomerang posX_tiles="3.5"
+                              posY_tiles="1.0"
+                              theta_deg="45.0"
+                              search_radius_m="0.3"
+                              threshold_m="0.10"
+                              angle_threshold_deg="5.0"
+                              threshold_vel_mps="100.0"
+                              angle_threshold_vel_dps="1000.0"
+                              lead="1.0"
+                              max_speed_linear_pct="0.6"
+                              max_speed_angular_pct="1.0"
+                              timeout_ms="-1000"
+                              use_theta="true"
+                              backwards="true"/>
       </ReactiveSequence>
 
-      <Delay delay_msec="2000">
+      <Logging message="Realign Conveyor"/>
+      <ShutoffNode/>
+      <Delay delay_msec="500">
         <ShutoffNode/>
-      </Delay>
-        <ReactiveSequence>
-          <IntakeCmd lower="true"
-          red="false"/>
-          <Sequence>
-            <MoveToPoseBoomerang posX_tiles="1.75"
-                                  posY_tiles="1.0"
-                                  theta_deg="180.0"
-                                  search_radius_m="0.3"
-                                  threshold_m="0.10"
-                                  angle_threshold_deg="5.0"
-                                  threshold_vel_mps="100.0"
-                                  angle_threshold_vel_dps="1000.0"
-                                  lead="1.0"
-                                  max_speed_linear_pct="1.0"
-                                  max_speed_angular_pct="1.0"
-                                  timeout_ms="-1000"
-                                  use_theta="true"
-                                  backwards="false"/>
-            <ShutoffNode/>
-            <MoveToPoseBoomerang posX_tiles="1.25"
-                                  posY_tiles="1.0"
-                                  theta_deg="180.0"
-                                  search_radius_m="0.3"
-                                  threshold_m="0.10"
-                                  angle_threshold_deg="5.0"
-                                  threshold_vel_mps="100.0"
-                                  angle_threshold_vel_dps="1000.0"
-                                  lead="1.0"
-                                  max_speed_linear_pct="0.3"
-                                  max_speed_angular_pct="1.0"
-                                  timeout_ms="-1000"
-                                  use_theta="true"
-                                  backwards="false"/>
-            <ShutoffNode/>
-            <MoveToPoseBoomerang posX_tiles="1.75"
-                                  posY_tiles="1.0"
-                                  theta_deg="0.0"
-                                  search_radius_m="0.3"
-                                  threshold_m="0.10"
-                                  angle_threshold_deg="5.0"
-                                  threshold_vel_mps="100.0"
-                                  angle_threshold_vel_dps="1000.0"
-                                  lead="1.0"
-                                  max_speed_linear_pct="0.3"
-                                  max_speed_angular_pct="1.0"
-                                  timeout_ms="-1000"
-                                  use_theta="true"
-                                  backwards="true"/>
-            <ShutoffNode/>
-            <MoveToPoseBoomerang posX_tiles="1.25"
-                                  posY_tiles="1.0"
-                                  theta_deg="180.0"
-                                  search_radius_m="0.3"
-                                  threshold_m="0.10"
-                                  angle_threshold_deg="5.0"
-                                  threshold_vel_mps="100.0"
-                                  angle_threshold_vel_dps="1000.0"
-                                  lead="1.0"
-                                  max_speed_linear_pct="0.3"
-                                  max_speed_angular_pct="1.0"
-                                  timeout_ms="-1000"
-                                  use_theta="true"
-                                  backwards="false"/>
-            <ShutoffNode/>
-          </Sequence>
-        </ReactiveSequence>
+      </Delay>  
+      <ConveyorCmd fwd="false"/>
 
-        <Delay delay_msec="5000">
+      <Logging message="Grab Stack"/>
+      <ReactiveSequence>
+        <IntakeCmd lower="true" red="false"/>
+        <Sequence>
+          <MoveToPoseBoomerang posX_tiles="3.0"
+                                posY_tiles="0.5"
+                                theta_deg="-135.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.10"
+                                angle_threshold_deg="5.0"
+                                threshold_vel_mps="100.0"
+                                angle_threshold_vel_dps="1000.0"
+                                lead="0.5"
+                                max_speed_linear_pct="0.4"
+                                max_speed_angular_pct="0.5"
+                                timeout_ms="-1000"
+                                use_theta="true"
+                                backwards="false"/>
           <ShutoffNode/>
-        </Delay>
+          <Delay delay_msec="500">
+            <ShutoffNode/>
+          </Delay>  
+          <Logging message="Wait for Ring"/>
+          <Logging message="Backup"/>
+          <MoveToPoseBoomerang posX_tiles="3.5"
+                          posY_tiles="1.0"
+                          theta_deg="45.0"
+                          search_radius_m="0.3"
+                          threshold_m="0.10"
+                          angle_threshold_deg="5.0"
+                          threshold_vel_mps="100.0"
+                          angle_threshold_vel_dps="1000.0"
+                          lead="1.0"
+                          max_speed_linear_pct="0.6"
+                          max_speed_angular_pct="1.0"
+                          timeout_ms="-1000"
+                          use_theta="true"
+                          backwards="true"/>
+        </Sequence>
+      </ReactiveSequence>
+      <ShutoffNode/>
+      <Delay delay_msec="250">
+        <ShutoffNode/>
+      </Delay>  
+          
+      <ReactiveSequence>
+        <IntakeCmd lower="true" red="false"/>
+        <Sequence>
+          <Logging message="Go to next stack"/>
+          <MoveToPoseBoomerang posX_tiles="1.75"
+                                posY_tiles="1.0"
+                                theta_deg="180.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.10"
+                                angle_threshold_deg="5.0"
+                                threshold_vel_mps="100.0"
+                                angle_threshold_vel_dps="1000.0"
+                                lead="1.0"
+                                max_speed_linear_pct="1.0"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="true"
+                                backwards="false"/>
+          <ShutoffNode/>
+          <Delay delay_msec="250">
+            <ShutoffNode/>
+          </Delay>
 
+          <Logging message="Slowly grab stack"/>
+          <MoveToPoseBoomerang posX_tiles="1.25"
+                                posY_tiles="1.0"
+                                theta_deg="180.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.10"
+                                angle_threshold_deg="5.0"
+                                threshold_vel_mps="100.0"
+                                angle_threshold_vel_dps="1000.0"
+                                lead="1.0"
+                                max_speed_linear_pct="0.3"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="false"
+                                backwards="false"/>
+          <ShutoffNode/>
+          <Delay delay_msec="250">
+            <ShutoffNode/>
+          </Delay>
+
+          <Logging message="Back up"/>
+          <MoveToPoseBoomerang posX_tiles="1.75"
+                                posY_tiles="1.0"
+                                theta_deg="0.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.10"
+                                angle_threshold_deg="5.0"
+                                threshold_vel_mps="100.0"
+                                angle_threshold_vel_dps="1000.0"
+                                lead="1.0"
+                                max_speed_linear_pct="0.3"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="falses"
+                                backwards="true"/>
+          <ShutoffNode/>
+          <Delay delay_msec="250">
+            <ShutoffNode/>
+          </Delay>
+
+          <Logging message="Grab Red to Reject"/>
+          <MoveToPoseBoomerang posX_tiles="1.25"
+                                posY_tiles="1.0"
+                                theta_deg="180.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.10"
+                                angle_threshold_deg="5.0"
+                                threshold_vel_mps="100.0"
+                                angle_threshold_vel_dps="1000.0"
+                                lead="1.0"
+                                max_speed_linear_pct="0.3"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="false"
+                                backwards="false"/>
+          <ShutoffNode/>
+          <Delay delay_msec="250">
+            <ShutoffNode/>
+          </Delay>
+        </Sequence>
+      </ReactiveSequence>
+
+      <IntakeCmd lower="false" red="false"/>
+      
         <!-- <ShutoffNode/>
         <Delay delay_msec="5000">
           <ShutoffNode/>
@@ -388,11 +413,12 @@
             <ShutoffNode/>
           </Repeat>
         </Sequence>
-        </ReactiveSequence>
+        </ReactiveSequence> -->
 
-        <Delay delay_msec="50000">
-        <ShutoffNode/>
-        </Delay> -->
+      <Logging message="Auton Complete"/>
+      <Delay delay_msec="50000">
+      <ShutoffNode/>
+      </Delay>
     </Sequence>
   </BehaviorTree>
 
@@ -443,8 +469,7 @@
   <BehaviorTree ID="test_intake">
     <KeepRunningUntilFailure>
       <ReactiveSequence>
-        <IntakeCmd lower="true"
-                  red="false"/>
+        <IntakeCmd lower="true" red="false"/>
         <ClampCmd clamp_closed="true"/>
         <BiteCmd bite_closed="true"/>
       </ReactiveSequence>
