@@ -185,6 +185,9 @@ void OmegaJerryPlugin::teleop(double current_time)
   bool shift2 = joy_data->btn_d;
 
   TankRobotPlugin::teleop(current_time);
+  if (m_running_auton) {
+    return;
+  }
 
   updateNeutralStakeArmController(joy_data->btn_l1, joy_data->btn_l2, shift1); // Y-held mode
 
@@ -231,14 +234,6 @@ void OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
   // Don't exert negative power at lower limit
   if (curr_pos < m_neutral_stake_arm_rest_pos_deg) {
     power = ghost_util::clamp(power, 0.0, 1.0);
-  }
-
-  if (m_arm_mode == 3) {
-    power = ghost_util::clamp(power, -0.4, 0.4);
-  }
-
-  if (m_arm_mode == 4) {
-    power = ghost_util::clamp(power, -0.8, 0.8);
   }
 
   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);

@@ -316,6 +316,12 @@ void TankRobotPlugin::initTankModel()
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta_fine", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_ki_theta_fine", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_integral_limit", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy_arc", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy_arc", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta_arc", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta_arc", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_ki_theta_arc", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_integral_limit_arc", 0.5);
   m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
   float kp_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
   float kd_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
@@ -328,9 +334,16 @@ void TankRobotPlugin::initTankModel()
   float kd_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta_fine").as_double();
   float ki_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_ki_theta_fine").as_double();
   float integral_limit = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_integral_limit").as_double();
+  float kp_xy_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy_arc").as_double();
+  float kd_xy_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy_arc").as_double();
+  float kp_theta_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta_arc").as_double();
+  float kd_theta_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta_arc").as_double();
+  float ki_theta_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_ki_theta_arc").as_double();
+  float integral_limit_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_integral_limit_arc").as_double();
 
   m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta, ki_theta, integral_limit);
   m_pd_control_threshold = std::make_shared<PDControl>(kp_xy_fine, kd_xy_fine, kp_theta_fine, kd_theta_fine, ki_theta_fine, integral_limit);
+  m_pd_control_arc = std::make_shared<PDControl>(kp_xy_arc, kd_xy_arc, kp_theta_arc, kd_theta_arc, ki_theta_arc, integral_limit_arc);
 }
 
 void TankRobotPlugin::initAutonomy()
@@ -348,6 +361,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("node_ptr", node_ptr_);
   bt_->set_variable("pd_control_ptr", m_pd_control);
   bt_->set_variable("pd_control_threshold_ptr", m_pd_control_threshold);
+  bt_->set_variable("pd_control_arc_ptr", m_pd_control_arc);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
   bt_->set_variable("config_path", config_path);
@@ -515,8 +529,8 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   // Auton Request
-  bool running_auton = runAutonFromDriver(joy_data, current_time);
-  if (running_auton) {
+  m_running_auton = runAutonFromDriver(joy_data, current_time);
+  if (m_running_auton) {
     return;
   }
 

@@ -62,7 +62,7 @@ std::vector<std::vector<double>> readPathFromFile(const std::string &filename) {
         // Get Theta setpoint
         std::getline(ss, value_string, ',');
         if (value_string != "") {
-            current_theta = (std::stod(value_string) * DEG_TO_RAD + M_PI);
+            current_theta = (-std::stod(value_string) * DEG_TO_RAD + M_PI);
             if (current_theta > 360.0){
                 current_theta -= 360.0;
             } else if (current_theta < 0.0){

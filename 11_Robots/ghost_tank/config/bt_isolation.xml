@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="test_jerryio">
+      main_tree_to_execute="main_tree">
   <!-- <include path="bt_goal_rush.xml"/> -->
   <include path="worlds/bt_worlds_goal_rush_omega.xml" />
   <include path="worlds/bt_center_rush_after_side_rush.xml"/>
@@ -17,9 +17,12 @@
         <Logging message="Starting main tree" />
         <!-- <SubTree ID="worlds_goal_rush" _autoremap="true"/> -->
         <SubTree ID="win_point" _autoremap="true"/>
-        <SubTree ID="basic_auton_1" _autoremap="true"/>
-        <SubTree ID="basic_auton_1_end" _autoremap="true"/>
-        <SubTree ID="neutral_stake" _autoremap="true"/>
+        <SubTree ID="grab_middle_goal" _autoremap="true"/>
+        <SubTree ID="clear_corner" _autoremap="true"/>
+        
+        <!-- <SubTree ID="basic_auton_1" _autoremap="true"/> -->
+        <!-- <SubTree ID="basic_auton_1_end" _autoremap="true"/> -->
+        <!-- <SubTree ID="neutral_stake" _autoremap="true"/> -->
       </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true"/>
     </Sequence>
@@ -28,48 +31,91 @@
   <BehaviorTree ID="win_point">
     <Sequence>
       <Logging message="Starting winpoint"/>
-
-      <IntakeCmd auto="true"
-      ground_intake="false"/>
-      <WaitCmd seconds="0.1"
-                shutoff_motors="true"/>
-      <IntakeCmd auto="false"
-          ground_intake="false"/>
-      <WaitCmd seconds="0.5"
-            shutoff_motors="true"/>
-
-      <!-- <ConveyorCmd fwd="true"/> -->
-      <NeutralStakeCmd state="1"
-                       timeout="1.0"/>
-      <!-- <ConveyorCmd fwd="false"/> -->
-      <!-- <WaitCmd seconds="0.1" shutoff_motors="true"/> -->
-      <ConveyorCmd fwd="true"/>
-      <WaitCmd seconds="0.5" shutoff_motors="true"/>
-      <NeutralStakeCmd state="4"
+      <NeutralStakeCmd state="3"
           timeout="2.000"/>
-      <ConveyorCmd fwd="false"/>
-      <NeutralStakeCmd state="0"
-          timeout="1.000"/>
+      <!-- <NeutralStakeCmd state="0"
+          timeout="1.000"/> -->
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="test_jerryio">
+  <BehaviorTree ID="grab_middle_goal">
     <Sequence>
       <Logging message="Starting jerryio"/>
-      <MoveToPoseJERRYIO file_path="test_path.txt"
+      <ClampCmd clamp_closed="false"/>
+      <!-- <MoveToPoseJERRYIO file_path="test_path.txt"
+        search_radius_tiles="0.3"
+        xy_exit_threshold_tiles="0.20"
+        angle_exit_threshold_deg="10.0"
+        lin_vel_exit_threshold_tps="0.1"
+        ang_vel_exit_threshold_dps="5.0"
+        max_speed_linear_percent="0.4"
+        max_speed_angular_percent="0.4"
+        timeout_ms="5000"
+        use_theta="true"
+        backwards="true"/> -->
+      <ArcturnToPoint posX_tiles="3.0"
+        posY_tiles="1.0"
+        timeout_ms="2000"
+        angle_exit_threshold_deg="1.0"
+        backwards="true"/>
+      <MoveToPoint 
+        kp="3.0"
+        kd="0.0"
+        max_effort_percent="0.3"
+        timeout_ms="2000"
+        xy_exit_threshold_tiles="-0.5"/>
+      <!-- <MoveToPoseBezier posX_tiles="3.0"
+        posY_tiles="1.0"
+        theta_deg="180.0"
         search_radius_tiles="0.5"
         xy_exit_threshold_tiles="0.05"
         angle_exit_threshold_deg="3.0"
         lin_vel_exit_threshold_tps="0.1"
-        ang_vel_exit_threshold_dps="5.0"
-        max_speed_linear_percent="0.7"
-        max_speed_angular_percent="1.0"
-        timeout_ms="5000"
-        use_theta="true"
-        backwards="true"/>
-      <Logging message="done"/>
-      <WaitCmd seconds="500.0" shutoff_motors="true"/>
-    </Sequence>
+        ang_vel_exit_threshold_dps="1.0"
+        lead="0.2"
+        max_speed_linear_percent="0.3"
+        max_speed_angular_percent="0.3"
+        timeout_ms="2000"
+        use_theta="false"
+        backwards="true"/> -->
+      <ClampCmd clamp_closed="true"/>
+      <BiteCmd bite_closed="true"/>
+      <IntakeCmd auto="true"
+          ground_intake="false"/>
+      <WaitCmd seconds="0.3" shutoff_motors="true"/>
+      <ParallelAll>
+        <Sequence>
+          <MoveToPoseBezier posX_tiles="1.5"
+                              posY_tiles="0.75"
+                              theta_deg="180.0"
+                              search_radius_tiles="0.5"
+                              xy_exit_threshold_tiles="0.1"
+                              angle_exit_threshold_deg="3.0"
+                              lin_vel_exit_threshold_tps="0.1"
+                              ang_vel_exit_threshold_dps="1.0"
+                              lead="0.5"
+                              max_speed_linear_percent="0.6"
+                              max_speed_angular_percent="1.0"
+                              timeout_ms="2000"
+                              use_theta="true"
+                              backwards="false"/>
+        <MoveToPoseBezier posX_tiles="1.0"
+                              posY_tiles="1.0"
+                              theta_deg="135.0"
+                              search_radius_tiles="0.5"
+                              xy_exit_threshold_tiles="0.1"
+                              angle_exit_threshold_deg="3.0"
+                              lin_vel_exit_threshold_tps="0.1"
+                              ang_vel_exit_threshold_dps="1.0"
+                              lead="0.5"
+                              max_speed_linear_percent="0.6"
+                              max_speed_angular_percent="1.0"
+                              timeout_ms="2000"
+                              use_theta="true"
+                              backwards="false"/>
+        </Sequence>
+      <ParallelAll>
+      </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="test_turn">

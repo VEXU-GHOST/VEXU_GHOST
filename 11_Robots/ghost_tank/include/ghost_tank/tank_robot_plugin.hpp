@@ -229,6 +229,7 @@ protected:
   bool m_bite_closed{false};
   bool m_goal_rush_active{false};
   bool m_goal_rush_clamp_active{false};
+  bool m_running_auton = false;
 
   // Conveyor
   double m_conveyor_ticks_per_loop{0.0};
@@ -272,6 +273,7 @@ protected:
 
   std::shared_ptr<PDControl> m_pd_control;
   std::shared_ptr<PDControl> m_pd_control_threshold;
+  std::shared_ptr<PDControl> m_pd_control_arc;
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
