@@ -81,9 +81,9 @@
         ground_intake="false"
         store_ring="false"/>
 
-      <GenerateBezierPath end_x_tiles="4.0"
+      <GenerateBezierPath end_x_tiles="2.0"
         end_y_tiles="1.0"
-        end_theta_deg="180.0"
+        end_theta_deg="90.0"
         lead_tiles="1.5"
         backwards="false"
         type="CUBIC_BEZIER"
@@ -139,9 +139,9 @@
         backwards="false"
         angle_exit_threshold_deg="1.0"/> -->
 
-      <GenerateBezierPath end_x_tiles="5.0"
+      <GenerateBezierPath end_x_tiles="1.0"
         end_y_tiles="1.0"
-        end_theta_deg="180.0"
+        end_theta_deg="0.0"
         lead_tiles="0.5"
         backwards="true"
         type="QUADRATIC_BEZIER"

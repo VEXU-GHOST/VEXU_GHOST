@@ -12,7 +12,7 @@
           <GenerateBezierPath end_x_tiles="0.8"
             end_y_tiles="1.5"
             end_theta_deg="100.0"
-            lead_tiles="1.3"
+            lead_tiles="1.0"
             backwards="false"
             type="QUADRATIC_BEZIER"
             num_points="250"/>
@@ -89,21 +89,21 @@
       <IntakeCmd auto="true"
         ground_intake="true"/>
       <Sequence>
-        <!-- <MoveToPoint kp="5.0"
+        <MoveToPoint kp="5.0"
           kd="0.0"
           max_effort_percent="0.3"
           timeout_ms="2000"
           backwards="false"
           distance_tiles="0.1"/>
-        <ShutoffNode/> -->
+        <ShutoffNode/>
 
-        <!-- <ArcturnToPoint posX_tiles="0.0"
+        <ArcturnToPoint posX_tiles="0.0"
           posY_tiles="0.0"
           timeout_ms="5000"
           angle_exit_threshold_deg="1.0"
           ang_vel_exit_threshold_dps="10.0"
           drive_backwards="false"
-          face_backwards="false"/> -->
+          face_backwards="false"/>
 
         <!-- <MoveToPoint kp="5.0"
           kd="0.0"
@@ -128,6 +128,14 @@
           backwards="true"
           distance_tiles="0.5"/>
         <ShutoffNode/>
+
+        <ArcturnToPoint posX_tiles="0.0"
+          posY_tiles="0.0"
+          timeout_ms="5000"
+          angle_exit_threshold_deg="1.0"
+          ang_vel_exit_threshold_dps="10.0"
+          drive_backwards="false"
+          face_backwards="false"/>
 
         <MoveToPoint kp="5.0"
           kd="0.0"

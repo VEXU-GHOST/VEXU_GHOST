@@ -7,10 +7,11 @@
       <KeepRunningUntilFailure>
         <AutonTimer seconds="55">
           <Sequence>
+            <SetMirrored mirrored="false"/>
             <ClampCmd clamp_closed="true"/>
-            <GenerateBezierPath end_x_tiles="5.0"
+            <GenerateBezierPath end_x_tiles="1.0"
               end_y_tiles="1.0"
-              end_theta_deg="135.0"
+              end_theta_deg="45.0"
               lead_tiles="1.0"
               backwards="true"
               type="QUADRATIC_BEZIER"
@@ -38,7 +39,7 @@
       <Sequence>
         <ClampCmd clamp_closed="false"/>
         <Logging message="leave corner"/>
-        <GenerateBezierPath end_x_tiles="5.0"
+        <GenerateBezierPath end_x_tiles="1.0"
           end_y_tiles="2.0"
           end_theta_deg="90.0"
           lead_tiles="1.0"
@@ -59,17 +60,34 @@
           deceleration_start_distance_tiles="1.0"
           deceleration_exponent="1.5"
           min_approach_velocity_tps="0.05"/>
-        <TurnToPoint posX_tiles="4.0"
+        <TurnToPoint posX_tiles="2.0"
           posY_tiles="3.0"
           timeout_ms="2000"
           backwards="false"
           angle_exit_threshold_deg="1.0"/>
+        <BiteCmd bite_closed="false"/>
         <MoveToPoint kp="5.0"
           kd="0.0"
           max_effort_percent="0.2"
           timeout_ms="3000"
           backwards="false"
           distance_tiles="0.4"/>
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.2"
+          timeout_ms="3000"
+          backwards="true"
+          distance_tiles="0.4"/>
+        <BiteCmd bite_closed="true"/>
+        <IntakeCmd auto="false"
+          ground_intake="false"
+          store_ring="false"/>
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.2"
+          timeout_ms="3000"
+          backwards="false"
+          distance_tiles="0.6"/>
         <WaitCmd seconds="500.0"
           shutoff_motors="true"/>
       </Sequence>
