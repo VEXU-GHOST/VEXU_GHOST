@@ -904,11 +904,19 @@ void AlphaJerryPlugin::updateMusic(JoyPtr joy_data, double current_time)
 void AlphaJerryPlugin::updateGoalRush(bool left_rush, bool right_rush, bool enabled)
 {
   if (enabled) {
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], left_rush);
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], right_rush);
+    if (left_rush && right_rush && !m_rush_button_pressed) {
+      m_rush_button_pressed = true;
+      m_rush_held = !m_rush_held;
+    } else m_rush_button_pressed = false;
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_rush_held ||  left_rush);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], m_rush_held || right_rush);
   } else {
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], false);
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], false);
+  }
+  if (m_rush_held){
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], true);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], true);
   }
 }
 

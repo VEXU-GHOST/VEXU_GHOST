@@ -263,6 +263,9 @@ protected:
   double m_scissor_reset_extension{0.0};
   int m_arm_mode{0};
 
+  double m_rush_held{false};
+  double m_rush_button_pressed{false};
+
   // Digital IO
   std::vector<bool> m_digital_io;
   std::unordered_map<std::string, size_t> m_digital_io_name_map;

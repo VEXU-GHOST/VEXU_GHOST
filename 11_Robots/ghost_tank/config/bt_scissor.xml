@@ -6,10 +6,10 @@
 
       <ClimbCmd climb_extended="true"/>
       <WaitCmd seconds="0.8" shutoff_motors="false" />
-      <MoveScissor scissor_position_in="12" offset="1" timeout_ms="1000"/>
+      <MoveScissor scissor_position_in="13" offset="0.2" timeout_ms="5000"/>
       <ClimbCmd climb_extended="false"/>
-      <WaitCmd seconds="0.5" shutoff_motors="false" />
-      <MoveScissor scissor_position_in="8" offset="1" timeout_ms="1000"/>
+      <WaitCmd seconds="1.0" shutoff_motors="false" />
+      <MoveScissor scissor_position_in="8" offset="0.2" timeout_ms="5000"/>
       <!-- <ClimbCmd climb_extended="true"/>
       <WaitCmd seconds="0.2" shutoff_motors="false" />
       <ClimbCmd climb_extended="false"/>
