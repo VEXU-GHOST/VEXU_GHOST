@@ -165,13 +165,13 @@ def generate_launch_description():
         serial_node,
         competition_state_machine_node,
         bag_recorder_service,
-        ekf_pf_node, # THIS ONE
+        # ekf_pf_node, # THIS ONE
         # realsense_node,
         imu_filter_node,
         odom_ekf_node,
-        map_ekf_node,
-        rplidar_node,
-        color_classifier_node,
-        color_sensor_node
+        # map_ekf_node,
+        # rplidar_node,
+        # color_classifier_node,
+        # color_sensor_node
 
     ])

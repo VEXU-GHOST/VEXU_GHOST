@@ -345,26 +345,26 @@ void TankRobotPlugin::disabled()
 
 void TankRobotPlugin::autonomous(double current_time)
 {
-  std::cout << "Autonomous: " << current_time << std::endl;
-  bt_->set_variable("auton_time_elapsed", current_time);
+  // std::cout << "Autonomous: " << current_time << std::endl;
+  // bt_->set_variable("auton_time_elapsed", current_time);
 
-  static bool first_loop = true;
-  if (first_loop) {
-    first_loop = false;
-    m_odom_ptr->resetPose();
-  }
+  // static bool first_loop = true;
+  // if (first_loop) {
+  //   first_loop = false;
+  //   m_odom_ptr->resetPose();
+  // }
 
-  bt_->tick_tree();
+  // bt_->tick_tree();
 
-  // Get best state estimate
-  auto curr_pose = m_tank_model_ptr->getWorldPose();
-  auto curr_twist = m_tank_model_ptr->getWorldTwist();
+  // // Get best state estimate
+  // auto curr_pose = m_tank_model_ptr->getWorldPose();
+  // auto curr_twist = m_tank_model_ptr->getWorldTwist();
 
-  movePointToPoint();
+  // movePointToPoint();
 
-  publishCurrentTwist(curr_twist);
-  // publishDesiredTwist(m_desired_twist);
-  publishDesiredPose(m_desired_pose);
+  // publishCurrentTwist(curr_twist);
+  // // publishDesiredTwist(m_desired_twist);
+  // publishDesiredPose(m_desired_pose);
 }
 
 void TankRobotPlugin::teleop(double current_time)
