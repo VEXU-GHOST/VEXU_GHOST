@@ -6,8 +6,8 @@
       <Logging message="goal_rush"/>
       <GoalRushCmd arm_down="false"/>
       <MoveToPoseBoomerang  posX_tiles="1.5"
-                            posY_tiles="2.35"
-                            theta_deg="120.0"
+                            posY_tiles="2.4"
+                            theta_deg="115.0"
                             search_radius_m="0.3"
                             threshold_m="0.1"
                             angle_threshold_deg="3.0"
@@ -21,7 +21,7 @@
                             backwards="false"/>
       <GoalRushCmd arm_down="true"/>
       <ShutoffNode/>
-      <Delay delay_msec="250">
+      <Delay delay_msec="100">
         <ShutoffNode/>
       </Delay>
 
@@ -49,7 +49,7 @@
                             posY_tiles="1.0"
                             theta_deg="-90.0"
                             search_radius_m="0.3"
-                            threshold_m="0.10"
+                            threshold_m="0.05"
                             angle_threshold_deg="3.0"
                             threshold_vel_mps="0.1"
                             angle_threshold_vel_dps="1.0"
@@ -85,17 +85,20 @@
                             posY_tiles="1.0"
                             theta_deg="0.0"
                             search_radius_m="0.3"
-                            threshold_m="0.10"
+                            threshold_m="0.05"
                             angle_threshold_deg="3.0"
                             threshold_vel_mps="0.1"
                             angle_threshold_vel_dps="1.0"
                             lead="1.0"
-                            max_speed_linear_pct="0.4"
+                            max_speed_linear_pct="0.6"
                             max_speed_angular_pct="1.0"
                             timeout_ms="-1000"
                             use_theta="true"
                             backwards="true"/>
       <ShutoffNode/>
+      <Delay delay_msec="250">
+        <ShutoffNode/>
+      </Delay>
       <ClampCmd clamp_closed="true"/>
       <Delay delay_msec="250">
         <ShutoffNode/>
@@ -137,7 +140,7 @@
                                 threshold_vel_mps="0.1"
                                 angle_threshold_vel_dps="1.0"
                                 lead="0.5"
-                                max_speed_linear_pct="0.4"
+                                max_speed_linear_pct="0.6"
                                 max_speed_angular_pct="0.5"
                                 timeout_ms="-1000"
                                 use_theta="true"
@@ -167,9 +170,6 @@
         </Sequence>
       </ReactiveSequence>
       <ShutoffNode/>
-      <Delay delay_msec="500">
-        <ShutoffNode/>
-      </Delay>
 
       <Logging message="Go to stack"/>
       <BiteCmd bite_closed="false"/>
@@ -192,7 +192,7 @@
                                 use_theta="true"
                                 backwards="false"/>
           <ShutoffNode/>
-          <Delay delay_msec="1000">
+          <Delay delay_msec="250">
             <ShutoffNode/>
           </Delay>
 
@@ -206,13 +206,13 @@
                                 threshold_vel_mps="0.1"
                                 angle_threshold_vel_dps="1.0"
                                 lead="0.0"
-                                max_speed_linear_pct="0.5"
+                                max_speed_linear_pct="0.6"
                                 max_speed_angular_pct="1.0"
                                 timeout_ms="-1000"
                                 use_theta="true"
                                 backwards="false"/>
           <ShutoffNode/>
-          <Delay delay_msec="250">
+          <Delay delay_msec="100">
             <ShutoffNode/>
           </Delay>
 
@@ -233,7 +233,7 @@
                                 threshold_vel_mps="0.1"
                                 angle_threshold_vel_dps="1.0"
                                 lead="0.0"
-                                max_speed_linear_pct="0.5"
+                                max_speed_linear_pct="0.6"
                                 max_speed_angular_pct="1.0"
                                 timeout_ms="-1000"
                                 use_theta="false"
@@ -250,13 +250,13 @@
                                 threshold_vel_mps="0.1"
                                 angle_threshold_vel_dps="1.0"
                                 lead="0.0"
-                                max_speed_linear_pct="0.3"
+                                max_speed_linear_pct="1.0"
                                 max_speed_angular_pct="1.0"
                                 timeout_ms="-1000"
                                 use_theta="false"
                                 backwards="false"/>
           <ShutoffNode/>
-          <Delay delay_msec="1000">
+          <Delay delay_msec="250">
             <ShutoffNode/>
           </Delay>
 
@@ -290,7 +290,7 @@
                                 threshold_vel_mps="0.1"
                                 angle_threshold_vel_dps="1.0"
                                 lead="1.0"
-                                max_speed_linear_pct="0.3"
+                                max_speed_linear_pct="0.6"
                                 max_speed_angular_pct="1.0"
                                 timeout_ms="-1000"
                                 use_theta="true"
@@ -316,7 +316,7 @@
                                 threshold_vel_mps="0.1"
                                 angle_threshold_vel_dps="1.0"
                                 lead="0.5"
-                                max_speed_linear_pct="0.3"
+                                max_speed_linear_pct="0.6"
                                 max_speed_angular_pct="1.0"
                                 timeout_ms="-1000"
                                 use_theta="true"
@@ -324,8 +324,8 @@
           <ShutoffNode/>
 
           <Logging message="Go to corner stack"/>
-          <MoveToPoseBoomerang posX_tiles="0.75"
-                                posY_tiles="0.75"
+          <MoveToPoseBoomerang posX_tiles="0.8"
+                                posY_tiles="0.7"
                                 theta_deg="225.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.05"
@@ -345,10 +345,10 @@
       <Logging message="Processing Corner Stack"/>
       <ReactiveSequence>
         <IntakeCmd lower="true" red="false"/>
-        <Repeat num_cycles="3">
+        <Repeat num_cycles="2">
           <Sequence>
-            <MoveToPoseBoomerang posX_tiles="0.6"
-                                    posY_tiles="0.6"
+            <MoveToPoseBoomerang posX_tiles="0.375"
+                                    posY_tiles="0.375"
                                     theta_deg="225.0"
                                     search_radius_m="0.05"
                                     threshold_m="0.02"
@@ -356,15 +356,12 @@
                                     threshold_vel_mps="0.1"
                                     angle_threshold_vel_dps="1.0"
                                     lead="0.5"
-                                    max_speed_linear_pct="0.2"
+                                    max_speed_linear_pct="0.75"
                                     max_speed_angular_pct="1.0"
-                                    timeout_ms="-1000"
-                                    use_theta="false"
+                                    timeout_ms="-500"
+                                    use_theta="true"
                                     backwards="false"/>
               <ShutoffNode/>
-              <Delay delay_msec="500">
-                <ShutoffNode/>
-              </Delay>
 
               <MoveToPoseBoomerang
                 posX_tiles="0.7"
@@ -376,15 +373,12 @@
                 threshold_vel_mps="0.1"
                 angle_threshold_vel_dps="1.0"
                 lead="0.5"
-                max_speed_linear_pct="0.2"
+                max_speed_linear_pct="0.5"
                 max_speed_angular_pct="1.0"
-                timeout_ms="-1000"
-                use_theta="false"
+                timeout_ms="-500"
+                use_theta="true"
                 backwards="true"/>
             <ShutoffNode/>
-            <Delay delay_msec="500">
-              <ShutoffNode/>
-            </Delay>
           </Sequence>
         </Repeat>
       </ReactiveSequence>
@@ -401,13 +395,10 @@
         lead="0.5"
         max_speed_linear_pct="1.0"
         max_speed_angular_pct="1.0"
-        timeout_ms="-1000"
+        timeout_ms="-500"
         use_theta="true"
         backwards="true"/>
       <ShutoffNode/>
-      <Delay delay_msec="500">
-        <ShutoffNode/>
-      </Delay>
 
       <MoveToPoseBoomerang
         posX_tiles="1.0"
@@ -425,9 +416,6 @@
         use_theta="true"
         backwards="false"/>
       <ShutoffNode/>
-      <Delay delay_msec="500">
-        <ShutoffNode/>
-      </Delay>
 
       <MoveToPoseBoomerang
         posX_tiles="0.25"
@@ -446,9 +434,6 @@
         backwards="true"/>
       <ShutoffNode/>
       <ClampCmd clamp_closed="false"/>
-      <Delay delay_msec="500">
-        <ShutoffNode/>
-      </Delay>
 
       <MoveToPoseBoomerang
         posX_tiles="1.0"
@@ -466,9 +451,23 @@
         use_theta="true"
         backwards="false"/>
       <ShutoffNode/>
-      <Delay delay_msec="500">
-        <ShutoffNode/>
-      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="0.25"
+        posY_tiles="0.25"
+        theta_deg="225.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="true"/>
+      <ShutoffNode/>
 
       <MoveToPoseBoomerang
         posX_tiles="2.5"
