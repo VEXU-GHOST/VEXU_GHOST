@@ -169,7 +169,7 @@ def generate_launch_description():
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
-        cubic_motion_planner_node,
+        # cubic_motion_planner_node,
         # trapezoid_motion_planner_node,
         rplidar_node
     ])
