@@ -89,21 +89,21 @@
       <IntakeCmd auto="true"
         ground_intake="true"/>
       <Sequence>
-        <MoveToPoint kp="5.0"
+        <!-- <MoveToPoint kp="5.0"
           kd="0.0"
           max_effort_percent="0.3"
           timeout_ms="2000"
           backwards="false"
           distance_tiles="0.1"/>
-        <ShutoffNode/>
+        <ShutoffNode/> -->
 
-        <ArcturnToPoint posX_tiles="0.0"
+        <!-- <ArcturnToPoint posX_tiles="0.0"
           posY_tiles="0.0"
           timeout_ms="5000"
           angle_exit_threshold_deg="1.0"
           ang_vel_exit_threshold_dps="10.0"
           drive_backwards="false"
-          face_backwards="false"/>
+          face_backwards="false"/> -->
 
         <!-- <MoveToPoint kp="5.0"
           kd="0.0"
@@ -118,7 +118,7 @@
           max_effort_percent="1.0"
           timeout_ms="1000"
           backwards="false"
-          distance_tiles="0.5"/>
+          distance_tiles="0.7"/>
         <ShutoffNode/>
 
         <MoveToPoint kp="5.0"
@@ -126,7 +126,7 @@
           max_effort_percent="1.0"
           timeout_ms="1500"
           backwards="true"
-          distance_tiles="0.75"/>
+          distance_tiles="0.5"/>
         <ShutoffNode/>
 
         <MoveToPoint kp="5.0"

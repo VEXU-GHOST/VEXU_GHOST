@@ -187,9 +187,9 @@
       <MoveToPoint kp="3.0"
         kd="0.0"
         max_effort_percent="0.4"
-        timeout_ms="800"
+        timeout_ms="1500"
         backwards="true"
-        distance_tiles="0.4"/>
+        distance_tiles="0.7"/>
       <ClampCmd clamp_closed="true"/>
       <BiteCmd bite_closed="true"/>
       <IntakeCmd auto="true"

@@ -3,11 +3,11 @@
   <BehaviorTree ID="get_far_goal">
     <Sequence>
       <ParallelAll>
-        <IntakeCmd auto="true"
+        <!-- <IntakeCmd auto="true"
           ground_intake="true"
-          store_ring="true"/>
+          store_ring="true"/> -->
         <ClampCmd clamp_closed="false"/>
-        <BiteCmd bite_closed="false"/>
+        <!-- <BiteCmd bite_closed="false"/> -->
         <Sequence>
           <GenerateBezierPath end_x_tiles="0.9"
             end_y_tiles="1.6"
@@ -33,7 +33,7 @@
           <BiteCmd bite_closed="true"/>
           <WaitCmd seconds="0.25" shutoff_motors="false" />
 
-          <MoveToPoint kp="5.0"
+          <!-- <MoveToPoint kp="5.0"
             kd="0.2"
             max_effort_percent="0.5"
             timeout_ms="850"
@@ -45,7 +45,7 @@
             max_effort_percent="0.5"
             timeout_ms="850"
             backwards="false"
-            distance_tiles="0.5"/>
+            distance_tiles="0.5"/> -->
 
           <TurnToPoint posX_tiles="1.0"
             posY_tiles="5.0"
@@ -54,7 +54,7 @@
             angle_exit_threshold_deg="1.0"/>
 
           <GenerateBezierPath end_x_tiles="1.0"
-            end_y_tiles="2.8"
+            end_y_tiles="2.6"
             end_theta_deg="-90.0"
             lead_tiles="0.5"
             backwards="true"
@@ -81,18 +81,18 @@
         ground_intake="false"
         store_ring="false"/>
 
-      <GenerateBezierPath end_x_tiles="1.0"
-        end_y_tiles="2.0"
-        end_theta_deg="45.0"
-        lead_tiles="1.0"
+      <GenerateBezierPath end_x_tiles="4.0"
+        end_y_tiles="1.0"
+        end_theta_deg="180.0"
+        lead_tiles="1.5"
         backwards="false"
-        type="QUADRATIC_BEZIER"
+        type="CUBIC_BEZIER"
         num_points="250"/>
       <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
         angle_exit_threshold_deg="5.0"
         lin_vel_exit_threshold_tps="0.2"
         ang_vel_exit_threshold_dps="30.0"
-        max_speed_linear_percent="0.4"
+        max_speed_linear_percent="0.7"
         max_speed_angular_percent="1.0"
         timeout_ms="2000"
         use_theta="false"
@@ -101,7 +101,64 @@
         deceleration_start_distance_tiles="1.0"
         deceleration_exponent="2.0"
         min_approach_velocity_tps="0.1"/>
+      
+      <GenerateBezierPath end_x_tiles="3.0"
+        end_y_tiles="1.0"
+        end_theta_deg="180.0"
+        lead_tiles="0.5"
+        backwards="false"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="5.0"
+        lin_vel_exit_threshold_tps="0.2"
+        ang_vel_exit_threshold_dps="30.0"
+        max_speed_linear_percent="0.7"
+        max_speed_angular_percent="1.0"
+        timeout_ms="2000"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.2"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="2.0"
+        min_approach_velocity_tps="0.1"/>
+        
+      <IntakeCmd auto="false"
+          ground_intake="true"
+          store_ring="false"/>
 
+      <MoveToPoint kp="5.0"
+        kd="0.0"
+        max_effort_percent="0.4"
+        timeout_ms="3000"
+        backwards="false"
+        distance_tiles="1.0"/>
+      <!-- <TurnToPoint posX_tiles="4.0"
+        posY_tiles="2.0"
+        timeout_ms="1500"
+        backwards="false"
+        angle_exit_threshold_deg="1.0"/> -->
+
+      <GenerateBezierPath end_x_tiles="5.0"
+        end_y_tiles="1.0"
+        end_theta_deg="180.0"
+        lead_tiles="0.5"
+        backwards="true"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="5.0"
+        lin_vel_exit_threshold_tps="0.2"
+        ang_vel_exit_threshold_dps="30.0"
+        max_speed_linear_percent="0.7"
+        max_speed_angular_percent="1.0"
+        timeout_ms="2000"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.2"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="2.0"
+        min_approach_velocity_tps="0.1"/>
     </Sequence>
   </BehaviorTree>
 
