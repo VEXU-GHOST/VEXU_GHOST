@@ -4,7 +4,8 @@
     <Sequence>
     <!-- put donut on cone  -->
       <Logging message="basic auton 1"/>
-      <Logging message="Go to corner stack"/>
+      <GoalRushCmd arm_down="true"
+                  clamp="false"/>
       <GoalRushCmd arm_down="true"
                   clamp="false"/>
       <MoveToPoseBezier posX_tiles="1.9"
@@ -23,15 +24,17 @@
                             backwards="true"/>
       <GoalRushCmd arm_down="false"
                   clamp="false"/>
-      <Logging message="Back Up and Clamp Goal"/>
+      <GoalRushCmd arm_down="true"
+                  clamp="false"/>
+      <Logging message="Back Up Further and Clamp Goal"/>
       <ParallelAll>
         <Fallback>
-          <Delay delay_msec="1000">
-            <!-- <KeepRunningUntilFailure> -->
+          <Timeout msec="1000">
+            <KeepRunningUntilFailure>
               <ClampCmd clamp_closed="false"/>
-            <!-- </KeepRunningUntilFailure> -->
-          </Delay>
-            <ClampCmd clamp_closed="true"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ClampCmd clamp_closed="true"/>
         </Fallback>
         <MoveToPoseBezier posX_tiles="1.7"
                             posY_tiles="2.7"
@@ -48,10 +51,7 @@
                             use_theta="true"
                             backwards="true"/>
       </ParallelAll>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
       <ClampCmd clamp_closed="true"/>
-      <ShutoffNode/>
       <!-- donut on cone done -->
 
       <Logging message="back into goal infront of neutral"/>

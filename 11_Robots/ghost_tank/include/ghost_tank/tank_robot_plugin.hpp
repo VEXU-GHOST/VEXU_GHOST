@@ -107,10 +107,10 @@ protected:
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateNeutralStakeArmController(bool shift1, bool shift2, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   void updateNeutralStakeArmPosition(int arm_mode);
-  void updateNeutralStakeArmPositionController(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateNeutralStakeArmPositionController(bool active, bool up_btn, bool down_btn);
 
   void ringDetector(bool active, double current_time, bool want_red);
   void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);

@@ -520,7 +520,7 @@ void TankRobotPlugin::teleop(double current_time)
   toggleBagRecorder(joy_data);
   // CONDITIONAL control mode dispatching
   if (shift1) {
-    updateNeutralStakeArmController(shift1, shift2, joy_data); // Y-held mode
+    updateNeutralStakeArmJoystick(true, shift2, joy_data); // Y-held mode
     updateIntake(joy_data->btn_r2, joy_data->btn_r1,
       false, false,
       current_time);
@@ -531,7 +531,7 @@ void TankRobotPlugin::teleop(double current_time)
     updateIntake(joy_data->btn_r2, joy_data->btn_r1,
                 joy_data->btn_l1, joy_data->btn_l2,
                 current_time);            // Default mode 
-    updateNeutralStakeArmController(shift1, shift2, joy_data);            
+    updateNeutralStakeArmJoystick(false, shift2, joy_data);            
   }
   updateBite(joy_data);
   updateDrivetrain(joy_data);
@@ -733,69 +733,61 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 
 
 
-void TankRobotPlugin::updateNeutralStakeArmPositionController(std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateNeutralStakeArmPositionController(bool active, bool down_btn, bool up_btn)
 {
   double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
   int32_t current_ma = 0;
 
   bool command_given = false;
-  if(joy_data->btn_y){
-  
-  // ---- Manual Control ----
-    if (joy_data->btn_l2) {
+  if(active){
+    // ---- Manual Control ----
+    if (down_btn) {
       // Move forward (toward down)
       power = 1;  // Tune this value
       current_ma = 2500;
       command_given = true;
-    } 
-    else if (joy_data->btn_l1) {
+    } else if (up_btn) {
       // Move backward (toward up)
       power = -1;
       current_ma = 2500;
       command_given = true;
-    }else{
-    
+    } else {
       double position_error = (m_neutral_stake_arm_loading_pos_deg - curr_pos);
       current_ma = 2500;
       power = m_neutral_stake_arm_kp * position_error;
       command_given = true; 
-  }
-    
-
-    // ---- Send Command ----
-    if (command_given) {
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-      m_loop_current_limits.push_back(current_ma);
-      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
-    } 
-    else {
-      // Stop motor if no command needed
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", 0);
-      m_loop_current_limits.push_back(0);
-      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
     }
-  }else{
-      double position_error =(m_neutral_stake_arm_rest_pos_deg - curr_pos-45);
-      current_ma = 2500;
-      power = m_neutral_stake_arm_kp * position_error;
-      command_given = true; 
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-      m_loop_current_limits.push_back(current_ma);
-      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
-
+  } else {
+    double position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
+    current_ma = 2500;
+    power = m_neutral_stake_arm_kp * position_error;
+    command_given = true; 
+    // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
+    // m_loop_current_limits.push_back(current_ma);
+    // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
   }
-
-  
+  // ---- Send Command ----
+  // if (command_given) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
+    m_loop_current_limits.push_back(current_ma);
+    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
+  // } 
+  // else {
+  //   // Stop motor if no command needed
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", 0);
+  //   m_loop_current_limits.push_back(0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
+  // }
 }
 
 
-void TankRobotPlugin::updateNeutralStakeArmController(bool shift1, bool shift2, std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<JoystickDeviceData> joy_data)
 {
-
-  // Increment arm mode with button l1
-  updateNeutralStakeArmPositionController(joy_data); 
-
+  bool down_btn = joy_data->btn_l2;
+  bool up_btn = joy_data->btn_l1;
+  bool active = shift1;
+  updateNeutralStakeArmPositionController(active, up_btn, down_btn); 
 }
 
 void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
