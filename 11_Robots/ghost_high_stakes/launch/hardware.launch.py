@@ -171,7 +171,7 @@ def generate_launch_description():
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
-        rplidar_node,
+        #rplidar_node,
         competition_state_machine_node,
         color_classifier_node,
         color_sensor_node

@@ -8,7 +8,7 @@
       <Logging message="prog_red"/>
       <BiteCmd bite_closed="true"/>
       <MoveToPoseBoomerang posX_tiles="2.02"
-                           posY_tiles="3.01"
+                           posY_tiles="4.01"
                            theta_deg="300.0"
                            search_radius_m="0.4"
                            threshold_m="0.1"
@@ -20,7 +20,7 @@
                            max_speed_angular_pct="1.0"
                            timeout_ms="-2000"
                            use_theta="true"
-                           backwards="false"/>
+                           backwards="true"/>
       <ShutoffNode/>
       <ClampCmd clamp_closed="true"/>
       <Delay delay_msec="200">
