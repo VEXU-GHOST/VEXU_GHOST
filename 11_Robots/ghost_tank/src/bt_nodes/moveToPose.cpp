@@ -109,9 +109,9 @@ bool MoveToPose::CheckEndConditions(Eigen::Vector3d des_pos){
   bool ang_vel_satisfied = std::fabs(tank_model_ptr_->getWorldTwist().z()) < ang_vel_exit_threshold_radps;
 
   // Check exit conditions
-  if (xy_satisfied && angle_satisfied && xy_vel_satisfied) {
+  if (xy_satisfied && xy_vel_satisfied) {
     bool translation_only = !use_theta;
-    if (translation_only || use_theta && ang_vel_satisfied) {
+    if (translation_only || use_theta && ang_vel_satisfied && angle_satisfied) {
       RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPose: Success");
       return true;
     }

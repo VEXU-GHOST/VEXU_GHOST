@@ -706,7 +706,7 @@ void TankRobotPlugin::toggleBagRecorder(JoyPtr joy_data)
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
 {
-  static bool first_r2 = true;
+  static bool first_r2 = false;
   static bool first_r2_started = false;
   // Manual Ground Pickup control
   double ground_pickup_power = 0;

@@ -60,10 +60,13 @@ BT::NodeStatus ArcturnToPoint::onRunning()
     des_ang_rad = ghost_util::FlipAnglePI(des_ang_rad);
   }
 
-  double theta_err_rad = std::fabs(ghost_util::SmallestAngleDistRad(tank_model_ptr_->getWorldTwist().z(), des_ang_rad));
+  double theta_err_rad = std::fabs(ghost_util::SmallestAngleDistRad(tank_model_ptr_->getWorldPose().z(), des_ang_rad));
   bool angle_satisfied = theta_err_rad < angle_exit_threshold_rad;
 
+  std::cout << "theta error: " << theta_err_rad << std::endl;
+  
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
+  std::cout << "time elapsed: " << time_elapsed << std::endl;
   if (angle_satisfied || time_elapsed > timeout_ms) {
     tank_model_ptr_->driveCommand(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
@@ -72,10 +75,10 @@ BT::NodeStatus ArcturnToPoint::onRunning()
   Eigen::Vector3d final_pose_ = Eigen::Vector3d(0.0, 0.0, des_ang_rad);
   auto command = pd_control_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose_);
 
-  if (drive_backwards ^ face_backwards){
-    tank_model_ptr_->driveCommand(-command[1], command[1]);
+  if (drive_backwards){
+    tank_model_ptr_->driveCommand(-abs(command[1]), command[1]);
   } else {
-    tank_model_ptr_->driveCommand(command[1], command[1]);
+    tank_model_ptr_->driveCommand(abs(command[1]), command[1]);
   }
 
   return BT::NodeStatus::RUNNING;

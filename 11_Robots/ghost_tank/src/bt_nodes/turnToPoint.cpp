@@ -47,7 +47,7 @@ BT::NodeStatus TurnToPoint::onStart()
 
 BT::NodeStatus TurnToPoint::onRunning()
 {
-  double theta_err_rad = std::fabs(ghost_util::SmallestAngleDistRad(tank_model_ptr_->getWorldTwist().z(), des_ang_rad));
+  double theta_err_rad = std::fabs(ghost_util::SmallestAngleDistRad(tank_model_ptr_->getWorldPose().z(), des_ang_rad));
   bool angle_satisfied = theta_err_rad < angle_exit_threshold_rad;
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
