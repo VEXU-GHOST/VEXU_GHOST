@@ -121,12 +121,12 @@
           distance_tiles="0.7"/>
         <ShutoffNode/>
 
-        <MoveToPoint kp="5.0"
-          kd="0.2"
+        <MoveToPoint kp="7.0"
+          kd="0.0"
           max_effort_percent="1.0"
           timeout_ms="1500"
           backwards="true"
-          distance_tiles="0.5"/>
+          distance_tiles="0.75"/>
         <ShutoffNode/>
 
         <ArcturnToPoint posX_tiles="0.0"
@@ -139,10 +139,10 @@
 
         <MoveToPoint kp="5.0"
           kd="0.0"
-          max_effort_percent="0.4"
+          max_effort_percent="0.3"
           timeout_ms="1500"
           backwards="false"
-          distance_tiles="1.0"/>
+          distance_tiles="0.7"/>
         <ShutoffNode/>
       </Sequence>
       <ShutoffNode/>
