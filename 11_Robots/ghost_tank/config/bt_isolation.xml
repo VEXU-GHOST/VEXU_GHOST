@@ -40,8 +40,8 @@
                             timeout_ms="-500"
                             use_theta="true"
                             backwards="true"/>
-        <GoalRushCmd arm_down="false"/>
         <Logging message="retract arm"/>
+        <GoalRushCmd arm_down="false"/>
         <ShutoffNode/>
         <Delay delay_msec="200">
           <ShutoffNode/>
@@ -59,13 +59,15 @@
                               lead="1.0"
                               max_speed_linear_pct="1.0"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-2000"
+                              timeout_ms="-1250"
                               use_theta="true"
                               backwards="true"/>
         <ShutoffNode/>
+        <Logging message="Bite Goal"/>
         <Delay delay_msec="500">
         <BiteCmd bite_closed="true"/>
         </Delay>
+        <Logging message="Back Up Further"/>
         <MoveToPoseBoomerang posX_tiles="3.2"
                               posY_tiles="1.0"
                               theta_deg="0.0"
@@ -82,6 +84,7 @@
                               backwards="true"/>
         <ShutoffNode/>
         <ClampCmd clamp_closed="true"/>
+        <Logging message="Turn to face stack"/>
         <ReactiveSequence>
           <ConveyorCmd fwd="true"/>
           <MoveToPoseBoomerang posX_tiles="3.5"
@@ -99,6 +102,10 @@
                                 use_theta="true"
                                 backwards="true"/>
         </ReactiveSequence>
+        <ShutoffNode/>
+        <Delay delay_msec="500">
+          <ShutoffNode/>
+        </Delay>
         <ConveyorCmd fwd="false"/>
         <Logging message="Grab Stack"/>
         <ReactiveSequence>
@@ -138,9 +145,6 @@
                             timeout_ms="-1000"
                             use_theta="true"
                             backwards="true"/>
-            <ShutoffNode/>
-            <Delay delay_msec="5000">
-            <ShutoffNode/>
             </Delay>
           </Sequence>
       </ReactiveSequence>
@@ -166,6 +170,7 @@
                                   timeout_ms="-1000"
                                   use_theta="true"
                                   backwards="false"/>
+            <ShutoffNode/>
             <MoveToPoseBoomerang posX_tiles="1.25"
                                   posY_tiles="1.0"
                                   theta_deg="180.0"
@@ -180,6 +185,7 @@
                                   timeout_ms="-1000"
                                   use_theta="true"
                                   backwards="false"/>
+            <ShutoffNode/>
             <MoveToPoseBoomerang posX_tiles="1.75"
                                   posY_tiles="1.0"
                                   theta_deg="0.0"
@@ -194,6 +200,7 @@
                                   timeout_ms="-1000"
                                   use_theta="true"
                                   backwards="true"/>
+            <ShutoffNode/>
             <MoveToPoseBoomerang posX_tiles="1.25"
                                   posY_tiles="1.0"
                                   theta_deg="180.0"
@@ -208,10 +215,15 @@
                                   timeout_ms="-1000"
                                   use_theta="true"
                                   backwards="false"/>
+            <ShutoffNode/>
           </Sequence>
         </ReactiveSequence>
 
-        <ShutoffNode/>
+        <Delay delay_msec="5000">
+          <ShutoffNode/>
+        </Delay>
+
+        <!-- <ShutoffNode/>
         <Delay delay_msec="5000">
           <ShutoffNode/>
         </Delay>
@@ -380,7 +392,7 @@
 
         <Delay delay_msec="50000">
         <ShutoffNode/>
-        </Delay>
+        </Delay> -->
     </Sequence>
   </BehaviorTree>
 

@@ -73,7 +73,7 @@ competition_state_machine_node:
       move_to_pose_kp_xy: 2.5
       move_to_pose_kd_xy: 0.3
       move_to_pose_kp_theta: 2.0
-      move_to_pose_kd_theta: 0.2
+      move_to_pose_kd_theta: 0.3
 
       drive_motor_ticks_per_rotation: 360.0
       drive_gear_ratio: 1.15 # 23/20
