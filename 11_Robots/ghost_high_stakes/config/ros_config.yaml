@@ -70,7 +70,7 @@ competition_state_machine_node:
       conveyor_hook_throw_duration: 0.25
 
       # motion planning
-      move_to_pose_kp_xy: 2.5
+      move_to_pose_kp_xy: 2.75
       move_to_pose_kd_xy: 0.3
       move_to_pose_kp_theta: 2.0
       move_to_pose_kd_theta: 0.3
@@ -99,7 +99,7 @@ competition_state_machine_node:
       initial_state:
         [
           1.2, 0.508, 0.0,
-          0.0,  0.0,  1.7,
+          0.0,  0.0,  1.75,
           0.0,  0.0,  0.0,
           0.0,  0.0,  0.0,
           0.0,  0.0,  0.0,
@@ -486,7 +486,7 @@ map_ekf_node:
     initial_state:
       [
         1.2, 0.508,  0.0,
-        0.0,  0.0,  1.7,
+        0.0,  0.0,  1.75,
         0.0,  0.0,  0.0,
         0.0,  0.0,  0.0,
         0.0,  0.0,  0.0,
