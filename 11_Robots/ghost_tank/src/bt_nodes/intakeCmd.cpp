@@ -78,7 +78,7 @@ BT::NodeStatus IntakeCmd::tick()
   bool want_red = BT_Util::get_input<bool>(this, "red");
 
   bool mirrored = false;
-  BT_Util::get_from_blackboard(blackboard_, "mirroed", mirrored);
+  BT_Util::get_from_blackboard(blackboard_, "mirrored", mirrored);
   if (mirrored){
     want_red = !want_red;
   }

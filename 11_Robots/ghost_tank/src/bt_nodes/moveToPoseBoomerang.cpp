@@ -279,19 +279,15 @@ void MoveToPoseBoomerang::PurePursuit(){
 	
 	double dist_err = sqrt(((final_pose.x() - current_x) * (final_pose.x() - current_x) + (final_pose.y() - current_y) * (final_pose.y() - current_y)));
 
-	Eigen::Vector3d goal;
+	Eigen::Vector3d carrot;
 
 	if (dist_err < threshold_xy) {
-		goal = final_pose;
-		command = pd_control_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), goal);
+		carrot = final_pose;
+		command = pd_control_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose);
 	} else {
-		goal = desired_pose;
-		command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), goal, final_pose, backwards);
+		carrot = desired_pose;
+		command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), carrot, final_pose, backwards);
 	}
-	// Eigen::Vector3d error = goal - tank_model_ptr_->getWorldPose();
-	// error.z() = ghost_util::SmallestAngleDistRad(goal.z(), tank_model_ptr_->getWorldPose().z());
-	// publishErrorPose(error);
-	// std::cout << "des angle: " << goal.z() << std::endl;
 	
 	auto fwd_cmd = ghost_util::clamp(command[0], -max_speed_linear, max_speed_linear);
 	auto turn_cmd = ghost_util::clamp(command[1], -max_speed_angular, max_speed_angular);
