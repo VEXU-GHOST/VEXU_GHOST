@@ -7,7 +7,7 @@ import signal
 import sys
 
 def handler(signum, frame):
-    print("exiting")
+    print("Exiting")
     p.disconnect()
     sys.exit()
 
