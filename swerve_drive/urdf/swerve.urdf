@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<robot name="swerve" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:property name="l_wheel" value="0.2286"/> <!-- 9" center to wheel modules-->
+    <xacro:property name="r_wheel" value="0.06985"/> <!-- 2.75" wheel radius-->
+    <xacro:property name="width_wheel" value="0.0254"/> <!-- 1" wheel width-->
+    <xacro:property name="wheel_offset" value="0.058"/> <!-- 2" wheel width-->
+    <xacro:property name="com_radius" value="0.05"/>
+    <xacro:property name="d2r" value="${3.14159/180}"/>
+
+    <link name="base_link">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <sphere radius="${com_radius}"/>
+        </geometry>
+        <material name="white"/>
+        </visual>
+
+        <!--Inertia estimated for solid cylinder of radius 9" and height 3" with mass 7kg-->
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="7"/>
+            <inertia
+                ixx="0.094839" ixy="0.0" ixz="0.0"
+                iyy="0.094839" iyz="0.0"
+                izz="0.182903"/>
+        </inertial>
+    </link>
+
+    <link name="base_footprint">
+    </link>    
+
+    <joint name="base_footprint_link" type="fixed">
+        <parent link="base_link"/>
+        <child link="base_footprint"/>
+        <origin xyz="0 0 ${-wheel_offset - r_wheel}" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.00001"/>
+            <inertia
+                ixx="0.00001" ixy="0.0" ixz="0.0"
+                iyy="0.00001" iyz="0.0"
+                izz="0.00001"/>
+        </inertial>
+    </joint>
+
+    <link name="mod_1">
+            <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.00001"/>
+            <inertia
+                ixx="0.00001" ixy="0.0" ixz="0.0"
+                iyy="0.00001" iyz="0.0"
+                izz="0.00001"/>
+        </inertial>
+    </link>
+
+    <link name="mod_2">
+            <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.00001"/>
+            <inertia
+                ixx="0.00001" ixy="0.0" ixz="0.0"
+                iyy="0.00001" iyz="0.0"
+                izz="0.00001"/>
+        </inertial>
+    </link>
+
+    <link name="mod_3">
+            <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.00001"/>
+            <inertia
+                ixx="0.00001" ixy="0.0" ixz="0.0"
+                iyy="0.00001" iyz="0.0"
+                izz="0.00001"/>
+        </inertial>
+    </link>
+
+    <joint name="pivot_1" type="continuous">
+        <parent link="base_link"/>
+        <child link="mod_1"/>
+        <origin xyz="${l_wheel*0.866} ${l_wheel/2} 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="pivot_2" type="continuous">
+        <parent link="base_link"/>
+        <child link="mod_2"/>
+        <origin xyz="${-l_wheel*0.866} ${l_wheel/2} 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="pivot_3" type="continuous">
+        <parent link="base_link"/>
+        <child link="mod_3"/>
+        <origin xyz="0 ${-l_wheel} 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="wheel_1">
+        <visual>
+            <geometry>
+                <cylinder radius="${r_wheel}" length="${width_wheel}"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+
+        <collision>
+            <geometry>
+                <cylinder radius="${r_wheel}" length="${width_wheel}"/>
+            </geometry>
+        </collision>
+
+        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 0.25lb-->
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.11364"/>
+            <inertia
+                ixx="0.00012" ixy="0.0" ixz="0.0"
+                iyy="0.00012" iyz="0.0"
+                izz="0.000229"/>
+        </inertial>
+    </link>
+
+    <link name="wheel_2">
+        <visual>
+            <geometry>
+                <cylinder radius="${r_wheel}" length="${width_wheel}"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+
+        <collision>
+            <geometry>
+                <cylinder radius="${r_wheel}" length="${width_wheel}"/>
+            </geometry>
+        </collision>
+
+        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 0.25lb-->
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.11364"/>
+            <inertia
+                ixx="0.00012" ixy="0.0" ixz="0.0"
+                iyy="0.00012" iyz="0.0"
+                izz="0.000229"/>
+        </inertial>
+    </link>
+
+    <link name="wheel_3">
+        <visual>
+            <geometry>
+                <cylinder radius="${r_wheel}" length="${width_wheel}"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+
+        <collision>
+            <geometry>
+                <cylinder radius="${r_wheel}" length="${width_wheel}"/>
+            </geometry>
+        </collision>
+
+        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 0.25lb-->
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.11364"/>
+            <inertia
+                ixx="0.00012" ixy="0.0" ixz="0.0"
+                iyy="0.00012" iyz="0.0"
+                izz="0.000229"/>
+        </inertial>
+    </link>
+
+    <joint name="driveshaft_1" type="continuous">
+        <parent link="mod_1"/>
+        <child link="wheel_1"/>
+        <origin xyz="0 0 -${wheel_offset}" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="driveshaft_2" type="continuous">
+        <parent link="mod_2"/>
+        <child link="wheel_2"/>
+        <origin xyz="0 0 -${wheel_offset}" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="driveshaft_3" type="continuous">
+        <parent link="mod_3"/>
+        <child link="wheel_3"/>
+        <origin xyz="0 0 -${wheel_offset}" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+</robot>
