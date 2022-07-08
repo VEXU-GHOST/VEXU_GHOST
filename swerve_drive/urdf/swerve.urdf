@@ -29,14 +29,6 @@
     </link>
 
     <link name="base_footprint">
-    </link>    
-
-    <joint name="base_footprint_link" type="fixed">
-        <parent link="base_link"/>
-        <child link="base_footprint"/>
-        <origin xyz="0 0 ${-wheel_offset - r_wheel}" rpy="0 0 0"/>
-        <axis xyz="0 0 1"/>
-        
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <mass value="0.00001"/>
@@ -45,6 +37,13 @@
                 iyy="0.00001" iyz="0.0"
                 izz="0.00001"/>
         </inertial>
+    </link>    
+
+    <joint name="base_footprint_link" type="fixed">
+        <parent link="base_link"/>
+        <child link="base_footprint"/>
+        <origin xyz="0 0 ${-wheel_offset - r_wheel}" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
     </joint>
 
     <link name="mod_1">
