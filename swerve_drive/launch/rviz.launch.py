@@ -4,7 +4,7 @@ import launch_ros
 import os
 
 def generate_launch_description():
-    pkg_share = launch_ros.substitutions.FindPackageShare(package='swerve-drive').find('swerve-drive')
+    pkg_share = launch_ros.substitutions.FindPackageShare(package='swerve_drive').find('swerve_drive')
     default_model_path = os.path.join(pkg_share, 'urdf/swerve.urdf')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
 
