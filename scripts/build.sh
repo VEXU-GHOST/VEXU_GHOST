@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ~/VEXU
+cd ~/VEXU_GHOST
 colcon build
 
 URDF_PATH="$PWD/install/swerve_drive/share/swerve_drive/urdf/robot_description.urdf"
