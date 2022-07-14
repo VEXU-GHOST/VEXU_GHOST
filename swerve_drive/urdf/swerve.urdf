@@ -26,6 +26,10 @@
                 iyy="0.094839" iyz="0.0"
                 izz="0.182903"/>
         </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
     </link>
 
     <link name="base_footprint">
@@ -39,43 +43,46 @@
         </inertial>
     </link>    
 
-    <joint name="base_footprint_link" type="fixed">
+    <joint name="base_footprint_joint" type="fixed">
         <parent link="base_link"/>
         <child link="base_footprint"/>
         <origin xyz="0 0 ${-wheel_offset - r_wheel}" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
+    <!-- Inertia estimated for hollow cylinder with inner R of 1", outer R 2", height 1", and mass 1lb-->
     <link name="mod_1">
-            <inertial>
+        <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="0.00001"/>
+            <mass value="0.4545"/>
             <inertia
-                ixx="0.00001" ixy="0.0" ixz="0.0"
-                iyy="0.00001" iyz="0.0"
-                izz="0.00001"/>
+                ixx="0.000975" ixy="0.0" ixz="0.0"
+                iyy="0.000975" iyz="0.0"
+                izz="0.001902"/>
         </inertial>
     </link>
-
+    
+    <!-- Inertia estimated for hollow cylinder with inner R of 1", outer R 2", height 1", and mass 1lb-->
     <link name="mod_2">
-            <inertial>
+        <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="0.00001"/>
+            <mass value="0.4545"/>
             <inertia
-                ixx="0.00001" ixy="0.0" ixz="0.0"
-                iyy="0.00001" iyz="0.0"
-                izz="0.00001"/>
+                ixx="0.000975" ixy="0.0" ixz="0.0"
+                iyy="0.000975" iyz="0.0"
+                izz="0.001902"/>
         </inertial>
     </link>
 
+    <!-- Inertia estimated for hollow cylinder with inner R of 1", outer R 2", height 1", and mass 1 lb-->
     <link name="mod_3">
-            <inertial>
+        <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="0.00001"/>
+            <mass value="0.4545"/>
             <inertia
-                ixx="0.00001" ixy="0.0" ixz="0.0"
-                iyy="0.00001" iyz="0.0"
-                izz="0.00001"/>
+                ixx="0.000975" ixy="0.0" ixz="0.0"
+                iyy="0.000975" iyz="0.0"
+                izz="0.001902"/>
         </inertial>
     </link>
 
@@ -109,20 +116,29 @@
         </visual>
 
         <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <cylinder radius="${r_wheel}" length="${width_wheel}"/>
             </geometry>
         </collision>
 
-        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 0.25lb-->
+        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 1 lb-->
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="0.11364"/>
+            <mass value="0.4545"/>
             <inertia
-                ixx="0.00012" ixy="0.0" ixz="0.0"
-                iyy="0.00012" iyz="0.0"
-                izz="0.000229"/>
+                ixx="0.000482" ixy="0.0" ixz="0.0"
+                iyy="0.000482" iyz="0.0"
+                izz="0.000914"/>
         </inertial>
+
+        <!-- <gazebo>
+            <selfCollide>false</selfCollide>
+            <kp>1930</kp>
+            <kd>1000</kd>
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2>
+        </gazebo> -->
     </link>
 
     <link name="wheel_2">
@@ -134,20 +150,29 @@
         </visual>
 
         <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <cylinder radius="${r_wheel}" length="${width_wheel}"/>
             </geometry>
         </collision>
 
-        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 0.25lb-->
+        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 1 lb-->
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="0.11364"/>
+            <mass value="0.4545"/>
             <inertia
-                ixx="0.00012" ixy="0.0" ixz="0.0"
-                iyy="0.00012" iyz="0.0"
-                izz="0.000229"/>
+                ixx="0.000482" ixy="0.0" ixz="0.0"
+                iyy="0.000482" iyz="0.0"
+                izz="0.000914"/>
         </inertial>
+
+        <!-- <gazebo>
+            <selfCollide>false</selfCollide>
+            <kp>1930</kp>
+            <kd>1000</kd>
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2>
+        </gazebo> -->
     </link>
 
     <link name="wheel_3">
@@ -159,20 +184,29 @@
         </visual>
 
         <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <cylinder radius="${r_wheel}" length="${width_wheel}"/>
             </geometry>
         </collision>
 
-        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 0.25lb-->
+        <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 1 lb-->
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="0.11364"/>
+            <mass value="0.4545"/>
             <inertia
-                ixx="0.00012" ixy="0.0" ixz="0.0"
-                iyy="0.00012" iyz="0.0"
-                izz="0.000229"/>
+                ixx="0.000482" ixy="0.0" ixz="0.0"
+                iyy="0.000482" iyz="0.0"
+                izz="0.000914"/>
         </inertial>
+
+        <!-- <gazebo>
+            <selfCollide>false</selfCollide>
+            <kp>1930</kp>
+            <kd>1000</kd>
+            <mu1>1.0</mu1>
+            <mu2>1.0</mu2>
+        </gazebo> -->
     </link>
 
     <joint name="driveshaft_1" type="continuous">

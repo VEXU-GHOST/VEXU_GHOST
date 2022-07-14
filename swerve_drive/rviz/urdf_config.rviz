@@ -4,12 +4,10 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
-        - /RobotModel1/Links1
-        - /TF1
+        - /MarkerArray1
+        - /MarkerArray1/Status1
       Splitter Ratio: 0.5
-    Tree Height: 557
+    Tree Height: 787
 Visualization Manager:
   Class: ""
   Displays:
@@ -18,9 +16,24 @@ Visualization Manager:
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
       Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
       Name: Grid
-    - Alpha: 0.6
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: true
+    - Alpha: 0.6000000238418579
       Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
       Description Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -28,19 +41,113 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /robot_description
       Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        mod_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        mod_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        mod_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wheel_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
       Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        mod_1:
+          Value: true
+        mod_2:
+          Value: true
+        mod_3:
+          Value: true
+        wheel_1:
+          Value: true
+        wheel_2:
+          Value: true
+        wheel_3:
+          Value: true
+        world:
+          Value: true
+      Marker Scale: 0.30000001192092896
       Name: TF
-      Marker Scale: 0.3
       Show Arrows: false
       Show Axes: true
-      Show Names: true
+      Show Names: false
+      Tree:
+        world:
+          base_link:
+            base_footprint:
+              {}
+            mod_1:
+              wheel_1:
+                {}
+            mod_2:
+              wheel_2:
+                {}
+            mod_3:
+              wheel_3:
+                {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /base_vel_markers
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
-    Fixed Frame: base_footprint
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -58,7 +165,33 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
+      Distance: 10
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
       Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.7853981852531433
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
+      Yaw: 0.7853981852531433
     Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 1016
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd00000001000000000000025d0000039efc0200000001fb000000100044006900730070006c006100790073010000003d0000039e000000c900ffffff000004d50000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Width: 1848
+  X: 72
+  Y: 27
