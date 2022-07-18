@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(swerve_drive)
 
+#########################
+#### Compile Options ####
+#########################
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -17,41 +20,75 @@ endif()
 
 add_compile_options(-g -O0)
 
-# find dependencies
+######################
+#### Dependencies ####
+######################
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_gtest REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(gazebo REQUIRED)
+find_package(gazebo_dev REQUIRED)
+find_package(gazebo_msgs REQUIRED)
+find_package(gazebo_ros REQUIRED)
+find_package(gazebo_plugins REQUIRED)
 
 include_directories(include)
+link_directories(${gazebo_dev_LIBRARY_DIRS})
 
+#################
 #### Targets ####
+#################
 add_library(dc_motor_model SHARED src/dc_motor_model.cpp)
 target_include_directories(dc_motor_model
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-ament_export_targets(export__dc_motor_model HAS_LIBRARY_TARGET)
+ament_export_libraries(dc_motor_model)
+
+add_library(gazebo_swerve_plugin SHARED src/gazebo_swerve_plugin.cpp)
+ament_target_dependencies(gazebo_swerve_plugin
+  rclcpp
+  gazebo
+  gazebo_ros
+  gazebo_plugins
+)
+target_include_directories(gazebo_swerve_plugin
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+ament_export_libraries(gazebo_swerve_plugin)
+
+#################
+#### Testing ####
+#################
+ament_add_gtest(test_dc_motor_model test/test_dc_motor_model.cpp)
+target_link_libraries(test_dc_motor_model
+dc_motor_model
+gtest)
+
+ament_add_gtest(test_gazebo_swerve_plugin test/test_gazebo_swerve_plugin.cpp)
+target_link_libraries(test_gazebo_swerve_plugin
+  gazebo_swerve_plugin
+  gtest)
+
+#################
+#### Install ####
+#################
 install(
-  TARGETS dc_motor_model
-  EXPORT export__dc_motor_model
+  TARGETS 
+    dc_motor_model
+    gazebo_swerve_plugin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
 
-#### Testing ####
-find_package(ament_cmake_gtest REQUIRED)
-ament_add_gtest(test_dc_motor_model test/test_dc_motor_model.cpp)
-target_link_libraries(test_dc_motor_model
-dc_motor_model
-gtest)
-target_include_directories(dc_motor_model
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-
-#### Install Share ####
-install(DIRECTORY launch urdf rviz scripts
+install(DIRECTORY
+  launch
+  urdf
+  rviz
+  scripts
   DESTINATION share/${PROJECT_NAME})
-
 
 ament_package()
