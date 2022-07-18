@@ -17,7 +17,6 @@ def generate_launch_description():
     doc = xacro.process(urdf_path)
     
     spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity swerve -topic robot_description").split()
-    # spawn_entity_args = ("-topic robot_description").split()
     
     with open(os.path.join(swerve_drive_share_dir, "urdf", "robot_description.urdf"), 'w') as file:
         file.write(doc)
@@ -35,12 +34,5 @@ def generate_launch_description():
             name='robot_state_publisher',
             output='screen',
             parameters=[{'use_sim_time': False}, {"robot_description": doc}],
-        ),
-        Node(
-            package='joint_state_publisher',
-            executable='joint_state_publisher',
-            name='joint_state_publisher',
-            parameters=[{"robot_description": doc}],
-        ),
-        
+        )
     ])
