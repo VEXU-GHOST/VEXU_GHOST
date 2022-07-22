@@ -101,6 +101,25 @@ TEST_F(TestMotorModel, testMotorZeroPower){
     EXPECT_FLOAT_EQ(0.0, motor_393.getTorqueOutput());
 }
 
+TEST_F(TestMotorModel, testMotorGearRatio){
+    motor_393.setGearRatio(0.5);
+    motor_393.setMotorInput(1.0, 50);
+    EXPECT_FLOAT_EQ(7.2, motor_393.getVoltage());
+    EXPECT_FLOAT_EQ(50, motor_393.getSpeed());
+    EXPECT_FLOAT_EQ(0.1, motor_393.getCurrentDraw());
+    EXPECT_FLOAT_EQ(0.0, motor_393.getTorqueOutput());
+    
+    motor_393.setMotorInput(1.0, 25);
+    EXPECT_FLOAT_EQ(25, motor_393.getSpeed());
+    EXPECT_FLOAT_EQ(1.85, motor_393.getCurrentDraw());
+    EXPECT_FLOAT_EQ(1.67, motor_393.getTorqueOutput());
+
+    motor_393.setMotorInput(1.0, 0);
+    EXPECT_FLOAT_EQ(0, motor_393.getSpeed());
+    EXPECT_FLOAT_EQ(3.6, motor_393.getCurrentDraw());
+    EXPECT_FLOAT_EQ(2*1.67, motor_393.getTorqueOutput());
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

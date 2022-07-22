@@ -27,6 +27,7 @@ namespace dc_motor_model
                               free_current_(free_current),
                               stall_current_(stall_current),
                               nominal_voltage_(nominal_voltage),
+                              gear_ratio_(1.0),
                               max_speed_(max_speed),
                               max_current_(max_current)
     {
@@ -38,6 +39,9 @@ namespace dc_motor_model
 
     void DCMotorModel::setMotorInput(double voltage_input, double current_speed)
     {
+        // Transform to internal motor speed
+        current_speed /= gear_ratio_;
+        
         // Save motor direction, then treat speed as only positive
         motor_dir = (curr_speed_ >= 0) ? 1 : -1;
 

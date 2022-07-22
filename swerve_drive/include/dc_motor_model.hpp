@@ -76,6 +76,10 @@ namespace dc_motor_model
             double max_speed,
             double max_current);
 
+        void setGearRatio(double ratio){
+            gear_ratio_ = ratio;
+        }
+
         /**
          * @brief Set new motor input voltage and current speed, then update motor state
          *
@@ -107,7 +111,7 @@ namespace dc_motor_model
          */
         double getSpeed()
         {
-            return curr_speed_;
+            return curr_speed_*gear_ratio_;
         }
 
         /**
@@ -137,7 +141,7 @@ namespace dc_motor_model
          */
         double getTorqueOutput()
         {
-            return curr_torque_;
+            return curr_torque_/gear_ratio_;
         }
 
     private:
@@ -147,6 +151,7 @@ namespace dc_motor_model
         double free_current_;    // Amps
         double stall_current_;   // Amps
         double nominal_voltage_; // Volts
+        double gear_ratio_;
 
         // Motor limits
         double max_speed_;   // RPM
