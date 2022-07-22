@@ -8,57 +8,47 @@
  * Modified By: Maxx Wilson
  */
 
-#include <gazebo/physics/Model.hh>
-#include <gazebo_plugins/gazebo_ros_template.hpp>
-#include <gazebo_ros/node.hpp>
-#include <rclcpp/rclcpp.hpp>
+#ifndef SWERVE_DRIVE__GAZEBO_SWERVE_PLUGIN_HPP_
+#define SWERVE_DRIVE__GAZEBO_SWERVE_PLUGIN_HPP_
 
+#include <gazebo/common/Plugin.hh>
+#include <std_msgs/msg/float32_multi_array.hpp>
+
+// For std::unique_ptr, could be removed
 #include <memory>
 
-namespace gazebo_plugins
+namespace gazebo_swerve_plugin
 {
-/// Class to hold private data members (PIMPL pattern)
-class GazeboRosTemplatePrivate
+// Forward declaration of private data class.
+class GazeboSwervePluginPrivate;
+
+class GazeboSwervePlugin : public gazebo::ModelPlugin
 {
 public:
-  /// Connection to world update event. Callback is called while this is alive.
-  gazebo::event::ConnectionPtr update_connection_;
+  /// Constructor
+  GazeboSwervePlugin();
 
-  /// Node for ROS communication.
-  gazebo_ros::Node::SharedPtr ros_node_;
+  /// Destructor
+  ~GazeboSwervePlugin();
+
+  /// Gazebo calls this when the plugin is loaded.
+  /// \param[in] model Pointer to parent model. Other plugin types will expose different entities,
+  /// such as `gazebo::sensors::SensorPtr`, `gazebo::physics::WorldPtr`,
+  /// `gazebo::rendering::VisualPtr`, etc.
+  /// \param[in] sdf SDF element containing user-defined parameters.
+  void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
+
+protected:
+  /// Optional callback to be called at every simulation iteration.
+  void OnUpdate();
+
+  void OnInputMsg(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
+
+private:
+  /// Recommended PIMPL pattern. This variable should hold all private
+  /// data members.
+  std::unique_ptr<GazeboSwervePluginPrivate> impl_;
 };
+}  // namespace swerve_drive
 
-GazeboRosTemplate::GazeboRosTemplate()
-: impl_(std::make_unique<GazeboRosTemplatePrivate>())
-{
-}
-
-GazeboRosTemplate::~GazeboRosTemplate()
-{
-}
-
-void GazeboRosTemplate::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
-{
-  // Create a GazeboRos node instead of a common ROS node.
-  // Pass it SDF parameters so common options like namespace and remapping
-  // can be handled.
-  impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
-
-  // The model pointer gives you direct access to the physics object,
-  // for example:
-  RCLCPP_INFO(impl_->ros_node_->get_logger(), model->GetName().c_str());
-
-  // Create a connection so the OnUpdate function is called at every simulation
-  // iteration. Remove this call, the connection and the callback if not needed.
-  impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-    std::bind(&GazeboRosTemplate::OnUpdate, this));
-}
-
-void GazeboRosTemplate::OnUpdate()
-{
-  // Do something every simulation iteration
-}
-
-// Register this plugin with the simulator
-GZ_REGISTER_MODEL_PLUGIN(GazeboRosTemplate)
-}  // namespace gazebo_plugins
+#endif  // SWERVE_DRIVE__GAZEBO_SWERVE_PLUGIN_HPP_

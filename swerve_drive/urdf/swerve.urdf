@@ -22,6 +22,12 @@
         <joint_name>driveshaft_2</joint_name>
         <joint_name>driveshaft_3</joint_name>
         </plugin>
+
+        <!-- Motor Models -->
+        <plugin name="gazebo_swerve_plugin" filename="libgazebo_swerve_plugin.so">
+            <input_topic>actuator_inputs</input_topic>
+            <output_topic>actuator_outputs</output_topic>
+        </plugin>
     </gazebo>
 
     <link name="base_link">

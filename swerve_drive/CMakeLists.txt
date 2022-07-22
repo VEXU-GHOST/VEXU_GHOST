@@ -31,6 +31,7 @@ find_package(gazebo_dev REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(gazebo_plugins REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
 include_directories(include)
 link_directories(${gazebo_dev_LIBRARY_DIRS})
@@ -49,9 +50,13 @@ add_library(gazebo_swerve_plugin SHARED src/gazebo_swerve_plugin.cpp)
 ament_target_dependencies(gazebo_swerve_plugin
   rclcpp
   gazebo
+  gazebo_dev
+  gazebo_msgs
   gazebo_ros
   gazebo_plugins
 )
+target_link_libraries(gazebo_swerve_plugin
+  dc_motor_model)
 target_include_directories(gazebo_swerve_plugin
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -67,8 +72,12 @@ dc_motor_model
 gtest)
 
 ament_add_gtest(test_gazebo_swerve_plugin test/test_gazebo_swerve_plugin.cpp)
+ament_target_dependencies(test_gazebo_swerve_plugin
+  ament_index_cpp
+)
 target_link_libraries(test_gazebo_swerve_plugin
   gazebo_swerve_plugin
+  gazebo_test_fixture
   gtest)
 
 #################
