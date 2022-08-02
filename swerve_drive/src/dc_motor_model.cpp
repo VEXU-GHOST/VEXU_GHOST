@@ -43,10 +43,11 @@ namespace dc_motor_model
         current_speed /= gear_ratio_;
         
         // Save motor direction, then treat speed as only positive
-        motor_dir = (curr_speed_ >= 0) ? 1 : -1;
+        curr_motor_dir_ = (curr_speed_ >= 0) ? 1 : -1;
+        cmd_motor_dir_ = (voltage_input >= 0) ? 1 : -1;
 
         // Clip inputs to bounds
-        curr_voltage_ = std::clamp(voltage_input, 0.0, 1.0);
+        curr_voltage_ = std::clamp(voltage_input, -1.0, 1.0);
         curr_speed_ = std::clamp(std::abs(current_speed), 0.0, max_speed_);
 
         // Update torque output and current draw
@@ -65,7 +66,7 @@ namespace dc_motor_model
         curr_torque_ = stall_torque_ * (1 - (stall_current_ - curr_current_) / (stall_current_ - free_current_));
 
         // Scale torque and current outputs based on voltage input
-        curr_torque_ *= curr_voltage_;
+        curr_torque_ *= curr_voltage_ * curr_motor_dir_;
         curr_current_ *= curr_voltage_;
     }
 

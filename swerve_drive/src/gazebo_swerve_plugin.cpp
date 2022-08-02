@@ -13,6 +13,7 @@
 
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/Joint.hh>
+#include <gazebo/physics/Link.hh>
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -32,14 +33,20 @@ public:
   /// Node for ROS communication.
   gazebo_ros::Node::SharedPtr ros_node_;
 
-  /// Motor Input Subscriber
-  rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr input_sub_;
+  /// Subscribers
+  rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr wheel_input_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr steering_input_sub_;
 
-  /// Motor Output Publisher
-  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr output_sub_;
+  /// Publishers
+  rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr wheel_torque_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr steering_torque_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr wheel_speed_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr steering_speed_pub_;
 
-  std::map<std::string, double> actuator_inputs_;
-  std::map<std::string, dc_motor_model::DCMotorModel> actuators_;
+  /// Latest Actuator Values
+  std::vector<double> actuator_inputs_;
+  std::vector<std::pair<std::string, std::string>> joint_link_indexes_;
+  std::vector<dc_motor_model::DCMotorModel> actuators_;
 
   gazebo::physics::ModelPtr model_;
 };
@@ -60,58 +67,78 @@ void GazeboSwervePlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
   auto logger = impl_->ros_node_->get_logger();
   impl_->model_= model;
 
-  if(!sdf->HasElement("input_topic")){
-    RCLCPP_ERROR(logger, "Swerve plugin missing <input_topic>, cannot proceed");
-    return;
-  }
-
-  if(!sdf->HasElement("output_topic")){
-    RCLCPP_ERROR(logger, "Swerve plugin missing <output_topic>, cannot proceed");
-    return;
-  }
-
   // Get QoS profiles
   const gazebo_ros::QoS & qos = impl_->ros_node_->get_qos();
 
   // Initialize Subscriptions
-  impl_->input_sub_ = impl_->ros_node_->create_subscription<std_msgs::msg::Float32MultiArray>(
-    sdf->GetElement("input_topic")->Get<std::string>(),
+  impl_->wheel_input_sub_ = impl_->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+    "wheel_voltage_input",
     qos.get_subscription_qos("gazebo_swerve_plugin", rclcpp::SystemDefaultsQoS()),
     std::bind(
-      &GazeboSwervePlugin::OnInputMsg,
+      &GazeboSwervePlugin::OnWheelMsg,
+      this,
+      std::placeholders::_1
+      )
+    );
+
+  impl_->steering_input_sub_ = impl_->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+    "steering_voltage_input",
+    qos.get_subscription_qos("gazebo_swerve_plugin", rclcpp::SystemDefaultsQoS()),
+    std::bind(
+      &GazeboSwervePlugin::OnSteeringMsg,
       this,
       std::placeholders::_1
       )
     );
 
   // Initialize Publisher
-  impl_->output_sub_ = impl_->ros_node_->create_publisher<std_msgs::msg::Float32MultiArray>(
-    sdf->GetElement("input_topic")->Get<std::string>(), 
+  impl_->wheel_torque_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
+    "wheel_torque_output",
+    qos.get_subscription_qos("gazebo_swerve_plugin", rclcpp::SystemDefaultsQoS()));
+
+  impl_->steering_torque_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
+    "steering_torque_output", 
+    qos.get_subscription_qos("gazebo_swerve_plugin", rclcpp::SystemDefaultsQoS()));
+
+  impl_->wheel_speed_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
+    "wheel_speed_output",
+    qos.get_subscription_qos("gazebo_swerve_plugin", rclcpp::SystemDefaultsQoS()));
+
+  impl_->steering_speed_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
+    "steering_speed_output", 
     qos.get_subscription_qos("gazebo_swerve_plugin", rclcpp::SystemDefaultsQoS()));
 
   // Initalize motor models
-  impl_->actuators_ = std::map<std::string, dc_motor_model::DCMotorModel>{
-    {"pivot_1", dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5)},
-    {"pivot_2", dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5)},
-    {"pivot_3", dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5)},
-    {"driveshaft_1", dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5)},
-    {"driveshaft_2", dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5)},
-    {"driveshaft_3", dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5)},
+  impl_->actuators_ = std::vector<dc_motor_model::DCMotorModel>{
+    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
+    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
+    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
+    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
+    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
+    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
+    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2)
   };
 
-  impl_->actuator_inputs_ = std::map<std::string, double>{
-    {"pivot_1", 0.0},
-    {"pivot_2", 0.0},
-    {"pivot_3", 0.0},
-    {"driveshaft_1", 0.0},
-    {"driveshaft_2", 0.0},
-    {"driveshaft_3", 0.0},
+  impl_->actuator_inputs_ = std::vector<double>(6,0.0);
+
+  impl_->joint_link_indexes_ = std::vector<std::pair<std::string, std::string>>{
+    std::pair("driveshaft_1", "wheel_1"),
+    std::pair("driveshaft_2", "wheel_2"),
+    std::pair("driveshaft_3", "wheel_3"),
+    std::pair("pivot_1", "mod_1"),
+    std::pair("pivot_2", "mod_2"),
+    std::pair("pivot_3", "mod_3"),
   };
 
   // Set Gear Ratios
-  impl_->actuators_["driveshaft_1"].setGearRatio(6.0);
-  impl_->actuators_["driveshaft_2"].setGearRatio(6.0);
-  impl_->actuators_["driveshaft_3"].setGearRatio(6.0);
+  // impl_->actuators_[0].setGearRatio(6.0);
+  // impl_->actuators_[1].setGearRatio(6.0);
+  // impl_->actuators_[2].setGearRatio(6.0);
 
   // Create a connection so the OnUpdate function is called at every simulation
   // iteration. Remove this call, the connection and the callback if not needed.
@@ -121,38 +148,61 @@ void GazeboSwervePlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
 
 void GazeboSwervePlugin::OnUpdate()
 {
-
   // Update Actuators from last torque command
-  for(const auto& pair : impl_->actuators_){
-    std::string joint_name = pair.first;
-    impl_->actuators_[joint_name].setMotorInput(
-      impl_->actuator_inputs_[joint_name],
-      impl_->model_->GetJoint(joint_name)->GetVelocity(2)
+  for(std::size_t i = 0; i < impl_->actuator_inputs_.size(); i++){
+    std::string joint_name = impl_->joint_link_indexes_[i].first;
+    std::string link_name = impl_->joint_link_indexes_[i].second;
+
+    impl_->actuators_[i].setMotorInput(
+      impl_->actuator_inputs_[i],
+      impl_->model_->GetJoint(joint_name)->GetVelocity(2)*60/(2*3.14159)
     );
 
-    impl_->model_->GetJoint(joint_name)->SetForce(0, impl_->actuators_[joint_name].getTorqueOutput());
+    impl_->model_->GetLink(link_name)->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->actuators_[i].getTorqueOutput()));
   }
 
   // Publish current joint torques
-  auto msg = std_msgs::msg::Float32MultiArray{};
-  msg.data = std::vector<float>(6, 0.0);
-  msg.data[0] = impl_->actuator_inputs_["pivot_1"];
-  msg.data[1] = impl_->actuator_inputs_["pivot_2"];
-  msg.data[2] = impl_->actuator_inputs_["pivot_3"];
-  msg.data[3] = impl_->actuator_inputs_["driveshaft_1"];
-  msg.data[4] = impl_->actuator_inputs_["driveshaft_2"];
-  msg.data[5] = impl_->actuator_inputs_["driveshaft_3"];
+  auto wheel_torque_msg = geometry_msgs::msg::Vector3{};
+  wheel_torque_msg.x = impl_->actuators_[0].getTorqueOutput();
+  wheel_torque_msg.y = impl_->actuators_[1].getTorqueOutput();
+  wheel_torque_msg.z = impl_->actuators_[2].getTorqueOutput();
+  
+  impl_->wheel_torque_pub_->publish(wheel_torque_msg);
+
+  auto steering_torque_msg = geometry_msgs::msg::Vector3{};
+  steering_torque_msg.x = impl_->actuators_[3].getTorqueOutput();
+  steering_torque_msg.y = impl_->actuators_[4].getTorqueOutput();
+  steering_torque_msg.z = impl_->actuators_[5].getTorqueOutput();
+
+  impl_->steering_torque_pub_->publish(steering_torque_msg);
+
+  // Publish current joint speeds (RPM)
+  auto wheel_speed_msg = geometry_msgs::msg::Vector3{};
+  wheel_speed_msg.x = impl_->actuators_[0].getSpeed();
+  wheel_speed_msg.y = impl_->actuators_[1].getSpeed();
+  wheel_speed_msg.z = impl_->actuators_[2].getSpeed();
+  
+  impl_->wheel_speed_pub_->publish(wheel_speed_msg);
+
+  auto steering_speed_msg = geometry_msgs::msg::Vector3{};
+  steering_speed_msg.x = impl_->actuators_[3].getSpeed();
+  steering_speed_msg.y = impl_->actuators_[4].getSpeed();
+  steering_speed_msg.z = impl_->actuators_[5].getSpeed();
+
+  impl_->steering_speed_pub_->publish(steering_speed_msg);
+
 }
 
-void GazeboSwervePlugin::OnInputMsg(const std_msgs::msg::Float32MultiArray::SharedPtr msg){
+void GazeboSwervePlugin::OnWheelMsg(const geometry_msgs::msg::Vector3::SharedPtr msg){
+  impl_->actuator_inputs_[0] = msg->x;
+  impl_->actuator_inputs_[1] = msg->y;
+  impl_->actuator_inputs_[2] = msg->z;
+}
 
-  impl_->actuator_inputs_["pivot_1"] = msg->data[0];
-  impl_->actuator_inputs_["pivot_2"] = msg->data[1];
-  impl_->actuator_inputs_["pivot_3"] = msg->data[2];
-  impl_->actuator_inputs_["driveshaft_1"] = msg->data[3];
-  impl_->actuator_inputs_["driveshaft_2"] = msg->data[4];
-  impl_->actuator_inputs_["driveshaft_3"] = msg->data[5];
-
+void GazeboSwervePlugin::OnSteeringMsg(const geometry_msgs::msg::Vector3::SharedPtr msg){
+  impl_->actuator_inputs_[3] = msg->x;
+  impl_->actuator_inputs_[4] = msg->y;
+  impl_->actuator_inputs_[5] = msg->z;
 }
 
 

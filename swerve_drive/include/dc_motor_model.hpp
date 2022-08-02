@@ -111,7 +111,7 @@ namespace dc_motor_model
          */
         double getSpeed()
         {
-            return curr_speed_*gear_ratio_;
+            return curr_motor_dir_*curr_speed_*gear_ratio_;
         }
 
         /**
@@ -162,7 +162,8 @@ namespace dc_motor_model
         double curr_speed_;   // RPM
         double curr_torque_;  // N-m
         double curr_current_; // Amps
-        int motor_dir;
+        int curr_motor_dir_;
+        int cmd_motor_dir_;
     };
 
 } // namespace dc_motor_model

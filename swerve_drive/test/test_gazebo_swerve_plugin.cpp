@@ -23,8 +23,36 @@ using namespace std::literals::chrono_literals;
 class GazeboSwervePluginTest : public gazebo::ServerFixture
 {
 public:
+
   void SwerveBringup()
   {
+    // ROS Node and Callback Executor
+    ros_node_ = std::make_shared<rclcpp::Node>("gazebo_swerve_plugin_test_node");
+
+    // Create publisher
+    wheel_input_pub_ = ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
+        "wheel_voltage",
+        rclcpp::SensorDataQoS());
+
+    steering_input_pub_ = ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
+        "steering_voltage",
+        rclcpp::SensorDataQoS());
+
+    // Create subscriber 
+    wheel_torque_sub_ = ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+        "wheel_torque", rclcpp::SensorDataQoS(),
+        [this](const geometry_msgs::msg::Vector3::SharedPtr msg)
+        {
+          wheel_torque_msg_ = msg;
+        });
+
+    steering_torque_sub_ = ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+        "steering_torque", rclcpp::SensorDataQoS(),
+        [this](const geometry_msgs::msg::Vector3::SharedPtr msg)
+        {
+          steering_torque_msg_ = msg;
+        });
+
     auto pkg_share = ament_index_cpp::get_package_share_directory("swerve_drive");
     auto world_file_path = pkg_share + "/urdf/spin_up.world";
     auto sdf_file_path = pkg_share + "/urdf/swerve.sdf";
@@ -37,69 +65,65 @@ public:
 
     this->SpawnSDF(buffer.str());
     this->WaitUntilEntitySpawn("swerve", 100, 100);
+
+    // World
+    world_ = gazebo::physics::get_world();
+
+    // Model
+    model_ = world_->ModelByName("swerve");
+
+    // Initialize Gazebo with a few starting steps
+    world_->Step(500);
+    gazebo::common::Time::MSleep(100);
   }
+
+  gazebo::physics::WorldPtr world_;
+  gazebo::physics::ModelPtr model_;
+
+  rclcpp::Node::SharedPtr ros_node_;
+
+  // Publishers
+  std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::Vector3>> wheel_input_pub_;
+  std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::Vector3>> steering_input_pub_;
+  
+  // Subscribers
+  std::shared_ptr<rclcpp::Subscription<geometry_msgs::msg::Vector3>> wheel_torque_sub_;
+  std::shared_ptr<rclcpp::Subscription<geometry_msgs::msg::Vector3>> steering_torque_sub_;
+
+  // Msgs
+  geometry_msgs::msg::Vector3::SharedPtr input_wheel_msg_;
+  geometry_msgs::msg::Vector3::SharedPtr input_steering_msg_;
+  geometry_msgs::msg::Vector3::SharedPtr wheel_torque_msg_;
+  geometry_msgs::msg::Vector3::SharedPtr steering_torque_msg_;
 };
 
 TEST_F(GazeboSwervePluginTest, testJointTorque)
 {
-  // Spawn world and model
-  this->SwerveBringup();
-
-  // World
-  auto world = gazebo::physics::get_world();
-  ASSERT_NE(nullptr, world);
-
-  // Model
-  auto swerve = world->ModelByName("swerve");
-  ASSERT_NE(nullptr, swerve);
-
-  // New ROS Node
-  auto node = std::make_shared<rclcpp::Node>("gazebo_swerve_plugin_test_node");
-
-  // Make an executor for node callbacks
+  SwerveBringup();
   rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(node);
+  executor.add_node(ros_node_);
+  executor.spin_once(100ms);
 
-  // Initialize Gazebo with a few starting steps
-  world->Step(500);
-  executor.spin_once(500ms);
-  gazebo::common::Time::MSleep(100);
-
-  // Create publisher
-  std_msgs::msg::Float32MultiArray::SharedPtr actuator_input_msg;
-  auto pub = node->create_publisher<std_msgs::msg::Float32MultiArray>(
-      "actuator_inputs",
-      rclcpp::SensorDataQoS());
-
-  // Create subscriber
-  std_msgs::msg::Float32MultiArray::SharedPtr actuator_output_msg;
-  auto sub = node->create_subscription<std_msgs::msg::Float32MultiArray>(
-      "actuator_outputs", rclcpp::SensorDataQoS(),
-      [&actuator_output_msg](const std_msgs::msg::Float32MultiArray::SharedPtr msg)
-      {
-        actuator_output_msg = msg;
-      });
-
-  auto input_test_msg = std_msgs::msg::Float32MultiArray{};
-  input_test_msg.data = std::vector<float>(6);
-  input_test_msg.data[0] = 1.0;
-  pub->publish(input_test_msg);
+  auto input_test_msg = geometry_msgs::msg::Vector3{};
+  input_test_msg.x = 1.0;
+  input_test_msg.y = 1.0;
+  input_test_msg.z = 1.0;
+  wheel_input_pub_->publish(input_test_msg);
 
   for (unsigned int i = 0; i < 10; ++i) {
-    world->Step(100);
+    world_->Step(100);
     executor.spin_once(100ms);
     gazebo::common::Time::MSleep(100);
-    
-    EXPECT_TRUE(actuator_output_msg->data[0] > 0.0);
-    EXPECT_TRUE(swerve->GetJoint("pivot_1")->GetForceTorque(0).body1Torque[2] > 0.0);
-    EXPECT_TRUE(swerve->GetJoint("pivot_1")->GetVelocity(2) > 0.0);
-
-    actuator_output_msg.reset();
   }
+
+  EXPECT_TRUE(model_->GetJoint("driveshaft_1")->GetVelocity(2) > 0.0);
+  EXPECT_TRUE(model_->GetJoint("driveshaft_2")->GetVelocity(2) > 0.0);
+  EXPECT_TRUE(model_->GetJoint("driveshaft_3")->GetVelocity(2) > 0.0);
 }
 
 int main(int argc, char **argv)
 {
+  rclcpp::init(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

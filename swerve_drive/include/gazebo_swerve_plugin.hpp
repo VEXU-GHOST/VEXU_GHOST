@@ -12,7 +12,7 @@
 #define SWERVE_DRIVE__GAZEBO_SWERVE_PLUGIN_HPP_
 
 #include <gazebo/common/Plugin.hh>
-#include <std_msgs/msg/float32_multi_array.hpp>
+#include <geometry_msgs/msg/vector3.hpp>
 
 // For std::unique_ptr, could be removed
 #include <memory>
@@ -42,7 +42,8 @@ protected:
   /// Optional callback to be called at every simulation iteration.
   void OnUpdate();
 
-  void OnInputMsg(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
+  void OnWheelMsg(const geometry_msgs::msg::Vector3::SharedPtr msg);
+  void OnSteeringMsg(const geometry_msgs::msg::Vector3::SharedPtr msg);
 
 private:
   /// Recommended PIMPL pattern. This variable should hold all private

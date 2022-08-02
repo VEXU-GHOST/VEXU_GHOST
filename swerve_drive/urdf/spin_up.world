@@ -34,7 +34,7 @@
               <friction>
                 <ode>
                   <mu>100</mu>
-                  <mu2>50</mu2>
+                  <mu2>100</mu2>
                 </ode>
                 <torsional>
                   <ode/>
