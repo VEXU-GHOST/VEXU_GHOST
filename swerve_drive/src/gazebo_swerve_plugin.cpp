@@ -110,18 +110,18 @@ void GazeboSwervePlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
 
   // Initalize motor models
   impl_->actuators_ = std::vector<dc_motor_model::DCMotorModel>{
-    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
-    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
-    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
-    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
-    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
-    // dc_motor_model::DCMotorModel(130, 4.5, -0.73, 4.5, 12.8, 100, 2.5),
-    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2)
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
+    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
+    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2)
   };
 
   impl_->actuator_inputs_ = std::vector<double>(6,0.0);
@@ -157,7 +157,7 @@ void GazeboSwervePlugin::OnUpdate()
       impl_->actuator_inputs_[i],
       impl_->model_->GetJoint(joint_name)->GetVelocity(2)*60/(2*3.14159)
     );
-
+    // FYI: SetTorque method totally breaks rolling of wheels, use AddRelativeTorque
     impl_->model_->GetLink(link_name)->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->actuators_[i].getTorqueOutput()));
   }
 
@@ -178,16 +178,16 @@ void GazeboSwervePlugin::OnUpdate()
 
   // Publish current joint speeds (RPM)
   auto wheel_speed_msg = geometry_msgs::msg::Vector3{};
-  wheel_speed_msg.x = impl_->actuators_[0].getSpeed();
-  wheel_speed_msg.y = impl_->actuators_[1].getSpeed();
-  wheel_speed_msg.z = impl_->actuators_[2].getSpeed();
+  wheel_speed_msg.x = impl_->model_->GetJoint("driveshaft_1")->GetVelocity(2)*60/(2*3.14159);
+  wheel_speed_msg.y = impl_->model_->GetJoint("driveshaft_2")->GetVelocity(2)*60/(2*3.14159);
+  wheel_speed_msg.z = impl_->model_->GetJoint("driveshaft_3")->GetVelocity(2)*60/(2*3.14159);
   
   impl_->wheel_speed_pub_->publish(wheel_speed_msg);
 
   auto steering_speed_msg = geometry_msgs::msg::Vector3{};
-  steering_speed_msg.x = impl_->actuators_[3].getSpeed();
-  steering_speed_msg.y = impl_->actuators_[4].getSpeed();
-  steering_speed_msg.z = impl_->actuators_[5].getSpeed();
+  steering_speed_msg.x = impl_->model_->GetJoint("pivot_1")->GetVelocity(2)*60/(2*3.14159);
+  steering_speed_msg.y = impl_->model_->GetJoint("pivot_2")->GetVelocity(2)*60/(2*3.14159);
+  steering_speed_msg.z = impl_->model_->GetJoint("pivot_3")->GetVelocity(2)*60/(2*3.14159);
 
   impl_->steering_speed_pub_->publish(steering_speed_msg);
 

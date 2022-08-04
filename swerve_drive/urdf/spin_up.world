@@ -21,7 +21,7 @@
       </light>
 
       <model name='ground_plane'>
-        <static>1</static>
+        <static>true</static>
         <link name='link'>
           <collision name='collision'>
             <geometry>
@@ -65,10 +65,10 @@
       </model>
 
       <model name="walls">
-        <pose>0 0 0 0 0 0</pose>
+        <static>true</static>
+        <pose>0 0 0.1524 0 0 0</pose>
 
         <link name="wall_1">
-          <static>1</static>
           <pose>0 1.8542 0 0 0 0</pose>
           <visual name='visual'>
             <geometry>
@@ -88,7 +88,6 @@
         </link>
 
         <link name="wall_2">
-          <static>1</static>
           <pose>0 -1.8542 0 0 0 0</pose>
           <visual name='visual'>
             <geometry>
@@ -108,7 +107,6 @@
         </link>
 
         <link name="wall_3">
-          <static>1</static>
           <pose>1.8542 0 0 0 0 0</pose>
           <visual name='visual'>
             <geometry>
@@ -128,7 +126,6 @@
         </link>
 
         <link name="wall_4">
-          <static>1</static>
           <pose>-1.8542 0 0 0 0 0</pose>
           <visual name='visual'>
             <geometry>

@@ -2,10 +2,9 @@
 <robot name="swerve" xmlns:xacro="http://ros.org/wiki/xacro">
 
     <xacro:property name="l_wheel" value="0.2286"/> <!-- 9" center to wheel modules-->
-    <xacro:property name="r_wheel" value="0.06985"/> <!-- 2.75" wheel radius-->
+    <xacro:property name="r_wheel" value="0.034925"/> <!-- 2.75" wheel radius-->
     <xacro:property name="width_wheel" value="0.0254"/> <!-- 1" wheel width-->
-    <xacro:property name="wheel_offset" value="0.058"/> <!-- 2" wheel width-->
-    <xacro:property name="com_radius" value="0.05"/>
+    <xacro:property name="com_radius" value="0.02"/>
     <xacro:property name="d2r" value="${3.14159/180}"/>
 
     <gazebo>
@@ -40,7 +39,7 @@
         <!--Inertia estimated for solid cylinder of radius 9" and height 3" with mass 7kg-->
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="7"/>
+            <mass value="10"/>
             <inertia
                 ixx="0.094839" ixy="0.0" ixz="0.0"
                 iyy="0.094839" iyz="0.0"
@@ -66,7 +65,7 @@
     <joint name="base_footprint_joint" type="fixed">
         <parent link="base_link"/>
         <child link="base_footprint"/>
-        <origin xyz="0 0 ${-wheel_offset - r_wheel}" rpy="0 0 0"/>
+        <origin xyz="0 0 ${- r_wheel}" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -138,7 +137,7 @@
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
-                <cylinder radius="${r_wheel}" length="${width_wheel/8}"/>
+                <cylinder radius="${r_wheel}" length="${width_wheel/4}"/>
             </geometry>
         </collision>
 
@@ -173,7 +172,7 @@
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
-                <cylinder radius="${r_wheel}" length="${width_wheel/8}"/>
+                <cylinder radius="${r_wheel}" length="${width_wheel/4}"/>
             </geometry>
         </collision>
 
@@ -208,7 +207,7 @@
         <collision>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
-                <cylinder radius="${r_wheel}" length="${width_wheel/8}"/>
+                <cylinder radius="${r_wheel}" length="${width_wheel/4}"/>
             </geometry>
         </collision>
 
@@ -235,21 +234,21 @@
     <joint name="driveshaft_1" type="continuous">
         <parent link="mod_1"/>
         <child link="wheel_1"/>
-        <origin xyz="0 0 -${wheel_offset}" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <origin xyz="0 0 0" rpy="${90*d2r} 0 ${90*d2r}"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="driveshaft_2" type="continuous">
         <parent link="mod_2"/>
         <child link="wheel_2"/>
-        <origin xyz="0 0 -${wheel_offset}" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <origin xyz="0 0 0" rpy="${90*d2r} 0 ${90*d2r}"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="driveshaft_3" type="continuous">
         <parent link="mod_3"/>
         <child link="wheel_3"/>
-        <origin xyz="0 0 -${wheel_offset}" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <origin xyz="0 0 0" rpy="${90*d2r} 0 ${90*d2r}"/>
         <axis xyz="0 0 1"/>
     </joint>
 </robot>
