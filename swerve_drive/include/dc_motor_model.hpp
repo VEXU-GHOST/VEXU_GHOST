@@ -12,6 +12,7 @@
 #define DC_MOTOR_MODEL_HPP
 
 #include <limits>
+#include <algorithm>
 
 namespace dc_motor_model
 {
@@ -28,9 +29,7 @@ namespace dc_motor_model
                     0.0,
                     0.0,
                     0.0,
-                    0.0,
-                    0.0,
-                    std::numeric_limits<double>::infinity()) {};
+                    0.0) {};
 
         /**
          * @brief Constructs DC Motor Model with motor params
@@ -46,47 +45,22 @@ namespace dc_motor_model
             double stall_torque,
             double free_current,
             double stall_current,
-            double nominal_voltage) : 
-                DCMotorModel(
-                    free_speed,
-                    stall_torque,
-                    free_current,
-                    stall_current,
-                    nominal_voltage,
-                    free_speed,
-                    std::numeric_limits<double>::infinity()) {}
-
-        /**
-         * @brief Constructor for DC Motor Model with optional speed and current limits
-         *
-         * @param free_speed        RPM
-         * @param stall_torque      N-m
-         * @param free_current      Amps
-         * @param stall_current     Amps
-         * @param nominal_voltage   Volts
-         * @param max_speed         RPM
-         * @param max_current       Amps
-         */
-        DCMotorModel(
-            double free_speed,
-            double stall_torque,
-            double free_current,
-            double stall_current,
-            double nominal_voltage,
-            double max_speed,
-            double max_current);
+            double nominal_voltage);
 
         void setGearRatio(double ratio){
             gear_ratio_ = ratio;
         }
 
+        void setCurrentLimit(double current_lim){
+            max_current_ = std::abs(current_lim);
+        }
+
         /**
-         * @brief Set new motor input voltage and current speed, then update motor state
+         * @brief Set new motor input effort
          *
          * @param voltage_input voltage percentage (0.0 - 1.0)
-         * @param current_speed motor speed (RPM
          */
-        void setMotorInput(double voltage_input, double current_speed);
+        void setMotorEffort(double voltage_percent);
 
         /**
          * @brief Set maximum motor current
@@ -100,18 +74,35 @@ namespace dc_motor_model
         }
 
         /**
-         * @brief Update motor outputs based on current state
+         * @brief Set Current Motor Speed in RPM
          */
-        void updateMotor();
+        void setMotorSpeedRPM(double current_speed);
+
+        /**
+         * @brief Set Current Motor Speed
+         */
+        void setMotorSpeedRad(double current_speed){
+            setMotorSpeedRPM(current_speed*60/(2*3.14159));
+        };
 
         /**
          * @brief Get current motor speed
          *
          * @return double speed (RPM)
          */
-        double getSpeed()
+        double getSpeedRPM()
         {
-            return curr_motor_dir_*curr_speed_*gear_ratio_;
+            return curr_speed_*gear_ratio_;
+        }
+
+        /**
+         * @brief Get current motor speed
+         *
+         * @return double speed (rad/s)
+         */
+        double getSpeedRad()
+        {
+            return curr_speed_*gear_ratio_*(2*3.14159)/60;
         }
 
         /**
@@ -121,7 +112,7 @@ namespace dc_motor_model
          */
         double getVoltage()
         {
-            return curr_voltage_ * nominal_voltage_;
+            return curr_voltage_percent_ * nominal_voltage_;
         }
 
         /**
@@ -129,9 +120,9 @@ namespace dc_motor_model
          *
          * @return double current (amps)
          */
-        double getCurrentDraw()
+        double getMotorCurrent()
         {
-            return curr_current_;
+            return std::abs(curr_current_);
         }
 
         /**
@@ -145,6 +136,9 @@ namespace dc_motor_model
         }
 
     private:
+
+        void updateMotor();
+
         // Motor params
         double free_speed_;      // RPM
         double stall_torque_;    // N-m
@@ -158,7 +152,7 @@ namespace dc_motor_model
         double max_current_; // Amps
 
         // Current state
-        double curr_voltage_; // %
+        double curr_voltage_percent_; // %
         double curr_speed_;   // RPM
         double curr_torque_;  // N-m
         double curr_current_; // Amps

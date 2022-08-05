@@ -110,7 +110,7 @@ TEST_F(GazeboSwervePluginTest, testJointTorque)
   input_test_msg.z = 1.0;
   wheel_input_pub_->publish(input_test_msg);
 
-  for (unsigned int i = 0; i < 10; ++i) {
+  for (unsigned int i = 0; i < 100; ++i) {
     world_->Step(100);
     executor.spin_once(100ms);
     gazebo::common::Time::MSleep(100);

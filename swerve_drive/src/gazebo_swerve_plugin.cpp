@@ -110,18 +110,12 @@ void GazeboSwervePlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr s
 
   // Initalize motor models
   impl_->actuators_ = std::vector<dc_motor_model::DCMotorModel>{
-    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
-    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
-    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
-    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
-    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
-    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8, 100, 2.5),
-    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2),
-    // dc_motor_model::DCMotorModel(100, 1.67, 0.1, 3.6, 7.2)
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8),
+    dc_motor_model::DCMotorModel(130, 4.5, 0.1, 4.5, 12.8),
   };
 
   impl_->actuator_inputs_ = std::vector<double>(6,0.0);
@@ -153,10 +147,8 @@ void GazeboSwervePlugin::OnUpdate()
     std::string joint_name = impl_->joint_link_indexes_[i].first;
     std::string link_name = impl_->joint_link_indexes_[i].second;
 
-    impl_->actuators_[i].setMotorInput(
-      impl_->actuator_inputs_[i],
-      impl_->model_->GetJoint(joint_name)->GetVelocity(2)*60/(2*3.14159)
-    );
+    impl_->actuators_[i].setMotorEffort(impl_->actuator_inputs_[i]);
+    impl_->actuators_[i].setMotorSpeedRad(impl_->model_->GetJoint(joint_name)->GetVelocity(2));
     // FYI: SetTorque method totally breaks rolling of wheels, use AddRelativeTorque
     impl_->model_->GetLink(link_name)->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->actuators_[i].getTorqueOutput()));
   }
