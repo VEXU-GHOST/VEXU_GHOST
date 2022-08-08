@@ -2,6 +2,7 @@
 
 cd ~/VEXU_GHOST
 colcon build
+source ~/.bashrc
 
 SHARE_DIR="$PWD/install/swerve_drive/share/swerve_drive"
 URDF_PATH="${SHARE_DIR}/urdf/robot_description.urdf"
