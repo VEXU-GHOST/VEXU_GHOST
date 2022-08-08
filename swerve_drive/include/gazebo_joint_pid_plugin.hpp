@@ -1,35 +1,36 @@
 /*
- * Filename: gazebo_swerve_plugin
- * Created Date: Monday July 18th 2022
+ * Filename: gazebo_joint_pid_plugin
+ * Created Date: Sunday August 7th 2022
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Monday July 18th 2022 11:31:06 am
+ * Last Modified: Sunday August 7th 2022 2:00:44 pm
  * Modified By: Maxx Wilson
  */
 
-#ifndef SWERVE_DRIVE__GAZEBO_SWERVE_PLUGIN_HPP_
-#define SWERVE_DRIVE__GAZEBO_SWERVE_PLUGIN_HPP_
+#ifndef SWERVE_DRIVE__GAZEBO_JOINT_PID_PLUGIN_HPP_
+#define SWERVE_DRIVE__GAZEBO_JOINT_PID_PLUGIN_HPP_
 
 #include <gazebo/common/Plugin.hh>
-#include <geometry_msgs/msg/vector3.hpp>
+#include "std_msgs/msg/float32.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
 
 // For std::unique_ptr, could be removed
 #include <memory>
 
-namespace gazebo_swerve_plugin
+namespace gazebo_joint_pid_plugin
 {
 // Forward declaration of private data class.
-class GazeboSwervePluginPrivate;
+class GazeboJointPIDPluginPrivate;
 
-class GazeboSwervePlugin : public gazebo::ModelPlugin
+class GazeboJointPIDPlugin : public gazebo::ModelPlugin
 {
 public:
   /// Constructor
-  GazeboSwervePlugin();
+  GazeboJointPIDPlugin();
 
   /// Destructor
-  ~GazeboSwervePlugin();
+  ~GazeboJointPIDPlugin();
 
   /// Gazebo calls this when the plugin is loaded.
   /// \param[in] model Pointer to parent model. Other plugin types will expose different entities,
@@ -42,14 +43,11 @@ protected:
   /// Optional callback to be called at every simulation iteration.
   void OnUpdate();
 
-  void OnWheelMsg(const geometry_msgs::msg::Vector3::SharedPtr msg);
-  void OnSteeringMsg(const geometry_msgs::msg::Vector3::SharedPtr msg);
-
 private:
   /// Recommended PIMPL pattern. This variable should hold all private
   /// data members.
-  std::unique_ptr<GazeboSwervePluginPrivate> impl_;
+  std::unique_ptr<GazeboJointPIDPluginPrivate> impl_;
 };
-}  // namespace swerve_drive
+}  // namespace gazebo_joint_pid_plugin
 
-#endif  // SWERVE_DRIVE__GAZEBO_SWERVE_PLUGIN_HPP_
+#endif  // SWERVE_DRIVE__GAZEBO_JOINT_PID_PLUGIN_HPP_

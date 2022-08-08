@@ -1,14 +1,14 @@
 /*
- * Filename: gazebo_swerve_plugin
- * Created Date: Monday July 18th 2022
+ * Filename: gazebo_joint_pid_plugin
+ * Created Date: Sunday August 7th 2022
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Sunday August 7th 2022 2:00:06 pm
+ * Last Modified: Sunday August 7th 2022 2:00:44 pm
  * Modified By: Maxx Wilson
  */
 
-#include "gazebo_motor_plugin.hpp"
+#include "gazebo_joint_pid_plugin.hpp"
 #include "dc_motor_model.hpp"
 
 #include <gazebo/physics/Model.hh>
@@ -17,14 +17,14 @@
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <math.h>
 #include <vector>
 #include <memory>
 
-
-namespace gazebo_motor_plugin
+namespace gazebo_joint_pid_plugin
 {
 /// Class to hold private data members (PIMPL pattern)
-class GazeboMotorPluginPrivate
+class GazeboJointPIDPluginPrivate
 {
 public:
   /// Connection to world update event. Callback is called while this is alive.
@@ -39,38 +39,46 @@ public:
   gazebo_ros::Node::SharedPtr ros_node_;
 
   /// Subscribers
-  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr input_voltage_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr input_setpoint_sub_;
 
   /// Publishers
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr output_torque_pub_;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr output_speed_pub_;
 
-  /// Latest Actuator Values
-  double actuator_input_;
-  dc_motor_model::DCMotorModel motor_model_;
-
   // Plugin params
   std::string joint_name_;
   std::string link_name_;
   
+  // Motor Parameters
+  dc_motor_model::DCMotorModel motor_model_;
   double free_speed_;
   double stall_torque_;
   double free_current_;
   double stall_current_;
   double nominal_voltage_;
   double gear_ratio_;
+
+  // Controller Parameters
+  double pos_gain_;
+  double vel_gain_;
+  double accel_gain_;
+
+  // Controller Setpoints
+  double angle_setpoint_;
+  double vel_setpoint_;
+  double accel_setpoint_;
 };
 
-GazeboMotorPlugin::GazeboMotorPlugin()
-: impl_(std::make_unique<GazeboMotorPluginPrivate>())
+GazeboJointPIDPlugin::GazeboJointPIDPlugin()
+: impl_(std::make_unique<GazeboJointPIDPluginPrivate>())
 {
 }
 
-GazeboMotorPlugin::~GazeboMotorPlugin()
+GazeboJointPIDPlugin::~GazeboJointPIDPlugin()
 {
 }
 
-void GazeboMotorPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
+void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
 {
   // Get ROS Node and Gazebo Model Ptr
   impl_->ros_node_ = gazebo_ros::Node::Get(sdf);
@@ -81,6 +89,9 @@ void GazeboMotorPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sd
   std::vector<std::string> params{
     "joint_name",
     "link_name",
+    "position_gain",
+    "vel_gain",
+    "accel_gain",
     "free_speed",
     "stall_torque",
     "free_current",
@@ -99,6 +110,10 @@ void GazeboMotorPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sd
   // Get plugin config
   impl_->joint_name_ = sdf->GetElement("joint_name")->Get<std::string>();
   impl_->link_name_ = sdf->GetElement("link_name")->Get<std::string>();
+
+  impl_->pos_gain_ = sdf->GetElement("position_gain")->Get<double>();
+  impl_->vel_gain_ = sdf->GetElement("vel_gain")->Get<double>();
+  impl_->accel_gain_ = sdf->GetElement("accel_gain")->Get<double>();
   
   impl_->free_speed_ = sdf->GetElement("free_speed")->Get<double>();
   impl_->stall_torque_ = sdf->GetElement("stall_torque")->Get<double>();
@@ -108,11 +123,13 @@ void GazeboMotorPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sd
   impl_->gear_ratio_ = sdf->GetElement("gear_ratio")->Get<double>();
 
   // Initialize Subscriptions
-  impl_->input_voltage_sub_ = impl_->ros_node_->create_subscription<std_msgs::msg::Float32>(
-    "motors/" + impl_->link_name_ + "/input_voltage",
+  impl_->input_setpoint_sub_ = impl_->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
+    "motors/" + impl_->link_name_ + "/setpoint",
     10,
-    [this](const std_msgs::msg::Float32::SharedPtr msg){
-      impl_->actuator_input_ = msg->data;
+    [this](const geometry_msgs::msg::Vector3::SharedPtr msg){
+        impl_->angle_setpoint_ = msg->x;
+        impl_->vel_setpoint_ = msg->y;
+        impl_->accel_setpoint_ = msg->z;
     }
     );
 
@@ -133,7 +150,6 @@ void GazeboMotorPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sd
     impl_->stall_current_,
     impl_->nominal_voltage_
     );
-  impl_->actuator_input_ = 0.0;
 
   // Set Gear Ratios
   impl_->motor_model_.setGearRatio(impl_->gear_ratio_);
@@ -145,14 +161,21 @@ void GazeboMotorPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sd
   // Create a connection so the OnUpdate function is called at every simulation
   // iteration. Remove this call, the connection and the callback if not needed.
   impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-    std::bind(&GazeboMotorPlugin::OnUpdate, this));
+    std::bind(&GazeboJointPIDPlugin::OnUpdate, this));
 }
 
-void GazeboMotorPlugin::OnUpdate()
+void GazeboJointPIDPlugin::OnUpdate()
 {
-  // Update Actuators from last torque command
-  impl_->motor_model_.setMotorEffort(impl_->actuator_input_);
-  impl_->motor_model_.setMotorSpeedRad(impl_->joint_->GetVelocity(2));
+  // Get joint velocity
+  auto joint_vel = impl_->joint_->GetVelocity(2)*60/(2*3.14159);
+
+  // Wrap angle error
+  double angle_error = fmod(impl_->angle_setpoint_, 360) - fmod(impl_->joint_->Position(2)*180/3.14159, 360);
+  angle_error = std::abs(angle_error) > 180 ? 360 - angle_error : angle_error; 
+
+  // Update motor
+  impl_->motor_model_.setMotorSpeedRad(joint_vel);
+  impl_->motor_model_.setMotorEffort(impl_->accel_gain_ * impl_->accel_setpoint_ + impl_->vel_gain_ * (impl_->vel_setpoint_ - joint_vel) + impl_->pos_gain_ * angle_error);
   impl_->link_->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->motor_model_.getTorqueOutput()));
 
   // Publish current joint torque
@@ -162,10 +185,10 @@ void GazeboMotorPlugin::OnUpdate()
 
   // Publish current joint speed (RPM)
   auto speed_msg = std_msgs::msg::Float32{};
-  speed_msg.data = impl_->joint_->GetVelocity(2)*60/(2*3.14159);
+  speed_msg.data = joint_vel;
   impl_->output_speed_pub_->publish(speed_msg);
 }
 
 // Register this plugin with the simulator
-GZ_REGISTER_MODEL_PLUGIN(GazeboMotorPlugin)
+GZ_REGISTER_MODEL_PLUGIN(GazeboJointPIDPlugin)
 }  // namespace gazebo_swerve_plugin

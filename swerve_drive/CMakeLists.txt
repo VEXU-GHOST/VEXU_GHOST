@@ -27,6 +27,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gazebo_dev REQUIRED)
 find_package(gazebo_msgs REQUIRED)
@@ -65,6 +66,25 @@ target_include_directories(gazebo_motor_plugin
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(gazebo_motor_plugin)
 
+add_library(gazebo_joint_pid_plugin SHARED src/gazebo_joint_pid_plugin.cpp)
+ament_target_dependencies(gazebo_joint_pid_plugin
+  rclcpp
+  std_msgs
+  geometry_msgs
+  gazebo
+  gazebo_dev
+  gazebo_msgs
+  gazebo_ros
+  gazebo_plugins
+)
+target_link_libraries(gazebo_joint_pid_plugin
+  dc_motor_model)
+target_include_directories(gazebo_joint_pid_plugin
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+ament_export_libraries(gazebo_joint_pid_plugin)
+
 #################
 #### Testing ####
 #################
@@ -89,6 +109,7 @@ install(
   TARGETS 
     dc_motor_model
     gazebo_motor_plugin
+    gazebo_joint_pid_plugin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
