@@ -42,8 +42,7 @@ public:
   rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr input_setpoint_sub_;
 
   /// Publishers
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr output_torque_pub_;
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr output_speed_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr output_pub_;
 
   // Plugin params
   std::string joint_name_;
@@ -134,12 +133,8 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     );
 
   // Initialize Publisher
-  impl_->output_torque_pub_ = impl_->ros_node_->create_publisher<std_msgs::msg::Float32>(
-    "motors/" + impl_->link_name_ + "/output_torque",
-    10);
-
-  impl_->output_speed_pub_ = impl_->ros_node_->create_publisher<std_msgs::msg::Float32>(
-    "motors/" + impl_->link_name_ + "/output_speed",
+  impl_->output_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
+    "motors/" + impl_->link_name_ + "/output",
     10);
 
   // Initalize motor models
@@ -158,6 +153,11 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
   impl_->joint_ = impl_->model_->GetJoint(impl_->joint_name_);
   impl_->link_ = impl_->model_->GetLink(impl_->link_name_);
 
+  // Initialize setpoints
+  impl_->angle_setpoint_ = 0.0;
+  impl_->vel_setpoint_ = 0.0;
+  impl_->accel_setpoint_ = 0.0;
+
   // Create a connection so the OnUpdate function is called at every simulation
   // iteration. Remove this call, the connection and the callback if not needed.
   impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
@@ -166,27 +166,31 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
 
 void GazeboJointPIDPlugin::OnUpdate()
 {
-  // Get joint velocity
-  auto joint_vel = impl_->joint_->GetVelocity(2)*60/(2*3.14159);
+  // // Get joint velocity
+  auto joint_vel_rpm = impl_->joint_->GetVelocity(2)*60/(2*3.14159);
+  auto joint_angle_deg = fmod(impl_->joint_->Position(2)*180/3.14159, 360);
 
-  // Wrap angle error
-  double angle_error = fmod(impl_->angle_setpoint_, 360) - fmod(impl_->joint_->Position(2)*180/3.14159, 360);
-  angle_error = std::abs(angle_error) > 180 ? 360 - angle_error : angle_error; 
+  // // Wrap angle error
+  double angle_error = fmod(impl_->angle_setpoint_, 360) - joint_angle_deg;
+  double angle_sign = std::abs(angle_error)/angle_error;
+  angle_error = std::abs(angle_error) > 180 ? angle_sign*360 - angle_error : angle_error; 
 
-  // Update motor
-  impl_->motor_model_.setMotorSpeedRad(joint_vel);
-  impl_->motor_model_.setMotorEffort(impl_->accel_gain_ * impl_->accel_setpoint_ + impl_->vel_gain_ * (impl_->vel_setpoint_ - joint_vel) + impl_->pos_gain_ * angle_error);
-  impl_->link_->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->motor_model_.getTorqueOutput()));
+  // // Update motor
+  impl_->motor_model_.setMotorSpeedRPM(joint_vel_rpm);
+  impl_->motor_model_.setMotorEffort(impl_->accel_gain_ * impl_->accel_setpoint_ + impl_->vel_gain_ * (impl_->vel_setpoint_ - joint_vel_rpm) + impl_->pos_gain_ * angle_error);
+  
+  auto motor_torque = impl_->motor_model_.getTorqueOutput();
+  // For simulatilon stability, only apply torque if larger than a threshhold
+  if(std::abs(motor_torque) > 1e-5){
+    impl_->link_->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, motor_torque));
+  }
 
   // Publish current joint torque
-  auto torque_msg = std_msgs::msg::Float32{};
-  torque_msg.data = impl_->motor_model_.getTorqueOutput();
-  impl_->output_torque_pub_->publish(torque_msg);
-
-  // Publish current joint speed (RPM)
-  auto speed_msg = std_msgs::msg::Float32{};
-  speed_msg.data = joint_vel;
-  impl_->output_speed_pub_->publish(speed_msg);
+  auto output_msg = geometry_msgs::msg::Vector3{};
+  output_msg.x = joint_angle_deg; // Angle in degrees
+  output_msg.y = joint_vel_rpm;   // Velocity in RPM
+  output_msg.z = motor_torque;    // Torque in N-m
+  impl_->output_pub_->publish(output_msg);
 }
 
 // Register this plugin with the simulator

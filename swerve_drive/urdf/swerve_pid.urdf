@@ -118,12 +118,13 @@
         </plugin>
 
         <!-- Motor Models -->
+        <!-- 0.05 Steering -->
         <xacro:joint_pid_macro
             joint_name="steering_1"
             link_name="mod_1"
             gear_ratio="1.0"
             position_gain="0.05"
-            vel_gain="0.0"
+            vel_gain="0.04"
             accel_gain="0.0">
         </xacro:joint_pid_macro>
 
@@ -131,8 +132,8 @@
             joint_name="steering_2"
             link_name="mod_2"
             gear_ratio="1.0"
-            position_gain="0.0"
-            vel_gain="0.0"
+            position_gain="0.05"
+            vel_gain="0.04"
             accel_gain="0.0">
         </xacro:joint_pid_macro>
 
@@ -140,8 +141,8 @@
             joint_name="steering_3"
             link_name="mod_3"
             gear_ratio="1.0"
-            position_gain="0.0"
-            vel_gain="0.0"
+            position_gain="0.05"
+            vel_gain="0.04"
             accel_gain="0.0">
         </xacro:joint_pid_macro>
 
