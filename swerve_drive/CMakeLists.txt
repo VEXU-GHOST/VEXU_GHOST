@@ -27,6 +27,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gazebo_dev REQUIRED)
@@ -38,17 +39,17 @@ find_package(ament_index_cpp REQUIRED)
 include_directories(include)
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
-#################
-#### Targets ####
-#################
-add_library(dc_motor_model SHARED src/dc_motor_model.cpp)
+############################
+#### Simulation Targets ####
+############################
+add_library(dc_motor_model SHARED src/simulator_plugins/dc_motor_model.cpp)
 target_include_directories(dc_motor_model
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(dc_motor_model)
 
-add_library(gazebo_motor_plugin SHARED src/gazebo_motor_plugin.cpp)
+add_library(gazebo_motor_plugin SHARED src/simulator_plugins/gazebo_motor_plugin.cpp)
 ament_target_dependencies(gazebo_motor_plugin
   rclcpp
   std_msgs
@@ -66,7 +67,7 @@ target_include_directories(gazebo_motor_plugin
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(gazebo_motor_plugin)
 
-add_library(gazebo_joint_pid_plugin SHARED src/gazebo_joint_pid_plugin.cpp)
+add_library(gazebo_joint_pid_plugin SHARED src/simulator_plugins/gazebo_joint_pid_plugin.cpp)
 ament_target_dependencies(gazebo_joint_pid_plugin
   rclcpp
   std_msgs
@@ -84,6 +85,23 @@ target_include_directories(gazebo_joint_pid_plugin
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(gazebo_joint_pid_plugin)
+
+#########################
+#### Latency Testing ####
+#########################
+add_executable(latency_test_publisher src/latency_tests/latency_test_publisher.cpp)
+ament_target_dependencies(latency_test_publisher rclcpp sensor_msgs)
+
+install(TARGETS
+  latency_test_publisher
+  DESTINATION lib/${PROJECT_NAME})
+
+add_executable(latency_test_subscriber src/latency_tests/latency_test_subscriber.cpp)
+ament_target_dependencies(latency_test_subscriber rclcpp sensor_msgs)
+
+install(TARGETS
+  latency_test_subscriber
+  DESTINATION lib/${PROJECT_NAME})
 
 #################
 #### Testing ####
