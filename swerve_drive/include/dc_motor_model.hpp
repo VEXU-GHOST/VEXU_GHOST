@@ -122,7 +122,7 @@ namespace dc_motor_model
          */
         double getMotorCurrent()
         {
-            return std::abs(curr_current_);
+            return curr_current_;
         }
 
         /**

@@ -51,12 +51,12 @@ namespace dc_motor_model
     void DCMotorModel::updateMotor()
     {
         // Calculate current motor torque
-        curr_torque_ = stall_torque_*curr_voltage_percent_ - (stall_torque_ / free_speed_)*curr_speed_;
+        curr_torque_ = (stall_torque_) * curr_voltage_percent_ - (stall_torque_ / free_speed_) * curr_speed_;
 
         // Calculate ideal current draw (no limit)
-        curr_current_ = std::abs(stall_current_*curr_voltage_percent_ - ((stall_current_ - free_current_) / free_speed_) * curr_speed_);
+        curr_current_ = (stall_current_) * curr_voltage_percent_ - ((stall_current_ - free_current_) / free_speed_) * curr_speed_;
 
-        // Clamp if true current exceeds max current
-        curr_current_ = (curr_current_ > max_current_) ? max_current_ : curr_current_;
+        // // Clamp if true current exceeds max current
+        // curr_current_ = (curr_current_ > max_current_) ? max_current_ : curr_current_;
     }
 } // namespace dc_motor_model
