@@ -144,6 +144,18 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /base_vel_markers
       Value: true
+    - Class: rviz_default_plugins/LaserScan
+      Enabled: true
+      Name: LIDAR
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scan
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255

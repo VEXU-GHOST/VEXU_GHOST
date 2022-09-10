@@ -29,9 +29,19 @@ def generate_launch_description():
             )
         )
     )
+    
+    simulator = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                swerve_share_dir,
+                "launch",
+                "start_sim.launch.py"
+            )
+        )
+    )
 
     return LaunchDescription([
         joy_launch_description,
         rviz_launch_description,
-        # simulator
+        simulator
     ])

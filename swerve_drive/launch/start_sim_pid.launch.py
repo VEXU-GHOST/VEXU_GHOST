@@ -20,13 +20,15 @@ def generate_launch_description():
         ),
         launch_arguments={'world': world_file}.items()
     )
+    
+    upload_swerve = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(swerve_drive_share_dir, 'launch',
+                            'upload_swerve_pid.launch.py')
+        )
+    )
 
     return LaunchDescription([
         gz,
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(swerve_drive_share_dir, 'launch',
-                             'upload_swerve_pid.launch.py')
-            )
-        ),
+        upload_swerve,
     ])
