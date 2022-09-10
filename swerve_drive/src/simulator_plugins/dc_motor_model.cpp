@@ -8,7 +8,7 @@
  * Modified By: Maxx Wilson
  */
 
-#include "dc_motor_model.hpp"
+#include "simulator_plugins/dc_motor_model.hpp"
 
 namespace dc_motor_model
 {
