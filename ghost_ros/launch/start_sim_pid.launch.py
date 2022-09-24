@@ -10,8 +10,8 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     gazebo_ros_share_dir = get_package_share_directory('gazebo_ros')
-    swerve_drive_share_dir = get_package_share_directory('swerve_drive')
-    world_file = os.path.join(swerve_drive_share_dir, "urdf", "spin_up.world")
+    ghost_ros_share_dir = get_package_share_directory('ghost_ros')
+    world_file = os.path.join(ghost_ros_share_dir, "urdf", "spin_up.world")
 
     gz = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -23,7 +23,7 @@ def generate_launch_description():
     
     upload_swerve = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(swerve_drive_share_dir, 'launch',
+            os.path.join(ghost_ros_share_dir, 'launch',
                             'upload_swerve_pid.launch.py')
         )
     )

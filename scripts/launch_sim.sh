@@ -1,3 +1,3 @@
 #!/bin/bash
 source  ~/VEXU_GHOST/install/setup.bash
-ros2 launch swerve_drive swerve.launch.py
+ros2 launch ghost_ros swerve.launch.py

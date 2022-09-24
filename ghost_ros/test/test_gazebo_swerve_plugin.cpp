@@ -4,7 +4,7 @@
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  *
- * Last Modified: Monday July 18th 2022 11:41:53 am
+ * Last Modified: Saturday September 10th 2022 10:50:34 am
  * Modified By: Maxx Wilson
  */
 
@@ -53,7 +53,7 @@ public:
           steering_torque_msg_ = msg;
         });
 
-    auto pkg_share = ament_index_cpp::get_package_share_directory("swerve_drive");
+    auto pkg_share = ament_index_cpp::get_package_share_directory("ghost_ros");
     auto world_file_path = pkg_share + "/urdf/spin_up.world";
     auto sdf_file_path = pkg_share + "/urdf/swerve.sdf";
 

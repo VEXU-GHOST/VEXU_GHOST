@@ -10,15 +10,15 @@ import xacro
 
 def generate_launch_description():
 
-    swerve_drive_share_dir = get_package_share_directory('swerve_drive')
+    ghost_ros_share_dir = get_package_share_directory('ghost_ros')
     
-    urdf_path = os.path.join(swerve_drive_share_dir, "urdf", "swerve_pid.urdf")
+    urdf_path = os.path.join(ghost_ros_share_dir, "urdf", "swerve_pid.urdf")
 
     doc = xacro.process(urdf_path)
     
     spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity swerve -topic robot_description").split()
     
-    with open(os.path.join(swerve_drive_share_dir, "urdf", "robot_description_pid.urdf"), 'w') as file:
+    with open(os.path.join(ghost_ros_share_dir, "urdf", "robot_description_pid.urdf"), 'w') as file:
         file.write(doc)
 
     return LaunchDescription([

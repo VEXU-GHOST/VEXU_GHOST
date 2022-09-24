@@ -9,7 +9,7 @@ import pybullet as p
 import numpy as np
 from ament_index_python.packages import get_package_share_directory
 
-swerve_mod_src_path = os.path.join(get_package_share_directory("swerve_drive"), "scripts")
+swerve_mod_src_path = os.path.join(get_package_share_directory("ghost_ros"), "scripts")
 sys.path.append(swerve_mod_src_path)
 
 from pybullet_rviz_publisher import PybulletRVIZPublisher
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     step = 1 # ms
     
     # Load Robot and Ground models
-    urdf_dir = os.path.join(get_package_share_directory("swerve_drive"), "urdf")
+    urdf_dir = os.path.join(get_package_share_directory("ghost_ros"), "urdf")
     p.loadURDF(urdf_dir + "/plane.urdf", [0, 0, 0], useFixedBase=True)
     robotID = p.loadURDF(
         urdf_dir + "/swerve.urdf", 

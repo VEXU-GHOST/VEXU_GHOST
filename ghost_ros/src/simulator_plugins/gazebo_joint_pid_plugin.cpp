@@ -4,7 +4,7 @@
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Sunday August 7th 2022 2:00:44 pm
+ * Last Modified: Saturday September 10th 2022 10:50:34 am
  * Modified By: Maxx Wilson
  */
 
@@ -166,16 +166,16 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
 
 void GazeboJointPIDPlugin::OnUpdate()
 {
-  // // Get joint velocity
+  // Get joint velocity
   auto joint_vel_rpm = impl_->joint_->GetVelocity(2)*60/(2*3.14159);
   auto joint_angle_deg = fmod(impl_->joint_->Position(2)*180/3.14159, 360);
 
-  // // Wrap angle error
+  // Wrap angle error
   double angle_error = fmod(impl_->angle_setpoint_, 360) - joint_angle_deg;
   double angle_sign = std::abs(angle_error)/angle_error;
   angle_error = std::abs(angle_error) > 180 ? angle_sign*360 - angle_error : angle_error; 
 
-  // // Update motor
+  // Update motor
   impl_->motor_model_.setMotorSpeedRPM(joint_vel_rpm);
   impl_->motor_model_.setMotorEffort(impl_->accel_gain_ * impl_->accel_setpoint_ + impl_->vel_gain_ * (impl_->vel_setpoint_ - joint_vel_rpm) + impl_->pos_gain_ * angle_error);
   

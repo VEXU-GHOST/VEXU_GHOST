@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <robot name="swerve" xmlns:xacro="http://ros.org/wiki/xacro">
 
-    <xacro:include filename="$(find swerve_drive)/urdf/swerve_macros.xacro"/>
+    <xacro:include filename="$(find ghost_ros)/urdf/swerve_macros.xacro"/>
 
     <xacro:property name="l_wheel" value="0.2286"/> <!-- 9" center to wheel modules-->
-    <xacro:property name="r_wheel" value="0.034925"/> <!-- 2.75" wheel radius-->
+    <xacro:property name="r_wheel" value="0.034925"/> <!-- 2.75" wheel diameter-->
     <xacro:property name="width_wheel" value="0.0254"/> <!-- 1" wheel width-->
     <xacro:property name="com_radius" value="0.02"/>
     <xacro:property name="d2r" value="${3.14159/180}"/>
@@ -107,7 +107,7 @@
     <!-- Sensors -->
     <link name="lidar_link">
         <inertial>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <origin xyz="0.2 0 0.24" rpy="0 0 0"/>
             <mass value="0.125"/>
             <inertia ixx="0.001"  ixy="0"  ixz="0" iyy="0.001" iyz="0" izz="0.001" />
         </inertial>
@@ -115,7 +115,7 @@
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
-            <cylinder radius="0.0508" length="0.025"/>
+            <cylinder radius="${0.06985/2}" length="0.0254"/>
             </geometry>
         </visual>
     </link>

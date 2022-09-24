@@ -1,35 +1,36 @@
 /*
- * Filename: gazebo_motor_plugin
+ * Filename: gazebo_joint_pid_plugin
  * Created Date: Sunday August 7th 2022
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Sunday August 7th 2022 2:00:44 pm
+ * Last Modified: Saturday September 10th 2022 10:50:34 am
  * Modified By: Maxx Wilson
  */
 
-#ifndef SWERVE_DRIVE__GAZEBO_MOTOR_PLUGIN_HPP_
-#define SWERVE_DRIVE__GAZEBO_MOTOR_PLUGIN_HPP_
+#ifndef GHOST_ROS__GAZEBO_JOINT_PID_PLUGIN_HPP_
+#define GHOST_ROS__GAZEBO_JOINT_PID_PLUGIN_HPP_
 
 #include <gazebo/common/Plugin.hh>
 #include "std_msgs/msg/float32.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
 
 // For std::unique_ptr, could be removed
 #include <memory>
 
-namespace gazebo_motor_plugin
+namespace gazebo_joint_pid_plugin
 {
 // Forward declaration of private data class.
-class GazeboMotorPluginPrivate;
+class GazeboJointPIDPluginPrivate;
 
-class GazeboMotorPlugin : public gazebo::ModelPlugin
+class GazeboJointPIDPlugin : public gazebo::ModelPlugin
 {
 public:
   /// Constructor
-  GazeboMotorPlugin();
+  GazeboJointPIDPlugin();
 
   /// Destructor
-  ~GazeboMotorPlugin();
+  ~GazeboJointPIDPlugin();
 
   /// Gazebo calls this when the plugin is loaded.
   /// \param[in] model Pointer to parent model. Other plugin types will expose different entities,
@@ -45,8 +46,8 @@ protected:
 private:
   /// Recommended PIMPL pattern. This variable should hold all private
   /// data members.
-  std::unique_ptr<GazeboMotorPluginPrivate> impl_;
+  std::unique_ptr<GazeboJointPIDPluginPrivate> impl_;
 };
-}  // namespace gazebo_motor_plugin
+}  // namespace gazebo_joint_pid_plugin
 
-#endif  // SWERVE_DRIVE__GAZEBO_MOTOR_PLUGIN_HPP_
+#endif  // GHOST_ROS__GAZEBO_JOINT_PID_PLUGIN_HPP_

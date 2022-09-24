@@ -3,3 +3,4 @@ build
 log
 .vscode
 *.pyc
+.cache/*

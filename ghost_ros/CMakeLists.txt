@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(swerve_drive)
+project(ghost_ros)
 
 #########################
 #### Compile Options ####
