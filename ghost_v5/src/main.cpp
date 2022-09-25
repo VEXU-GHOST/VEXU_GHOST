@@ -1,4 +1,9 @@
 #include "main.h"
+#include "pros/motors.h"
+
+#include <vector>
+#include <algorithm>
+#include <numeric>
 
 /**
  * A callback function for LLEMU's center button.
@@ -75,18 +80,42 @@ void autonomous() {}
  */
 void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor left_mtr(1);
-	pros::Motor right_mtr(2);
+	pros::Motor left_mtr(1, pros::motor_gearset_e::E_MOTOR_GEAR_600);
+	pros::Motor right_mtr(2, pros::motor_gearset_e::E_MOTOR_GEAR_600);
+	
+
+	int v_buf_count = 0;
+	int e_buf_count = 0;
+	int p_buf_count = 0;
+	int num_samples = 100;
+
+	std::vector<double> vel_buffer(num_samples, 0);
+	std::vector<double> eff_buffer(num_samples, 0);
+	std::vector<double> pwr_buffer(num_samples, 0);
 
 	while (true) {
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
+		vel_buffer[v_buf_count%num_samples] = left_mtr.get_actual_velocity();
+		double v_min = *std::min_element(vel_buffer.begin(), vel_buffer.end());
+		double v_max = *std::max_element(vel_buffer.begin(), vel_buffer.end());
+		double v_avg = std::accumulate(vel_buffer.begin(), vel_buffer.end(), 0)/ ((double) num_samples);
+		v_buf_count++;
+
+		pwr_buffer[p_buf_count%num_samples] = left_mtr.get_power();
+		double p_min = *std::min_element(pwr_buffer.begin(), pwr_buffer.end());
+		double p_max = *std::max_element(pwr_buffer.begin(), pwr_buffer.end());
+		double p_avg = std::accumulate(pwr_buffer.begin(), pwr_buffer.end(), 0)/((double) num_samples);
+		p_buf_count++;
+
+		if(v_buf_count % num_samples == 0){
+			pros::lcd::print(0, "RPM, Efficiency, W");
+			pros::lcd::print(1, "%lf %lf %lf", v_min, v_avg, v_max);
+			pros::lcd::print(2, "%lf %lf %lf", p_min, p_avg, p_max);
+		}
 		int left = master.get_analog(ANALOG_LEFT_Y);
 		int right = master.get_analog(ANALOG_RIGHT_Y);
 
 		left_mtr = left;
 		right_mtr = right;
-		pros::delay(20);
+		pros::delay(5);
 	}
 }
