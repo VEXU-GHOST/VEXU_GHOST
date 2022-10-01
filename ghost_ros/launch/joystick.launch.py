@@ -4,9 +4,12 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package = 'joy',
-            executable = 'joy_node',
+            package = 'joy_linux',
+            executable = 'joy_linux_node',
             name = 'joystick_node',
+            parameters= [{
+                "dev": "/dev/input/js2"
+            }]
         ),
         Node(
             package = 'teleop_twist_joy',
