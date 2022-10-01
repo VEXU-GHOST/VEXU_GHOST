@@ -103,6 +103,16 @@ install(TARGETS
   latency_test_subscriber
   DESTINATION lib/${PROJECT_NAME})
 
+#########################
+#### GHOST ROS Main ####
+#########################
+add_executable(ghost_ros_main src/main.cpp)
+ament_target_dependencies(ghost_ros_main rclcpp std_msgs)
+
+install(TARGETS
+  ghost_ros_main
+  DESTINATION lib/${PROJECT_NAME})
+
 #################
 #### Testing ####
 #################
