@@ -35,7 +35,7 @@ def generate_launch_description():
             os.path.join(
                 swerve_share_dir,
                 "launch",
-                "start_sim.launch.py"
+                "start_sim_pid.launch.py"
             )
         )
     )
