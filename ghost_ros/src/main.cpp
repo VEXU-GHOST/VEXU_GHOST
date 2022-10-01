@@ -10,11 +10,7 @@ SimulatedRobotNode::SimulatedRobotNode(std::string node_name): Node(node_name){
 SimulatedRobotNode::~SimulatedRobotNode(){
 }
 
-SimulatedRobotNode::laser_callback(const sensor_msgs::msg::laser_scan::SharedPtr msg){
-    
-}
-
-SimulatedRobotNode::laser_callback(const sensor_msgs::msg::laser_scan::SharedPtr msg){
+void SimulatedRobotNode::laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
     
 }
 

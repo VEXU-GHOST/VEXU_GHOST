@@ -16,7 +16,7 @@ public:
 
     
 private:
-
+    void timer_callback();
     void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
 
     rclcpp::TimerBase::SharedPtr timer_;
