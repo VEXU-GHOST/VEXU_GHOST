@@ -5,7 +5,7 @@ import os
 
 def generate_launch_description():
     pkg_share = launch_ros.substitutions.FindPackageShare(package='ghost_ros').find('ghost_ros')
-    default_model_path = os.path.join(pkg_share, 'urdf/swerve.urdf')
+    default_model_path = os.path.join(pkg_share, 'urdf/swerve_pid.urdf')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
 
     robot_state_publisher_node = launch_ros.actions.Node(

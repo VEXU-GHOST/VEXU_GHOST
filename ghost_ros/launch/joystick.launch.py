@@ -8,7 +8,7 @@ def generate_launch_description():
             executable = 'joy_linux_node',
             name = 'joystick_node',
             parameters= [{
-                "dev": "/dev/input/js2"
+                "dev": "/dev/input/js0"
             }]
         ),
         Node(
@@ -18,8 +18,8 @@ def generate_launch_description():
                 "require_enable_button": False,
                 "axis_linear": {"x": 0, "y": 1},
                 "axis_angular": {"yaw": 3},
-                "scale_linear": {"x": -2.0, "y": 2.0},
-                "scale_angular": {"yaw": 1.0}
+                "scale_linear": {"x": -1.0, "y": 1.0},
+                "scale_angular": {"yaw": 0.5}
                 }]
         )
     ])

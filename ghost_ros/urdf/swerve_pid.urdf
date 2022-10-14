@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="swerve" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="swerve_pid" xmlns:xacro="http://ros.org/wiki/xacro">
 
     <xacro:include filename="$(find ghost_ros)/urdf/swerve_macros.xacro"/>
 
@@ -122,7 +122,7 @@
         <xacro:joint_pid_macro
             joint_name="steering_1"
             link_name="mod_1"
-            gear_ratio="1.0"
+            gear_ratio="2.0"
             position_gain="0.05"
             vel_gain="0.04"
             accel_gain="0.0">
@@ -131,7 +131,7 @@
         <xacro:joint_pid_macro
             joint_name="steering_2"
             link_name="mod_2"
-            gear_ratio="1.0"
+            gear_ratio="2.0"
             position_gain="0.05"
             vel_gain="0.04"
             accel_gain="0.0">
@@ -140,7 +140,7 @@
         <xacro:joint_pid_macro
             joint_name="steering_3"
             link_name="mod_3"
-            gear_ratio="1.0"
+            gear_ratio="2.0"
             position_gain="0.05"
             vel_gain="0.04"
             accel_gain="0.0">
@@ -149,7 +149,7 @@
         <xacro:joint_pid_macro
             joint_name="driveshaft_1"
             link_name="wheel_1"
-            gear_ratio="6.0"
+            gear_ratio="5.0"
             position_gain="0.0"
             vel_gain="0.04"
             accel_gain="0.0">
@@ -158,7 +158,7 @@
         <xacro:joint_pid_macro
             joint_name="driveshaft_2"
             link_name="wheel_2"
-            gear_ratio="6.0"
+            gear_ratio="5.0"
             position_gain="0.0"
             vel_gain="0.04"
             accel_gain="0.0">
@@ -167,7 +167,7 @@
         <xacro:joint_pid_macro
             joint_name="driveshaft_3"
             link_name="wheel_3"
-            gear_ratio="6.0"
+            gear_ratio="5.0"
             position_gain="0.0"
             vel_gain="0.04"
             accel_gain="0.0">

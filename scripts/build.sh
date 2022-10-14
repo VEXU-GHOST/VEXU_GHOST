@@ -13,6 +13,7 @@ SDF_PID_PATH="$SHARE_DIR/urdf/swerve_pid.sdf"
 if [ ! -d $SHARE_DIR ];
 then
     touch $URDF_PATH
+    touch $URDF_PID_PATH
 else
     echo
     echo "Generating URDF"

@@ -16,7 +16,7 @@ def generate_launch_description():
 
     doc = xacro.process(urdf_path)
     
-    spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity swerve -topic robot_description").split()
+    spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity swerve_pid -topic robot_description").split()
     
     with open(os.path.join(ghost_ros_share_dir, "urdf", "robot_description_pid.urdf"), 'w') as file:
         file.write(doc)

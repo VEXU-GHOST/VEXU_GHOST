@@ -40,8 +40,15 @@ def generate_launch_description():
         )
     )
 
+    teleop = Node(
+            package = 'ghost_ros',
+            executable = 'basic_swerve_controller',
+            name = 'swerve_controller',
+        )
+
     return LaunchDescription([
         joy_launch_description,
         rviz_launch_description,
-        simulator
+        simulator,
+        teleop
     ])

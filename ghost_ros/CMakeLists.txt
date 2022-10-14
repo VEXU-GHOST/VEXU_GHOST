@@ -87,7 +87,12 @@ target_include_directories(gazebo_joint_pid_plugin
 ament_export_libraries(gazebo_joint_pid_plugin)
 
 add_executable(basic_swerve_controller src/simulator_plugins/basic_swerve_controller.cpp)
-ament_target_dependencies(basic_swerve_controller rclcpp std_msgs geometry_msgs)
+ament_target_dependencies(basic_swerve_controller
+  rclcpp
+  std_msgs
+  geometry_msgs
+  gazebo_msgs
+)
 
 install(TARGETS
 basic_swerve_controller
