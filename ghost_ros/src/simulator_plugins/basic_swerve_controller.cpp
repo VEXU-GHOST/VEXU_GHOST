@@ -6,6 +6,8 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
 #include "gazebo_msgs/msg/model_states.hpp"
+#include "Eigen/Dense"
+#include <eigen3/Eigen/Core>
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -72,12 +74,15 @@ public:
         RCLCPP_INFO(this->get_logger(), "jy: %lf", jy);
         RCLCPP_INFO(this->get_logger(), "jw: %lf", jw);
 
-        float vw1x = jx - jw*sin(theta_ - 60.0/180.0*M_PI);
-        float vw1y = jy + jw*cos(theta_ - 60.0/180.0*M_PI);
-        float vw2x = jx - jw*sin(theta_ + 60.0/180.0*M_PI);
-        float vw2y = jy + jw*cos(theta_ + 90.0/180.0*M_PI);
-        float vw3x = jx - jw*sin(theta_ - 180.0/180.0*M_PI);
-        float vw3y = jy + jw*cos(theta_ - 180.0/180.0*M_PI);
+        float jx_bl = cos(theta_)*jx - sin(theta_)*jy;
+        float jy_bl = sin(theta_)*jx + cos(theta_)*jy;
+
+        float vw1x = jx_bl - jw*sin(-60.0/180.0*M_PI);
+        float vw1y = jy_bl + jw*cos(-60.0/180.0*M_PI);
+        float vw2x = jx_bl - jw*sin(90.0/180.0*M_PI);
+        float vw2y = jy_bl + jw*cos(90.0/180.0*M_PI);
+        float vw3x = jx_bl - jw*sin(-180.0/180.0*M_PI);
+        float vw3y = jy_bl + jw*cos(-180.0/180.0*M_PI);
 
         RCLCPP_INFO(this->get_logger(), "vw1x: %lf", vw1x);
         RCLCPP_INFO(this->get_logger(), "vw1y: %lf", vw1y);

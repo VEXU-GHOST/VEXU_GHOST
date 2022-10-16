@@ -35,6 +35,8 @@ find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(gazebo_plugins REQUIRED)
 find_package(ament_index_cpp REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 include_directories(include)
 link_directories(${gazebo_dev_LIBRARY_DIRS})
@@ -92,6 +94,7 @@ ament_target_dependencies(basic_swerve_controller
   std_msgs
   geometry_msgs
   gazebo_msgs
+  Eigen3
 )
 
 install(TARGETS
