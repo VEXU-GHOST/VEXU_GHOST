@@ -1,0 +1,3 @@
+[submodule "ghost_ros/src/shared"]
+	path = ghost_ros/src/shared
+	url = git@github.com:umass-amrl/amrl_shared_lib.git
