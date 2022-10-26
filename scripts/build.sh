@@ -12,7 +12,7 @@ then
     colcon build
 fi
 
-if [ "$arch" == 'aarch65' ];
+if [ "$arch" == 'aarch64' ];
 then 
     colcon build --packages-select ghost_ros
 fi
