@@ -4,11 +4,11 @@
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Sunday July 17th 2022 4:09:32 pm
+ * Last Modified: Saturday September 10th 2022 10:50:34 am
  * Modified By: Maxx Wilson
  */
 
-#include "simulator_plugins/dc_motor_model.hpp"
+#include "dc_motor_model.hpp"
 
 #include "gtest/gtest.h"
 

@@ -1,3 +1,13 @@
+/*
+ * Filename: ground_truth_pose
+ * Created Date: Monday October 24th 2022
+ * Author: Maxx Wilson
+ * Author Email: JesseMaxxWilson@utexas.edu
+ * 
+ * Last Modified: Monday October 24th 2022 2:24:18 pm
+ * Modified By: Maxx Wilson
+ */
+
 #include <chrono>
 #include <math.h>
 
@@ -16,17 +26,6 @@ class BasicSwerveController : public rclcpp::Node{
 public:
     BasicSwerveController(): Node("basic_swerve_controller"){
         steering_1_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_1/setpoint", 10);
-        steering_2_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_2/setpoint", 10);
-        steering_3_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_3/setpoint", 10);
-        wheel_1_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_1/setpoint", 10);
-        wheel_2_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_2/setpoint", 10);
-        wheel_3_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_3/setpoint", 10);
-
-        cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-            "/cmd_vel",
-            10, 
-            std::bind(&BasicSwerveController::cmd_vel_callback, this, _1)
-            );
 
         model_states_sub_ = this->create_subscription<gazebo_msgs::msg::ModelStates>(
             "/model_states",
@@ -169,7 +168,7 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<BasicSwerveController>());
+  rclcpp::spin(std::make_shared<GroundTruthPose>());
   rclcpp::shutdown();
   return 0;
 }

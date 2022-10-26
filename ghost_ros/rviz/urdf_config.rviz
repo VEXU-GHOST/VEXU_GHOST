@@ -41,48 +41,6 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /robot_description
       Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        mod_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        mod_2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        mod_3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        wheel_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wheel_2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wheel_3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -91,45 +49,11 @@ Visualization Manager:
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
-      Frames:
-        All Enabled: true
-        base_footprint:
-          Value: true
-        base_link:
-          Value: true
-        mod_1:
-          Value: true
-        mod_2:
-          Value: true
-        mod_3:
-          Value: true
-        wheel_1:
-          Value: true
-        wheel_2:
-          Value: true
-        wheel_3:
-          Value: true
-        world:
-          Value: true
       Marker Scale: 0.30000001192092896
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
-      Tree:
-        world:
-          base_link:
-            base_footprint:
-              {}
-            mod_1:
-              wheel_1:
-                {}
-            mod_2:
-              wheel_2:
-                {}
-            mod_3:
-              wheel_3:
-                {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/MarkerArray

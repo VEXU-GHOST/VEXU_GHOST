@@ -8,8 +8,8 @@
  * Modified By: Maxx Wilson
  */
 
-#include "simulator_plugins/gazebo_joint_pid_plugin.hpp"
-#include "simulator_plugins/dc_motor_model.hpp"
+#include "gazebo_joint_pid_plugin.hpp"
+#include "dc_motor_model.hpp"
 
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/Joint.hh>

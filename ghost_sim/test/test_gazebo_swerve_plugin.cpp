@@ -8,7 +8,7 @@
  * Modified By: Maxx Wilson
  */
 
-#include "simulator_plugins/gazebo_swerve_plugin.hpp"
+// #include "gazebo_swerve_plugin.hpp"
 
 #include <gazebo/test/ServerFixture.hh>
 #include <gazebo/common/Time.hh>

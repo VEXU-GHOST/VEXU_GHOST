@@ -1,4 +1,14 @@
-#include "simulator_plugins/odometry_plugin.hpp"
+/*
+ * Filename: odometry_plugin
+ * Created Date: Monday October 24th 2022
+ * Author: Maxx Wilson
+ * Author Email: JesseMaxxWilson@utexas.edu
+ * 
+ * Last Modified: Monday October 24th 2022 2:19:23 pm
+ * Modified By: Maxx Wilson
+ */
+
+#include "odometry_plugin.hpp"
 
 namespace odometry_plugin
 {

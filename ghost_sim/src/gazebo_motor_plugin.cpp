@@ -4,12 +4,12 @@
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Sunday August 7th 2022 2:00:06 pm
+ * Last Modified: Saturday September 10th 2022 10:50:34 am
  * Modified By: Maxx Wilson
  */
 
-#include "simulator_plugins/gazebo_motor_plugin.hpp"
-#include "simulator_plugins/dc_motor_model.hpp"
+#include "gazebo_motor_plugin.hpp"
+#include "dc_motor_model.hpp"
 
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/Joint.hh>
