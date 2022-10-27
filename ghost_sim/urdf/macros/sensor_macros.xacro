@@ -31,7 +31,7 @@
                     <remapping>~/out:=${topic_name}</remapping>
                 </ros>
                 <output_type>sensor_msgs/LaserScan</output_type>
-                <frame_name>"${link_name}"</frame_name>
+                <frame_name>${link_name}</frame_name>
                 </plugin>
             </sensor>
         </gazebo>

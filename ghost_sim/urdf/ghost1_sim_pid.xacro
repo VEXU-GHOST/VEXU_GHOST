@@ -7,7 +7,7 @@
     <!-- Import Primary Robot URDF -->
     <xacro:include filename="$(find ghost_ros)/urdf/ghost1.xacro"/>
 
-    <xacro:lidar_macro link_name="lidar_link" topic_name="scan1"></xacro:lidar_macro>        
+    <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro>        
 
     <!-- Gazebo Plugins -->
     <gazebo>
