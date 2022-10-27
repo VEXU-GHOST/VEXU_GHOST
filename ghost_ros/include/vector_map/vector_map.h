@@ -34,13 +34,13 @@ namespace vector_map {
 // loc, and if so, trim_line is trimmed accordingly, adding sub-lines to
 // scene_lines if necessary.
 void TrimOcclusion(const Eigen::Vector2f& loc,
-                  const geometry::line2f& line1,
-                  geometry::line2f* line2_ptr,
-                  std::vector<geometry::line2f>* scene_lines_ptr);
+                  const geometry::Line2f& line1,
+                  geometry::Line2f* line2_ptr,
+                  std::vector<geometry::Line2f>* scene_lines_ptr);
 
 struct VectorMap {
   VectorMap() {}
-  explicit VectorMap(const std::vector<geometry::line2f>& lines) :
+  explicit VectorMap(const std::vector<geometry::Line2f>& lines) :
       lines(lines) {}
   explicit VectorMap(const std::string& file) {
     Load(file);
@@ -48,18 +48,18 @@ struct VectorMap {
 
   void GetSceneLines(const Eigen::Vector2f& loc,
                      float max_range,
-                     std::vector<geometry::line2f>* lines_list) const;
+                     std::vector<geometry::Line2f>* lines_list) const;
 
 
   void SceneRender(const Eigen::Vector2f& loc,
                    float max_range,
                    float angle_min,
                    float angle_max,
-                   std::vector<geometry::line2f>* render) const;
+                   std::vector<geometry::Line2f>* render) const;
 
   void RayCast(const Eigen::Vector2f& loc,
                float max_range,
-               std::vector<geometry::line2f>* render) const;
+               std::vector<geometry::Line2f>* render) const;
 
   // Get predicted laser scan from current location.
   void GetPredictedScan(const Eigen::Vector2f& loc,
@@ -74,7 +74,7 @@ struct VectorMap {
   void Load(const std::string& file);
 
   bool Intersects(const Eigen::Vector2f& v0, const Eigen::Vector2f& v1) const ;
-  std::vector<geometry::line2f> lines;
+  std::vector<geometry::Line2f> lines;
   std::string file_name;
 };
 

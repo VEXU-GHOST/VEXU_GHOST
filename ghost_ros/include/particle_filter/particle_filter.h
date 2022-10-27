@@ -24,10 +24,9 @@
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
-#include "shared/math/line2d.h"
-#include "shared/util/random.h"
+#include "math/line2d.h"
+#include "util/random.h"
 #include "vector_map/vector_map.h"
-#include "visualization/visualization.h"
 
 #ifndef SRC_PARTICLE_FILTER_H_
 #define SRC_PARTICLE_FILTER_H_
@@ -81,8 +80,8 @@ class ParticleFilter {
   void LowVarianceResample();
 
   void SortMap();
-  static bool horizontal_line_compare(const geometry::line2f l1, const geometry::line2f l2);
-  static bool vertical_line_compare(const geometry::line2f l1, const geometry::line2f l2);
+  static bool horizontal_line_compare(const geometry::Line2f l1, const geometry::Line2f l2);
+  static bool vertical_line_compare(const geometry::Line2f l1, const geometry::Line2f l2);
 
   // For debugging: get predicted point cloud from current location.
   void GetPredictedPointCloud(const Eigen::Vector2f& loc,
@@ -105,9 +104,9 @@ class ParticleFilter {
 
   // Map of the environment.
   vector_map::VectorMap map_;
-  std::vector<geometry::line2f> horizontal_lines_;
-  std::vector<geometry::line2f> vertical_lines_;
-  std::vector<geometry::line2f> angled_lines_;
+  std::vector<geometry::Line2f> horizontal_lines_;
+  std::vector<geometry::Line2f> vertical_lines_;
+  std::vector<geometry::Line2f> angled_lines_;
 
   // Random number generator.
   util_random::Random rng_;

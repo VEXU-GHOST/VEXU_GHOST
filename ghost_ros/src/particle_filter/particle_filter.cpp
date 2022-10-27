@@ -26,17 +26,17 @@
 #include "eigen3/Eigen/Geometry"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "shared/math/geometry.h"
-#include "shared/math/line2d.h"
-#include "shared/math/math_util.h"
-#include "shared/util/timer.h"
+#include "math/geometry.h"
+#include "math/line2d.h"
+#include "math/math_util.h"
+#include "util/timer.h"
+#include "yaml-cpp/yaml.h"
 
-#include "config_reader/config_reader.h"
-#include "particle_filter.h"
+#include "particle_filter/particle_filter.h"
 
 #include "vector_map/vector_map.h"
 
-using geometry::line2f;
+using geometry::Line2f;
 using std::cout;
 using std::endl;
 using std::string;
@@ -46,38 +46,39 @@ using Eigen::Vector2f;
 using Eigen::Vector2i;
 using vector_map::VectorMap;
 
-CONFIG_INT(num_particles, "num_particles");
-CONFIG_FLOAT(init_x_sigma, "init_x_sigma");
-CONFIG_FLOAT(init_y_sigma, "init_y_sigma");
-CONFIG_FLOAT(init_r_sigma, "init_r_sigma");
+YAML::Node config = YAML::LoadFile("ghost_ros/config/particle_filter.yaml");
 
-CONFIG_FLOAT(k1, "k1");
-CONFIG_FLOAT(k2, "k2");
-CONFIG_FLOAT(k3, "k3");
-CONFIG_FLOAT(k4, "k4");
-CONFIG_FLOAT(k5, "k5");
-CONFIG_FLOAT(k6, "k6");
+const int CONFIG_num_particles = config["num_particles"].as<int>();
 
-CONFIG_FLOAT(laser_offset, "laser_offset");
+const float CONFIG_init_x_sigma = config["init_x_sigma"].as<float>();
+const float CONFIG_init_y_sigma = config["init_y_sigma"].as<float>();
+const float CONFIG_init_r_sigma = config["init_r_sigma"].as<float>();
 
-CONFIG_FLOAT(min_update_dist, "min_update_dist");
-CONFIG_FLOAT(min_update_angle, "min_update_angle");
+const float CONFIG_k1 = config["k1"].as<float>();
+const float CONFIG_k2 = config["k2"].as<float>();
+const float CONFIG_k3 = config["k3"].as<float>();
+const float CONFIG_k4 = config["k4"].as<float>();
+const float CONFIG_k5 = config["k5"].as<float>();
+const float CONFIG_k6 = config["k6"].as<float>();
 
-CONFIG_DOUBLE(sigma_observation, "sigma_observation");
-CONFIG_DOUBLE(gamma, "gamma");
-CONFIG_DOUBLE(dist_short, "dist_short");
-CONFIG_DOUBLE(dist_long, "dist_long");
-CONFIG_DOUBLE(range_min, "range_min");
-CONFIG_DOUBLE(range_max, "range_max");
+const float CONFIG_laser_offset = config["laser_offset"].as<float>();
+const float CONFIG_min_update_dist = config["min_update_dist"].as<float>();
+const float CONFIG_min_update_angle = config["min_update_angle"].as<float>();
 
-CONFIG_DOUBLE(resize_factor, "resize_factor");
-CONFIG_INT(resample_frequency, "resample_frequency");
+const double CONFIG_sigma_observation = config["sigma_observation"].as<double>();
+const double CONFIG_gamma = config["gamma"].as<double>();
+const double CONFIG_dist_short = config["dist_short"].as<double>();
+const double CONFIG_dist_long = config["dist_long"].as<double>();
+
+const double CONFIG_range_min = config["range_min"].as<double>();
+const double CONFIG_range_max = config["range_max"].as<double>();
+const double CONFIG_resize_factor = config["resize_factor"].as<double>();
+
+const int CONFIG_resample_frequency = config["resample_frequency"].as<int>();
 
 namespace particle_filter {
   Vector2f first_odom_loc;
   float first_odom_angle;
-
-config_reader::ConfigReader config_reader_({"config/particle_filter.lua"});
 
 ParticleFilter::ParticleFilter() :
     prev_odom_loc_(0, 0),
@@ -104,8 +105,8 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
   
   Vector2f sensor_loc = BaseLinkToSensorFrame(loc, angle);
   
-  int v_start_index = std::lower_bound(horizontal_lines_.begin(), horizontal_lines_.end(), line2f(sensor_loc, sensor_loc), horizontal_line_compare) - horizontal_lines_.begin();
-  int h_start_index = std::lower_bound(vertical_lines_.begin(), vertical_lines_.end(), line2f(sensor_loc, sensor_loc), vertical_line_compare) - vertical_lines_.begin();
+  int v_start_index = std::lower_bound(horizontal_lines_.begin(), horizontal_lines_.end(), Line2f(sensor_loc, sensor_loc), horizontal_line_compare) - horizontal_lines_.begin();
+  int h_start_index = std::lower_bound(vertical_lines_.begin(), vertical_lines_.end(), Line2f(sensor_loc, sensor_loc), vertical_line_compare) - vertical_lines_.begin();
 
   // Return if no map is loaded
   if(!vertical_lines_.size() || !horizontal_lines_.size()){
@@ -120,7 +121,7 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
     float S0 = sin(ray_angle);
 
     Vector2f final_intersection = sensor_loc + CONFIG_range_max * Vector2f(C0, S0);
-    line2f ray(sensor_loc, final_intersection);
+    Line2f ray(sensor_loc, final_intersection);
 
     int h_dir = math_util::Sign(ray.Dir().x());
     int v_dir = math_util::Sign(ray.Dir().y());
@@ -398,11 +399,11 @@ void ParticleFilter::Initialize(const string& map_file,
   SortMap();
 }
 
-bool ParticleFilter::horizontal_line_compare(const geometry::line2f l1, const geometry::line2f l2){
+bool ParticleFilter::horizontal_line_compare(const geometry::Line2f l1, const geometry::Line2f l2){
   return l1.p0.y() < l2.p0.y();
 }
 
-bool ParticleFilter::vertical_line_compare(const geometry::line2f l1, const geometry::line2f l2){
+bool ParticleFilter::vertical_line_compare(const geometry::Line2f l1, const geometry::Line2f l2){
   return l1.p0.x() < l2.p0.x();
 }
 
@@ -413,7 +414,7 @@ void ParticleFilter::SortMap(){
   angled_lines_.clear();
   
   for (size_t i = 0; i < map_.lines.size(); ++i) {
-      const geometry::line2f line = map_.lines[i];
+      const geometry::Line2f line = map_.lines[i];
       if(line.p0.y() == line.p1.y()){
         horizontal_lines_.push_back(line);
       }

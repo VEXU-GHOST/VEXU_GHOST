@@ -4,14 +4,14 @@
 #include "sensor_msgs/msg/laser_scan.hpp"
 using std::placeholders::_1;
 
-class LatencyTestSubscriber : public rclcpp::Node
+class ROSSubscriberExample : public rclcpp::Node
 {
   public:
-    LatencyTestSubscriber()
+    ROSSubscriberExample()
     : Node("latency_test_subscriber")
     {
       subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-      "latency_test_topic", 10, std::bind(&LatencyTestSubscriber::topic_callback, this, _1));
+      "latency_test_topic", 10, std::bind(&ROSSubscriberExample::topic_callback, this, _1));
     }
 
   private:
@@ -27,7 +27,7 @@ class LatencyTestSubscriber : public rclcpp::Node
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<LatencyTestSubscriber>());
+  rclcpp::spin(std::make_shared<ROSSubscriberExample>());
   rclcpp::shutdown();
   return 0;
 }

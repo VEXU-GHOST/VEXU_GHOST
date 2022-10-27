@@ -1,0 +1,5 @@
+ns1:
+  ns2:
+    string_val: "string_val"
+    an_int: 50
+    a_double: 50.0 # Needs the .0 at the end!

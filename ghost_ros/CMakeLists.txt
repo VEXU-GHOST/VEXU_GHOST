@@ -30,13 +30,14 @@ find_package(geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 include_directories(include)
 include_directories(src/shared)
 add_subdirectory(src/shared)
 
 # ##################
-# #### Targets #####
+# #### Library #####
 # ##################
 # DC Motor Model Library
 add_library(dc_motor_model SHARED src/dc_motor_model.cpp)
@@ -55,7 +56,29 @@ install(
   INCLUDES DESTINATION include
 )
 
+# Particle Filter Library
+add_library(particle_filter SHARED src/particle_filter/particle_filter.cpp)
+target_link_libraries(particle_filter
+  amrl_shared_lib
+  yaml-cpp
+)
+ament_target_dependencies(particle_filter
+  Eigen3
+)
+target_include_directories(particle_filter
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 
+install(
+  TARGETS particle_filter
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+# Basic Swerve Controller
 add_executable(basic_swerve_controller src/basic_swerve_controller.cpp)
 ament_target_dependencies(basic_swerve_controller
   rclcpp
@@ -68,29 +91,39 @@ install(TARGETS
   basic_swerve_controller
   DESTINATION lib/${PROJECT_NAME})
 
-# ########################
-# ### Latency Testing ####
-# ########################
-# Latency Test Publisher
-add_executable(latency_test_publisher src/latency_tests/latency_test_publisher.cpp)
-ament_target_dependencies(latency_test_publisher
+#####################
+##### Examples ######
+#####################
+# ROS Publisher Example
+add_executable(ros_publisher_example src/examples/ros_publisher_example.cpp)
+ament_target_dependencies(ros_publisher_example
   rclcpp
   sensor_msgs
 )
 
 install(TARGETS
-  latency_test_publisher
+  ros_publisher_example
   DESTINATION lib/${PROJECT_NAME})
 
-# Latency Test Subscriber
-add_executable(latency_test_subscriber src/latency_tests/latency_test_subscriber.cpp)
-ament_target_dependencies(latency_test_subscriber
+# ROS Subscriber Example
+add_executable(ros_subscriber_example src/examples/ros_subscriber_example.cpp)
+ament_target_dependencies(ros_subscriber_example
   rclcpp
   sensor_msgs
 )
 
 install(TARGETS
-  latency_test_subscriber
+  ros_subscriber_example
+  DESTINATION lib/${PROJECT_NAME})
+
+# YAML Load Example
+add_executable(yaml_load_example src/examples/yaml_load.cpp)
+target_link_libraries(yaml_load_example
+  yaml-cpp
+)
+
+install(TARGETS
+  yaml_load_example
   DESTINATION lib/${PROJECT_NAME})
 
 # ########################
@@ -104,6 +137,7 @@ ament_target_dependencies(ghost_ros_main
 
 target_link_libraries(ghost_ros_main
   amrl_shared_lib
+  yaml-cpp
 )
 
 install(TARGETS

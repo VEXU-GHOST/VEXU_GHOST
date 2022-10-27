@@ -8,8 +8,15 @@
  * Modified By: Maxx Wilson
  */
 
+#include <iostream>
+#include "yaml-cpp/yaml.h"
 
 int main(int argc, char* argv[]){
+
+    YAML::Node config = YAML::LoadFile("config/config.yaml");
+
+    const std::string username = config["test"]["test2"].as<std::string>();
+    std::cout << username << std::endl;
 
     return 0;
 }
