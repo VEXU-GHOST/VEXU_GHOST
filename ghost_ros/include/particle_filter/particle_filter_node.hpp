@@ -1,39 +1,51 @@
+#include <signal.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <inttypes.h>
+#include <termios.h>
+#include <vector>
+
+#include "eigen3/Eigen/Dense"
+#include "eigen3/Eigen/Geometry"
+#include "gflags/gflags.h"
+
+#include <rclcpp/rclcpp.hpp>
+
+#include "geometry_msgs/msg/pose_array.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+
+#include "math/math_util.h"
+#include "math/line2d.h"
+#include "util/timer.h"
+
+#include "globals/globals.hpp"
+#include "particle_filter.hpp"
+
+using geometry::Line2f;
+using geometry::Line;
+using math_util::DegToRad;
+using math_util::RadToDeg;
+using std::string;
+using std::vector;
+using Eigen::Vector2f;
+
+using std::placeholders::_1;
+
+namespace particle_filter{
+
 class ParticleFilterNode : public rclcpp::Node {
   public:
 
-  ParticleFilterNode(): Node("particle_filter_node"){
-    // Subscriptions
-    laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-      "latency_test_topic",
-      10,
-      std::bind(&ParticleFilterNode::LaserCallback, this, _1));
+  ParticleFilterNode();
 
-    odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-      "latency_test_topic",
-      10,
-      std::bind(&ParticleFilterNode::OdometryCallback, this, _1));
-
-    initial_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-      "latency_test_topic",
-      10,
-      std::bind(&ParticleFilterNode::InitialPoseCallback, this, _1));
-
-    // Publishers
-    // publisher_ = this->create_publisher<sensor_msgs::msg::LaserScan>("latency_test_topic", 10);
-
-  }
-
-  void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
-
-  }
-
-  void OdometryCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
-
-  }
-
-  void InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
-
-  }
+  void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+  void OdometryCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+  void PublishParticles();
   
   private:
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
@@ -41,3 +53,4 @@ class ParticleFilterNode : public rclcpp::Node {
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_sub_;
 
 };
+} // namespace particle_filter

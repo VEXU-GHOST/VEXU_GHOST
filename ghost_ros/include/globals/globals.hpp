@@ -13,39 +13,35 @@
 
 #include <vector>
 
-#include "Eigen/Dense"
-#include <eigen3/Eigen/Core>
-#include <rclcpp>
+#include "eigen3/Eigen/Dense"
+#include "eigen3/Eigen/Geometry"
+#include "math/poses_2d.h"
 
-#include "shared/math/poses_2d.h"
-
-namespace ghost{
-namespace global{
+namespace globals{
 
 struct Pose2DWithCovariance
 {
-    Pose2D pose;
-    Eigen::matrix<float, 3, 3> covariance;
+    pose_2d::Pose2D<float> pose;
+    Eigen::Matrix<float, 3, 3> covariance;
 };
 
 
-    // Sensor Data
-    std::vector<Eigen::Vector2f> point_cloud_;
+    // // Sensor Data
+    // std::vector<Eigen::Vector2f> point_cloud_;
     
-    Pose2DWithCovariance odom_;
+    // Pose2DWithCovariance odom_;
 
-    // Robot State Estimation
-    Pose2DWithCovariance robot_pose;
+    // // Robot State Estimation
+    // Pose2DWithCovariance robot_pose_;
 
-    // Environment State Estimation
-    std::vector<Pose2DWithCovariance> robot_
-    std::vector<Pose2DWithCovariance> disc_locations;
+    // // Environment State Estimation
+    // std::vector<Pose2DWithCovariance> robot_poses_;
+    // std::vector<Pose2DWithCovariance> disc_locations;
 
     // Motor Outputs
 
-};
+extern std::string test;
 
-} // global
-} // ghost
+} // namespace global
 
 #endif // GHOST_ROS__GLOBALS_HPP

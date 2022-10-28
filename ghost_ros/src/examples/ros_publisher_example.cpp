@@ -5,6 +5,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 
 using namespace std::chrono_literals;
 
@@ -17,7 +18,7 @@ class ROSPublisherExample : public rclcpp::Node
     ROSPublisherExample()
     : Node("latency_test_publisher"), count_(0)
     {
-      publisher_ = this->create_publisher<sensor_msgs::msg::LaserScan>("latency_test_topic", 10);
+      publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("latency_test_topic", 10);
       timer_ = this->create_wall_timer(
       500ms, std::bind(&ROSPublisherExample::timer_callback, this));
     }
@@ -25,12 +26,12 @@ class ROSPublisherExample : public rclcpp::Node
   private:
     void timer_callback()
     {
-      auto message = sensor_msgs::msg::LaserScan();
+      auto message = geometry_msgs::msg::PoseWithCovarianceStamped();
       message.header.stamp = this->get_clock()->now();
       publisher_->publish(message);
     }
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr publisher_;
     size_t count_;
 };
 

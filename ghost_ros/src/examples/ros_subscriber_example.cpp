@@ -12,18 +12,18 @@ class ROSSubscriberExample : public rclcpp::Node
     ROSSubscriberExample()
     : Node("latency_test_subscriber")
     {
-      subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+      subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
       "latency_test_topic", 10, std::bind(&ROSSubscriberExample::topic_callback, this, _1));
     }
 
   private:
-    void topic_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
+    void topic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
     {
       auto now = this->get_clock()->now();
       auto diff = now - msg->header.stamp;
       RCLCPP_INFO(this->get_logger(), "%d us", diff.nanoseconds()/1000);
     }
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr subscription_;
 };
 
 int main(int argc, char * argv[])

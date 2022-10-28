@@ -20,41 +20,7 @@
 */
 //========================================================================
 
-#include <signal.h>
-#include <stdlib.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <inttypes.h>
-#include <termios.h>
-#include <vector>
-
-#include "eigen3/Eigen/Dense"
-#include "eigen3/Eigen/Geometry"
-#include "gflags/gflags.h"
-
-#include <rclcpp/rclcpp.hpp>
-
-#include "geometry_msgs/msg/pose_array.hpp"
-#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
-#include "sensor_msgs/msg/laser_scan.hpp"
-#include "nav_msgs/msg/odometry.hpp"
-
-#include "math/math_util.h"
-#include "math/line2d.h"
-#include "util/timer.h"
-
-#include "particle_filter.h"
-
-using geometry::Line2f;
-using geometry::Line;
-using math_util::DegToRad;
-using math_util::RadToDeg;
-using std::string;
-using std::vector;
-using Eigen::Vector2f;
-
-using std::placeholders::_1;
+#include "particle_filter/particle_filter_node.hpp"
 
 // // Create command line arguements
 // DEFINE_string(laser_topic, "/scan", "Name of ROS topic for LIDAR data");
@@ -71,23 +37,20 @@ using std::placeholders::_1;
 // CONFIG_FLOAT(init_r_, "init_r");
 namespace particle_filter {
 
-class ParticleFilterNode : public rclcpp::Node {
-  public:
-
-  ParticleFilterNode(): Node("particle_filter_node"){
+  ParticleFilterNode::ParticleFilterNode(): Node("particle_filter_node"){
     // Subscriptions
     laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-      "latency_test_topic",
+      "scan",
       10,
       std::bind(&ParticleFilterNode::LaserCallback, this, _1));
 
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-      "latency_test_topic",
+      "odom",
       10,
       std::bind(&ParticleFilterNode::OdometryCallback, this, _1));
 
     initial_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-      "latency_test_topic",
+      "initial_pose",
       10,
       std::bind(&ParticleFilterNode::InitialPoseCallback, this, _1));
 
@@ -96,7 +59,7 @@ class ParticleFilterNode : public rclcpp::Node {
 
   }
 
-  void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
+  void ParticleFilterNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
     // Process laser observation
 
     // Update robot pose estimate
@@ -104,10 +67,12 @@ class ParticleFilterNode : public rclcpp::Node {
     // Update unmapped obstacle scans
 
     // Publish Visualization
+    std::cout << "Laser" << std::endl;
+    std::cout << globals::test << std::endl;
   }
 
-  void OdometryCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
-    // Particle Fitler Predict
+  void ParticleFilterNode::OdometryCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
+    // Particle Filter Predict
 
     // Update robot pose estimate
 
@@ -116,22 +81,14 @@ class ParticleFilterNode : public rclcpp::Node {
 
   }
 
-  void InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
+  void ParticleFilterNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
     // Set new initial pose
+    std::cout << "New Initial Pose" << std::endl;
+    globals::test = "test20";
   }
   
-  void PublishParticles(){
+  void ParticleFilterNode::PublishParticles(){
 
   }
   
-  private:
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_sub_;
-
-};
-
-void Run() {
-  rclcpp::spin(std::make_shared<ParticleFilterNode>());
-}
 } // namespace particle_filter

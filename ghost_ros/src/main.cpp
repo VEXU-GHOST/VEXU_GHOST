@@ -16,11 +16,16 @@
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
 
-// #include "particle_filter/particle_filter_node.hpp"
+#include "globals/globals.hpp"
+
+#include "particle_filter/particle_filter_node.hpp"
 
 using namespace std::literals::chrono_literals;
 
+// Define Global Variables in shared memory
 bool run_ = true;
+std::string globals::test = "test";
+
 
 void SignalHandler(int) {
     if(rclcpp::ok()){
@@ -37,11 +42,7 @@ void SignalHandler(int) {
 }
 
 void particle_filter_main(){
-    while(rclcpp::ok() && run_){
-        // rclcpp::spin_once();
-        std::cout << "Particle Filter" << std::endl;
-        std::this_thread::sleep_for(500ms);
-    }
+    rclcpp::spin(std::make_shared<particle_filter::ParticleFilterNode>());
 }
 
 int main(int argc, char* argv[]){

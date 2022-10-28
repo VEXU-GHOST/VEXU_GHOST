@@ -27,6 +27,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -131,10 +132,15 @@ install(TARGETS
 # ########################
 # ### GHOST ROS Main ####
 # ########################
-add_executable(ghost_ros_main src/main.cpp)
+add_executable(ghost_ros_main
+  src/main.cpp
+  src/particle_filter/particle_filter_node.cpp)
 ament_target_dependencies(ghost_ros_main
   rclcpp
   std_msgs
+  geometry_msgs
+  sensor_msgs
+  nav_msgs
 )
 
 target_link_libraries(ghost_ros_main
