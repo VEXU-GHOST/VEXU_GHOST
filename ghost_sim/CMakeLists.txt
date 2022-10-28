@@ -78,6 +78,25 @@ target_include_directories(gazebo_joint_pid_plugin
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(gazebo_joint_pid_plugin)
 
+# Gazebo Swerve Odometry Plugin
+add_library(swerve_odometry_plugin SHARED src/swerve_odometry_plugin.cpp)
+ament_target_dependencies(swerve_odometry_plugin
+  rclcpp
+  std_msgs
+  geometry_msgs
+  gazebo
+  gazebo_dev
+  gazebo_msgs
+  gazebo_ros
+  gazebo_plugins
+  ghost_ros
+)
+target_include_directories(swerve_odometry_plugin
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+ament_export_libraries(swerve_odometry_plugin)
+
 ###################
 ##### TESTING #####
 ###################

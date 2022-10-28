@@ -1,16 +1,15 @@
 /*
- * Filename: gazebo_joint_pid_plugin
- * Created Date: Sunday August 7th 2022
+ * Filename: odometry_plugin
+ * Created Date: Monday October 24th 2022
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Saturday September 10th 2022 10:50:34 am
+ * Last Modified: Monday October 24th 2022 2:19:16 pm
  * Modified By: Maxx Wilson
  */
 
-#ifndef GHOST_SIM__GAZEBO_JOINT_PID_PLUGIN_HPP_
-#define GHOST_SIM__GAZEBO_JOINT_PID_PLUGIN_HPP_
-
+#ifndef GHOST_SIM__SWERVE_ODOMETRY_PLUGIN_HPP
+#define GHOST_SIM__SWERVE_ODOMETRY_PLUGIN_HPP
 #include <math.h>
 #include <vector>
 #include <memory>
@@ -24,22 +23,21 @@
 
 #include "std_msgs/msg/float32.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
-#include "dc_motor_model.hpp"
-
-namespace gazebo_joint_pid_plugin
+namespace swerve_odometry_plugin
 {
 // Forward declaration of private data class.
-class GazeboJointPIDPluginPrivate;
+class SwerveOdometryPluginPrivate;
 
-class GazeboJointPIDPlugin : public gazebo::ModelPlugin
+class SwerveOdometryPlugin : public gazebo::ModelPlugin
 {
 public:
   /// Constructor
-  GazeboJointPIDPlugin();
+  SwerveOdometryPlugin();
 
   /// Destructor
-  ~GazeboJointPIDPlugin();
+  ~SwerveOdometryPlugin();
 
   /// Gazebo calls this when the plugin is loaded.
   /// \param[in] model Pointer to parent model. Other plugin types will expose different entities,
@@ -55,8 +53,8 @@ protected:
 private:
   /// Recommended PIMPL pattern. This variable should hold all private
   /// data members.
-  std::unique_ptr<GazeboJointPIDPluginPrivate> impl_;
+  std::unique_ptr<SwerveOdometryPluginPrivate> impl_;
 };
-}  // namespace gazebo_joint_pid_plugin
+}  // namespace swerve_odometry_plugin
 
-#endif  // GHOST_SIM__GAZEBO_JOINT_PID_PLUGIN_HPP_
+#endif  // GHOST_SIM__SWERVE_ODOMETRY_PLUGIN_HPP

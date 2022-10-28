@@ -9,17 +9,6 @@
  */
 
 #include "gazebo_joint_pid_plugin.hpp"
-#include "dc_motor_model.hpp"
-
-#include <gazebo/physics/Model.hh>
-#include <gazebo/physics/Joint.hh>
-#include <gazebo/physics/Link.hh>
-#include <gazebo_ros/node.hpp>
-#include <rclcpp/rclcpp.hpp>
-
-#include <math.h>
-#include <vector>
-#include <memory>
 
 namespace gazebo_joint_pid_plugin
 {

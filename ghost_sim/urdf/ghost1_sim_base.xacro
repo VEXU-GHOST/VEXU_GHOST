@@ -9,11 +9,10 @@
 
     <!-- Add Sensors -->
     <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro>
-    <xacro:imu_macro parent_link="camera_view_link"></xacro:imu_macro>
+    <!-- <xacro:imu_macro parent_link="camera_view_link"></xacro:imu_macro> -->
 
-    <!-- Gazebo Plugins -->
+    <!-- Joint State Publisher -->
     <gazebo>
-        <!-- Joint State Publisher -->
         <plugin name="gazebo_ros_joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
             <update_rate>100</update_rate>
             <joint_name>steering_1</joint_name>
@@ -23,5 +22,8 @@
             <joint_name>driveshaft_2</joint_name>
             <joint_name>driveshaft_3</joint_name>
         </plugin>
+
+        <!-- <plugin name="swerve_odometry_plugin" filename="libswerve_odometry_plugin.so">
+        </plugin> -->
     </gazebo>
 </robot>
