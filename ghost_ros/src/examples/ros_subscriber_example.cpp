@@ -2,6 +2,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+
 using std::placeholders::_1;
 
 class ROSSubscriberExample : public rclcpp::Node

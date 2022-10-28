@@ -97,14 +97,30 @@ class ParticleFilterNode : public rclcpp::Node {
   }
 
   void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
+    // Process laser observation
 
+    // Update robot pose estimate
+
+    // Update unmapped obstacle scans
+
+    // Publish Visualization
   }
 
   void OdometryCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
+    // Particle Fitler Predict
+
+    // Update robot pose estimate
+
+    // Publish Visualization
+
 
   }
 
   void InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
+    // Set new initial pose
+  }
+  
+  void PublishParticles(){
 
   }
   

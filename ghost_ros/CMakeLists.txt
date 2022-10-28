@@ -99,6 +99,7 @@ add_executable(ros_publisher_example src/examples/ros_publisher_example.cpp)
 ament_target_dependencies(ros_publisher_example
   rclcpp
   sensor_msgs
+  geometry_msgs
 )
 
 install(TARGETS
@@ -110,6 +111,7 @@ add_executable(ros_subscriber_example src/examples/ros_subscriber_example.cpp)
 ament_target_dependencies(ros_subscriber_example
   rclcpp
   sensor_msgs
+  geometry_msgs
 )
 
 install(TARGETS

@@ -32,7 +32,7 @@
 #include "util/timer.h"
 #include "yaml-cpp/yaml.h"
 
-#include "particle_filter/particle_filter.h"
+#include "particle_filter/particle_filter.hpp"
 
 #include "vector_map/vector_map.h"
 
@@ -450,10 +450,6 @@ void ParticleFilter::GetLocation(Eigen::Vector2f* loc_ptr,
 
 Eigen::Vector2f ParticleFilter::BaseLinkToSensorFrame(const Eigen::Vector2f &loc, const float &angle){
   return loc + Vector2f(CONFIG_laser_offset*cos(angle), CONFIG_laser_offset*sin(angle));
-}
-
-void ParticleFilter::Run(){
-  
 }
 
 }  // namespace particle_filter
