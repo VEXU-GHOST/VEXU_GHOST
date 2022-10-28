@@ -126,17 +126,31 @@
         <origin xyz="0 0 0.1" rpy="0 0 0"/>
     </joint>
 
-    <link name="camera_link">
+    <link name="camera_base_link">
         <inertial>
             <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
             <mass value="0.125"/>
-            <inertia ixx="0.001"  ixy="0"  ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+            <inertia ixx="0.001"  ixy="0.001"  ixz="0.001" iyy="0.001" iyz="0.001" izz="0.001" />
         </inertial>
     </link>
 
-    <joint name="camera_joint" type="fixed">
+    <joint name="camera_base_joint" type="fixed">
         <parent link="base_link"/>
-        <child link="camera_link"/>
-        <origin xyz="${l_wheel/2} 0 0.33" rpy="0 0 0"/>
+        <child link="camera_base_link"/>
+        <origin xyz="0 ${l_wheel/2} 0.33" rpy="0 0 1.570795"/>
+    </joint>
+
+    <link name="camera_view_link">
+        <inertial>
+            <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
+            <mass value="0.125"/>
+            <inertia ixx="0.001"  ixy="0.001"  ixz="0.001" iyy="0.001" iyz="0.001" izz="0.001" />
+        </inertial>
+    </link>
+
+    <joint name="camera_view_joint" type="fixed">
+        <parent link="camera_base_link"/>
+        <child link="camera_view_link"/>
+        <origin xyz="0 0 0" rpy="0 0.7853975 0"/>
     </joint>
 </robot>

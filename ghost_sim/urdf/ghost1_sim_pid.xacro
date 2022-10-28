@@ -1,33 +1,11 @@
 <?xml version="1.0"?>
 <robot name="ghost1" xmlns:xacro="http://ros.org/wiki/xacro">
 
-    <xacro:include filename="$(find ghost_sim)/urdf/macros/actuator_macros.xacro"/>
-    <xacro:include filename="$(find ghost_sim)/urdf/macros/sensor_macros.xacro"/>
-    
     <!-- Import Primary Robot URDF -->
-    <xacro:include filename="$(find ghost_ros)/urdf/ghost1.xacro"/>
-
-    <!-- Add Sensors -->
-    <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro>
-
-    <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
-    <xacro:sensor_d435i parent="camera_link" >
-        <origin xyz="0 0 0" rpy="0 -0.7853975 0"/>
-    </xacro:sensor_d435i>
+    <xacro:include filename="$(find ghost_sim)/urdf/ghost1_sim_base.xacro"/>
 
     <!-- Gazebo Plugins -->
     <gazebo>
-        <!-- Joint State Publisher -->
-        <plugin name="gazebo_ros_joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-            <update_rate>100</update_rate>
-            <joint_name>steering_1</joint_name>
-            <joint_name>steering_2</joint_name>
-            <joint_name>steering_3</joint_name>
-            <joint_name>driveshaft_1</joint_name>
-            <joint_name>driveshaft_2</joint_name>
-            <joint_name>driveshaft_3</joint_name>
-        </plugin>
-
         <!-- Motor Models -->
         <!-- 0.05 Steering -->
         <xacro:joint_pid_macro
