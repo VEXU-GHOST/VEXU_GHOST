@@ -7,7 +7,13 @@
     <!-- Import Primary Robot URDF -->
     <xacro:include filename="$(find ghost_ros)/urdf/ghost1.xacro"/>
 
-    <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro>        
+    <!-- Add Sensors -->
+    <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro>
+
+    <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
+    <xacro:sensor_d435i parent="camera_link" >
+        <origin xyz="0 0 0" rpy="0 -0.7853975 0"/>
+    </xacro:sensor_d435i>
 
     <!-- Gazebo Plugins -->
     <gazebo>
