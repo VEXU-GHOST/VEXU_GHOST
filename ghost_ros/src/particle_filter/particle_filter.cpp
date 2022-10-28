@@ -452,4 +452,8 @@ Eigen::Vector2f ParticleFilter::BaseLinkToSensorFrame(const Eigen::Vector2f &loc
   return loc + Vector2f(CONFIG_laser_offset*cos(angle), CONFIG_laser_offset*sin(angle));
 }
 
+void ParticleFilter::Run(){
+  
+}
+
 }  // namespace particle_filter

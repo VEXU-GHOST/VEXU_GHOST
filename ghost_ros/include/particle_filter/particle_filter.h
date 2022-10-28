@@ -42,7 +42,7 @@ struct Particle {
 class ParticleFilter {
  public:
   // Default Constructor.
-   ParticleFilter();
+  ParticleFilter();
 
   // Observe a new laser scan.
   void ObserveLaser(const std::vector<float>& ranges,
@@ -131,6 +131,6 @@ class ParticleFilter {
 
   double end_time = 0;
 };
-}  // namespace slam
+}  // namespace particle_filter
 
 #endif   // SRC_PARTICLE_FILTER_H_

@@ -9,14 +9,19 @@
  */
 
 #include <iostream>
-#include "yaml-cpp/yaml.h"
+#include <thread>
+
+#include <rclcpp/rclcpp.hpp>
+#include <yaml-cpp/yaml.h>
+
+#include "particle_filter/particle_filter.h"
 
 int main(int argc, char* argv[]){
+    rclcpp::init(argc, argv);
 
-    YAML::Node config = YAML::LoadFile("config/config.yaml");
+    // Initialize modules
+    std::thread particle_filter_thread(particle_filter::Run);    
 
-    const std::string username = config["test"]["test2"].as<std::string>();
-    std::cout << username << std::endl;
 
     return 0;
 }
