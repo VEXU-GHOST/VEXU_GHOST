@@ -23,7 +23,10 @@
             <joint_name>driveshaft_3</joint_name>
         </plugin>
 
-        <!-- <plugin name="swerve_odometry_plugin" filename="libswerve_odometry_plugin.so">
-        </plugin> -->
+        <plugin name="swerve_odometry_plugin" filename="libswerve_odometry_plugin.so">
+        <x_stddev>0.05</x_stddev>
+        <y_stddev>0.05</y_stddev>
+        <r_stddev>0.03</r_stddev>
+        </plugin>
     </gazebo>
 </robot>

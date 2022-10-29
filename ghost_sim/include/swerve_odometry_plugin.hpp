@@ -13,6 +13,7 @@
 #include <math.h>
 #include <vector>
 #include <memory>
+#include <random>
 
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/physics/Model.hh>
@@ -22,8 +23,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "std_msgs/msg/float32.hpp"
-#include "geometry_msgs/msg/vector3.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/vector3_stamped.hpp"
 
 namespace swerve_odometry_plugin
 {
