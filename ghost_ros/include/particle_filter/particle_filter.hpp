@@ -22,11 +22,22 @@
 #include <algorithm>
 #include <vector>
 
+#include <cmath>
+#include <iostream>
+#include "eigen3/Eigen/Dense"
+#include "eigen3/Eigen/Geometry"
+#include "gflags/gflags.h"
+#include "glog/logging.h"
+#include "math/geometry.h"
+#include "math/line2d.h"
+#include "math/math_util.h"
+#include "util/timer.h"
+
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
 #include "math/line2d.h"
 #include "util/random.h"
-#include "vector_map/vector_map.h"
+#include "vector_map/vector_map.hpp"
 
 #ifndef SRC_PARTICLE_FILTER_H_
 #define SRC_PARTICLE_FILTER_H_
@@ -39,10 +50,41 @@ struct Particle {
   double weight;
 };
 
+struct ParticleFilterConfig {
+  std::string map;
+  float init_x;
+  float init_y;
+  float init_r;
+  int num_particles;
+  float init_x_sigma;
+  float init_y_sigma;
+  float init_r_sigma;
+  float k1;
+  float k2;
+  float k3;
+  float k4;
+  float k5;
+  float k6;
+  float laser_offset;
+  float min_update_dist;
+  float min_update_angle;
+  double sigma_observation;
+  double gamma;
+  double dist_short;
+  double dist_long;
+  double range_min;
+  double range_max;
+  double resize_factor;
+  int resample_frequency;
+};
+
 class ParticleFilter {
  public:
   // Default Constructor.
   ParticleFilter();
+
+  // Constructor with params
+  ParticleFilter(ParticleFilterConfig &config_params);
 
   // Observe a new laser scan.
   void ObserveLaser(const std::vector<float>& ranges,
@@ -95,9 +137,18 @@ class ParticleFilter {
 
   void SetParticlesForTesting(std::vector<Particle> new_particles);
 
- Eigen::Vector2f BaseLinkToSensorFrame(const Eigen::Vector2f &loc, const float &angle);
+  double GetRobustObservationLikelihood(double measured, double expected, double dist_short, double dist_long);
+
+  Eigen::Vector2f BaseLinkToSensorFrame(const Eigen::Vector2f &loc, const float &angle);
+
+  vector_map::VectorMap GetMap(){
+    return map_;
+  }
 
  private:
+
+  // Runtime Configuration Params
+  ParticleFilterConfig config_params_;
 
   // List of particles being tracked.
   std::vector<Particle> particles_;
@@ -127,7 +178,6 @@ class ParticleFilter {
   Eigen::Vector2f last_update_loc_;
   float last_update_angle_;
   int resample_loop_counter_ = 0;
-
 
   double end_time = 0;
 };

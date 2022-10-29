@@ -14,8 +14,10 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+# set(CMAKE_BUILD_TYPE "DEBUG")
+
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
-  add_compile_options(-g -O2)
+  add_compile_options(-g -O0)
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
 # #####################
@@ -27,6 +29,8 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(tf2_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
@@ -57,11 +61,33 @@ install(
   INCLUDES DESTINATION include
 )
 
+# Vector Map Library
+add_library(vector_map SHARED src/vector_map/vector_map.cpp)
+target_link_libraries(vector_map
+  amrl_shared_lib
+  gflags
+)
+ament_target_dependencies(vector_map
+  Eigen3
+)
+target_include_directories(vector_map
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+install(
+  TARGETS vector_map
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 # Particle Filter Library
 add_library(particle_filter SHARED src/particle_filter/particle_filter.cpp)
 target_link_libraries(particle_filter
   amrl_shared_lib
-  yaml-cpp
+  vector_map
 )
 ament_target_dependencies(particle_filter
   Eigen3
@@ -134,18 +160,23 @@ install(TARGETS
 # ########################
 add_executable(ghost_ros_main
   src/main.cpp
-  src/particle_filter/particle_filter_node.cpp)
+  src/particle_filter/particle_filter_node.cpp
+)
+
 ament_target_dependencies(ghost_ros_main
   rclcpp
   std_msgs
-  geometry_msgs
   sensor_msgs
+  geometry_msgs
+  visualization_msgs
+  tf2_msgs
   nav_msgs
 )
 
 target_link_libraries(ghost_ros_main
   amrl_shared_lib
   yaml-cpp
+  particle_filter
 )
 
 install(TARGETS
@@ -171,6 +202,7 @@ install(
 
 install(DIRECTORY
   launch
+  config
   urdf
   rviz
   DESTINATION share/${PROJECT_NAME})

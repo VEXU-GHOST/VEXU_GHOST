@@ -12,6 +12,8 @@
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
 
   <exec_depend>joy</exec_depend>
   <exec_depend>teleop_twist_joy</exec_depend>

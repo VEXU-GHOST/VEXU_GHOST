@@ -4,7 +4,7 @@
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Monday October 24th 2022 2:34:06 pm
+ * Last Modified: Friday October 28th 2022 3:45:21 pm
  * Modified By: Maxx Wilson
  */
 
@@ -40,7 +40,7 @@ struct Pose2DWithCovariance
 
     // Motor Outputs
 
-extern std::string test;
+extern std::string repo_base_dir;
 
 } // namespace global
 

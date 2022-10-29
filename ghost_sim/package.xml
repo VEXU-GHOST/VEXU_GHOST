@@ -13,6 +13,7 @@
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
   <depend>gazebo</depend>
   <depend>gazebo_dev</depend>
   <depend>gazebo_msgs</depend>

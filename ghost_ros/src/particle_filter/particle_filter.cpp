@@ -19,22 +19,7 @@
 */
 //========================================================================
 
-#include <algorithm>
-#include <cmath>
-#include <iostream>
-#include "eigen3/Eigen/Dense"
-#include "eigen3/Eigen/Geometry"
-#include "gflags/gflags.h"
-#include "glog/logging.h"
-#include "math/geometry.h"
-#include "math/line2d.h"
-#include "math/math_util.h"
-#include "util/timer.h"
-#include "yaml-cpp/yaml.h"
-
 #include "particle_filter/particle_filter.hpp"
-
-#include "vector_map/vector_map.h"
 
 using geometry::Line2f;
 using std::cout;
@@ -46,36 +31,6 @@ using Eigen::Vector2f;
 using Eigen::Vector2i;
 using vector_map::VectorMap;
 
-YAML::Node config = YAML::LoadFile("ghost_ros/config/particle_filter.yaml");
-
-const int CONFIG_num_particles = config["num_particles"].as<int>();
-
-const float CONFIG_init_x_sigma = config["init_x_sigma"].as<float>();
-const float CONFIG_init_y_sigma = config["init_y_sigma"].as<float>();
-const float CONFIG_init_r_sigma = config["init_r_sigma"].as<float>();
-
-const float CONFIG_k1 = config["k1"].as<float>();
-const float CONFIG_k2 = config["k2"].as<float>();
-const float CONFIG_k3 = config["k3"].as<float>();
-const float CONFIG_k4 = config["k4"].as<float>();
-const float CONFIG_k5 = config["k5"].as<float>();
-const float CONFIG_k6 = config["k6"].as<float>();
-
-const float CONFIG_laser_offset = config["laser_offset"].as<float>();
-const float CONFIG_min_update_dist = config["min_update_dist"].as<float>();
-const float CONFIG_min_update_angle = config["min_update_angle"].as<float>();
-
-const double CONFIG_sigma_observation = config["sigma_observation"].as<double>();
-const double CONFIG_gamma = config["gamma"].as<double>();
-const double CONFIG_dist_short = config["dist_short"].as<double>();
-const double CONFIG_dist_long = config["dist_long"].as<double>();
-
-const double CONFIG_range_min = config["range_min"].as<double>();
-const double CONFIG_range_max = config["range_max"].as<double>();
-const double CONFIG_resize_factor = config["resize_factor"].as<double>();
-
-const int CONFIG_resample_frequency = config["resample_frequency"].as<int>();
-
 namespace particle_filter {
   Vector2f first_odom_loc;
   float first_odom_angle;
@@ -83,7 +38,15 @@ namespace particle_filter {
 ParticleFilter::ParticleFilter() :
     prev_odom_loc_(0, 0),
     prev_odom_angle_(0),
-    odom_initialized_(false) {}
+    odom_initialized_(false){
+    }
+
+ParticleFilter::ParticleFilter(ParticleFilterConfig &config_params) :
+    prev_odom_loc_(0, 0),
+    prev_odom_angle_(0),
+    odom_initialized_(false){
+      config_params_ = config_params;
+    }
 
 void ParticleFilter::GetParticles(vector<Particle>* particles) const {
   *particles = particles_;
@@ -101,7 +64,7 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
   // Compute what the predicted point cloud would be, if the car was at the pose
   // loc, angle, with the sensor characteristics defined by the provided
   // parameters.
-  scan.resize((int)(num_ranges / CONFIG_resize_factor));
+  scan.resize((int)(num_ranges / config_params_.resize_factor));
   
   Vector2f sensor_loc = BaseLinkToSensorFrame(loc, angle);
   
@@ -116,11 +79,11 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
   // Fill in the entries of scan using array writes, e.g. scan[i] = ...
   for (size_t i = 0; i < scan.size(); ++i) { // for each ray
     // Initialize the ray line
-    float ray_angle = angle + angle_min + CONFIG_resize_factor * i / num_ranges * (angle_max - angle_min);
+    float ray_angle = angle + angle_min + config_params_.resize_factor * i / num_ranges * (angle_max - angle_min);
     float C0 = cos(ray_angle);
     float S0 = sin(ray_angle);
 
-    Vector2f final_intersection = sensor_loc + CONFIG_range_max * Vector2f(C0, S0);
+    Vector2f final_intersection = sensor_loc + config_params_.range_max * Vector2f(C0, S0);
     Line2f ray(sensor_loc, final_intersection);
 
     int h_dir = math_util::Sign(ray.Dir().x());
@@ -185,9 +148,9 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
   }
 }
 
-double GetRobustObservationLikelihood(double measured, double expected, double dist_short, double dist_long){
+double ParticleFilter::GetRobustObservationLikelihood(double measured, double expected, double dist_short, double dist_long){
   
-  if(measured < CONFIG_range_min || measured > CONFIG_range_max){
+  if(measured < config_params_.range_min || measured > config_params_.range_max){
     return 0;
   }
   else if(measured < (expected - dist_short)){
@@ -228,10 +191,10 @@ void ParticleFilter::Update(const vector<float>& ranges,
 
   // Calculate the particle weight
   for(std::size_t i = 0; i < predicted_cloud.size(); i++) {
-    trimmed_ranges[i] = ranges[i * CONFIG_resize_factor];
+    trimmed_ranges[i] = ranges[i * config_params_.resize_factor];
     double predicted_range = (predicted_cloud[i] - sensor_loc).norm();
-    double diff = GetRobustObservationLikelihood(trimmed_ranges[i], predicted_range, CONFIG_dist_short, CONFIG_dist_long);
-    particle.weight += -CONFIG_gamma * Sq(diff) / Sq(CONFIG_sigma_observation);
+    double diff = GetRobustObservationLikelihood(trimmed_ranges[i], predicted_range, config_params_.dist_short, config_params_.dist_long);
+    particle.weight += -config_params_.gamma * Sq(diff) / Sq(config_params_.sigma_observation);
   } 
 }
 
@@ -288,7 +251,7 @@ void ParticleFilter::ObserveLaser(const vector<float>& ranges,
   // Call the Update and Resample steps as necessary.
   double delta_translation = (last_update_loc_ - prev_odom_loc_).norm();
   double delta_angle = math_util::AngleDiff(last_update_angle_, prev_odom_angle_);
-  if(delta_translation > CONFIG_min_update_dist || std::abs(delta_angle) > CONFIG_min_update_angle){
+  if(delta_translation > config_params_.min_update_dist || std::abs(delta_angle) > config_params_.min_update_angle){
     static int i = 0;
     double start_time = GetMonotonicTime();
     max_weight_log_ = -1e10; // Should be smaller than any
@@ -318,7 +281,7 @@ void ParticleFilter::ObserveLaser(const vector<float>& ranges,
       weight_bins_[i] = weight_sum_;
     }
 
-    if(!(resample_loop_counter_ % CONFIG_resample_frequency)){
+    if(!(resample_loop_counter_ % config_params_.resample_frequency)){
       LowVarianceResample();
     }
     last_update_loc_ = prev_odom_loc_;
@@ -348,12 +311,12 @@ void ParticleFilter::Predict(const Vector2f& odom_loc,
 
   for(Particle &particle: particles_){
     // Get noisy angle
-    float sigma_tht = CONFIG_k5 * delta_translation.norm() + CONFIG_k6 * abs(delta_angle);
+    float sigma_tht = config_params_.k5 * delta_translation.norm() + config_params_.k6 * abs(delta_angle);
     float noisy_angle = delta_angle + rng_.Gaussian(0.0, sigma_tht);
 
     // Get translation noise in Base Link 2
-    float sigma_x = CONFIG_k1 * delta_translation.norm() + CONFIG_k2 * abs(delta_angle);;
-    float sigma_y = CONFIG_k3 * delta_translation.norm() + CONFIG_k4 * abs(delta_angle);
+    float sigma_x = config_params_.k1 * delta_translation.norm() + config_params_.k2 * abs(delta_angle);;
+    float sigma_y = config_params_.k3 * delta_translation.norm() + config_params_.k4 * abs(delta_angle);
     Eigen::Vector2f e_xy = Eigen::Vector2f((float) rng_.Gaussian(0.0, sigma_x),(float) rng_.Gaussian(0.0, sigma_y));
 
     // Transform noise to Base Link 1 using estimated angle to get noisy translation
@@ -382,16 +345,17 @@ void ParticleFilter::Initialize(const string& map_file,
   // The "set_pose" button on the GUI was clicked, or an initialization message
   // was received from the log.
 
-  particles_.resize(CONFIG_num_particles);
+  particles_.resize(config_params_.num_particles);
 
   for(Particle &particle: particles_){
     particle.loc = Eigen::Vector2f(
-      loc[0] + rng_.Gaussian(0, CONFIG_init_x_sigma),
-      loc[1] + rng_.Gaussian(0, CONFIG_init_y_sigma)
+      loc[0] + rng_.Gaussian(0, config_params_.init_x_sigma),
+      loc[1] + rng_.Gaussian(0, config_params_.init_y_sigma)
       );
-    particle.angle = angle + rng_.Gaussian(0, CONFIG_init_r_sigma);
+    particle.angle = angle + rng_.Gaussian(0, config_params_.init_r_sigma);
     particle.weight = 1/((double)particles_.size());
   }
+  weight_sum_ = 1;
   max_weight_log_ = 0;
   last_update_loc_ = prev_odom_loc_;
   last_update_angle_ = prev_odom_angle_;
@@ -449,7 +413,7 @@ void ParticleFilter::GetLocation(Eigen::Vector2f* loc_ptr,
 }
 
 Eigen::Vector2f ParticleFilter::BaseLinkToSensorFrame(const Eigen::Vector2f &loc, const float &angle){
-  return loc + Vector2f(CONFIG_laser_offset*cos(angle), CONFIG_laser_offset*sin(angle));
+  return loc + Vector2f(config_params_.laser_offset*cos(angle), config_params_.laser_offset*sin(angle));
 }
 
 }  // namespace particle_filter

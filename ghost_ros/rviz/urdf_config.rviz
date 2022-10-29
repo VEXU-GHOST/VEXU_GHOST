@@ -12,7 +12,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 1
+      Cell Size: 0.6096 # 24" Tiles
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -26,7 +26,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 6
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 0.6000000238418579
@@ -56,18 +56,27 @@ Visualization Manager:
       Show Names: false
       Update Interval: 0
       Value: true
-    - Class: rviz_default_plugins/MarkerArray
+    - Class: rviz_default_plugins/PoseArray
       Enabled: true
-      Name: MarkerArray
-      Namespaces:
-        "": true
+      Name: Particle Cloud
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /base_vel_markers
+        Value: /particle_cloud
+      Color: 95; 53; 102
+      Arrow Length: 0.03
       Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /map_viz
     - Class: rviz_default_plugins/LaserScan
       Enabled: true
       Name: LIDAR
@@ -83,7 +92,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
-    Fixed Frame: base_link
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:

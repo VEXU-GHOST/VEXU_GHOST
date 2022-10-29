@@ -1,17 +1,17 @@
-map: "maps/VEXField.txt"
+map: "ghost_ros/maps/VEXField.txt"
 init_x: 0.0
 init_y: 0.0
 init_r: 0.0
 
 # Vehicle Constants
-laser_offset: 0.2
+laser_offset: 0.0
 range_min: 0.02
 range_max: 10.0
 
 # Initial cloud distribution
-init_x_sigma: 0.3         # 99% of the time, within a meter
-init_y_sigma: 0.3         # 99% of the time, within a meter
-init_r_sigma: 0.2         # 99% of the time, its within 35 deg
+init_x_sigma: 0.025         #
+init_y_sigma: 0.025         #
+init_r_sigma: 0.1        #
 
 # Motion Model Params
 k1: 0.4                   # x error from translation            95% of translations are within 15% margin of error

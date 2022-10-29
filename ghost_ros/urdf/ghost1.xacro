@@ -65,42 +65,42 @@
     <joint name="steering_1" type="continuous">
         <parent link="base_link"/>
         <child link="mod_1"/>
-        <origin xyz="${l_wheel*0.866} ${l_wheel/2} 0" rpy="0 0 0"/>
+        <origin xyz="${l_wheel/2} ${-l_wheel*0.866} 0" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="steering_2" type="continuous">
         <parent link="base_link"/>
         <child link="mod_2"/>
-        <origin xyz="${-l_wheel*0.866} ${l_wheel/2} 0" rpy="0 0 0"/>
+        <origin xyz="${l_wheel/2} ${l_wheel*0.866} 0" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="steering_3" type="continuous">
         <parent link="base_link"/>
         <child link="mod_3"/>
-        <origin xyz="0 ${-l_wheel} 0" rpy="0 0 0"/>
+        <origin xyz="${-l_wheel} 0 0" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="driveshaft_1" type="continuous">
         <parent link="mod_1"/>
         <child link="wheel_1"/>
-        <origin xyz="0 0 0" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="driveshaft_2" type="continuous">
         <parent link="mod_2"/>
         <child link="wheel_2"/>
-        <origin xyz="0 0 0" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="driveshaft_3" type="continuous">
         <parent link="mod_3"/>
         <child link="wheel_3"/>
-        <origin xyz="0 0 0" rpy="${90*d2r} 0 ${90*d2r}"/>
+        <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -137,7 +137,7 @@
     <joint name="camera_base_joint" type="fixed">
         <parent link="base_link"/>
         <child link="camera_base_link"/>
-        <origin xyz="0 ${l_wheel/2} 0.33" rpy="0 0 1.570795"/>
+        <origin xyz="${l_wheel/2} 0 0.33" rpy="0 0 0"/>
     </joint>
 
     <link name="camera_view_link">

@@ -4,7 +4,7 @@
  * Author: Maxx Wilson
  * Author Email: JesseMaxxWilson@utexas.edu
  * 
- * Last Modified: Thursday October 27th 2022 7:40:53 pm
+ * Last Modified: Friday October 28th 2022 3:45:21 pm
  * Modified By: Maxx Wilson
  */
 
@@ -23,8 +23,10 @@
 using namespace std::literals::chrono_literals;
 
 // Define Global Variables in shared memory
-bool run_ = true;
-std::string globals::test = "test";
+namespace globals{
+    std::string repo_base_dir;
+    bool run_ = true;
+}
 
 
 void SignalHandler(int) {
@@ -32,22 +34,25 @@ void SignalHandler(int) {
         rclcpp::shutdown();
     }
 
-    if (!run_) {
+    if (!globals::run_) {
         printf("Force Exit.\n");
         exit(0);
     }
 
     printf("Exiting.\n");
-    run_ = false;
+    globals::run_ = false;
 }
 
 void particle_filter_main(){
-    rclcpp::spin(std::make_shared<particle_filter::ParticleFilterNode>());
+    rclcpp::spin(std::make_shared<particle_filter::ParticleFilterNode>(globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"));
 }
 
 int main(int argc, char* argv[]){
     signal(SIGINT, SignalHandler);
     rclcpp::init(argc, argv);
+
+    globals::repo_base_dir = getenv("HOME");
+    globals::repo_base_dir += + "/VEXU_GHOST/";
 
     // Initialize modules
     std::thread particle_filter_thread(&particle_filter_main);    

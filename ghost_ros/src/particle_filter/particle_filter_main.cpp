@@ -33,10 +33,8 @@
 #include "eigen3/Eigen/Geometry"
 #include "gflags/gflags.h"
 
-#include "geometry_msgs/msg/pose_array.hpp"
-#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "nav_msgs/msg/odometry.hpp"
+#include "geometry_msgs/msg/vector3_stamped.hpp"
 
 #include "math/math_util.h"
 #include "math/line2d.h"
