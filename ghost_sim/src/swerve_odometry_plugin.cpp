@@ -29,7 +29,7 @@ public:
     gazebo_ros::Node::SharedPtr ros_node_;
 
     /// Publishers
-    rclcpp::Publisher<geometry_msgs::msg::Vector3Stamped>::SharedPtr odom_pub_;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
 
     double x_stddev;
     double y_stddev;
@@ -89,7 +89,7 @@ void SwerveOdometryPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     impl_->gen = std::mt19937(impl_->rd()); 
 
     // Initialize Publisher
-    impl_->odom_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3Stamped>("/odom", 10);
+    impl_->odom_pub_ = impl_->ros_node_->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
 
     // Create a connection so the OnUpdate function is called at every simulation
     // iteration. Remove this call, the connection and the callback if not needed.
@@ -108,12 +108,13 @@ void SwerveOdometryPlugin::OnUpdate()
     // angle_error = std::abs(angle_error) > 180 ? angle_sign*360 - angle_error : angle_error; 
 
     // Publish current joint torque
-    auto odom_msg = geometry_msgs::msg::Vector3Stamped{};
+    auto odom_msg = nav_msgs::msg::Odometry{};
     odom_msg.header.stamp = impl_->ros_node_->get_clock()->now();
-    odom_msg.vector.x = world_pose.Pos().X() + impl_->x_noise_dist(impl_->gen);
-    odom_msg.vector.y = world_pose.Pos().Y() + impl_->y_noise_dist(impl_->gen);
-    odom_msg.vector.z = 2.0 * atan2(world_pose.Rot().Z(), world_pose.Rot().W()) + impl_->r_noise_dist(impl_->gen);
-
+    odom_msg.pose.pose.position.x = world_pose.Pos().X() + impl_->x_noise_dist(impl_->gen);
+    odom_msg.pose.pose.position.y = world_pose.Pos().Y() + impl_->y_noise_dist(impl_->gen);
+    double angle = 2.0 * atan2(world_pose.Rot().Z(), world_pose.Rot().W()) + impl_->r_noise_dist(impl_->gen);
+    odom_msg.pose.pose.orientation.z = sin(angle * 0.5);
+    odom_msg.pose.pose.orientation.w = cos(angle * 0.5);
     impl_->odom_pub_->publish(odom_msg);
 }
 

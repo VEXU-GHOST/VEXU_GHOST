@@ -23,7 +23,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "std_msgs/msg/float32.hpp"
-#include "geometry_msgs/msg/vector3_stamped.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 
 namespace swerve_odometry_plugin
 {

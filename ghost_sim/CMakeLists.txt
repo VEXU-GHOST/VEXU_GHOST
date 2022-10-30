@@ -17,6 +17,7 @@ find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
 
@@ -85,6 +86,7 @@ ament_target_dependencies(swerve_odometry_plugin
   rclcpp
   std_msgs
   geometry_msgs
+  nav_msgs
   gazebo
   gazebo_dev
   gazebo_msgs
