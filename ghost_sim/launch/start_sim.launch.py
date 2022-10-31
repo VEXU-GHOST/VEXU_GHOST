@@ -94,6 +94,13 @@ def generate_launch_description():
         condition=launch.conditions.IfCondition(LaunchConfiguration("joystick"))
     )
 
+    ghost_ros_main = Node(
+        package='ghost_ros',
+        executable='ghost_ros_main',
+        name='ghost_ros_main',
+        output='screen',
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(name='enable_pid', default_value='True'),
         DeclareLaunchArgument(name='joystick', default_value='False'),
@@ -101,5 +108,6 @@ def generate_launch_description():
         simulation,
         rviz_node,
         joy_launch_description,
+        ghost_ros_main,
         OpaqueFunction(function = launch_setup)
     ])
