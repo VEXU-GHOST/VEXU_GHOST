@@ -1,23 +1,114 @@
 #include "main.h"
 #include "pros/motors.h"
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <numeric>
+#include <unistd.h>
 
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
+// Globals
+uint32_t last_cmd_time_ = 0;
+bool run_ = true;
+
+/*
+	------ Producer Message Encoding ------
+	PROS Overhead:
+	5x Bytes - Packet Header (NULL + "sout")
+	1x Byte - Delimiter (\x00)
+	Sum: 6x Bytes -> 0.41ms
+
+	Six Independent Drive Motors:
+		4x Bytes - int32_t for Raw Position
+	Sum: 24x Bytes -> 1.67ms
+
+	Each V5 Swerve Encoder (Three on a drivetrain, One on Turret):
+		4x Bytes - int32_t for Angle
+	Sum: 16x Bytes -> 1.11ms
+	
+	For each of four joystick channels:
+		4x Bytes - int32_t for Joystick Value
+	Sum: 16x Bytes -> 1.11ms
+
+	Misc:
+		0.5 Bytes - Competition Mode
+		1.5 Bytes - Joystick Buttons
+		1x Byte - Digital Outs
+		1x Byte - Checksum
+	Sum: 4x Bytes -> 0.27ms
+	
+	Total Sum: 66 Byte Packet
+	66 Bytes x 8 bits / byte * 1 sec / 115200 bits * 1000ms / 1s = 4.58ms
+	*/
+void producer_main(){
+	int sout_int = fileno(stdout);
+	char buffer[] = {66, 0, 10};
+	pros::c::fdctl(sout_int, SERCTL_DEACTIVATE, NULL);
+
+	for(int i = 0; i < 100; i++){
+		write(sout_int, buffer, sizeof(buffer));
+	}
+
+	while(run_){
+		// Poll sensor data
+
+		// Get Competition Mode
+		
+		// Compress to serial msg
+
+		// Add Checksum
+
+		// Send
+		std::cout << "Producer" << std::endl;
+		pros::delay(250);
+	}
+	fclose(stdout);
+}
+
+/*
+	------ Producer Message Encoding ------
+	PROS Overhead:
+	5x Bytes - Packet Header (NULL + "sout")
+	1x Byte - Delimiter (\x00)
+	Sum: 6x Bytes -> 0.41ms
+
+	2x Flywheel Motors
+		4x Bytes - int32_t for Velocity Command
+		2x Bytes - int16_t for Voltage Command
+	Sum: 12 Bytes -> 0.83ms
+
+	6x Independent Drive Motors, 1x Turret:
+		4x Bytes - int32_t for Velocity Command
+		2x Bytes - int16_t for Voltage Command
+	Sum: 42 Bytes -> 2.92ms
+
+	Misc:
+		1x Byte - Checksum
+	Sum: 1x Byte -> 0.07ms
+	
+	Total Sum: 61 Byte Packet
+	 61 Bytes x 8 bits / byte * 1 sec / 115200 bits * 1000ms / 1s = 4.24ms
+	*/
+void consumer_main(){
+	while(run_){
+		// Read serial buffer
+		
+		// Collect packets
+		
+		// Verify Check Sum
+		
+		// Actuator Mutex
+		
+		// Update Actuators
+		// std::cout << "Consumer" << std::endl;
+		pros::delay(500);
+	}
+}
+
+void actuator_timeout_main(){
+	while(run_){
+		std::cout << "Timeout" << std::endl;
+		pros::delay(1000);
 	}
 }
 
@@ -29,9 +120,10 @@ void on_center_button() {
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
 
-	pros::lcd::register_btn1_cb(on_center_button);
+	// Start Serial Interface tasks
+	pros::Task producer_thread(producer_main, "producer thread");
+	pros::Task consumer_thread(consumer_main, "consumer thread");
 }
 
 /**
@@ -39,7 +131,12 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+	while(pros::competition::is_disabled()){
+		std::cout << "Disabled" << std::endl;
+		pros::delay(10);
+	}
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -63,7 +160,12 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+	while(pros::competition::is_autonomous()){
+		std::cout << "Auton" << std::endl;
+		pros::delay(10);
+	}
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -80,42 +182,7 @@ void autonomous() {}
  */
 void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor left_mtr(1, pros::motor_gearset_e::E_MOTOR_GEAR_600);
-	pros::Motor right_mtr(2, pros::motor_gearset_e::E_MOTOR_GEAR_600);
-	
-
-	int v_buf_count = 0;
-	int e_buf_count = 0;
-	int p_buf_count = 0;
-	int num_samples = 100;
-
-	std::vector<double> vel_buffer(num_samples, 0);
-	std::vector<double> eff_buffer(num_samples, 0);
-	std::vector<double> pwr_buffer(num_samples, 0);
-
-	while (true) {
-		vel_buffer[v_buf_count%num_samples] = left_mtr.get_actual_velocity();
-		double v_min = *std::min_element(vel_buffer.begin(), vel_buffer.end());
-		double v_max = *std::max_element(vel_buffer.begin(), vel_buffer.end());
-		double v_avg = std::accumulate(vel_buffer.begin(), vel_buffer.end(), 0)/ ((double) num_samples);
-		v_buf_count++;
-
-		pwr_buffer[p_buf_count%num_samples] = left_mtr.get_power();
-		double p_min = *std::min_element(pwr_buffer.begin(), pwr_buffer.end());
-		double p_max = *std::max_element(pwr_buffer.begin(), pwr_buffer.end());
-		double p_avg = std::accumulate(pwr_buffer.begin(), pwr_buffer.end(), 0)/((double) num_samples);
-		p_buf_count++;
-
-		if(v_buf_count % num_samples == 0){
-			pros::lcd::print(0, "RPM, Efficiency, W");
-			pros::lcd::print(1, "%lf %lf %lf", v_min, v_avg, v_max);
-			pros::lcd::print(2, "%lf %lf %lf", p_min, p_avg, p_max);
-		}
-		int left = master.get_analog(ANALOG_LEFT_Y);
-		int right = master.get_analog(ANALOG_RIGHT_Y);
-
-		left_mtr = left;
-		right_mtr = right;
-		pros::delay(5);
+	while(run_){
+		pros::delay(10);
 	}
 }
