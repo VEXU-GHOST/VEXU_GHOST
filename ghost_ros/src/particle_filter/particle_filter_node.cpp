@@ -233,5 +233,10 @@ namespace particle_filter {
       first_map_load_ = false;
     }
   }
+
+  // Particle Filter Main Thread
+  void particle_filter_main(std::string config_file){
+      rclcpp::spin(std::make_shared<particle_filter::ParticleFilterNode>(config_file));
+  }
   
 } // namespace particle_filter

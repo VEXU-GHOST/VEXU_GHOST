@@ -14,7 +14,7 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
-# set(CMAKE_BUILD_TYPE "DEBUG")
+set(CMAKE_BUILD_TYPE "DEBUG")
 
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0)
@@ -35,6 +35,8 @@ find_package(nav_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+
+find_package(serial REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 include_directories(include)
@@ -96,9 +98,41 @@ target_include_directories(particle_filter
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-
 install(
   TARGETS particle_filter
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+# COBS Library
+add_library(cobs SHARED src/COBS/COBS.cpp)
+target_include_directories(cobs
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(
+  TARGETS cobs
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+# V5 Serial Library
+add_library(v5_serial SHARED src/v5_serial/v5_serial.cpp src/COBS/COBS.cpp)
+target_link_libraries(v5_serial
+  cobs
+  serial
+)
+target_include_directories(v5_serial
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+install(
+  TARGETS v5_serial
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -161,6 +195,7 @@ install(TARGETS
 add_executable(ghost_ros_main
   src/main.cpp
   src/particle_filter/particle_filter_node.cpp
+  src/v5_serial/v5_serial.cpp
 )
 
 ament_target_dependencies(ghost_ros_main
@@ -177,6 +212,7 @@ target_link_libraries(ghost_ros_main
   amrl_shared_lib
   yaml-cpp
   particle_filter
+  v5_serial
 )
 
 install(TARGETS
@@ -189,6 +225,17 @@ install(TARGETS
 ament_add_gtest(test_dc_motor_model test/test_dc_motor_model.cpp)
 target_link_libraries(test_dc_motor_model
   dc_motor_model
+  gtest
+)
+
+ament_add_gtest(test_cobs test/test_cobs.cpp)
+target_link_libraries(test_cobs
+cobs
+  gtest
+)
+
+ament_add_gtest(test_stamped_queue test/test_stamped_queue.cpp)
+target_link_libraries(test_stamped_queue
   gtest
 )
 

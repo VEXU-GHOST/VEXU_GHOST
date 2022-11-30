@@ -11,6 +11,69 @@
 uint32_t last_cmd_time_ = 0;
 bool run_ = true;
 
+pros::Motor drive_motors[8] = {
+	pros::Motor(1, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS),		// 
+	pros::Motor(2, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS),		// 
+	pros::Motor(3, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS),		// 
+	pros::Motor(4, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS),		// 
+	pros::Motor(5, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS),		// 
+	pros::Motor(6, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS),		// 
+	pros::Motor(7, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS),		// 
+	pros::Motor(8, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS),		// 
+};
+pros::Motor turret_motor(8, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);	// 
+
+pros::Rotation encoders[3] = {
+	pros::Rotation(17),	//
+	pros::Rotation(18),	//
+	pros::Rotation(19),	//
+};
+
+pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
+const pros::controller_analog_e_t joy_channels[4] = {
+	ANALOG_LEFT_X,
+	ANALOG_LEFT_Y,
+	ANALOG_RIGHT_X,
+	ANALOG_RIGHT_Y
+};
+
+const pros::controller_digital_e_t joy_btns[12] = {
+	DIGITAL_A,
+	DIGITAL_B,
+	DIGITAL_X,
+	DIGITAL_Y,
+	DIGITAL_UP,
+	DIGITAL_DOWN,
+	DIGITAL_LEFT,
+	DIGITAL_RIGHT,
+	DIGITAL_L1,
+	DIGITAL_L2,
+	DIGITAL_R1,
+	DIGITAL_R2,
+};
+
+pros::ADIPort digital_out[8] = {
+	pros::ADIPort(1),
+	pros::ADIPort(2),
+	pros::ADIPort(3),
+	pros::ADIPort(4),
+	pros::ADIPort(5),
+	pros::ADIPort(6),
+	pros::ADIPort(7),
+	pros::ADIPort(8),
+};
+
+uint32_t checksum_bitmask[8] = {
+	0x00000001,
+	0x00000002,
+	0x00000004,
+	0x00000008,
+	0x00000010,
+	0x00000020,
+	0x00000040,
+	0x00000080,
+};
+
 /*
 	------ Producer Message Encoding ------
 	PROS Overhead:
@@ -18,51 +81,148 @@ bool run_ = true;
 	1x Byte - Delimiter (\x00)
 	Sum: 6x Bytes -> 0.41ms
 
-	Six Independent Drive Motors:
+	6x Independent Drive Motors, 1x Turret:
 		4x Bytes - int32_t for Raw Position
-	Sum: 24x Bytes -> 1.67ms
+		4x Bytes - float for Velocity
+	Sum: 56x Bytes -> 3.89ms
 
-	Each V5 Swerve Encoder (Three on a drivetrain, One on Turret):
+	Each V5 Swerve Encoder (Three on a drivetrain):
 		4x Bytes - int32_t for Angle
-	Sum: 16x Bytes -> 1.11ms
+		4x Bytes - float for Velocity
+	Sum: 24x Bytes -> 1.67ms
 	
-	For each of four joystick channels:
+	4x Joystick Channels:
 		4x Bytes - int32_t for Joystick Value
 	Sum: 16x Bytes -> 1.11ms
 
 	Misc:
-		0.5 Bytes - Competition Mode
 		1.5 Bytes - Joystick Buttons
+		0.5 Bytes - Competition Mode (Enabled - Autonomous - Competition Connected - None)
 		1x Byte - Digital Outs
 		1x Byte - Checksum
 	Sum: 4x Bytes -> 0.27ms
 	
 	Total Sum: 66 Byte Packet
-	66 Bytes x 8 bits / byte * 1 sec / 115200 bits * 1000ms / 1s = 4.58ms
+	106 Bytes x 8 bits / byte * 1 sec / 115200 bits * 1000ms / 1s = 7.36ms
+
+	------ Packet Format ------
+	Header (6x Bytes)
+
+	6x Drive Motor Positions 	(24x Bytes)
+	1x Turret Motor Position 	(4x Bytes)
+	3x Encoder Angles 			(12x Bytes)
+	4x Joystick Channels 		(16x Bytes)
+
+	6x Drive Motor Velocities 	(24x Bytes)
+	1x Turret Motor Velocity 	(4x Bytes)
+	3x Encoder Velocities 		(12x Bytes)
+
+	12x Joystick Buttons 		(1.5 Bytes / 12 bits)
+	Enabled 					(1x bit)
+	Autonomous 					(1x bit)
+	Competition Connected 		(1x bit)
+	Empty Bit					(1x bit)
+	Digital Outs				(1x Byte / 8 bits)
+	Checksum					(1x Byte, 8 bits)
+
+
 	*/
 void producer_main(){
 	int sout_int = fileno(stdout);
-	char buffer[] = {66, 0, 10};
-	pros::c::fdctl(sout_int, SERCTL_DEACTIVATE, NULL);
+	
+	uint8_t int_buffer_len = 6+1+3+4;
+	int32_t int_buffer[int_buffer_len] = {0,};
+	
+	uint8_t float_buffer_len = 6+1+3;
+	float float_buffer[float_buffer_len] = {0.0f,};
 
-	for(int i = 0; i < 100; i++){
-		write(sout_int, buffer, sizeof(buffer));
-	}
+	uint32_t digital_states = 0;
+	unsigned char char_buffer[sizeof(int_buffer) + sizeof(float_buffer) + sizeof(digital_states)] = {0,};
 
 	while(run_){
-		// Poll sensor data
+		//// MOTORS ////
+		// Poll drive motors
+		for(int i = 0; i < 6; i++){
+			int_buffer[i] = drive_motors[i].get_position();
+			float_buffer[i] = drive_motors[i].get_actual_velocity();
+		}
 
-		// Get Competition Mode
-		
-		// Compress to serial msg
+		// Poll turret motor
+		int_buffer[7] = turret_motor.get_position();
+		float_buffer[7] = turret_motor.get_actual_velocity();
 
-		// Add Checksum
+		//// SENSORS ////
+		// Poll drive encoders
+		for(int i = 0; i < 3; i++){
+			int_buffer[i+8] = encoders[i].get_angle();
+			float_buffer[i+8] = encoders[i].get_velocity();
+		}
 
-		// Send
-		std::cout << "Producer" << std::endl;
-		pros::delay(250);
+		//// JOYSTICK ////
+		// Poll joystick channels
+		for(int i = 0; i < 4; i++){
+			int_buffer[i+11] = controller_main.get_analog(joy_channels[i]);
+		}
+
+		// Poll joystick button channels
+		digital_states = 0;
+		for(int i = 0; i < 12; i++){
+			digital_states += (uint32_t) controller_main.get_digital(joy_btns[i]);
+			digital_states <<= 1;
+		}
+
+		// Poll competition mode
+		digital_states += 0; //!pros::competition::is_disabled();
+		digital_states <<= 1;
+
+		digital_states += 0; //pros::competition::is_autonomous());
+		digital_states <<= 1;
+
+		digital_states += 0; //pros::competition::is_connected();
+		digital_states <<= 1;
+
+		// Empty bit
+		digital_states <<= 1;
+
+		// Digital Outs
+		for(int i = 0; i < 8; i++){
+			digital_states += 0; //digital_out[i].get_value();
+			digital_states <<= 1;
+		}
+
+		// Calculate Checksum
+		uint32_t checksum = 0;
+		// for(int i = 0; i < int_buffer_len; i++){
+		// 	for(int k = 0; k < 8; k++){
+		// 		checksum += (int_buffer[i] && checksum_bitmask[k]) >> k;
+		// 	}
+		// }
+
+		// for(int i = 0; i < float_buffer_len; i++){
+		// 	for(int k = 0; k < 8; k++){
+		// 		checksum += (float_buffer[i] && checksum_bitmask[k]) >> k;
+		// 	}
+		// }
+
+		checksum &= 0x00FF; // Reduce checksum to 8-bits, won't be a true sum if it exceeds 255, but still functions sufficiently
+
+		// Shift aditional seven to make space for 32-bit checksum (already shifter by one from last operation)
+		digital_states <<= 7;
+		digital_states += checksum;
+
+		// Copy each buffer to single buffer of unsigned char
+		// Otherwise we are sending three packets with additional overhead
+		memmove(char_buffer, int_buffer, sizeof(int_buffer));
+		memmove(char_buffer + sizeof(int_buffer), float_buffer, sizeof(float_buffer));
+		memmove(char_buffer + sizeof(int_buffer) + sizeof(float_buffer), &digital_states, sizeof(digital_states));
+
+		// Write single char buffer to serial port (as one packet)
+		// write(sout_int, char_buffer, sizeof(char_buffer));
+	
+		write(sout_int, &test_string.c_str()[0], test_string.length());
+		//std::cout << test << std::endl;
+		pros::delay(10);
 	}
-	fclose(stdout);
 }
 
 /*
@@ -120,6 +280,7 @@ void actuator_timeout_main(){
  */
 void initialize() {
 	pros::lcd::initialize();
+	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 
 	// Start Serial Interface tasks
 	pros::Task producer_thread(producer_main, "producer thread");
@@ -181,7 +342,6 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	while(run_){
 		pros::delay(10);
 	}

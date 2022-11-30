@@ -19,45 +19,49 @@
 #include "globals/globals.hpp"
 
 #include "particle_filter/particle_filter_node.hpp"
+#include "v5_serial/v5_serial.hpp"
 
 using namespace std::literals::chrono_literals;
 
 // Define Global Variables in shared memory
 namespace globals{
     std::string repo_base_dir;
-    bool run_ = true;
+    bool run = true;
 }
-
 
 void SignalHandler(int) {
     if(rclcpp::ok()){
         rclcpp::shutdown();
     }
 
-    if (!globals::run_) {
+    if (!globals::run) {
         printf("Force Exit.\n");
         exit(0);
     }
 
     printf("Exiting.\n");
-    globals::run_ = false;
-}
-
-void particle_filter_main(){
-    rclcpp::spin(std::make_shared<particle_filter::ParticleFilterNode>(globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"));
+    globals::run = false;
 }
 
 int main(int argc, char* argv[]){
     signal(SIGINT, SignalHandler);
     rclcpp::init(argc, argv);
 
-    globals::repo_base_dir = getenv("HOME");
-    globals::repo_base_dir += + "/VEXU_GHOST/";
+    globals::repo_base_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/";
 
     // Initialize modules
-    std::thread particle_filter_thread(&particle_filter_main);    
+    // std::thread particle_filter_thread(
+    //     &particle_filter::particle_filter_main,
+    //     globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"
+    //     );
 
-    particle_filter_thread.join();
+    std::thread v5_serial_interfaces(
+        &v5_serial::v5_serial_main,
+        globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml"
+    );
+
+    // particle_filter_thread.join();
+    v5_serial_interfaces.join();
 
     return 0;
 }

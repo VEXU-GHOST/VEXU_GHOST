@@ -41,7 +41,8 @@ struct Pose2DWithCovariance
     // Motor Outputs
 
 extern std::string repo_base_dir;
+extern bool run;
 
-} // namespace global
+} // namespace globals
 
 #endif // GHOST_ROS__GLOBALS_HPP
