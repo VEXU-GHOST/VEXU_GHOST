@@ -5,7 +5,9 @@ sudo apt-get install -y python3-pip libgtest-dev libgoogle-glog-dev
 sudo apt-get install -y ros-foxy-rplidar-ros  ros-foxy-realsense2*
 
 cd ~/
-git clone git@github.com:jbeder/yaml-cpp.git
+git config --global --add safe.directory /root/VEXU_GHOST
+git config --global --add safe.directory /root/VEXU_GHOST/ghost_ros/src/shared
+git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
 mkdir build
 cd build
@@ -14,4 +16,4 @@ make -j
 sudo make install
 
 cd ~/VEXU_GHOST
-git submodule update --init
+git submodule update --init --force
