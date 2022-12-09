@@ -140,6 +140,7 @@ void producer_main(){
 	unsigned char char_buffer[sizeof(int_buffer) + sizeof(float_buffer) + sizeof(digital_states)] = {0,};
 
 	while(run_){
+		/*
 		//// MOTORS ////
 		// Poll drive motors
 		for(int i = 0; i < 6; i++){
@@ -172,13 +173,13 @@ void producer_main(){
 		}
 
 		// Poll competition mode
-		digital_states += 0; //!pros::competition::is_disabled();
+		digital_states += !pros::competition::is_disabled();
 		digital_states <<= 1;
 
-		digital_states += 0; //pros::competition::is_autonomous());
+		digital_states += pros::competition::is_autonomous();
 		digital_states <<= 1;
 
-		digital_states += 0; //pros::competition::is_connected();
+		digital_states += pros::competition::is_connected();
 		digital_states <<= 1;
 
 		// Empty bit
@@ -186,23 +187,23 @@ void producer_main(){
 
 		// Digital Outs
 		for(int i = 0; i < 8; i++){
-			digital_states += 0; //digital_out[i].get_value();
+			digital_states += digital_out[i].get_value();
 			digital_states <<= 1;
 		}
 
 		// Calculate Checksum
 		uint32_t checksum = 0;
-		// for(int i = 0; i < int_buffer_len; i++){
-		// 	for(int k = 0; k < 8; k++){
-		// 		checksum += (int_buffer[i] && checksum_bitmask[k]) >> k;
-		// 	}
-		// }
+		for(int i = 0; i < int_buffer_len; i++){
+			for(int k = 0; k < 8; k++){
+				checksum += (int_buffer[i] && checksum_bitmask[k]) >> k;
+			}
+		}
 
-		// for(int i = 0; i < float_buffer_len; i++){
-		// 	for(int k = 0; k < 8; k++){
-		// 		checksum += (float_buffer[i] && checksum_bitmask[k]) >> k;
-		// 	}
-		// }
+		for(int i = 0; i < float_buffer_len; i++){
+			for(int k = 0; k < 8; k++){
+				checksum += (float_buffer[i] && checksum_bitmask[k]) >> k;
+			}
+		}
 
 		checksum &= 0x00FF; // Reduce checksum to 8-bits, won't be a true sum if it exceeds 255, but still functions sufficiently
 
@@ -218,9 +219,20 @@ void producer_main(){
 
 		// Write single char buffer to serial port (as one packet)
 		// write(sout_int, char_buffer, sizeof(char_buffer));
-	
-		write(sout_int, &test_string.c_str()[0], test_string.length());
-		//std::cout << test << std::endl;
+
+		*/
+
+		// std::string output_string = 
+		// 	"The very thought of you and Am I Blue? A Love Supreme seems far removed."
+		// 	"I Get Along Without You, very well, some other nights.";
+
+		std::string output_string = "Test1234";
+
+		unsigned char input_string[128] = {0, };
+
+		read(sout_int, input_string, sizeof(input_string));
+		write(sout_int, output_string.c_str(), output_string.length());
+
 		pros::delay(10);
 	}
 }
@@ -272,6 +284,12 @@ void actuator_timeout_main(){
 	}
 }
 
+void button_callback(){
+	int sout_int = fileno(stdout);
+	unsigned char test[] = {'t', 'e', 's', 't'};
+	write(sout_int, test, sizeof(test));
+}
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -285,6 +303,9 @@ void initialize() {
 	// Start Serial Interface tasks
 	pros::Task producer_thread(producer_main, "producer thread");
 	pros::Task consumer_thread(consumer_main, "consumer thread");
+
+	// Callback serial test
+	pros::lcd::register_btn0_cb(&button_callback);
 }
 
 /**

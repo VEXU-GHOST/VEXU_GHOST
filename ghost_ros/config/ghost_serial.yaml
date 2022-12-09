@@ -1,1 +1,5 @@
 port_name: "/dev/ttyACM1"
+max_bytes_to_read: 256
+max_msg_len: 106
+msg_start_seq: "sout"
+max_msg_time_duration: 8 # ms

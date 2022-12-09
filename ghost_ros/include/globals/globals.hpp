@@ -12,6 +12,8 @@
 #define GHOST_ROS__GLOBALS_HPP
 
 #include <vector>
+#include <chrono>
+#include <atomic>
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
@@ -41,7 +43,8 @@ struct Pose2DWithCovariance
     // Motor Outputs
 
 extern std::string repo_base_dir;
-extern bool run;
+extern std::atomic_bool run;
+extern std::chrono::time_point<std::chrono::system_clock> program_start_time;
 
 } // namespace globals
 

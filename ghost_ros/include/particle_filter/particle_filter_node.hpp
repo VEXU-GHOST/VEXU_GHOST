@@ -33,9 +33,6 @@
 
 namespace particle_filter{
 
-// Entry point for particle filter thread
-void particle_filter_main(std::string config_file);
-
 class ParticleFilterNode : public rclcpp::Node {
   public:
 

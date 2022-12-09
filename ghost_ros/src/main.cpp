@@ -11,6 +11,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <atomic>
 #include <signal.h>
 
 #include <rclcpp/rclcpp.hpp>
@@ -18,15 +19,16 @@
 
 #include "globals/globals.hpp"
 
-#include "particle_filter/particle_filter_node.hpp"
-#include "v5_serial/v5_serial.hpp"
+#include "ghost_modules/particle_filter_main.hpp"
+#include "ghost_modules/serial_main.hpp"
 
 using namespace std::literals::chrono_literals;
 
 // Define Global Variables in shared memory
 namespace globals{
     std::string repo_base_dir;
-    bool run = true;
+    std::atomic_bool run(true);
+    std::chrono::time_point<std::chrono::system_clock> program_start_time;
 }
 
 void SignalHandler(int) {
@@ -44,19 +46,21 @@ void SignalHandler(int) {
 }
 
 int main(int argc, char* argv[]){
+    globals::program_start_time = std::chrono::system_clock::now();
+    
     signal(SIGINT, SignalHandler);
     rclcpp::init(argc, argv);
-
+    
     globals::repo_base_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/";
 
     // Initialize modules
-    // std::thread particle_filter_thread(
-    //     &particle_filter::particle_filter_main,
-    //     globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"
-    //     );
+    std::thread particle_filter_thread(
+        ghost_modules::ghost_particle_filter_main,
+        globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"
+        );
 
     std::thread v5_serial_interfaces(
-        &v5_serial::v5_serial_main,
+        ghost_modules::ghost_serial_main,
         globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml"
     );
 

@@ -86,20 +86,27 @@ install(
 )
 
 # Particle Filter Library
-add_library(particle_filter SHARED src/particle_filter/particle_filter.cpp)
-target_link_libraries(particle_filter
+add_library(particle_filter_ros SHARED src/particle_filter/particle_filter_node.cpp src/particle_filter/particle_filter.cpp)
+ament_target_dependencies(particle_filter_ros
+  rclcpp
+  tf2_msgs
+  sensor_msgs
+  visualization_msgs
+)
+target_link_libraries(particle_filter_ros
   amrl_shared_lib
   vector_map
+  yaml-cpp
 )
-ament_target_dependencies(particle_filter
+ament_target_dependencies(particle_filter_ros
   Eigen3
 )
-target_include_directories(particle_filter
+target_include_directories(particle_filter_ros
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(
-  TARGETS particle_filter
+  TARGETS particle_filter_ros
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -121,18 +128,19 @@ install(
 )
 
 # V5 Serial Library
-add_library(v5_serial SHARED src/v5_serial/v5_serial.cpp src/COBS/COBS.cpp)
-target_link_libraries(v5_serial
+add_library(serial_interface SHARED src/serial_interface/serial_interface.cpp src/COBS/COBS.cpp)
+target_link_libraries(serial_interface
   cobs
   serial
+  yaml-cpp
 )
-target_include_directories(v5_serial
+target_include_directories(serial_interface
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
 install(
-  TARGETS v5_serial
+  TARGETS serial_interface
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -194,8 +202,8 @@ install(TARGETS
 # ########################
 add_executable(ghost_ros_main
   src/main.cpp
-  src/particle_filter/particle_filter_node.cpp
-  src/v5_serial/v5_serial.cpp
+  src/ghost_modules/particle_filter_main.cpp
+  src/ghost_modules/serial_main.cpp
 )
 
 ament_target_dependencies(ghost_ros_main
@@ -211,8 +219,8 @@ ament_target_dependencies(ghost_ros_main
 target_link_libraries(ghost_ros_main
   amrl_shared_lib
   yaml-cpp
-  particle_filter
-  v5_serial
+  particle_filter_ros
+  serial_interface
 )
 
 install(TARGETS
