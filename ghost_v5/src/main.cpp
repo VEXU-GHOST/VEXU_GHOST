@@ -74,6 +74,30 @@ uint32_t checksum_bitmask[8] = {
 	0x00000080,
 };
 
+void move_voltage_slew(pros::Motor motor, double cmd_voltage, const double max_slew_percentage){
+	// Map gearing enumerates to RPM value
+	const int gearing_rpm_map[] = {100.0, 200.0, 600.0};
+
+	// Normalize voltage command from millivolts
+	double cmd_voltage_scaled = cmd_voltage / 12000.0;
+
+	// Normalize velocity by nominal free speed
+	double curr_vel_scaled = motor.get_actual_velocity() / gearing_rpm_map[motor.get_gearing()];
+
+	double cmd;
+	// Maximum voltage difference in motor is capped by slew rate parameter
+	if(fabs(curr_vel_scaled - cmd_voltage_scaled) > max_slew_percentage){
+		double sign = (curr_vel_scaled - cmd_voltage_scaled > 0) ? 1.0 : -1.0;
+		cmd = curr_vel_scaled - sign*fabs(max_slew_percentage);
+	}
+	else{
+		cmd = cmd_voltage_scaled*12000;
+	}
+	
+	// Set motor
+	motor.move_voltage(cmd);
+}
+
 /*
 	------ Producer Message Encoding ------
 	PROS Overhead:
@@ -140,23 +164,22 @@ void producer_main(){
 	unsigned char char_buffer[sizeof(int_buffer) + sizeof(float_buffer) + sizeof(digital_states)] = {0,};
 
 	while(run_){
-		/*
 		//// MOTORS ////
 		// Poll drive motors
 		for(int i = 0; i < 6; i++){
-			int_buffer[i] = drive_motors[i].get_position();
-			float_buffer[i] = drive_motors[i].get_actual_velocity();
+			int_buffer[i] = i;//drive_motors[i].get_position();
+			float_buffer[i] = i + 100; //drive_motors[i].get_actual_velocity();
 		}
 
 		// Poll turret motor
-		int_buffer[7] = turret_motor.get_position();
-		float_buffer[7] = turret_motor.get_actual_velocity();
+		int_buffer[7] = 7; //turret_motor.get_position();
+		float_buffer[7] = 107; //turret_motor.get_actual_velocity();
 
 		//// SENSORS ////
 		// Poll drive encoders
 		for(int i = 0; i < 3; i++){
-			int_buffer[i+8] = encoders[i].get_angle();
-			float_buffer[i+8] = encoders[i].get_velocity();
+			int_buffer[i+8] = i+8; //encoders[i].get_angle();
+			float_buffer[i+8] = i+108; //encoders[i].get_velocity();
 		}
 
 		//// JOYSTICK ////
@@ -213,25 +236,12 @@ void producer_main(){
 
 		// Copy each buffer to single buffer of unsigned char
 		// Otherwise we are sending three packets with additional overhead
-		memmove(char_buffer, int_buffer, sizeof(int_buffer));
-		memmove(char_buffer + sizeof(int_buffer), float_buffer, sizeof(float_buffer));
-		memmove(char_buffer + sizeof(int_buffer) + sizeof(float_buffer), &digital_states, sizeof(digital_states));
+		memcpy(char_buffer, int_buffer, sizeof(int_buffer));
+		memcpy(char_buffer + sizeof(int_buffer), float_buffer, sizeof(float_buffer));
+		memcpy(char_buffer + sizeof(int_buffer) + sizeof(float_buffer), &digital_states, sizeof(digital_states));
 
 		// Write single char buffer to serial port (as one packet)
-		// write(sout_int, char_buffer, sizeof(char_buffer));
-
-		*/
-
-		// std::string output_string = 
-		// 	"The very thought of you and Am I Blue? A Love Supreme seems far removed."
-		// 	"I Get Along Without You, very well, some other nights.";
-
-		std::string output_string = "Test1234";
-
-		unsigned char input_string[128] = {0, };
-
-		read(sout_int, input_string, sizeof(input_string));
-		write(sout_int, output_string.c_str(), output_string.length());
+		write(sout_int, char_buffer, sizeof(char_buffer));
 
 		pros::delay(10);
 	}
@@ -301,11 +311,11 @@ void initialize() {
 	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 
 	// Start Serial Interface tasks
-	pros::Task producer_thread(producer_main, "producer thread");
-	pros::Task consumer_thread(consumer_main, "consumer thread");
+	// pros::Task producer_thread(producer_main, "producer thread");
+	// pros::Task consumer_thread(consumer_main, "consumer thread");
 
 	// Callback serial test
-	pros::lcd::register_btn0_cb(&button_callback);
+	// pros::lcd::register_btn0_cb(&button_callback);
 }
 
 /**
@@ -363,7 +373,24 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	auto m1 = pros::Motor(11, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
+	auto m2 = pros::Motor(12, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
 	while(run_){
-		pros::delay(10);
+		auto start = pros::millis();
+		// double wheel_vel = controller_main.get_analog(ANALOG_RIGHT_Y)*500.0/127.0;	// 500 RPM
+		// double module_vel = controller_main.get_analog(ANALOG_LEFT_Y)*200.0/127.0;	// 200 RPM
+
+		// std::cout << wheel_vel << ", " << module_vel << std::endl;
+		// std::cout << 0.9*(0.6*wheel_vel + 1.5*module_vel) << std::endl;
+		// std::cout << 0.9*(-0.6*wheel_vel + 1.5*module_vel) << std::endl;
+		// std::cout << std::endl;
+
+		// m1.move_velocity(0.9*(0.6*wheel_vel + 1.5*module_vel));
+		// m2.move_velocity(0.9*(-0.6*wheel_vel + 1.5*module_vel));
+
+		double input = controller_main.get_analog(ANALOG_RIGHT_Y)/127.0;
+		move_voltage_slew(m1, input*12000, 1.0);
+
+		pros::delay(10 - (pros::millis() - start));
 	}
 }
