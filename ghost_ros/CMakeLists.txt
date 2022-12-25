@@ -36,8 +36,10 @@ find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-find_package(serial REQUIRED)
+find_package(ghost_serial REQUIRED)
 find_package(yaml-cpp REQUIRED)
+
+find_library(ghost_serial_node REQUIRED)
 
 include_directories(include)
 include_directories(src/shared)
@@ -92,14 +94,12 @@ ament_target_dependencies(particle_filter_ros
   tf2_msgs
   sensor_msgs
   visualization_msgs
+  Eigen3
 )
 target_link_libraries(particle_filter_ros
   amrl_shared_lib
   vector_map
   yaml-cpp
-)
-ament_target_dependencies(particle_filter_ros
-  Eigen3
 )
 target_include_directories(particle_filter_ros
   PUBLIC
@@ -107,40 +107,6 @@ target_include_directories(particle_filter_ros
   $<INSTALL_INTERFACE:include>)
 install(
   TARGETS particle_filter_ros
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-# COBS Library
-add_library(cobs SHARED src/COBS/COBS.cpp)
-target_include_directories(cobs
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(
-  TARGETS cobs
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-# V5 Serial Library
-add_library(serial_interface SHARED src/serial_interface/serial_interface.cpp src/COBS/COBS.cpp)
-target_link_libraries(serial_interface
-  cobs
-  serial
-  yaml-cpp
-)
-target_include_directories(serial_interface
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-
-install(
-  TARGETS serial_interface
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -202,12 +168,10 @@ install(TARGETS
 # ########################
 add_executable(ghost_ros_main
   src/main.cpp
-  src/ghost_modules/particle_filter_main.cpp
-  src/ghost_modules/serial_main.cpp
 )
-
 ament_target_dependencies(ghost_ros_main
   rclcpp
+  ghost_serial
   std_msgs
   sensor_msgs
   geometry_msgs
@@ -215,12 +179,11 @@ ament_target_dependencies(ghost_ros_main
   tf2_msgs
   nav_msgs
 )
-
 target_link_libraries(ghost_ros_main
   amrl_shared_lib
   yaml-cpp
   particle_filter_ros
-  serial_interface
+  ghost_serial::ghost_serial_node
 )
 
 install(TARGETS
@@ -233,12 +196,6 @@ install(TARGETS
 ament_add_gtest(test_dc_motor_model test/test_dc_motor_model.cpp)
 target_link_libraries(test_dc_motor_model
   dc_motor_model
-  gtest
-)
-
-ament_add_gtest(test_cobs test/test_cobs.cpp)
-target_link_libraries(test_cobs
-cobs
   gtest
 )
 
@@ -258,7 +215,6 @@ install(
 install(DIRECTORY
   launch
   config
-  urdf
   rviz
   DESTINATION share/${PROJECT_NAME})
 
