@@ -1,14 +1,4 @@
-/*
- * Filename: test_dc_motor_model
- * Created Date: Sunday July 17th 2022
- * Author: Maxx Wilson
- * Author Email: JesseMaxxWilson@utexas.edu
- * 
- * Last Modified: Saturday September 10th 2022 10:50:34 am
- * Modified By: Maxx Wilson
- */
-
-#include "COBS/COBS.hpp"
+#include "cobs/cobs.hpp"
 
 #include "gtest/gtest.h"
 

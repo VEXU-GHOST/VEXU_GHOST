@@ -1,7 +1,8 @@
 
-#include "COBS/COBS.hpp"
+#include "cobs/cobs.hpp"
 
 namespace COBS{
+	
 /** COBS encode data to buffer
 	@param data Pointer to input data to encode
 	@param length Number of bytes to encode
