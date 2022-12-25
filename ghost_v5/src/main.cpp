@@ -74,15 +74,14 @@ uint32_t checksum_bitmask[8] = {
 	0x00000080,
 };
 
-void move_voltage_slew(pros::Motor motor, double cmd_voltage, const double max_slew_percentage){
-	// Map gearing enumerates to RPM value
-	const int gearing_rpm_map[] = {100.0, 200.0, 600.0};
-
+void move_voltage_slew(pros::Motor &motor, double cmd_voltage, const double max_slew_percentage){
+	double motor_gearing[] = {100, 200, 600};
+	
 	// Normalize voltage command from millivolts
 	double cmd_voltage_scaled = cmd_voltage / 12000.0;
 
 	// Normalize velocity by nominal free speed
-	double curr_vel_scaled = motor.get_actual_velocity() / gearing_rpm_map[motor.get_gearing()];
+	double curr_vel_scaled = motor.get_actual_velocity() / motor_gearing[motor.get_gearing()];
 
 	double cmd;
 	// Maximum voltage difference in motor is capped by slew rate parameter
@@ -91,17 +90,17 @@ void move_voltage_slew(pros::Motor motor, double cmd_voltage, const double max_s
 		cmd = curr_vel_scaled - sign*fabs(max_slew_percentage);
 	}
 	else{
-		cmd = cmd_voltage_scaled*12000;
+		cmd = cmd_voltage_scaled;
 	}
 	
 	// Set motor
-	motor.move_voltage(cmd);
+	motor.move_voltage(cmd*12000);
 }
 
 /*
 	------ Producer Message Encoding ------
 	PROS Overhead:
-	5x Bytes - Packet Header (NULL + "sout")
+	5x Bytes - Packet Header (COBS Byte + "sout")
 	1x Byte - Delimiter (\x00)
 	Sum: 6x Bytes -> 0.41ms
 
@@ -311,7 +310,7 @@ void initialize() {
 	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 
 	// Start Serial Interface tasks
-	// pros::Task producer_thread(producer_main, "producer thread");
+	pros::Task producer_thread(producer_main, "producer thread");
 	// pros::Task consumer_thread(consumer_main, "consumer thread");
 
 	// Callback serial test
@@ -375,6 +374,7 @@ void autonomous() {
 void opcontrol() {
 	auto m1 = pros::Motor(11, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
 	auto m2 = pros::Motor(12, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
+	
 	while(run_){
 		auto start = pros::millis();
 		// double wheel_vel = controller_main.get_analog(ANALOG_RIGHT_Y)*500.0/127.0;	// 500 RPM
@@ -388,9 +388,13 @@ void opcontrol() {
 		// m1.move_velocity(0.9*(0.6*wheel_vel + 1.5*module_vel));
 		// m2.move_velocity(0.9*(-0.6*wheel_vel + 1.5*module_vel));
 
-		double input = controller_main.get_analog(ANALOG_RIGHT_Y)/127.0;
-		move_voltage_slew(m1, input*12000, 1.0);
+		double input1 = controller_main.get_analog(ANALOG_RIGHT_Y)/127.0;
+		double input2 = controller_main.get_analog(ANALOG_LEFT_Y)/127.0;
+		move_voltage_slew(m1, input1*12000, 1.0);
+		move_voltage_slew(m2, input2*12000, 1.0);
 
+		// std::cout << m1.get_actual_velocity() << std::endl;
 		pros::delay(10 - (pros::millis() - start));
+
 	}
 }
