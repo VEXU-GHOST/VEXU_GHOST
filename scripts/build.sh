@@ -14,22 +14,22 @@ fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --packages-select ghost_ros
+    colcon build --packages-up-to ghost_ros
 fi
 
 source install/setup.bash
 
 # Process URDFs from Xacro and add to Share
-GHOST_ROS_SHARE_DIR="$PWD/install/ghost_ros/share/ghost_ros"
-URDF_PATH="${GHOST_ROS_SHARE_DIR}/urdf/ghost1.urdf"
+GHOST_DESCRIPTION_SHARE_DIR="$PWD/install/ghost_description/share/ghost_description"
+URDF_PATH="${GHOST_DESCRIPTION_SHARE_DIR}/urdf/ghost1.urdf"
 
-if [ ! -d $GHOST_ROS_SHARE_DIR ];
+if [ ! -d $GHOST_DESCRIPTION_SHARE_DIR ];
 then
     touch $URDF_PATH
 else
     echo
     echo "Generating URDF"
-    xacro ghost_ros/urdf/ghost1.xacro > $URDF_PATH
+    xacro ghost_description/urdf/ghost1.xacro > $URDF_PATH
     echo "URDF written to" $URDF_PATH
 fi
 
