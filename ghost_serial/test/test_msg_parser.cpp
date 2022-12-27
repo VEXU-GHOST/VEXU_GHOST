@@ -1,7 +1,7 @@
 
 
 #include "cobs/cobs.hpp"
-#include "serial_interface/msg_parser.hpp"
+#include "msg_parser/msg_parser.hpp"
 
 #include "gtest/gtest.h"
 
@@ -138,7 +138,7 @@ TEST_F(TestMsgParser, testMsgLengthExceeded){
 TEST_F(TestMsgParser, testChecksumValid){
     // Msg Configuration
     std::string start_seq = "start";
-    int msg_len  = 4;
+    int msg_len  = 3;
     int cobs_packet_length = start_seq.length() + msg_len + 2;
 
     // Msg Data
@@ -158,7 +158,7 @@ TEST_F(TestMsgParser, testChecksumValid){
 
     // Check that msg is correctly parsed
     unsigned char expected[] = {'m', 's', 'g'};
-    for(int i = 0; i < msg_len - 1; i++){
+    for(int i = 0; i < msg_len; i++){
         ASSERT_EQ(expected[i], output_buffer[i]);
     }
 }
@@ -166,7 +166,7 @@ TEST_F(TestMsgParser, testChecksumValid){
 TEST_F(TestMsgParser, testChecksumInvalid){
     // Msg Configuration
     std::string start_seq = "start";
-    int msg_len  = 4;
+    int msg_len  = 3;
     int cobs_packet_length = start_seq.length() + msg_len + 2;
 
     // Msg Data

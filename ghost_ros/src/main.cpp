@@ -19,7 +19,7 @@
 
 #include "globals/globals.hpp"
 #include "particle_filter/particle_filter_node.hpp"
-#include "ghost_serial/ghost_serial_node.hpp"
+#include "ghost_serial/v5_serial_node.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -53,25 +53,22 @@ void particle_filter_main(std::string config_file){
 
 void serial_interface_main(std::string config_file)
 {
-    auto serial_node = std::make_shared<ghost_serial::GhostSerialNode>(config_file);
-    std::cout << "Init" << std::endl;
-    // // Open serial port
-    // bool serial_open = false;
-    // while(globals::run && !serial_open){
-    //     serial_open = serial_node->trySerialOpen();
-    // }
+    std::cout << "[START] Serial Writer Thread" << std::endl;
+    auto serial_node = std::make_shared<ghost_serial::V5SerialNode>(config_file);
+    
+    // Wait for serial port, then start reader thread
+    serial_node->initSerialInterfaceBlocking();
 
-    // serial_node->startReaderThread();
-
-    // rclcpp::spin(serial_node);
-    std::cout << "End" << std::endl;
+    // Process ROS Callbacks until exit
+    rclcpp::spin(serial_node);
+    std::cout << "[END] Serial Writer Thread" << std::endl;
 }
 
 int main(int argc, char* argv[]){
-    globals::program_start_time = std::chrono::system_clock::now();
-    
-    signal(SIGINT, SignalHandler);
     rclcpp::init(argc, argv);
+    signal(SIGINT, SignalHandler);
+
+    globals::program_start_time = std::chrono::system_clock::now();
     
     globals::repo_base_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/";
 
@@ -86,10 +83,9 @@ int main(int argc, char* argv[]){
         globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml"
     );
 
+    // Start threads
     // particle_filter_thread.join();
-    std::cout << "Gonna Join" << std::endl;
     serial_interface_thread.join();
-    std::cout << "Joined" << std::endl;
 
     return 0;
 }

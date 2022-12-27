@@ -39,7 +39,7 @@ find_package(Eigen3 REQUIRED)
 find_package(ghost_serial REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-find_library(ghost_serial_node REQUIRED)
+find_library(v5_serial_node REQUIRED)
 
 include_directories(include)
 include_directories(src/shared)
@@ -183,7 +183,7 @@ target_link_libraries(ghost_ros_main
   amrl_shared_lib
   yaml-cpp
   particle_filter_ros
-  ghost_serial::ghost_serial_node
+  ghost_serial::v5_serial_node
 )
 
 install(TARGETS

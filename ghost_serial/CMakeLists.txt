@@ -29,7 +29,9 @@ include_directories(include)
 ####################
 ### COBS Library ###
 ####################
-add_library(cobs SHARED src/cobs/cobs.cpp)
+add_library(cobs SHARED
+  src/cobs/cobs.cpp
+)
 target_include_directories(cobs
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -44,16 +46,38 @@ install(
   INCLUDES DESTINATION include
 )
 
+##################
+### Msg Parser ###
+##################
+add_library(msg_parser SHARED
+  src/msg_parser/msg_parser.cpp
+)
+target_link_libraries(msg_parser
+  cobs
+)
+target_include_directories(msg_parser
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(msg_parser HAS_LIBRARY_TARGET)
+install(
+  TARGETS msg_parser
+  EXPORT msg_parser
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 ######################
 ### Serial Library ###
 ######################
 add_library(serial_interface SHARED
   src/serial_interface/serial_interface.cpp
-  src/serial_interface/msg_parser.cpp
 )
 target_link_libraries(serial_interface
   cobs
-  yaml-cpp
+  msg_parser
 )
 target_include_directories(serial_interface
   PUBLIC
@@ -72,27 +96,27 @@ install(
 ######################
 ### GHOST ROS Node ###
 ######################
-add_library(ghost_serial_node SHARED
-  src/ghost_serial_node.cpp
+add_library(v5_serial_node SHARED
+  src/v5_serial_node.cpp
 )
-ament_target_dependencies(ghost_serial_node
+ament_target_dependencies(v5_serial_node
   rclcpp
   ghost_msgs
 )
-target_link_libraries(ghost_serial_node
+target_link_libraries(v5_serial_node
   serial_interface
   cobs
   yaml-cpp
 )
-target_include_directories(ghost_serial_node
+target_include_directories(v5_serial_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_export_targets(ghost_serial_node HAS_LIBRARY_TARGET)
+ament_export_targets(v5_serial_node HAS_LIBRARY_TARGET)
 ament_export_dependencies(ghost_msgs)
 install(
-    TARGETS ghost_serial_node
-  EXPORT ghost_serial_node
+  TARGETS v5_serial_node
+  EXPORT v5_serial_node
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -109,8 +133,7 @@ target_link_libraries(test_cobs
 )
 ament_add_gtest(test_msg_parser test/test_msg_parser.cpp)
 target_link_libraries(test_msg_parser
-  cobs
-  serial_interface
+  msg_parser
   gtest
 )
 
