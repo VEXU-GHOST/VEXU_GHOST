@@ -23,7 +23,7 @@ namespace ghost_serial
         parsed_msg_buffer_ = std::vector<char>(msg_len_);
     }
 
-    bool MsgParser::parseByteStream(const unsigned char *raw_data_buffer, const int num_bytes, unsigned char *parsed_msg)
+    bool MsgParser::parseByteStream(const unsigned char raw_data_buffer[], const int num_bytes, unsigned char parsed_msg[])
     {
         bool msg_found = false;
         uint8_t checksum_byte = 0;
@@ -46,8 +46,8 @@ namespace ghost_serial
                     {
                         // Apply COBS Decode to raw msg
                         unsigned char decoded_msg[msg_len_ + use_checksum_ + 2] = {0,};
-                        COBS::cobsDecode(incoming_msg_buffer_.data(), sizeof(incoming_msg_buffer_), decoded_msg);
-                        memcpy(parsed_msg, decoded_msg, sizeof(parsed_msg));
+                        COBS::cobsDecode(incoming_msg_buffer_.data(), msg_len_ + use_checksum_ + 2, decoded_msg);
+                        memcpy(parsed_msg, decoded_msg, msg_len_);
 
                         // Validate checksum
                         if(use_checksum_){

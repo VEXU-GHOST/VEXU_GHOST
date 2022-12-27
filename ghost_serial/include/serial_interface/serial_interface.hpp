@@ -50,7 +50,7 @@ namespace ghost_serial
          * @param num_bytes length of msg in bytes
          * @return bool if write was successful
          */
-        bool writeMsgToSerial(const unsigned char *buffer, const int num_bytes);
+        bool writeMsgToSerial(const unsigned char buffer[], const int num_bytes);
 
         /**
          * @brief Thread-safe method to read serial port for new msgs. Blocks until new msg is recieved
@@ -62,7 +62,7 @@ namespace ghost_serial
          * @param msg_buffer buffer of length msg_len to store incoming serial msgs
          * @return bool if msg was found in serial stream
          */
-        bool readMsgFromSerial(unsigned char *msg_buffer);
+        bool readMsgFromSerial(unsigned char msg_buffer[]);
 
     private:
         /**

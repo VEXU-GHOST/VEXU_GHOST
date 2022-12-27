@@ -61,12 +61,7 @@ void V5SerialNode::readerLoop(){
             bool msg_found = serial_interface_->readMsgFromSerial(new_msg_.data());
 
             if(msg_found){
-                std::cout << "New Msg: ";
-                for(std::size_t i = 0; i < new_msg_.size(); i++){
-                    std::cout << new_msg_[i];
-                }
-                std::cout << std::endl;
-                // publishSensorUpdate(new_msg_.data());
+                publishSensorUpdate(new_msg_.data());
             }
         }
         catch(std::exception &e){
@@ -102,7 +97,7 @@ void V5SerialNode::readerLoop(){
 	*/
 void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorCommands::SharedPtr msg){
     RCLCPP_INFO(get_logger(), "Actuator Command");
-    int32_t int32_buffer[] = {
+    std::vector<int32_t> int32_buffer{
         msg->wheel_left_angle_cmd,
         msg->wheel_right_angle_cmd,
         msg->wheel_back_angle_cmd,
@@ -112,7 +107,7 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
         msg->turret_angle_cmd
     };
 
-    float float_buffer[] = {
+    std::vector<float> float_buffer{
         msg->wheel_left_velocity_cmd,
         msg->wheel_right_velocity_cmd,
         msg->wheel_back_velocity_cmd,
@@ -124,7 +119,7 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
         msg->flywheel_right_velocity_cmd,
     };
 
-    int16_t int16_buffer[] = {
+    std::vector<int16_t> int16_buffer{
         msg->wheel_left_torque_cmd,
         msg->wheel_right_torque_cmd,
         msg->wheel_back_torque_cmd,
@@ -157,11 +152,11 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
     digital_out_vector += msg->digital_out_8;
     
     // Pack into single msg
-    unsigned char msg_buffer[87] = {0,};
-    memcpy(msg_buffer, int32_buffer, sizeof(int32_buffer));
-    memcpy(msg_buffer + sizeof(int32_buffer), float_buffer, sizeof(float_buffer));
-    memcpy(msg_buffer + sizeof(int32_buffer) + sizeof(float_buffer), int16_buffer, sizeof(int16_buffer));
-    memcpy(msg_buffer + sizeof(int32_buffer) + sizeof(float_buffer) + sizeof(int16_buffer), &digital_out_vector, sizeof(digital_out_vector));
+    unsigned char msg_buffer[4*int32_buffer.size() + 4*float_buffer.size() + 2*int16_buffer.size() + 1] = {0,};
+    memcpy(msg_buffer, int32_buffer.data(), 4*int32_buffer.size());
+    memcpy(msg_buffer + 4*int32_buffer.size(), float_buffer.data(), 4*float_buffer.size());
+    memcpy(msg_buffer + 4*int32_buffer.size() + 4*float_buffer.size(), int16_buffer.data(), 2*int16_buffer.size());
+    memcpy(msg_buffer + 4*int32_buffer.size() + 4*float_buffer.size() + 2*int16_buffer.size(), &digital_out_vector, 1);
 
     serial_interface_->writeMsgToSerial(msg_buffer, 87);
 }
@@ -187,7 +182,6 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
 	Digital Outs				(1x Byte / 8 bits)
 	*/
 void V5SerialNode::publishSensorUpdate(unsigned char buffer[]){
-    RCLCPP_INFO(get_logger(), "Sensor Update");
     auto msg = ghost_msgs::msg::SensorUpdate{};
     
     msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);
@@ -203,10 +197,10 @@ void V5SerialNode::publishSensorUpdate(unsigned char buffer[]){
 	uint8_t digital_outs = 0;
 
     // Copy msg to buffers
-    memcpy(int_buffer, buffer, sizeof(int_buffer));
-    memcpy(float_buffer, buffer + sizeof(int_buffer), sizeof(float_buffer));
-    memcpy(&digital_states, buffer + sizeof(int_buffer) + sizeof(float_buffer), sizeof(digital_states));
-    memcpy(&digital_outs, buffer + sizeof(int_buffer) + sizeof(float_buffer) + sizeof(digital_outs), sizeof(digital_outs));
+	memcpy(int_buffer, buffer, 4*int_buffer_len);
+	memcpy(float_buffer, buffer + 4*int_buffer_len, 4*float_buffer_len);
+	memcpy(&digital_states, buffer + 4*int_buffer_len + 4*float_buffer_len, 2);
+	memcpy(&digital_outs, buffer + 4*int_buffer_len + 4*float_buffer_len + 2, 1);
 
     // Motor Angles
     msg.drive_lf_angle = int_buffer[0];
@@ -242,23 +236,23 @@ void V5SerialNode::publishSensorUpdate(unsigned char buffer[]){
     msg.joystick_right_y = int_buffer[16];
 
     // Joystick Buttons
-    msg.joystick_btn_a = digital_states & 0x8000;
-    msg.joystick_btn_b = digital_states & 0x4000;
-    msg.joystick_btn_x = digital_states & 0x2000;
-    msg.joystick_btn_y = digital_states & 0x1000;
-    msg.joystick_btn_up = digital_states & 0x0800;
-    msg.joystick_btn_down = digital_states & 0x0400;
-    msg.joystick_btn_left = digital_states & 0x0200;
-    msg.joystick_btn_right = digital_states & 0x0100;
-    msg.joystick_btn_l1 = digital_states & 0x0080;
-    msg.joystick_btn_l2 = digital_states & 0x0040;
-    msg.joystick_btn_r1 = digital_states & 0x0020;
-    msg.joystick_btn_r2 = digital_states & 0x0010;
+    msg.joystick_btn_a =        digital_states & 0x8000;
+    msg.joystick_btn_b =        digital_states & 0x4000;
+    msg.joystick_btn_x =        digital_states & 0x2000;
+    msg.joystick_btn_y =        digital_states & 0x1000;
+    msg.joystick_btn_up =       digital_states & 0x0800;
+    msg.joystick_btn_down =     digital_states & 0x0400;
+    msg.joystick_btn_left =     digital_states & 0x0200;
+    msg.joystick_btn_right =    digital_states & 0x0100;
+    msg.joystick_btn_l1 =       digital_states & 0x0080;
+    msg.joystick_btn_l2 =       digital_states & 0x0040;
+    msg.joystick_btn_r1 =       digital_states & 0x0020;
+    msg.joystick_btn_r2 =       digital_states & 0x0010;
 
     // Competition state
-    msg.is_disabled = digital_states & 0x0008;
-    msg.is_autonomous = digital_states & 0x0004;
-    msg.is_connected = digital_states & 0x0002;
+    msg.is_disabled =           digital_states & 0x0008;
+    msg.is_autonomous =         digital_states & 0x0004;
+    msg.is_connected =          digital_states & 0x0002;
 
     // Digital Outputs
     msg.digital_out_1 = digital_outs & 0x80;

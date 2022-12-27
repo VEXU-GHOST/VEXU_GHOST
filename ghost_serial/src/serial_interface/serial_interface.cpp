@@ -162,7 +162,7 @@ namespace ghost_serial
         return false;
     }
 
-    bool SerialInterface::writeMsgToSerial(const unsigned char *buffer, const int num_bytes)
+    bool SerialInterface::writeMsgToSerial(const unsigned char buffer[], const int num_bytes)
     {
         bool succeeded = false;
         if (port_open_)
@@ -212,7 +212,7 @@ namespace ghost_serial
         return succeeded;
     }
 
-    bool SerialInterface::readMsgFromSerial(unsigned char *msg_buffer)
+    bool SerialInterface::readMsgFromSerial(unsigned char msg_buffer[])
     {
         if (port_open_)
         {

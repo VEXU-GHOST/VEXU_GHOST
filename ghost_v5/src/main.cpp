@@ -155,98 +155,92 @@ void move_voltage_slew(pros::Motor &motor, double cmd_voltage, const double max_
 void producer_main(){
 	int sout_int = fileno(stdout);
 	
-	uint8_t int_buffer_len = 6+1+3+3+4;
-	int32_t int_buffer[int_buffer_len] = {0,};
+	std::vector<int32_t> int_buffer(6+1+3+3+4, 0);
 	
-	uint8_t float_buffer_len = 6+1;
-	float float_buffer[float_buffer_len] = {0.0f,};
+	std::vector<float> float_buffer(6+1, 0.0);
 
-	uint32_t digital_states = 0;
-	unsigned char char_buffer[sizeof(int_buffer) + sizeof(float_buffer) + sizeof(digital_states)] = {0,};
+	uint16_t digital_states = 0;
+	uint8_t digital_outs = 0;
+	uint8_t checksum_byte = 0;
+
+	int char_buffer_len = 4*int_buffer.size() + 4*float_buffer.size() + 2 + 1 + 1;
+	unsigned char char_buffer[char_buffer_len] = {0,};
 
 	while(run_){
 		//// MOTORS ////
 		// Poll drive motors
 		for(int i = 0; i < 6; i++){
 			uint32_t timestamp;
-			int_buffer[i] = i; //drive_motors[i].get_raw_position(&timestamp);
-			float_buffer[i] = (float) i + 100.0; //drive_motors[i].get_actual_velocity();
+			int_buffer[i] = drive_motors[i].get_raw_position(&timestamp);
+			float_buffer[i] = drive_motors[i].get_actual_velocity();
 		}
 
 		// Poll turret motor
-		int_buffer[7] = 7; //turret_motor.get_position();
-		float_buffer[7] = 107.0; //turret_motor.get_actual_velocity();
+		int_buffer[6] = turret_motor.get_position();
+		float_buffer[6] = turret_motor.get_actual_velocity();
 
 		//// SENSORS ////
 		// Poll drive encoders
 		for(int i = 0; i < 3; i++){
-			int_buffer[i+8] = i+8; //encoders[i].get_angle();
-			int_buffer[i+8+3] = i+8+3; //encoders[i].get_velocity();
+			int_buffer[i+7] = encoders[i].get_angle();
+			int_buffer[i+7+3] = encoders[i].get_velocity();
 		}
 
 		//// JOYSTICK ////
 		// Poll joystick channels
 		for(int i = 0; i < 4; i++){
-			int_buffer[i+14] = i+14; //controller_main.get_analog(joy_channels[i]);
+			int_buffer[i+13] = controller_main.get_analog(joy_channels[i]);
 		}
 
 		// Poll joystick button channels
 		digital_states = 0;
 		for(int i = 0; i < 12; i++){
-			digital_states += i%2; (uint32_t) controller_main.get_digital(joy_btns[i]);
+			digital_states += (uint32_t) controller_main.get_digital(joy_btns[i]);
 			digital_states <<= 1;
 		}
 
 		// Poll competition mode
-		digital_states += 1; //!pros::competition::is_disabled();
+		digital_states += pros::competition::is_disabled();
 		digital_states <<= 1;
 
-		digital_states += 1; //pros::competition::is_autonomous();
+		digital_states += pros::competition::is_autonomous();
 		digital_states <<= 1;
 
-		digital_states += 1; // pros::competition::is_connected();
+		digital_states += pros::competition::is_connected();
 		digital_states <<= 1;
 
-		// Empty bit
-		digital_states <<= 1;
+		// TODO: New joystick input bit (Sampled at 50ms intervals)
+
 
 		// Digital Outs
-		for(int i = 0; i < 8; i++){
-			digital_states += i%2; // digital_out[i].get_value();
-			digital_states <<= 1;
+		for(int i = 0; i < 7; i++){
+			digital_outs += digital_out[i].get_value();
+			digital_outs <<= 1;
 		}
-
-		// Calculate Checksum
-		uint32_t checksum = 0;
-		for(int i = 0; i < int_buffer_len; i++){
-			checksum += (uint32_t) int_buffer[i];
-		}
-
-		for(int i = 0; i < float_buffer_len; i++){
-			checksum += (uint32_t) float_buffer[i];
-		}
-
-		checksum &= 0x00FF; // Reduce checksum to 8-bits, won't be a true sum if it exceeds 255, but still functions sufficiently
-
-		// Shift aditional seven to make space for 32-bit checksum (already shifter by one from last operation)
-		digital_states <<= 7;
-		digital_states += checksum;
+		digital_outs += digital_out[7].get_value();
 
 		// Copy each buffer to single buffer of unsigned char
 		// Otherwise we are sending three packets with additional overhead
-		memcpy(char_buffer, int_buffer, sizeof(int_buffer));
-		memcpy(char_buffer + sizeof(int_buffer), float_buffer, sizeof(float_buffer));
-		memcpy(char_buffer + sizeof(int_buffer) + sizeof(float_buffer), &digital_states, sizeof(digital_states));
+		memcpy(char_buffer, int_buffer.data(), 4*int_buffer.size());
+		memcpy(char_buffer + 4*int_buffer.size(), float_buffer.data(), 4*float_buffer.size());
+		memcpy(char_buffer + 4*int_buffer.size() + 4*float_buffer.size(), &digital_states, 2);
+		memcpy(char_buffer + 4*int_buffer.size() + 4*float_buffer.size() + 2, &digital_outs, 1);
+
+		// Calculate Checksum
+		uint32_t checksum = 0;
+		for(int i = 0; i < char_buffer_len - 1; i++){
+			checksum += char_buffer[i];
+		}
+		
+		// Append checksum byte
+		char_buffer[char_buffer_len - 1] = checksum_byte;
 
 		// Write single char buffer to serial port (as one packet)
 		serial_io_mutex.lock();
-		// write(sout_int, char_buffer, sizeof(char_buffer));
-		// unsigned char test_buffer[] = {'t', 'e', 's', 't'};
-		// write(sout_int, test_buffer, sizeof(test_buffer));
-		std::cout << "test" << std::endl;
+		write(sout_int, char_buffer, sizeof(char_buffer));
 		serial_io_mutex.unlock();
 
-		pros::delay(100);
+		pros::delay(10);
 	}
 }
 
@@ -299,9 +293,94 @@ void actuator_timeout_main(){
 }
 
 void button_callback(){
+	// int sout_int = fileno(stdout);
+	// unsigned char test[] = {'t', 'e', 's', 't'};
+	// write(sout_int, test, sizeof(test));
 	int sout_int = fileno(stdout);
-	unsigned char test[] = {'t', 'e', 's', 't'};
-	write(sout_int, test, sizeof(test));
+	
+	std::vector<int32_t> int_buffer(6+1+3+3+4, 0);
+	
+	std::vector<float> float_buffer(6+1, 0.0);
+
+	uint16_t digital_states = 0;
+	uint8_t digital_outs = 0;
+	uint8_t checksum_byte = 0;
+
+	int char_buffer_len = 4*int_buffer.size() + 4*float_buffer.size() + 2 + 1 + 1;
+	unsigned char char_buffer[char_buffer_len] = {0,};
+
+	//// MOTORS ////
+	// Poll drive motors
+	for(int i = 0; i < 6; i++){
+		uint32_t timestamp;
+		int_buffer[i] = drive_motors[i].get_raw_position(&timestamp);
+		float_buffer[i] = drive_motors[i].get_actual_velocity();
+	}
+
+	// Poll turret motor
+	int_buffer[6] = turret_motor.get_position();
+	float_buffer[6] = turret_motor.get_actual_velocity();
+
+	//// SENSORS ////
+	// Poll drive encoders
+	for(int i = 0; i < 3; i++){
+		int_buffer[i+7] = encoders[i].get_angle();
+		int_buffer[i+7+3] = encoders[i].get_velocity();
+	}
+
+	//// JOYSTICK ////
+	// Poll joystick channels
+	for(int i = 0; i < 4; i++){
+		int_buffer[i+13] = controller_main.get_analog(joy_channels[i]);
+	}
+
+	// Poll joystick button channels
+	digital_states = 0;
+	for(int i = 0; i < 12; i++){
+		digital_states += (uint32_t) controller_main.get_digital(joy_btns[i]);
+		digital_states <<= 1;
+	}
+
+	// Poll competition mode
+	digital_states += pros::competition::is_disabled();
+	digital_states <<= 1;
+
+	digital_states += pros::competition::is_autonomous();
+	digital_states <<= 1;
+
+	digital_states += pros::competition::is_connected();
+	digital_states <<= 1;
+
+	// TODO: New joystick input bit (Sampled at 50ms intervals)
+
+
+	// Digital Outs
+	for(int i = 0; i < 7; i++){
+		digital_outs += digital_out[i].get_value();
+		digital_outs <<= 1;
+	}
+	digital_outs += digital_out[7].get_value();
+
+	// Copy each buffer to single buffer of unsigned char
+	// Otherwise we are sending three packets with additional overhead
+	memcpy(char_buffer, int_buffer.data(), 4*int_buffer.size());
+	memcpy(char_buffer + 4*int_buffer.size(), float_buffer.data(), 4*float_buffer.size());
+	memcpy(char_buffer + 4*int_buffer.size() + 4*float_buffer.size(), &digital_states, 2);
+	memcpy(char_buffer + 4*int_buffer.size() + 4*float_buffer.size() + 2, &digital_outs, 1);
+
+	// Calculate Checksum
+	uint32_t checksum = 0;
+	for(int i = 0; i < char_buffer_len - 1; i++){
+		checksum += char_buffer[i];
+	}
+	
+	// Append checksum byte
+	char_buffer[char_buffer_len - 1] = checksum_byte;
+
+	// Write single char buffer to serial port (as one packet)
+	serial_io_mutex.lock();
+	write(sout_int, char_buffer, sizeof(char_buffer));
+	serial_io_mutex.unlock();
 }
 
 /**
@@ -315,11 +394,11 @@ void initialize() {
 	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 
 	// Start Serial Interface tasks
-	// pros::Task producer_thread(producer_main, "producer thread");
+	pros::Task producer_thread(producer_main, "producer thread");
 	// pros::Task consumer_thread(consumer_main, "consumer thread");
 
 	// Callback serial test
-	pros::lcd::register_btn0_cb(&button_callback);
+	// pros::lcd::register_btn0_cb(&button_callback);
 }
 
 /**
