@@ -18,8 +18,17 @@ def main():
     ser = serial.Serial('/dev/ttyACM1', timeout=0.5)  # open serial port
     ser.flushInput()
     while(run_):
+        write_str = b"beepo"
+        print()
+        print("Writing: " + str(write_str))
+        start = time.time_ns()
+        ser.write(write_str)
+
         buffer = ser.read_until(b'\x00')
+        end = time.time_ns()
+        print("Duration:", (end - start)/1000)
         if(len(buffer) != 0):
+            print("Recieved: ")
             print(buffer)
             decoded_packet = cobs.decode(buffer[:-1])
             print(decoded_packet)

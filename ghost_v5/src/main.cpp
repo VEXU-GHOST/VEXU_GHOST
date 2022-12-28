@@ -7,6 +7,8 @@
 #include <numeric>
 #include <unistd.h>
 
+#include "pros/apix.h"
+
 #include "msg_parser/msg_parser.hpp"
 
 // Globals
@@ -76,7 +78,10 @@ uint32_t checksum_bitmask[8] = {
 	0x00000080,
 };
 
-pros::Mutex serial_io_mutex;
+// Serial Port
+int stdin_fd_ = fileno(stdin);
+int stdout_fd_ = fileno(stdout);
+pros::Mutex serial_io_mutex_;
 
 void move_voltage_slew(pros::Motor &motor, double cmd_voltage, const double max_slew_percentage){
 	double motor_gearing[] = {100, 200, 600};
@@ -153,7 +158,6 @@ void move_voltage_slew(pros::Motor &motor, double cmd_voltage, const double max_
 	Checksum					(1x Byte, 8 bits)
 */
 void producer_main(){
-	int sout_int = fileno(stdout);
 	
 	std::vector<int32_t> int_buffer(6+1+3+3+4, 0);
 	
@@ -236,9 +240,9 @@ void producer_main(){
 		char_buffer[char_buffer_len - 1] = checksum_byte;
 
 		// Write single char buffer to serial port (as one packet)
-		serial_io_mutex.lock();
-		write(sout_int, char_buffer, sizeof(char_buffer));
-		serial_io_mutex.unlock();
+		serial_io_mutex_.lock();
+		write(stdout_fd_, char_buffer, sizeof(char_buffer));
+		serial_io_mutex_.unlock();
 
 		pros::delay(10);
 	}
@@ -270,8 +274,33 @@ void producer_main(){
 	 61 Bytes x 8 bits / byte * 1 sec / 115200 bits * 1000ms / 1s = 4.24ms
 	*/
 void consumer_main(){
+	int32_t read_buffer_len = 128;
+	unsigned char read_buffer[read_buffer_len] = {0,};
+	unsigned char write_buffer[read_buffer_len] = {0,};
 	while(run_){
 		// Read serial buffer
+		serial_io_mutex_.lock();
+		int bytes_available = std::min(pros::c::fdctl(stdin_fd_, DEVCTL_FIONREAD, NULL), read_buffer_len);
+		int bytes_read = read(stdin_fd_, read_buffer, bytes_available);
+
+		write_buffer[0] = 'b';
+		write_buffer[1] = 'e';
+		write_buffer[2] = 'e';
+		write_buffer[3] = 'p';
+		write_buffer[4] = '_';
+		for(int i = 0; i < bytes_read; i++){
+			write_buffer[i+5] = read_buffer[i];
+		}
+
+		write_buffer[bytes_read + 5] = '_';
+		write_buffer[bytes_read + 6] = 'b';
+		write_buffer[bytes_read + 7] = 'e';
+		write_buffer[bytes_read + 8] = 'e';
+		write_buffer[bytes_read + 9] = 'p';
+
+		write(stdout_fd_, write_buffer, 10 + bytes_read);
+		serial_io_mutex_.unlock();
+
 		
 		// Collect packets
 		
@@ -293,94 +322,6 @@ void actuator_timeout_main(){
 }
 
 void button_callback(){
-	// int sout_int = fileno(stdout);
-	// unsigned char test[] = {'t', 'e', 's', 't'};
-	// write(sout_int, test, sizeof(test));
-	int sout_int = fileno(stdout);
-	
-	std::vector<int32_t> int_buffer(6+1+3+3+4, 0);
-	
-	std::vector<float> float_buffer(6+1, 0.0);
-
-	uint16_t digital_states = 0;
-	uint8_t digital_outs = 0;
-	uint8_t checksum_byte = 0;
-
-	int char_buffer_len = 4*int_buffer.size() + 4*float_buffer.size() + 2 + 1 + 1;
-	unsigned char char_buffer[char_buffer_len] = {0,};
-
-	//// MOTORS ////
-	// Poll drive motors
-	for(int i = 0; i < 6; i++){
-		uint32_t timestamp;
-		int_buffer[i] = drive_motors[i].get_raw_position(&timestamp);
-		float_buffer[i] = drive_motors[i].get_actual_velocity();
-	}
-
-	// Poll turret motor
-	int_buffer[6] = turret_motor.get_position();
-	float_buffer[6] = turret_motor.get_actual_velocity();
-
-	//// SENSORS ////
-	// Poll drive encoders
-	for(int i = 0; i < 3; i++){
-		int_buffer[i+7] = encoders[i].get_angle();
-		int_buffer[i+7+3] = encoders[i].get_velocity();
-	}
-
-	//// JOYSTICK ////
-	// Poll joystick channels
-	for(int i = 0; i < 4; i++){
-		int_buffer[i+13] = controller_main.get_analog(joy_channels[i]);
-	}
-
-	// Poll joystick button channels
-	digital_states = 0;
-	for(int i = 0; i < 12; i++){
-		digital_states += (uint32_t) controller_main.get_digital(joy_btns[i]);
-		digital_states <<= 1;
-	}
-
-	// Poll competition mode
-	digital_states += pros::competition::is_disabled();
-	digital_states <<= 1;
-
-	digital_states += pros::competition::is_autonomous();
-	digital_states <<= 1;
-
-	digital_states += pros::competition::is_connected();
-	digital_states <<= 1;
-
-	// TODO: New joystick input bit (Sampled at 50ms intervals)
-
-
-	// Digital Outs
-	for(int i = 0; i < 7; i++){
-		digital_outs += digital_out[i].get_value();
-		digital_outs <<= 1;
-	}
-	digital_outs += digital_out[7].get_value();
-
-	// Copy each buffer to single buffer of unsigned char
-	// Otherwise we are sending three packets with additional overhead
-	memcpy(char_buffer, int_buffer.data(), 4*int_buffer.size());
-	memcpy(char_buffer + 4*int_buffer.size(), float_buffer.data(), 4*float_buffer.size());
-	memcpy(char_buffer + 4*int_buffer.size() + 4*float_buffer.size(), &digital_states, 2);
-	memcpy(char_buffer + 4*int_buffer.size() + 4*float_buffer.size() + 2, &digital_outs, 1);
-
-	// Calculate Checksum
-	uint32_t checksum = 0;
-	for(int i = 0; i < char_buffer_len - 1; i++){
-		checksum += char_buffer[i];
-	}
-	
-	// Append checksum byte
-	char_buffer[char_buffer_len - 1] = checksum_byte;
-
-	// Write single char buffer to serial port (as one packet)
-	serial_io_mutex.lock();
-	write(sout_int, char_buffer, sizeof(char_buffer));
-	serial_io_mutex.unlock();
 }
 
 /**
@@ -394,8 +335,9 @@ void initialize() {
 	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 
 	// Start Serial Interface tasks
-	pros::Task producer_thread(producer_main, "producer thread");
-	// pros::Task consumer_thread(consumer_main, "consumer thread");
+	// serial_init();
+	// pros::Task producer_thread(producer_main, "producer thread");
+	pros::Task consumer_thread(consumer_main, "consumer thread");
 
 	// Callback serial test
 	// pros::lcd::register_btn0_cb(&button_callback);
