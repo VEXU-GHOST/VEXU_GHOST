@@ -161,9 +161,9 @@ void producer_main(){
 
 	uint16_t digital_states = 0;
 	uint8_t digital_outs = 0;
-	uint8_t checksum_byte = 0;
 
-	int char_buffer_len = 4*int_buffer.size() + 4*float_buffer.size() + 2 + 1 + 1;
+	// Add one at end for checksum byte
+	int char_buffer_len = 4*int_buffer.size() + 4*float_buffer.size() + sizeof(digital_states) + sizeof(digital_outs) + 1;
 	unsigned char char_buffer[char_buffer_len] = {0,};
 
 	while(run_){
@@ -217,7 +217,7 @@ void producer_main(){
 			digital_outs += digital_out[i].get_value();
 			digital_outs <<= 1;
 		}
-		digital_outs += digital_out[7].get_value();
+		// digital_outs += digital_out[7].get_value();
 
 		// Copy each buffer to single buffer of unsigned char
 		// Otherwise we are sending three packets with additional overhead
@@ -227,9 +227,9 @@ void producer_main(){
 		memcpy(char_buffer + 4*int_buffer.size() + 4*float_buffer.size() + 2, &digital_outs, 1);
 
 		// Calculate Checksum
-		uint32_t checksum = 0;
+		uint8_t checksum_byte = 0;
 		for(int i = 0; i < char_buffer_len - 1; i++){
-			checksum += char_buffer[i];
+			checksum_byte += char_buffer[i];
 		}
 		
 		// Append checksum byte

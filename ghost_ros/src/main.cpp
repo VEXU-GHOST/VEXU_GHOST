@@ -53,7 +53,11 @@ void particle_filter_main(std::string config_file){
 
 void serial_interface_main(std::string config_file)
 {
-    std::cout << "[START] Serial Writer Thread" << std::endl;
+    bool verbose = YAML::LoadFile(config_file)["verbose"].as<bool>();
+
+    if(verbose){
+        std::cout << "[START] Serial Writer Thread" << std::endl;
+    }
     auto serial_node = std::make_shared<ghost_serial::V5SerialNode>(config_file);
     
     // Wait for serial port, then start reader thread
@@ -61,7 +65,9 @@ void serial_interface_main(std::string config_file)
 
     // Process ROS Callbacks until exit
     rclcpp::spin(serial_node);
-    std::cout << "[END] Serial Writer Thread" << std::endl;
+    if(verbose){
+        std::cout << "[END] Serial Writer Thread" << std::endl;
+    }
 }
 
 int main(int argc, char* argv[]){

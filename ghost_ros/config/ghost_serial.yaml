@@ -1,7 +1,7 @@
 port_name: "/dev/ttyACM1"
 backup_port_name: "/dev/ttyACM2"
 msg_start_seq: "sout"
-msg_len: 100
-use_checksum: false
-verbose: true
+msg_len: 99
+use_checksum: true
+verbose: false
 using_reader_thread: true

@@ -9,6 +9,7 @@ V5SerialNode::V5SerialNode(std::string config_file) : Node("ghost_serial_node"),
     // Load config file
     config_yaml_ = YAML::LoadFile(config_file);
     msg_len_ = config_yaml_["msg_len"].as<int>(); 
+    verbose_ = config_yaml_["verbose"].as<bool>();
     using_reader_thread_ = config_yaml_["using_reader_thread"].as<bool>(); 
 
     // Serial Interface
@@ -17,7 +18,7 @@ V5SerialNode::V5SerialNode(std::string config_file) : Node("ghost_serial_node"),
         config_yaml_["msg_start_seq"].as<std::string>(),
         msg_len_,
         config_yaml_["use_checksum"].as<bool>(),
-        config_yaml_["verbose"].as<bool>());
+        verbose_);
 
     // Sensor Update Msg Publisher
     sensor_update_pub_ = create_publisher<ghost_msgs::msg::SensorUpdate>("v5_sensor_update", 10);
@@ -54,7 +55,10 @@ void V5SerialNode::initSerialInterfaceBlocking(){
 }
 
 void V5SerialNode::readerLoop(){
-    std::cout << "[START] Serial Read Thread" << std::endl;
+    if(verbose_){
+        std::cout << "[START] Serial Read Thread" << std::endl;
+    }
+
     reader_thread_init_ = true;
     while(rclcpp::ok()){
         try{
@@ -68,7 +72,10 @@ void V5SerialNode::readerLoop(){
             std::cout << "Error: " << e.what() << std::endl;
         }
     }
-    std::cout << "[END] Serial Read Thread" << std::endl;
+
+    if(verbose_){
+        std::cout << "[END] Serial Read Thread" << std::endl;
+    }
 }
 
 /*
@@ -96,7 +103,10 @@ void V5SerialNode::readerLoop(){
 	 61 Bytes x 8 bits / byte * 1 sec / 115200 bits * 1000ms / 1s = 4.24ms
 	*/
 void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorCommands::SharedPtr msg){
-    RCLCPP_INFO(get_logger(), "Actuator Command");
+    if(verbose_){
+        RCLCPP_INFO(get_logger(), "Actuator Command");
+    }
+
     std::vector<int32_t> int32_buffer{
         msg->wheel_left_angle_cmd,
         msg->wheel_right_angle_cmd,
@@ -182,6 +192,10 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
 	Digital Outs				(1x Byte / 8 bits)
 	*/
 void V5SerialNode::publishSensorUpdate(unsigned char buffer[]){
+    if(verbose_){
+        RCLCPP_INFO(get_logger(), "Sensor Update");
+    }
+    
     auto msg = ghost_msgs::msg::SensorUpdate{};
     
     msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);

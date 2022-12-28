@@ -45,14 +45,17 @@ namespace ghost_serial
                     if (raw_data_buffer[i] == 0x00) // Msg end delimiter
                     {
                         // Apply COBS Decode to raw msg
+                        // cobsDecode requires size of input and output buffers to be the same.
                         unsigned char decoded_msg[msg_len_ + use_checksum_ + 2] = {0,};
                         COBS::cobsDecode(incoming_msg_buffer_.data(), msg_len_ + use_checksum_ + 2, decoded_msg);
+                        
+                        // Thus, copy ONLY the msg from cobsDecode output to parsed_msg
                         memcpy(parsed_msg, decoded_msg, msg_len_);
 
                         // Validate checksum
                         if(use_checksum_){
-                            // Checksum should always be last byte before end delimiter
-                            checksum_byte = incoming_msg_buffer_[incoming_msg_buffer_.size()-2];
+                            // Checksum is one byte past end of parsed_msg
+                            checksum_byte = decoded_msg[msg_len_];
                             for(int b = 0; b < msg_len_; b++){
                                 checksum_byte -= parsed_msg[b];
                             }
