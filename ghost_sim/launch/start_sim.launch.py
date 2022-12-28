@@ -73,6 +73,12 @@ def generate_launch_description():
             }.items()
     )
 
+    ground_truth_publisher = Node(
+        package='ghost_sim',
+        executable='ground_truth_pose_publisher',
+        name='ground_truth_pose_publisher',
+    )
+
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -106,6 +112,7 @@ def generate_launch_description():
         DeclareLaunchArgument(name='joystick', default_value='False'),
         DeclareLaunchArgument('sim_gui', default_value='False'),
         simulation,
+        ground_truth_publisher,
         rviz_node,
         joy_launch_description,
         ghost_ros_main,

@@ -18,6 +18,7 @@ find_package(std_msgs REQUIRED)
 
 # Custom Msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Pose2D.msg"
   "msg/ActuatorCommands.msg"
   "msg/SensorUpdate.msg"
   DEPENDENCIES std_msgs

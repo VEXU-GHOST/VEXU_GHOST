@@ -6,6 +6,12 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+set(CMAKE_BUILD_TYPE "DEBUG")
+
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+  add_compile_options(-g -O0)
+endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+
 ########################
 ##### DEPENDENCIES #####
 ########################
@@ -17,6 +23,7 @@ find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(tf2_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
@@ -29,6 +36,7 @@ find_package(gazebo_ros REQUIRED)
 find_package(gazebo_plugins REQUIRED)
 
 # Custom
+find_package(ghost_msgs REQUIRED)
 find_package(ghost_ros REQUIRED)
 
 # Include
@@ -99,6 +107,20 @@ target_include_directories(swerve_odometry_plugin
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(swerve_odometry_plugin)
+
+add_executable(ground_truth_pose_publisher
+  src/ground_truth_pose_publisher.cpp
+)
+ament_target_dependencies(ground_truth_pose_publisher
+  rclcpp
+  tf2_msgs
+  geometry_msgs
+  gazebo_msgs
+  ghost_msgs
+)
+install(TARGETS
+  ground_truth_pose_publisher
+  DESTINATION lib/${PROJECT_NAME})
 
 ###################
 ##### TESTING #####
