@@ -9,7 +9,7 @@
 
 #include "pros/apix.h"
 
-#include "msg_parser/msg_parser.hpp"
+#include "ghost_serial/msg_parser/msg_parser.hpp"
 
 // Globals
 uint32_t last_cmd_time_ = 0;

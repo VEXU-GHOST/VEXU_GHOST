@@ -7,7 +7,7 @@
  * If I was more knowledgeable with Makefiles, this would be linked as a static library, but alas I am not. :(
 */
 
-#include "cobs/cobs.hpp"
+#include "ghost_serial/cobs/cobs.hpp"
 
 namespace COBS{
 	

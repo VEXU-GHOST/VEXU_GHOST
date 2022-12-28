@@ -25,7 +25,7 @@
 #include "std_msgs/msg/float32.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
 
-#include "dc_motor_model.hpp"
+#include "ghost_control/models/dc_motor_model.hpp"
 
 namespace gazebo_joint_pid_plugin
 {

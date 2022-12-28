@@ -1,4 +1,4 @@
-#include "cobs/cobs.hpp"
+#include "ghost_serial/cobs/cobs.hpp"
 
 #include "gtest/gtest.h"
 

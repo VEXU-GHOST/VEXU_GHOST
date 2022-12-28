@@ -9,7 +9,7 @@
 #include "ghost_msgs/msg/actuator_commands.hpp"
 #include "ghost_msgs/msg/sensor_update.hpp"
 
-#include "serial_interface/serial_interface.hpp"
+#include "ghost_serial/serial_interface/serial_interface.hpp"
 
 namespace ghost_serial
 {

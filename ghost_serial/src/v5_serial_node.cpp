@@ -1,5 +1,5 @@
 
-#include "v5_serial_node.hpp"
+#include "ghost_serial/v5_serial_node.hpp"
 
 using std::placeholders::_1;
 using namespace std::literals::chrono_literals;

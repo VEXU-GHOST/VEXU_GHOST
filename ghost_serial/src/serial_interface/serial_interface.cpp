@@ -1,4 +1,4 @@
-#include "serial_interface/serial_interface.hpp"
+#include "ghost_serial/serial_interface/serial_interface.hpp"
 
 #include <cstring>
 #include <exception>

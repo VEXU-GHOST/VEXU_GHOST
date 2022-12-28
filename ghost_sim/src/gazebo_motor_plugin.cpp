@@ -9,7 +9,7 @@
  */
 
 #include "gazebo_motor_plugin.hpp"
-#include "dc_motor_model.hpp"
+#include "ghost_control/models/dc_motor_model.hpp"
 
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/Joint.hh>

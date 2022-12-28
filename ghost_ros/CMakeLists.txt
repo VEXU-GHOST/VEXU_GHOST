@@ -48,23 +48,6 @@ add_subdirectory(src/shared)
 # ##################
 # #### Library #####
 # ##################
-# DC Motor Model Library
-add_library(dc_motor_model SHARED src/dc_motor_model.cpp)
-target_include_directories(dc_motor_model
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(dc_motor_model HAS_LIBRARY_TARGET)
-
-install(
-  TARGETS dc_motor_model
-  EXPORT dc_motor_model
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
 # Vector Map Library
 add_library(vector_map SHARED src/vector_map/vector_map.cpp)
 target_link_libraries(vector_map
@@ -193,12 +176,6 @@ install(TARGETS
 # ################
 # ### Testing ####
 # ################
-ament_add_gtest(test_dc_motor_model test/test_dc_motor_model.cpp)
-target_link_libraries(test_dc_motor_model
-  dc_motor_model
-  gtest
-)
-
 ament_add_gtest(test_stamped_queue test/test_stamped_queue.cpp)
 target_link_libraries(test_stamped_queue
   gtest

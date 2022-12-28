@@ -37,7 +37,7 @@ find_package(gazebo_plugins REQUIRED)
 
 # Custom
 find_package(ghost_msgs REQUIRED)
-find_package(ghost_ros REQUIRED)
+find_package(ghost_control REQUIRED)
 
 # Include
 include_directories(include)
@@ -56,10 +56,10 @@ ament_target_dependencies(gazebo_motor_plugin
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
-  ghost_ros
+  ghost_control
 )
 target_link_libraries(gazebo_motor_plugin
-  ghost_ros::dc_motor_model)
+  ghost_control::dc_motor_model)
 target_include_directories(gazebo_motor_plugin
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -77,10 +77,10 @@ ament_target_dependencies(gazebo_joint_pid_plugin
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
-  ghost_ros
+  ghost_control
 )
 target_link_libraries(gazebo_joint_pid_plugin
-  ghost_ros::dc_motor_model
+  ghost_control::dc_motor_model
 )
 target_include_directories(gazebo_joint_pid_plugin
   PUBLIC
@@ -100,7 +100,7 @@ ament_target_dependencies(swerve_odometry_plugin
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
-  ghost_ros
+  ghost_control
 )
 target_include_directories(swerve_odometry_plugin
   PUBLIC

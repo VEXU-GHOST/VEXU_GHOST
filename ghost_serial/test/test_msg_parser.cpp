@@ -1,7 +1,7 @@
 
 
-#include "cobs/cobs.hpp"
-#include "msg_parser/msg_parser.hpp"
+#include "ghost_serial/cobs/cobs.hpp"
+#include "ghost_serial/msg_parser/msg_parser.hpp"
 
 #include "gtest/gtest.h"
 

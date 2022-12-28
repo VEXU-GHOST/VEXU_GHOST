@@ -6,7 +6,7 @@
  * If I was more knowledgeable with Makefiles, this would be linked as a static library, but alas I am not. :(
 */
 
-#include "msg_parser/msg_parser.hpp"
+#include "ghost_serial/msg_parser/msg_parser.hpp"
 #include <cstring>
 
 namespace ghost_serial
