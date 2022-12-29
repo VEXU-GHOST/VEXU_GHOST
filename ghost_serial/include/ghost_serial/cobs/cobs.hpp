@@ -3,7 +3,7 @@
  * All credit goes to original authors.
 
  * All original serial library files reside under the ghost_serial ROS package.
- * Symlinks have been created in the ghost_v5 project to compile the files to the V5 Brain from the same source files.
+ * Symlinks have been created in the ghost_pros project to compile the files to the V5 Brain from the same source files.
  * Relative paths in Symlinks mean it should work across machines via Github.
 
  * If I was more knowledgeable with Makefiles, this would be linked as a static library, but alas I am not. :(
