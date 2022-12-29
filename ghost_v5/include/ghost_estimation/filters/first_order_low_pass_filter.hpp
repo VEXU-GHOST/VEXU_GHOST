@@ -20,10 +20,12 @@ namespace ghost_estimation
          *
          * See: http://lpsa.swarthmore.edu/LaplaceZTable/LaplaceZFuncTable.html
          * 
-         * @param w0_   filter cutoff frequency
+         * Functionality is not changed by frequency units (can be Hz or rad/s) as long as input data matches.
+         * 
+         * @param w0   filter cutoff frequency
          * @param ts    timestep in seconds
          */
-        FirstOrderLowPassFilter(float w0_, float ts);
+        FirstOrderLowPassFilter(float w0, float ts);
         
         /**
          * @brief Called at regular interval specific by timestep with new raw data input.

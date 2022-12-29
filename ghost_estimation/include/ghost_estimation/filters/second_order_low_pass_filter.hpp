@@ -20,7 +20,9 @@ namespace ghost_estimation
          *
          * See: http://lpsa.swarthmore.edu/LaplaceZTable/LaplaceZFuncTable.html
          * 
-         * @param w0    natural frequency (or break/corner frequency) in rad/s
+         * Functionality is not changed by frequency units (can be Hz or rad/s) as long as input data matches.
+         * 
+         * @param w0    natural frequency (or break/corner frequency)
          * @param zeta  damping factor (between 0.0 and 1.0)
          * @param ts    timestep in seconds
          */
@@ -69,11 +71,12 @@ namespace ghost_estimation
         float d1_coeff_;
         float d0_coeff_;
 
-        // State Variables
+        // Output State Variables
         float y0_;
         float y1_;
         float y2_;
 
+        // Input State Variables
         float u0_;
         float u1_;
         float u2_;

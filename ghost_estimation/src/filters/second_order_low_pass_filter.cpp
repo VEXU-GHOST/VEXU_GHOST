@@ -11,6 +11,7 @@ SecondOrderLowPassFilter::SecondOrderLowPassFilter(float w0, float zeta, float t
         // Damped Natural Frequency
         wd_ = w0_ * sqrt(1 - zeta_ * zeta_);
         phi_ = acos(zeta);
+        
         // Transfer Function Coefficients
         n2_coeff_ = wd_/w0_;
         n1_coeff_ = exp(-zeta_*w0_*ts_) * sin(wd_*ts_ - phi_);
