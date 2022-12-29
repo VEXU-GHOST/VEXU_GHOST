@@ -14,7 +14,7 @@
 #include <limits>
 #include <algorithm>
 
-namespace dc_motor_model
+namespace ghost_control
 {
 
     class DCMotorModel
@@ -45,7 +45,8 @@ namespace dc_motor_model
             double stall_torque,
             double free_current,
             double stall_current,
-            double nominal_voltage);
+            double nominal_voltage,
+            double gear_ratio = 1.0);
 
         void setGearRatio(double ratio){
             gear_ratio_ = ratio;
@@ -135,6 +136,14 @@ namespace dc_motor_model
             return curr_torque_/gear_ratio_;
         }
 
+        /**
+         * @brief Solves for voltage command given desired torque
+         * 
+         * @param torque_desired 
+         * @return double voltage_cmd
+         */
+        double getVoltageFromTorque(double torque_desired);
+
     private:
 
         void updateMotor();
@@ -160,6 +169,6 @@ namespace dc_motor_model
         int cmd_motor_dir_;
     };
 
-} // namespace dc_motor_model
+} // namespace ghost_control
 
 #endif

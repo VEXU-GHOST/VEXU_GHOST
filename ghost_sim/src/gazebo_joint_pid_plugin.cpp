@@ -38,7 +38,7 @@ public:
   std::string link_name_;
   
   // Motor Parameters
-  dc_motor_model::DCMotorModel motor_model_;
+  ghost_control::DCMotorModel motor_model_;
   double free_speed_;
   double stall_torque_;
   double free_current_;
@@ -127,7 +127,7 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     10);
 
   // Initalize motor models
-  impl_->motor_model_ = dc_motor_model::DCMotorModel(
+  impl_->motor_model_ = ghost_control::DCMotorModel(
     impl_->free_speed_,
     impl_->stall_torque_,
     impl_->free_current_,

@@ -10,7 +10,7 @@
 
 #include "ghost_control/models/dc_motor_model.hpp"
 
-namespace dc_motor_model
+namespace ghost_control
 {
 
     DCMotorModel::DCMotorModel(
@@ -18,12 +18,13 @@ namespace dc_motor_model
         double stall_torque,
         double free_current,
         double stall_current,
-        double nominal_voltage) : free_speed_(free_speed),
+        double nominal_voltage,
+        double gear_ratio) : free_speed_(free_speed),
                               stall_torque_(stall_torque),
                               free_current_(free_current),
                               stall_current_(stall_current),
                               nominal_voltage_(nominal_voltage),
-                              gear_ratio_(1.0),
+                              gear_ratio_(gear_ratio),
                               max_current_(stall_current)
     {
         curr_voltage_percent_ = 0;
@@ -48,6 +49,10 @@ namespace dc_motor_model
         updateMotor();
     }
 
+    double DCMotorModel::getVoltageFromTorque(double torque_desired){
+        return (torque_desired / stall_torque_ + curr_speed_ / free_speed_) * nominal_voltage_;
+    }
+
     void DCMotorModel::updateMotor()
     {
         // Calculate current motor torque
@@ -59,4 +64,4 @@ namespace dc_motor_model
         // // Clamp if true current exceeds max current
         // curr_current_ = (curr_current_ > max_current_) ? max_current_ : curr_current_;
     }
-} // namespace dc_motor_model
+} // namespace ghost_control

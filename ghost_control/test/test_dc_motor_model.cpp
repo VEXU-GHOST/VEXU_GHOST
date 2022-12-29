@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-using dc_motor_model::DCMotorModel;
+using ghost_control::DCMotorModel;
 
 class TestMotorModel: public ::testing::Test {
     protected:
