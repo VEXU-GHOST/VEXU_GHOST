@@ -19,7 +19,7 @@ find_package(ament_cmake_gtest REQUIRED)
 ### Libraries ###
 #################
 # DC Motor Model Library
-add_library(dc_motor_model SHARED src/dc_motor_model.cpp)
+add_library(dc_motor_model SHARED src/models/dc_motor_model.cpp)
 target_include_directories(dc_motor_model
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

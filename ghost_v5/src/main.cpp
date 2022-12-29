@@ -10,6 +10,8 @@
 #include "pros/apix.h"
 
 #include "ghost_serial/msg_parser/msg_parser.hpp"
+#include "ghost_estimation/filters/first_order_low_pass_filter.hpp"
+#include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
 
 // Globals
 uint32_t last_cmd_time_ = 0;
@@ -337,7 +339,7 @@ void initialize() {
 	// Start Serial Interface tasks
 	// serial_init();
 	// pros::Task producer_thread(producer_main, "producer thread");
-	pros::Task consumer_thread(consumer_main, "consumer thread");
+	// pros::Task consumer_thread(consumer_main, "consumer thread");
 
 	// Callback serial test
 	// pros::lcd::register_btn0_cb(&button_callback);
@@ -401,6 +403,8 @@ void opcontrol() {
 	auto m1 = pros::Motor(11, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
 	auto m2 = pros::Motor(12, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
 	
+	auto lpf_2 = ghost_estimation::SecondOrderLowPassFilter(100, 0.707, 0.01);
+
 	while(run_){
 		auto start = pros::millis();
 		// double wheel_vel = controller_main.get_analog(ANALOG_RIGHT_Y)*500.0/127.0;	// 500 RPM
@@ -416,8 +420,12 @@ void opcontrol() {
 
 		double input1 = controller_main.get_analog(ANALOG_RIGHT_Y)/127.0;
 		double input2 = controller_main.get_analog(ANALOG_LEFT_Y)/127.0;
+
 		move_voltage_slew(m1, input1*12000, 1.0);
 		move_voltage_slew(m2, input2*12000, 1.0);
+		auto raw_vel = m2.get_actual_velocity();
+		auto f2_vel = lpf_2.updateFilter(raw_vel);
+		std::cout << m2.get_actual_velocity() << " " << f1_vel << " " << f2_vel << std::endl;
 
 		// std::cout << m1.get_actual_velocity() << std::endl;
 		pros::delay(10 - (pros::millis() - start));

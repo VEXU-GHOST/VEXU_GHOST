@@ -20,10 +20,10 @@ namespace ghost_estimation
          *
          * See: http://lpsa.swarthmore.edu/LaplaceZTable/LaplaceZFuncTable.html
          * 
-         * @param tau   filter time constant
+         * @param w0_   filter cutoff frequency
          * @param ts    timestep in seconds
          */
-        FirstOrderLowPassFilter(float tau, float ts);
+        FirstOrderLowPassFilter(float w0_, float ts);
         
         /**
          * @brief Called at regular interval specific by timestep with new raw data input.
@@ -31,13 +31,18 @@ namespace ghost_estimation
          * See: http://lpsa.swarthmore.edu/LaplaceZTable/LaplaceZFuncTable.html
          * 
          * Derivation:
-         * Y/U = 1 / (tau * s + 1)
-         *     = (1 / tau) * 1 / (s + 1 / tau)
-         *     = (1 / tau) * Z / (Z - exp(-T / tau))
+         * G(s) = 1 / (s / a + 1) = a/(s + a)
          * 
-         * Y * (Z - exp(-T / tau)) = Z * U / tau
-         * y[k-1] - y[k] * exp(-T / tau) = u[k-1] / tau
-         * y[k] = (y[k-1] - u[k-1] / tau) / exp(-T / tau)
+         * <Apply Zero-Order Hold Discretization (ZOH)>
+         * Gzoh(s)*G(s) = (1-exp(-Ts)) * a/(s*(s + a))
+         * 
+         * G(z) = Z[Gzoh(s)*G(s)] = Z[(a/(s*(s + a))] - Z[(1-exp(-Ts)) * a/(s*(s + a))]
+         *      = (z-1)/z * Z[(a/(s*(s + a))]
+         *      = (z-1)/z * (1-exp(-aT))*z/((z-1)*(z-exp(-aT))) = (1-exp(-aT)) / (z-exp(-aT))
+         * 
+         * Y(Z) * (z-exp(-aT)) = U(Z) * (1-exp(-aT))
+         * y[k+1] - y[k]*exp(-aT) = (1-exp(-aT))*u[k]
+         * y[k] = y[k-1] * exp(-w0 * ts) + (1 - exp(-w0 * ts)) * u[k-1]
          * 
          * @param raw_sensor_input
          * @return float filtered_output
@@ -46,14 +51,8 @@ namespace ghost_estimation
 
     private:
         // Filter Parameters
-        float tau_;
+        float w0_;
         float ts_;
-
-        // Transfer Function coefficients
-        float leading_coeff_;
-        float nz1_coeff_;
-        float dz1_coeff_;
-        float dz0_coeff_;
 
         // State Variables
         float y0_;
