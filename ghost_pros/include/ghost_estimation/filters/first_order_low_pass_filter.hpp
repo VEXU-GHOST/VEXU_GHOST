@@ -51,6 +51,13 @@ namespace ghost_estimation
          */
         float updateFilter(float u1);
 
+        /**
+         * @brief Returns last filter output
+         * 
+         * @return float 
+         */
+        float getCurrentState();
+
     private:
         // Filter Parameters
         float w0_;

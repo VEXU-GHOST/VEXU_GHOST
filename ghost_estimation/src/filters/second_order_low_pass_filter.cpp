@@ -42,4 +42,8 @@ float SecondOrderLowPassFilter::updateFilter(float u0)
     return y0_;
 }
 
+float SecondOrderLowPassFilter::getCurrentState(){
+    return y0_;
+}
+
 } // namespace ghost_estimation
