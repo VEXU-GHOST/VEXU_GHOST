@@ -10,8 +10,7 @@
 #include "pros/apix.h"
 
 #include "ghost_serial/msg_parser/msg_parser.hpp"
-#include "ghost_estimation/filters/first_order_low_pass_filter.hpp"
-#include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
+#include "ghost_v5/ghost_motor.hpp"
 
 // Globals
 uint32_t last_cmd_time_ = 0;
@@ -84,29 +83,6 @@ uint32_t checksum_bitmask[8] = {
 int stdin_fd_ = fileno(stdin);
 int stdout_fd_ = fileno(stdout);
 pros::Mutex serial_io_mutex_;
-
-void move_voltage_slew(pros::Motor &motor, double cmd_voltage, const double max_slew_percentage){
-	double motor_gearing[] = {100, 200, 600};
-	
-	// Normalize voltage command from millivolts
-	double cmd_voltage_scaled = cmd_voltage / 12000.0;
-
-	// Normalize velocity by nominal free speed
-	double curr_vel_scaled = motor.get_actual_velocity() / motor_gearing[motor.get_gearing()];
-
-	double cmd;
-	// Maximum voltage difference in motor is capped by slew rate parameter
-	if(fabs(curr_vel_scaled - cmd_voltage_scaled) > max_slew_percentage){
-		double sign = (curr_vel_scaled - cmd_voltage_scaled > 0) ? 1.0 : -1.0;
-		cmd = curr_vel_scaled - sign*fabs(max_slew_percentage);
-	}
-	else{
-		cmd = cmd_voltage_scaled;
-	}
-	
-	// Set motor
-	motor.move_voltage(cmd*12000);
-}
 
 /*
 	------ Producer Message Encoding ------
@@ -400,10 +376,37 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	auto m1 = pros::Motor(11, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
-	auto m2 = pros::Motor(12, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
-	
-	auto lpf_2 = ghost_estimation::SecondOrderLowPassFilter(100, 0.707, 0.01);
+
+	ghost_v5::ghost_motor_config drive_motor_config = {
+        // DC Motor
+        .motor__reversed = false,
+        .motor__encoder_units = pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES,
+        .motor__nominal_free_speed = 120,
+        .motor__stall_torque = 3.6,
+        .motor__free_current = 0.14,
+        .motor__stall_current = 4.25,
+		.motor__max_voltage = 12.0,
+        .motor__gear_ratio = 2,
+
+        // 2nd Order Velocity Filter
+        .filter__cutoff_frequency = 75.0,	// Hz
+        .filter__damping_ratio = 0.707,
+        .filter__timestep = 0.01,			// ms
+
+        // FF-PD Controller
+        .ctl__pos_gain = 150.0,				// Maps encoder ticks to millivolts ()
+        .ctl__vel_gain = 15.0,				// Maps RPM to Millivolts
+		.ctl__ff_vel_gain = 1.0,
+		.ctl__ff_voltage_gain = 1.0,
+
+        // Limit Instant Voltage Change
+        .motor__torque_limit_norm = 1.0,
+	};
+
+	auto m1 = ghost_v5::GhostMotor(1, drive_motor_config);
+
+	// auto m1 = pros::Motor(1, pros::E_MOTOR_GEAR_100, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
+	auto m2 = pros::Motor(2, pros::E_MOTOR_GEAR_600, false, pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
 
 	while(run_){
 		auto start = pros::millis();
@@ -421,13 +424,11 @@ void opcontrol() {
 		double input1 = controller_main.get_analog(ANALOG_RIGHT_Y)/127.0;
 		double input2 = controller_main.get_analog(ANALOG_LEFT_Y)/127.0;
 
-		move_voltage_slew(m1, input1*12000, 1.0);
-		move_voltage_slew(m2, input2*12000, 1.0);
-		auto raw_vel = m2.get_actual_velocity();
-		auto f2_vel = lpf_2.updateFilter(raw_vel);
-		std::cout << m2.get_actual_velocity() << " " << f1_vel << " " << f2_vel << std::endl;
+		// m1.setMotorCommand(0.0, 0.0, input1*360);
+		// m1.setMotorCommand(0.0, input1*drive_motor_config.motor__nominal_free_speed * drive_motor_config.motor__gear_ratio);
+		// m1.setMotorCommand(input1);
+		m1.updateMotor();
 
-		// std::cout << m1.get_actual_velocity() << std::endl;
 		pros::delay(10 - (pros::millis() - start));
 
 	}

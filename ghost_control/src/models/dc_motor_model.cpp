@@ -48,9 +48,13 @@ namespace ghost_control
         curr_speed_ = current_speed/gear_ratio_;
         updateMotor();
     }
+    
+    double DCMotorModel::getVoltageFromTorqueMillivolts(double torque_desired){
+        return (torque_desired / stall_torque_ + curr_speed_ / free_speed_) * nominal_voltage_ * 1000;
+    }
 
-    double DCMotorModel::getVoltageFromTorque(double torque_desired){
-        return (torque_desired / stall_torque_ + curr_speed_ / free_speed_) * nominal_voltage_;
+    double DCMotorModel::getVoltageFromVelocityMillivolts(double velocity_desired){
+        return (velocity_desired / (free_speed_ * gear_ratio_)) * nominal_voltage_ * 1000;
     }
 
     void DCMotorModel::updateMotor()

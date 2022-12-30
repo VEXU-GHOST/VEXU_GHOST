@@ -137,12 +137,20 @@ namespace ghost_control
         }
 
         /**
-         * @brief Solves for voltage command given desired torque
+         * @brief Solves for feed forward voltage command given desired torque
          * 
          * @param torque_desired 
          * @return double voltage_cmd
          */
-        double getVoltageFromTorque(double torque_desired);
+        double getVoltageFromTorqueMillivolts(double torque_desired);
+
+        /**
+         * @brief Solves for feed forward voltage command given desired velocity
+         * 
+         * @param velocity_desired 
+         * @return double voltage_cmd
+         */
+        double getVoltageFromVelocityMillivolts(double velocity_desired);
 
     private:
 
