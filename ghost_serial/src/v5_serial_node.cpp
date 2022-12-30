@@ -107,7 +107,7 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
         RCLCPP_INFO(get_logger(), "Actuator Command");
     }
 
-    std::vector<int32_t> int32_buffer{
+    std::vector<int32_t> angle_buffer{
         msg->wheel_left_angle_cmd,
         msg->wheel_right_angle_cmd,
         msg->wheel_back_angle_cmd,
@@ -117,7 +117,7 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
         msg->turret_angle_cmd
     };
 
-    std::vector<float> float_buffer{
+    std::vector<float> vel_buffer{
         msg->wheel_left_velocity_cmd,
         msg->wheel_right_velocity_cmd,
         msg->wheel_back_velocity_cmd,
@@ -129,18 +129,18 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
         msg->flywheel_right_velocity_cmd,
     };
 
-    std::vector<int16_t> int16_buffer{
-        msg->wheel_left_torque_cmd,
-        msg->wheel_right_torque_cmd,
-        msg->wheel_back_torque_cmd,
-        msg->steering_left_torque_cmd,
-        msg->steering_right_torque_cmd,
-        msg->steering_back_torque_cmd,
-        msg->turret_torque_cmd,
-        msg->flywheel_right_torque_cmd,
-        msg->flywheel_left_torque_cmd,
-        msg->intake_torque_cmd,
-        msg->indexer_torque_cmd,
+    std::vector<float> voltage_buffer{
+        msg->wheel_left_voltage_cmd,
+        msg->wheel_right_voltage_cmd,
+        msg->wheel_back_voltage_cmd,
+        msg->steering_left_voltage_cmd,
+        msg->steering_right_voltage_cmd,
+        msg->steering_back_voltage_cmd,
+        msg->turret_voltage_cmd,
+        msg->flywheel_right_voltage_cmd,
+        msg->flywheel_left_voltage_cmd,
+        msg->intake_voltage_cmd,
+        msg->indexer_voltage_cmd,
     };
 
     // Digital Outputs
@@ -162,13 +162,13 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
     digital_out_vector += msg->digital_out_8;
     
     // Pack into single msg
-    unsigned char msg_buffer[4*int32_buffer.size() + 4*float_buffer.size() + 2*int16_buffer.size() + 1] = {0,};
-    memcpy(msg_buffer, int32_buffer.data(), 4*int32_buffer.size());
-    memcpy(msg_buffer + 4*int32_buffer.size(), float_buffer.data(), 4*float_buffer.size());
-    memcpy(msg_buffer + 4*int32_buffer.size() + 4*float_buffer.size(), int16_buffer.data(), 2*int16_buffer.size());
-    memcpy(msg_buffer + 4*int32_buffer.size() + 4*float_buffer.size() + 2*int16_buffer.size(), &digital_out_vector, 1);
+    unsigned char msg_buffer[4*angle_buffer.size() + 4*vel_buffer.size() + 4*voltage_buffer.size() + 1] = {0,};
+    memcpy(msg_buffer, angle_buffer.data(), 4*angle_buffer.size());
+    memcpy(msg_buffer + 4*angle_buffer.size(), vel_buffer.data(), 4*vel_buffer.size());
+    memcpy(msg_buffer + 4*angle_buffer.size() + 4*vel_buffer.size(), voltage_buffer.data(), 4*voltage_buffer.size());
+    memcpy(msg_buffer + 4*angle_buffer.size() + 4*vel_buffer.size() + 4*voltage_buffer.size(), &digital_out_vector, 1);
 
-    serial_interface_->writeMsgToSerial(msg_buffer, 87);
+    serial_interface_->writeMsgToSerial(msg_buffer, 109);
 }
 
 /*

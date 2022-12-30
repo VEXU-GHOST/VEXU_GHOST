@@ -1,39 +1,38 @@
-# Header
 std_msgs/Header header
 
 # Drivetrain Motors
-int32 drive_lf_angle
-int32 drive_lb_angle
-int32 drive_rf_angle
-int32 drive_rb_angle
-int32 drive_bl_angle
-int32 drive_br_angle
+int32 drive_lf_angle            # Degrees
+int32 drive_lb_angle            # Degrees
+int32 drive_rf_angle            # Degrees
+int32 drive_rb_angle            # Degrees
+int32 drive_bl_angle            # Degrees
+int32 drive_br_angle            # Degrees
 
-float32 drive_lf_velocity
-float32 drive_lb_velocity
-float32 drive_rf_velocity
-float32 drive_rb_velocity
-float32 drive_bl_velocity
-float32 drive_br_velocity
+float32 drive_lf_velocity       # RPM
+float32 drive_lb_velocity       # RPM
+float32 drive_rf_velocity       # RPM
+float32 drive_rb_velocity       # RPM
+float32 drive_bl_velocity       # RPM
+float32 drive_br_velocity       # RPM
 
 # Turret Encoder
-int32 turret_angle
-float32 turret_velocity
+int32 turret_angle              # Degrees
+float32 turret_velocity         # RPM
 
 # Drivetrain Steering Encoders
-int32 steering_left_angle
-int32 steering_right_angle
-int32 steering_back_angle
+int32 steering_left_angle       # Degrees
+int32 steering_right_angle      # Degrees
+int32 steering_back_angle       # Degrees
 
-int32 steering_left_velocity
-int32 steering_right_velocity
-int32 steering_back_velocity
+int32 steering_left_velocity    # RPM
+int32 steering_right_velocity   # RPM
+int32 steering_back_velocity    # RPM
 
 # Joystick Channels
-int32 joystick_left_x
-int32 joystick_left_y
-int32 joystick_right_x
-int32 joystick_right_y
+int32 joystick_left_x           # 0 -> 127
+int32 joystick_left_y           # 0 -> 127
+int32 joystick_right_x          # 0 -> 127
+int32 joystick_right_y          # 0 -> 127
 
 # Joystick Buttons
 bool joystick_btn_a
