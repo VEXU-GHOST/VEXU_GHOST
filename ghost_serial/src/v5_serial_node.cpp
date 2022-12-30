@@ -9,16 +9,14 @@ V5SerialNode::V5SerialNode(std::string config_file) : Node("ghost_serial_node"),
     // Load config file
     config_yaml_ = YAML::LoadFile(config_file);
     msg_len_ = config_yaml_["msg_len"].as<int>(); 
-    verbose_ = config_yaml_["verbose"].as<bool>();
     using_reader_thread_ = config_yaml_["using_reader_thread"].as<bool>(); 
 
     // Serial Interface
-    serial_interface_ = std::make_shared<SerialInterface>(
+    serial_interface_ = std::make_shared<JetsonSerialInterface>(
         config_yaml_["port_name"].as<std::string>(),
         config_yaml_["msg_start_seq"].as<std::string>(),
         msg_len_,
-        config_yaml_["use_checksum"].as<bool>(),
-        verbose_);
+        config_yaml_["use_checksum"].as<bool>());
 
     // Sensor Update Msg Publisher
     sensor_update_pub_ = create_publisher<ghost_msgs::msg::SensorUpdate>("v5_sensor_update", 10);
@@ -40,11 +38,11 @@ V5SerialNode::~V5SerialNode(){
     }
 }
 
-void V5SerialNode::initSerialInterfaceBlocking(){
+void V5SerialNode::initSerialBlocking(){
     // Wait for serial to become available
     bool serial_open = false;
     while(rclcpp::ok() && !serial_open){
-        serial_open = serial_interface_->trySerialOpen();
+        serial_open = serial_interface_->trySerialInit();
         std::this_thread::sleep_for(10ms);
     }
 
@@ -55,9 +53,9 @@ void V5SerialNode::initSerialInterfaceBlocking(){
 }
 
 void V5SerialNode::readerLoop(){
-    if(verbose_){
+    #ifdef GHOST_DEBUG_VERBOSE
         std::cout << "[START] Serial Read Thread" << std::endl;
-    }
+    #endif
 
     reader_thread_init_ = true;
     while(rclcpp::ok()){
@@ -73,9 +71,9 @@ void V5SerialNode::readerLoop(){
         }
     }
 
-    if(verbose_){
+    #ifdef GHOST_DEBUG_VERBOSE
         std::cout << "[END] Serial Read Thread" << std::endl;
-    }
+    #endif
 }
 
 /*
@@ -103,9 +101,9 @@ void V5SerialNode::readerLoop(){
 	 61 Bytes x 8 bits / byte * 1 sec / 115200 bits * 1000ms / 1s = 4.24ms
 	*/
 void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorCommands::SharedPtr msg){
-    if(verbose_){
+    #ifdef GHOST_DEBUG_VERBOSE
         RCLCPP_INFO(get_logger(), "Actuator Command");
-    }
+    #endif
 
     std::vector<int32_t> angle_buffer{
         msg->wheel_left_angle_cmd,
@@ -192,9 +190,9 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
 	Digital Outs				(1x Byte / 8 bits)
 	*/
 void V5SerialNode::publishSensorUpdate(unsigned char buffer[]){
-    if(verbose_){
+    #ifdef GHOST_DEBUG_VERBOSE
         RCLCPP_INFO(get_logger(), "Sensor Update");
-    }
+    #endif
     
     auto msg = ghost_msgs::msg::SensorUpdate{};
     

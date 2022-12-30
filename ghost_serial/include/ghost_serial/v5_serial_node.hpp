@@ -9,7 +9,7 @@
 #include "ghost_msgs/msg/actuator_commands.hpp"
 #include "ghost_msgs/msg/sensor_update.hpp"
 
-#include "ghost_serial/serial_interface/serial_interface.hpp"
+#include "ghost_serial/serial_interface/jetson_serial_interface.hpp"
 
 namespace ghost_serial
 {
@@ -20,8 +20,7 @@ namespace ghost_serial
         V5SerialNode(std::string config_file);
         ~V5SerialNode();
 
-        // Starts
-        void initSerialInterfaceBlocking();
+        void initSerialBlocking();
 
     private:
         // Process incoming/outgoing msgs w/ ROS
@@ -42,7 +41,7 @@ namespace ghost_serial
         rclcpp::Publisher<ghost_msgs::msg::SensorUpdate>::SharedPtr sensor_update_pub_;
 
         // Serial Interface
-        std::shared_ptr<SerialInterface> serial_interface_;
+        std::shared_ptr<JetsonSerialInterface> serial_interface_;
         std::vector<unsigned char> new_msg_;
 
         // Reader Thread

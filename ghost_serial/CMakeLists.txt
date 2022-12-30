@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(ghost_serial)
 
+#########################
+#### Compile Options ####
+#########################
+
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -17,7 +21,18 @@ if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0)
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
-# find dependencies
+add_compile_options(-DGHOST_DEBUG_VERBOSE)
+
+# Device specific flag for code portability between Coprocessor, V5 Brain, and TM4C
+add_definitions(-DGHOST_JETSON=1)
+add_definitions(-DGHOST_V5_BRAIN=2)
+add_definitions(-DGHOST_TM4C=3)
+
+add_definitions(-DGHOST_DEVICE=1)
+
+######################
+#### Dependencies ####
+######################
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
 
@@ -72,21 +87,22 @@ install(
 ######################
 ### Serial Library ###
 ######################
-add_library(serial_interface SHARED
-  src/serial_interface/serial_interface.cpp
+add_library(jetson_serial_interface SHARED
+  src/serial_interface/base_serial_interface.cpp
+  src/serial_interface/jetson_serial_interface.cpp
 )
-target_link_libraries(serial_interface
+target_link_libraries(jetson_serial_interface
   cobs
   msg_parser
 )
-target_include_directories(serial_interface
+target_include_directories(jetson_serial_interface
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_export_targets(serial_interface HAS_LIBRARY_TARGET)
+ament_export_targets(jetson_serial_interface HAS_LIBRARY_TARGET)
 install(
-  TARGETS serial_interface
-  EXPORT serial_interface
+  TARGETS jetson_serial_interface
+  EXPORT jetson_serial_interface
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -104,7 +120,7 @@ ament_target_dependencies(v5_serial_node
   ghost_msgs
 )
 target_link_libraries(v5_serial_node
-  serial_interface
+  jetson_serial_interface
   cobs
   yaml-cpp
 )
@@ -138,11 +154,11 @@ target_link_libraries(test_msg_parser
 )
 
 ###############
-### Headers ###
+### Install ###
 ###############
 install(
   DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME}
+  DESTINATION include
 )
 
 ament_package()

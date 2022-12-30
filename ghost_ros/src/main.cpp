@@ -61,7 +61,7 @@ void serial_interface_main(std::string config_file)
     auto serial_node = std::make_shared<ghost_serial::V5SerialNode>(config_file);
     
     // Wait for serial port, then start reader thread
-    serial_node->initSerialInterfaceBlocking();
+    serial_node->initSerialBlocking();
 
     // Process ROS Callbacks until exit
     rclcpp::spin(serial_node);

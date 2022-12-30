@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(ghost_ros)
 
-# ########################
-# ### Compile Options ####
-# ########################
+#########################
+#### Compile Options ####
+#########################
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
@@ -14,15 +14,16 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+# Compile time flags to add debug symbols and disable code optimization (for using debugger)
 set(CMAKE_BUILD_TYPE "DEBUG")
 
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
-  add_compile_options(-g -O0)
+  add_compile_options(-g -O0 -DGHOST_DEBUG_VERBOSE)
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
-# #####################
-# ### Dependencies ####
-# #####################
+######################
+#### Dependencies ####
+######################
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -45,9 +46,9 @@ include_directories(include)
 include_directories(src/shared)
 add_subdirectory(src/shared)
 
-# ##################
-# #### Library #####
-# ##################
+###################
+##### Library #####
+###################
 # Vector Map Library
 add_library(vector_map SHARED src/vector_map/vector_map.cpp)
 target_link_libraries(vector_map
@@ -146,9 +147,9 @@ install(TARGETS
   yaml_load_example
   DESTINATION lib/${PROJECT_NAME})
 
-# ########################
-# ### GHOST ROS Main ####
-# ########################
+########################
+#### GHOST ROS Main ####
+########################
 add_executable(ghost_ros_main
   src/main.cpp
 )
@@ -173,17 +174,17 @@ install(TARGETS
   ghost_ros_main
   DESTINATION lib/${PROJECT_NAME})
 
-# ################
-# ### Testing ####
-# ################
+#################
+#### Testing ####
+#################
 ament_add_gtest(test_stamped_queue test/test_stamped_queue.cpp)
 target_link_libraries(test_stamped_queue
   gtest
 )
 
-# ################
-# ### Install ####
-# ################
+#################
+#### Install ####
+#################
 install(
   DIRECTORY include/
   DESTINATION include
