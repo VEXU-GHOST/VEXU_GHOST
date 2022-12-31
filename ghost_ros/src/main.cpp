@@ -19,7 +19,7 @@
 
 #include "globals/globals.hpp"
 #include "particle_filter/particle_filter_node.hpp"
-#include "ghost_serial/v5_serial_node.hpp"
+#include "ghost_serial/jetson_v5_serial_node.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -58,7 +58,7 @@ void serial_interface_main(std::string config_file)
     if(verbose){
         std::cout << "[START] Serial Writer Thread" << std::endl;
     }
-    auto serial_node = std::make_shared<ghost_serial::V5SerialNode>(config_file);
+    auto serial_node = std::make_shared<ghost_serial::JetsonV5SerialNode>(config_file);
     
     // Wait for serial port, then start reader thread
     serial_node->initSerialBlocking();

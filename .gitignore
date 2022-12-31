@@ -4,3 +4,10 @@ log
 .vscode
 *.pyc
 .cache/*
+
+ghost_pros/include/ghost_control/**
+ghost_pros/include/ghost_estimation/**
+ghost_pros/include/ghost_serial/**
+ghost_pros/src/ghost_control/**
+ghost_pros/src/ghost_estimation/**
+ghost_pros/src/ghost_serial/**

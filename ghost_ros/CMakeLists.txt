@@ -167,7 +167,7 @@ target_link_libraries(ghost_ros_main
   amrl_shared_lib
   yaml-cpp
   particle_filter_ros
-  ghost_serial::v5_serial_node
+  ghost_serial::jetson_v5_serial_node
 )
 
 install(TARGETS

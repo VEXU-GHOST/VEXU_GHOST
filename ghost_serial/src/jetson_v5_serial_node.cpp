@@ -1,18 +1,18 @@
 
-#include "ghost_serial/v5_serial_node.hpp"
+#include "ghost_serial/jetson_v5_serial_node.hpp"
 
 using std::placeholders::_1;
 using namespace std::literals::chrono_literals;
 namespace ghost_serial{
 
-V5SerialNode::V5SerialNode(std::string config_file) : Node("ghost_serial_node"), reader_thread_init_(false){
+JetsonV5SerialNode::JetsonV5SerialNode(std::string config_file) : Node("ghost_serial_node"), reader_thread_init_(false){
     // Load config file
     config_yaml_ = YAML::LoadFile(config_file);
     msg_len_ = config_yaml_["msg_len"].as<int>(); 
     using_reader_thread_ = config_yaml_["using_reader_thread"].as<bool>(); 
 
     // Serial Interface
-    serial_interface_ = std::make_shared<JetsonSerialInterface>(
+    serial_base_interface_ = std::make_shared<JetsonSerialBase>(
         config_yaml_["port_name"].as<std::string>(),
         config_yaml_["msg_start_seq"].as<std::string>(),
         msg_len_,
@@ -25,34 +25,34 @@ V5SerialNode::V5SerialNode(std::string config_file) : Node("ghost_serial_node"),
     actuator_command_sub_ = create_subscription<ghost_msgs::msg::ActuatorCommands>(
         "v5_actuator_commands",
         10,
-        std::bind(&V5SerialNode::actuatorCommandCallback, this, _1)
+        std::bind(&JetsonV5SerialNode::actuatorCommandCallback, this, _1)
         );
 
     // Array to store latest incoming msg
     new_msg_ = std::vector<unsigned char>(msg_len_, 0);
 }
 
-V5SerialNode::~V5SerialNode(){
+JetsonV5SerialNode::~JetsonV5SerialNode(){
     if(reader_thread_init_){
         reader_thread_.join();
     }
 }
 
-void V5SerialNode::initSerialBlocking(){
+void JetsonV5SerialNode::initSerialBlocking(){
     // Wait for serial to become available
     bool serial_open = false;
     while(rclcpp::ok() && !serial_open){
-        serial_open = serial_interface_->trySerialInit();
+        serial_open = serial_base_interface_->trySerialInit();
         std::this_thread::sleep_for(10ms);
     }
 
     // Start Reader Thread
     if(rclcpp::ok() && using_reader_thread_){
-        reader_thread_ = std::thread(&V5SerialNode::readerLoop, this);
+        reader_thread_ = std::thread(&JetsonV5SerialNode::readerLoop, this);
     }
 }
 
-void V5SerialNode::readerLoop(){
+void JetsonV5SerialNode::readerLoop(){
     #ifdef GHOST_DEBUG_VERBOSE
         std::cout << "[START] Serial Read Thread" << std::endl;
     #endif
@@ -60,7 +60,7 @@ void V5SerialNode::readerLoop(){
     reader_thread_init_ = true;
     while(rclcpp::ok()){
         try{
-            bool msg_found = serial_interface_->readMsgFromSerial(new_msg_.data());
+            bool msg_found = serial_base_interface_->readMsgFromSerial(new_msg_.data());
 
             if(msg_found){
                 publishSensorUpdate(new_msg_.data());
@@ -100,7 +100,7 @@ void V5SerialNode::readerLoop(){
 	Total Sum: 61 Byte Packet
 	 61 Bytes x 8 bits / byte * 1 sec / 115200 bits * 1000ms / 1s = 4.24ms
 	*/
-void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorCommands::SharedPtr msg){
+void JetsonV5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorCommands::SharedPtr msg){
     #ifdef GHOST_DEBUG_VERBOSE
         RCLCPP_INFO(get_logger(), "Actuator Command");
     #endif
@@ -166,7 +166,7 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
     memcpy(msg_buffer + 4*angle_buffer.size() + 4*vel_buffer.size(), voltage_buffer.data(), 4*voltage_buffer.size());
     memcpy(msg_buffer + 4*angle_buffer.size() + 4*vel_buffer.size() + 4*voltage_buffer.size(), &digital_out_vector, 1);
 
-    serial_interface_->writeMsgToSerial(msg_buffer, 109);
+    serial_base_interface_->writeMsgToSerial(msg_buffer, 109);
 }
 
 /*
@@ -189,7 +189,7 @@ void V5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::ActuatorComman
 	Empty Bit					(1x bit)
 	Digital Outs				(1x Byte / 8 bits)
 	*/
-void V5SerialNode::publishSensorUpdate(unsigned char buffer[]){
+void JetsonV5SerialNode::publishSensorUpdate(unsigned char buffer[]){
     #ifdef GHOST_DEBUG_VERBOSE
         RCLCPP_INFO(get_logger(), "Sensor Update");
     #endif

@@ -1,5 +1,5 @@
-#ifndef GHOST_ROS__BASE_SERIAL_INTERFACE_HPP
-#define GHOST_ROS__BASE_SERIAL_INTERFACE_HPP
+#ifndef GHOST_SERIAL__GENERIC_SERIAL_BASE_HPP
+#define GHOST_SERIAL__GENERIC_SERIAL_BASE_HPP
 
 #include <string>
 #include <atomic>
@@ -20,15 +20,15 @@
 
 namespace ghost_serial
 {
-    class BaseSerialInterface
+    class GenericSerialBase
     {
     public:
-        BaseSerialInterface(
+        GenericSerialBase(
             std::string msg_start_seq,
             int msg_len,
             bool use_checksum = false);
 
-        ~BaseSerialInterface();
+        ~GenericSerialBase();
 
         /**
          * @brief Thread-safe method to write msg buffer to serial port. Shares mutex with reader thread,
@@ -66,16 +66,19 @@ namespace ghost_serial
         int msg_len_;
         bool use_checksum_;
 
-        // Serial IO
+        // Serial Status
         CROSSPLATFORM_MUTEX_T serial_io_mutex_;
         std::atomic_bool port_open_;
+
+        // Serial IO File Descriptors
         int serial_write_fd_;
         int serial_read_fd_;
 
-        std::vector<unsigned char> raw_serial_buffer_;
+        // Msg Buffers
+        std::vector<unsigned char> read_buffer_;
         std::unique_ptr<MsgParser> msg_parser_;
     };
 
 } // namespace ghost_serial
 
-#endif // GHOST_ROS__BASE_SERIAL_INTERFACE_HPP
+#endif // GHOST_SERIAL__GENERIC_SERIAL_BASE_HPP

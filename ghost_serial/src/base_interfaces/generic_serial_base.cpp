@@ -1,4 +1,4 @@
-#include "ghost_serial/serial_interface/base_serial_interface.hpp"
+#include "ghost_serial/base_interfaces/generic_serial_base.hpp"
 
 #include <cstring>
 #include <exception>
@@ -9,11 +9,11 @@ using namespace std::chrono_literals;
 namespace ghost_serial
 {
     /**
-     * @brief Construct a new BaseSerialInterface object
+     * @brief Construct a new GenericSerialBase object
      *
      * @param config_file
      */
-    BaseSerialInterface::BaseSerialInterface(
+    GenericSerialBase::GenericSerialBase(
         std::string msg_start_seq,
         int msg_len,
         bool use_checksum): msg_len_(msg_len),
@@ -22,15 +22,15 @@ namespace ghost_serial
                             port_open_(false)
     {
         // Reads a maximum of (two msgs - one byte) at once
-        raw_serial_buffer_ = std::vector<unsigned char>(2 * (msg_len + use_checksum_ + 2) - 1);
+        read_buffer_ = std::vector<unsigned char>(2 * (msg_len + use_checksum_ + 2) - 1);
         msg_parser_ = std::make_unique<MsgParser>(msg_len, msg_start_seq_, use_checksum_);
     }
 
     /**
-     * @brief Destroy BaseSerialInterface object
+     * @brief Destroy GenericSerialBase object
      *
      */
-    BaseSerialInterface::~BaseSerialInterface()
+    GenericSerialBase::~GenericSerialBase()
     {
         // Acquire lock (in case any read/writes are in progress)
         std::unique_lock<CROSSPLATFORM_MUTEX_T> close_lock(serial_io_mutex_);
@@ -45,7 +45,7 @@ namespace ghost_serial
         }
     }
 
-    uint8_t BaseSerialInterface::calculateChecksum(const unsigned char buffer[], const int &num_bytes) const
+    uint8_t GenericSerialBase::calculateChecksum(const unsigned char buffer[], const int &num_bytes) const
     {
         uint8_t checksum = 0;
         for (int i = 0; i < num_bytes; i++)
@@ -55,7 +55,7 @@ namespace ghost_serial
         return checksum;
     }
 
-    bool BaseSerialInterface::writeMsgToSerial(const unsigned char buffer[], const int num_bytes)
+    bool GenericSerialBase::writeMsgToSerial(const unsigned char buffer[], const int num_bytes)
     {
         bool succeeded = false;
         if (port_open_)

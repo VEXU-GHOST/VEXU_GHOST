@@ -1,4 +1,4 @@
-#include "ghost_serial/serial_interface/jetson_serial_interface.hpp"
+#include "ghost_serial/base_interfaces/jetson_serial_base.hpp"
 
 #include <cstring>
 #include <exception>
@@ -8,15 +8,15 @@ using namespace std::chrono_literals;
 namespace ghost_serial
 {
     /**
-     * @brief Construct a new JetsonSerialInterface object
+     * @brief Construct a new JetsonSerialBase object
      *
      * @param config_file
      */
-    JetsonSerialInterface::JetsonSerialInterface(
+    JetsonSerialBase::JetsonSerialBase(
         std::string port_name,
         std::string msg_start_seq,
         int msg_len,
-        bool use_checksum): BaseSerialInterface(
+        bool use_checksum): GenericSerialBase(
                                 msg_start_seq,
                                 msg_len,
                                 use_checksum),
@@ -24,14 +24,14 @@ namespace ghost_serial
     {
     }
 
-    JetsonSerialInterface::~JetsonSerialInterface(){
+    JetsonSerialBase::~JetsonSerialBase(){
         
     }
 
     /**
      * @brief Shorthand to flush bytes from serial port
      */
-    bool JetsonSerialInterface::flushStream() const
+    bool JetsonSerialBase::flushStream() const
     {
         int ret = ioctl(serial_read_fd_, TCFLSH, 0);
         return (ret != -1) ? true : false;
@@ -42,14 +42,14 @@ namespace ghost_serial
      *
      * @return int bytes_available
      */
-    int JetsonSerialInterface::getNumBytesAvailable() const
+    int JetsonSerialBase::getNumBytesAvailable() const
     {
         int bytes_available;
         ioctl(serial_read_fd_, FIONREAD, &bytes_available);
         return bytes_available;
     }
 
-    bool JetsonSerialInterface::setSerialPortConfig()
+    bool JetsonSerialBase::setSerialPortConfig()
     {
         // Serial Port Configuration
         struct termios tty;
@@ -94,7 +94,7 @@ namespace ghost_serial
      * 
      * @returns if init is successful or not
      */
-    bool JetsonSerialInterface::trySerialInit()
+    bool JetsonSerialBase::trySerialInit()
     {
         try
         {
@@ -137,7 +137,7 @@ namespace ghost_serial
         return false;
     }
 
-    bool JetsonSerialInterface::readMsgFromSerial(unsigned char msg_buffer[])
+    bool JetsonSerialBase::readMsgFromSerial(unsigned char msg_buffer[])
     {
         if (port_open_)
         {
@@ -153,14 +153,14 @@ namespace ghost_serial
                     std::unique_lock<std::mutex> read_lock(serial_io_mutex_);
 
                     // Read available bytes, up to size of raw_serial_buffer (two msgs - one byte)
-                    int bytes_to_read = std::min(getNumBytesAvailable(), (int)raw_serial_buffer_.size());
-                    int num_bytes_read = read(serial_read_fd_, raw_serial_buffer_.data(), bytes_to_read);
+                    int bytes_to_read = std::min(getNumBytesAvailable(), (int)read_buffer_.size());
+                    int num_bytes_read = read(serial_read_fd_, read_buffer_.data(), bytes_to_read);
                     read_lock.unlock();
 
                     // Extract any msgs from serial stream and return if msg is found
                     if (num_bytes_read > 0)
                     {
-                        return msg_parser_->parseByteStream(raw_serial_buffer_.data(), num_bytes_read, msg_buffer);
+                        return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer);
                     }
                     else if (num_bytes_read == -1)
                     {

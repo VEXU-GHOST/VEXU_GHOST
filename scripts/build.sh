@@ -28,7 +28,7 @@ then
     touch $URDF_PATH
 else
     echo
-    echo "Generating URDF"
+    echo "---Generating Ghost Description URDF---"
     xacro ghost_description/urdf/ghost1.xacro > $URDF_PATH
     echo "URDF written to" $URDF_PATH
 fi
@@ -46,7 +46,7 @@ then
         touch $URDF_SIM_PID_PATH
     else
         echo
-        echo "Generating URDF"
+        echo "---Generating Ghost Simulation URDFs---"
         xacro ghost_sim/urdf/ghost1_sim_voltage.xacro > $URDF_SIM_VOLTAGE_PATH
         xacro ghost_sim/urdf/ghost1_sim_pid.xacro > $URDF_SIM_PID_PATH
         echo "URDF written to" $URDF_SIM_VOLTAGE_PATH
@@ -55,3 +55,7 @@ then
 fi
 
 source ~/.bashrc
+
+echo
+echo "---Updating V5 Project Symbolic Links---"
+bash scripts/update_symlinks.sh

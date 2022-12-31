@@ -1,4 +1,4 @@
-#include "ghost_v5/ghost_motor.hpp"
+#include "ghost_v5/motor/ghost_motor.hpp"
 
 #include <iostream>
 

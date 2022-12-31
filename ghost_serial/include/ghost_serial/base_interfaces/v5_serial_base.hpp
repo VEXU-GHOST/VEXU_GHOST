@@ -1,5 +1,5 @@
-#ifndef GHOST_ROS__V5_BRAIN_SERIAL_INTERFACE_HPP
-#define GHOST_ROS__V5_BRAIN_SERIAL_INTERFACE_HPP
+#ifndef GHOST_SERIAL__V5_SERIAL_BASE_HPP
+#define GHOST_SERIAL__V5_SERIAL_BASE_HPP
 
 #include <string.h>
 #include <unistd.h>
@@ -10,20 +10,20 @@
 #include <iostream>
 
 #include "ghost_serial/msg_parser/msg_parser.hpp"
-#include "ghost_serial/serial_interface/base_serial_interface.hpp"
+#include "ghost_serial/base_interfaces/generic_serial_base.hpp"
 
 namespace ghost_serial
 {
 
-    class V5BrainSerialInterface : public BaseSerialInterface
+    class V5SerialBase : public GenericSerialBase
     {
     public:
-        V5BrainSerialInterface(
+        V5SerialBase(
             std::string msg_start_seq,
             int msg_len,
             bool use_checksum = false);
 
-        ~V5BrainSerialInterface();
+        ~V5SerialBase();
 
         /**
          * @brief Thread-safe method to read serial port for new msgs. Will read and process a single msg before returning
@@ -62,4 +62,4 @@ namespace ghost_serial
 
 } // namespace ghost_serial
 
-#endif // GHOST_ROS__V5_BRAIN_SERIAL_INTERFACE_HPP
+#endif // GHOST_SERIAL__V5_SERIAL_BASE_HPP

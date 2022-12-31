@@ -1,6 +1,6 @@
 
-#ifndef GHOST_SERIAL__GHOST_SERIAL_NODE_HPP
-#define GHOST_SERIAL__GHOST_SERIAL_NODE_HPP
+#ifndef GHOST_SERIAL__JETSON_V5_SERIAL_NODE_HPP
+#define GHOST_SERIAL__JETSON_V5_SERIAL_NODE_HPP
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -9,16 +9,16 @@
 #include "ghost_msgs/msg/actuator_commands.hpp"
 #include "ghost_msgs/msg/sensor_update.hpp"
 
-#include "ghost_serial/serial_interface/jetson_serial_interface.hpp"
+#include "ghost_serial/base_interfaces/jetson_serial_base.hpp"
 
 namespace ghost_serial
 {
 
-    class V5SerialNode : public rclcpp::Node
+    class JetsonV5SerialNode : public rclcpp::Node
     {
     public:
-        V5SerialNode(std::string config_file);
-        ~V5SerialNode();
+        JetsonV5SerialNode(std::string config_file);
+        ~JetsonV5SerialNode();
 
         void initSerialBlocking();
 
@@ -34,14 +34,13 @@ namespace ghost_serial
         YAML::Node config_yaml_;
         int msg_len_;
         bool using_reader_thread_;
-        bool verbose_;
 
         // ROS Topics
         rclcpp::Subscription<ghost_msgs::msg::ActuatorCommands>::SharedPtr actuator_command_sub_;
         rclcpp::Publisher<ghost_msgs::msg::SensorUpdate>::SharedPtr sensor_update_pub_;
 
         // Serial Interface
-        std::shared_ptr<JetsonSerialInterface> serial_interface_;
+        std::shared_ptr<JetsonSerialBase> serial_base_interface_;
         std::vector<unsigned char> new_msg_;
 
         // Reader Thread
@@ -50,4 +49,4 @@ namespace ghost_serial
     };
 
 } // namespace ghost_serial
-#endif
+#endif // GHOST_SERIAL__JETSON_V5_SERIAL_NODE_HPP

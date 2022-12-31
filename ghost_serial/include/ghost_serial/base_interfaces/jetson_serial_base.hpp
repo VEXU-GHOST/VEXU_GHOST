@@ -1,5 +1,5 @@
-#ifndef GHOST_ROS__JETSON_SERIAL_INTERFACE_HPP
-#define GHOST_ROS__JETSON_SERIAL_INTERFACE_HPP
+#ifndef GHOST_SERIAL__JETSON_SERIAL_BASE_HPP
+#define GHOST_SERIAL__JETSON_SERIAL_BASE_HPP
 
 #include <string.h>
 #include <unistd.h>
@@ -15,21 +15,21 @@
 #include <iostream>
 
 #include "../msg_parser/msg_parser.hpp"
-#include "ghost_serial/serial_interface/base_serial_interface.hpp"
+#include "ghost_serial/base_interfaces/generic_serial_base.hpp"
 
 namespace ghost_serial
 {
 
-    class JetsonSerialInterface : public BaseSerialInterface
+    class JetsonSerialBase : public GenericSerialBase
     {
     public:
-        JetsonSerialInterface(
+        JetsonSerialBase(
             std::string port_name,
             std::string msg_start_seq,
             int msg_len,
             bool use_checksum = false);
 
-        ~JetsonSerialInterface();
+        ~JetsonSerialBase();
         
         /**
          * @brief Attempts once to open serial port, catching errors and printing to stdout.
@@ -76,10 +76,10 @@ namespace ghost_serial
         // Config params
         std::string port_name_;
 
-        // Serial IO
+        // Poll Config Strictire
         struct pollfd pollfd_read_;
     };
 
 } // namespace ghost_serial
 
-#endif // GHOST_ROS__JETSON_SERIAL_INTERFACE_HPP
+#endif // GHOST_SERIAL__JETSON_SERIAL_BASE_HPP

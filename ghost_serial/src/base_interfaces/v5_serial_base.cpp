@@ -1,4 +1,4 @@
-#include "ghost_v5/v5_brain_serial_interface.hpp"
+#include "ghost_serial/base_interfaces/v5_serial_base.hpp"
 
 #include <cstring>
 #include <exception>
@@ -10,14 +10,14 @@ using namespace std::chrono_literals;
 namespace ghost_serial
 {
     /**
-     * @brief Construct a new V5BrainSerialInterface object
+     * @brief Construct a new V5SerialBase object
      *
      * @param config_file
      */
-    V5BrainSerialInterface::V5BrainSerialInterface(
+    V5SerialBase::V5SerialBase(
         std::string msg_start_seq,
         int msg_len,
-        bool use_checksum): BaseSerialInterface(
+        bool use_checksum): GenericSerialBase(
                                 msg_start_seq,
                                 msg_len,
                                 use_checksum)
@@ -26,14 +26,14 @@ namespace ghost_serial
         serial_write_fd_ = fileno(stdout);
     }
 
-    V5BrainSerialInterface::~V5BrainSerialInterface(){
+    V5SerialBase::~V5SerialBase(){
         
     }
 
     /**
      * @brief Shorthand to flush bytes from serial port
      */
-    bool V5BrainSerialInterface::flushStream() const
+    bool V5SerialBase::flushStream() const
     {
         // Check num bytes available to read
         int bytes_available = getNumBytesAvailable();
@@ -51,19 +51,19 @@ namespace ghost_serial
      *
      * @return int bytes_available
      */
-    int V5BrainSerialInterface::getNumBytesAvailable() const
+    int V5SerialBase::getNumBytesAvailable() const
     {
         int bytes_available;
         pros::c::fdctl(serial_read_fd_, DEVCTL_FIONREAD, NULL);
         return bytes_available;
     }
 
-    bool V5BrainSerialInterface::setSerialPortConfig()
+    bool V5SerialBase::setSerialPortConfig()
     {
         return true;
     }
 
-    bool V5BrainSerialInterface::readMsgFromSerial(unsigned char msg_buffer[])
+    bool V5SerialBase::readMsgFromSerial(unsigned char msg_buffer[])
     {
         if (port_open_)
         {
@@ -73,14 +73,14 @@ namespace ghost_serial
                 std::unique_lock<pros::Mutex> read_lock(serial_io_mutex_);
 
                 // Read available bytes, up to size of raw_serial_buffer (two msgs - one byte)
-                int bytes_to_read = std::min(getNumBytesAvailable(), (int)raw_serial_buffer_.size());
-                int num_bytes_read = read(serial_read_fd_, raw_serial_buffer_.data(), bytes_to_read);
+                int bytes_to_read = std::min(getNumBytesAvailable(), (int)read_buffer_.size());
+                int num_bytes_read = read(serial_read_fd_, read_buffer_.data(), bytes_to_read);
                 read_lock.unlock();
 
                 // Extract any msgs from serial stream and return if msg is found
                 if (num_bytes_read > 0)
                 {
-                    return msg_parser_->parseByteStream(raw_serial_buffer_.data(), num_bytes_read, msg_buffer);
+                    return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer);
                 }
                 else if (num_bytes_read == -1)
                 {

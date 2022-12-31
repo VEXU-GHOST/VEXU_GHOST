@@ -87,22 +87,22 @@ install(
 ######################
 ### Serial Library ###
 ######################
-add_library(jetson_serial_interface SHARED
-  src/serial_interface/base_serial_interface.cpp
-  src/serial_interface/jetson_serial_interface.cpp
+add_library(jetson_serial_base SHARED
+  src/base_interfaces/generic_serial_base.cpp
+  src/base_interfaces/jetson_serial_base.cpp
 )
-target_link_libraries(jetson_serial_interface
+target_link_libraries(jetson_serial_base
   cobs
   msg_parser
 )
-target_include_directories(jetson_serial_interface
+target_include_directories(jetson_serial_base
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_export_targets(jetson_serial_interface HAS_LIBRARY_TARGET)
+ament_export_targets(jetson_serial_base HAS_LIBRARY_TARGET)
 install(
-  TARGETS jetson_serial_interface
-  EXPORT jetson_serial_interface
+  TARGETS jetson_serial_base
+  EXPORT jetson_serial_base
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -112,27 +112,27 @@ install(
 ######################
 ### GHOST ROS Node ###
 ######################
-add_library(v5_serial_node SHARED
-  src/v5_serial_node.cpp
+add_library(jetson_v5_serial_node SHARED
+  src/jetson_v5_serial_node.cpp
 )
-ament_target_dependencies(v5_serial_node
+ament_target_dependencies(jetson_v5_serial_node
   rclcpp
   ghost_msgs
 )
-target_link_libraries(v5_serial_node
-  jetson_serial_interface
+target_link_libraries(jetson_v5_serial_node
+  jetson_serial_base
   cobs
   yaml-cpp
 )
-target_include_directories(v5_serial_node
+target_include_directories(jetson_v5_serial_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_export_targets(v5_serial_node HAS_LIBRARY_TARGET)
+ament_export_targets(jetson_v5_serial_node HAS_LIBRARY_TARGET)
 ament_export_dependencies(ghost_msgs)
 install(
-  TARGETS v5_serial_node
-  EXPORT v5_serial_node
+  TARGETS jetson_v5_serial_node
+  EXPORT jetson_v5_serial_node
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
