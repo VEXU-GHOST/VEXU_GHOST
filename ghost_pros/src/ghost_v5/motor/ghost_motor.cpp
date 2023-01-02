@@ -1,16 +1,17 @@
 #include "ghost_v5/motor/ghost_motor.hpp"
 
-#include <iostream>
+#include "pros/error.h"
 
 namespace ghost_v5
 {
     GhostMotor::GhostMotor(
         int motor_port,
-        ghost_motor_config &config)
+        bool reversed,
+        GhostMotorConfig &config)
         : pros::Motor(
               motor_port,
               pros::E_MOTOR_GEARSET_INVALID,
-              config.motor__reversed,
+              reversed,
               config.motor__encoder_units),
           velocity_filter_(
               config.filter__cutoff_frequency,
@@ -22,18 +23,36 @@ namespace ghost_v5
               config.motor__free_current,
               config.motor__stall_current,
               config.motor__max_voltage,
-              config.motor__gear_ratio)
+              config.motor__gear_ratio),
+          motor_is_3600_cart_{(config_.motor__gear_ratio == 36)},
+          trq_lim_norm_{config_.motor__torque_limit_norm},
+          device_connected_{false}
     {
         config_ = config;
-        
+
         // Doing this in the constructor causes data abort exception
         set_gearing(RPM_TO_GEARING[config_.motor__gear_ratio]);
+
+        // Dont strip the plastic gears
+        if(motor_is_3600_cart_){
+            trq_lim_norm_ = 0.75;
+        }
     }
 
     void GhostMotor::updateMotor()
     {
+        // Get Motor Velocity, checking for errors
+        double raw_vel = get_actual_velocity();
+        device_connected_ = (raw_vel != PROS_ERR_F);
+        if(raw_vel == PROS_ERR_F){
+            raw_vel = 0.0;
+        }
+        
+        // Adjust reported velocity for direct drive motor gearing
+        auto true_vel = (motor_is_3600_cart_) ?  6*raw_vel : raw_vel;
+        
         // Update Low Pass Filter with velocity measurement
-        curr_vel_rpm_ = velocity_filter_.updateFilter(get_actual_velocity());
+        curr_vel_rpm_ = velocity_filter_.updateFilter(true_vel);
 
         // Update DC Motor Model
         motor_model_.setMotorSpeedRPM(curr_vel_rpm_);
@@ -45,17 +64,18 @@ namespace ghost_v5
         float position_feedback = (des_pos_encoder_ - get_position()) * config_.ctl__pos_gain;
 
         // Set voltage command based on control mode
-        switch(ctl_mode_){
-            case control_mode_e::POSITION_CONTROL:
-                cmd_voltage_mv_ = voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback;
+        switch (ctl_mode_)
+        {
+        case control_mode_e::POSITION_CONTROL:
+            cmd_voltage_mv_ = voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback;
             break;
 
-            case control_mode_e::VELOCITY_CONTROL:
-                cmd_voltage_mv_ = voltage_feedforward + velocity_feedforward + velocity_feedback;
+        case control_mode_e::VELOCITY_CONTROL:
+            cmd_voltage_mv_ = voltage_feedforward + velocity_feedforward + velocity_feedback;
             break;
 
-            case control_mode_e::VOLTAGE_CONTROL:
-                cmd_voltage_mv_ = voltage_feedforward;
+        case control_mode_e::VOLTAGE_CONTROL:
+            cmd_voltage_mv_ = voltage_feedforward;
             break;
         }
 
@@ -63,7 +83,8 @@ namespace ghost_v5
         move_voltage_trq_lim(cmd_voltage_mv_);
     }
 
-    void GhostMotor::move_voltage_trq_lim(float voltage_mv){
+    void GhostMotor::move_voltage_trq_lim(float voltage_mv)
+    {
         // Normalize voltage command from millivolts
         double voltage_normalized = voltage_mv / config_.motor__max_voltage / 1000.0;
 
@@ -74,20 +95,22 @@ namespace ghost_v5
         // and driving voltage assuming constant resistance.
         // Limiting voltage difference prevents voltage spikes and prolongs motor life when changing speed rapidly.
         double cmd;
-        if(fabs(curr_vel_normalized - voltage_normalized) > config_.motor__torque_limit_norm){
+        if (fabs(curr_vel_normalized - voltage_normalized) > trq_lim_norm_)
+        {
             double sign = (curr_vel_normalized - voltage_normalized > 0) ? 1.0 : -1.0;
-            cmd = curr_vel_normalized - sign*fabs(config_.motor__torque_limit_norm);
+            cmd = curr_vel_normalized - sign * fabs(trq_lim_norm_);
         }
-        else{
+        else
+        {
             cmd = voltage_normalized;
         }
-        
+
         // Limit cmd to voltage bounds
-        cmd = std::min(cmd, config_.motor__max_voltage*1000.0);
-        cmd = std::max(cmd, -config_.motor__max_voltage*1000.0);
+        cmd = std::min(cmd, config_.motor__max_voltage * 1000.0);
+        cmd = std::max(cmd, -config_.motor__max_voltage * 1000.0);
 
         // Set motor
-        move_voltage(cmd*config_.motor__max_voltage*1000);
+        move_voltage(cmd * config_.motor__max_voltage * 1000);
     }
 
     void GhostMotor::setMotorCommand(float voltage, float velocity, float position)
@@ -107,7 +130,8 @@ namespace ghost_v5
         des_voltage_norm_ = voltage;
     }
 
-    void GhostMotor::setMotorCommand(float voltage){
+    void GhostMotor::setMotorCommand(float voltage)
+    {
         ctl_mode_ = control_mode_e::VOLTAGE_CONTROL;
         des_voltage_norm_ = voltage;
     }

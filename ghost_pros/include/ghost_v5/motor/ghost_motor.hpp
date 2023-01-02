@@ -8,32 +8,30 @@
 
 namespace ghost_v5
 {
-
-    struct ghost_motor_config
+    struct GhostMotorConfig
     {
         // PROS Motor
-        bool motor__reversed;
-        pros::motor_encoder_units_e motor__encoder_units;
-        float motor__nominal_free_speed;
-        float motor__stall_torque;
-        float motor__free_current;
-        float motor__stall_current;
-        float motor__max_voltage;
-        float motor__gear_ratio;
+        pros::motor_encoder_units_e motor__encoder_units{pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES};
+        float motor__nominal_free_speed{120};
+        float motor__stall_torque{3.6};
+        float motor__free_current{0.14};
+        float motor__stall_current{4.25};
+        float motor__max_voltage{12};
+        float motor__gear_ratio{600};
 
         // 2nd Order Velocity Filter
-        float filter__cutoff_frequency;
-        float filter__damping_ratio;
-        float filter__timestep;
+        float filter__cutoff_frequency{75.0};
+        float filter__damping_ratio{0.707};
+        float filter__timestep{0.01};
 
         // FF-PD Controller
-        float ctl__pos_gain;
-        float ctl__vel_gain;
-        float ctl__ff_vel_gain;
-        float ctl__ff_voltage_gain;
+        float ctl__pos_gain{0.0};
+        float ctl__vel_gain{10.0};
+        float ctl__ff_vel_gain{1.0};
+        float ctl__ff_voltage_gain{1.0};
 
         // Limit Instant Voltage Change
-        float motor__torque_limit_norm;
+        float motor__torque_limit_norm{1.0};
     };
 
     enum control_mode_e{
@@ -45,12 +43,16 @@ namespace ghost_v5
     class GhostMotor : public pros::Motor
     {
     public:
-        GhostMotor(int motor_port, ghost_motor_config &config);
+        GhostMotor(int motor_port, bool reversed, GhostMotorConfig &config);
 
         void updateMotor();
 
         float getVelocityFilteredRPM(){
             return velocity_filter_.getCurrentState();
+        }
+
+        bool getDeviceIsConnected(){
+            return device_connected_;
         }
 
         void setMotorCommand(float voltage, float velocity, float position);
@@ -61,16 +63,21 @@ namespace ghost_v5
         void move_voltage_trq_lim(float voltage_mv);
     
         // Motor Config
-        ghost_motor_config config_;
+        GhostMotorConfig config_;
         std::map<int, pros::motor_gearset_e_t> RPM_TO_GEARING{
             {1, pros::E_MOTOR_GEAR_100},
             {2, pros::E_MOTOR_GEAR_200},
-            {6, pros::E_MOTOR_GEAR_600}
+            {6, pros::E_MOTOR_GEAR_600},
+            {36, pros::E_MOTOR_GEAR_600}, // PROS::Motor 
         };
+
+        bool motor_is_3600_cart_;
+        float trq_lim_norm_;
 
         // Velocity Filtering
         ghost_estimation::SecondOrderLowPassFilter velocity_filter_;
         float curr_vel_rpm_;
+        bool device_connected_;
 
         // Motor Controller
         control_mode_e ctl_mode_;
