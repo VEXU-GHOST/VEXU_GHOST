@@ -18,18 +18,18 @@ SecondOrderLowPassFilter::SecondOrderLowPassFilter(float w0, float zeta, float t
         d2_coeff_ = 1.0;
         d1_coeff_ = -2*exp(-zeta_*w0_*ts_) * cos(wd_ * ts_);
         d0_coeff_ = exp(-2*zeta_*w0_*ts_);
+
+        // Evaluate difference equation coefficients
+        u0_coeff_ = (d2_coeff_ - n2_coeff_*w0_/wd_);
+        u1_coeff_ = (d1_coeff_ + w0_/wd_ * (n2_coeff_ - n1_coeff_));
+        u2_coeff_ = (d0_coeff_ + n1_coeff_ * w0_ / wd_);
+        y0_coeff_ = d2_coeff_;
+        y1_coeff_ = - d1_coeff_;
+        y2_coeff_ = - d0_coeff_;
     }
 
 float SecondOrderLowPassFilter::updateFilter(float u0)
 {
-    // Evaluate difference equation coefficients
-    float u0_coeff = (d2_coeff_ - n2_coeff_*w0_/wd_);
-    float u1_coeff = (d1_coeff_ + w0_/wd_ * (n2_coeff_ - n1_coeff_));
-    float u2_coeff = (d0_coeff_ + n1_coeff_ * w0_ / wd_);
-    float y0_coeff = d2_coeff_;
-    float y1_coeff = - d1_coeff_;
-    float y2_coeff = - d0_coeff_;
-
     // Update filter states
     u2_ = u1_;
     u1_ = u0_;

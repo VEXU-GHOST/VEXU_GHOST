@@ -26,7 +26,12 @@ namespace ghost_v5
               config.motor__gear_ratio),
           motor_is_3600_cart_{(config_.motor__gear_ratio == 36)},
           trq_lim_norm_{config_.motor__torque_limit_norm},
-          device_connected_{false}
+          device_connected_{false},
+          ctl_mode_{control_mode_e::VOLTAGE_CONTROL},
+          des_voltage_norm_{0.0},
+          des_vel_rpm_{0.0},
+          des_pos_encoder_{0.0},
+          cmd_voltage_mv_{0.0}
     {
         config_ = config;
 

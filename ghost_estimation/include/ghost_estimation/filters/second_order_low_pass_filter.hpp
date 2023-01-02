@@ -78,6 +78,14 @@ namespace ghost_estimation
         float d1_coeff_;
         float d0_coeff_;
 
+        // Difference Equation coefficients
+        float u0_coeff_;
+        float u1_coeff_;
+        float u2_coeff_;
+        float y0_coeff_;
+        float y1_coeff_;
+        float y2_coeff_;
+
         // Output State Variables
         float y0_;
         float y1_;
