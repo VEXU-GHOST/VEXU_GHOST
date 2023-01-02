@@ -37,7 +37,7 @@
 #include "eigen3/Eigen/Geometry"
 #include "math/line2d.h"
 #include "util/random.h"
-#include "vector_map/vector_map.hpp"
+#include "ghost_ros/vector_map/vector_map.hpp"
 
 #ifndef SRC_PARTICLE_FILTER_H_
 #define SRC_PARTICLE_FILTER_H_

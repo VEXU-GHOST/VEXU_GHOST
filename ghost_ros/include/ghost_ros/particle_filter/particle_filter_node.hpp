@@ -28,8 +28,8 @@
 #include "util/timer.h"
 #include "yaml-cpp/yaml.h"
 
-#include "globals/globals.hpp"
-#include "particle_filter.hpp"
+#include "ghost_ros/globals/globals.hpp"
+#include "ghost_ros/particle_filter/particle_filter.hpp"
 
 namespace particle_filter{
 

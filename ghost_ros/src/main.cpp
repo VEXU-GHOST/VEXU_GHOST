@@ -17,9 +17,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include "globals/globals.hpp"
-#include "particle_filter/particle_filter_node.hpp"
-#include "ghost_serial/jetson_v5_serial_node.hpp"
+#include "ghost_ros/globals/globals.hpp"
+#include "ghost_ros/particle_filter/particle_filter_node.hpp"
+#include "ghost_ros/jetson_serial/jetson_v5_serial_node.hpp"
 
 using namespace std::literals::chrono_literals;
 

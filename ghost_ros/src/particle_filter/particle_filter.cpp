@@ -19,7 +19,7 @@
 */
 //========================================================================
 
-#include "particle_filter/particle_filter.hpp"
+#include "ghost_ros/particle_filter/particle_filter.hpp"
 
 using geometry::Line2f;
 using std::cout;

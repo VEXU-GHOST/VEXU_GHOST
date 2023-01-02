@@ -6,8 +6,8 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include "ghost_msgs/msg/actuator_commands.hpp"
-#include "ghost_msgs/msg/sensor_update.hpp"
+#include "ghost_msgs/msg/robot_actuator_command.hpp"
+#include "ghost_msgs/msg/robot_state_update.hpp"
 
 #include "ghost_serial/base_interfaces/jetson_serial_base.hpp"
 
@@ -24,28 +24,32 @@ namespace ghost_serial
 
     private:
         // Process incoming/outgoing msgs w/ ROS
-        void actuatorCommandCallback(const ghost_msgs::msg::ActuatorCommands::SharedPtr msg);
-        void publishSensorUpdate(unsigned char buffer[]);
+        void actuatorCommandCallback(const ghost_msgs::msg::RobotActuatorCommand::SharedPtr msg);
+        void publishRobotStateUpdate(unsigned char buffer[]);
 
         // Background thread loop for processing serial reads
         void readerLoop();
 
         // Config Params
         YAML::Node config_yaml_;
-        int msg_len_;
+        int max_msg_len_;
         bool using_reader_thread_;
 
         // ROS Topics
-        rclcpp::Subscription<ghost_msgs::msg::ActuatorCommands>::SharedPtr actuator_command_sub_;
-        rclcpp::Publisher<ghost_msgs::msg::SensorUpdate>::SharedPtr sensor_update_pub_;
+        rclcpp::Subscription<ghost_msgs::msg::RobotActuatorCommand>::SharedPtr actuator_command_sub_;
+        rclcpp::Publisher<ghost_msgs::msg::RobotStateUpdate>::SharedPtr state_update_pub_;
 
         // Serial Interface
         std::shared_ptr<JetsonSerialBase> serial_base_interface_;
-        std::vector<unsigned char> new_msg_;
+        std::vector<unsigned char> robot_state_msg_;
 
         // Reader Thread
         std::thread reader_thread_;
         std::atomic_bool reader_thread_init_;
+
+        // Msg Config
+        int actuator_command_msg_len_;
+        int state_update_msg_len_;
     };
 
 } // namespace ghost_serial

@@ -42,6 +42,26 @@ find_package(ghost_msgs REQUIRED)
 include_directories(include)
 
 ####################
+### Serial Utils ###
+####################
+add_library(serial_utils SHARED
+  src/serial_utils/bitmasks.cpp
+)
+target_include_directories(serial_utils
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(serial_utils HAS_LIBRARY_TARGET)
+install(
+  TARGETS serial_utils
+  EXPORT serial_utils
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+####################
 ### COBS Library ###
 ####################
 add_library(cobs SHARED
@@ -92,6 +112,7 @@ add_library(jetson_serial_base SHARED
   src/base_interfaces/jetson_serial_base.cpp
 )
 target_link_libraries(jetson_serial_base
+  serial_utils  
   cobs
   msg_parser
 )
@@ -109,36 +130,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-######################
-### GHOST ROS Node ###
-######################
-add_library(jetson_v5_serial_node SHARED
-  src/jetson_v5_serial_node.cpp
-)
-ament_target_dependencies(jetson_v5_serial_node
-  rclcpp
-  ghost_msgs
-)
-target_link_libraries(jetson_v5_serial_node
-  jetson_serial_base
-  cobs
-  yaml-cpp
-)
-target_include_directories(jetson_v5_serial_node
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(jetson_v5_serial_node HAS_LIBRARY_TARGET)
-ament_export_dependencies(ghost_msgs)
-install(
-  TARGETS jetson_v5_serial_node
-  EXPORT jetson_v5_serial_node
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-  )
-  
 ###############
 ### Testing ###
 ###############

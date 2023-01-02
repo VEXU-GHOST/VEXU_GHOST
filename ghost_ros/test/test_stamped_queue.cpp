@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include <thread>
 
-#include "stamped_queue/stamped_queue.hpp"
+#include "ghost_ros/stamped_queue/stamped_queue.hpp"
 
 using stamped_queue::StampedQueue;
 using std::chrono::system_clock;
