@@ -5,6 +5,7 @@ arch=$(uname -p)
 
 # Assumes repository is in base directory
 cd ~/VEXU_GHOST
+echo "---Building Ghost ROS Packages---"
 
 # Build ignores simulator packages on embedded devices
 if [ "$arch" == 'x86_64' ];
@@ -59,3 +60,13 @@ source ~/.bashrc
 echo
 echo "---Updating V5 Project Symbolic Links---"
 bash scripts/update_symlinks.sh
+
+cd ghost_pros
+
+echo
+echo "---Cleaning PROS Project---"
+make clean
+
+echo 
+echo "---Building PROS Project---"
+pros make

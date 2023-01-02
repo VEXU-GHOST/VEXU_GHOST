@@ -16,6 +16,7 @@ cd ghost_serial
 # Add Folders
 ln -s ../../../ghost_serial/src/cobs
 ln -s ../../../ghost_serial/src/msg_parser
+ln -s ../../../ghost_serial/src/serial_utils
 
 # Add Specific Files
 mkdir base_interfaces && cd base_interfaces
@@ -38,8 +39,8 @@ ln -s ../../../ghost_control/src/models
 cd $V5_DIR/include
 
 # Clear existing directories
-rm -r ghost_serial ghost_estimation ghost_control
-mkdir ghost_serial ghost_estimation ghost_control
+rm -r ghost_serial ghost_estimation ghost_control ghost_ros
+mkdir ghost_serial ghost_estimation ghost_control ghost_ros
 
 ### Symlink ghost_serial ###
 cd ghost_serial
@@ -47,6 +48,7 @@ cd ghost_serial
 # Add Folders
 ln -s ../../../ghost_serial/include/ghost_serial/cobs
 ln -s ../../../ghost_serial/include/ghost_serial/msg_parser
+ln -s ../../../ghost_serial/include/ghost_serial/serial_utils
 
 # Add Specific Files
 mkdir base_interfaces && cd base_interfaces
@@ -62,3 +64,8 @@ ln -s ../../../ghost_estimation/include/ghost_estimation/filters
 # Add Folders
 cd ../ghost_control
 ln -s ../../../ghost_control/include/ghost_control/models
+
+### Symlink ghost_ros ###
+# Add Folders
+cd ../ghost_ros
+ln -s ../../../ghost_ros/include/ghost_ros/robot_config

@@ -7,8 +7,10 @@
 #include "pros/apix.h"
 
 #include "ghost_serial/base_interfaces/v5_serial_base.hpp"
+#include "ghost_serial/serial_utils/bitmasks.hpp"
 
 namespace ghost_v5{
+
     class V5SerialNode
     {
     public:
@@ -16,16 +18,14 @@ namespace ghost_v5{
         ~V5SerialNode();
 
         void initSerial();
+        bool readV5ActuatorUpdate();
+        void writeV5StateUpdate();
 
     private:
-        // Background thread loop for processing serial reads
-        void readerLoop();
-
         void updateActuatorCommands(unsigned char buffer[]);
-        void writeSensorUpdate();
 
         // Config Params
-        int msg_len_;
+        int max_msg_len_;
         bool using_reader_thread_;
 
         // Serial Interface
@@ -35,6 +35,10 @@ namespace ghost_v5{
         // Reader Thread
         std::unique_ptr<pros::Task> reader_thread_;
         std::atomic_bool reader_thread_init_;
+
+        // Msg Config
+        int actuator_command_msg_len_;
+        int state_update_msg_len_;
     };
 } // namespace ghost_v5
 #endif // GHOST_V5__V5_SERIAL_NODE_HPP
