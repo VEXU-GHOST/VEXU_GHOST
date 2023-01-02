@@ -37,6 +37,7 @@ find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+find_package(ghost_msgs REQUIRED)
 find_package(ghost_serial REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
@@ -105,10 +106,38 @@ ament_target_dependencies(basic_swerve_controller
   geometry_msgs
   Eigen3
 )
-
 install(TARGETS
   basic_swerve_controller
   DESTINATION lib/${PROJECT_NAME})
+
+# Jetson Serial Node
+add_library(jetson_v5_serial_node SHARED
+  src/jetson_serial/jetson_v5_serial_node.cpp
+)
+ament_target_dependencies(jetson_v5_serial_node
+  rclcpp
+  ghost_msgs
+  ghost_serial
+)
+target_link_libraries(jetson_v5_serial_node
+  ghost_serial::jetson_serial_base
+  ghost_serial::cobs
+  yaml-cpp
+)
+target_include_directories(jetson_v5_serial_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(jetson_v5_serial_node HAS_LIBRARY_TARGET)
+ament_export_dependencies(ghost_msgs)
+install(
+  TARGETS jetson_v5_serial_node
+  EXPORT jetson_v5_serial_node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+  )
 
 #####################
 ##### Examples ######
@@ -167,7 +196,7 @@ target_link_libraries(ghost_ros_main
   amrl_shared_lib
   yaml-cpp
   particle_filter_ros
-  ghost_serial::jetson_v5_serial_node
+  jetson_v5_serial_node
 )
 
 install(TARGETS
