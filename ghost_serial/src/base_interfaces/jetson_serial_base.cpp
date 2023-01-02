@@ -137,7 +137,7 @@ namespace ghost_serial
         return false;
     }
 
-    bool JetsonSerialBase::readMsgFromSerial(unsigned char msg_buffer[])
+    bool JetsonSerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len)
     {
         if (port_open_)
         {
@@ -160,7 +160,7 @@ namespace ghost_serial
                     // Extract any msgs from serial stream and return if msg is found
                     if (num_bytes_read > 0)
                     {
-                        return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer);
+                        return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer, parsed_msg_len);
                     }
                     else if (num_bytes_read == -1)
                     {

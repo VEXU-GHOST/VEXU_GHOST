@@ -44,7 +44,7 @@ namespace ghost_serial
         bool writeMsgToSerial(const unsigned char buffer[], const int num_bytes);
 
         // Platform specific depending on Serial IO interfaces
-        virtual bool readMsgFromSerial(unsigned char msg_buffer[]) = 0;
+        virtual bool readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len) = 0;
 
     protected:
         // Platform specific depending on Serial IO interfaces
@@ -63,7 +63,7 @@ namespace ghost_serial
 
         // Config params
         std::string msg_start_seq_;
-        int msg_len_;
+        int max_msg_len_;
         bool use_checksum_;
 
         // Serial Status

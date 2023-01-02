@@ -16,7 +16,7 @@ namespace ghost_serial
     GenericSerialBase::GenericSerialBase(
         std::string msg_start_seq,
         int msg_len,
-        bool use_checksum): msg_len_(msg_len),
+        bool use_checksum): max_msg_len_(msg_len),
                             msg_start_seq_(msg_start_seq),
                             use_checksum_(use_checksum),
                             port_open_(false)
@@ -62,38 +62,39 @@ namespace ghost_serial
         {
             try
             {
+                // Raw msg buffer (checksum will add one byte past original msg buffer length)
                 int raw_msg_len = num_bytes + use_checksum_;
-                int encoded_msg_len = raw_msg_len + 2;
-
-                // New msg buffer (checksum will add one byte past original msg buffer length)
-                unsigned char msg_buffer_raw[raw_msg_len] = {
+                unsigned char raw_msg_buffer[raw_msg_len] = {
                     0,
                 };
 
                 // Calculate and append checksum byte (if used)
                 if (use_checksum_)
                 {
-                    memcpy(msg_buffer_raw, buffer, num_bytes);
-                    msg_buffer_raw[num_bytes] = calculateChecksum(buffer, num_bytes);
+                    memcpy(raw_msg_buffer, buffer, num_bytes);
+                    raw_msg_buffer[num_bytes] = calculateChecksum(buffer, num_bytes);
                 }
                 else
                 {
-                    memcpy(msg_buffer_raw, buffer, raw_msg_len);
+                    memcpy(raw_msg_buffer, buffer, raw_msg_len);
                 }
 
-                // COBS Encode (Adds leading byte and null delimiter byte)
-                unsigned char msg_buffer_encoded[encoded_msg_len] = {
-                    0,
-                };
-
-                // On V5 Brain, serial output is COBS encoded by default
+                // On V5 Brain, serial output is COBS encoded by default, otherwise, encode it (adding two bytes)
                 #if GHOST_DEVICE != GHOST_V5_BRAIN
-                    COBS::cobsEncode(msg_buffer_raw, raw_msg_len, msg_buffer_encoded);
+                    // COBS Encode (Adds leading byte and null delimiter byte)
+                    int write_buffer_len = raw_msg_len + 2;
+                    unsigned char write_buffer[write_buffer_len] = {
+                        0,
+                    };
+                    COBS::cobsEncode(raw_msg_buffer, raw_msg_len, write_buffer);
+                #else
+                    int write_buffer_len = raw_msg_len;
+                    unsigned char * write_buffer = raw_msg_buffer;
                 #endif
                 
                 // Write to serial port
                 std::unique_lock<CROSSPLATFORM_MUTEX_T> write_lock(serial_io_mutex_);
-                int ret = write(serial_write_fd_, msg_buffer_encoded, encoded_msg_len);
+                int ret = write(serial_write_fd_, write_buffer, write_buffer_len);
                 write_lock.unlock();
 
                 if (ret != -1)

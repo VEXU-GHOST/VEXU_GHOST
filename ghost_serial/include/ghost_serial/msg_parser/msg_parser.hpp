@@ -36,12 +36,12 @@ class MsgParser {
          * @param parsed_msg        array of size msg_len to store extracted msgs
          * @return bool whether msg is found
          */
-        bool parseByteStream(const unsigned char raw_data_buffer[], const int num_bytes, unsigned char parsed_msg[]);
+        bool parseByteStream(const unsigned char raw_data_buffer[], const int num_bytes, unsigned char parsed_msg[], int &parsed_msg_len);
 
     private:
         // Config params
         std::string msg_start_seq_;
-        int msg_len_;
+        int max_msg_len_;
         bool use_checksum_;
 
         // Serial Buffers
