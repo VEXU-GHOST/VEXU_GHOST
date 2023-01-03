@@ -37,7 +37,7 @@ float SecondOrderLowPassFilter::updateFilter(float u0)
 
     y2_ = y1_;
     y1_ = y0_;
-    y0_ = (u0_coeff * u0_ + u1_coeff * u1_ + u2_coeff * u2_ + y1_coeff * y1_ + y2_coeff * y2_) / y0_coeff;
+    y0_ = (u0_coeff_ * u0_ + u1_coeff_ * u1_ + u2_coeff_ * u2_ + y1_coeff_ * y1_ + y2_coeff_ * y2_) / y0_coeff_;
 
     return y0_;
 }
