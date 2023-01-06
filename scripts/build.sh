@@ -57,16 +57,22 @@ fi
 
 source ~/.bashrc
 
-echo
-echo "---Updating V5 Project Symbolic Links---"
-bash scripts/update_symlinks.sh
-
-cd ghost_pros
-
-echo
-echo "---Cleaning PROS Project---"
-make clean
-
 echo 
-echo "---Building PROS Project---"
-pros make
+echo "Checking for PROS"
+if [ -x "$(pros --version)"]; then
+    echo "Found PROS"
+    echo "---Updating V5 Project Symbolic Links---"
+    bash scripts/update_symlinks.sh
+
+    cd ghost_pros
+
+    echo
+    echo "---Cleaning PROS Project---"
+    make clean
+
+    echo 
+    echo "---Building PROS Project---"
+    pros make
+else
+echo "PROS not installed, skipping V5 Build"
+fi
