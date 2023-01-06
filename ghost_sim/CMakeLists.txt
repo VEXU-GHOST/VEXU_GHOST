@@ -150,7 +150,6 @@ install(
 install(DIRECTORY
   launch
   urdf
-  rviz
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()
