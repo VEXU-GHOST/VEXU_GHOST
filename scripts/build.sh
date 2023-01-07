@@ -59,7 +59,7 @@ source ~/.bashrc
 
 echo 
 echo "Checking for PROS"
-if [ -x "$(pros --version)" ]; then
+if [[ $(pros --version) ]] 2> /dev/null; then
     echo "Found PROS"
     echo "---Updating V5 Project Symbolic Links---"
     bash scripts/update_symlinks.sh
@@ -74,5 +74,5 @@ if [ -x "$(pros --version)" ]; then
     echo "---Building PROS Project---"
     pros make
 else
-echo "PROS not installed, skipping V5 Build"
+    echo "PROS not installed, skipping V5 Build"
 fi
