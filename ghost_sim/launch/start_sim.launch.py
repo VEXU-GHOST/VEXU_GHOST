@@ -70,6 +70,7 @@ def generate_launch_description():
         launch_arguments={
             'world': world_file,
             'gui': LaunchConfiguration("sim_gui"),
+            'verbose': LaunchConfiguration('verbose'),
             }.items()
     )
 
@@ -108,9 +109,10 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        DeclareLaunchArgument(name='enable_pid', default_value='True'),
-        DeclareLaunchArgument(name='joystick', default_value='False'),
-        DeclareLaunchArgument('sim_gui', default_value='False'),
+        DeclareLaunchArgument(name='enable_pid', default_value='true'),
+        DeclareLaunchArgument(name='joystick', default_value='false'),
+        DeclareLaunchArgument('sim_gui', default_value='false'),
+        DeclareLaunchArgument('verbose', default_value='false'),
         simulation,
         ground_truth_publisher,
         rviz_node,

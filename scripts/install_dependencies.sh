@@ -17,6 +17,3 @@ sudo make install
 
 cd ~/VEXU_GHOST
 git submodule update --init
-
-echo "Adding /usr/local/lib to LD_LIBRARY_PATH in ~/.bashrc"
-echo 'export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH' >> ~/.bashrc

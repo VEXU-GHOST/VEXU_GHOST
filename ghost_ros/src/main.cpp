@@ -74,24 +74,39 @@ int main(int argc, char* argv[]){
     rclcpp::init(argc, argv);
     signal(SIGINT, SignalHandler);
 
-    globals::program_start_time = std::chrono::system_clock::now();
-    
+    globals::program_start_time = std::chrono::system_clock::now();    
     globals::repo_base_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/";
+    auto main_config = YAML::LoadFile(globals::repo_base_dir + "ghost_ros/config/main_config.yaml");
+
+    std::unique_ptr<std::thread> serial_interface_thread;
+    std::unique_ptr<std::thread> particle_filter_thread;
+
+    if(main_config["simulated"].as<bool>()){
+
+
+    }
+    else{
+        serial_interface_thread = std::make_unique<std::thread>(
+            serial_interface_main,
+            globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml"
+        );
+    }
 
     // // Initialize modules
-    // std::thread particle_filter_thread(
+    // particle_filter_thread = std::make_unique<particle_filter_thread>(
     //     particle_filter_main,
     //     globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"
     //     );
-    
-    std::thread serial_interface_thread(
-        serial_interface_main,
-        globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml"
-    );
+
 
     // Start threads
+    if(main_config["simulated"].as<bool>()){
+
+    }
+    else{
+        serial_interface_thread->join();
+    }
     // particle_filter_thread.join();
-    serial_interface_thread.join();
 
     return 0;
 }

@@ -30,7 +30,7 @@ namespace ghost_v5
           ctl_mode_{control_mode_e::VOLTAGE_CONTROL},
           des_voltage_norm_{0.0},
           des_vel_rpm_{0.0},
-          des_pos_encoder_{0.0},
+          des_pos_encoder_{0},
           cmd_voltage_mv_{0.0}
     {
         config_ = config;
