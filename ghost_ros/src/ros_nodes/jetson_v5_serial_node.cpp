@@ -1,6 +1,4 @@
-
-#include "ghost_ros/jetson_serial/jetson_v5_serial_node.hpp"
-
+#include "ghost_ros/ros_nodes/jetson_v5_serial_node.hpp"
 #include "ghost_ros/robot_config/v5_serial_msg_config.hpp"
 #include "ghost_serial/serial_utils/bitmasks.hpp"
 

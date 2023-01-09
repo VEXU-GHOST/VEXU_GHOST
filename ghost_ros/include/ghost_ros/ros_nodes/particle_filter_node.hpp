@@ -26,10 +26,11 @@
 #include "math/math_util.h"
 #include "math/line2d.h"
 #include "util/timer.h"
+
 #include "yaml-cpp/yaml.h"
 
 #include "ghost_ros/globals/globals.hpp"
-#include "ghost_ros/particle_filter/particle_filter.hpp"
+#include "ghost_estimation/particle_filter/particle_filter.hpp"
 
 namespace particle_filter{
 

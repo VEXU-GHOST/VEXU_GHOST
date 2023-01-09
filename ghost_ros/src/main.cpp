@@ -18,8 +18,8 @@
 #include <yaml-cpp/yaml.h>
 
 #include "ghost_ros/globals/globals.hpp"
-#include "ghost_ros/particle_filter/particle_filter_node.hpp"
-#include "ghost_ros/jetson_serial/jetson_v5_serial_node.hpp"
+#include "ghost_ros/ros_nodes/particle_filter_node.hpp"
+#include "ghost_ros/ros_nodes/jetson_v5_serial_node.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -70,6 +70,10 @@ void serial_interface_main(std::string config_file)
     }
 }
 
+void controller_main(std::string config_file){
+    
+}
+
 int main(int argc, char* argv[]){
     rclcpp::init(argc, argv);
     signal(SIGINT, SignalHandler);
@@ -80,17 +84,19 @@ int main(int argc, char* argv[]){
 
     std::unique_ptr<std::thread> serial_interface_thread;
     std::unique_ptr<std::thread> particle_filter_thread;
+    std::unique_ptr<std::thread> controller_thread;
 
-    if(main_config["simulated"].as<bool>()){
-
-
-    }
-    else{
+    if(!main_config["simulated"].as<bool>()){
         serial_interface_thread = std::make_unique<std::thread>(
             serial_interface_main,
             globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml"
         );
     }
+
+    controller_thread = std::make_unique<std::thread>(
+        controller_main,
+        globals::repo_base_dir + "ghost_ros/config/ghost_controller.yaml"
+    );
 
     // // Initialize modules
     // particle_filter_thread = std::make_unique<particle_filter_thread>(
@@ -100,13 +106,11 @@ int main(int argc, char* argv[]){
 
 
     // Start threads
-    if(main_config["simulated"].as<bool>()){
-
-    }
-    else{
+    if(!main_config["simulated"].as<bool>()){
         serial_interface_thread->join();
     }
     // particle_filter_thread.join();
+    controller_thread->join();
 
     return 0;
 }

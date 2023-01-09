@@ -33,7 +33,7 @@
 #include "math/line2d.h"
 #include "math/math_util.h"
 #include "util/timer.h"
-#include "ghost_ros/vector_map/vector_map.hpp"
+#include "ghost_estimation/vector_map/vector_map.hpp"
 
 using math_util::AngleMod;
 using math_util::RadToDeg;

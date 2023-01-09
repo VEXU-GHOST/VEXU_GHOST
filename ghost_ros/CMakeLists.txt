@@ -37,67 +37,19 @@ find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+find_package(yaml-cpp REQUIRED)
+
 find_package(ghost_msgs REQUIRED)
 find_package(ghost_serial REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(ghost_estimation REQUIRED)
 
 find_library(v5_serial_node REQUIRED)
 
 include_directories(include)
-include_directories(src/shared)
-add_subdirectory(src/shared)
 
-###################
-##### Library #####
-###################
-# Vector Map Library
-add_library(vector_map SHARED src/vector_map/vector_map.cpp)
-target_link_libraries(vector_map
-  amrl_shared_lib
-  gflags
-)
-ament_target_dependencies(vector_map
-  Eigen3
-)
-target_include_directories(vector_map
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-
-install(
-  TARGETS vector_map
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-# Particle Filter Library
-add_library(particle_filter_ros SHARED src/particle_filter/particle_filter_node.cpp src/particle_filter/particle_filter.cpp)
-ament_target_dependencies(particle_filter_ros
-  rclcpp
-  tf2_msgs
-  sensor_msgs
-  visualization_msgs
-  Eigen3
-)
-target_link_libraries(particle_filter_ros
-  amrl_shared_lib
-  vector_map
-  yaml-cpp
-)
-target_include_directories(particle_filter_ros
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(
-  TARGETS particle_filter_ros
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
+#####################
+##### ROS Nodes #####
+#####################
 # Basic Swerve Controller
 add_executable(basic_swerve_controller src/basic_swerve_controller.cpp)
 ament_target_dependencies(basic_swerve_controller
@@ -112,10 +64,11 @@ install(TARGETS
 
 # Jetson Serial Node
 add_library(jetson_v5_serial_node SHARED
-  src/jetson_serial/jetson_v5_serial_node.cpp
+  src/ros_nodes/jetson_v5_serial_node.cpp
 )
 ament_target_dependencies(jetson_v5_serial_node
   rclcpp
+  sensor_msgs
   ghost_msgs
   ghost_serial
 )
@@ -138,6 +91,35 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
   )
+
+# Particle Filter Node
+# Particle Filter Library
+add_library(particle_filter_node SHARED src/ros_nodes/particle_filter_node.cpp)
+ament_target_dependencies(particle_filter_node
+  rclcpp
+  tf2_msgs
+  sensor_msgs
+  visualization_msgs
+  ghost_estimation
+  Eigen3
+)
+target_link_libraries(particle_filter_node
+  ghost_estimation::amrl_shared_lib
+  ghost_estimation::vector_map
+  ghost_estimation::particle_filter
+  yaml-cpp
+)
+target_include_directories(particle_filter_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(
+  TARGETS particle_filter_node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 #####################
 ##### Examples ######
@@ -193,9 +175,8 @@ ament_target_dependencies(ghost_ros_main
   nav_msgs
 )
 target_link_libraries(ghost_ros_main
-  amrl_shared_lib
   yaml-cpp
-  particle_filter_ros
+  particle_filter_node
   jetson_v5_serial_node
 )
 
@@ -226,6 +207,5 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME})
 
 ament_export_include_directories(include)
-ament_export_libraries(dc_motor_model)
 
 ament_package()

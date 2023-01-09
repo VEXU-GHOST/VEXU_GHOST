@@ -20,7 +20,7 @@
 */
 //========================================================================
 
-#include "ghost_ros/particle_filter/particle_filter_node.hpp"
+#include "ghost_ros/ros_nodes/particle_filter_node.hpp"
 
 using geometry::Line2f;
 using geometry::Line;
