@@ -63,14 +63,50 @@ void reader_loop(){
 
 void ghost_main_loop(){
 	// Send robot state over serial to coprocessor
-	v5_globals::serial_node_.writeV5StateUpdate();
+	// v5_globals::serial_node_.writeV5StateUpdate();
 	
 	// Zero All Motors if disableds
 	if(pros::competition::is_disabled()){
 		zero_motors();
 	}
+	
+	auto module_vel_des = 200.0 * ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[ANALOG_LEFT_Y])) / 127.0;
+	auto wheel_vel_des = 600.0 * ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[ANALOG_RIGHT_Y])) / 127.0;
+
+	float m1_speed = (6/5*wheel_vel_des + 3*module_vel_des);
+	float m2_speed = (-6/5*wheel_vel_des + 3*module_vel_des);
+	
+	float max_speed_norm = 1.0;
+	if(fabs(m1_speed) > 600.0){
+		max_speed_norm = 600.0/fabs(m1_speed);
+	}
+
+	if(fabs(m2_speed) > 600.0){
+		max_speed_norm = 600.0/fabs(m2_speed);
+	}
+
+	m1_speed *= max_speed_norm;
+	m2_speed *= max_speed_norm;
+
+	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR]->setMotorCommand(0.0, m1_speed);
+	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR]->setMotorCommand(0.0, m2_speed);
+
+	float input1, input2;
+	input1 = ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[ANALOG_RIGHT_Y])) / 127.0;
+	
+	if(v5_globals::controller_main.get_digital(DIGITAL_R1)){
+		input2 = input1;
+	}
+	else{
+		input2 = ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[ANALOG_LEFT_Y])) / 127.0;
+	}
+
+	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR]->setMotorCommand(input1);
+	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR]->setMotorCommand(input2);
 
 	update_motors();
+	std::cout << v5_globals::motors[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR]->getVelocityFilteredRPM() << " " << 
+	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR]->getVelocityFilteredRPM() << std::endl;
 }
 
 /**
@@ -182,16 +218,3 @@ void opcontrol()
 		pros::c::task_delay_until(&loop_time, 10);
 	}
 }
-
-/*	Differential Swerve Transform
-	double wheel_vel = controller_main.get_analog(ANALOG_RIGHT_Y)*500.0/127.0;	// 500 RPM
-	double module_vel = controller_main.get_analog(ANALOG_LEFT_Y)*200.0/127.0;	// 200 RPM
-
-	std::cout << wheel_vel << ", " << module_vel << std::endl;
-	std::cout << 0.9*(0.6*wheel_vel + 1.5*module_vel) << std::endl;
-	std::cout << 0.9*(-0.6*wheel_vel + 1.5*module_vel) << std::endl;
-	std::cout << std::endl;
-
-	m1.move_velocity(0.9*(0.6*wheel_vel + 1.5*module_vel));
-	m2.move_velocity(0.9*(-0.6*wheel_vel + 1.5*module_vel));
-*/
