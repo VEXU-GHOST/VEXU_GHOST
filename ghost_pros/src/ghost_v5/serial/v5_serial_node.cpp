@@ -147,7 +147,7 @@ namespace ghost_v5
 		// Poll joystick channels
 		for (int i = 0; i < 4; i++)
 		{
-			int32_t analog_input = v5_globals::controller_main.get_analog(v5_globals::joy_channels[i]);
+			float analog_input = ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[i])) / 127.0;
 			memcpy(state_update_msg_buffer + 4 * (buffer_32bit_index++), &analog_input, 4);
 		}
 

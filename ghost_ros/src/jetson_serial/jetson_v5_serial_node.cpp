@@ -46,7 +46,9 @@ namespace ghost_serial
             use_checksum);
 
         // Sensor Update Msg Publisher
-        state_update_pub_ = create_publisher<ghost_msgs::msg::RobotStateUpdate>("v5_state_update", 10);
+        state_update_pub_ = create_publisher<ghost_msgs::msg::RobotStateUpdate>("v5/state_update", 10);
+        competition_state_pub_ = create_publisher<ghost_msgs::msg::V5CompetitionState>("v5/competition_state", 10);
+        joystick_pub_ = create_publisher<ghost_msgs::msg::V5Joystick>("v5/joystick", 10);
 
         // Actuator Command Msg Subscriber
         actuator_command_sub_ = create_subscription<ghost_msgs::msg::RobotActuatorCommand>(
@@ -163,50 +165,56 @@ namespace ghost_serial
     {
         // RCLCPP_INFO(get_logger(), "Sensor Update");
 
-        auto msg = ghost_msgs::msg::RobotStateUpdate{};
-        msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms); // Add
+        auto encoder_state_msg = ghost_msgs::msg::RobotStateUpdate{};
+        encoder_state_msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);
+
+        auto joystick_msg = ghost_msgs::msg::V5Joystick{};
+        joystick_msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);
+
+        auto competition_state_msg = ghost_msgs::msg::V5CompetitionState{};
+        competition_state_msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);
 
         // Copy sensor device data to ros msg
         int buffer_index = 0;
         for (auto motor_id : ghost_v5_config::state_update_motor_config)
         {
             // Set Device Name from Config Enum ID
-            msg.encoders[motor_id].device_name = ghost_v5_config::device_names[motor_id];
-            msg.encoders[motor_id].device_id = motor_id;
+            encoder_state_msg.encoders[motor_id].device_name = ghost_v5_config::device_names[motor_id];
+            encoder_state_msg.encoders[motor_id].device_id = motor_id;
 
             // Copy encoder angle
             uint32_t angle;
             memcpy(&angle, buffer + 4 * (buffer_index++), 4);
-            msg.encoders[motor_id].current_angle = angle;
+            encoder_state_msg.encoders[motor_id].current_angle = angle;
 
             // Copy encoder velocity
             float velocity;
             memcpy(&velocity, buffer + 4 * (buffer_index++), 4);
-            msg.encoders[motor_id].current_velocity = velocity;
+            encoder_state_msg.encoders[motor_id].current_velocity = velocity;
         }
 
         for (auto sensor_id : ghost_v5_config::state_update_sensor_config)
         {
             // Set Device Name from Config Enum ID
-            msg.encoders[sensor_id].device_name = ghost_v5_config::device_names[sensor_id];
-            msg.encoders[sensor_id].device_id = sensor_id;
+            encoder_state_msg.encoders[sensor_id].device_name = ghost_v5_config::device_names[sensor_id];
+            encoder_state_msg.encoders[sensor_id].device_id = sensor_id;
 
             // Copy encoder angle
             uint32_t angle;
             memcpy(&angle, buffer + 4 * (buffer_index++), 4);
-            msg.encoders[sensor_id].current_angle = angle;
+            encoder_state_msg.encoders[sensor_id].current_angle = angle;
 
             // Copy encoder velocity
             float velocity;
             memcpy(&velocity, buffer + 4 * (buffer_index++), 4);
-            msg.encoders[sensor_id].current_velocity = velocity;
+            encoder_state_msg.encoders[sensor_id].current_velocity = velocity;
         }
 
         // Joystick Channels
-        memcpy(&(msg.joystick_left_x), buffer + 4 * (buffer_index++), 4);
-        memcpy(&(msg.joystick_left_y), buffer + 4 * (buffer_index++), 4);
-        memcpy(&(msg.joystick_right_x), buffer + 4 * (buffer_index++), 4);
-        memcpy(&(msg.joystick_right_y), buffer + 4 * (buffer_index++), 4);
+        memcpy(&(joystick_msg.joystick_left_x), buffer + 4 * (buffer_index++), 4);
+        memcpy(&(joystick_msg.joystick_left_y), buffer + 4 * (buffer_index++), 4);
+        memcpy(&(joystick_msg.joystick_right_x), buffer + 4 * (buffer_index++), 4);
+        memcpy(&(joystick_msg.joystick_right_y), buffer + 4 * (buffer_index++), 4);
 
         // Buffers to store extracted V5 Msg
         uint8_t digital_outs = 0;
@@ -216,29 +224,29 @@ namespace ghost_serial
         memcpy(&digital_outs, buffer + 4 * buffer_index + 2, 1);
 
         // Joystick Buttons
-        msg.joystick_btn_a = digital_states & 0x8000;
-        msg.joystick_btn_b = digital_states & 0x4000;
-        msg.joystick_btn_x = digital_states & 0x2000;
-        msg.joystick_btn_y = digital_states & 0x1000;
-        msg.joystick_btn_up = digital_states & 0x0800;
-        msg.joystick_btn_down = digital_states & 0x0400;
-        msg.joystick_btn_left = digital_states & 0x0200;
-        msg.joystick_btn_right = digital_states & 0x0100;
-        msg.joystick_btn_l1 = digital_states & 0x0080;
-        msg.joystick_btn_l2 = digital_states & 0x0040;
-        msg.joystick_btn_r1 = digital_states & 0x0020;
-        msg.joystick_btn_r2 = digital_states & 0x0010;
+        joystick_msg.joystick_btn_a =        digital_states & 0x8000;
+        joystick_msg.joystick_btn_b =        digital_states & 0x4000;
+        joystick_msg.joystick_btn_x =        digital_states & 0x2000;
+        joystick_msg.joystick_btn_y =        digital_states & 0x1000;
+        joystick_msg.joystick_btn_up =       digital_states & 0x0800;
+        joystick_msg.joystick_btn_down =     digital_states & 0x0400;
+        joystick_msg.joystick_btn_left =     digital_states & 0x0200;
+        joystick_msg.joystick_btn_right =    digital_states & 0x0100;
+        joystick_msg.joystick_btn_l1 =       digital_states & 0x0080;
+        joystick_msg.joystick_btn_l2 =       digital_states & 0x0040;
+        joystick_msg.joystick_btn_r1 =       digital_states & 0x0020;
+        joystick_msg.joystick_btn_r2 =       digital_states & 0x0010;
 
         // Competition state
-        msg.is_disabled = digital_states & 0x0008;
-        msg.is_autonomous = digital_states & 0x0004;
-        msg.is_connected = digital_states & 0x0002;
+        competition_state_msg.is_disabled = digital_states & 0x0008;
+        competition_state_msg.is_autonomous = digital_states & 0x0004;
+        competition_state_msg.is_connected = digital_states & 0x0002;
 
         // Digital Outputs
         uint8_t bitmask[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
         for (int i = 0; i < 8; i++)
         {
-            msg.digital_out_vector[i] = digital_outs & bitmask[i];
+            encoder_state_msg.digital_out_vector[i] = digital_outs & bitmask[i];
         }
 
         // Device Connected Vector
@@ -247,14 +255,16 @@ namespace ghost_serial
         
         for (auto motor_id : ghost_v5_config::state_update_motor_config)
         {
-            msg.encoders[motor_id].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[motor_id];
+            encoder_state_msg.encoders[motor_id].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[motor_id];
         }
         for (auto sensor_id : ghost_v5_config::state_update_sensor_config)
         {
-            msg.encoders[sensor_id].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[sensor_id];
+            encoder_state_msg.encoders[sensor_id].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[sensor_id];
         }
 
-        state_update_pub_->publish(msg);
+        state_update_pub_->publish(encoder_state_msg);
+        competition_state_pub_->publish(competition_state_msg);
+        joystick_pub_->publish(joystick_msg);
     }
 
 } // namespace ghost_serial

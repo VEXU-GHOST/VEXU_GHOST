@@ -63,50 +63,14 @@ void reader_loop(){
 
 void ghost_main_loop(){
 	// Send robot state over serial to coprocessor
-	// v5_globals::serial_node_.writeV5StateUpdate();
+	v5_globals::serial_node_.writeV5StateUpdate();
 	
 	// Zero All Motors if disableds
 	if(pros::competition::is_disabled()){
 		zero_motors();
 	}
 	
-	auto module_vel_des = 200.0 * ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[ANALOG_LEFT_Y])) / 127.0;
-	auto wheel_vel_des = 600.0 * ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[ANALOG_RIGHT_Y])) / 127.0;
-
-	float m1_speed = (6/5*wheel_vel_des + 3*module_vel_des);
-	float m2_speed = (-6/5*wheel_vel_des + 3*module_vel_des);
-	
-	float max_speed_norm = 1.0;
-	if(fabs(m1_speed) > 600.0){
-		max_speed_norm = 600.0/fabs(m1_speed);
-	}
-
-	if(fabs(m2_speed) > 600.0){
-		max_speed_norm = 600.0/fabs(m2_speed);
-	}
-
-	m1_speed *= max_speed_norm;
-	m2_speed *= max_speed_norm;
-
-	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR]->setMotorCommand(0.0, m1_speed);
-	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR]->setMotorCommand(0.0, m2_speed);
-
-	float input1, input2;
-	input1 = ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[ANALOG_RIGHT_Y])) / 127.0;
-	
-	if(v5_globals::controller_main.get_digital(DIGITAL_R1)){
-		input2 = input1;
-	}
-	else{
-		input2 = ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[ANALOG_LEFT_Y])) / 127.0;
-	}
-
-	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR]->setMotorCommand(input1);
-	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR]->setMotorCommand(input2);
-
 	update_motors();
-	std::cout << v5_globals::motors[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR]->getVelocityFilteredRPM() << " " << 
-	v5_globals::motors[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR]->getVelocityFilteredRPM() << std::endl;
 }
 
 /**
@@ -145,7 +109,7 @@ void initialize()
 
 	// Perform and necessary Serial Init
 	v5_globals::serial_node_.initSerial();
-	// pros::Task producer_thread(producer_main, "producer thread");
+	pros::Task reader_thread(reader_loop, "reader thread");
 	// pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
 }
 
