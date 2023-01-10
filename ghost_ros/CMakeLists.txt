@@ -47,6 +47,26 @@ find_library(v5_serial_node REQUIRED)
 
 include_directories(include)
 
+###############################
+##### Robot Configuration #####
+###############################
+add_library(v5_serial_msg_config SHARED
+  src/robot_config/v5_serial_msg_config.cpp
+)
+target_include_directories(v5_serial_msg_config
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(v5_serial_msg_config HAS_LIBRARY_TARGET)
+install(
+  TARGETS v5_serial_msg_config
+  EXPORT v5_serial_msg_config
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+  )
+
 #####################
 ##### ROS Nodes #####
 #####################
@@ -75,6 +95,7 @@ ament_target_dependencies(jetson_v5_serial_node
 target_link_libraries(jetson_v5_serial_node
   ghost_serial::jetson_serial_base
   ghost_serial::cobs
+  v5_serial_msg_config
   yaml-cpp
 )
 target_include_directories(jetson_v5_serial_node
@@ -93,7 +114,6 @@ install(
   )
 
 # Particle Filter Node
-# Particle Filter Library
 add_library(particle_filter_node SHARED src/ros_nodes/particle_filter_node.cpp)
 ament_target_dependencies(particle_filter_node
   rclcpp
@@ -115,6 +135,29 @@ target_include_directories(particle_filter_node
   $<INSTALL_INTERFACE:include>)
 install(
   TARGETS particle_filter_node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+# Robot State Machine Node
+add_library(robot_state_machine_node SHARED src/ros_nodes/robot_state_machine_node.cpp)
+ament_target_dependencies(robot_state_machine_node
+  rclcpp
+  ghost_msgs
+  Eigen3
+)
+target_link_libraries(robot_state_machine_node
+  yaml-cpp
+  v5_serial_msg_config
+)
+target_include_directories(robot_state_machine_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(
+  TARGETS robot_state_machine_node
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -167,17 +210,12 @@ add_executable(ghost_ros_main
 ament_target_dependencies(ghost_ros_main
   rclcpp
   ghost_serial
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-  visualization_msgs
-  tf2_msgs
-  nav_msgs
 )
 target_link_libraries(ghost_ros_main
   yaml-cpp
   particle_filter_node
   jetson_v5_serial_node
+  robot_state_machine_node
 )
 
 install(TARGETS

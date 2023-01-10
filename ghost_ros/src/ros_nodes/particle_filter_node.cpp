@@ -20,6 +20,10 @@
 */
 //========================================================================
 
+#include "math/math_util.h"
+#include "math/line2d.h"
+#include "util/timer.h"
+
 #include "ghost_ros/ros_nodes/particle_filter_node.hpp"
 
 using geometry::Line2f;

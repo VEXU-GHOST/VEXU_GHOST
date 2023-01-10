@@ -20,6 +20,7 @@
 #include "ghost_ros/globals/globals.hpp"
 #include "ghost_ros/ros_nodes/particle_filter_node.hpp"
 #include "ghost_ros/ros_nodes/jetson_v5_serial_node.hpp"
+#include "ghost_ros/ros_nodes/robot_state_machine_node.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -31,12 +32,6 @@ namespace globals{
 }
 
 void SignalHandler(int) {
-    if(rclcpp::ok()){
-        std::cout << "RCLCPP Shutdown" << std::endl;
-        rclcpp::shutdown();
-
-    }
-
     if (!globals::run) {
         printf("Force Exit.\n");
         exit(0);
@@ -47,40 +42,60 @@ void SignalHandler(int) {
 }
 
 // Particle Filter Main Thread
-void particle_filter_main(std::string config_file){
+void particle_filter_main(std::string config_file, bool verbose){
+    if(verbose){
+        std::cout << "[START] Particle Filter Thread" << std::endl;
+    }
+
     rclcpp::spin(std::make_shared<particle_filter::ParticleFilterNode>(config_file));
+    
+    if(verbose){
+        std::cout << "[END] Particle Filter Thread" << std::endl;
+    }
 }
 
-void serial_interface_main(std::string config_file)
+void serial_interface_main(std::string config_file, bool verbose)
 {
-    bool verbose = YAML::LoadFile(config_file)["verbose"].as<bool>();
-
     if(verbose){
         std::cout << "[START] Serial Writer Thread" << std::endl;
     }
     auto serial_node = std::make_shared<ghost_serial::JetsonV5SerialNode>(config_file);
     
     // Wait for serial port, then start reader thread
-    serial_node->initSerialBlocking();
+    bool success = serial_node->initSerialBlocking();
 
-    // Process ROS Callbacks until exit
-    rclcpp::spin(serial_node);
+    if(success){
+        // Process ROS Callbacks until exit
+        rclcpp::spin(serial_node);
+    }
     if(verbose){
         std::cout << "[END] Serial Writer Thread" << std::endl;
     }
 }
 
-void controller_main(std::string config_file){
+void controller_main(std::string config_file, bool verbose){
+    if(verbose){
+        std::cout << "[START] State Machine Thread" << std::endl;
+    }
+
+    auto state_machine_node = std::make_shared<ghost_ros::RobotStateMachineNode>(config_file);
     
+    // Process ROS Callbacks until exit
+    rclcpp::spin(state_machine_node);
+    
+    if(verbose){
+        std::cout << "[END] State Machine Thread" << std::endl;
+    }
 }
 
 int main(int argc, char* argv[]){
-    rclcpp::init(argc, argv);
     signal(SIGINT, SignalHandler);
+    rclcpp::init(argc, argv);
 
     globals::program_start_time = std::chrono::system_clock::now();    
     globals::repo_base_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/";
     auto main_config = YAML::LoadFile(globals::repo_base_dir + "ghost_ros/config/main_config.yaml");
+    bool verbose = main_config["verbose"].as<bool>();
 
     std::unique_ptr<std::thread> serial_interface_thread;
     std::unique_ptr<std::thread> particle_filter_thread;
@@ -89,13 +104,15 @@ int main(int argc, char* argv[]){
     if(!main_config["simulated"].as<bool>()){
         serial_interface_thread = std::make_unique<std::thread>(
             serial_interface_main,
-            globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml"
+            globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml",
+            false
         );
     }
 
     controller_thread = std::make_unique<std::thread>(
         controller_main,
-        globals::repo_base_dir + "ghost_ros/config/ghost_controller.yaml"
+        globals::repo_base_dir + "ghost_ros/config/ghost_controller.yaml",
+        verbose
     );
 
     // // Initialize modules
@@ -104,8 +121,16 @@ int main(int argc, char* argv[]){
     //     globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"
     //     );
 
+    while(globals::run){
+        std::this_thread::sleep_for(100ms);
+    }
+    
+    if(rclcpp::ok()){
+        std::cout << "RCLCPP Shutdown" << std::endl;
+        rclcpp::shutdown();
+    }
 
-    // Start threads
+    // Cleanup threads
     if(!main_config["simulated"].as<bool>()){
         serial_interface_thread->join();
     }

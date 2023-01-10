@@ -23,10 +23,6 @@
 #include "tf2_msgs/msg/tf_message.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 
-#include "math/math_util.h"
-#include "math/line2d.h"
-#include "util/timer.h"
-
 #include "yaml-cpp/yaml.h"
 
 #include "ghost_ros/globals/globals.hpp"

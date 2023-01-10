@@ -1,14 +1,14 @@
 #!/bin/bash
 V5_DIR="$PWD/ghost_pros"
 
-
-
+##############
 ### V5 SRC ###
+##############
 cd $V5_DIR/src
 
 # Clear existing directories
-rm -r ghost_serial ghost_estimation ghost_control
-mkdir ghost_serial ghost_estimation ghost_control
+rm -r ghost_serial ghost_estimation ghost_control ghost_ros
+mkdir ghost_serial ghost_estimation ghost_control ghost_ros
 
 ### Symlink ghost_serial ###
 cd ghost_serial
@@ -33,9 +33,15 @@ ln -s ../../../ghost_estimation/src/filters
 cd ../ghost_control
 ln -s ../../../ghost_control/src/models
 
+### Symlink ghost_ros ###
+# Add Folders
+cd ../ghost_ros
+ln -s ../../../ghost_ros/src/robot_config
 
-
+##################
 ### V5 INCLUDE ###
+##################
+
 cd $V5_DIR/include
 
 # Clear existing directories

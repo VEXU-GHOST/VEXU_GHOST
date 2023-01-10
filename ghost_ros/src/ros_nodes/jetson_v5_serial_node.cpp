@@ -63,7 +63,7 @@ namespace ghost_serial
         }
     }
 
-    void JetsonV5SerialNode::initSerialBlocking()
+    bool JetsonV5SerialNode::initSerialBlocking()
     {
         // Wait for serial to become available
         bool serial_open = false;
@@ -78,6 +78,7 @@ namespace ghost_serial
         {
             reader_thread_ = std::thread(&JetsonV5SerialNode::readerLoop, this);
         }
+        return serial_open;
     }
 
     void JetsonV5SerialNode::readerLoop()
@@ -177,7 +178,7 @@ namespace ghost_serial
         for (auto motor_id : ghost_v5_config::state_update_motor_config)
         {
             // Set Device Name from Config Enum ID
-            encoder_state_msg.encoders[motor_id].device_name = ghost_v5_config::device_names[motor_id];
+            encoder_state_msg.encoders[motor_id].device_name = ghost_v5_config::device_names.at(motor_id);
             encoder_state_msg.encoders[motor_id].device_id = motor_id;
 
             // Copy encoder angle
@@ -194,7 +195,7 @@ namespace ghost_serial
         for (auto sensor_id : ghost_v5_config::state_update_sensor_config)
         {
             // Set Device Name from Config Enum ID
-            encoder_state_msg.encoders[sensor_id].device_name = ghost_v5_config::device_names[sensor_id];
+            encoder_state_msg.encoders[sensor_id].device_name = ghost_v5_config::device_names.at(sensor_id);
             encoder_state_msg.encoders[sensor_id].device_id = sensor_id;
 
             // Copy encoder angle

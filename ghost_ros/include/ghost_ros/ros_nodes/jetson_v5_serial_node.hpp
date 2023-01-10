@@ -22,7 +22,7 @@ namespace ghost_serial
         JetsonV5SerialNode(std::string config_file);
         ~JetsonV5SerialNode();
 
-        void initSerialBlocking();
+        bool initSerialBlocking();
 
     private:
         // Process incoming/outgoing msgs w/ ROS
