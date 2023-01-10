@@ -50,7 +50,7 @@ namespace ghost_serial
 
         // Actuator Command Msg Subscriber
         actuator_command_sub_ = create_subscription<ghost_msgs::msg::RobotActuatorCommand>(
-            "v5_actuator_commands",
+            "v5/actuator_commands",
             10,
             std::bind(&JetsonV5SerialNode::actuatorCommandCallback, this, _1));
     }
