@@ -59,36 +59,34 @@ namespace ghost_ros
             actuator_cmd_msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);
             
             auto motor_cmd_msg = ghost_msgs::msg::V5MotorCommand{};
-            motor_cmd_msg.desired_velocity = msg->joystick_right_y*600.0;
 
             int motor_index = 0;
 
             if(msg->joystick_btn_a){
-                motor_index = ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR;
+                actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].desired_velocity = msg->joystick_right_y*600.0;
             }
             else if(msg->joystick_btn_b){
-                motor_index = ghost_v5_config::DRIVE_LEFT_BACK_MOTOR;
+                actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].desired_velocity = msg->joystick_right_y*600.0;
             }
             else if(msg->joystick_btn_x){
-                motor_index = ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR;
+                actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].desired_velocity = msg->joystick_right_y*600.0;
             }
             else if(msg->joystick_btn_y){
-                motor_index = ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR;
-            }
-            else if(msg->joystick_btn_up){
-                motor_index = ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR;
-            }
-            else if(msg->joystick_btn_down){
-                motor_index = ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR;
-            }
-            else if(msg->joystick_btn_left){
-                motor_index = ghost_v5_config::DRIVE_BACK_RIGHT_1_MOTOR;
+                actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].desired_velocity = msg->joystick_right_y*600.0;
             }
             else if(msg->joystick_btn_right){
-                motor_index = ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR;
+                actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_1_MOTOR].desired_velocity = msg->joystick_right_y*600.0;
+                actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR].desired_velocity = msg->joystick_right_y*600.0;
+            }
+            else if(msg->joystick_btn_up){
+            }
+            else if(msg->joystick_btn_left){
+                actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR].desired_velocity = msg->joystick_right_y*600.0;
+                actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_velocity = msg->joystick_right_y*600.0;
+            }
+            else if(msg->joystick_btn_down){
             }
             
-            actuator_cmd_msg.motor_commands[motor_index] = motor_cmd_msg;
             actuator_command_pub_->publish(actuator_cmd_msg);
         }
     }

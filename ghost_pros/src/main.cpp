@@ -57,19 +57,20 @@ void reader_loop(){
 		if(update_recieved){
 			v5_globals::last_cmd_time = pros::millis();
 		}
-		pros::c::task_delay_until(&loop_time, v5_globals::cmd_timeout_ms);
+		// Reader thread blocks waiting for data, so loop frequency must run faster than producer to avoid msg queue backup
+		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency/2);
 	}
 }
 
 void ghost_main_loop(){
 	// Send robot state over serial to coprocessor
 	v5_globals::serial_node_.writeV5StateUpdate();
-	
+
 	// Zero All Motors if disableds
 	if(pros::competition::is_disabled()){
 		zero_motors();
 	}
-	
+
 	update_motors();
 }
 
@@ -124,7 +125,7 @@ void disabled()
 	while (pros::competition::is_disabled())
 	{
 		ghost_main_loop();
-		pros::c::task_delay_until(&loop_time, 10);
+		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 }
 
@@ -156,7 +157,7 @@ void autonomous()
 	while (pros::competition::is_autonomous())
 	{
 		ghost_main_loop();
-		pros::c::task_delay_until(&loop_time, 10);
+		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 }
 

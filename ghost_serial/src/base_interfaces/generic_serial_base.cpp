@@ -14,16 +14,18 @@ namespace ghost_serial
      * @param config_file
      */
     GenericSerialBase::GenericSerialBase(
-        std::string msg_start_seq,
-        int msg_len,
-        bool use_checksum): max_msg_len_(msg_len),
-                            msg_start_seq_(msg_start_seq),
+        std::string write_msg_start_seq,
+        std::string read_msg_start_seq,
+        int read_msg_max_len,
+        bool use_checksum): read_msg_max_len_(read_msg_max_len),
+                            write_msg_start_seq(write_msg_start_seq),
+                            read_msg_start_seq(read_msg_start_seq),
                             use_checksum_(use_checksum),
                             port_open_(false)
     {
-        // Reads a maximum of (two msgs - one byte) at once
-        read_buffer_ = std::vector<unsigned char>(2 * (msg_len + use_checksum_ + 2) - 1);
-        msg_parser_ = std::make_unique<MsgParser>(msg_len, msg_start_seq_, use_checksum_);
+        // Reads a maximum of two msgs - one byte at once
+        read_buffer_ = std::vector<unsigned char>(2 * (read_msg_max_len + use_checksum_ + 2) - 1);
+        msg_parser_ = std::make_unique<MsgParser>(read_msg_max_len, read_msg_start_seq, use_checksum_);
     }
 
     /**
@@ -63,7 +65,7 @@ namespace ghost_serial
             try
             {
                 // Raw msg buffer (checksum will add one byte past original msg buffer length)
-                int raw_msg_len = num_bytes + use_checksum_;
+                int raw_msg_len = write_msg_start_seq.length() + num_bytes + use_checksum_;
                 unsigned char raw_msg_buffer[raw_msg_len] = {
                     0,
                 };
@@ -71,26 +73,22 @@ namespace ghost_serial
                 // Calculate and append checksum byte (if used)
                 if (use_checksum_)
                 {
-                    memcpy(raw_msg_buffer, buffer, num_bytes);
-                    raw_msg_buffer[num_bytes] = calculateChecksum(buffer, num_bytes);
+                    memcpy(raw_msg_buffer, write_msg_start_seq.c_str(), write_msg_start_seq.length());
+                    memcpy(raw_msg_buffer + write_msg_start_seq.length(), buffer, num_bytes);
+                    raw_msg_buffer[raw_msg_len - 1] = calculateChecksum(buffer, num_bytes);
                 }
                 else
                 {
-                    memcpy(raw_msg_buffer, buffer, raw_msg_len);
+                    memcpy(raw_msg_buffer, write_msg_start_seq.c_str(), write_msg_start_seq.length());
+                    memcpy(raw_msg_buffer + write_msg_start_seq.length(), buffer, num_bytes + use_checksum_);
                 }
 
-                // On V5 Brain, serial output is COBS encoded by default, otherwise, encode it (adding two bytes)
-                #if GHOST_DEVICE != GHOST_V5_BRAIN
-                    // COBS Encode (Adds leading byte and null delimiter byte)
-                    int write_buffer_len = raw_msg_len + 2;
-                    unsigned char write_buffer[write_buffer_len] = {
-                        0,
-                    };
-                    COBS::cobsEncode(raw_msg_buffer, raw_msg_len, write_buffer);
-                #else
-                    int write_buffer_len = raw_msg_len;
-                    unsigned char * write_buffer = raw_msg_buffer;
-                #endif
+                // COBS Encode (Adds leading byte and null delimiter byte)
+                int write_buffer_len = write_msg_start_seq.length() + raw_msg_len + 2;
+                unsigned char write_buffer[write_buffer_len] = {
+                    0,
+                };
+                COBS::cobsEncode(raw_msg_buffer, raw_msg_len, write_buffer);
                 
                 // Write to serial port
                 std::unique_lock<CROSSPLATFORM_MUTEX_T> write_lock(serial_io_mutex_);

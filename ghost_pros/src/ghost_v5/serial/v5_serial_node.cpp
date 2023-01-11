@@ -13,7 +13,9 @@ using ghost_v5_config::v5_sensor_id_enum;
 namespace ghost_v5
 {
 
-	V5SerialNode::V5SerialNode(std::string msg_start_seq, int msg_len, bool use_checksum) : max_msg_len_(msg_len)
+	V5SerialNode::V5SerialNode(
+		std::string read_msg_start_seq,
+		bool use_checksum)
 	{
 		// Calculate Msg Sizes based on robot configuration
 		actuator_command_msg_len_ = 2 * 4 * ghost_v5_config::actuator_command_config.size() + 1;
@@ -26,10 +28,13 @@ namespace ghost_v5
 		state_update_msg_len_ += ghost_v5_config::state_update_extra_byte_count + use_checksum;
 
 		// Array to store latest incoming msg
-		new_msg_ = std::vector<unsigned char>(max_msg_len_, 0);
+		new_msg_ = std::vector<unsigned char>(actuator_command_msg_len_, 0);
 
 		// Construct Serial Interface
-		serial_base_interface_ = std::make_unique<ghost_serial::V5SerialBase>(msg_start_seq, msg_len, use_checksum);
+		serial_base_interface_ = std::make_unique<ghost_serial::V5SerialBase>(
+			read_msg_start_seq,
+			actuator_command_msg_len_,
+			use_checksum);
 	}
 
 	V5SerialNode::~V5SerialNode()
@@ -38,12 +43,14 @@ namespace ghost_v5
 
 	void V5SerialNode::initSerial()
 	{
+		pros::c::serctl(SERCTL_DISABLE_COBS, NULL);
+		pros::c::serctl(SERCTL_BLKWRITE, NULL);
 	}
 
 	bool V5SerialNode::readV5ActuatorUpdate()
 	{
 		int msg_len;
-		bool msg_recieved = serial_base_interface_->readMsgFromSerial(new_msg_.data(), msg_len);
+		bool msg_recieved = serial_base_interface_->readMsgFromSerial(new_msg_.data(), actuator_command_msg_len_);
 		if (msg_recieved)
 		{
 			std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);

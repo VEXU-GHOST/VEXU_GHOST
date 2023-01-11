@@ -14,7 +14,9 @@ namespace ghost_v5{
     class V5SerialNode
     {
     public:
-        V5SerialNode(std::string msg_start_seq, int msg_len, bool use_checksum);
+        V5SerialNode(
+            std::string read_msg_start_seq,
+            bool use_checksum);
         ~V5SerialNode();
 
         void initSerial();
@@ -35,7 +37,7 @@ namespace ghost_v5{
         // Reader Thread
         std::unique_ptr<pros::Task> reader_thread_;
         std::atomic_bool reader_thread_init_;
-
+        
         // Msg Config
         int actuator_command_msg_len_;
         int state_update_msg_len_;

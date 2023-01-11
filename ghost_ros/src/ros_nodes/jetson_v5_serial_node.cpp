@@ -26,7 +26,7 @@ namespace ghost_serial
 
         int incoming_packet_len = state_update_msg_len_ +
                                   use_checksum +
-                                  config_yaml_["msg_start_seq"].as<std::string>().size() +
+                                  config_yaml_["read_msg_start_seq"].as<std::string>().size() +
                                   2; // Cobs Encoding adds two bytes
 
         RCLCPP_INFO(get_logger(), "Actuator Command Msg Length: %d", actuator_command_msg_len_);
@@ -39,7 +39,8 @@ namespace ghost_serial
         // Serial Interface
         serial_base_interface_ = std::make_shared<JetsonSerialBase>(
             config_yaml_["port_name"].as<std::string>(),
-            config_yaml_["msg_start_seq"].as<std::string>(),
+            config_yaml_["write_msg_start_seq"].as<std::string>(),
+            config_yaml_["read_msg_start_seq"].as<std::string>(),
             state_update_msg_len_,
             use_checksum);
 

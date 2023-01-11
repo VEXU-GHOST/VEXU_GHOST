@@ -11,6 +11,7 @@ namespace v5_globals
 {
     extern uint32_t last_cmd_time;
     extern uint32_t cmd_timeout_ms;
+    extern uint32_t loop_frequency;
     extern bool run;
 
     extern pros::Controller controller_main;

@@ -83,6 +83,7 @@ namespace v5_globals
 {
     uint32_t last_cmd_time = 0;
     uint32_t cmd_timeout_ms = 250;
+    uint32_t loop_frequency = 10;
     bool run = true;
     pros::Mutex actuator_update_lock;
 
@@ -126,7 +127,7 @@ namespace v5_globals
     };
 
     // Serial Port
-    ghost_v5::V5SerialNode serial_node_("sin", 85, true); // Becomes 109 w Checksum
+    ghost_v5::V5SerialNode serial_node_("msg", true); // Becomes 109 w Checksum
 } // namespace v5_globals
 
 /**

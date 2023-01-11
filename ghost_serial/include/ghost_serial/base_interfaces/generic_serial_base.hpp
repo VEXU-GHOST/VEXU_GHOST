@@ -24,8 +24,9 @@ namespace ghost_serial
     {
     public:
         GenericSerialBase(
-            std::string msg_start_seq,
-            int msg_len,
+            std::string write_msg_start_seq,
+            std::string read_msg_start_seq,
+            int read_msg_max_len,
             bool use_checksum = false);
 
         ~GenericSerialBase();
@@ -61,10 +62,11 @@ namespace ghost_serial
          */
         uint8_t calculateChecksum(const unsigned char buffer[], const int &num_bytes) const;
 
-        // Config params
-        std::string msg_start_seq_;
-        int max_msg_len_;
+        // Msg Config
+        std::string write_msg_start_seq;
+        std::string read_msg_start_seq;
         bool use_checksum_;
+        int read_msg_max_len_;
 
         // Serial Status
         CROSSPLATFORM_MUTEX_T serial_io_mutex_;
