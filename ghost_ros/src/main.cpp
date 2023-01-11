@@ -105,7 +105,7 @@ int main(int argc, char* argv[]){
         serial_interface_thread = std::make_unique<std::thread>(
             serial_interface_main,
             globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml",
-            false
+            verbose
         );
     }
 
