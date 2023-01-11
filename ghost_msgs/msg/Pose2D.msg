@@ -1,5 +1,6 @@
 # Header
 std_msgs/Header header
+uint32 msg_id
 
 # Robot Pose
 float32 x

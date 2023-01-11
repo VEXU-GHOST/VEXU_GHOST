@@ -15,7 +15,7 @@ namespace ghost_v5
 
 	V5SerialNode::V5SerialNode(
 		std::string read_msg_start_seq,
-		bool use_checksum)
+		bool use_checksum) : read_msg_id_{1}, write_msg_id_{1}
 	{
 		// Calculate Msg Sizes based on robot configuration
 		actuator_command_msg_len_ = 2 * 4 * ghost_v5_config::actuator_command_config.size() + 1;
@@ -23,9 +23,10 @@ namespace ghost_v5
 		{
 			actuator_command_msg_len_ += (pair.second) ? 4 : 0; // Add four bytes for each motor using position control
 		}
+		actuator_command_msg_len_ += ghost_v5_config::actuator_cmd_extra_byte_count;
 
-		state_update_msg_len_ = (ghost_v5_config::state_update_motor_config.size() + ghost_v5_config::state_update_sensor_config.size()) * 2 * 4;
-		state_update_msg_len_ += ghost_v5_config::state_update_extra_byte_count + use_checksum;
+		sensor_update_msg_len_ = (ghost_v5_config::sensor_update_motor_config.size() + ghost_v5_config::sensor_update_sensor_config.size()) * 2 * 4;
+		sensor_update_msg_len_ += ghost_v5_config::sensor_update_extra_byte_count;
 
 		// Array to store latest incoming msg
 		new_msg_ = std::vector<unsigned char>(actuator_command_msg_len_, 0);
@@ -102,18 +103,21 @@ namespace ghost_v5
 			v5_globals::adi_ports[i].set_value(digital_out_vector & 0x01);
 			digital_out_vector >>= 1;
 		}
+
+		// Update incoming msg id
+		memcpy(&read_msg_id_, buffer + 4 * buffer_32bit_index + 1, 4);
 	}
 
 	void V5SerialNode::writeV5StateUpdate()
 	{
 		int buffer_32bit_index = 0;
-		unsigned char state_update_msg_buffer[state_update_msg_len_] = {
+		unsigned char sensor_update_msg_buffer[sensor_update_msg_len_] = {
 			0,
 		};
 		uint32_t device_connected_vector = 0;
 
 		// Update V5 Motor Encoders
-		for (auto &motor_id : ghost_v5_config::state_update_motor_config)
+		for (auto &motor_id : ghost_v5_config::sensor_update_motor_config)
 		{
 			int position = v5_globals::motors[motor_id]->get_position();
 			float velocity = v5_globals::motors[motor_id]->getVelocityFilteredRPM();
@@ -128,18 +132,18 @@ namespace ghost_v5
 				device_connected_vector &= (~BITMASK_ARR_32BIT[motor_id]);
 			}
 
-			memcpy(state_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
-			memcpy(state_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
+			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
+			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
 		}
 
 		// Update V5 Sensors
-		for (auto &sensor_id : ghost_v5_config::state_update_sensor_config)
+		for (auto &sensor_id : ghost_v5_config::sensor_update_sensor_config)
 		{
 			int32_t position = v5_globals::encoders[sensor_id]->get_angle();
 			float velocity = v5_globals::encoders[sensor_id]->get_velocity();
 
-			memcpy(state_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
-			memcpy(state_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
+			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
+			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
 
 			if (position != PROS_ERR && velocity != PROS_ERR_F)
 			{
@@ -155,7 +159,7 @@ namespace ghost_v5
 		for (int i = 0; i < 4; i++)
 		{
 			float analog_input = ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[i])) / 127.0;
-			memcpy(state_update_msg_buffer + 4 * (buffer_32bit_index++), &analog_input, 4);
+			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &analog_input, 4);
 		}
 
 		// Poll joystick button channels
@@ -185,11 +189,13 @@ namespace ghost_v5
 		}
 		digital_outs += v5_globals::adi_ports[7].get_value();
 
-		memcpy(state_update_msg_buffer + 4 * buffer_32bit_index, &digital_states, 2);
-		memcpy(state_update_msg_buffer + 4 * (buffer_32bit_index) + 2, &digital_outs, 1);
-		memcpy(state_update_msg_buffer + 4 * (buffer_32bit_index) + 3, &device_connected_vector, 4);
+		memcpy(sensor_update_msg_buffer + 4 * buffer_32bit_index, &digital_states, 2);
+		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2, &digital_outs, 1);
+		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2 + 1, &device_connected_vector, 4);
+		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2 + 1 + 4, &write_msg_id_, 4);
 
-		serial_base_interface_->writeMsgToSerial(state_update_msg_buffer, state_update_msg_len_);
+		serial_base_interface_->writeMsgToSerial(sensor_update_msg_buffer, sensor_update_msg_len_);
+		write_msg_id_++;
 	}
 
 } // namespace ghost_v5

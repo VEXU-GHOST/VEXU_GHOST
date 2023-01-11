@@ -1,5 +1,6 @@
 # Header
 std_msgs/Header header
+uint32 msg_id
 
 # Joystick Channels
 float32 joystick_left_x       # 0 -> 1.0

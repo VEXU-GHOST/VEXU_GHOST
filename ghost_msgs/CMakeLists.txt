@@ -21,10 +21,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Pose2D.msg"
   "msg/v5_msgs/V5MotorCommand.msg"
   "msg/v5_msgs/V5EncoderState.msg"
-  "msg/v5_msgs/V5Joystick.msg"
-  "msg/v5_msgs/V5CompetitionState.msg"
-  "msg/RobotActuatorCommand.msg"
-  "msg/RobotStateUpdate.msg"
+  "msg/V5Joystick.msg"
+  "msg/V5CompetitionState.msg"
+  "msg/V5ActuatorCommand.msg"
+  "msg/V5SensorUpdate.msg"
   DEPENDENCIES std_msgs
  )
 ament_export_dependencies(rosidl_default_runtime)

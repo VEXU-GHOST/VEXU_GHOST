@@ -18,8 +18,10 @@ namespace ghost_v5_config{
         std::pair<v5_motor_id_enum, bool>(SHOOTER_RIGHT_MOTOR, false),
     };
 
+    const int actuator_cmd_extra_byte_count = 4; // Msg Sequence ID
+
     // Defines order to pack V5 -> Jetson serial msg
-    const std::vector<v5_motor_id_enum> state_update_motor_config = {
+    const std::vector<v5_motor_id_enum> sensor_update_motor_config = {
         DRIVE_LEFT_FRONT_MOTOR, 
         DRIVE_LEFT_BACK_MOTOR,
         DRIVE_RIGHT_FRONT_MOTOR,
@@ -33,14 +35,14 @@ namespace ghost_v5_config{
         SHOOTER_RIGHT_MOTOR,
     };
 
-    const std::vector<v5_sensor_id_enum> state_update_sensor_config = {
+    const std::vector<v5_sensor_id_enum> sensor_update_sensor_config = {
         STEERING_LEFT_ENCODER,
         STEERING_RIGHT_ENCODER,
         STEERING_BACK_ENCODER,
     };
 
-    // 4x int32 Joystick Channels, 2x bytes of btns/digital outs/competition modes, 4x Bytes of port status
-    const int state_update_extra_byte_count = 4*4 + 2 + 4;
+    // 4x int32 Joystick Channels, 2x bytes of btns/digital outs/competition modes, 4x Bytes of port status, Msg Sequence ID
+    const int sensor_update_extra_byte_count = 4*4 + 2 + 4 + 4;
 
     // Maps device enum to device_name
     const std::map<int, std::string> device_names{

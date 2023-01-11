@@ -40,7 +40,11 @@ namespace ghost_v5{
         
         // Msg Config
         int actuator_command_msg_len_;
-        int state_update_msg_len_;
+        int sensor_update_msg_len_;
+
+        // Msg IDs
+        uint32_t read_msg_id_;
+        uint32_t write_msg_id_;
     };
 } // namespace ghost_v5
 #endif // GHOST_V5__V5_SERIAL_NODE_HPP

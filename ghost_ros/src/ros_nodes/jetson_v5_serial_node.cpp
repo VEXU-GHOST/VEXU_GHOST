@@ -20,37 +20,38 @@ namespace ghost_serial
         {
             actuator_command_msg_len_ += (pair.second) ? 4 : 0; // Add four bytes for each motor using position control
         }
+        actuator_command_msg_len_ += ghost_v5_config::actuator_cmd_extra_byte_count;
 
-        state_update_msg_len_ = (ghost_v5_config::state_update_motor_config.size() + ghost_v5_config::state_update_sensor_config.size()) * 2 * 4;
-        state_update_msg_len_ += ghost_v5_config::state_update_extra_byte_count + use_checksum; // 4x int32 Joystick Channels, 2x bytes of btns/digital outs/competition modes, 1 byte checksum
+        sensor_update_msg_len_ = (ghost_v5_config::sensor_update_motor_config.size() + ghost_v5_config::sensor_update_sensor_config.size()) * 2 * 4;
+        sensor_update_msg_len_ += ghost_v5_config::sensor_update_extra_byte_count;
 
-        int incoming_packet_len = state_update_msg_len_ +
+        int incoming_packet_len = sensor_update_msg_len_ +
                                   use_checksum +
                                   config_yaml_["read_msg_start_seq"].as<std::string>().size() +
                                   2; // Cobs Encoding adds two bytes
 
         RCLCPP_INFO(get_logger(), "Actuator Command Msg Length: %d", actuator_command_msg_len_);
-        RCLCPP_INFO(get_logger(), "State Update Msg Length: %d", state_update_msg_len_);
+        RCLCPP_INFO(get_logger(), "State Update Msg Length: %d", sensor_update_msg_len_);
         RCLCPP_INFO(get_logger(), "Incoming Packet Length: %d", incoming_packet_len);
 
         // Array to store latest incoming msg
-        robot_state_msg_ = std::vector<unsigned char>(state_update_msg_len_, 0);
+        sensor_update_msg_ = std::vector<unsigned char>(sensor_update_msg_len_, 0);
 
         // Serial Interface
         serial_base_interface_ = std::make_shared<JetsonSerialBase>(
             config_yaml_["port_name"].as<std::string>(),
             config_yaml_["write_msg_start_seq"].as<std::string>(),
             config_yaml_["read_msg_start_seq"].as<std::string>(),
-            state_update_msg_len_,
+            sensor_update_msg_len_,
             use_checksum);
 
         // Sensor Update Msg Publisher
-        state_update_pub_ = create_publisher<ghost_msgs::msg::RobotStateUpdate>("v5/state_update", 10);
+        sensor_update_pub_ = create_publisher<ghost_msgs::msg::V5SensorUpdate>("v5/sensor_update", 10);
         competition_state_pub_ = create_publisher<ghost_msgs::msg::V5CompetitionState>("v5/competition_state", 10);
         joystick_pub_ = create_publisher<ghost_msgs::msg::V5Joystick>("v5/joystick", 10);
 
         // Actuator Command Msg Subscriber
-        actuator_command_sub_ = create_subscription<ghost_msgs::msg::RobotActuatorCommand>(
+        actuator_command_sub_ = create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
             "v5/actuator_commands",
             10,
             std::bind(&JetsonV5SerialNode::actuatorCommandCallback, this, _1));
@@ -92,11 +93,11 @@ namespace ghost_serial
             try
             {
                 int msg_len;
-                bool msg_found = serial_base_interface_->readMsgFromSerial(robot_state_msg_.data(), msg_len);
+                bool msg_found = serial_base_interface_->readMsgFromSerial(sensor_update_msg_.data(), msg_len);
 
                 if (msg_found)
                 {
-                    publishRobotStateUpdate(robot_state_msg_.data());
+                    publishV5SensorUpdate(sensor_update_msg_.data());
                 }
             }
             catch (std::exception &e)
@@ -108,10 +109,8 @@ namespace ghost_serial
         RCLCPP_INFO(get_logger(), "Ending Serial Reader Thread");
     }
 
-    void JetsonV5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::RobotActuatorCommand::SharedPtr msg)
+    void JetsonV5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)
     {
-        // RCLCPP_INFO(get_logger(), "Actuator Command");
-
         // Pack into single msg
         int buffer_index = 0;
         unsigned char msg_buffer[actuator_command_msg_len_] = {
@@ -137,46 +136,27 @@ namespace ghost_serial
         }
         digital_out_byte += msg->digital_out_vector[8];
         memcpy(msg_buffer + actuator_command_msg_len_, &digital_out_byte, 1);
+        memcpy(msg_buffer + actuator_command_msg_len_ + 1, &(msg->msg_id), 4);
 
         serial_base_interface_->writeMsgToSerial(msg_buffer, actuator_command_msg_len_);
     }
 
-    /*
-        ------ Packet Format ------
-        H99x Bytes
-
-        6x Drive Motor Positions 	(24x Bytes)
-        1x Turret Motor Position 	(4x Bytes)
-        3x Encoder Angles 			(12x Bytes)
-        4x Joystick Channels 		(16x Bytes)
-
-        6x Drive Motor Velocities 	(24x Bytes)
-        1x Turret Motor Velocity 	(4x Bytes)
-        3x Encoder Velocities 		(12x Bytes)
-
-        12x Joystick Buttons 		(1.5 Bytes / 12 bits)
-        Enabled 					(1x bit)
-        Autonomous 					(1x bit)
-        Competition Connected 		(1x bit)
-        Empty Bit					(1x bit)
-        Digital Outs				(1x Byte / 8 bits)
-        */
-    void JetsonV5SerialNode::publishRobotStateUpdate(unsigned char buffer[])
+    void JetsonV5SerialNode::publishV5SensorUpdate(unsigned char buffer[])
     {
-        // RCLCPP_INFO(get_logger(), "Sensor Update");
+        auto curr_ros_time = get_clock()->now();
 
-        auto encoder_state_msg = ghost_msgs::msg::RobotStateUpdate{};
-        encoder_state_msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);
+        auto encoder_state_msg = ghost_msgs::msg::V5SensorUpdate{};
+        encoder_state_msg.header.stamp = curr_ros_time - rclcpp::Duration(7.36ms);
 
         auto joystick_msg = ghost_msgs::msg::V5Joystick{};
-        joystick_msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);
+        joystick_msg.header.stamp = curr_ros_time - rclcpp::Duration(7.36ms);
 
         auto competition_state_msg = ghost_msgs::msg::V5CompetitionState{};
-        competition_state_msg.header.stamp = get_clock()->now() - rclcpp::Duration(7.36ms);
+        competition_state_msg.header.stamp = curr_ros_time - rclcpp::Duration(7.36ms);
 
         // Copy sensor device data to ros msg
         int buffer_index = 0;
-        for (auto motor_id : ghost_v5_config::state_update_motor_config)
+        for (auto motor_id : ghost_v5_config::sensor_update_motor_config)
         {
             // Set Device Name from Config Enum ID
             encoder_state_msg.encoders[motor_id].device_name = ghost_v5_config::device_names.at(motor_id);
@@ -193,7 +173,7 @@ namespace ghost_serial
             encoder_state_msg.encoders[motor_id].current_velocity = velocity;
         }
 
-        for (auto sensor_id : ghost_v5_config::state_update_sensor_config)
+        for (auto sensor_id : ghost_v5_config::sensor_update_sensor_config)
         {
             // Set Device Name from Config Enum ID
             encoder_state_msg.encoders[sensor_id].device_name = ghost_v5_config::device_names.at(sensor_id);
@@ -253,16 +233,25 @@ namespace ghost_serial
         uint32_t device_connected_bit_vector = 0;
         memcpy(&device_connected_bit_vector, buffer + 4 * buffer_index + 3, 4);
         
-        for (auto motor_id : ghost_v5_config::state_update_motor_config)
+        for (auto motor_id : ghost_v5_config::sensor_update_motor_config)
         {
             encoder_state_msg.encoders[motor_id].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[motor_id];
         }
-        for (auto sensor_id : ghost_v5_config::state_update_sensor_config)
+        for (auto sensor_id : ghost_v5_config::sensor_update_sensor_config)
         {
             encoder_state_msg.encoders[sensor_id].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[sensor_id];
         }
 
-        state_update_pub_->publish(encoder_state_msg);
+        // Update Msg Sequence ID
+        uint32_t msg_id;
+        memcpy(&msg_id, buffer + 4 * buffer_index + 3 + 4, 4);
+
+        encoder_state_msg.msg_id      = msg_id;
+        joystick_msg.msg_id           = msg_id;
+        competition_state_msg.msg_id  = msg_id;
+
+        // Publish update
+        sensor_update_pub_->publish(encoder_state_msg);
         competition_state_pub_->publish(competition_state_msg);
         joystick_pub_->publish(joystick_msg);
     }

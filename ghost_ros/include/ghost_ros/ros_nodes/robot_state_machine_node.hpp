@@ -8,7 +8,7 @@
 #include "ghost_msgs/msg/v5_competition_state.hpp"
 #include "ghost_msgs/msg/v5_joystick.hpp"
 #include "ghost_msgs/msg/pose2_d.hpp"
-#include "ghost_msgs/msg/robot_actuator_command.hpp"
+#include "ghost_msgs/msg/v5_actuator_command.hpp"
 
 namespace ghost_ros
 {
@@ -25,12 +25,10 @@ namespace ghost_ros
         RobotStateMachineNode(std::string config_file);
 
     private:
-        void competitionStateCallback(const ghost_msgs::msg::V5CompetitionState::SharedPtr msg);
-        void v5JoystickCallback(const ghost_msgs::msg::V5Joystick::SharedPtr msg);
-        void robotPoseCallback(const ghost_msgs::msg::Pose2D::SharedPtr msg);
-
+        void updateController();
+        void teleop();
         // Publishers
-        rclcpp::Publisher<ghost_msgs::msg::RobotActuatorCommand>::SharedPtr actuator_command_pub_;
+        rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_pub_;
 
         // Subscriptions
         rclcpp::Subscription<ghost_msgs::msg::V5CompetitionState>::SharedPtr competition_state_sub_;
@@ -39,14 +37,16 @@ namespace ghost_ros
 
         // Robot States
         robot_state_e curr_robot_state_;
-        float curr_x_;
-        float curr_y_;
-        float curr_theta_;
+        std::chrono::time_point<std::chrono::system_clock> auton_start_time_;
 
-        // Last Command
-        float des_x_vel_;
-        float des_y_vel_;
-        float des_theta_vel_;
+        // Latest Msgs
+        ghost_msgs::msg::V5Joystick::SharedPtr curr_joystick_msg_;
+        ghost_msgs::msg::V5CompetitionState::SharedPtr curr_comp_state_msg_;
+        ghost_msgs::msg::Pose2D::SharedPtr curr_pose_msg_;
+
+        uint32_t curr_pose_msg_id_;
+        uint32_t curr_joystick_msg_id_;
+        uint32_t curr_comp_state_msg_id_;
     };
 
 } // namespace ghost_ros

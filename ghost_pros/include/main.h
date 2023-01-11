@@ -82,7 +82,7 @@ ghost_v5::GhostMotorConfig shooter_motor_config = {
 namespace v5_globals
 {
     uint32_t last_cmd_time = 0;
-    uint32_t cmd_timeout_ms = 250;
+    uint32_t cmd_timeout_ms = 50;
     uint32_t loop_frequency = 10;
     bool run = true;
     pros::Mutex actuator_update_lock;
