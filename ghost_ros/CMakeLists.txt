@@ -15,7 +15,8 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 # Compile time flags to add debug symbols and disable code optimization (for using debugger)
-set(CMAKE_BUILD_TYPE "DEBUG")
+# set(CMAKE_BUILD_TYPE "DEBUG")
+set(CMAKE_BUILD_TYPE "RELEASE")
 
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0 -DGHOST_DEBUG_VERBOSE)

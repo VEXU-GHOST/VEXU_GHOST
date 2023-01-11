@@ -15,7 +15,7 @@ fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --packages-up-to ghost_ros
+    colcon build --packages-skip ghost_sim
 fi
 
 source install/setup.bash
