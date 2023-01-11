@@ -20,6 +20,14 @@ def generate_launch_description():
         )
     )
 
+    ghost_ros_main_node = Node(
+        package='ghost_ros',
+        executable='ghost_ros_main',
+        name='ghost_ros_main',
+        output='screen',
+    )
+
     return LaunchDescription([
         rviz_launch_description,
+        ghost_ros_main_node
     ])

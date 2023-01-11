@@ -18,7 +18,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "ghost_ros/globals/globals.hpp"
-#include "ghost_ros/ros_nodes/particle_filter_node.hpp"
+#include "ghost_ros/ros_nodes/ghost_estimator_node.hpp"
 #include "ghost_ros/ros_nodes/jetson_v5_serial_node.hpp"
 #include "ghost_ros/ros_nodes/robot_state_machine_node.hpp"
 
@@ -41,16 +41,16 @@ void SignalHandler(int) {
     globals::run = false;
 }
 
-// Particle Filter Main Thread
-void particle_filter_main(std::string config_file, bool verbose){
+// Ghost Estimator Main Thread
+void ghost_estimator_main(std::string config_file, bool verbose){
     if(verbose){
-        std::cout << "[START] Particle Filter Thread" << std::endl;
+        std::cout << "[START] Ghost Estimator Thread" << std::endl;
     }
 
-    rclcpp::spin(std::make_shared<particle_filter::ParticleFilterNode>(config_file));
+    rclcpp::spin(std::make_shared<ghost_ros::GhostEstimatorNode>(config_file));
     
     if(verbose){
-        std::cout << "[END] Particle Filter Thread" << std::endl;
+        std::cout << "[END] Ghost Estimator Thread" << std::endl;
     }
 }
 
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]){
     bool verbose = main_config["verbose"].as<bool>();
 
     std::unique_ptr<std::thread> serial_interface_thread;
-    std::unique_ptr<std::thread> particle_filter_thread;
+    std::unique_ptr<std::thread> ghost_estimator_thread;
     std::unique_ptr<std::thread> controller_thread;
 
     if(!main_config["simulated"].as<bool>()){
@@ -115,11 +115,12 @@ int main(int argc, char* argv[]){
         verbose
     );
 
-    // // Initialize modules
-    // particle_filter_thread = std::make_unique<particle_filter_thread>(
-    //     particle_filter_main,
-    //     globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"
-    //     );
+    // Initialize modules
+    ghost_estimator_thread = std::make_unique<std::thread>(
+        ghost_estimator_main,
+        globals::repo_base_dir + "ghost_ros/config/ghost_estimator_config.yaml",
+        verbose
+        );
 
     while(globals::run){
         std::this_thread::sleep_for(100ms);
@@ -134,7 +135,7 @@ int main(int argc, char* argv[]){
     if(!main_config["simulated"].as<bool>()){
         serial_interface_thread->join();
     }
-    // particle_filter_thread.join();
+    ghost_estimator_thread->join();
     controller_thread->join();
 
     return 0;

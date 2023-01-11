@@ -113,28 +113,29 @@ install(
   INCLUDES DESTINATION include
   )
 
-# Particle Filter Node
-add_library(particle_filter_node SHARED src/ros_nodes/particle_filter_node.cpp)
-ament_target_dependencies(particle_filter_node
+# Ghost Estimator Node
+add_library(ghost_estimator_node SHARED src/ros_nodes/ghost_estimator_node.cpp)
+ament_target_dependencies(ghost_estimator_node
   rclcpp
   tf2_msgs
   sensor_msgs
   visualization_msgs
+  ghost_msgs
   ghost_estimation
   Eigen3
 )
-target_link_libraries(particle_filter_node
+target_link_libraries(ghost_estimator_node
   ghost_estimation::amrl_shared_lib
   ghost_estimation::vector_map
   ghost_estimation::particle_filter
   yaml-cpp
 )
-target_include_directories(particle_filter_node
+target_include_directories(ghost_estimator_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(
-  TARGETS particle_filter_node
+  TARGETS ghost_estimator_node
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -213,7 +214,7 @@ ament_target_dependencies(ghost_ros_main
 )
 target_link_libraries(ghost_ros_main
   yaml-cpp
-  particle_filter_node
+  ghost_estimator_node
   jetson_v5_serial_node
   robot_state_machine_node
 )

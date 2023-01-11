@@ -52,54 +52,54 @@
     </joint>
 
     <!-- Steering Modules -->
-    <xacro:steering_macro id="1"></xacro:steering_macro>
-    <xacro:steering_macro id="2"></xacro:steering_macro>
-    <xacro:steering_macro id="3"></xacro:steering_macro>
+    <xacro:steering_macro id="left"></xacro:steering_macro>
+    <xacro:steering_macro id="right"></xacro:steering_macro>
+    <xacro:steering_macro id="back"></xacro:steering_macro>
 
     <!-- Wheel Modules -->
-    <xacro:wheel_macro id="1" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="2" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="3" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="left" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="right" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
 
     <!-- Joints -->
-    <joint name="steering_1" type="continuous">
+    <joint name="steering_left" type="continuous">
         <parent link="base_link"/>
-        <child link="mod_1"/>
-        <origin xyz="${l_wheel/2} ${-l_wheel*0.866} 0" rpy="0 0 0"/>
-        <axis xyz="0 0 1"/>
-    </joint>
-
-    <joint name="steering_2" type="continuous">
-        <parent link="base_link"/>
-        <child link="mod_2"/>
+        <child link="mod_left"/>
         <origin xyz="${l_wheel/2} ${l_wheel*0.866} 0" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="steering_3" type="continuous">
+    <joint name="steering_right" type="continuous">
         <parent link="base_link"/>
-        <child link="mod_3"/>
+        <child link="mod_right"/>
+        <origin xyz="${l_wheel/2} ${-l_wheel*0.866} 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="steering_back" type="continuous">
+        <parent link="base_link"/>
+        <child link="mod_back"/>
         <origin xyz="${-l_wheel} 0 0" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="driveshaft_1" type="continuous">
-        <parent link="mod_1"/>
-        <child link="wheel_1"/>
+    <joint name="driveshaft_left" type="continuous">
+        <parent link="mod_left"/>
+        <child link="wheel_left"/>
         <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="driveshaft_2" type="continuous">
-        <parent link="mod_2"/>
-        <child link="wheel_2"/>
+    <joint name="driveshaft_right" type="continuous">
+        <parent link="mod_right"/>
+        <child link="wheel_right"/>
         <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="driveshaft_3" type="continuous">
-        <parent link="mod_3"/>
-        <child link="wheel_3"/>
+    <joint name="driveshaft_back" type="continuous">
+        <parent link="mod_back"/>
+        <child link="wheel_back"/>
         <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>

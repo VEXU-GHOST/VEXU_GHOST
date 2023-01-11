@@ -18,7 +18,7 @@ find_package(std_msgs REQUIRED)
 
 # Custom Msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Pose2D.msg"
+  "msg/GhostRobotState.msg"
   "msg/v5_msgs/V5MotorCommand.msg"
   "msg/v5_msgs/V5EncoderState.msg"
   "msg/V5Joystick.msg"

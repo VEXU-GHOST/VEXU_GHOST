@@ -57,10 +57,10 @@ namespace ghost_ros
                 updateController();
             });
 
-        robot_pose_sub_ = create_subscription<ghost_msgs::msg::Pose2D>(
+        robot_pose_sub_ = create_subscription<ghost_msgs::msg::GhostRobotState>(
             "estimation/robot_pose",
             10,
-            [this](const ghost_msgs::msg::Pose2D::SharedPtr msg)
+            [this](const ghost_msgs::msg::GhostRobotState::SharedPtr msg)
             {
                 curr_pose_msg_id_ = msg->msg_id;
                 curr_pose_msg_ = msg;

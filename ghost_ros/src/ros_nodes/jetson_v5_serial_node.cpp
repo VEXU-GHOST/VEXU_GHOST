@@ -163,7 +163,7 @@ namespace ghost_serial
             encoder_state_msg.encoders[motor_id].device_id = motor_id;
 
             // Copy encoder angle
-            uint32_t angle;
+            float angle;
             memcpy(&angle, buffer + 4 * (buffer_index++), 4);
             encoder_state_msg.encoders[motor_id].current_angle = angle;
 
@@ -180,7 +180,7 @@ namespace ghost_serial
             encoder_state_msg.encoders[sensor_id].device_id = sensor_id;
 
             // Copy encoder angle
-            uint32_t angle;
+            float angle;
             memcpy(&angle, buffer + 4 * (buffer_index++), 4);
             encoder_state_msg.encoders[sensor_id].current_angle = angle;
 

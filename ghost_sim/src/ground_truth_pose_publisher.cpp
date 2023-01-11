@@ -16,7 +16,7 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "gazebo_msgs/msg/model_states.hpp"
 
-#include "ghost_msgs/msg/pose2_d.hpp"
+#include "ghost_msgs/msg/ghost_robot_state.hpp"
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -34,7 +34,7 @@ public:
             10
             );
 
-        robot_pose_pub_ = this->create_publisher<ghost_msgs::msg::Pose2D>(
+        robot_pose_pub_ = this->create_publisher<ghost_msgs::msg::GhostRobotState>(
             "/tf",
             10
             );
@@ -52,15 +52,15 @@ public:
     }
 
     void publishRobotPose(const float x, const float y, const float theta){
-        auto pose2d_msg = ghost_msgs::msg::Pose2D{};
-        pose2d_msg.header.stamp = get_clock()->now();
-        pose2d_msg.header.frame_id = "world";
+        auto ghost_robot_state_msg = ghost_msgs::msg::GhostRobotState{};
+        ghost_robot_state_msg.header.stamp = get_clock()->now();
+        ghost_robot_state_msg.header.frame_id = "world";
 
-        pose2d_msg.x = x;
-        pose2d_msg.y = y;
-        pose2d_msg.theta = theta;
+        ghost_robot_state_msg.x = x;
+        ghost_robot_state_msg.y = y;
+        ghost_robot_state_msg.theta = theta;
 
-        robot_pose_pub_->publish(pose2d_msg);
+        robot_pose_pub_->publish(ghost_robot_state_msg);
     }
 
     void publishWorldTransform(
@@ -122,7 +122,7 @@ public:
 private:
     // Publishers
     rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr world_tf_pub_;
-    rclcpp::Publisher<ghost_msgs::msg::Pose2D>::SharedPtr robot_pose_pub_;
+    rclcpp::Publisher<ghost_msgs::msg::GhostRobotState>::SharedPtr robot_pose_pub_;
     
     // Subscriptions
     rclcpp::Subscription<gazebo_msgs::msg::ModelStates>::SharedPtr model_states_sub_;

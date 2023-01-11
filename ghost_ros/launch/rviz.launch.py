@@ -4,9 +4,10 @@ import launch_ros
 import os
 
 def generate_launch_description():
-    pkg_share = launch_ros.substitutions.FindPackageShare(package='ghost_ros').find('ghost_ros')
-    default_model_path = os.path.join(pkg_share, 'urdf/ghost1.urdf')
-    default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
+    description_pkg_share = launch_ros.substitutions.FindPackageShare(package='ghost_description').find('ghost_description')
+    ros_pkg_share = launch_ros.substitutions.FindPackageShare(package='ghost_ros').find('ghost_ros')
+    default_model_path = os.path.join(description_pkg_share, 'urdf/ghost1.urdf')
+    default_rviz_config_path = os.path.join(ros_pkg_share, 'rviz/urdf_config.rviz')
 
     robot_state_publisher_node = launch_ros.actions.Node(
         name = "robot_state_publisher",
@@ -19,6 +20,11 @@ def generate_launch_description():
         executable='joint_state_publisher',
         name='joint_state_publisher',
     )
+    joint_state_publisher_gui_node = launch_ros.actions.Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        name='joint_state_publisher_gui',
+    )
     rviz_node = launch_ros.actions.Node(
         package='rviz2',
         executable='rviz2',
@@ -28,7 +34,8 @@ def generate_launch_description():
     )
 
     return launch.LaunchDescription([
-        joint_state_publisher_node,
+        # joint_state_publisher_gui_node,
+        # joint_state_publisher_node,
         robot_state_publisher_node,
         rviz_node
     ])

@@ -119,7 +119,7 @@ namespace ghost_v5
 		// Update V5 Motor Encoders
 		for (auto &motor_id : ghost_v5_config::sensor_update_motor_config)
 		{
-			int position = v5_globals::motors[motor_id]->get_position();
+			float position = v5_globals::motors[motor_id]->get_position();
 			float velocity = v5_globals::motors[motor_id]->getVelocityFilteredRPM();
 
 			// If device is connected (and recieving valid sensor updates), set corresponding bit in connected vector
@@ -139,8 +139,8 @@ namespace ghost_v5
 		// Update V5 Sensors
 		for (auto &sensor_id : ghost_v5_config::sensor_update_sensor_config)
 		{
-			int32_t position = v5_globals::encoders[sensor_id]->get_angle();
-			float velocity = v5_globals::encoders[sensor_id]->get_velocity();
+			float position = ((float) v5_globals::encoders[sensor_id]->get_angle()) / 100.0;
+			float velocity = ((float) v5_globals::encoders[sensor_id]->get_velocity()) * 60.0 / 100.0 / 360.0; // Centidegrees -> RPM
 
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
