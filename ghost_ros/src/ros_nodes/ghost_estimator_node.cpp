@@ -69,6 +69,7 @@ namespace ghost_ros
     // Publishers
     cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
     map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", 10);
+    debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("debug_viz", 10);
     world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
     joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 
@@ -164,7 +165,9 @@ namespace ghost_ros
     joint_state_pub_->publish(joint_state_msg);
 
     // Calculate ICR
-    /*
+
+    auto viz_msg = visualization_msgs::msg::MarkerArray{};
+
     std::vector<Eigen::Vector3f> h_space_icr_points{0};
 
     Eigen::Vector2f left_encoder_dir(
@@ -180,6 +183,72 @@ namespace ghost_ros
     geometry::Line2f left_encoder_vector(left_wheel_link_, left_encoder_dir + left_wheel_link_);
     geometry::Line2f right_encoder_vector(right_wheel_link_, right_encoder_dir + right_wheel_link_);
     geometry::Line2f back_encoder_vector(back_wheel_link_, back_encoder_dir + back_wheel_link_);
+
+    //
+    auto marker_msg_1 = visualization_msgs::msg::Marker{};
+    marker_msg_1.header.frame_id = "base_link";
+    marker_msg_1.header.stamp = this->get_clock()->now();
+    marker_msg_1.id = 0;
+    marker_msg_1.action = 0;
+    marker_msg_1.type = 0;
+
+    geometry_msgs::msg::Point p10{};
+    p10.x = left_wheel_link_.x();
+    p10.y = left_wheel_link_.y();
+    p10.z = 1;
+
+    geometry_msgs::msg::Point p11{};
+    p11.x = (left_encoder_dir + left_wheel_link_).x();
+    p11.y = (left_encoder_dir + left_wheel_link_).y();
+    p11.z = 1;
+
+    marker_msg_1.points.push_back(p11);
+    marker_msg_1.points.push_back(p10);
+
+    ///
+    auto marker_msg_2 = visualization_msgs::msg::Marker{};
+    marker_msg_2.header.frame_id = "base_link";
+    marker_msg_2.header.stamp = this->get_clock()->now();
+    marker_msg_2.id = 1;
+    marker_msg_2.action = 0;
+    marker_msg_2.type = 0;
+
+    geometry_msgs::msg::Point p20{};
+    p20.x = right_wheel_link_.x();
+    p20.y = right_wheel_link_.y();
+    p20.z = 1;
+
+    geometry_msgs::msg::Point p21{};
+    p21.x = (right_encoder_dir + right_wheel_link_).x();
+    p21.y = (right_encoder_dir + right_wheel_link_).y();
+    p21.z = 1;
+
+    marker_msg_2.points.push_back(p21);
+    marker_msg_2.points.push_back(p20);
+
+    auto marker_msg_3 = visualization_msgs::msg::Marker{};
+    marker_msg_3.header.frame_id = "base_link";
+    marker_msg_3.header.stamp = this->get_clock()->now();
+    marker_msg_3.id = 3;
+    marker_msg_3.action = 0;
+    marker_msg_3.type = 0;
+
+    geometry_msgs::msg::Point p30{};
+    p30.x = back_wheel_link_.x();
+    p30.y = back_wheel_link_.y();
+    p30.z = 1;
+
+    geometry_msgs::msg::Point p31{};
+    p31.x = (back_encoder_dir + back_wheel_link_).x();
+    p31.y = (back_encoder_dir + back_wheel_link_).y();
+    p31.z = 1;
+
+    marker_msg_3.points.push_back(p31);
+    marker_msg_3.points.push_back(p30);
+
+    viz_msg.markers.push_back(marker_msg_1);
+    viz_msg.markers.push_back(marker_msg_2);
+    viz_msg.markers.push_back(marker_msg_3);
 
     auto line_pairs = std::vector<std::pair<geometry::Line2f, geometry::Line2f>>{
       std::pair<geometry::Line2f, geometry::Line2f>(left_encoder_vector, right_encoder_vector),
@@ -204,9 +273,13 @@ namespace ghost_ros
         h_space_icr_points.push_back(intersection_3d/intersection_3d.norm());
       }
   }
-  */
+
+  Eigen::Vector2f icr_estimation = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2])/3;
+
+  debug_viz_pub_->publish(viz_msg);
+
   PublishWorldTransform();
-  PublishVisualization();
+  // PublishVisualization();
 }
 
 void GhostEstimatorNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
