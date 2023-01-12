@@ -86,7 +86,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: System Default
         Value: /scan
       Value: true
   Enabled: true

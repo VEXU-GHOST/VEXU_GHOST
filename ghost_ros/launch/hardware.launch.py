@@ -10,14 +10,11 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     swerve_share_dir = get_package_share_directory("ghost_ros")
 
-    rviz_launch_description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                swerve_share_dir,
-                "launch",
-                "rviz.launch.py"
-            )
-        )
+    rplidar_node = Node(
+        package='rplidar_ros2',
+        executable='rplidar_scan_publisher',
+        name='rplidar_scan_publisher',
+        parameters=[{"frame_id": "lidar_link"}]
     )
 
     ghost_ros_main_node = Node(
@@ -28,6 +25,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        rviz_launch_description,
-        ghost_ros_main_node
+        ghost_ros_main_node,
+        rplidar_node,
     ])
