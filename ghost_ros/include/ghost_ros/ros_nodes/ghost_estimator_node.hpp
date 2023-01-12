@@ -36,7 +36,7 @@ namespace ghost_ros{
 class GhostEstimatorNode : public rclcpp::Node {
   public:
 
-    GhostEstimatorNode(std::string config_file);
+    GhostEstimatorNode(std::string config_file, bool use_sim_time);
 
     // Topic callback functions
     void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
@@ -68,7 +68,7 @@ class GhostEstimatorNode : public rclcpp::Node {
     sensor_msgs::msg::LaserScan last_laser_msg_;
 
     // Configuration
-    YAML::Node config_yaml;
+    YAML::Node config_yaml_;
     particle_filter::ParticleFilterConfig config_params;
 
     bool first_map_load_;

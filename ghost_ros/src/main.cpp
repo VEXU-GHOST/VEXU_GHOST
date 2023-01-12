@@ -42,12 +42,12 @@ void SignalHandler(int) {
 }
 
 // Ghost Estimator Main Thread
-void ghost_estimator_main(std::string config_file, bool verbose){
+void ghost_estimator_main(std::string config_file, bool use_sim_time, bool verbose){
     if(verbose){
         std::cout << "[START] Ghost Estimator Thread" << std::endl;
     }
 
-    rclcpp::spin(std::make_shared<ghost_ros::GhostEstimatorNode>(config_file));
+    rclcpp::spin(std::make_shared<ghost_ros::GhostEstimatorNode>(config_file, use_sim_time));
     
     if(verbose){
         std::cout << "[END] Ghost Estimator Thread" << std::endl;
@@ -119,6 +119,7 @@ int main(int argc, char* argv[]){
     ghost_estimator_thread = std::make_unique<std::thread>(
         ghost_estimator_main,
         globals::repo_base_dir + "ghost_ros/config/ghost_estimator_config.yaml",
+        main_config["simulated"].as<bool>(),
         verbose
         );
 
