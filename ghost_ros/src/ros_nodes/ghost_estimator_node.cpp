@@ -274,7 +274,7 @@ namespace ghost_ros
       }
   }
 
-  Eigen::Vector2f icr_estimation = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2])/3;
+  Eigen::Vector3f icr_estimation = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2])/3;
 
   debug_viz_pub_->publish(viz_msg);
 
