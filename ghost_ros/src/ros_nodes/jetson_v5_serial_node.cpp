@@ -13,6 +13,7 @@ namespace ghost_serial
         config_yaml_ = YAML::LoadFile(config_file);
         using_reader_thread_ = config_yaml_["using_reader_thread"].as<bool>();
         bool use_checksum = config_yaml_["use_checksum"].as<bool>();
+        verbose_ = config_yaml_["verbose"].as<bool>();
 
         // Calculate Msg Sizes based on robot configuration
         actuator_command_msg_len_ = 2 * 4 * ghost_v5_config::actuator_command_config.size() + 1;
@@ -43,7 +44,8 @@ namespace ghost_serial
             config_yaml_["write_msg_start_seq"].as<std::string>(),
             config_yaml_["read_msg_start_seq"].as<std::string>(),
             sensor_update_msg_len_,
-            use_checksum);
+            use_checksum,
+            verbose_);
 
         // Sensor Update Msg Publisher
         sensor_update_pub_ = create_publisher<ghost_msgs::msg::V5SensorUpdate>("v5/sensor_update", 10);
@@ -111,6 +113,10 @@ namespace ghost_serial
 
     void JetsonV5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)
     {
+        if(verbose_){
+            RCLCPP_INFO(get_logger(), "Received Actuator Command");
+        }
+
         // Pack into single msg
         int buffer_index = 0;
         unsigned char msg_buffer[actuator_command_msg_len_] = {
@@ -143,6 +149,10 @@ namespace ghost_serial
 
     void JetsonV5SerialNode::publishV5SensorUpdate(unsigned char buffer[])
     {
+        if(verbose_){
+            RCLCPP_INFO(get_logger(), "Publishing Sensor Update");
+        }
+
         auto curr_ros_time = get_clock()->now();
 
         auto encoder_state_msg = ghost_msgs::msg::V5SensorUpdate{};
@@ -249,6 +259,10 @@ namespace ghost_serial
         encoder_state_msg.msg_id      = msg_id;
         joystick_msg.msg_id           = msg_id;
         competition_state_msg.msg_id  = msg_id;
+
+        if(verbose_){
+            RCLCPP_INFO(get_logger(), "Going to publish?");
+        }
 
         // Publish update
         sensor_update_pub_->publish(encoder_state_msg);

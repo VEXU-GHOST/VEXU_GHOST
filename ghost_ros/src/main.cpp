@@ -41,53 +41,6 @@ void SignalHandler(int) {
     globals::run = false;
 }
 
-// Ghost Estimator Main Thread
-void ghost_estimator_main(std::string config_file, bool use_sim_time, bool verbose){
-    if(verbose){
-        std::cout << "[START] Ghost Estimator Thread" << std::endl;
-    }
-
-    rclcpp::spin(std::make_shared<ghost_ros::GhostEstimatorNode>(config_file, use_sim_time));
-    
-    if(verbose){
-        std::cout << "[END] Ghost Estimator Thread" << std::endl;
-    }
-}
-
-void serial_interface_main(std::string config_file, bool verbose)
-{
-    if(verbose){
-        std::cout << "[START] Serial Writer Thread" << std::endl;
-    }
-    auto serial_node = std::make_shared<ghost_serial::JetsonV5SerialNode>(config_file);
-    
-    // Wait for serial port, then start reader thread
-    bool success = serial_node->initSerialBlocking();
-
-    if(success){
-        // Process ROS Callbacks until exit
-        rclcpp::spin(serial_node);
-    }
-    if(verbose){
-        std::cout << "[END] Serial Writer Thread" << std::endl;
-    }
-}
-
-void controller_main(std::string config_file, bool verbose){
-    if(verbose){
-        std::cout << "[START] State Machine Thread" << std::endl;
-    }
-
-    auto state_machine_node = std::make_shared<ghost_ros::RobotStateMachineNode>(config_file);
-    
-    // Process ROS Callbacks until exit
-    rclcpp::spin(state_machine_node);
-    
-    if(verbose){
-        std::cout << "[END] State Machine Thread" << std::endl;
-    }
-}
-
 int main(int argc, char* argv[]){
     signal(SIGINT, SignalHandler);
     rclcpp::init(argc, argv);
@@ -95,49 +48,33 @@ int main(int argc, char* argv[]){
     globals::program_start_time = std::chrono::system_clock::now();    
     globals::repo_base_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/";
     auto main_config = YAML::LoadFile(globals::repo_base_dir + "ghost_ros/config/main_config.yaml");
-    bool verbose = main_config["verbose"].as<bool>();
 
-    std::unique_ptr<std::thread> serial_interface_thread;
-    std::unique_ptr<std::thread> ghost_estimator_thread;
-    std::unique_ptr<std::thread> controller_thread;
+    // Define Nodes and MultiThreadedExecutor
+    auto serial_node = std::make_shared<ghost_serial::JetsonV5SerialNode>(
+        globals::repo_base_dir + "ghost_ros/config/ghost_serial_config.yaml");
 
-    if(!main_config["simulated"].as<bool>()){
-        serial_interface_thread = std::make_unique<std::thread>(
-            serial_interface_main,
-            globals::repo_base_dir + "ghost_ros/config/ghost_serial.yaml",
-            verbose
-        );
-    }
-
-    controller_thread = std::make_unique<std::thread>(
-        controller_main,
-        globals::repo_base_dir + "ghost_ros/config/ghost_controller.yaml",
-        verbose
-    );
-
-    // Initialize modules
-    ghost_estimator_thread = std::make_unique<std::thread>(
-        ghost_estimator_main,
+    auto ghost_estimator_node = std::make_shared<ghost_ros::GhostEstimatorNode>(
         globals::repo_base_dir + "ghost_ros/config/ghost_estimator_config.yaml",
-        main_config["simulated"].as<bool>(),
-        verbose
+        main_config["simulated"].as<bool>()
         );
 
-    while(globals::run){
-        std::this_thread::sleep_for(100ms);
-    }
+    auto state_machine_node = std::make_shared<ghost_ros::RobotStateMachineNode>(
+        globals::repo_base_dir + "ghost_ros/config/ghost_state_machine_config.yaml"
+        );
     
-    if(rclcpp::ok()){
-        std::cout << "RCLCPP Shutdown" << std::endl;
-        rclcpp::shutdown();
+    rclcpp::executors::MultiThreadedExecutor executor;
+
+    // Wait for serial port, then start reader thread
+    if(!main_config["simulated"].as<bool>()){
+        serial_node->initSerialBlocking();
+        executor.add_node(serial_node);
     }
 
-    // Cleanup threads
-    if(!main_config["simulated"].as<bool>()){
-        serial_interface_thread->join();
-    }
-    ghost_estimator_thread->join();
-    controller_thread->join();
+    // Start ROS Executor
+    executor.add_node(ghost_estimator_node);
+    executor.add_node(state_machine_node);
+
+    executor.spin();
 
     return 0;
 }

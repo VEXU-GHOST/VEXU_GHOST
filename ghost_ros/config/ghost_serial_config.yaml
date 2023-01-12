@@ -3,5 +3,5 @@ backup_port_name: "/dev/ttyACM2"
 write_msg_start_seq: "msg"
 read_msg_start_seq: "sout"
 use_checksum: true
-verbose: true
+verbose: false
 using_reader_thread: true

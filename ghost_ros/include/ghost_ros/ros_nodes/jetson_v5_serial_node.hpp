@@ -36,6 +36,7 @@ namespace ghost_serial
         YAML::Node config_yaml_;
         int max_msg_len_;
         bool using_reader_thread_;
+        bool verbose_;
 
         // ROS Topics
         rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;

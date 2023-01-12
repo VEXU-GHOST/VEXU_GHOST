@@ -28,7 +28,8 @@ namespace ghost_serial
             std::string write_msg_start_seq,
             std::string read_msg_start_seq,
             int read_msg_max_len,
-            bool use_checksum = false);
+            bool use_checksum = false,
+            bool verbose = false);
 
         ~JetsonSerialBase();
         
@@ -76,6 +77,7 @@ namespace ghost_serial
 
         // Config params
         std::string port_name_;
+        bool verbose_;
 
         // Poll Config Strictire
         struct pollfd pollfd_read_;

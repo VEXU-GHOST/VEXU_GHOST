@@ -17,12 +17,14 @@ namespace ghost_serial
         std::string write_msg_start_seq,
         std::string read_msg_start_seq,
         int read_msg_max_len,
-        bool use_checksum): GenericSerialBase(
+        bool use_checksum,
+        bool verbose): GenericSerialBase(
                                 write_msg_start_seq,
                                 read_msg_start_seq,
                                 read_msg_max_len,
                                 use_checksum),
-                            port_name_(port_name)
+                        port_name_(port_name),
+                        verbose_{verbose}
     {
     }
 
@@ -162,6 +164,9 @@ namespace ghost_serial
                     // Extract any msgs from serial stream and return if msg is found
                     if (num_bytes_read > 0)
                     {
+                        if(verbose_){
+                            std::cout << "Read " << num_bytes_read << " bytes" << std::endl;
+                        }
                         return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer, parsed_msg_len);
                     }
                     else if (num_bytes_read == -1)
