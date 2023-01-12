@@ -3,7 +3,7 @@
 
     <xacro:include filename="$(find ghost_description)/urdf/swerve_macros.xacro"/>
 
-    <xacro:property name="l_wheel" value="0.2286"/> <!-- 9" center to wheel modules-->
+    <xacro:property name="dist_to_wheel" value="0.2286"/> <!-- 9" center to wheel modules-->
     <xacro:property name="r_wheel" value="0.034925"/> <!-- 1.375" wheel radius-->
     <xacro:property name="width_wheel" value="0.0254"/> <!-- 1" wheel width-->
     <xacro:property name="com_radius" value="0.02"/>
@@ -13,9 +13,11 @@
         <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-            <sphere radius="${com_radius}"/>
+            <box size="0.0127 0.29 0.0254"/>
         </geometry>
-        <material name="white"/>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
         </visual>
 
         <!--Inertia estimated for solid cylinder of radius 9" and height 3" with mass 7kg-->
@@ -42,12 +44,69 @@
                 iyy="0.00001" iyz="0.0"
                 izz="0.00001"/>
         </inertial>
-    </link>    
+    </link>
 
     <joint name="base_footprint_joint" type="fixed">
         <parent link="base_link"/>
         <child link="base_footprint"/>
-        <origin xyz="0 0 ${- r_wheel}" rpy="0 0 0"/>
+        <origin xyz="0 0 -0.052585" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="front_bar">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="0.0127 0.35 0.0254"/>
+        </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+        </visual>
+    </link>    
+
+    <joint name="front_bar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="front_bar"/>
+        <origin xyz="0.175 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="left_bar">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="0.0127 0.35 0.0254"/>
+        </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+        </visual>
+    </link>
+
+    <joint name="left_bar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="left_bar"/>
+        <origin xyz="-0.05 0.125 0" rpy="0 0 -1.0471"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="right_bar">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="0.0127 0.35 0.0254"/>
+        </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+    </visual>
+    </link>
+
+    <joint name="right_bar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="right_bar"/>
+        <origin xyz="-0.05 -0.125 0" rpy="0 0 1.0471"/>
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -65,42 +124,42 @@
     <joint name="steering_left" type="continuous">
         <parent link="base_link"/>
         <child link="mod_left"/>
-        <origin xyz="${l_wheel/2} ${l_wheel*0.866} 0" rpy="0 0 0"/>
+        <origin xyz="0.126365 0.180975 0.0812" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="steering_right" type="continuous">
         <parent link="base_link"/>
         <child link="mod_right"/>
-        <origin xyz="${l_wheel/2} ${-l_wheel*0.866} 0" rpy="0 0 0"/>
+        <origin xyz="0.126365 -0.180975 0.0812" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="steering_back" type="continuous">
         <parent link="base_link"/>
         <child link="mod_back"/>
-        <origin xyz="${-l_wheel} 0 0" rpy="0 0 0"/>
+        <origin xyz="-0.187 0.0 0.0812" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="driveshaft_left" type="continuous">
         <parent link="mod_left"/>
         <child link="wheel_left"/>
-        <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
+        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="driveshaft_right" type="continuous">
         <parent link="mod_right"/>
         <child link="wheel_right"/>
-        <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
+        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="driveshaft_back" type="continuous">
         <parent link="mod_back"/>
         <child link="wheel_back"/>
-        <origin xyz="0 0 0" rpy="${90*d2r} 0 0"/>
+        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -123,10 +182,10 @@
     <joint name="lidar_joint" type="fixed">
         <parent link="base_link"/>
         <child link="lidar_link"/>
-        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+        <origin xyz="-0.19015 0 0.2145" rpy="0 0 0"/>
     </joint>
 
-    <link name="camera_base_link">
+    <!-- <link name="camera_base_link">
         <inertial>
             <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
             <mass value="0.125"/>
@@ -137,7 +196,7 @@
     <joint name="camera_base_joint" type="fixed">
         <parent link="base_link"/>
         <child link="camera_base_link"/>
-        <origin xyz="${l_wheel/2} 0 0.33" rpy="0 0 0"/>
+        <origin xyz="${dist_to_wheel/2} 0 0.33" rpy="0 0 0"/>
     </joint>
 
     <link name="camera_view_link">
@@ -152,5 +211,5 @@
         <parent link="camera_base_link"/>
         <child link="camera_view_link"/>
         <origin xyz="0 0 0" rpy="0 0.7853975 0"/>
-    </joint>
+    </joint> -->
 </robot>
