@@ -11,7 +11,7 @@ using std::placeholders::_1;
 namespace ghost_ros
 {
 
-    RobotStateMachineNode::RobotStateMachineNode(std::string config_file) : 
+    RobotStateMachineNode::RobotStateMachineNode() : 
         rclcpp::Node("ghost_state_machine"),
         curr_robot_state_{robot_state_e::DISABLED},
         curr_pose_msg_id_{0},
@@ -129,3 +129,10 @@ namespace ghost_ros
     }
 
 } // namespace ghost_ros
+
+int main(int argc, char* argv[]){
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<ghost_ros::RobotStateMachineNode>());
+  rclcpp::shutdown();
+  return 0;
+}

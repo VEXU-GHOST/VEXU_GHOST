@@ -38,7 +38,7 @@ namespace ghost_ros{
 class GhostEstimatorNode : public rclcpp::Node {
   public:
 
-    GhostEstimatorNode(std::string config_file, bool use_sim_time);
+    GhostEstimatorNode();
 
     // Topic callback functions
     void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);

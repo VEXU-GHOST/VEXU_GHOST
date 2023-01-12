@@ -22,7 +22,7 @@ namespace ghost_ros
     class RobotStateMachineNode : public rclcpp::Node
     {
     public:
-        RobotStateMachineNode(std::string config_file);
+        RobotStateMachineNode();
 
     private:
         void updateController();

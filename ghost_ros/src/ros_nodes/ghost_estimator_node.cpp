@@ -41,13 +41,13 @@ using std::placeholders::_1;
 namespace ghost_ros
 {
 
-  GhostEstimatorNode::GhostEstimatorNode(std::string config_file, bool use_sim_time) : Node("ghost_estimator_node")
+  GhostEstimatorNode::GhostEstimatorNode() : Node("ghost_estimator_node")
   {
     // Loads configuration from YAML
-    LoadConfiguration(config_file);
+    LoadConfiguration("config_file");
 
     // Use simulated time in ROS
-    rclcpp::Parameter use_sim_time_param("use_sim_time", use_sim_time);
+    rclcpp::Parameter use_sim_time_param("use_sim_time", false);
     this->set_parameter(use_sim_time_param);
 
     // Subscriptions
@@ -84,41 +84,41 @@ namespace ghost_ros
 
   void GhostEstimatorNode::LoadConfiguration(std::string filename)
   {
-    config_yaml_ = YAML::LoadFile(filename);
+    // config_yaml_ = YAML::LoadFile(filename);
 
-    // Odometry
-    auto center_to_wheel_dist = config_yaml_["odometry"]["center_to_wheel_dist"].as<float>();
-    left_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, 0.866 * center_to_wheel_dist);
-    right_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, -0.866 * center_to_wheel_dist);
-    back_wheel_link_ = Eigen::Vector2f(-center_to_wheel_dist, 0.0);
+    // // Odometry
+    // auto center_to_wheel_dist = config_yaml_["odometry"]["center_to_wheel_dist"].as<float>();
+    // left_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, 0.866 * center_to_wheel_dist);
+    // right_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, -0.866 * center_to_wheel_dist);
+    // back_wheel_link_ = Eigen::Vector2f(-center_to_wheel_dist, 0.0);
 
-    // Particle Filter
+    // // Particle Filter
     config_params = ParticleFilterConfig();
-    config_params.map = globals::repo_base_dir + config_yaml_["particle_filter"]["map"].as<std::string>();
-    config_params.init_x = config_yaml_["particle_filter"]["init_x"].as<float>();
-    config_params.init_y = config_yaml_["particle_filter"]["init_y"].as<float>();
-    config_params.init_r = config_yaml_["particle_filter"]["init_r"].as<float>();
-    config_params.num_particles = config_yaml_["particle_filter"]["num_particles"].as<int>();
-    config_params.resample_frequency = config_yaml_["particle_filter"]["resample_frequency"].as<int>();
-    config_params.init_x_sigma = config_yaml_["particle_filter"]["init_x_sigma"].as<float>();
-    config_params.init_y_sigma = config_yaml_["particle_filter"]["init_y_sigma"].as<float>();
-    config_params.init_r_sigma = config_yaml_["particle_filter"]["init_r_sigma"].as<float>();
-    config_params.k1 = config_yaml_["particle_filter"]["k1"].as<float>();
-    config_params.k2 = config_yaml_["particle_filter"]["k2"].as<float>();
-    config_params.k3 = config_yaml_["particle_filter"]["k3"].as<float>();
-    config_params.k4 = config_yaml_["particle_filter"]["k4"].as<float>();
-    config_params.k5 = config_yaml_["particle_filter"]["k5"].as<float>();
-    config_params.k6 = config_yaml_["particle_filter"]["k6"].as<float>();
-    config_params.laser_offset = config_yaml_["particle_filter"]["laser_offset"].as<float>();
-    config_params.min_update_dist = config_yaml_["particle_filter"]["min_update_dist"].as<float>();
-    config_params.min_update_angle = config_yaml_["particle_filter"]["min_update_angle"].as<float>();
-    config_params.sigma_observation = config_yaml_["particle_filter"]["sigma_observation"].as<double>();
-    config_params.gamma = config_yaml_["particle_filter"]["gamma"].as<double>();
-    config_params.dist_short = config_yaml_["particle_filter"]["dist_short"].as<double>();
-    config_params.dist_long = config_yaml_["particle_filter"]["dist_long"].as<double>();
-    config_params.range_min = config_yaml_["particle_filter"]["range_min"].as<double>();
-    config_params.range_max = config_yaml_["particle_filter"]["range_max"].as<double>();
-    config_params.resize_factor = config_yaml_["particle_filter"]["resize_factor"].as<double>();
+    // config_params.map = globals::repo_base_dir + config_yaml_["particle_filter"]["map"].as<std::string>();
+    // config_params.init_x = config_yaml_["particle_filter"]["init_x"].as<float>();
+    // config_params.init_y = config_yaml_["particle_filter"]["init_y"].as<float>();
+    // config_params.init_r = config_yaml_["particle_filter"]["init_r"].as<float>();
+    // config_params.num_particles = config_yaml_["particle_filter"]["num_particles"].as<int>();
+    // config_params.resample_frequency = config_yaml_["particle_filter"]["resample_frequency"].as<int>();
+    // config_params.init_x_sigma = config_yaml_["particle_filter"]["init_x_sigma"].as<float>();
+    // config_params.init_y_sigma = config_yaml_["particle_filter"]["init_y_sigma"].as<float>();
+    // config_params.init_r_sigma = config_yaml_["particle_filter"]["init_r_sigma"].as<float>();
+    // config_params.k1 = config_yaml_["particle_filter"]["k1"].as<float>();
+    // config_params.k2 = config_yaml_["particle_filter"]["k2"].as<float>();
+    // config_params.k3 = config_yaml_["particle_filter"]["k3"].as<float>();
+    // config_params.k4 = config_yaml_["particle_filter"]["k4"].as<float>();
+    // config_params.k5 = config_yaml_["particle_filter"]["k5"].as<float>();
+    // config_params.k6 = config_yaml_["particle_filter"]["k6"].as<float>();
+    // config_params.laser_offset = config_yaml_["particle_filter"]["laser_offset"].as<float>();
+    // config_params.min_update_dist = config_yaml_["particle_filter"]["min_update_dist"].as<float>();
+    // config_params.min_update_angle = config_yaml_["particle_filter"]["min_update_angle"].as<float>();
+    // config_params.sigma_observation = config_yaml_["particle_filter"]["sigma_observation"].as<double>();
+    // config_params.gamma = config_yaml_["particle_filter"]["gamma"].as<double>();
+    // config_params.dist_short = config_yaml_["particle_filter"]["dist_short"].as<double>();
+    // config_params.dist_long = config_yaml_["particle_filter"]["dist_long"].as<double>();
+    // config_params.range_min = config_yaml_["particle_filter"]["range_min"].as<double>();
+    // config_params.range_max = config_yaml_["particle_filter"]["range_max"].as<double>();
+    // config_params.resize_factor = config_yaml_["particle_filter"]["resize_factor"].as<double>();
   }
 
   void GhostEstimatorNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
@@ -404,3 +404,10 @@ void GhostEstimatorNode::PublishVisualization()
 }
 
 } // namespace ghost_ros
+
+int main(int argc, char* argv[]){
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<ghost_ros::GhostEstimatorNode>());
+  rclcpp::shutdown();
+  return 0;
+}

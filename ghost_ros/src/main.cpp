@@ -67,12 +67,11 @@ int main(int argc, char* argv[]){
     // Wait for serial port, then start reader thread
     if(!main_config["simulated"].as<bool>()){
         serial_node->initSerialBlocking();
-        executor.add_node(serial_node);
     }
 
     // Start ROS Executor
-    executor.add_node(ghost_estimator_node);
-    executor.add_node(state_machine_node);
+    // executor.add_node(ghost_estimator_node);
+    // executor.add_node(state_machine_node);
 
     executor.spin();
 

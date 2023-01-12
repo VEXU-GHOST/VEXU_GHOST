@@ -17,11 +17,29 @@ def generate_launch_description():
         parameters=[{"frame_id": "lidar_link"}]
     )
 
-    ghost_ros_main_node = Node(
+    serial_node = Node(
         package='ghost_ros',
-        executable='ghost_ros_main',
-        name='ghost_ros_main',
+        executable='jetson_v5_serial_node',
+        name='ghost_serial_node',
         output='screen',
+        parameters=[os.path.join(swerve_share_dir, "config", "ghost_serial_config.yaml")]
+    )
+
+    estimator_node = Node(
+        package='ghost_ros',
+        executable='ghost_estimator_node',
+        name='ghost_estimator_node',
+        output='screen',
+        parameters=[os.path.join(swerve_share_dir, "config", "ghost_estimator_config.yaml")]
+
+    )
+
+    state_machine_node = Node(
+        package='ghost_ros',
+        executable='robot_state_machine_node',
+        name='ghost_state_machine_node',
+        output='screen',
+        parameters=[os.path.join(swerve_share_dir, "config", "ghost_state_machine_config.yaml")]
     )
 
     return LaunchDescription([

@@ -83,8 +83,10 @@ install(TARGETS
   basic_swerve_controller
   DESTINATION lib/${PROJECT_NAME})
 
-# Jetson Serial Node
-add_library(jetson_v5_serial_node SHARED
+############################
+#### Jetson Serial Node ####
+############################
+add_executable(jetson_v5_serial_node
   src/ros_nodes/jetson_v5_serial_node.cpp
 )
 ament_target_dependencies(jetson_v5_serial_node
@@ -103,19 +105,16 @@ target_include_directories(jetson_v5_serial_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_export_targets(jetson_v5_serial_node HAS_LIBRARY_TARGET)
-ament_export_dependencies(ghost_msgs)
-install(
-  TARGETS jetson_v5_serial_node
-  EXPORT jetson_v5_serial_node
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-  )
+install(TARGETS
+  jetson_v5_serial_node
+  DESTINATION lib/${PROJECT_NAME})
 
-# Ghost Estimator Node
-add_library(ghost_estimator_node SHARED src/ros_nodes/ghost_estimator_node.cpp)
+##############################
+#### Ghost Estimator Node ####
+##############################
+add_executable(ghost_estimator_node
+  src/ros_nodes/ghost_estimator_node.cpp
+)
 ament_target_dependencies(ghost_estimator_node
   rclcpp
   tf2_msgs
@@ -135,16 +134,16 @@ target_include_directories(ghost_estimator_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-install(
-  TARGETS ghost_estimator_node
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
+install(TARGETS
+  ghost_estimator_node
+  DESTINATION lib/${PROJECT_NAME})
 
-# Robot State Machine Node
-add_library(robot_state_machine_node SHARED src/ros_nodes/robot_state_machine_node.cpp)
+##################################
+#### Robot State Machine Node ####
+##################################
+add_executable(robot_state_machine_node
+  src/ros_nodes/robot_state_machine_node.cpp
+)
 ament_target_dependencies(robot_state_machine_node
   rclcpp
   ghost_msgs
@@ -158,13 +157,9 @@ target_include_directories(robot_state_machine_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-install(
-  TARGETS robot_state_machine_node
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
+install(TARGETS
+robot_state_machine_node
+DESTINATION lib/${PROJECT_NAME})
 
 #####################
 ##### Examples ######
@@ -201,27 +196,6 @@ target_link_libraries(yaml_load_example
 
 install(TARGETS
   yaml_load_example
-  DESTINATION lib/${PROJECT_NAME})
-
-########################
-#### GHOST ROS Main ####
-########################
-add_executable(ghost_ros_main
-  src/main.cpp
-)
-ament_target_dependencies(ghost_ros_main
-  rclcpp
-  ghost_serial
-)
-target_link_libraries(ghost_ros_main
-  yaml-cpp
-  ghost_estimator_node
-  jetson_v5_serial_node
-  robot_state_machine_node
-)
-
-install(TARGETS
-  ghost_ros_main
   DESTINATION lib/${PROJECT_NAME})
 
 #################

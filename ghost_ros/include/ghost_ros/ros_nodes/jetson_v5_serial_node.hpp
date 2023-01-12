@@ -13,13 +13,13 @@
 
 #include "ghost_serial/base_interfaces/jetson_serial_base.hpp"
 
-namespace ghost_serial
+namespace ghost_ros
 {
 
     class JetsonV5SerialNode : public rclcpp::Node
     {
     public:
-        JetsonV5SerialNode(std::string config_file);
+        JetsonV5SerialNode();
         ~JetsonV5SerialNode();
 
         bool initSerialBlocking();
@@ -45,7 +45,7 @@ namespace ghost_serial
         rclcpp::Publisher<ghost_msgs::msg::V5CompetitionState>::SharedPtr competition_state_pub_;
 
         // Serial Interface
-        std::shared_ptr<JetsonSerialBase> serial_base_interface_;
+        std::shared_ptr<ghost_serial::JetsonSerialBase> serial_base_interface_;
         std::vector<unsigned char> sensor_update_msg_;
 
         // Reader Thread

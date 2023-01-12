@@ -4,16 +4,19 @@
 
 using std::placeholders::_1;
 using namespace std::literals::chrono_literals;
-namespace ghost_serial
+namespace ghost_ros
 {
 
-    JetsonV5SerialNode::JetsonV5SerialNode(std::string config_file) : Node("ghost_serial_node"), reader_thread_init_(false)
+    JetsonV5SerialNode::JetsonV5SerialNode() : Node("ghost_serial_node"), reader_thread_init_(false)
     {
+            // Use simulated time in ROS
+    // rclcpp::Parameter use_sim_time_param("use_sim_time", use_sim_time);
+    // this->set_parameter(use_sim_time_param);
+
         // Load config file
-        config_yaml_ = YAML::LoadFile(config_file);
-        using_reader_thread_ = config_yaml_["using_reader_thread"].as<bool>();
-        bool use_checksum = config_yaml_["use_checksum"].as<bool>();
-        verbose_ = config_yaml_["verbose"].as<bool>();
+        using_reader_thread_ = true; //config_yaml_["using_reader_thread"].as<bool>();
+        bool use_checksum = true; //config_yaml_["use_checksum"].as<bool>();
+        verbose_ = false; //config_yaml_["verbose"].as<bool>();
 
         // Calculate Msg Sizes based on robot configuration
         actuator_command_msg_len_ = 2 * 4 * ghost_v5_config::actuator_command_config.size() + 1;
@@ -39,10 +42,10 @@ namespace ghost_serial
         sensor_update_msg_ = std::vector<unsigned char>(sensor_update_msg_len_, 0);
 
         // Serial Interface
-        serial_base_interface_ = std::make_shared<JetsonSerialBase>(
-            config_yaml_["port_name"].as<std::string>(),
-            config_yaml_["write_msg_start_seq"].as<std::string>(),
-            config_yaml_["read_msg_start_seq"].as<std::string>(),
+        serial_base_interface_ = std::make_shared<ghost_serial::JetsonSerialBase>(
+            "/dev/ttyACM1", //config_yaml_["port_name"].as<std::string>(),
+            "msg", //config_yaml_["write_msg_start_seq"].as<std::string>(),
+            "sout", //config_yaml_["read_msg_start_seq"].as<std::string>(),
             sensor_update_msg_len_,
             use_checksum,
             verbose_);
@@ -270,4 +273,15 @@ namespace ghost_serial
         joystick_pub_->publish(joystick_msg);
     }
 
-} // namespace ghost_serial
+} // namespace ghost_ros
+
+int main(int argc, char* argv[]){
+    rclcpp::init(argc, argv);
+
+    auto serial_node = std::make_shared<ghost_ros::JetsonV5SerialNode>();
+    serial_node->initSerialBlocking();
+    
+    rclcpp::spin(serial_node);
+    rclcpp::shutdown();
+    return 0;
+}

@@ -1,7 +1,9 @@
-port_name: "/dev/ttyACM1"
-backup_port_name: "/dev/ttyACM2"
-write_msg_start_seq: "msg"
-read_msg_start_seq: "sout"
-use_checksum: true
-verbose: false
-using_reader_thread: true
+jetson_v5_serial_node:
+  ros__parameters:
+    port_name: "/dev/ttyACM1"
+    backup_port_name: "/dev/ttyACM2"
+    write_msg_start_seq: "msg"
+    read_msg_start_seq: "sout"
+    use_checksum: true
+    verbose: false
+    using_reader_thread: true
