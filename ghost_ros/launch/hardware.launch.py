@@ -43,6 +43,8 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        ghost_ros_main_node,
+        serial_node,
+        estimator_node,
+        state_machine_node,
         rplidar_node,
     ])

@@ -9,14 +9,27 @@ namespace ghost_ros
 
     JetsonV5SerialNode::JetsonV5SerialNode() : Node("ghost_serial_node"), reader_thread_init_(false)
     {
-            // Use simulated time in ROS
-    // rclcpp::Parameter use_sim_time_param("use_sim_time", use_sim_time);
-    // this->set_parameter(use_sim_time_param);
+        // Load ROS Params
+        declare_parameter("using_reader_thread", true);
+        using_reader_thread_ = get_parameter("using_reader_thread").as_bool();
+        
+        declare_parameter("use_checksum", true);
+        bool use_checksum = get_parameter("use_checksum").as_bool();
+        
+        declare_parameter("verbose", true);
+        verbose_ = get_parameter("verbose").as_bool();
+        
+        declare_parameter("read_msg_start_seq", "sout");
+        std::string read_msg_start_seq = get_parameter("read_msg_start_seq").as_string();
+        
+        declare_parameter("write_msg_start_seq", "msg");
+        std::string write_msg_start_seq = get_parameter("write_msg_start_seq").as_string();
+        
+        declare_parameter("port_name", "/dev/ttyACM1");
+        std::string port_name = get_parameter("port_name").as_string();
 
-        // Load config file
-        using_reader_thread_ = true; //config_yaml_["using_reader_thread"].as<bool>();
-        bool use_checksum = true; //config_yaml_["use_checksum"].as<bool>();
-        verbose_ = false; //config_yaml_["verbose"].as<bool>();
+        declare_parameter("backup_port_name", "/dev/ttyACM2");
+        std::string backup_port_name = get_parameter("backup_port_name").as_string();
 
         // Calculate Msg Sizes based on robot configuration
         actuator_command_msg_len_ = 2 * 4 * ghost_v5_config::actuator_command_config.size() + 1;
@@ -31,7 +44,7 @@ namespace ghost_ros
 
         int incoming_packet_len = sensor_update_msg_len_ +
                                   use_checksum +
-                                  config_yaml_["read_msg_start_seq"].as<std::string>().size() +
+                                  read_msg_start_seq.size() + 
                                   2; // Cobs Encoding adds two bytes
 
         RCLCPP_INFO(get_logger(), "Actuator Command Msg Length: %d", actuator_command_msg_len_);
@@ -43,9 +56,9 @@ namespace ghost_ros
 
         // Serial Interface
         serial_base_interface_ = std::make_shared<ghost_serial::JetsonSerialBase>(
-            "/dev/ttyACM1", //config_yaml_["port_name"].as<std::string>(),
-            "msg", //config_yaml_["write_msg_start_seq"].as<std::string>(),
-            "sout", //config_yaml_["read_msg_start_seq"].as<std::string>(),
+            port_name,
+            write_msg_start_seq,
+            read_msg_start_seq,
             sensor_update_msg_len_,
             use_checksum,
             verbose_);

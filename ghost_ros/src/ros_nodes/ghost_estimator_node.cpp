@@ -43,8 +43,8 @@ namespace ghost_ros
 
   GhostEstimatorNode::GhostEstimatorNode() : Node("ghost_estimator_node")
   {
-    // Loads configuration from YAML
-    LoadConfiguration("config_file");
+    // Loads configuration from ROS Parameters
+    LoadROSParams();
 
     // Use simulated time in ROS
     rclcpp::Parameter use_sim_time_param("use_sim_time", false);
@@ -82,43 +82,73 @@ namespace ghost_ros
     particle_filter_.Initialize(config_params.map, init_loc, config_params.init_r);
   }
 
-  void GhostEstimatorNode::LoadConfiguration(std::string filename)
+  void GhostEstimatorNode::LoadROSParams()
   {
-    // config_yaml_ = YAML::LoadFile(filename);
+    // Odometry
+    declare_parameter("odometry.center_to_wheel_dist", 0.0);
+    auto center_to_wheel_dist = get_parameter("odometry.center_to_wheel_dist").as_double();
 
-    // // Odometry
-    // auto center_to_wheel_dist = config_yaml_["odometry"]["center_to_wheel_dist"].as<float>();
-    // left_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, 0.866 * center_to_wheel_dist);
-    // right_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, -0.866 * center_to_wheel_dist);
-    // back_wheel_link_ = Eigen::Vector2f(-center_to_wheel_dist, 0.0);
+    left_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, 0.866 * center_to_wheel_dist);
+    right_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, -0.866 * center_to_wheel_dist);
+    back_wheel_link_ = Eigen::Vector2f(-center_to_wheel_dist, 0.0);
 
     // // Particle Filter
     config_params = ParticleFilterConfig();
-    // config_params.map = globals::repo_base_dir + config_yaml_["particle_filter"]["map"].as<std::string>();
-    // config_params.init_x = config_yaml_["particle_filter"]["init_x"].as<float>();
-    // config_params.init_y = config_yaml_["particle_filter"]["init_y"].as<float>();
-    // config_params.init_r = config_yaml_["particle_filter"]["init_r"].as<float>();
-    // config_params.num_particles = config_yaml_["particle_filter"]["num_particles"].as<int>();
-    // config_params.resample_frequency = config_yaml_["particle_filter"]["resample_frequency"].as<int>();
-    // config_params.init_x_sigma = config_yaml_["particle_filter"]["init_x_sigma"].as<float>();
-    // config_params.init_y_sigma = config_yaml_["particle_filter"]["init_y_sigma"].as<float>();
-    // config_params.init_r_sigma = config_yaml_["particle_filter"]["init_r_sigma"].as<float>();
-    // config_params.k1 = config_yaml_["particle_filter"]["k1"].as<float>();
-    // config_params.k2 = config_yaml_["particle_filter"]["k2"].as<float>();
-    // config_params.k3 = config_yaml_["particle_filter"]["k3"].as<float>();
-    // config_params.k4 = config_yaml_["particle_filter"]["k4"].as<float>();
-    // config_params.k5 = config_yaml_["particle_filter"]["k5"].as<float>();
-    // config_params.k6 = config_yaml_["particle_filter"]["k6"].as<float>();
-    // config_params.laser_offset = config_yaml_["particle_filter"]["laser_offset"].as<float>();
-    // config_params.min_update_dist = config_yaml_["particle_filter"]["min_update_dist"].as<float>();
-    // config_params.min_update_angle = config_yaml_["particle_filter"]["min_update_angle"].as<float>();
-    // config_params.sigma_observation = config_yaml_["particle_filter"]["sigma_observation"].as<double>();
-    // config_params.gamma = config_yaml_["particle_filter"]["gamma"].as<double>();
-    // config_params.dist_short = config_yaml_["particle_filter"]["dist_short"].as<double>();
-    // config_params.dist_long = config_yaml_["particle_filter"]["dist_long"].as<double>();
-    // config_params.range_min = config_yaml_["particle_filter"]["range_min"].as<double>();
-    // config_params.range_max = config_yaml_["particle_filter"]["range_max"].as<double>();
-    // config_params.resize_factor = config_yaml_["particle_filter"]["resize_factor"].as<double>();
+
+    declare_parameter("particle_filter.map", "");
+    config_params.map = get_parameter("particle_filter.map").as_string();
+
+    declare_parameter("particle_filter.init_x", 0.0);
+    declare_parameter("particle_filter.init_y", 0.0);
+    declare_parameter("particle_filter.init_r", 0.0);
+    config_params.init_x = get_parameter("particle_filter.init_x").as_double();
+    config_params.init_y = get_parameter("particle_filter.init_y").as_double();
+    config_params.init_r = get_parameter("particle_filter.init_r").as_double();
+
+    declare_parameter("particle_filter.resample_frequency", 1);
+    config_params.resample_frequency = get_parameter("particle_filter.resample_frequency").as_int();
+
+    declare_parameter("particle_filter.init_x_sigma", 0.0);
+    declare_parameter("particle_filter.init_y_sigma", 0.0);
+    declare_parameter("particle_filter.init_r_sigma", 0.0);
+    config_params.init_x_sigma = get_parameter("particle_filter.init_x_sigma").as_double();
+    config_params.init_y_sigma = get_parameter("particle_filter.init_y_sigma").as_double();
+    config_params.init_r_sigma = get_parameter("particle_filter.init_r_sigma").as_double();
+
+    declare_parameter("particle_filter.k1", 0.0);
+    declare_parameter("particle_filter.k2", 0.0);
+    declare_parameter("particle_filter.k3", 0.0);
+    declare_parameter("particle_filter.k4", 0.0);
+    declare_parameter("particle_filter.k5", 0.0);
+    declare_parameter("particle_filter.k6", 0.0);
+    config_params.k1 = get_parameter("particle_filter.k1").as_double();
+    config_params.k2 = get_parameter("particle_filter.k2").as_double();
+    config_params.k3 = get_parameter("particle_filter.k3").as_double();
+    config_params.k4 = get_parameter("particle_filter.k4").as_double();
+    config_params.k5 = get_parameter("particle_filter.k5").as_double();
+    config_params.k6 = get_parameter("particle_filter.k6").as_double();
+
+    declare_parameter("particle_filter.laser_offset", 0.0);
+    declare_parameter("particle_filter.min_update_dist", 0.0);
+    declare_parameter("particle_filter.min_update_angle", 0.0);
+    config_params.laser_offset = get_parameter("particle_filter.laser_offset").as_double();
+    config_params.min_update_dist = get_parameter("particle_filter.min_update_dist").as_double();
+    config_params.min_update_angle = get_parameter("particle_filter.min_update_angle").as_double();
+
+    declare_parameter("particle_filter.sigma_observation", 0.0);
+    declare_parameter("particle_filter.gamma", 0.0);
+    declare_parameter("particle_filter.dist_short", 0.0);
+    declare_parameter("particle_filter.dist_long", 0.0);
+    declare_parameter("particle_filter.range_min", 0.0);
+    declare_parameter("particle_filter.range_max", 0.0);
+    declare_parameter("particle_filter.resize_factor", 0.0);
+    config_params.sigma_observation = get_parameter("particle_filter.sigma_observation").as_double();
+    config_params.gamma = get_parameter("particle_filter.gamma").as_double();
+    config_params.dist_short = get_parameter("particle_filter.dist_short").as_double();
+    config_params.dist_long = get_parameter("particle_filter.dist_long").as_double();
+    config_params.range_min = get_parameter("particle_filter.range_min").as_double();
+    config_params.range_max = get_parameter("particle_filter.range_max").as_double();
+    config_params.resize_factor = get_parameter("particle_filter.resize_factor").as_double();
   }
 
   void GhostEstimatorNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
@@ -251,12 +281,12 @@ namespace ghost_ros
     viz_msg.markers.push_back(marker_msg_3);
 
     auto line_pairs = std::vector<std::pair<geometry::Line2f, geometry::Line2f>>{
-      std::pair<geometry::Line2f, geometry::Line2f>(left_encoder_vector, right_encoder_vector),
-      std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, left_encoder_vector),
-      std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, right_encoder_vector)
-    };
+        std::pair<geometry::Line2f, geometry::Line2f>(left_encoder_vector, right_encoder_vector),
+        std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, left_encoder_vector),
+        std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, right_encoder_vector)};
 
-    for(auto & pair : line_pairs){
+    for (auto &pair : line_pairs)
+    {
       auto l1 = pair.first;
       auto l2 = pair.second;
       if (fabs(geometry::Cross(l1.Dir(), l2.Dir())) < 1e-5)
@@ -270,142 +300,143 @@ namespace ghost_ros
 
         auto intersection = hp1.intersection(hp2);
         auto intersection_3d = Eigen::Vector3f(intersection.x(), intersection.y(), 1);
-        h_space_icr_points.push_back(intersection_3d/intersection_3d.norm());
+        h_space_icr_points.push_back(intersection_3d / intersection_3d.norm());
       }
+    }
+
+    Eigen::Vector3f icr_estimation = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2]) / 3;
+
+    debug_viz_pub_->publish(viz_msg);
+
+    PublishWorldTransform();
+    // PublishVisualization();
   }
 
-  Eigen::Vector3f icr_estimation = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2])/3;
-
-  debug_viz_pub_->publish(viz_msg);
-
-  PublishWorldTransform();
-  // PublishVisualization();
-}
-
-void GhostEstimatorNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
-{
-  // Set new initial pose
-  const Vector2f init_loc(msg->pose.pose.position.x, msg->pose.pose.position.y);
-  const float init_angle = 2.0 * atan2(msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
-
-  RCLCPP_INFO(
-      this->get_logger(),
-      "Initialize: %s (%f,%f) %f\u00b0\n",
-      config_params.map.c_str(),
-      init_loc.x(),
-      init_loc.y(),
-      RadToDeg(init_angle));
-
-  particle_filter_.Initialize(config_params.map, init_loc, init_angle);
-
-  PublishWorldTransform();
-  PublishVisualization();
-  PublishMapViz();
-}
-
-void GhostEstimatorNode::DrawParticles(geometry_msgs::msg::PoseArray &viz_msg)
-{
-  vector<particle_filter::Particle> particles;
-  particle_filter_.GetParticles(&particles);
-  for (const particle_filter::Particle &p : particles)
+  void GhostEstimatorNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
   {
-    auto pose_msg = geometry_msgs::msg::Pose{};
-    pose_msg.position.x = p.loc.x();
-    pose_msg.position.y = p.loc.y();
-    pose_msg.orientation.w = cos(p.angle * 0.5);
-    pose_msg.orientation.z = sin(p.angle * 0.5);
-    viz_msg.poses.push_back(pose_msg);
-  }
-}
+    // Set new initial pose
+    const Vector2f init_loc(msg->pose.pose.position.x, msg->pose.pose.position.y);
+    const float init_angle = 2.0 * atan2(msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
 
-void GhostEstimatorNode::PublishWorldTransform()
-{
-  auto tf_msg = tf2_msgs::msg::TFMessage{};
+    RCLCPP_INFO(
+        this->get_logger(),
+        "Initialize: %s (%f,%f) %f\u00b0\n",
+        config_params.map.c_str(),
+        init_loc.x(),
+        init_loc.y(),
+        RadToDeg(init_angle));
 
-  auto world_to_base_tf = geometry_msgs::msg::TransformStamped{};
-  world_to_base_tf.header.stamp = this->get_clock()->now();
-  world_to_base_tf.header.frame_id = "world";
-  world_to_base_tf.child_frame_id = "base_link";
+    particle_filter_.Initialize(config_params.map, init_loc, init_angle);
 
-  Vector2f robot_loc(0, 0);
-  float robot_angle(0);
-  particle_filter_.GetLocation(&robot_loc, &robot_angle);
-
-  world_to_base_tf.transform.translation.x = robot_loc.x();
-  world_to_base_tf.transform.translation.y = robot_loc.y();
-  world_to_base_tf.transform.translation.z = 0.0;
-  world_to_base_tf.transform.rotation.x = 0.0;
-  world_to_base_tf.transform.rotation.y = 0.0;
-  world_to_base_tf.transform.rotation.z = sin(robot_angle * 0.5);
-  world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
-
-  tf_msg.transforms.push_back(world_to_base_tf);
-  world_tf_pub_->publish(tf_msg);
-}
-
-void GhostEstimatorNode::PublishMapViz()
-{
-  auto map_msg = visualization_msgs::msg::Marker{};
-  auto map = particle_filter_.GetMap();
-
-  // Iterate through all lines in map
-  for (size_t i = 0; i < map.lines.size(); ++i)
-  {
-    const geometry::Line2f line = map.lines[i];
-
-    auto start_point = geometry_msgs::msg::Point{};
-    start_point.x = line.p0.x();
-    start_point.y = line.p0.y();
-
-    auto end_point = geometry_msgs::msg::Point{};
-    end_point.x = line.p1.x();
-    end_point.y = line.p1.y();
-
-    map_msg.points.push_back(start_point);
-    map_msg.points.push_back(end_point);
-  }
-
-  map_msg.header.stamp = this->get_clock()->now();
-  map_msg.header.frame_id = "world";
-  map_msg.id = 0;
-  map_msg.type = 5;   // Line List
-  map_msg.action = 0; // Add / Modify
-  map_msg.scale.x = 0.01;
-  map_msg.color.r = 0.0;
-  map_msg.color.g = 0.0;
-  map_msg.color.b = 0.0;
-  map_msg.color.a = 1.0;
-
-  map_viz_pub_->publish(map_msg);
-}
-
-void GhostEstimatorNode::PublishVisualization()
-{
-  static double t_last = 0;
-  if (GetMonotonicTime() - t_last < 0.05)
-  {
-    // Rate-limit visualization.
-    return;
-  }
-  t_last = GetMonotonicTime();
-
-  // Publish Particle Cloud
-  auto viz_msg = geometry_msgs::msg::PoseArray{};
-  viz_msg.header.frame_id = "world";
-  viz_msg.header.stamp = this->get_clock()->now();
-  DrawParticles(viz_msg);
-  cloud_viz_pub_->publish(viz_msg);
-
-  if (first_map_load_)
-  {
+    PublishWorldTransform();
+    PublishVisualization();
     PublishMapViz();
-    first_map_load_ = false;
   }
-}
+
+  void GhostEstimatorNode::DrawParticles(geometry_msgs::msg::PoseArray &viz_msg)
+  {
+    vector<particle_filter::Particle> particles;
+    particle_filter_.GetParticles(&particles);
+    for (const particle_filter::Particle &p : particles)
+    {
+      auto pose_msg = geometry_msgs::msg::Pose{};
+      pose_msg.position.x = p.loc.x();
+      pose_msg.position.y = p.loc.y();
+      pose_msg.orientation.w = cos(p.angle * 0.5);
+      pose_msg.orientation.z = sin(p.angle * 0.5);
+      viz_msg.poses.push_back(pose_msg);
+    }
+  }
+
+  void GhostEstimatorNode::PublishWorldTransform()
+  {
+    auto tf_msg = tf2_msgs::msg::TFMessage{};
+
+    auto world_to_base_tf = geometry_msgs::msg::TransformStamped{};
+    world_to_base_tf.header.stamp = this->get_clock()->now();
+    world_to_base_tf.header.frame_id = "world";
+    world_to_base_tf.child_frame_id = "base_link";
+
+    Vector2f robot_loc(0, 0);
+    float robot_angle(0);
+    particle_filter_.GetLocation(&robot_loc, &robot_angle);
+
+    world_to_base_tf.transform.translation.x = robot_loc.x();
+    world_to_base_tf.transform.translation.y = robot_loc.y();
+    world_to_base_tf.transform.translation.z = 0.0;
+    world_to_base_tf.transform.rotation.x = 0.0;
+    world_to_base_tf.transform.rotation.y = 0.0;
+    world_to_base_tf.transform.rotation.z = sin(robot_angle * 0.5);
+    world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
+
+    tf_msg.transforms.push_back(world_to_base_tf);
+    world_tf_pub_->publish(tf_msg);
+  }
+
+  void GhostEstimatorNode::PublishMapViz()
+  {
+    auto map_msg = visualization_msgs::msg::Marker{};
+    auto map = particle_filter_.GetMap();
+
+    // Iterate through all lines in map
+    for (size_t i = 0; i < map.lines.size(); ++i)
+    {
+      const geometry::Line2f line = map.lines[i];
+
+      auto start_point = geometry_msgs::msg::Point{};
+      start_point.x = line.p0.x();
+      start_point.y = line.p0.y();
+
+      auto end_point = geometry_msgs::msg::Point{};
+      end_point.x = line.p1.x();
+      end_point.y = line.p1.y();
+
+      map_msg.points.push_back(start_point);
+      map_msg.points.push_back(end_point);
+    }
+
+    map_msg.header.stamp = this->get_clock()->now();
+    map_msg.header.frame_id = "world";
+    map_msg.id = 0;
+    map_msg.type = 5;   // Line List
+    map_msg.action = 0; // Add / Modify
+    map_msg.scale.x = 0.01;
+    map_msg.color.r = 0.0;
+    map_msg.color.g = 0.0;
+    map_msg.color.b = 0.0;
+    map_msg.color.a = 1.0;
+
+    map_viz_pub_->publish(map_msg);
+  }
+
+  void GhostEstimatorNode::PublishVisualization()
+  {
+    static double t_last = 0;
+    if (GetMonotonicTime() - t_last < 0.05)
+    {
+      // Rate-limit visualization.
+      return;
+    }
+    t_last = GetMonotonicTime();
+
+    // Publish Particle Cloud
+    auto viz_msg = geometry_msgs::msg::PoseArray{};
+    viz_msg.header.frame_id = "world";
+    viz_msg.header.stamp = this->get_clock()->now();
+    DrawParticles(viz_msg);
+    cloud_viz_pub_->publish(viz_msg);
+
+    if (first_map_load_)
+    {
+      PublishMapViz();
+      first_map_load_ = false;
+    }
+  }
 
 } // namespace ghost_ros
 
-int main(int argc, char* argv[]){
+int main(int argc, char *argv[])
+{
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<ghost_ros::GhostEstimatorNode>());
   rclcpp::shutdown();

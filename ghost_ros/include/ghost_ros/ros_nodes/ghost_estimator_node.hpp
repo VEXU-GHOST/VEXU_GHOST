@@ -51,7 +51,7 @@ class GhostEstimatorNode : public rclcpp::Node {
     void PublishMapViz();
   
   private:
-    void LoadConfiguration(std::string filename);
+    void LoadROSParams();
     void DrawParticles(geometry_msgs::msg::PoseArray &viz_msg);
 
     // Subscribers
