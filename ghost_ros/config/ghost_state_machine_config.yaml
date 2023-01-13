@@ -1,0 +1,11 @@
+ghost_state_machine:
+  ros__parameters:
+    max_linear_vel: 2.00    # m/s
+    max_angular_vel: 9.00   # rad / s
+
+    left_wheel_x:   1.0
+    left_wheel_y:   1.0
+    right_wheel_x:  1.0
+    right_wheel_y:  1.0
+    back_wheel_x:   1.0
+    back_wheel_y:   1.0

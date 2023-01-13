@@ -18,6 +18,33 @@ namespace ghost_ros
         curr_joystick_msg_id_{0},
         curr_comp_state_msg_id_{0}
     {
+        declare_parameter("max_linear_vel", 0.0);
+        declare_parameter("max_angular_vel", 0.0);
+        max_linear_vel_ = get_parameter("max_linear_vel").as_double();
+        max_angular_vel_ = get_parameter("max_angular_vel").as_double();
+
+        declare_parameter("left_wheel_x",   0.0);
+        declare_parameter("left_wheel_y",   0.0);
+        declare_parameter("right_wheel_x",  0.0);
+        declare_parameter("right_wheel_y",  0.0);
+        declare_parameter("back_wheel_x",   0.0);
+        declare_parameter("back_wheel_y",   0.0);
+
+        left_wheel_pos_ = Eigen::Vector2f(
+            get_parameter("left_wheel_x").as_double(),
+            get_parameter("left_wheel_y").as_double(),
+            );
+
+        right_wheel_pos_ = Eigen::Vector2f(
+            get_parameter("right_wheel_x").as_double(), 
+            get_parameter("right_wheel_y").as_double(), 
+            );
+
+        back_wheel_pos_ = Eigen::Vector2f(
+            get_parameter("back_wheel_x").as_double(), 
+            get_parameter("back_wheel_y").as_double(), 
+            );
+        
         actuator_command_pub_ = create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
             "v5/actuator_commands",
             10);
@@ -90,40 +117,63 @@ namespace ghost_ros
     }
 
     void RobotStateMachineNode::teleop(){
+        Eigen::Vector2f xy_vel_cmd(curr_joystick_msg_->joystick_left_x, curr_joystick_msg_->joystick_left_y);
+
+        // Convert joystick to robot twist command
+        float angular_vel_cmd = std::clamp<float>(curr_joystick_msg_->joystick_right_x, -1.0, 1.0) * max_angular_vel_;
+        float linear_vel_cmd = std::clamp<float>(xy_vel_cmd.norm(), -1.0, 1.0) * max_linear_vel_;
+        float linear_vel_dir = xy_vel_cmd / xy_vel_cmd.norm();
+
+        Eigen::Vector3f steering
+
+        // Zero motor commands if linear velocity is less than 1% of max
+        if(fabs(linear_vel_cmd) > (max_linear_vel_ * 0.01)){
+            Eigen::Vector2f xy_vel_dir = xy_vel_vector/xy_vel_vector.norm();
+
+            // Special case for pure translation (less than 1% of max angular velocity)
+            if(fabs(angular_vel_cmd) < (max_angular_vel_ * 0.01)){
+                
+            }
+            else{
+                
+            }
+
+            Eigen::Vector2f desired_icr(-linear_vel_dir.y(), linear_vel_dir.x());
+            desired_icr *= (linear_vel_cmd / angular_vel_cmd) * (max_angular_vel_ / max_linear_vel_);
+        }
+
+        // Convert steering and wheel commands to actuator space
+        std::vector<float> motor_speed_cmds{8, 0.0};
+        std::vector<float> motor_voltage_cmds{8, 0.0};
+
+        publishMotorCommand(motor_speed_cmds, motor_voltager_cmds);
+    }
+
+    void RobotStateMachineNode::publishMotorCommand(std::vector<float> speed_cmd_array, std::vector<float> voltage_cmd_array){
+        // Generate actuator command msg
         auto actuator_cmd_msg = ghost_msgs::msg::V5ActuatorCommand{};
         actuator_cmd_msg.header.stamp = get_clock()->now();
         actuator_cmd_msg.msg_id = curr_joystick_msg_id_;
 
-        auto motor_cmd_msg = ghost_msgs::msg::V5MotorCommand{};
+        // Update velocity commands
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].desired_velocity   = voltage_cmd_array[0];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].desired_velocity    = voltage_cmd_array[1];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].desired_velocity  = voltage_cmd_array[2];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].desired_velocity   = voltage_cmd_array[3];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_1_MOTOR].desired_velocity = voltage_cmd_array[4];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR].desired_velocity = voltage_cmd_array[5];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR].desired_velocity  = voltage_cmd_array[6];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_velocity  = voltage_cmd_array[7];
 
-        int motor_index = 0;
-
-        if (curr_joystick_msg_->joystick_btn_a)
-        {
-            actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].desired_velocity = curr_joystick_msg_->joystick_right_y * 600.0;
-        }
-        else if (curr_joystick_msg_->joystick_btn_b)
-        {
-            actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].desired_velocity = curr_joystick_msg_->joystick_right_y * 600.0;
-        }
-        else if (curr_joystick_msg_->joystick_btn_x)
-        {
-            actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].desired_velocity = curr_joystick_msg_->joystick_right_y * 600.0;
-        }
-        else if (curr_joystick_msg_->joystick_btn_y)
-        {
-            actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].desired_velocity = curr_joystick_msg_->joystick_right_y * 600.0;
-        }
-        else if (curr_joystick_msg_->joystick_btn_right)
-        {
-            actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_1_MOTOR].desired_velocity = curr_joystick_msg_->joystick_right_y * 600.0;
-            actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR].desired_velocity = curr_joystick_msg_->joystick_right_y * 600.0;
-        }
-        else if (curr_joystick_msg_->joystick_btn_left)
-        {
-            actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR].desired_velocity = curr_joystick_msg_->joystick_right_y * 600.0;
-            actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_velocity = curr_joystick_msg_->joystick_right_y * 600.0;
-        }
+        // Update voltage commands
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].desired_voltage    = speed_cmd_array[0];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].desired_voltage     = speed_cmd_array[1];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].desired_voltage   = speed_cmd_array[2];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].desired_voltage    = speed_cmd_array[3];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_1_MOTOR].desired_voltage  = speed_cmd_array[4];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR].desired_voltage  = speed_cmd_array[5];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR].desired_voltage   = speed_cmd_array[6];
+        actuator_cmd_msg.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_voltage   = speed_cmd_array[7];
 
         actuator_command_pub_->publish(actuator_cmd_msg);
     }
