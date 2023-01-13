@@ -1,4 +1,5 @@
 #include <chrono>
+#include <math>
 #include "eigen3/Eigen/Geometry"
 
 #include "ghost_ros/robot_config/v5_port_config.hpp"
@@ -118,23 +119,36 @@ namespace ghost_ros
     }
 
     void RobotStateMachineNode::teleop(){
-        Eigen::Vector2f xy_vel_cmd(curr_joystick_msg_->joystick_left_x, curr_joystick_msg_->joystick_left_y);
 
         // Convert joystick to robot twist command
+        Eigen::Vector2f xy_vel_cmd(curr_joystick_msg_->joystick_left_x, curr_joystick_msg_->joystick_left_y);
         float angular_vel_cmd = std::clamp<float>(curr_joystick_msg_->joystick_right_x, -1.0, 1.0) * max_angular_vel_;
         float linear_vel_cmd = std::clamp<float>(xy_vel_cmd.norm(), -1.0, 1.0) * max_linear_vel_;
         float linear_vel_dir = xy_vel_cmd / xy_vel_cmd.norm();
-        Eigen::Vector2f xy_vel_vector(curr_joystick_msg_->joystick_left_x, curr_joystick_msg_->joystick_left_y);
-        Eigen::Vector2f xy_vel_vector(curr_joystick_msg_->joystick_left_x, curr_joystick_msg_->joystick_left_y);
-        float xy_vel_mag_norm = std::min(std::max(xy_vel_vector.norm(), -1.0), 1.0);
-        if(abs(xy_vel_mag) > 1e-3){
+
+        // Swerve Drive Setpoints
+        std::vector<float> steering_angle_cmd_{3, 0.0};
+        std::vector<float> steering_velocity_cmd_{3, 0.0};
+        std::vector<float> steering_voltage_cmd_{3, 0.0};
+
+        std::vector<float> wheel_velocity_cmd_{3, 0.0};
+        std::vector<float> wheel_voltage_cmd_{3, 0.0};
+
+        // Zero motors is vel cmd is less than 1%
+        if(fabs(linear_vel_cmd) > max_linear_vel_ * 0.01){
             Eigen::Vector2f xy_vel_dir = xy_vel_vector/xy_vel_vector.norm();
             Eigen::Vector2f icr
+
+            // Pure translation for negligable angular velocity command (<1%)
+            if(fabs(angular_vel_cmd) < max_angular_vel_ * 0.01){
+                auto angle = atan2(linear_vel_dir.y(), linear_vel_dir.x());
+
+            }
+
         }
         else{
 
         }
-        RCLCPP_INFO(get_logger(), "mag: %f, x: %f, y: %f", xy_vel_mag, xy_vel_dir.x(), xy_vel_dir.y());
 
         auto motor_cmd_msg = ghost_msgs::msg::V5MotorCommand{};
 
