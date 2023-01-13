@@ -85,12 +85,27 @@ namespace ghost_ros
   void GhostEstimatorNode::LoadROSParams()
   {
     // Odometry
-    declare_parameter("odometry.center_to_wheel_dist", 0.0);
-    auto center_to_wheel_dist = get_parameter("odometry.center_to_wheel_dist").as_double();
+    declare_parameter("odometry.left_mod_x", 0.0);
+    declare_parameter("odometry.left_mod_y", 0.0);
+    declare_parameter("odometry.right_mod_x", 0.0);
+    declare_parameter("odometry.right_mod_y", 0.0);
+    declare_parameter("odometry.back_mod_x", 0.0);
+    declare_parameter("odometry.back_mod_y", 0.0);
 
-    left_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, 0.866 * center_to_wheel_dist);
-    right_wheel_link_ = Eigen::Vector2f(0.5 * center_to_wheel_dist, -0.866 * center_to_wheel_dist);
-    back_wheel_link_ = Eigen::Vector2f(-center_to_wheel_dist, 0.0);
+    left_wheel_link_ = Eigen::Vector2f(
+      get_parameter("odometry.left_mod_x").as_double(), 
+      get_parameter("odometry.left_mod_y").as_double()
+    );
+
+    right_wheel_link_ = Eigen::Vector2f(
+      get_parameter("odometry.right_mod_x").as_double(),
+      get_parameter("odometry.right_mod_y").as_double()
+    );
+    
+    back_wheel_link_ = Eigen::Vector2f(
+      get_parameter("odometry.back_mod_x").as_double(),
+      get_parameter("odometry.back_mod_y").as_double()
+    );
 
     // // Particle Filter
     config_params = ParticleFilterConfig();
@@ -171,119 +186,33 @@ namespace ghost_ros
     auto back_encoder = msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER];
 
     // Publish joint states
-    auto joint_state_msg = sensor_msgs::msg::JointState{};
-    joint_state_msg.header.stamp = get_clock()->now();
-
-    joint_state_msg.name.push_back("steering_left");
-    joint_state_msg.position.push_back(left_encoder.current_angle * M_PI / 180.0);
-
-    joint_state_msg.name.push_back("steering_right");
-    joint_state_msg.position.push_back(right_encoder.current_angle * M_PI / 180.0);
-
-    joint_state_msg.name.push_back("steering_back");
-    joint_state_msg.position.push_back(back_encoder.current_angle * M_PI / 180.0);
-
-    joint_state_msg.name.push_back("driveshaft_left");
-    joint_state_msg.position.push_back(0.0);
-
-    joint_state_msg.name.push_back("driveshaft_right");
-    joint_state_msg.position.push_back(0.0);
-
-    joint_state_msg.name.push_back("driveshaft_back");
-    joint_state_msg.position.push_back(0.0);
-
-    joint_state_pub_->publish(joint_state_msg);
+    PublishJointStateMsg(msg);
 
     // Calculate ICR
-
-    auto viz_msg = visualization_msgs::msg::MarkerArray{};
-
     std::vector<Eigen::Vector3f> h_space_icr_points{0};
 
+    // Calculate Wheel Axis Unit Direction Vectors
     Eigen::Vector2f left_encoder_dir(
-        cos(left_encoder.current_angle * M_PI / 180.0),
-        sin(left_encoder.current_angle * M_PI / 180.0));
+        sin(left_encoder.current_angle * M_PI / 180.0),
+        -cos(left_encoder.current_angle * M_PI / 180.0));
     Eigen::Vector2f right_encoder_dir(
-        cos(right_encoder.current_angle * M_PI / 180.0),
-        sin(right_encoder.current_angle * M_PI / 180.0));
+        sin(right_encoder.current_angle * M_PI / 180.0),
+        -cos(right_encoder.current_angle * M_PI / 180.0));
     Eigen::Vector2f back_encoder_dir(
-        cos(back_encoder.current_angle * M_PI / 180.0),
-        sin(back_encoder.current_angle * M_PI / 180.0));
+        sin(back_encoder.current_angle * M_PI / 180.0),
+        -cos(back_encoder.current_angle * M_PI / 180.0));
 
+    // Calculate Wheel Axis Vectors
     geometry::Line2f left_encoder_vector(left_wheel_link_, left_encoder_dir + left_wheel_link_);
     geometry::Line2f right_encoder_vector(right_wheel_link_, right_encoder_dir + right_wheel_link_);
     geometry::Line2f back_encoder_vector(back_wheel_link_, back_encoder_dir + back_wheel_link_);
 
-    //
-    auto marker_msg_1 = visualization_msgs::msg::Marker{};
-    marker_msg_1.header.frame_id = "base_link";
-    marker_msg_1.header.stamp = this->get_clock()->now();
-    marker_msg_1.id = 0;
-    marker_msg_1.action = 0;
-    marker_msg_1.type = 0;
-
-    geometry_msgs::msg::Point p10{};
-    p10.x = left_wheel_link_.x();
-    p10.y = left_wheel_link_.y();
-    p10.z = 1;
-
-    geometry_msgs::msg::Point p11{};
-    p11.x = (left_encoder_dir + left_wheel_link_).x();
-    p11.y = (left_encoder_dir + left_wheel_link_).y();
-    p11.z = 1;
-
-    marker_msg_1.points.push_back(p11);
-    marker_msg_1.points.push_back(p10);
-
-    ///
-    auto marker_msg_2 = visualization_msgs::msg::Marker{};
-    marker_msg_2.header.frame_id = "base_link";
-    marker_msg_2.header.stamp = this->get_clock()->now();
-    marker_msg_2.id = 1;
-    marker_msg_2.action = 0;
-    marker_msg_2.type = 0;
-
-    geometry_msgs::msg::Point p20{};
-    p20.x = right_wheel_link_.x();
-    p20.y = right_wheel_link_.y();
-    p20.z = 1;
-
-    geometry_msgs::msg::Point p21{};
-    p21.x = (right_encoder_dir + right_wheel_link_).x();
-    p21.y = (right_encoder_dir + right_wheel_link_).y();
-    p21.z = 1;
-
-    marker_msg_2.points.push_back(p21);
-    marker_msg_2.points.push_back(p20);
-
-    auto marker_msg_3 = visualization_msgs::msg::Marker{};
-    marker_msg_3.header.frame_id = "base_link";
-    marker_msg_3.header.stamp = this->get_clock()->now();
-    marker_msg_3.id = 3;
-    marker_msg_3.action = 0;
-    marker_msg_3.type = 0;
-
-    geometry_msgs::msg::Point p30{};
-    p30.x = back_wheel_link_.x();
-    p30.y = back_wheel_link_.y();
-    p30.z = 1;
-
-    geometry_msgs::msg::Point p31{};
-    p31.x = (back_encoder_dir + back_wheel_link_).x();
-    p31.y = (back_encoder_dir + back_wheel_link_).y();
-    p31.z = 1;
-
-    marker_msg_3.points.push_back(p31);
-    marker_msg_3.points.push_back(p30);
-
-    viz_msg.markers.push_back(marker_msg_1);
-    viz_msg.markers.push_back(marker_msg_2);
-    viz_msg.markers.push_back(marker_msg_3);
-
+    // Iterate through each pair of lines and calculate ICR
     auto line_pairs = std::vector<std::pair<geometry::Line2f, geometry::Line2f>>{
         std::pair<geometry::Line2f, geometry::Line2f>(left_encoder_vector, right_encoder_vector),
         std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, left_encoder_vector),
-        std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, right_encoder_vector)};
+        std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, right_encoder_vector)
+        };
 
     for (auto &pair : line_pairs)
     {
@@ -304,7 +233,31 @@ namespace ghost_ros
       }
     }
 
-    Eigen::Vector3f icr_estimation = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2]) / 3;
+    // Average ICR points in H-Space as our estimated center of rotation
+    Eigen::Vector3f h_space_icr_avg = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2]) / 3;
+    Eigen::Vector3f icr_flat_estimation;
+
+    // Handle parallel case
+    if(h_space_icr_avg[2] > 1e9){
+      icr_flat_estimation = Eigen::Vector3f(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0);
+    }
+    else{
+      icr_flat_estimation = Eigen::Vector3f(h_space_icr_avg[0]/h_space_icr_avg[2], h_space_icr_avg[1]/h_space_icr_avg[2], 0);
+    }
+
+    // Initialize Visualization msg, and add debug visualization
+    auto viz_msg = visualization_msgs::msg::MarkerArray{};
+    std::vector<geometry::Line2f> lines{left_encoder_vector, right_encoder_vector, back_encoder_vector};
+    std::vector<Eigen::Vector3f> viz_points{
+      h_space_icr_points[0],
+      h_space_icr_points[1],
+      h_space_icr_points[2],
+      h_space_icr_avg,
+      icr_flat_estimation
+    };
+
+    AddWheelAxisMarkerVisualization(viz_msg, lines);
+    AddICRMarkerVisualiation(viz_msg, viz_points);
 
     debug_viz_pub_->publish(viz_msg);
 
@@ -433,6 +386,76 @@ namespace ghost_ros
     }
   }
 
+  void GhostEstimatorNode::PublishJointStateMsg(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
+    // Calculate Odometry
+    auto left_encoder = msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER];
+    auto right_encoder = msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER];
+    auto back_encoder = msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER];
+
+    // Publish joint states
+    auto joint_state_msg = sensor_msgs::msg::JointState{};
+    joint_state_msg.header.stamp = get_clock()->now();
+
+    joint_state_msg.name.push_back("steering_left");  joint_state_msg.name.push_back("driveshaft_left");
+    joint_state_msg.name.push_back("steering_right"); joint_state_msg.name.push_back("driveshaft_right"); 
+    joint_state_msg.name.push_back("steering_back");  joint_state_msg.name.push_back("driveshaft_back");
+
+    joint_state_msg.position.push_back(left_encoder.current_angle * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+    joint_state_msg.position.push_back(right_encoder.current_angle * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+    joint_state_msg.position.push_back(back_encoder.current_angle * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+
+    joint_state_pub_->publish(joint_state_msg);
+  }
+
+  void GhostEstimatorNode::AddWheelAxisMarkerVisualization(
+    visualization_msgs::msg::MarkerArray & msg,
+    std::vector<geometry::Line2f> & lines){
+    int j = 0;
+    for(auto & line : lines){
+      auto marker_msg = visualization_msgs::msg::Marker{};
+      
+      marker_msg.header.frame_id = "base_link";
+      marker_msg.header.stamp = this->get_clock()->now();
+      marker_msg.id = j++; marker_msg.action = 0; marker_msg.type = 0;
+      marker_msg.scale.x = 0.01; marker_msg.scale.y = 0.01; marker_msg.scale.z = 0.01; marker_msg.color.a = 1;
+
+      geometry_msgs::msg::Point p0{}; p0.x = line.p0.x(); p0.y = line.p0.y(); p0.z = 0.0; marker_msg.points.push_back(p0);
+      geometry_msgs::msg::Point p1{}; p1.x = line.p1.x(); p1.y = line.p1.y(); p1.z = 0.0; marker_msg.points.push_back(p1);
+
+      msg.markers.push_back(marker_msg);
+    }
+  }
+
+  void GhostEstimatorNode::AddICRMarkerVisualiation(
+    visualization_msgs::msg::MarkerArray & msg,
+    std::vector<Eigen::Vector3f> & points)
+    {
+    auto marker_msg_points = visualization_msgs::msg::Marker{};
+    marker_msg_points.header.frame_id = "base_link";
+    marker_msg_points.header.stamp = this->get_clock()->now();
+    marker_msg_points.id = 4; marker_msg_points.action = 0; marker_msg_points.type = 7;
+    marker_msg_points.scale.x = 0.01; marker_msg_points.scale.y = 0.01; marker_msg_points.scale.z = 0.01;
+    marker_msg_points.color.b = 1; marker_msg_points.color.a = 1;
+
+    for(auto & point : points){
+      geometry_msgs::msg::Point point_msg{};
+      point_msg.x = point.x();
+      point_msg.y = point.y();
+      point_msg.z = point.z();
+      marker_msg_points.points.push_back(point_msg);
+    }
+    msg.markers.push_back(marker_msg_points);
+
+    // Publish H-Space Sphere
+    auto marker_msg_sphere = visualization_msgs::msg::Marker{};
+    marker_msg_sphere.header.frame_id = "base_link";
+    marker_msg_sphere.header.stamp = this->get_clock()->now();
+    marker_msg_sphere.id = 5; marker_msg_sphere.action = 0; marker_msg_sphere.type = 2;
+    marker_msg_sphere.scale.x = 1; marker_msg_sphere.scale.y = 1; marker_msg_sphere.scale.z = 1;
+    marker_msg_sphere.color.r = 0.75; marker_msg_sphere.color.g = 0.75; marker_msg_sphere.color.b = 0.75;
+    marker_msg_sphere.color.a = 0.25;
+    msg.markers.push_back(marker_msg_sphere);
+  }
 } // namespace ghost_ros
 
 int main(int argc, char *argv[])

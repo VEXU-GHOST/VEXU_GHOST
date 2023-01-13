@@ -8,7 +8,8 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
-    swerve_share_dir = get_package_share_directory("ghost_ros")
+    home_dir = os.path.expanduser('~')
+    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "ghost_ros")
 
     rplidar_node = Node(
         package='rplidar_ros2',
@@ -22,7 +23,7 @@ def generate_launch_description():
         executable='jetson_v5_serial_node',
         name='ghost_serial_node',
         output='screen',
-        parameters=[os.path.join(swerve_share_dir, "config", "ghost_serial_config.yaml")]
+        parameters=[ghost_ros_base_dir + "/config/ghost_serial_config.yaml"]
     )
 
     estimator_node = Node(
@@ -30,7 +31,7 @@ def generate_launch_description():
         executable='ghost_estimator_node',
         name='ghost_estimator_node',
         output='screen',
-        parameters=[os.path.join(swerve_share_dir, "config", "ghost_estimator_config.yaml")]
+        parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
 
     )
 
@@ -39,7 +40,8 @@ def generate_launch_description():
         executable='robot_state_machine_node',
         name='ghost_state_machine_node',
         output='screen',
-        parameters=[os.path.join(swerve_share_dir, "config", "ghost_state_machine_config.yaml")]
+        parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
+
     )
 
     return LaunchDescription([

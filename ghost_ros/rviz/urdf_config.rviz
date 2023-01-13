@@ -49,7 +49,7 @@ Visualization Manager:
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
-      Marker Scale: 0.30000001192092896
+      Marker Scale: 0.2
       Name: TF
       Show Arrows: false
       Show Axes: true

@@ -16,7 +16,7 @@ namespace ghost_ros
         declare_parameter("use_checksum", true);
         bool use_checksum = get_parameter("use_checksum").as_bool();
         
-        declare_parameter("verbose", true);
+        declare_parameter("verbose", false);
         verbose_ = get_parameter("verbose").as_bool();
         
         declare_parameter("read_msg_start_seq", "sout");
@@ -291,8 +291,10 @@ namespace ghost_ros
 int main(int argc, char* argv[]){
     rclcpp::init(argc, argv);
 
+    std::cout << "Start" << std::endl;
     auto serial_node = std::make_shared<ghost_ros::JetsonV5SerialNode>();
     serial_node->initSerialBlocking();
+    std::cout << "Done" << std::endl;
     
     rclcpp::spin(serial_node);
     rclcpp::shutdown();
