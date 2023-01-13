@@ -2,6 +2,13 @@ ghost_estimator_node:
   ros__parameters:
     odometry:
       center_to_wheel_dist: 0.2286 # meters
+      left_mod_x:   0.126365
+      left_mod_y:   0.180975
+      right_mod_x:  0.126365
+      right_mod_y:  -0.180975
+      back_mod_x:   -0.187
+      back_mod_y:   0.0
+
 
     particle_filter:
       map: "ghost_ros/maps/VEXField.txt"

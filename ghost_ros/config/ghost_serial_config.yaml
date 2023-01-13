@@ -6,4 +6,4 @@ ghost_serial_node:
     read_msg_start_seq: "sout"
     use_checksum: true
     verbose: false
-    using_reader_thread: false
+    using_reader_thread: true

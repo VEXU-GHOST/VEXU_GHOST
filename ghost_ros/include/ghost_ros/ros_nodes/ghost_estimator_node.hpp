@@ -49,7 +49,10 @@ class GhostEstimatorNode : public rclcpp::Node {
     void PublishWorldTransform();
     void PublishVisualization();
     void PublishMapViz();
-  
+    void PublishJointStateMsg(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
+    void AddWheelAxisMarkerVisualization(visualization_msgs::msg::MarkerArray & msg, std::vector<geometry::Line2f> & lines);
+    void AddICRMarkerVisualiation(visualization_msgs::msg::MarkerArray & msg, std::vector<Eigen::Vector3f> & points);
+
   private:
     void LoadROSParams();
     void DrawParticles(geometry_msgs::msg::PoseArray &viz_msg);

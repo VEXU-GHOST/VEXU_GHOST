@@ -1,4 +1,5 @@
 #include <chrono>
+#include "eigen3/Eigen/Geometry"
 
 #include "ghost_ros/robot_config/v5_port_config.hpp"
 #include "ghost_ros/robot_config/v5_serial_msg_config.hpp"
@@ -93,6 +94,18 @@ namespace ghost_ros
         auto actuator_cmd_msg = ghost_msgs::msg::V5ActuatorCommand{};
         actuator_cmd_msg.header.stamp = get_clock()->now();
         actuator_cmd_msg.msg_id = curr_joystick_msg_id_;
+
+        Eigen::Vector2f xy_vel_vector(curr_joystick_msg_->joystick_left_x, curr_joystick_msg_->joystick_left_y);
+        Eigen::Vector2f xy_vel_vector(curr_joystick_msg_->joystick_left_x, curr_joystick_msg_->joystick_left_y);
+        float xy_vel_mag_norm = std::min(std::max(xy_vel_vector.norm(), -1.0), 1.0);
+        if(abs(xy_vel_mag) > 1e-3){
+            Eigen::Vector2f xy_vel_dir = xy_vel_vector/xy_vel_vector.norm();
+            Eigen::Vector2f icr
+        }
+        else{
+
+        }
+        RCLCPP_INFO(get_logger(), "mag: %f, x: %f, y: %f", xy_vel_mag, xy_vel_dir.x(), xy_vel_dir.y());
 
         auto motor_cmd_msg = ghost_msgs::msg::V5MotorCommand{};
 
