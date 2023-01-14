@@ -98,7 +98,7 @@ void initialize()
     v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        true, 	shooter_motor_config);
     v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       false, shooter_motor_config);
 
-	// // Encoder Ports
+	// Encoder Ports
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_LEFT_ENCODER),
     v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_RIGHT_ENCODER),
     v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_BACK_ENCODER),
@@ -111,6 +111,11 @@ void initialize()
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->set_data_rate(5);
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->set_data_rate(5);
 
+	// Digital Outs
+	for(auto & out : v5_globals::adi_ports){
+		out.set_value(false);
+	}
+
 	zero_motors();
 
 	pros::lcd::initialize();
@@ -119,7 +124,7 @@ void initialize()
 	// Perform and necessary Serial Init
 	v5_globals::serial_node_.initSerial();
 	pros::Task reader_thread(reader_loop, "reader thread");
-	// pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
+	pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
 }
 
 /**
@@ -161,6 +166,15 @@ void competition_initialize() {}
  */
 void autonomous()
 {
+	pros::c::adi_port_set_config(1, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(2, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(3, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(4, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(5, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(6, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(7, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(8, ADI_DIGITAL_OUT);
+
 	uint32_t loop_time = pros::millis();
 	while (pros::competition::is_autonomous())
 	{
@@ -184,6 +198,24 @@ void autonomous()
  */
 void opcontrol()
 {
+	pros::c::adi_port_set_config(1, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(2, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(3, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(4, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(5, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(6, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(7, ADI_DIGITAL_OUT);
+	pros::c::adi_port_set_config(8, ADI_DIGITAL_OUT);
+
+	pros::c::adi_port_set_value(1, LOW);
+	pros::c::adi_port_set_value(2, LOW);
+	pros::c::adi_port_set_value(3, LOW);
+	pros::c::adi_port_set_value(4, LOW);
+	pros::c::adi_port_set_value(5, LOW);
+	pros::c::adi_port_set_value(6, LOW);
+	pros::c::adi_port_set_value(7, LOW);
+	pros::c::adi_port_set_value(8, LOW);
+
 	uint32_t loop_time = pros::millis();
 	while (!pros::competition::is_autonomous() && !pros::competition::is_disabled())
 	{

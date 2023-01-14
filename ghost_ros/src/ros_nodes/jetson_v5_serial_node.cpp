@@ -155,10 +155,11 @@ namespace ghost_ros
         for (int i = 0; i < 7; i++)
         {
             digital_out_byte += msg->digital_out_vector[i];
+			digital_out_byte <<= 1;
         }
-        digital_out_byte += msg->digital_out_vector[8];
-        memcpy(msg_buffer + actuator_command_msg_len_, &digital_out_byte, 1);
-        memcpy(msg_buffer + actuator_command_msg_len_ + 1, &(msg->msg_id), 4);
+        digital_out_byte += msg->digital_out_vector[7];
+        memcpy(msg_buffer + 4 * (buffer_index), &digital_out_byte, 1);
+        memcpy(msg_buffer + 4 * (buffer_index) + 1, &(msg->msg_id), 4);
 
         serial_base_interface_->writeMsgToSerial(msg_buffer, actuator_command_msg_len_);
     }
@@ -205,9 +206,10 @@ namespace ghost_ros
             encoder_state_msg.encoders[sensor_id].device_name = ghost_v5_config::device_names.at(sensor_id);
             encoder_state_msg.encoders[sensor_id].device_id = sensor_id;
 
-            // Copy encoder angle
+            // Copy encoder angle, wrapped within -180 to 180
             float angle;
             memcpy(&angle, buffer + 4 * (buffer_index++), 4);
+            angle -= float(180.0) * rint(angle / float(180));
             encoder_state_msg.encoders[sensor_id].current_angle = angle;
 
             // Copy encoder velocity
@@ -223,11 +225,8 @@ namespace ghost_ros
         memcpy(&(joystick_msg.joystick_right_y), buffer + 4 * (buffer_index++), 4);
 
         // Buffers to store extracted V5 Msg
-        uint8_t digital_outs = 0;
         uint16_t digital_states = 0;
-
         memcpy(&digital_states, buffer + 4 * buffer_index, 2);
-        memcpy(&digital_outs, buffer + 4 * buffer_index + 2, 1);
 
         // Joystick Buttons
         joystick_msg.joystick_btn_a =        digital_states & 0x8000;
@@ -248,16 +247,9 @@ namespace ghost_ros
         competition_state_msg.is_autonomous = digital_states & 0x0004;
         competition_state_msg.is_connected = digital_states & 0x0002;
 
-        // Digital Outputs
-        uint8_t bitmask[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
-        for (int i = 0; i < 8; i++)
-        {
-            encoder_state_msg.digital_out_vector[i] = digital_outs & bitmask[i];
-        }
-
         // Device Connected Vector
         uint32_t device_connected_bit_vector = 0;
-        memcpy(&device_connected_bit_vector, buffer + 4 * buffer_index + 3, 4);
+        memcpy(&device_connected_bit_vector, buffer + 4 * buffer_index + 2, 4);
         
         for (auto motor_id : ghost_v5_config::sensor_update_motor_config)
         {
@@ -270,7 +262,7 @@ namespace ghost_ros
 
         // Update Msg Sequence ID
         uint32_t msg_id;
-        memcpy(&msg_id, buffer + 4 * buffer_index + 3 + 4, 4);
+        memcpy(&msg_id, buffer + 4 * buffer_index + 2 + 4, 4);
 
         encoder_state_msg.msg_id      = msg_id;
         joystick_msg.msg_id           = msg_id;

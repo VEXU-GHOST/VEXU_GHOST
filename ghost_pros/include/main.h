@@ -115,15 +115,15 @@ namespace v5_globals
         DIGITAL_R2,
     };
 
-    pros::ADIPort adi_ports[8] = {
-        pros::ADIPort(1),
-        pros::ADIPort(2),
-        pros::ADIPort(3),
-        pros::ADIPort(4),
-        pros::ADIPort(5),
-        pros::ADIPort(6),
-        pros::ADIPort(7),
-        pros::ADIPort(8),
+    pros::ADIDigitalOut adi_ports[8] = {
+        pros::ADIDigitalOut('A'),
+        pros::ADIDigitalOut('B'),
+        pros::ADIDigitalOut('C'),
+        pros::ADIDigitalOut('D'),
+        pros::ADIDigitalOut('E'),
+        pros::ADIDigitalOut('F'),
+        pros::ADIDigitalOut('G'),
+        pros::ADIDigitalOut('H'),
     };
 
     // Serial Port

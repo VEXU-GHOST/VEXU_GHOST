@@ -41,7 +41,7 @@ namespace ghost_v5_config{
         STEERING_BACK_ENCODER,
     };
 
-    // 4x int32 Joystick Channels, 2x bytes of btns/digital outs/competition modes, 4x Bytes of port status, Msg Sequence ID
+    // 4x int32 Joystick Channels, 2x bytes of btns/competition modes, 4x Bytes of port status, Msg Sequence ID
     const int sensor_update_extra_byte_count = 4*4 + 2 + 4 + 4;
 
     // Maps device enum to device_name

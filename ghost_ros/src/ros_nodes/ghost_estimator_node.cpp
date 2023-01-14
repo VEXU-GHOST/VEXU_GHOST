@@ -69,7 +69,7 @@ namespace ghost_ros
     // Publishers
     cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
     map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", 10);
-    debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("debug_viz", 10);
+    debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("estimation_debug", 10);
     world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
     joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 

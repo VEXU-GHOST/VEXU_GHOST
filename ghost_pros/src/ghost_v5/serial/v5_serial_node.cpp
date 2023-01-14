@@ -5,6 +5,9 @@
 #include "ghost_v5/globals/v5_globals.hpp"
 #include "ghost_v5/motor/ghost_motor.hpp"
 
+#include "pros/adi.h"
+#include "pros/apix.h"
+
 using ghost_serial::BITMASK_ARR_32BIT;
 
 using ghost_v5_config::v5_motor_id_enum;
@@ -100,7 +103,7 @@ namespace ghost_v5
 		memcpy(&digital_out_vector, buffer + 4 * buffer_32bit_index, 1);
 		for (int i = 0; i < 8; i++)
 		{
-			v5_globals::adi_ports[i].set_value(digital_out_vector & 0x01);
+			pros::c::adi_port_set_value(i, (bool) (digital_out_vector & 0x01));
 			digital_out_vector >>= 1;
 		}
 
@@ -178,21 +181,9 @@ namespace ghost_v5
 		digital_states += pros::competition::is_connected();
 		digital_states <<= 1;
 
-		// TODO: New joystick input bit (Sampled at 50ms intervals)
-
-		// Digital Outs
-		uint8_t digital_outs = 0;
-		for (auto &adi_port : v5_globals::adi_ports)
-		{
-			digital_outs += adi_port.get_value();
-			digital_outs <<= 1;
-		}
-		digital_outs += v5_globals::adi_ports[7].get_value();
-
 		memcpy(sensor_update_msg_buffer + 4 * buffer_32bit_index, &digital_states, 2);
-		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2, &digital_outs, 1);
-		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2 + 1, &device_connected_vector, 4);
-		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2 + 1 + 4, &write_msg_id_, 4);
+		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2, &device_connected_vector, 4);
+		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2 + 4, &write_msg_id_, 4);
 
 		serial_base_interface_->writeMsgToSerial(sensor_update_msg_buffer, sensor_update_msg_len_);
 		write_msg_id_++;

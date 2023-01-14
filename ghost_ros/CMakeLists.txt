@@ -94,10 +94,12 @@ ament_target_dependencies(jetson_v5_serial_node
   sensor_msgs
   ghost_msgs
   ghost_serial
+  ghost_estimation
 )
 target_link_libraries(jetson_v5_serial_node
   ghost_serial::jetson_serial_base
   ghost_serial::cobs
+  ghost_estimation::amrl_shared_lib
   v5_serial_msg_config
   yaml-cpp
 )
@@ -146,10 +148,13 @@ add_executable(robot_state_machine_node
 )
 ament_target_dependencies(robot_state_machine_node
   rclcpp
-  ghost_msgs
   Eigen3
+  ghost_msgs
+  visualization_msgs
+  ghost_estimation
 )
 target_link_libraries(robot_state_machine_node
+  ghost_estimation::amrl_shared_lib
   yaml-cpp
   v5_serial_msg_config
 )

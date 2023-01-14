@@ -27,7 +27,7 @@ namespace ghost_v5_config
     {
         STEERING_LEFT_ENCODER       = 20,
         STEERING_RIGHT_ENCODER      = 19,
-        STEERING_BACK_ENCODER       = 9,
+        STEERING_BACK_ENCODER       = 8,
     };
     
 } // ghost_v5_config
