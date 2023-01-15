@@ -116,15 +116,18 @@ namespace v5_globals
     };
 
     pros::ADIDigitalOut adi_ports[8] = {
-        pros::ADIDigitalOut('A'),
-        pros::ADIDigitalOut('B'),
-        pros::ADIDigitalOut('C'),
-        pros::ADIDigitalOut('D'),
-        pros::ADIDigitalOut('E'),
-        pros::ADIDigitalOut('F'),
-        pros::ADIDigitalOut('G'),
-        pros::ADIDigitalOut('H'),
+        pros::ADIDigitalOut('A', false),
+        pros::ADIDigitalOut('B', false),
+        pros::ADIDigitalOut('C', false),
+        pros::ADIDigitalOut('D', false),
+        pros::ADIDigitalOut('E', false),
+        pros::ADIDigitalOut('F', false),
+        pros::ADIDigitalOut('G', false),
+        pros::ADIDigitalOut('H', false),
     };
+
+    pros::Mutex digitial_out_lock;
+    std::vector<bool> digital_out_cmds(8, false);
 
     // Serial Port
     ghost_v5::V5SerialNode serial_node_("msg", true); // Becomes 109 w Checksum

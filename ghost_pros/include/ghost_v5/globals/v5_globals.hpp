@@ -25,6 +25,8 @@ namespace v5_globals
     extern const pros::controller_digital_e_t joy_btns[12];
 
     extern pros::ADIDigitalOut adi_ports[8];
+    extern pros::Mutex digitial_out_lock;
+    extern std::vector<bool> digital_out_cmds;
 
     // Serial Port
     extern ghost_v5::V5SerialNode serial_node_;

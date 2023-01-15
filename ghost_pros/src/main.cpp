@@ -16,18 +16,34 @@
 using ghost_v5_config::v5_motor_id_enum;
 using ghost_v5_config::v5_sensor_id_enum;
 
-void zero_motors(){
+void zero_actuators(){
+	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
+
 	// Zero all motor commands
 	for(auto & m : v5_globals::motors){
 		m.second->setMotorCommand(0.0);
 	}
+
+	// Zero Pneumatics
+	for(int i = 0; i < 8; i++){
+		v5_globals::adi_ports[i].set_value(false);
+	}
+	actuator_lock.unlock();
 }
 
-void update_motors(){
+void update_actuators(){
+	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
+
 	// Update velocity filter and motor controller for all motors
 	for(auto & m : v5_globals::motors){
 		m.second->updateMotor();
 	}
+
+	// Update Pneumatics
+	for(int i = 0; i < 8; i++){
+		v5_globals::adi_ports[i].set_value(v5_globals::digital_out_cmds[i]);
+	}
+	actuator_lock.unlock();
 }
 
 void button_callback()
@@ -40,7 +56,7 @@ void actuator_timeout_loop()
 	while (v5_globals::run)
 	{
 		if(pros::millis() > v5_globals::last_cmd_time + v5_globals::cmd_timeout_ms){
-			zero_motors();
+			zero_actuators();
 		}
 		pros::c::task_delay_until(&loop_time, v5_globals::cmd_timeout_ms);
 	}
@@ -68,10 +84,10 @@ void ghost_main_loop(){
 
 	// Zero All Motors if disableds
 	if(pros::competition::is_disabled()){
-		zero_motors();
+		zero_actuators();
 	}
 
-	update_motors();
+	update_actuators();
 }
 
 /**
@@ -111,12 +127,7 @@ void initialize()
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->set_data_rate(5);
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->set_data_rate(5);
 
-	// Digital Outs
-	for(auto & out : v5_globals::adi_ports){
-		out.set_value(false);
-	}
-
-	zero_motors();
+	zero_actuators();
 
 	pros::lcd::initialize();
 	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
@@ -166,15 +177,6 @@ void competition_initialize() {}
  */
 void autonomous()
 {
-	pros::c::adi_port_set_config(1, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(2, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(3, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(4, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(5, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(6, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(7, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(8, ADI_DIGITAL_OUT);
-
 	uint32_t loop_time = pros::millis();
 	while (pros::competition::is_autonomous())
 	{
@@ -196,26 +198,7 @@ void autonomous()
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol()
-{
-	pros::c::adi_port_set_config(1, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(2, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(3, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(4, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(5, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(6, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(7, ADI_DIGITAL_OUT);
-	pros::c::adi_port_set_config(8, ADI_DIGITAL_OUT);
-
-	pros::c::adi_port_set_value(1, LOW);
-	pros::c::adi_port_set_value(2, LOW);
-	pros::c::adi_port_set_value(3, LOW);
-	pros::c::adi_port_set_value(4, LOW);
-	pros::c::adi_port_set_value(5, LOW);
-	pros::c::adi_port_set_value(6, LOW);
-	pros::c::adi_port_set_value(7, LOW);
-	pros::c::adi_port_set_value(8, LOW);
-
+void opcontrol(){
 	uint32_t loop_time = pros::millis();
 	while (!pros::competition::is_autonomous() && !pros::competition::is_disabled())
 	{

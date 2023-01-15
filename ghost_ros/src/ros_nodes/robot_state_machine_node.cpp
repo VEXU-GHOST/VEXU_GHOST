@@ -187,7 +187,7 @@ namespace ghost_ros
             steering_angle_cmd_[wheel_id] = atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI;   // Converts rad/s to degrees
             wheel_velocity_cmd_[wheel_id] = vel_vec.norm() * 100 / 2.54 / (2.75 * M_PI) * 60; // Convert m/s to RPM
             wheel_velocity_cmd_[wheel_id] = 0.0;                                              // TEMP
-        }
+            }
 
         publishSwerveKinematicsVisualization(wheel_vel_vectors[0], wheel_vel_vectors[1], wheel_vel_vectors[2]);
 
@@ -259,17 +259,17 @@ namespace ghost_ros
 
         std::vector<bool> digital_outs(8, false);
         if(curr_joystick_msg_->joystick_btn_a){
-            digital_outs[6] = true;
+            digital_outs[0] = true;
         }
         else{
-            digital_outs[6] = false;
+            digital_outs[0] = false;
         }
 
         if(curr_joystick_msg_->joystick_btn_b){
-            digital_outs[7] = true;
+            digital_outs[1] = true;
         }
         else{
-            digital_outs[7] = false;
+            digital_outs[1] = false;
         }
 
         publishActuatorCommand(motor_speed_cmds, motor_voltage_cmds, digital_outs);

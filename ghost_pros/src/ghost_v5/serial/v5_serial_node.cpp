@@ -101,9 +101,9 @@ namespace ghost_v5
 		// Update Digital Outputs
 		uint8_t digital_out_vector = 0;
 		memcpy(&digital_out_vector, buffer + 4 * buffer_32bit_index, 1);
-		for (int i = 0; i < 8; i++)
+		for (int i = 7; i >= 0; i--)
 		{
-			pros::c::adi_port_set_value(i, (bool) (digital_out_vector & 0x01));
+			v5_globals::digital_out_cmds[i] = (bool) (digital_out_vector & 0x01);
 			digital_out_vector >>= 1;
 		}
 
