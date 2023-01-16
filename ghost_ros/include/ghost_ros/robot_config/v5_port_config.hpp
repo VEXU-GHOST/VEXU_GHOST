@@ -29,6 +29,13 @@ namespace ghost_v5_config
         STEERING_RIGHT_ENCODER      = 19,
         STEERING_BACK_ENCODER       = 8,
     };
+
+    enum v5_pneumatic_id_enum
+    {
+        FLYWHEEL_TILT   = 1,
+        INDEXER_ROOF    = 2,
+        ENDGAME         = 3,
+    };
     
 } // ghost_v5_config
 

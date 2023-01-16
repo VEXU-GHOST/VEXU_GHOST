@@ -12,4 +12,4 @@ ghost_state_machine_node:
 
     steering_kp: 0.1
 
-    max_motor_rpm_true: 600.0
+    max_motor_rpm_true: 625.0

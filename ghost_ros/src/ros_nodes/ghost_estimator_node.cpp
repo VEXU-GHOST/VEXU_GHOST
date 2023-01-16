@@ -73,6 +73,9 @@ namespace ghost_ros
     world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
     joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
 
+    // Init debug msg
+    viz_msg_ = visualization_msgs::msg::MarkerArray{};
+
     particle_filter_ = ParticleFilter(config_params);
     last_laser_msg_ = sensor_msgs::msg::LaserScan{};
     first_map_load_ = true;
@@ -180,13 +183,21 @@ namespace ghost_ros
 
   void GhostEstimatorNode::EncoderCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg)
   {
-    // Calculate Odometry
-    auto left_encoder = msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER];
-    auto right_encoder = msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER];
-    auto back_encoder = msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER];
 
     // Publish joint states
     PublishJointStateMsg(msg);
+    
+    CalculateHSpaceICR(msg);
+
+    PublishWorldTransform();
+    PublishVisualization();
+  }
+
+  Eigen::Vector3f GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg){
+    // Calculate Odometry
+    auto left_encoder = encoder_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER];
+    auto right_encoder = encoder_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER];
+    auto back_encoder = encoder_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER];
 
     // Calculate ICR
     std::vector<Eigen::Vector3f> h_space_icr_points{0};
@@ -246,23 +257,19 @@ namespace ghost_ros
     }
 
     // Initialize Visualization msg, and add debug visualization
-    auto viz_msg = visualization_msgs::msg::MarkerArray{};
     std::vector<geometry::Line2f> lines{left_encoder_vector, right_encoder_vector, back_encoder_vector};
-    std::vector<Eigen::Vector3f> viz_points{
+    DrawWheelAxisVectors(lines);
+
+    std::vector<Eigen::Vector3f> points{
       h_space_icr_points[0],
       h_space_icr_points[1],
       h_space_icr_points[2],
       h_space_icr_avg,
       icr_flat_estimation
     };
+    DrawICRPoints(points);
 
-    AddWheelAxisMarkerVisualization(viz_msg, lines);
-    AddICRMarkerVisualiation(viz_msg, viz_points);
-
-    debug_viz_pub_->publish(viz_msg);
-
-    PublishWorldTransform();
-    // PublishVisualization();
+    return h_space_icr_avg;
   }
 
   void GhostEstimatorNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
@@ -364,6 +371,7 @@ namespace ghost_ros
 
   void GhostEstimatorNode::PublishVisualization()
   {
+    viz_msg_ = visualization_msgs::msg::MarkerArray{};
     static double t_last = 0;
     if (GetMonotonicTime() - t_last < 0.05)
     {
@@ -384,6 +392,8 @@ namespace ghost_ros
       PublishMapViz();
       first_map_load_ = false;
     }
+
+    debug_viz_pub_->publish(viz_msg_);
   }
 
   void GhostEstimatorNode::PublishJointStateMsg(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
@@ -407,9 +417,7 @@ namespace ghost_ros
     joint_state_pub_->publish(joint_state_msg);
   }
 
-  void GhostEstimatorNode::AddWheelAxisMarkerVisualization(
-    visualization_msgs::msg::MarkerArray & msg,
-    std::vector<geometry::Line2f> & lines){
+  void GhostEstimatorNode::DrawWheelAxisVectors(std::vector<geometry::Line2f> & lines){
     int j = 0;
     for(auto & line : lines){
       auto marker_msg = visualization_msgs::msg::Marker{};
@@ -422,13 +430,11 @@ namespace ghost_ros
       geometry_msgs::msg::Point p0{}; p0.x = line.p0.x(); p0.y = line.p0.y(); p0.z = 0.0; marker_msg.points.push_back(p0);
       geometry_msgs::msg::Point p1{}; p1.x = line.p1.x(); p1.y = line.p1.y(); p1.z = 0.0; marker_msg.points.push_back(p1);
 
-      msg.markers.push_back(marker_msg);
+      viz_msg_.markers.push_back(marker_msg);
     }
   }
 
-  void GhostEstimatorNode::AddICRMarkerVisualiation(
-    visualization_msgs::msg::MarkerArray & msg,
-    std::vector<Eigen::Vector3f> & points)
+  void GhostEstimatorNode::DrawICRPoints(std::vector<Eigen::Vector3f> & points)
     {
     auto marker_msg_points = visualization_msgs::msg::Marker{};
     marker_msg_points.header.frame_id = "base_link";
@@ -444,7 +450,7 @@ namespace ghost_ros
       point_msg.z = point.z();
       marker_msg_points.points.push_back(point_msg);
     }
-    msg.markers.push_back(marker_msg_points);
+    viz_msg_.markers.push_back(marker_msg_points);
 
     // Publish H-Space Sphere
     auto marker_msg_sphere = visualization_msgs::msg::Marker{};
@@ -454,7 +460,7 @@ namespace ghost_ros
     marker_msg_sphere.scale.x = 1; marker_msg_sphere.scale.y = 1; marker_msg_sphere.scale.z = 1;
     marker_msg_sphere.color.r = 0.75; marker_msg_sphere.color.g = 0.75; marker_msg_sphere.color.b = 0.75;
     marker_msg_sphere.color.a = 0.25;
-    msg.markers.push_back(marker_msg_sphere);
+    viz_msg_.markers.push_back(marker_msg_sphere);
   }
 } // namespace ghost_ros
 

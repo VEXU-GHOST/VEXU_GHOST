@@ -40,6 +40,9 @@ class GhostEstimatorNode : public rclcpp::Node {
 
     GhostEstimatorNode();
 
+  private:
+    void LoadROSParams();
+
     // Topic callback functions
     void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
     void EncoderCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
@@ -50,12 +53,16 @@ class GhostEstimatorNode : public rclcpp::Node {
     void PublishVisualization();
     void PublishMapViz();
     void PublishJointStateMsg(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
-    void AddWheelAxisMarkerVisualization(visualization_msgs::msg::MarkerArray & msg, std::vector<geometry::Line2f> & lines);
-    void AddICRMarkerVisualiation(visualization_msgs::msg::MarkerArray & msg, std::vector<Eigen::Vector3f> & points);
 
-  private:
-    void LoadROSParams();
+    // Visualization
+    void DrawWheelAxisVectors(std::vector<geometry::Line2f> & lines);
+    void DrawICRPoints(std::vector<Eigen::Vector3f> & points);
     void DrawParticles(geometry_msgs::msg::PoseArray &viz_msg);
+
+    visualization_msgs::msg::MarkerArray viz_msg_;
+
+    Eigen::Vector3f CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg);
+
 
     // Subscribers
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;

@@ -209,7 +209,9 @@ namespace ghost_ros
             // Copy encoder angle, wrapped within -180 to 180
             float angle;
             memcpy(&angle, buffer + 4 * (buffer_index++), 4);
-            angle -= float(180.0) * rint(angle / float(180));
+            
+            // wrap from 0 to 360 to -180 to 180
+            angle = std::fmod(angle, 360);
             encoder_state_msg.encoders[sensor_id].current_angle = angle;
 
             // Copy encoder velocity

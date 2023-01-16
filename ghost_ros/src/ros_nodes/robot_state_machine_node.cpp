@@ -186,33 +186,37 @@ namespace ghost_ros
 
             steering_angle_cmd_[wheel_id] = atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI;   // Converts rad/s to degrees
             wheel_velocity_cmd_[wheel_id] = vel_vec.norm() * 100 / 2.54 / (2.75 * M_PI) * 60; // Convert m/s to RPM
-            wheel_velocity_cmd_[wheel_id] = 0.0;                                              // TEMP
-            }
-
+        }
         publishSwerveKinematicsVisualization(wheel_vel_vectors[0], wheel_vel_vectors[1], wheel_vel_vectors[2]);
 
         // Apply Steering Control
-        float left_steering_error =
-            steering_angle_cmd_[0] - curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].current_angle;
-        float right_steering_error =
-            steering_angle_cmd_[1] - curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].current_angle;
-        float back_steering_error =
-            steering_angle_cmd_[2] - curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].current_angle;
+        std::vector<float> angles = {
+            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].current_angle,
+            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].current_angle,
+            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].current_angle,
+            };
 
-        // Wrap angles to 180
-        left_steering_error -= float(180.0) * rint(left_steering_error / float(180));
-        right_steering_error -= float(180.0) * rint(right_steering_error / float(180));
-        back_steering_error -= float(180.0) * rint(back_steering_error / float(180));
+        for(int i = 0; i < 3; i++){
+            // Ensure angles are mapped from 0 -> 360
+            steering_angle_cmd_[i] = (steering_angle_cmd_[i] < 0.0) ? fmod(steering_angle_cmd_[i] + 360.0, 360.0) : fmod(steering_angle_cmd_[i], 360.0);
+            angles[i] = (angles[i] < 0.0) ? fmod(angles[i] + 360.0, 360.0) : fmod(angles[i], 360.0);
 
-        steering_voltage_cmd_[0] = left_steering_error * steering_kp_;
-        steering_voltage_cmd_[1] = right_steering_error * steering_kp_;
-        steering_voltage_cmd_[2] = back_steering_error * steering_kp_;
+            // Calculate angle error and then use direction of smallest error
+            float error = steering_angle_cmd_[i] - angles[i];
+            float err_sign = (error >= 0.0) ? 1.0 : -1.0;
+            if(fabs(error) > 180){
+                error = -(360 - fabs(error))*err_sign;
+            }
+
+            // Set voltage using position control law
+            steering_voltage_cmd_[i] = error * steering_kp_;
+        }
 
         // Calculate Actuator Commands
         Eigen::Matrix2f diff_swerve_jacobian;
         Eigen::Matrix2f diff_swerve_jacobian_inverse;
-        diff_swerve_jacobian << 5.0 / 6.0, -5.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0;
-        diff_swerve_jacobian_inverse << 0.6, 3.0, -0.6, 3.0;
+        diff_swerve_jacobian << 5.0 / 12.0, -5.0 / 12.0, 1.0 / 6.0, 1.0 / 6.0;
+        diff_swerve_jacobian_inverse << 1.2, 3.0, -1.2, 3.0;
 
         // Normalize velocities based on vel saturation, transform velocities to actuator space
         for (int wheel_id = 0; wheel_id < 3; wheel_id++)
@@ -231,6 +235,7 @@ namespace ghost_ros
             motor_voltage_cmds[2 * wheel_id + 1] = actuator_voltage_cmd.y();
         }
 
+        RCLCPP_INFO(get_logger(), "");
         // Get largest speed magnitude
         double max_speed_val = 0;
         for (float &speed : motor_speed_cmds)
@@ -257,19 +262,20 @@ namespace ghost_ros
             }
         }
 
+        // Actuate Pneumatics
         std::vector<bool> digital_outs(8, false);
         if(curr_joystick_msg_->joystick_btn_a){
-            digital_outs[0] = true;
+            digital_outs[ghost_v5_config::FLYWHEEL_TILT] = true;
         }
         else{
-            digital_outs[0] = false;
+            digital_outs[ghost_v5_config::FLYWHEEL_TILT] = false;
         }
 
         if(curr_joystick_msg_->joystick_btn_b){
-            digital_outs[1] = true;
+            digital_outs[ghost_v5_config::INDEXER_ROOF] = true;
         }
         else{
-            digital_outs[1] = false;
+            digital_outs[ghost_v5_config::INDEXER_ROOF] = false;
         }
 
         publishActuatorCommand(motor_speed_cmds, motor_voltage_cmds, digital_outs);
