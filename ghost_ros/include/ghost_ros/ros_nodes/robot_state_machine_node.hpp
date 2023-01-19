@@ -36,10 +36,7 @@ namespace ghost_ros
         void updateController();
         void teleop();
 
-        void publishActuatorCommand(
-            const std::vector<float> &speed_cmd_array,
-            const std::vector<float> &voltage_cmd_array,
-            const std::vector<bool> &digital_outs);
+        void updateSwerveCommandsFromTwist(float angular_velocity, float x_velocity, float y_velocity);
 
         void publishSwerveKinematicsVisualization(
             const Eigen::Vector2f &left_wheel_cmd,
@@ -81,6 +78,8 @@ namespace ghost_ros
         Eigen::Vector2f left_wheel_pos_;
         Eigen::Vector2f right_wheel_pos_;
         Eigen::Vector2f back_wheel_pos_;
+
+        ghost_msgs::msg::V5ActuatorCommand actuator_cmd_msg_;
     };
 
 } // namespace ghost_ros

@@ -53,6 +53,8 @@ class GhostEstimatorNode : public rclcpp::Node {
     void PublishVisualization();
     void PublishMapViz();
     void PublishJointStateMsg(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
+    void PublishGhostRobotState(const ghost_msgs::msg::V5SensorUpdate::SharedPtr sensor_update_msg);
+
 
     // Visualization
     void DrawWheelAxisVectors(std::vector<geometry::Line2f> & lines);
@@ -61,8 +63,7 @@ class GhostEstimatorNode : public rclcpp::Node {
 
     visualization_msgs::msg::MarkerArray viz_msg_;
 
-    Eigen::Vector3f CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg);
-
+    void CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg);
 
     // Subscribers
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
@@ -90,6 +91,9 @@ class GhostEstimatorNode : public rclcpp::Node {
     Eigen::Vector2f left_wheel_link_;
     Eigen::Vector2f right_wheel_link_;
     Eigen::Vector2f back_wheel_link_;
+
+    Eigen::Vector3f h_space_icr_avg_;
+    Eigen::Vector3f icr_flat_estimation_;
 
 };
 } // namespace ghost_ros

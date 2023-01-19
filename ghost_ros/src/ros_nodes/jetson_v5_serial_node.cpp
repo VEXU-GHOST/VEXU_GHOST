@@ -206,12 +206,9 @@ namespace ghost_ros
             encoder_state_msg.encoders[sensor_id].device_name = ghost_v5_config::device_names.at(sensor_id);
             encoder_state_msg.encoders[sensor_id].device_id = sensor_id;
 
-            // Copy encoder angle, wrapped within -180 to 180
+            // Copy encoder angle
             float angle;
             memcpy(&angle, buffer + 4 * (buffer_index++), 4);
-            
-            // wrap from 0 to 360 to -180 to 180
-            angle = std::fmod(angle, 360);
             encoder_state_msg.encoders[sensor_id].current_angle = angle;
 
             // Copy encoder velocity

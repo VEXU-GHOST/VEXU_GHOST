@@ -23,6 +23,10 @@ float32 left_steering_angle
 float32 right_steering_angle
 float32 back_steering_angle
 
+float32 left_steering_vel
+float32 right_steering_vel
+float32 back_steering_vel
+
 ## SHOOTER ##
 float32 left_shooter_vel
 float32 right_shooter_vel

@@ -183,17 +183,69 @@ namespace ghost_ros
 
   void GhostEstimatorNode::EncoderCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg)
   {
-
-    // Publish joint states
-    PublishJointStateMsg(msg);
-    
+    // Calculate ICR Estimate from encoder angles
     CalculateHSpaceICR(msg);
 
+    // With ICR Estimate, accumulate encoder ticks off drivetrain to estimate robot motion
+    // CalculateOdometry(msg);
+
+    ///// PREDICT /////
+
+    // Publish newest robot state
+    PublishGhostRobotState(msg);
+
+    // Publish Visualization
+    PublishJointStateMsg(msg);
     PublishWorldTransform();
     PublishVisualization();
   }
 
-  Eigen::Vector3f GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg){
+  void GhostEstimatorNode::PublishGhostRobotState(const ghost_msgs::msg::V5SensorUpdate::SharedPtr sensor_update_msg){
+    // Initialize robot state msg
+    auto robot_state_msg = ghost_msgs::msg::GhostRobotState{};
+    robot_state_msg.header.stamp = sensor_update_msg->header.stamp;
+    robot_state_msg.header.frame_id = "base_link";
+
+    ///// Drivetrain States /////
+    // Robot Location
+    Vector2f robot_loc(0, 0);
+    float robot_angle(0);
+    particle_filter_.GetLocation(&robot_loc, &robot_angle);
+
+    robot_state_msg.x = robot_loc.x();
+    robot_state_msg.y = robot_loc.y();
+    robot_state_msg.theta = robot_angle;
+
+    // Velocity estimate (from odometry)
+
+    robot_state_msg.x_vel = 0.0;
+    robot_state_msg.y_vel = 0.0;
+    robot_state_msg.theta_vel = 0.0;
+
+    // Currently unimplemented (Should come from IMU / EKF)
+    robot_state_msg.x_accel = 0.0;
+    robot_state_msg.y_accel = 0.0;
+    robot_state_msg.theta_accel = 0.0;
+
+    ///// Steering States /////
+    robot_state_msg.left_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].current_angle;
+    robot_state_msg.right_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].current_angle;
+    robot_state_msg.back_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].current_angle;
+
+    robot_state_msg.left_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].current_velocity;
+    robot_state_msg.right_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].current_velocity;
+    robot_state_msg.back_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].current_velocity;
+
+    ///// Shooter States /////
+    robot_state_msg.left_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_velocity;;
+    robot_state_msg.right_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_velocity;;
+
+    ///// Turret States /////
+    robot_state_msg.turret_angle = sensor_update_msg->encoders[ghost_v5_config::TURRET_MOTOR].current_angle;
+    robot_state_msg.turret_vel = sensor_update_msg->encoders[ghost_v5_config::TURRET_MOTOR].current_velocity;
+  }
+
+  void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg){
     // Calculate Odometry
     auto left_encoder = encoder_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER];
     auto right_encoder = encoder_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER];
@@ -245,15 +297,14 @@ namespace ghost_ros
     }
 
     // Average ICR points in H-Space as our estimated center of rotation
-    Eigen::Vector3f h_space_icr_avg = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2]) / 3;
-    Eigen::Vector3f icr_flat_estimation;
+    h_space_icr_avg_ = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2]) / 3;
 
     // Handle parallel case
-    if(h_space_icr_avg[2] > 1e9){
-      icr_flat_estimation = Eigen::Vector3f(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0);
+    if(fabs(h_space_icr_avg_[2]) < 1e-9){
+      icr_flat_estimation_ = Eigen::Vector3f(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0);
     }
     else{
-      icr_flat_estimation = Eigen::Vector3f(h_space_icr_avg[0]/h_space_icr_avg[2], h_space_icr_avg[1]/h_space_icr_avg[2], 0);
+      icr_flat_estimation_ = Eigen::Vector3f(h_space_icr_avg_[0]/h_space_icr_avg_[2], h_space_icr_avg_[1]/h_space_icr_avg_[2], 0);
     }
 
     // Initialize Visualization msg, and add debug visualization
@@ -264,12 +315,10 @@ namespace ghost_ros
       h_space_icr_points[0],
       h_space_icr_points[1],
       h_space_icr_points[2],
-      h_space_icr_avg,
-      icr_flat_estimation
+      h_space_icr_avg_,
+      icr_flat_estimation_
     };
     DrawICRPoints(points);
-
-    return h_space_icr_avg;
   }
 
   void GhostEstimatorNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
