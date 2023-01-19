@@ -63,6 +63,14 @@ namespace ghost_ros
             use_checksum,
             verbose_);
 
+        backup_serial_interface = std::make_shared<ghost_serial::JetsonSerialBase>(
+            backup_port_name,
+            write_msg_start_seq,
+            read_msg_start_seq,
+            sensor_update_msg_len_,
+            use_checksum,
+            verbose_);
+
         // Sensor Update Msg Publisher
         sensor_update_pub_ = create_publisher<ghost_msgs::msg::V5SensorUpdate>("v5/sensor_update", 10);
         competition_state_pub_ = create_publisher<ghost_msgs::msg::V5CompetitionState>("v5/competition_state", 10);
@@ -87,9 +95,24 @@ namespace ghost_ros
     {
         // Wait for serial to become available
         bool serial_open = false;
+        bool backup = false;
         while (rclcpp::ok() && !serial_open)
         {
-            serial_open = serial_base_interface_->trySerialInit();
+            if(backup){
+                serial_open = backup_serial_interface->trySerialInit();
+                
+                // Hack
+                if(serial_open){
+                    serial_base_interface_ = backup_serial_interface;
+                }
+            }
+            else{
+                serial_open = serial_base_interface_->trySerialInit();
+            }
+
+            if(!serial_open){
+                backup = !backup;
+            }
             std::this_thread::sleep_for(10ms);
         }
 

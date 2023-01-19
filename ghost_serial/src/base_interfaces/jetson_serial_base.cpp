@@ -108,7 +108,7 @@ namespace ghost_serial
 
             if (setSerialPortConfig())
             {
-                std::string err_string = "Error " + std::to_string(errno) + ", " + strerror(errno);
+                std::string err_string = "Error " + std::to_string(errno) + " on port:" + port_name_ + ", " + strerror(errno);
                 throw std::runtime_error(err_string);
             }
 

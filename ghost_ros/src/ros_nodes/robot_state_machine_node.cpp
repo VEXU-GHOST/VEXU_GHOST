@@ -165,7 +165,12 @@ namespace ghost_ros
 
         // Actuate Pneumatics
         std::vector<bool> digital_outs(8, false);
-        // digital_outs[ghost_v5_config::FLYWHEEL_TILT] = curr_joystick_msg_->joystick_btn_a;
+        if(curr_joystick_msg_->joystick_btn_a){
+            digital_outs[ghost_v5_config::ENDGAME] = true;
+        }
+        else{
+            digital_outs[ghost_v5_config::ENDGAME] = false;
+        }
         // digital_outs[ghost_v5_config::INDEXER_ROOF] = curr_joystick_msg_->joystick_btn_b;
 
 

@@ -46,6 +46,7 @@ namespace ghost_ros
 
         // Serial Interface
         std::shared_ptr<ghost_serial::JetsonSerialBase> serial_base_interface_;
+        std::shared_ptr<ghost_serial::JetsonSerialBase> backup_serial_interface;
         std::vector<unsigned char> sensor_update_msg_;
 
         // Reader Thread
