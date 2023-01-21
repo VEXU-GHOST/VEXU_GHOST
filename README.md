@@ -22,7 +22,7 @@
     * It is annoying to copy and paste this command every time so it's helpful to alias it by adding `alias lidarvnc="ssh -L 5900:localhost:5900 lidar@$(ipconfig getifaddr en0) \"x11vnc -create -nopw -listen 127.0.0.1 -localhost\""` to your shell initialization script.
 4. Use your VNC Viewer to connect with `localhost:5900` and type `startxfce4` in the terminal that appears; a GUI should form.
 5. Open a new terminal and run `sudo -i` to launch a root session and navigate to `/root/VEXU_GHOST/scripts`. Run `bash launch_sim.sh` and the rviz simulation should start up!
-
+    * You may need to change from world frame to base link in the dropdown in the upper left-hand corner for the simulation to work properly. Ideally, the world frame will be created in the future.
 
 ## Troubleshooting
 * Running `xeyes` (and having some eyes follow your mouse around the scene) is a good way to check basic x11 forwarding is working.
