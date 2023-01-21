@@ -1,33 +1,30 @@
-# Setting Up ROS container
+# Setting Up LIDAR container
 
-Build the Dockerfile by naviagting to the directory with the Dockerfile and using the command `docker build . -t ros2-foxy`.
+## Reuied Software
+* Docker
+* VNC Viewer (this installation was tested with [real vnc](https://www.realvnc.com/en/connect/download/viewer/), but any should do)
 
-Create a Docker ROS container using `docker run -it --name LIDAR ros2-foxy`. You're now running bash in the container. Type `exit` to stop.
-To re-enter the Docker container, run `docker container start LIDAR`. Confirm it's running with `docker ps` and then run `docker exec -it LIDAR bash`. 
-You may need to run `. /opt/ros/foxy/setup.bash` to get the ros2 command working.
+## Helpful Commands
+* `docker build . -t <image-name>` : create image
+* `docker container start <container-name>` : start container
+* `docker exec -it <container-name> bash` : access container's terminal
+* `ssh -L 5900:localhost:5900 <username>@$(ipconfig getifaddr en0) "x11vnc -create -nopw -listen 127.0.0.1 -localhost"` : start vnc server
+* `startxfce4` : start GUI
 
-Setup X11 forwarding. This may take a while.
-For MAC, I found these links useful
-[https://gist.github.com/sorny/969fe55d85c9b0035b0109a31cbcb088](https://gist.github.com/sorny/969fe55d85c9b0035b0109a31cbcb088)
-[https://medium.com/@mreichelt/how-to-show-x11-windows-within-docker-on-mac-50759f4b65cb](https://medium.com/@mreichelt/how-to-show-x11-windows-within-docker-on-mac-50759f4b65cb)
-Get to the point where running `xeyes` in the ROS docker container openes an xeyes windows on your computer.
-
-Download this repo (from this branch) and copy it into the Docker container using the `docker cp VEXU_GHOST LIDAR:root/VEXU_GHOST`. Then re-enter the container and
-navigate to the scripts folder of VEXU_GHOST (note that VEXU_GHOST is in the root directory and you will have to enter `cd ~` to navigate to this directory). Run the following commands _in order_ from the VEXU_GHOST directory:
-`bash install_dependencies.sh`
-`bash build.sh`
-`bash launch_sim.sh`
-
-error possibly in ~/VEXU_GHOST/install/setup.bash
-    COLCON_CURRENT_PREFIX="$(builtin cd "`dirname "${BASH_SOURCE[0]}"`" > /dev/null && pwd)"
-
-~/VEXU_GHOST/install/ghost_sim/share/ghost_sim/package.bash
+## Setup Steps
+1. Build the Dockerfile by naviagting to this directory and running the command `docker build . -t ros2-foxy`.
+2. Create a container from the image using `docker run -it -p 22:22 --name LIDAR ros2-foxy`. You're now running bash in the container. Type `exit` to stop. Note that `-p 22:22` maps the container's port 22 to your local port 22; only one container at a time can be bound to your local port 22.
+    * The docker file will create a user for you that defaults to the username `lidar` with passowrd `password`. To change these defaults, add `--build-arg USERNAME=<your-username>` or `--build-arg PASSWORD=<your-password>` to the `docker build` line.
+3. Start the container via the docker GUI or by running `docker container start LIDAR` and then _on your local machine_ run the command `ssh -L 5900:localhost:5900 lidar@$(ipconfig getifaddr en0) "x11vnc -create -nopw -listen 127.0.0.1 -localhost"` to establish a vnc server in the container and pipe it to localhost:5900. Unless you changed it during the previous step, the password is `password`.
+    * If you changed your username in step 2, change "lidar" to your username.
+    * It is annoying to copy and paste this command every time so its helpful to alias it by adding `alias lidarvnc="ssh -L 5900:localhost:5900 lidar@$(ipconfig getifaddr en0) \"x11vnc -create -nopw -listen 127.0.0.1 -localhost\""` to your shell initialization script.
+4. Use your VNC Viewer to connect with `localhost:5900` and type `startxfce4` in the terminal that appears; a GUI should form.
+5. Open a new terminal and run `sudo -i` to launch a root session and navigate to `/root/VEXU_GHOST/scripts`. Then run `bash build.sh` followed by `bash launch_sim.sh` and the rviz simulation should be running!
 
 
-source /opt/ros/foxy/setup.bash
-source /root/VEXU_GHOST/install/setup.bash
-export DISPLAY=host.docker.internal:0
-export LIBGL_ALWAYS_INDIRECT=1
+## Troubleshooting
+* Runing `xeyes` (and have some eyes follow your mouse around the scene) is a good way to check basic x11 forwarding is working.
 
-https://twiki.nevis.columbia.edu/twiki/bin/view/Main/X11OnLaptops
-http://tleyden.github.io/
+## Interesting Links & Explainations
+* Here is an explaination of our VNC setup that may help you work through issues <https://jasonmurray.org/posts/2021/x11vnc/>
+* When we VNC into a user account, we only give that user x11 forwarding authorization and have to essentially copy the credentials from the user to root so we can the simulation from root. This is all done programatically now, but this link covers how it is done manually <https://unix.stackexchange.com/questions/476290/x11-forwarding-does-not-work-if-su-to-another-user>
