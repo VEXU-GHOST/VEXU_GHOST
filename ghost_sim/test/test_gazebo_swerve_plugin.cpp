@@ -116,9 +116,9 @@ TEST_F(GazeboSwervePluginTest, testJointTorque)
     gazebo::common::Time::MSleep(100);
   }
 
-  EXPECT_TRUE(model_->GetJoint("driveshaft_1")->GetVelocity(2) > 0.0);
-  EXPECT_TRUE(model_->GetJoint("driveshaft_2")->GetVelocity(2) > 0.0);
-  EXPECT_TRUE(model_->GetJoint("driveshaft_3")->GetVelocity(2) > 0.0);
+  EXPECT_TRUE(model_->GetJoint("driveshaft_left")->GetVelocity(2) > 0.0);
+  EXPECT_TRUE(model_->GetJoint("driveshaft_right")->GetVelocity(2) > 0.0);
+  EXPECT_TRUE(model_->GetJoint("driveshaft_back")->GetVelocity(2) > 0.0);
 }
 
 int main(int argc, char **argv)

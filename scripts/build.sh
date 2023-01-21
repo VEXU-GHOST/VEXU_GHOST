@@ -2,11 +2,12 @@
 
 # Assumes repository is in base directory
 cd ~/VEXU_GHOST
+echo "---Building Ghost ROS Packages---"
 
 # Build simulator packages depending on what is passed for FULLBUILD
 if [ "$1" == "EMBEDBUILD" ];
 then 
-    colcon build --packages-select ghost_ros
+    colcon build --packages-skip ghost_sim
 else
     colcon build
 fi
@@ -14,16 +15,16 @@ fi
 source install/setup.bash
 
 # Process URDFs from Xacro and add to Share
-GHOST_ROS_SHARE_DIR="$PWD/install/ghost_ros/share/ghost_ros"
-URDF_PATH="${GHOST_ROS_SHARE_DIR}/urdf/ghost1.xacro"
+GHOST_DESCRIPTION_SHARE_DIR="$PWD/install/ghost_description/share/ghost_description"
+URDF_PATH="${GHOST_DESCRIPTION_SHARE_DIR}/urdf/ghost1.xacro"
 
-if [ ! -d $GHOST_ROS_SHARE_DIR ];
+if [ ! -d $GHOST_DESCRIPTION_SHARE_DIR ];
 then
     touch $URDF_PATH
 else
     echo
-    echo "Generating URDF"
-    xacro ghost_ros/urdf/ghost1.xacro > $URDF_PATH
+    echo "---Generating Ghost Description URDF---"
+    xacro ghost_description/urdf/ghost1.xacro > $URDF_PATH
     echo "URDF written to" $URDF_PATH
 fi
 
@@ -40,7 +41,7 @@ then
         touch $URDF_SIM_PID_PATH
     else
         echo
-        echo "Generating URDF"
+        echo "---Generating Ghost Simulation URDFs---"
         xacro ghost_sim/urdf/ghost1_sim_voltage.xacro > $URDF_SIM_VOLTAGE_PATH
         xacro ghost_sim/urdf/ghost1_sim_pid.xacro > $URDF_SIM_PID_PATH
         echo "URDF written to" $URDF_SIM_VOLTAGE_PATH
@@ -49,3 +50,23 @@ then
 fi
 
 source ~/.bashrc
+
+echo 
+echo "Checking for PROS"
+if [[ $(pros --version) ]] 2> /dev/null; then
+    echo "Found PROS"
+    echo "---Updating V5 Project Symbolic Links---"
+    bash scripts/update_symlinks.sh
+
+    cd ghost_pros
+
+    echo
+    echo "---Cleaning PROS Project---"
+    make clean
+
+    echo 
+    echo "---Building PROS Project---"
+    pros make
+else
+    echo "PROS not installed, skipping V5 Build"
+fi

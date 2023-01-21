@@ -38,7 +38,7 @@ public:
   std::string link_name_;
   
   // Motor Parameters
-  dc_motor_model::DCMotorModel motor_model_;
+  ghost_control::DCMotorModel motor_model_;
   double free_speed_;
   double stall_torque_;
   double free_current_;
@@ -47,14 +47,15 @@ public:
   double gear_ratio_;
 
   // Controller Parameters
-  double pos_gain_;
-  double vel_gain_;
-  double accel_gain_;
+  double position_gain_;
+  double velocity_gain_;
+  double feedforward_velocity_gain_;
+  double feedforward_voltage_gain_;
 
   // Controller Setpoints
   double angle_setpoint_;
-  double vel_setpoint_;
-  double accel_setpoint_;
+  double velocity_setpoint_;
+  double voltage_setpoint_;
 };
 
 GazeboJointPIDPlugin::GazeboJointPIDPlugin()
@@ -78,8 +79,9 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     "joint_name",
     "link_name",
     "position_gain",
-    "vel_gain",
-    "accel_gain",
+    "velocity_gain",
+    "feedforward_velocity_gain",
+    "feedforward_voltage_gain",
     "free_speed",
     "stall_torque",
     "free_current",
@@ -99,9 +101,10 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
   impl_->joint_name_ = sdf->GetElement("joint_name")->Get<std::string>();
   impl_->link_name_ = sdf->GetElement("link_name")->Get<std::string>();
 
-  impl_->pos_gain_ = sdf->GetElement("position_gain")->Get<double>();
-  impl_->vel_gain_ = sdf->GetElement("vel_gain")->Get<double>();
-  impl_->accel_gain_ = sdf->GetElement("accel_gain")->Get<double>();
+  impl_->position_gain_ = sdf->GetElement("position_gain")->Get<double>();
+  impl_->velocity_gain_ = sdf->GetElement("velocity_gain")->Get<double>();
+  impl_->feedforward_velocity_gain_ = sdf->GetElement("feedforward_velocity_gain")->Get<double>();
+  impl_->feedforward_voltage_gain_ = sdf->GetElement("feedforward_voltage_gain")->Get<double>();
   
   impl_->free_speed_ = sdf->GetElement("free_speed")->Get<double>();
   impl_->stall_torque_ = sdf->GetElement("stall_torque")->Get<double>();
@@ -116,8 +119,8 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     10,
     [this](const geometry_msgs::msg::Vector3::SharedPtr msg){
         impl_->angle_setpoint_ = msg->x;
-        impl_->vel_setpoint_ = msg->y;
-        impl_->accel_setpoint_ = msg->z;
+        impl_->velocity_setpoint_ = msg->y;
+        impl_->voltage_setpoint_ = msg->z;
     }
     );
 
@@ -127,7 +130,7 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     10);
 
   // Initalize motor models
-  impl_->motor_model_ = dc_motor_model::DCMotorModel(
+  impl_->motor_model_ = ghost_control::DCMotorModel(
     impl_->free_speed_,
     impl_->stall_torque_,
     impl_->free_current_,
@@ -144,8 +147,8 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
 
   // Initialize setpoints
   impl_->angle_setpoint_ = 0.0;
-  impl_->vel_setpoint_ = 0.0;
-  impl_->accel_setpoint_ = 0.0;
+  impl_->velocity_setpoint_ = 0.0;
+  impl_->voltage_setpoint_ = 0.0;
 
   // Create a connection so the OnUpdate function is called at every simulation
   // iteration. Remove this call, the connection and the callback if not needed.
@@ -166,7 +169,14 @@ void GazeboJointPIDPlugin::OnUpdate()
 
   // Update motor
   impl_->motor_model_.setMotorSpeedRPM(joint_vel_rpm);
-  impl_->motor_model_.setMotorEffort(impl_->accel_gain_ * impl_->accel_setpoint_ + impl_->vel_gain_ * (impl_->vel_setpoint_ - joint_vel_rpm) + impl_->pos_gain_ * angle_error);
+
+  // Calculate control inputs
+  float voltage_feedforward = impl_->voltage_setpoint_ * impl_->nominal_voltage_ * 1000 * impl_->feedforward_voltage_gain_;
+  float velocity_feedforward = impl_->motor_model_.getVoltageFromVelocityMillivolts(impl_->velocity_setpoint_) * impl_->feedforward_velocity_gain_;
+  float velocity_feedback = (impl_->velocity_setpoint_ - joint_vel_rpm) * impl_->velocity_gain_;
+  float position_feedback = (impl_->angle_setpoint_ - joint_angle_deg) * impl_->position_gain_;
+
+  impl_->motor_model_.setMotorEffort(voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback);
   
   auto motor_torque = impl_->motor_model_.getTorqueOutput();
   // For simulatilon stability, only apply torque if larger than a threshhold

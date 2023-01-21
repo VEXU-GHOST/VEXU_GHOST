@@ -11,53 +11,69 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <atomic>
 #include <signal.h>
 
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include "globals/globals.hpp"
-
-#include "particle_filter/particle_filter_node.hpp"
+#include "ghost_ros/globals/globals.hpp"
+#include "ghost_ros/ros_nodes/ghost_estimator_node.hpp"
+#include "ghost_ros/ros_nodes/jetson_v5_serial_node.hpp"
+#include "ghost_ros/ros_nodes/robot_state_machine_node.hpp"
 
 using namespace std::literals::chrono_literals;
 
 // Define Global Variables in shared memory
 namespace globals{
     std::string repo_base_dir;
-    bool run_ = true;
+    std::atomic_bool run(true);
+    std::chrono::time_point<std::chrono::system_clock> program_start_time;
 }
 
-
 void SignalHandler(int) {
-    if(rclcpp::ok()){
-        rclcpp::shutdown();
-    }
-
-    if (!globals::run_) {
+    if (!globals::run) {
         printf("Force Exit.\n");
         exit(0);
     }
 
     printf("Exiting.\n");
-    globals::run_ = false;
-}
-
-void particle_filter_main(){
-    rclcpp::spin(std::make_shared<particle_filter::ParticleFilterNode>(globals::repo_base_dir + "ghost_ros/config/particle_filter.yaml"));
+    globals::run = false;
 }
 
 int main(int argc, char* argv[]){
     signal(SIGINT, SignalHandler);
     rclcpp::init(argc, argv);
 
-    globals::repo_base_dir = getenv("HOME");
-    globals::repo_base_dir += + "/VEXU_GHOST/";
+    globals::program_start_time = std::chrono::system_clock::now();    
+    globals::repo_base_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/";
+    auto main_config = YAML::LoadFile(globals::repo_base_dir + "ghost_ros/config/main_config.yaml");
 
-    // Initialize modules
-    std::thread particle_filter_thread(&particle_filter_main);    
+    // Define Nodes and MultiThreadedExecutor
+    auto serial_node = std::make_shared<ghost_serial::JetsonV5SerialNode>(
+        globals::repo_base_dir + "ghost_ros/config/ghost_serial_config.yaml");
 
-    particle_filter_thread.join();
+    auto ghost_estimator_node = std::make_shared<ghost_ros::GhostEstimatorNode>(
+        globals::repo_base_dir + "ghost_ros/config/ghost_estimator_config.yaml",
+        main_config["simulated"].as<bool>()
+        );
+
+    auto state_machine_node = std::make_shared<ghost_ros::RobotStateMachineNode>(
+        globals::repo_base_dir + "ghost_ros/config/ghost_state_machine_config.yaml"
+        );
+    
+    rclcpp::executors::MultiThreadedExecutor executor;
+
+    // Wait for serial port, then start reader thread
+    if(!main_config["simulated"].as<bool>()){
+        serial_node->initSerialBlocking();
+    }
+
+    // Start ROS Executor
+    // executor.add_node(ghost_estimator_node);
+    // executor.add_node(state_machine_node);
+
+    executor.spin();
 
     return 0;
 }

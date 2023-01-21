@@ -9,7 +9,7 @@
  */
 
 #include "gazebo_motor_plugin.hpp"
-#include "dc_motor_model.hpp"
+#include "ghost_control/models/dc_motor_model.hpp"
 
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/Joint.hh>
@@ -47,7 +47,7 @@ public:
 
   /// Latest Actuator Values
   double actuator_input_;
-  dc_motor_model::DCMotorModel motor_model_;
+  ghost_control::DCMotorModel motor_model_;
 
   // Plugin params
   std::string joint_name_;
@@ -126,7 +126,7 @@ void GazeboMotorPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sd
     10);
 
   // Initalize motor models
-  impl_->motor_model_ = dc_motor_model::DCMotorModel(
+  impl_->motor_model_ = ghost_control::DCMotorModel(
     impl_->free_speed_,
     impl_->stall_torque_,
     impl_->free_current_,

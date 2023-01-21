@@ -6,6 +6,12 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+set(CMAKE_BUILD_TYPE "DEBUG")
+
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+  add_compile_options(-g -O0)
+endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+
 ########################
 ##### DEPENDENCIES #####
 ########################
@@ -17,6 +23,7 @@ find_package(Eigen3 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(tf2_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
@@ -29,7 +36,8 @@ find_package(gazebo_ros REQUIRED)
 find_package(gazebo_plugins REQUIRED)
 
 # Custom
-find_package(ghost_ros REQUIRED)
+find_package(ghost_msgs REQUIRED)
+find_package(ghost_control REQUIRED)
 
 # Include
 include_directories(include)
@@ -48,10 +56,10 @@ ament_target_dependencies(gazebo_motor_plugin
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
-  ghost_ros
+  ghost_control
 )
 target_link_libraries(gazebo_motor_plugin
-  ghost_ros::dc_motor_model)
+  ghost_control::dc_motor_model)
 target_include_directories(gazebo_motor_plugin
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -69,10 +77,10 @@ ament_target_dependencies(gazebo_joint_pid_plugin
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
-  ghost_ros
+  ghost_control
 )
 target_link_libraries(gazebo_joint_pid_plugin
-  ghost_ros::dc_motor_model
+  ghost_control::dc_motor_model
 )
 target_include_directories(gazebo_joint_pid_plugin
   PUBLIC
@@ -92,13 +100,27 @@ ament_target_dependencies(swerve_odometry_plugin
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
-  ghost_ros
+  ghost_control
 )
 target_include_directories(swerve_odometry_plugin
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(swerve_odometry_plugin)
+
+add_executable(ground_truth_pose_publisher
+  src/ground_truth_pose_publisher.cpp
+)
+ament_target_dependencies(ground_truth_pose_publisher
+  rclcpp
+  tf2_msgs
+  geometry_msgs
+  gazebo_msgs
+  ghost_msgs
+)
+install(TARGETS
+  ground_truth_pose_publisher
+  DESTINATION lib/${PROJECT_NAME})
 
 ###################
 ##### TESTING #####
@@ -128,7 +150,6 @@ install(
 install(DIRECTORY
   launch
   urdf
-  rviz
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()

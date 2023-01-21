@@ -4,7 +4,9 @@ sudo apt-get install -y ros-foxy-joint-state-publisher ros-foxy-joint-state-publ
 sudo apt-get install -y python3-pip libgtest-dev libgoogle-glog-dev
 sudo apt-get install -y ros-foxy-rplidar-ros  ros-foxy-realsense2*
 
+echo "Building yaml-cpp from source in ~/ghost_deps"
 cd ~/
+mkdir ghost_deps && cd ghost_deps
 git config --global --add safe.directory /root/VEXU_GHOST
 git config --global --add safe.directory /root/VEXU_GHOST/ghost_ros/src/shared
 git clone https://github.com/jbeder/yaml-cpp.git

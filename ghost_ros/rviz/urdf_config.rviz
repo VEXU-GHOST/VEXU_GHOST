@@ -49,7 +49,7 @@ Visualization Manager:
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
-      Marker Scale: 0.30000001192092896
+      Marker Scale: 0.2
       Name: TF
       Show Arrows: false
       Show Axes: true
@@ -86,8 +86,20 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: System Default
         Value: /scan
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Swerve Kinematics
+      Namespaces:
+        "controller": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: System Default
+        Value: /controller_debug
       Value: true
   Enabled: true
   Global Options:
