@@ -5,6 +5,8 @@ ARG PASSWORD=password
 
 ENV DEBIAN_FRONTEND noninteractive
 
+SHELL ["/bin/bash", "-c"]
+
 RUN apt-get clean
 
 # install ros package
@@ -31,6 +33,9 @@ COPY . /root/VEXU_GHOST
 
 RUN mkdir /root/VEXU_GHOST/ghost_sim/rviz && \
     /root/VEXU_GHOST/scripts/install_dependencies.sh
+
+RUN source /ros_entrypoint.sh && \
+    /root/VEXU_GHOST/scripts/build.sh
 
 RUN touch ~/.Xauthority
 
