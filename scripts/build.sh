@@ -1,27 +1,21 @@
 #!/bin/bash
 
-# Get processor architecture to determine if we should build simulator or not (not on robot hardware)
-arch=$(uname -p)
-
 # Assumes repository is in base directory
 cd ~/VEXU_GHOST
 
-# Build ignores simulator packages on embedded devices
-if [ "$arch" == 'x86_64' ];
-then 
-    colcon build
-fi
-
-if [ "$arch" == 'aarch64' ];
+# Build simulator packages depending on what is passed for FULLBUILD
+if [ "$1" == "EMBEDBUILD" ];
 then 
     colcon build --packages-select ghost_ros
+else
+    colcon build
 fi
 
 source install/setup.bash
 
 # Process URDFs from Xacro and add to Share
 GHOST_ROS_SHARE_DIR="$PWD/install/ghost_ros/share/ghost_ros"
-URDF_PATH="${GHOST_ROS_SHARE_DIR}/urdf/ghost1.urdf"
+URDF_PATH="${GHOST_ROS_SHARE_DIR}/urdf/ghost1.xacro"
 
 if [ ! -d $GHOST_ROS_SHARE_DIR ];
 then
@@ -34,7 +28,7 @@ else
 fi
 
 # Processes URDFs for simulation
-if [ "$arch" == 'x86_64' ];
+if [ "$1" != "EMBEDBUILD" ];
 then 
     GHOST_SIM_SHARE_DIR="$PWD/install/ghost_sim/share/ghost_sim"
     URDF_SIM_VOLTAGE_PATH="${GHOST_SIM_SHARE_DIR}/urdf/ghost1_sim_voltage.urdf"
