@@ -10,12 +10,12 @@ echo "---Building Ghost ROS Packages---"
 # Build ignores simulator packages on embedded devices
 if [ "$arch" == 'x86_64' ];
 then 
-    colcon build
+    colcon build --symlink-install
 fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --packages-skip ghost_sim
+    colcon build --symlink-install --packages-skip ghost_sim
 fi
 
 source install/setup.bash

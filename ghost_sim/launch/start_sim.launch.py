@@ -58,6 +58,10 @@ def generate_launch_description():
     gazebo_ros_share_dir = get_package_share_directory('gazebo_ros')
     ghost_ros_share_dir = get_package_share_directory('ghost_ros')
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
+
+    home_dir = os.path.expanduser('~')
+    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "ghost_ros")
+
     world_file = os.path.join(ghost_sim_share_dir, "urdf", "spin_up.world")
     rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')
 
@@ -101,11 +105,20 @@ def generate_launch_description():
         condition=launch.conditions.IfCondition(LaunchConfiguration("joystick"))
     )
 
-    ghost_ros_main = Node(
+    estimator_node = Node(
         package='ghost_ros',
-        executable='ghost_ros_main',
-        name='ghost_ros_main',
+        executable='ghost_estimator_node',
+        name='ghost_estimator_node',
         output='screen',
+        parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
+    )
+
+    state_machine_node = Node(
+        package='ghost_ros',
+        executable='robot_state_machine_node',
+        name='ghost_state_machine_node',
+        output='screen',
+        parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
     )
 
     return LaunchDescription([
@@ -117,6 +130,7 @@ def generate_launch_description():
         ground_truth_publisher,
         rviz_node,
         joy_launch_description,
-        ghost_ros_main,
+        estimator_node,
+        state_machine_node,
         OpaqueFunction(function = launch_setup)
     ])
