@@ -14,12 +14,12 @@ using std::placeholders::_1;
 class BasicSwerveController : public rclcpp::Node{
 public:
     BasicSwerveController(): Node("basic_swerve_controller"){
-        steering_1_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_1/setpoint", 10);
-        steering_2_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_2/setpoint", 10);
-        steering_3_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_3/setpoint", 10);
-        wheel_1_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_1/setpoint", 10);
-        wheel_2_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_2/setpoint", 10);
-        wheel_3_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_3/setpoint", 10);
+        steering_left_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_left/setpoint", 10);
+        steering_right_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_right/setpoint", 10);
+        steering_back_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/mod_back/setpoint", 10);
+        wheel_left_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_left/setpoint", 10);
+        wheel_right_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_right/setpoint", 10);
+        wheel_back_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/motors/wheel_back/setpoint", 10);
 
         cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
             "/cmd_vel",
@@ -84,13 +84,13 @@ public:
         RCLCPP_INFO(this->get_logger(), "vw3x: %lf", vw3x);
         RCLCPP_INFO(this->get_logger(), "vw3y: %lf", vw3y);
 
-        publish_twist_msg(steering_1_pub_, atan2(vw1y, vw1x)*180/M_PI, 0.0, 0.0);
-        publish_twist_msg(steering_2_pub_, atan2(vw2y, vw2x)*180/M_PI, 0.0, 0.0);
-        publish_twist_msg(steering_3_pub_, atan2(vw3y, vw3x)*180/M_PI, 0.0, 0.0);
+        publish_twist_msg(steering_left_pub_, atan2(vw1y, vw1x)*180/M_PI, 0.0, 0.0);
+        publish_twist_msg(steering_right_pub_, atan2(vw2y, vw2x)*180/M_PI, 0.0, 0.0);
+        publish_twist_msg(steering_back_pub_, atan2(vw3y, vw3x)*180/M_PI, 0.0, 0.0);
 
-        publish_twist_msg(wheel_1_pub_, 0.0, sqrt(vw1x*vw1x + vw1y*vw1y)/rpm_to_ms, 0.0);
-        publish_twist_msg(wheel_2_pub_, 0.0, sqrt(vw2x*vw2x + vw2y*vw2y)/rpm_to_ms, 0.0);
-        publish_twist_msg(wheel_3_pub_, 0.0, sqrt(vw3x*vw3x + vw3y*vw3y)/rpm_to_ms, 0.0);
+        publish_twist_msg(wheel_left_pub_, 0.0, sqrt(vw1x*vw1x + vw1y*vw1y)/rpm_to_ms, 0.0);
+        publish_twist_msg(wheel_right_pub_, 0.0, sqrt(vw2x*vw2x + vw2y*vw2y)/rpm_to_ms, 0.0);
+        publish_twist_msg(wheel_back_pub_, 0.0, sqrt(vw3x*vw3x + vw3y*vw3y)/rpm_to_ms, 0.0);
 
         RCLCPP_INFO(this->get_logger(), "%lf", atan2(vw1y, vw1x));
         RCLCPP_INFO(this->get_logger(), "%lf", atan2(vw2y, vw2x));
@@ -113,12 +113,12 @@ private:
     }
 
     // Publishers
-    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr steering_1_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr steering_2_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr steering_3_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr wheel_1_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr wheel_2_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr wheel_3_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr steering_left_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr steering_right_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr steering_back_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr wheel_left_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr wheel_right_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr wheel_back_pub_;
     
     // Subscriptions
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;

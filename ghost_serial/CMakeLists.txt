@@ -12,10 +12,11 @@ endif()
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
-set(CMAKE_BUILD_TYPE "DEBUG")
+# set(CMAKE_BUILD_TYPE "DEBUG")
+set(CMAKE_BUILD_TYPE "RELEASE")
 
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0)

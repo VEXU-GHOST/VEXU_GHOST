@@ -16,18 +16,34 @@
 using ghost_v5_config::v5_motor_id_enum;
 using ghost_v5_config::v5_sensor_id_enum;
 
-void zero_motors(){
+void zero_actuators(){
+	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
+
 	// Zero all motor commands
 	for(auto & m : v5_globals::motors){
 		m.second->setMotorCommand(0.0);
 	}
+
+	// Zero Pneumatics
+	for(int i = 0; i < 8; i++){
+		v5_globals::adi_ports[i].set_value(false);
+	}
+	actuator_lock.unlock();
 }
 
-void update_motors(){
+void update_actuators(){
+	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
+
 	// Update velocity filter and motor controller for all motors
 	for(auto & m : v5_globals::motors){
 		m.second->updateMotor();
 	}
+
+	// Update Pneumatics
+	for(int i = 0; i < 8; i++){
+		v5_globals::adi_ports[i].set_value(v5_globals::digital_out_cmds[i]);
+	}
+	actuator_lock.unlock();
 }
 
 void button_callback()
@@ -40,7 +56,7 @@ void actuator_timeout_loop()
 	while (v5_globals::run)
 	{
 		if(pros::millis() > v5_globals::last_cmd_time + v5_globals::cmd_timeout_ms){
-			zero_motors();
+			zero_actuators();
 		}
 		pros::c::task_delay_until(&loop_time, v5_globals::cmd_timeout_ms);
 	}
@@ -57,20 +73,21 @@ void reader_loop(){
 		if(update_recieved){
 			v5_globals::last_cmd_time = pros::millis();
 		}
-		pros::c::task_delay_until(&loop_time, v5_globals::cmd_timeout_ms);
+		// Reader thread blocks waiting for data, so loop frequency must run faster than producer to avoid msg queue backup
+		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency/2);
 	}
 }
 
 void ghost_main_loop(){
 	// Send robot state over serial to coprocessor
 	v5_globals::serial_node_.writeV5StateUpdate();
-	
+
 	// Zero All Motors if disableds
 	if(pros::competition::is_disabled()){
-		zero_motors();
+		zero_actuators();
 	}
 
-	update_motors();
+	update_actuators();
 }
 
 /**
@@ -97,20 +114,35 @@ void initialize()
     v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        true, 	shooter_motor_config);
     v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       false, shooter_motor_config);
 
-	// // Encoder Ports
+	// Drive testing
+	v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]->set_current_limit(0.0);
+	v5_globals::motors[v5_motor_id_enum::INTAKE_MOTOR]->set_current_limit(0.0);
+	v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]->set_current_limit(0.0);
+	v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]->set_current_limit(0.0);
+	v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]->set_current_limit(0.0);
+
+	// Encoder Ports
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_LEFT_ENCODER),
     v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_RIGHT_ENCODER),
     v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_BACK_ENCODER),
 	
-	zero_motors();
+	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->reverse();
+	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->reverse();
+	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->reverse();
+
+	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->set_data_rate(5);
+	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->set_data_rate(5);
+	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->set_data_rate(5);
+
+	zero_actuators();
 
 	pros::lcd::initialize();
 	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 
 	// Perform and necessary Serial Init
 	v5_globals::serial_node_.initSerial();
-	// pros::Task producer_thread(producer_main, "producer thread");
-	// pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
+	pros::Task reader_thread(reader_loop, "reader thread");
+	pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
 }
 
 /**
@@ -124,7 +156,7 @@ void disabled()
 	while (pros::competition::is_disabled())
 	{
 		ghost_main_loop();
-		pros::c::task_delay_until(&loop_time, 10);
+		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 }
 
@@ -156,7 +188,7 @@ void autonomous()
 	while (pros::competition::is_autonomous())
 	{
 		ghost_main_loop();
-		pros::c::task_delay_until(&loop_time, 10);
+		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 }
 
@@ -173,8 +205,7 @@ void autonomous()
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol()
-{
+void opcontrol(){
 	uint32_t loop_time = pros::millis();
 	while (!pros::competition::is_autonomous() && !pros::competition::is_disabled())
 	{
@@ -182,16 +213,3 @@ void opcontrol()
 		pros::c::task_delay_until(&loop_time, 10);
 	}
 }
-
-/*	Differential Swerve Transform
-	double wheel_vel = controller_main.get_analog(ANALOG_RIGHT_Y)*500.0/127.0;	// 500 RPM
-	double module_vel = controller_main.get_analog(ANALOG_LEFT_Y)*200.0/127.0;	// 200 RPM
-
-	std::cout << wheel_vel << ", " << module_vel << std::endl;
-	std::cout << 0.9*(0.6*wheel_vel + 1.5*module_vel) << std::endl;
-	std::cout << 0.9*(-0.6*wheel_vel + 1.5*module_vel) << std::endl;
-	std::cout << std::endl;
-
-	m1.move_velocity(0.9*(0.6*wheel_vel + 1.5*module_vel));
-	m2.move_velocity(0.9*(-0.6*wheel_vel + 1.5*module_vel));
-*/

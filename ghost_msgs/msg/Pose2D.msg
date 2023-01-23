@@ -1,7 +1,0 @@
-# Header
-std_msgs/Header header
-
-# Robot Pose
-float32 x
-float32 y
-float32 theta

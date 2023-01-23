@@ -18,11 +18,13 @@ find_package(std_msgs REQUIRED)
 
 # Custom Msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Pose2D.msg"
+  "msg/GhostRobotState.msg"
   "msg/v5_msgs/V5MotorCommand.msg"
   "msg/v5_msgs/V5EncoderState.msg"
-  "msg/RobotActuatorCommand.msg"
-  "msg/RobotStateUpdate.msg"
+  "msg/V5Joystick.msg"
+  "msg/V5CompetitionState.msg"
+  "msg/V5ActuatorCommand.msg"
+  "msg/V5SensorUpdate.msg"
   DEPENDENCIES std_msgs
  )
 ament_export_dependencies(rosidl_default_runtime)

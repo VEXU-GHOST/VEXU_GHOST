@@ -15,12 +15,12 @@
     <gazebo>
         <plugin name="gazebo_ros_joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
             <update_rate>100</update_rate>
-            <joint_name>steering_1</joint_name>
-            <joint_name>steering_2</joint_name>
-            <joint_name>steering_3</joint_name>
-            <joint_name>driveshaft_1</joint_name>
-            <joint_name>driveshaft_2</joint_name>
-            <joint_name>driveshaft_3</joint_name>
+            <joint_name>steering_left</joint_name>
+            <joint_name>steering_right</joint_name>
+            <joint_name>steering_back</joint_name>
+            <joint_name>driveshaft_left</joint_name>
+            <joint_name>driveshaft_right</joint_name>
+            <joint_name>driveshaft_back</joint_name>
         </plugin>
 
         <plugin name="swerve_odometry_plugin" filename="libswerve_odometry_plugin.so">

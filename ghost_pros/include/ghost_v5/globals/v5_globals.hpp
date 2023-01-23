@@ -11,6 +11,7 @@ namespace v5_globals
 {
     extern uint32_t last_cmd_time;
     extern uint32_t cmd_timeout_ms;
+    extern uint32_t loop_frequency;
     extern bool run;
 
     extern pros::Controller controller_main;
@@ -23,7 +24,9 @@ namespace v5_globals
     extern const pros::controller_analog_e_t joy_channels[4];
     extern const pros::controller_digital_e_t joy_btns[12];
 
-    extern pros::ADIPort adi_ports[8];
+    extern pros::ADIDigitalOut adi_ports[8];
+    extern pros::Mutex digitial_out_lock;
+    extern std::vector<bool> digital_out_cmds;
 
     // Serial Port
     extern ghost_v5::V5SerialNode serial_node_;

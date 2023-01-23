@@ -11,6 +11,15 @@
                 iyy="0.000975" iyz="0.0"
                 izz="0.001902"/>
         </inertial>
+        <visual>
+            <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.04826" length="0.0127"/>
+            </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+        </visual>
     </link>
     </xacro:macro>
 
@@ -21,7 +30,9 @@
                 <geometry>
                     <cylinder radius="${r_wheel}" length="${width_wheel}"/>
                 </geometry>
-                <material name="black"/>
+                <material name="black">
+                    <color rgba="0 0 0 1.0"/>
+                </material>
             </visual>
 
             <collision>

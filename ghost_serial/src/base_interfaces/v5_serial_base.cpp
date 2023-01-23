@@ -15,11 +15,12 @@ namespace ghost_serial
      * @param config_file
      */
     V5SerialBase::V5SerialBase(
-        std::string msg_start_seq,
-        int msg_len,
+        std::string read_msg_start_seq,
+        int read_msg_max_len,
         bool use_checksum): GenericSerialBase(
-                                msg_start_seq,
-                                msg_len,
+                                "sout",
+                                read_msg_start_seq,
+                                read_msg_max_len,
                                 use_checksum)
     {
         serial_read_fd_ = fileno(stdin);
@@ -55,7 +56,7 @@ namespace ghost_serial
     int V5SerialBase::getNumBytesAvailable() const
     {
         int bytes_available;
-        pros::c::fdctl(serial_read_fd_, DEVCTL_FIONREAD, NULL);
+        bytes_available = pros::c::fdctl(serial_read_fd_, DEVCTL_FIONREAD, NULL);
         return bytes_available;
     }
 
@@ -66,17 +67,18 @@ namespace ghost_serial
 
     bool V5SerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len)
     {
+        int max_read_bytes = read_msg_max_len_ + use_checksum_ + read_msg_start_seq.length() + 2;
         if (port_open_)
         {
             try
             {
                 // Lock serial port mutex from writes and read serial data
-                std::unique_lock<pros::Mutex> read_lock(serial_io_mutex_);
+                // std::unique_lock<CROSSPLATFORM_MUTEX_T> read_lock(serial_io_mutex_);
 
-                // Read available bytes, up to size of raw_serial_buffer (two msgs - one byte)
-                int bytes_to_read = std::min(getNumBytesAvailable(), (int)read_buffer_.size());
-                int num_bytes_read = read(serial_read_fd_, read_buffer_.data(), bytes_to_read);
-                read_lock.unlock();
+                // Block until one full msg is read
+                int num_bytes_read = read(serial_read_fd_, read_buffer_.data(), max_read_bytes);
+
+                // read_lock.unlock();
 
                 // Extract any msgs from serial stream and return if msg is found
                 if (num_bytes_read > 0)

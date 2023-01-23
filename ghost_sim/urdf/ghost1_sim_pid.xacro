@@ -9,8 +9,8 @@
         <!-- Motor Models -->
         <!-- 0.05 Steering -->
         <xacro:joint_pid_macro
-            joint_name="steering_1"
-            link_name="mod_1"
+            joint_name="steering_left"
+            link_name="mod_left"
             gear_ratio="2.0"
             position_gain="0.05"
             vel_gain="0.04"
@@ -18,8 +18,8 @@
         </xacro:joint_pid_macro>
 
         <xacro:joint_pid_macro
-            joint_name="steering_2"
-            link_name="mod_2"
+            joint_name="steering_right"
+            link_name="mod_right"
             gear_ratio="2.0"
             position_gain="0.05"
             vel_gain="0.04"
@@ -27,8 +27,8 @@
         </xacro:joint_pid_macro>
 
         <xacro:joint_pid_macro
-            joint_name="steering_3"
-            link_name="mod_3"
+            joint_name="steering_back"
+            link_name="mod_back"
             gear_ratio="2.0"
             position_gain="0.05"
             vel_gain="0.04"
@@ -36,8 +36,8 @@
         </xacro:joint_pid_macro>
 
         <xacro:joint_pid_macro
-            joint_name="driveshaft_1"
-            link_name="wheel_1"
+            joint_name="driveshaft_left"
+            link_name="wheel_left"
             gear_ratio="5.0"
             position_gain="0.0"
             vel_gain="0.04"
@@ -45,8 +45,8 @@
         </xacro:joint_pid_macro>
 
         <xacro:joint_pid_macro
-            joint_name="driveshaft_2"
-            link_name="wheel_2"
+            joint_name="driveshaft_right"
+            link_name="wheel_right"
             gear_ratio="5.0"
             position_gain="0.0"
             vel_gain="0.04"
@@ -54,8 +54,8 @@
         </xacro:joint_pid_macro>
 
         <xacro:joint_pid_macro
-            joint_name="driveshaft_3"
-            link_name="wheel_3"
+            joint_name="driveshaft_back"
+            link_name="wheel_back"
             gear_ratio="5.0"
             position_gain="0.0"
             vel_gain="0.04"

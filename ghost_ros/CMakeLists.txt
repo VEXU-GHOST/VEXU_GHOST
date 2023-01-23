@@ -15,7 +15,8 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 # Compile time flags to add debug symbols and disable code optimization (for using debugger)
-set(CMAKE_BUILD_TYPE "DEBUG")
+# set(CMAKE_BUILD_TYPE "DEBUG")
+set(CMAKE_BUILD_TYPE "RELEASE")
 
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0 -DGHOST_DEBUG_VERBOSE)
@@ -37,67 +38,39 @@ find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+find_package(yaml-cpp REQUIRED)
+
 find_package(ghost_msgs REQUIRED)
 find_package(ghost_serial REQUIRED)
-find_package(yaml-cpp REQUIRED)
+find_package(ghost_estimation REQUIRED)
 
 find_library(v5_serial_node REQUIRED)
 
 include_directories(include)
-include_directories(src/shared)
-add_subdirectory(src/shared)
 
-###################
-##### Library #####
-###################
-# Vector Map Library
-add_library(vector_map SHARED src/vector_map/vector_map.cpp)
-target_link_libraries(vector_map
-  amrl_shared_lib
-  gflags
+###############################
+##### Robot Configuration #####
+###############################
+add_library(v5_serial_msg_config SHARED
+  src/robot_config/v5_serial_msg_config.cpp
 )
-ament_target_dependencies(vector_map
-  Eigen3
-)
-target_include_directories(vector_map
+target_include_directories(v5_serial_msg_config
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-
+ament_export_targets(v5_serial_msg_config HAS_LIBRARY_TARGET)
 install(
-  TARGETS vector_map
+  TARGETS v5_serial_msg_config
+  EXPORT v5_serial_msg_config
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
-)
+  )
 
-# Particle Filter Library
-add_library(particle_filter_ros SHARED src/particle_filter/particle_filter_node.cpp src/particle_filter/particle_filter.cpp)
-ament_target_dependencies(particle_filter_ros
-  rclcpp
-  tf2_msgs
-  sensor_msgs
-  visualization_msgs
-  Eigen3
-)
-target_link_libraries(particle_filter_ros
-  amrl_shared_lib
-  vector_map
-  yaml-cpp
-)
-target_include_directories(particle_filter_ros
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(
-  TARGETS particle_filter_ros
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
+#####################
+##### ROS Nodes #####
+#####################
 # Basic Swerve Controller
 add_executable(basic_swerve_controller src/basic_swerve_controller.cpp)
 ament_target_dependencies(basic_swerve_controller
@@ -110,34 +83,88 @@ install(TARGETS
   basic_swerve_controller
   DESTINATION lib/${PROJECT_NAME})
 
-# Jetson Serial Node
-add_library(jetson_v5_serial_node SHARED
-  src/jetson_serial/jetson_v5_serial_node.cpp
+############################
+#### Jetson Serial Node ####
+############################
+add_executable(jetson_v5_serial_node
+  src/ros_nodes/jetson_v5_serial_node.cpp
 )
 ament_target_dependencies(jetson_v5_serial_node
   rclcpp
+  sensor_msgs
   ghost_msgs
   ghost_serial
+  ghost_estimation
 )
 target_link_libraries(jetson_v5_serial_node
   ghost_serial::jetson_serial_base
   ghost_serial::cobs
+  ghost_estimation::amrl_shared_lib
+  v5_serial_msg_config
   yaml-cpp
 )
 target_include_directories(jetson_v5_serial_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_export_targets(jetson_v5_serial_node HAS_LIBRARY_TARGET)
-ament_export_dependencies(ghost_msgs)
-install(
-  TARGETS jetson_v5_serial_node
-  EXPORT jetson_v5_serial_node
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-  )
+install(TARGETS
+  jetson_v5_serial_node
+  DESTINATION lib/${PROJECT_NAME})
+
+##############################
+#### Ghost Estimator Node ####
+##############################
+add_executable(ghost_estimator_node
+  src/ros_nodes/ghost_estimator_node.cpp
+)
+ament_target_dependencies(ghost_estimator_node
+  rclcpp
+  tf2_msgs
+  sensor_msgs
+  visualization_msgs
+  ghost_msgs
+  ghost_estimation
+  Eigen3
+)
+target_link_libraries(ghost_estimator_node
+  ghost_estimation::amrl_shared_lib
+  ghost_estimation::vector_map
+  ghost_estimation::particle_filter
+  yaml-cpp
+)
+target_include_directories(ghost_estimator_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  ghost_estimator_node
+  DESTINATION lib/${PROJECT_NAME})
+
+##################################
+#### Robot State Machine Node ####
+##################################
+add_executable(robot_state_machine_node
+  src/ros_nodes/robot_state_machine_node.cpp
+)
+ament_target_dependencies(robot_state_machine_node
+  rclcpp
+  Eigen3
+  ghost_msgs
+  visualization_msgs
+  ghost_estimation
+)
+target_link_libraries(robot_state_machine_node
+  ghost_estimation::amrl_shared_lib
+  yaml-cpp
+  v5_serial_msg_config
+)
+target_include_directories(robot_state_machine_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+robot_state_machine_node
+DESTINATION lib/${PROJECT_NAME})
 
 #####################
 ##### Examples ######
@@ -176,33 +203,6 @@ install(TARGETS
   yaml_load_example
   DESTINATION lib/${PROJECT_NAME})
 
-########################
-#### GHOST ROS Main ####
-########################
-add_executable(ghost_ros_main
-  src/main.cpp
-)
-ament_target_dependencies(ghost_ros_main
-  rclcpp
-  ghost_serial
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-  visualization_msgs
-  tf2_msgs
-  nav_msgs
-)
-target_link_libraries(ghost_ros_main
-  amrl_shared_lib
-  yaml-cpp
-  particle_filter_ros
-  jetson_v5_serial_node
-)
-
-install(TARGETS
-  ghost_ros_main
-  DESTINATION lib/${PROJECT_NAME})
-
 #################
 #### Testing ####
 #################
@@ -226,6 +226,5 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME})
 
 ament_export_include_directories(include)
-ament_export_libraries(dc_motor_model)
 
 ament_package()

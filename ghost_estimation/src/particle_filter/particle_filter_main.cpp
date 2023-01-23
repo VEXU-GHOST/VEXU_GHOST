@@ -168,7 +168,7 @@ void LaserCallback(const sensor_msgs::LaserScan& msg) {
   PublishVisualization();
 }
 
-void OdometryCallback(const nav_msgs::Odometry& msg) {
+void EncoderCallback(const nav_msgs::Odometry& msg) {
   if (FLAGS_v > 0) {
     printf("Odometry t=%f\n", msg.header.stamp.toSec());
   }
@@ -213,7 +213,7 @@ void ProcessLive(ros::NodeHandle* n) {
   ros::Subscriber odom_sub = n->subscribe(
       FLAGS_odom_topic.c_str(),
       1,
-      OdometryCallback);
+      EncoderCallback);
   while (ros::ok() && run_) {
     ros::spinOnce();
     PublishVisualization();

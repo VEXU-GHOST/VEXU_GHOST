@@ -35,8 +35,8 @@ ghost_v5::GhostMotorConfig drive_motor_config = {
     .filter__cutoff_frequency = 100.0, // Hz
 
     // FF-PD Controller
-    .ctl__vel_gain = 15.0,  // RPM -> mV
-    .ctl__ff_vel_gain = 1.0,
+    .ctl__vel_gain = 17.5,  // RPM -> mV
+    .ctl__ff_vel_gain = 1.1,
     .ctl__ff_voltage_gain = 1.0,
 };
 
@@ -82,7 +82,8 @@ ghost_v5::GhostMotorConfig shooter_motor_config = {
 namespace v5_globals
 {
     uint32_t last_cmd_time = 0;
-    uint32_t cmd_timeout_ms = 250;
+    uint32_t cmd_timeout_ms = 50;
+    uint32_t loop_frequency = 10;
     bool run = true;
     pros::Mutex actuator_update_lock;
 
@@ -114,19 +115,22 @@ namespace v5_globals
         DIGITAL_R2,
     };
 
-    pros::ADIPort adi_ports[8] = {
-        pros::ADIPort(1),
-        pros::ADIPort(2),
-        pros::ADIPort(3),
-        pros::ADIPort(4),
-        pros::ADIPort(5),
-        pros::ADIPort(6),
-        pros::ADIPort(7),
-        pros::ADIPort(8),
+    pros::ADIDigitalOut adi_ports[8] = {
+        pros::ADIDigitalOut('A', false),
+        pros::ADIDigitalOut('B', false),
+        pros::ADIDigitalOut('C', false),
+        pros::ADIDigitalOut('D', false),
+        pros::ADIDigitalOut('E', false),
+        pros::ADIDigitalOut('F', false),
+        pros::ADIDigitalOut('G', false),
+        pros::ADIDigitalOut('H', false),
     };
 
+    pros::Mutex digitial_out_lock;
+    std::vector<bool> digital_out_cmds(8, false);
+
     // Serial Port
-    ghost_v5::V5SerialNode serial_node_("sin", 85, true); // Becomes 109 w Checksum
+    ghost_v5::V5SerialNode serial_node_("msg", true); // Becomes 109 w Checksum
 } // namespace v5_globals
 
 /**

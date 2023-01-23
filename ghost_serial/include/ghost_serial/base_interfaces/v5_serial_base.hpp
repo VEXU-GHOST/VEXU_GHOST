@@ -19,8 +19,8 @@ namespace ghost_serial
     {
     public:
         V5SerialBase(
-            std::string msg_start_seq,
-            int msg_len,
+            std::string read_msg_start_seq,
+            int read_msg_max_len_,
             bool use_checksum = false);
 
         ~V5SerialBase();

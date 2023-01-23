@@ -16,6 +16,9 @@
   <depend>visualization_msgs</depend>
   <depend>ghost_serial</depend>
   <depend>ghost_msgs</depend>
+  <depend>ghost_description</depend>
+  <depend>ghost_estimation</depend>
+  <depend>ghost_control</depend>
 
   <exec_depend>joy</exec_depend>
   <exec_depend>teleop_twist_joy</exec_depend>

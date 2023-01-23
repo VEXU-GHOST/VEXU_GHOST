@@ -17,7 +17,7 @@ public:
     }
 
     std::vector<std::pair<std::chrono::time_point<std::chrono::system_clock>, data_type>> GetHistory(){
-
+        return data_history_;
     }
 
 private:

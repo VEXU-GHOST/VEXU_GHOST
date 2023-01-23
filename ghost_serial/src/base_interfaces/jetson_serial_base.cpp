@@ -14,13 +14,17 @@ namespace ghost_serial
      */
     JetsonSerialBase::JetsonSerialBase(
         std::string port_name,
-        std::string msg_start_seq,
-        int msg_len,
-        bool use_checksum): GenericSerialBase(
-                                msg_start_seq,
-                                msg_len,
+        std::string write_msg_start_seq,
+        std::string read_msg_start_seq,
+        int read_msg_max_len,
+        bool use_checksum,
+        bool verbose): GenericSerialBase(
+                                write_msg_start_seq,
+                                read_msg_start_seq,
+                                read_msg_max_len,
                                 use_checksum),
-                            port_name_(port_name)
+                        port_name_(port_name),
+                        verbose_{verbose}
     {
     }
 
@@ -104,7 +108,7 @@ namespace ghost_serial
 
             if (setSerialPortConfig())
             {
-                std::string err_string = "Error " + std::to_string(errno) + ", " + strerror(errno);
+                std::string err_string = "Error " + std::to_string(errno) + " on port:" + port_name_ + ", " + strerror(errno);
                 throw std::runtime_error(err_string);
             }
 
@@ -150,7 +154,7 @@ namespace ghost_serial
                 if ((pollfd_read_.revents & POLLIN) == POLLIN)
                 {
                     // Lock serial port mutex from writes and read serial data
-                    std::unique_lock<std::mutex> read_lock(serial_io_mutex_);
+                    std::unique_lock<CROSSPLATFORM_MUTEX_T> read_lock(serial_io_mutex_);
 
                     // Read available bytes, up to size of raw_serial_buffer (two msgs - one byte)
                     int bytes_to_read = std::min(getNumBytesAvailable(), (int)read_buffer_.size());
@@ -160,6 +164,9 @@ namespace ghost_serial
                     // Extract any msgs from serial stream and return if msg is found
                     if (num_bytes_read > 0)
                     {
+                        if(verbose_){
+                            std::cout << "Read " << num_bytes_read << " bytes" << std::endl;
+                        }
                         return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer, parsed_msg_len);
                     }
                     else if (num_bytes_read == -1)
