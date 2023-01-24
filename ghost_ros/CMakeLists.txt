@@ -166,43 +166,6 @@ install(TARGETS
 robot_state_machine_node
 DESTINATION lib/${PROJECT_NAME})
 
-#####################
-##### Examples ######
-#####################
-# ROS Publisher Example
-add_executable(ros_publisher_example src/examples/ros_publisher_example.cpp)
-ament_target_dependencies(ros_publisher_example
-  rclcpp
-  sensor_msgs
-  geometry_msgs
-)
-
-install(TARGETS
-  ros_publisher_example
-  DESTINATION lib/${PROJECT_NAME})
-
-# ROS Subscriber Example
-add_executable(ros_subscriber_example src/examples/ros_subscriber_example.cpp)
-ament_target_dependencies(ros_subscriber_example
-  rclcpp
-  sensor_msgs
-  geometry_msgs
-)
-
-install(TARGETS
-  ros_subscriber_example
-  DESTINATION lib/${PROJECT_NAME})
-
-# YAML Load Example
-add_executable(yaml_load_example src/examples/yaml_load.cpp)
-target_link_libraries(yaml_load_example
-  yaml-cpp
-)
-
-install(TARGETS
-  yaml_load_example
-  DESTINATION lib/${PROJECT_NAME})
-
 #################
 #### Testing ####
 #################
