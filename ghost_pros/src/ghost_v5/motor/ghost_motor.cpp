@@ -85,7 +85,8 @@ namespace ghost_v5
         }
 
         // Set motor voltage w/ torque limiting (limiting change in voltage)
-        move_voltage_trq_lim(cmd_voltage_mv_);
+        move_voltage(cmd_voltage_mv_);
+        // move_voltage_trq_lim(cmd_voltage_mv_);
     }
 
     void GhostMotor::move_voltage_trq_lim(float voltage_mv)
