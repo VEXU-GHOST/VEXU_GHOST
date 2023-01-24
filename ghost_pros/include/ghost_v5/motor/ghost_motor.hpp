@@ -18,6 +18,7 @@ namespace ghost_v5
         float motor__stall_current{4.25};
         float motor__max_voltage{12};
         float motor__gear_ratio{600};
+        pros::motor_brake_mode_e motor__brake_mode{pros::E_MOTOR_BRAKE_COAST};
 
         // 2nd Order Velocity Filter
         float filter__cutoff_frequency{75.0};

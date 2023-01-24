@@ -42,6 +42,9 @@ namespace ghost_v5
         if(motor_is_3600_cart_){
             trq_lim_norm_ = 0.75;
         }
+
+        // Set Brake Mode
+        set_brake_mode(config.motor__brake_mode);
     }
 
     void GhostMotor::updateMotor()
