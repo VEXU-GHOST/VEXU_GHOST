@@ -228,21 +228,21 @@ namespace ghost_ros
     robot_state_msg.theta_accel = 0.0;
 
     ///// Steering States /////
-    robot_state_msg.left_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].current_angle;
-    robot_state_msg.right_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].current_angle;
-    robot_state_msg.back_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].current_angle;
+    robot_state_msg.left_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees;
+    robot_state_msg.right_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees;
+    robot_state_msg.back_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees;
 
-    robot_state_msg.left_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].current_velocity;
-    robot_state_msg.right_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].current_velocity;
-    robot_state_msg.back_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].current_velocity;
+    robot_state_msg.left_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].velocity_rpm;
+    robot_state_msg.right_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].velocity_rpm;
+    robot_state_msg.back_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].velocity_rpm;
 
     ///// Shooter States /////
-    robot_state_msg.left_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_velocity;;
-    robot_state_msg.right_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_velocity;;
+    robot_state_msg.left_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_LEFT_MOTOR].velocity_rpm;
+    robot_state_msg.right_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_RIGHT_MOTOR].velocity_rpm;
 
     ///// Turret States /////
-    robot_state_msg.turret_angle = sensor_update_msg->encoders[ghost_v5_config::TURRET_MOTOR].current_angle;
-    robot_state_msg.turret_vel = sensor_update_msg->encoders[ghost_v5_config::TURRET_MOTOR].current_velocity;
+    robot_state_msg.turret_angle = sensor_update_msg->encoders[ghost_v5_config::TURRET_MOTOR].angle_degrees;
+    robot_state_msg.turret_vel = sensor_update_msg->encoders[ghost_v5_config::TURRET_MOTOR].velocity_rpm;
   }
 
   void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg){
@@ -256,14 +256,14 @@ namespace ghost_ros
 
     // Calculate Wheel Axis Unit Direction Vectors
     Eigen::Vector2f left_encoder_dir(
-        sin(left_encoder.current_angle * M_PI / 180.0),
-        -cos(left_encoder.current_angle * M_PI / 180.0));
+        sin(left_encoder.angle_degrees * M_PI / 180.0),
+        -cos(left_encoder.angle_degrees * M_PI / 180.0));
     Eigen::Vector2f right_encoder_dir(
-        sin(right_encoder.current_angle * M_PI / 180.0),
-        -cos(right_encoder.current_angle * M_PI / 180.0));
+        sin(right_encoder.angle_degrees * M_PI / 180.0),
+        -cos(right_encoder.angle_degrees * M_PI / 180.0));
     Eigen::Vector2f back_encoder_dir(
-        sin(back_encoder.current_angle * M_PI / 180.0),
-        -cos(back_encoder.current_angle * M_PI / 180.0));
+        sin(back_encoder.angle_degrees * M_PI / 180.0),
+        -cos(back_encoder.angle_degrees * M_PI / 180.0));
 
     // Calculate Wheel Axis Vectors
     geometry::Line2f left_encoder_vector(left_wheel_link_, left_encoder_dir + left_wheel_link_);
@@ -459,9 +459,9 @@ namespace ghost_ros
     joint_state_msg.name.push_back("steering_right"); joint_state_msg.name.push_back("driveshaft_right"); 
     joint_state_msg.name.push_back("steering_back");  joint_state_msg.name.push_back("driveshaft_back");
 
-    joint_state_msg.position.push_back(left_encoder.current_angle * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
-    joint_state_msg.position.push_back(right_encoder.current_angle * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
-    joint_state_msg.position.push_back(back_encoder.current_angle * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+    joint_state_msg.position.push_back(left_encoder.angle_degrees * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+    joint_state_msg.position.push_back(right_encoder.angle_degrees * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+    joint_state_msg.position.push_back(back_encoder.angle_degrees * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
 
     joint_state_pub_->publish(joint_state_msg);
   }

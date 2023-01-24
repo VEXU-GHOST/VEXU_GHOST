@@ -228,9 +228,9 @@ namespace ghost_ros
 
         // Apply Steering Control
         std::vector<float> angles = {
-            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].current_angle,
-            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].current_angle,
-            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].current_angle,
+            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees,
+            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees,
+            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees,
         };
 
         for (int i = 0; i < 3; i++)
