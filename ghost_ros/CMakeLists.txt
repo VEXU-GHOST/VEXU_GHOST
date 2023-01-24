@@ -43,6 +43,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(ghost_msgs REQUIRED)
 find_package(ghost_serial REQUIRED)
 find_package(ghost_estimation REQUIRED)
+find_package(ghost_util REQUIRED)
 
 find_library(v5_serial_node REQUIRED)
 
@@ -152,9 +153,11 @@ ament_target_dependencies(robot_state_machine_node
   ghost_msgs
   visualization_msgs
   ghost_estimation
+  ghost_util
 )
 target_link_libraries(robot_state_machine_node
   ghost_estimation::amrl_shared_lib
+  ghost_util::angle_util
   yaml-cpp
   v5_serial_msg_config
 )
