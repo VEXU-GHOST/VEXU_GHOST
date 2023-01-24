@@ -26,11 +26,11 @@ namespace ghost_util
         return WrapAngle180(angle + 180.0);
     }
 
-    float SmallestAngleDist360(float a2, float a1){
+    float SmallestAngleDist(float a2, float a1){
         a1 = WrapAngle360(a1);
         a2 = WrapAngle360(a2);
 
-        float diff = a1 - a2;
+        float diff = a2 - a1;
         if(diff > 180.0){
             diff = -(360.0 - diff);
         }

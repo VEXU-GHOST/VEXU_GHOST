@@ -51,21 +51,21 @@ TEST_F(TestAngleUtil, testFlipAngle180){
   EXPECT_NEAR(-45.0,  FlipAngle180(135.0), 0.01);
 }
 
-TEST_F(TestAngleUtil, testSmallestAngleDist360){
-  EXPECT_NEAR(-2.0,   SmallestAngleDist360(3.0, 1.0), 0.01);
-  EXPECT_NEAR(-2.0,   SmallestAngleDist360(1.0, -1.0), 0.01);
+TEST_F(TestAngleUtil, testSmallestAngleDist){
+  EXPECT_NEAR(2.0,    SmallestAngleDist(3.0, 1.0), 0.01);
+  EXPECT_NEAR(2.0,    SmallestAngleDist(1.0, -1.0), 0.01);
 
-  EXPECT_NEAR(90.0,   SmallestAngleDist360(1, 91.0), 0.01);
-  EXPECT_NEAR(-90.0,  SmallestAngleDist360(91.0, 1.0), 0.01);
+  EXPECT_NEAR(-90.0,  SmallestAngleDist(1, 91.0), 0.01);
+  EXPECT_NEAR(90.0,   SmallestAngleDist(91.0, 1.0), 0.01);
 
-  EXPECT_NEAR(178.0,  SmallestAngleDist360(91.0, -91.0), 0.01);
-  EXPECT_NEAR(-178.0, SmallestAngleDist360(-91.0, 91.0), 0.01);
+  EXPECT_NEAR(-178.0, SmallestAngleDist(91.0, -91.0), 0.01);
+  EXPECT_NEAR(178.0,  SmallestAngleDist(-91.0, 91.0), 0.01);
 
-  EXPECT_NEAR(2.0,    SmallestAngleDist360(179.0, -179.0), 0.01);
-  EXPECT_NEAR(-2.0,   SmallestAngleDist360(-179.0, 179.0), 0.01);
+  EXPECT_NEAR(-2.0,   SmallestAngleDist(179.0, -179.0), 0.01);
+  EXPECT_NEAR(2.0,    SmallestAngleDist(-179.0, 179.0), 0.01);
   
-  EXPECT_NEAR(2.0,    SmallestAngleDist360(359.0, 1.0), 0.01);
-  EXPECT_NEAR(-2.0,   SmallestAngleDist360(1.0, 359.0), 0.01);
+  EXPECT_NEAR(-2.0,   SmallestAngleDist(359.0, 1.0), 0.01);
+  EXPECT_NEAR(2.0,    SmallestAngleDist(1.0, 359.0), 0.01);
 }
 
 int main(int argc, char **argv) {
