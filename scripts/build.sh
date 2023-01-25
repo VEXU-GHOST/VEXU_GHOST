@@ -7,9 +7,9 @@ echo "---Building Ghost ROS Packages---"
 # Build simulator packages depending on what is passed for FULLBUILD
 if [ "$1" == "EMBEDBUILD" ];
 then 
-    colcon build --packages-skip ghost_sim
+    colcon build --symlink-install --packages-skip ghost_sim
 else
-    colcon build
+    colcon build --symlink-install
 fi
 
 source install/setup.bash

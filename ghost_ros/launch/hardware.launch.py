@@ -32,7 +32,6 @@ def generate_launch_description():
         name='ghost_estimator_node',
         output='screen',
         parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
-
     )
 
     state_machine_node = Node(
