@@ -16,7 +16,7 @@ source install/setup.bash
 
 # Process URDFs from Xacro and add to Share
 GHOST_DESCRIPTION_SHARE_DIR="$PWD/install/ghost_description/share/ghost_description"
-URDF_PATH="${GHOST_DESCRIPTION_SHARE_DIR}/urdf/ghost1.xacro"
+URDF_PATH="${GHOST_DESCRIPTION_SHARE_DIR}/urdf/ghost1.urdf"
 
 if [ ! -d $GHOST_DESCRIPTION_SHARE_DIR ];
 then
