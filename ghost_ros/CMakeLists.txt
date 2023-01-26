@@ -69,20 +69,25 @@ install(
   INCLUDES DESTINATION include
   )
 
-#####################
-##### ROS Nodes #####
-#####################
-# Basic Swerve Controller
-add_executable(basic_swerve_controller src/basic_swerve_controller.cpp)
-ament_target_dependencies(basic_swerve_controller
-  rclcpp
-  std_msgs
-  geometry_msgs
-  Eigen3
+#####################################
+##### Foxglove Diagnostics Node #####
+#####################################
+add_executable(foxglove_diagnostics_node
+  src/ros_nodes/foxglove_diagnostics_node.cpp
 )
+ament_target_dependencies(foxglove_diagnostics_node
+  rclcpp
+  sensor_msgs
+  ghost_msgs
+)
+target_include_directories(foxglove_diagnostics_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  basic_swerve_controller
+  foxglove_diagnostics_node
   DESTINATION lib/${PROJECT_NAME})
+
 
 ############################
 #### Jetson Serial Node ####
