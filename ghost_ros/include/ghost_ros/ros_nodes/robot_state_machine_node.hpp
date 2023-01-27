@@ -37,6 +37,7 @@ namespace ghost_ros
         void teleop();
 
         void updateSwerveCommandsFromTwist(float angular_velocity, float x_velocity, float y_velocity);
+        void updateSwerveVoltageCommandsFromTwist(float angular_velocity, float x_velocity, float y_velocity);
 
         void publishSwerveKinematicsVisualization(
             const Eigen::Vector2f &left_wheel_cmd,

@@ -35,8 +35,8 @@ ghost_v5::GhostMotorConfig drive_motor_config = {
     .filter__cutoff_frequency = 100.0, // Hz
 
     // FF-PD Controller
-    .ctl__vel_gain = 17.5,  // RPM -> mV
-    .ctl__ff_vel_gain = 1.1,
+    .ctl__vel_gain = 0.0, //17.5,  // RPM -> mV
+    .ctl__ff_vel_gain = 0.0, //1.1,
     .ctl__ff_voltage_gain = 1.0,
 };
 
