@@ -229,7 +229,7 @@ namespace ghost_ros
             wheel_vel_vectors[wheel_id] = vel_vec;
 
             // Calculate naive steering angle and wheel velocity setpoints
-            steering_angle_cmd_[wheel_id] = ghost_util::WrapAngle360((vel_vec.y(), vel_vec.x()) * 180.0 / M_PI);   // Converts rad/s to degrees
+            steering_angle_cmd_[wheel_id] = ghost_util::WrapAngle360(atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI);   // Converts rad/s to degrees
             wheel_velocity_cmd_[wheel_id] = vel_vec.norm(); // normalized
 
             // Calculate angle error and then use direction of smallest error
@@ -299,10 +299,11 @@ namespace ghost_ros
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_voltage =    motor_voltage_cmds[5];
 
         // Set Motor Names and Device IDs
-        for (auto it = ghost_v5_config::actuator_command_config.begin(); it != ghost_v5_config::actuator_command_config.end(); it++){
-            actuator_cmd_msg_.motor_commands[it->second].motor_name =   ghost_v5_config::device_names.at(it->second);
-            actuator_cmd_msg_.motor_commands[it->second].device_id =    it->second;
-        }
+        // for (auto it = ghost_v5_config::actuator_command_config.begin(); it != ghost_v5_config::actuator_command_config.end(); it++){
+        //     int dev_id = it->first;
+        //     actuator_cmd_msg_.motor_commands[dev_id].motor_name =   ghost_v5_config::device_names[dev_id];
+        //     actuator_cmd_msg_.motor_commands[dev_id].device_id =    dev_id;
+        // }
     }
 
 ////////////////////////////////////////////////

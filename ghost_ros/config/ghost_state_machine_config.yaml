@@ -10,6 +10,6 @@ ghost_state_machine_node:
     back_wheel_x:   -0.187
     back_wheel_y:   0.0
 
-    steering_kp: 0.15
+    steering_kp: 0.01
 
     max_motor_rpm_true: 625.0

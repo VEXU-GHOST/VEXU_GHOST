@@ -20,14 +20,19 @@ namespace ghost_ros
             10,
             std::bind(&FoxgloveDiagnosticsNode::V5SensorUpdateCallback, this, _1));
 
+        v5_actuator_command_sub_ = create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
+            "v5/actuator_commands",
+            10,
+            std::bind(&FoxgloveDiagnosticsNode::V5ActuatorCommandCallback, this, _1));
+
         // Create publisher for each motor
         for(std::string & name : motor_names_){
             motor_state_pubs_[name] = create_publisher<std_msgs::msg::Float32MultiArray>("foxglove/" + name + "/state", 10);
+            motor_setpoint_pubs_[name] = create_publisher<std_msgs::msg::Float32MultiArray>("foxglove/" + name + "/setpoint", 10);
         }
 
         // Publishers
         port_status_pub_ = create_publisher<std_msgs::msg::Float32MultiArray>("foxglove/v5_ports", 10);
-
         is_connected_pub_ = create_publisher<std_msgs::msg::Bool>("foxglove/is_connected", 10);
         is_autonomous_pub_ = create_publisher<std_msgs::msg::Bool>("foxglove/is_autonomous", 10);
         is_teleop_pub_ = create_publisher<std_msgs::msg::Bool>("foxglove/is_teleop", 10);
@@ -44,6 +49,20 @@ namespace ghost_ros
             });
 
         v5_hearbeat_toggle_ = false;
+    }
+
+    void FoxgloveDiagnosticsNode::V5ActuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
+        // Publish motor state
+        for(auto & cmd : msg->motor_commands){
+            if(motor_setpoint_pubs_.count(cmd.motor_name)){
+                // Update motor msg
+                auto motor_setpoint_msg = std_msgs::msg::Float32MultiArray{};
+                motor_setpoint_msg.data.push_back(cmd.desired_angle);
+                motor_setpoint_msg.data.push_back(cmd.desired_velocity);
+                motor_setpoint_msg.data.push_back(cmd.desired_voltage);
+                motor_setpoint_pubs_[cmd.motor_name]->publish(motor_setpoint_msg);
+            }
+        }
     }
 
     void FoxgloveDiagnosticsNode::V5SensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
