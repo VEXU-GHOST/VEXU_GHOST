@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-from dis import dis
-from turtle import color
-import pyrealsense2 as rs
+#from dis import dis
+#from turtle import color
+#import pyrealsense2 as rs
 import numpy as np
 import cv2
 import imutils
-import math
+#import math
 import time
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import String
-from sqlalchemy import false, true
+#from std_msgs.msg import String
+#from sqlalchemy import false, true
 import rclpy # Python library for ROS 2
 from rclpy.node import Node # Handles the creation of nodes
 from sensor_msgs.msg import Image # Image is the message type
@@ -24,10 +22,14 @@ class Disc:
         this.x = x
         this.y = y
         this.radius = radius
+        this.distance = 0
 
     def angle(this, hsize, hfov) -> float:
         angle = ((this.x - hsize/2)/(hsize/2))*(hfov/2)
         return angle
+    # def distance(this, hsize) -> float:
+    #     dist = (hsize/2 - this.radius)/hsize * 2 * 10
+    #     return dist
 
 class DiscDetector:
     def __init__(this, hsize, vsize, hfov, vfov, lower_color, upper_color):
@@ -66,10 +68,12 @@ class DiscDetector:
             image = cv2.rectangle(image, startpt, endpt, (255, 255, 0), 1)
             if text:
                 #distance = depth_frame.get_distance(int(disc.x),int(disc.y)) * meter_to_inch
+                #distance = round(disc.distance(this.hsize),3)
+                
                 #basedist = math.sqrt(abs(distance*distance - 18*18))
                 #hdist = round(np.sin(math.radians(disc.angle(this.hsize, this.hfov))) * distance, 3)
                 angle = round(disc.angle(this.hsize,this.hfov),3)
-                #text_dist = f'distance: {round(distance,3)}\"'
+                #text_dist = f'distance: {distance}\"'
                 #text_basedist = f'dist from base: {round(basedist,3)}\"'
                 #text_hdist = f'hdistance: {hdist}\"'
                 text_angle = f'angle: {angle}'
@@ -80,16 +84,21 @@ class DiscDetector:
                     image = cv2.putText(image, textList[i], text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,0), 1, cv2.LINE_AA)
         return image
     
-def detectDiscs(detector, color_image):
+def detectDiscs(detector, color_image, depth_image: np.array):
     try:
         starttime = time.perf_counter()
-
+        unit_conversion = 42/1000
         disc_image = detector.filterDisc(color_image)
         discs = detector.findDiscs(disc_image)
         for d in discs:
             if not d:
                 continue
-            color_image = detector.addDiscToDisplay(color_image, d, true)
+            try:
+                if not depth_image:
+                    d.distance = 1000
+            except:
+                d.distance = depth_image[int(d.y)][int(d.x)] * unit_conversion
+            color_image = detector.addDiscToDisplay(color_image, d, True)
         
         fps = 1/(time.perf_counter() - starttime)
         color_image = cv2.putText(color_image, f"fps: {fps:.2f}", (0,15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,0), 1, cv2.LINE_AA)
@@ -115,16 +124,23 @@ def initCamera():
 class DiscDetectorNode(Node):
     def __init__(self):
         super().__init__('disc_detector_node')
-        self.subscription = self.create_subscription(
+        self.image_subscription = self.create_subscription(
             #sensor_msgs/msg/Image,
             Image,
             '/camera/color/image_raw',
-            self.listener_callback,
+            self.image_listener_callback,
             10)
+        self.depth_subscription = self.create_subscription(
+            #sensor_msgs/msg/Image,
+            Image,
+            '/camera/depth/image_rect_raw',
+            self.depth_listener_callback,
+            10)
+        self.depth_image = None
         self.image_publisher_ = self.create_publisher(Image, 'cv_frames', 10)
         self.disc_publisher_ = self.create_publisher(CVDisc, 'cv_discs', 10)
         self.detector = initCamera()
-        self.subscription  # prevent unused variable warning
+        #self.image_subscription  # prevent unused variable warning
         self.br = CvBridge()
         self.cv_image = None
         self.discs = []
@@ -148,9 +164,14 @@ class DiscDetectorNode(Node):
             self.log_string += 'Discs not found, '
         else:
             #log_string += 'Discs found, '
+            # disc_list = DiscList()
+            # disc_list.append(cv_disc)
+            # add covarience 
+            # add num discs
+            #ros2 launch realsense2_camera rs_launch.py rgb_camera.profile:="640X480X15" enable_depth:=true depth_module.profile:="640X480X15"
             cv_disc = CVDisc()
             for i in range(len(self.discs)):
-                cv_disc.disc_distance.append(1.0 / self.discs[i].radius)
+                cv_disc.disc_distance.append(self.discs[i].distance)
                 cv_disc.disc_direction.append(self.discs[i].angle(640,69))
                 self.log_string += f'Disc {i} found, '
             self.disc_publisher_.publish(cv_disc)
@@ -158,11 +179,15 @@ class DiscDetectorNode(Node):
                     
         self.get_logger().info(self.log_string)
 
-    def listener_callback(self, data):
+    def image_listener_callback(self, data):
         self.get_logger().info('Camera Callback')
         frame = self.br.imgmsg_to_cv2(data)
-        self.cv_image, self.discs = detectDiscs(self.detector, frame)   
+        self.cv_image, self.discs = detectDiscs(self.detector, frame, self.depth_image)  
 
+    def depth_listener_callback(self, data):
+        self.get_logger().info('Depth Callback') 
+        self.depth_image = self.br.imgmsg_to_cv2(data)
+        
 
 def main(args=None):
     rclpy.init(args=args)
