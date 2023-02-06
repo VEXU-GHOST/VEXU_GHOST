@@ -14,7 +14,7 @@ from geometry_msgs.msg import PoseWithCovariance #, Pose
 from ghost_msgs.msg import CVDisc, CVDiscList
 
 
-cov_ratio = 1.0
+cov_ratio = 0.1
 
 class Disc:
     def __init__(this, x, y, radius):
@@ -87,12 +87,12 @@ class DiscDetector:
         return float(abs((depth_max_y - depth_min_y) * cov_ratio))
 
     def calcAngle(this, disc, hsize=640, hfov=69) -> float:
-        angle = ((disc.x - hsize/2)/(hsize/2))*(hfov/2)
+        angle = -1*((disc.x - hsize/2)/(hsize/2))*(hfov/2)*math.pi/180
         return angle
 
     def calcAngleCovariance(this, disc, hsize=640, hfov=69) -> float:
-        angle_min = ((disc.x + disc.radius/2 - hsize/2)/(hsize/2))*(hfov/2)
-        angle_max = ((disc.x - disc.radius/2 - hsize/2)/(hsize/2))*(hfov/2)
+        angle_min = ((disc.x + disc.radius/2 - hsize/2)/(hsize/2))*(hfov/2)*math.pi/180
+        angle_max = ((disc.x - disc.radius/2 - hsize/2)/(hsize/2))*(hfov/2)*math.pi/180
         return float(abs((angle_max - angle_min) * cov_ratio))
 
     def detectDiscs(this, color_image, depth_image: np.array):
