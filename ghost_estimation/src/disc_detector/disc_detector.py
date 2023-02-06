@@ -14,7 +14,7 @@ from geometry_msgs.msg import PoseWithCovariance #, Pose
 from ghost_msgs.msg import CVDisc, CVDiscList
 
 
-cov_ratio = 1.2
+cov_ratio = 1.0
 
 class Disc:
     def __init__(this, x, y, radius):
@@ -198,6 +198,8 @@ class DiscDetectorNode(Node):
             cv_disc_list.num_discs = len(cv_disc_list.discs)
             self.disc_publisher_.publish(cv_disc_list)
                 
+
+            #fix covariance
                     
         self.get_logger().info(self.log_string)
 

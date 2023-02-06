@@ -185,7 +185,7 @@
         <origin xyz="-0.19015 0 0.2145" rpy="0 0 0"/>
     </joint>
 
-    <!-- <link name="camera_base_link">
+    <link name="camera_base_link">
         <inertial>
             <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
             <mass value="0.125"/>
@@ -199,7 +199,7 @@
         <origin xyz="${dist_to_wheel/2} 0 0.33" rpy="0 0 0"/>
     </joint>
 
-    <link name="camera_view_link">
+    <link name="camera_color_optical_frame">
         <inertial>
             <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
             <mass value="0.125"/>
@@ -209,7 +209,7 @@
 
     <joint name="camera_view_joint" type="fixed">
         <parent link="camera_base_link"/>
-        <child link="camera_view_link"/>
+        <child link="camera_color_optical_frame"/>
         <origin xyz="0 0 0" rpy="0 0.7853975 0"/>
-    </joint> -->
+    </joint>
 </robot>
