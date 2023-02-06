@@ -143,6 +143,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   src/disc_detector/disc_detector.py
+  src/disc_detector/disc_marker_generator.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
