@@ -36,11 +36,11 @@ class DiscMarkerGeneratorNode(Node):
             marker.lifetime = rclpy.duration.Duration(seconds = 0.1).to_msg()
             marker.pose.position.x = disc.pose.position.x
             marker.pose.position.y = disc.pose.position.y
-            marker.pose.position.z = disc.pose.position.z
-            marker.pose.orientation.x = 0.0#0.707
-            marker.pose.orientation.y = 0.0
-            marker.pose.orientation.z = 0.0
-            marker.pose.orientation.w = 1.0#0.707
+            marker.pose.position.z = disc.pose.position.z 
+            marker.pose.orientation.x = disc.pose.orientation.x#0.0#0.707
+            marker.pose.orientation.y = disc.pose.orientation.y#0.0
+            marker.pose.orientation.z = disc.pose.orientation.z#0.0
+            marker.pose.orientation.w = disc.pose.orientation.w#1.0#0.707
             marker.scale.x = disc.covariance[0]**.5
             marker.scale.y = disc.covariance[1+6*1]**.5
             marker.scale.z = 0.01

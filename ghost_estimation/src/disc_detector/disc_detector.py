@@ -12,6 +12,8 @@ from sensor_msgs.msg import Image # Image is the message type
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 from geometry_msgs.msg import PoseWithCovariance #, Pose
 from ghost_msgs.msg import CVDisc, CVDiscList
+from scipy.spatial.transform import Rotation as R
+from tf2_ros.transform_broadcaster import TransformBroadcaster
 
 cov_ratio = 1
 
@@ -270,10 +272,15 @@ class DiscDetectorNode(Node):
                 cv_disc = PoseWithCovariance()
                 cv_disc.pose.position.y = d.distance * math.sin(d.angle)
                 cv_disc.pose.position.x = d.distance * math.cos(d.angle)
-                cv_disc.pose.position.z = -0.38 #-15 in # 0.0
+                cv_disc.pose.position.z = -0.38 #-15 in m # 0.0
+                r = R.from_euler('xyz', [0, 0, d.angle])
+                cv_disc.pose.orientation.x = r.as_quat()[0]#0.0#0.707
+                cv_disc.pose.orientation.y = r.as_quat()[1]#0.0
+                cv_disc.pose.orientation.z = r.as_quat()[2]#0.0
+                cv_disc.pose.orientation.w = r.as_quat()[3]#1.0#0.707
                 covariance = np.zeros(36)
-                covariance[0] = (d.distance_covariance*math.cos(d.angle) + d.distance*(d.angle_covariance*math.cos(d.angle)-math.sin(d.angle)))**2
-                covariance[1+6*1] = (d.distance_covariance*math.sin(d.angle) + d.distance*(d.angle_covariance*math.sin(d.angle)+math.cos(d.angle)))**2
+                covariance[0] = d.distance_covariance**2
+                covariance[1+6*1] = (d.angle_covariance*d.distance)**2+(d.angle*d.distance_covariance)**2
                 cv_disc.covariance = covariance
                 cv_disc_list.discs.append(cv_disc)
             self.log_string += f'{len(cv_disc_list.discs)} discs found, '
