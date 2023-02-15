@@ -8,6 +8,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
+#include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_competition_state.hpp"
 
 namespace ghost_ros
@@ -19,14 +20,17 @@ namespace ghost_ros
 
     private:
         void V5SensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
+        void V5ActuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
         void V5CompetitionStateCallback(const ghost_msgs::msg::V5CompetitionState::SharedPtr msg);
 
         // Subscriptions
         rclcpp::Subscription<ghost_msgs::msg::V5CompetitionState>::SharedPtr v5_competition_state_sub_;
         rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr v5_sensor_update_sub_;
+        rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr v5_actuator_command_sub_;
         
         // Publishers
         std::map<std::string, rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr> motor_state_pubs_;
+        std::map<std::string, rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr> motor_setpoint_pubs_;
         rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr port_status_pub_;
         
         rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr is_connected_pub_;

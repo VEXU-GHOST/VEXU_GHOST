@@ -28,7 +28,7 @@ namespace ghost_v5
 		}
 		actuator_command_msg_len_ += ghost_v5_config::actuator_cmd_extra_byte_count;
 
-        sensor_update_msg_len_ = (ghost_v5_config::sensor_update_motor_config.size() * 5 + ghost_v5_config::sensor_update_sensor_config.size() * 2 ) * 4;
+        sensor_update_msg_len_ = (ghost_v5_config::sensor_update_motor_config.size() * 6 + ghost_v5_config::sensor_update_sensor_config.size() * 2 ) * 4;
 		sensor_update_msg_len_ += ghost_v5_config::sensor_update_extra_byte_count;
 
 		// Array to store latest incoming msg
@@ -124,9 +124,10 @@ namespace ghost_v5
 		{
 			float position = v5_globals::motors[motor_id]->get_position();
 			float velocity = v5_globals::motors[motor_id]->getVelocityFilteredRPM();
-			int32_t voltage = v5_globals::motors[motor_id]->get_voltage();
+			float voltage = v5_globals::motors[motor_id]->getVoltageCommand();
 			float current = v5_globals::motors[motor_id]->get_current_draw();
 			float temp = v5_globals::motors[motor_id]->get_temperature();
+			float power = v5_globals::motors[motor_id]->get_power();
 
 			// If device is connected (and recieving valid sensor updates), set corresponding bit in connected vector
 			if (v5_globals::motors[motor_id]->getDeviceIsConnected())
@@ -143,6 +144,7 @@ namespace ghost_v5
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &voltage, 4);
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &current, 4);
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &temp, 4);
+			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &power, 4);
 		}
 
 		// Update V5 Sensors

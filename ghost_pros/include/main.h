@@ -35,8 +35,8 @@ ghost_v5::GhostMotorConfig drive_motor_config = {
     .filter__cutoff_frequency = 100.0, // Hz
 
     // FF-PD Controller
-    .ctl__vel_gain = 17.5,  // RPM -> mV
-    .ctl__ff_vel_gain = 1.1,
+    .ctl__vel_gain = 0.0, //17.5,  // RPM -> mV
+    .ctl__ff_vel_gain = 0.0, //1.1,
     .ctl__ff_voltage_gain = 1.0,
 };
 
@@ -62,6 +62,7 @@ ghost_v5::GhostMotorConfig intake_motor_config = {
 // Indexer Motor Config
 ghost_v5::GhostMotorConfig indexer_motor_config = {
     .motor__gear_ratio = 6,
+    .motor__brake_mode = pros::E_MOTOR_BRAKE_BRAKE,
     .filter__cutoff_frequency = 100.0,
     .ctl__pos_gain = 150.0,
     .ctl__vel_gain = 15.0,
@@ -73,7 +74,7 @@ ghost_v5::GhostMotorConfig indexer_motor_config = {
 ghost_v5::GhostMotorConfig shooter_motor_config = {
     .motor__gear_ratio = 36,
     .filter__cutoff_frequency = 100.0, // Hz
-    .ctl__vel_gain = 15.0,  // RPM -> mV
+    .ctl__vel_gain = 30.0,  // RPM -> mV
     .ctl__ff_vel_gain = 1.0,
     .ctl__ff_voltage_gain = 1.0,
 };

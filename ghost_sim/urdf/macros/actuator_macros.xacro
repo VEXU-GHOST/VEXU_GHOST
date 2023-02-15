@@ -22,7 +22,7 @@
             <link_name>${link_name}</link_name>
 
             <position_gain>${position_gain}</position_gain>
-            <vel_gain>${vel_gain}</vel_gain>
+            <velocity_gain>${vel_gain}</velocity_gain>
             <accel_gain>${accel_gain}</accel_gain>
 
             <free_speed>130</free_speed>

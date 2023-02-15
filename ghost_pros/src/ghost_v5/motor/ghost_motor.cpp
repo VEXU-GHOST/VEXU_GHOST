@@ -38,9 +38,8 @@ namespace ghost_v5
         // Doing this in the constructor causes data abort exception
         set_gearing(RPM_TO_GEARING[config_.motor__gear_ratio]);
 
-        // Dont strip the plastic gears
-        if(motor_is_3600_cart_){
-            trq_lim_norm_ = 0.75;
+        if(config.motor__gear_ratio == 36.0){
+            motor_is_3600_cart_ = true;
         }
 
         // Set Brake Mode

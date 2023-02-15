@@ -157,7 +157,7 @@ namespace ghost_ros
 
     void RobotStateMachineNode::teleop()
     {
-        updateSwerveCommandsFromTwist(
+        updateSwerveVoltageCommandsFromTwist(
             -curr_joystick_msg_->joystick_right_x,
             curr_joystick_msg_->joystick_left_y,
             -curr_joystick_msg_->joystick_left_x);
@@ -183,6 +183,134 @@ namespace ghost_ros
         }
     }
 
+    void RobotStateMachineNode::updateSwerveVoltageCommandsFromTwist(
+        float angular_velocity,
+        float x_velocity,
+        float y_velocity){
+
+        Eigen::Vector2f xy_vel_cmd(x_velocity, y_velocity);
+        float angular_vel_cmd = std::clamp<float>(angular_velocity, -1.0, 1.0);
+        float linear_vel_cmd = std::clamp<float>(xy_vel_cmd.norm(), -1.0, 1.0);
+
+        // Zero commands under 1%
+        linear_vel_cmd = (fabs(linear_vel_cmd) > 0.01) ? linear_vel_cmd : 0.0;
+        angular_vel_cmd = (fabs(angular_vel_cmd) > 0.01) ? angular_vel_cmd : 0.0;
+
+        // Calculate Linear Velocity Direction w/ error checking
+        Eigen::Vector2f linear_vel_dir(0.0, 0.0);
+        if (xy_vel_cmd.norm() != 0)
+        {
+            linear_vel_dir = xy_vel_cmd / xy_vel_cmd.norm();
+        }
+
+        // Calculate Wheel and Steering Setpoints
+        std::vector<float> steering_angles = {
+            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees),
+            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees),
+            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees),
+        };
+
+        // Swerve Drive Setpoints
+        std::vector<float> steering_angle_cmd_(3, 0.0);
+        std::vector<float> steering_velocity_cmd_(3, 0.0);
+        std::vector<float> steering_voltage_cmd_(3, 0.0);
+
+        std::vector<float> wheel_velocity_cmd_(3, 0.0);
+        std::vector<float> wheel_voltage_cmd_(3, 0.0);
+
+        std::vector<Eigen::Vector2f> wheel_vel_vectors(3, Eigen::Vector2f(0, 0));
+        std::vector<Eigen::Vector2f> wheel_positions = {left_wheel_pos_, right_wheel_pos_, back_wheel_pos_};
+        for (int wheel_id = 0; wheel_id < 3; wheel_id++)
+        {
+            // Calculate linear velocity vector at wheel
+            Eigen::Vector2f vel_vec(-wheel_positions[wheel_id].y(), wheel_positions[wheel_id].x());
+            vel_vec *= angular_vel_cmd;
+            vel_vec += linear_vel_cmd * linear_vel_dir;
+            wheel_vel_vectors[wheel_id] = vel_vec;
+
+            // Calculate naive steering angle and wheel velocity setpoints
+            steering_angle_cmd_[wheel_id] = ghost_util::WrapAngle360(atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI);   // Converts rad/s to degrees
+            wheel_velocity_cmd_[wheel_id] = vel_vec.norm(); // normalized
+
+            // Calculate angle error and then use direction of smallest error
+            float steering_error  = ghost_util::SmallestAngleDist(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+
+            // It is faster to reverse wheel direction and steer to opposite angle
+            if(fabs(steering_error) > 90.0){
+                // Flip commands
+                wheel_velocity_cmd_[wheel_id] *= -1.0;
+                steering_angle_cmd_[wheel_id] = ghost_util::FlipAngle180(steering_angle_cmd_[wheel_id]);
+
+                // Recalculate error
+                steering_error = ghost_util::SmallestAngleDist(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+            }
+
+            // Set steering voltage using position control law
+            steering_voltage_cmd_[wheel_id] = steering_error * steering_kp_;
+        }
+        publishSwerveKinematicsVisualization(wheel_vel_vectors[0], wheel_vel_vectors[1], wheel_vel_vectors[2]);
+
+        // Convert steering and wheel commands to actuator space
+        std::vector<float> motor_speed_cmds(6, 0.0);
+        std::vector<float> motor_voltage_cmds(6, 0.0);
+
+        // Normalize velocities based on vel saturation, transform velocities to actuator space
+        for (int wheel_id = 0; wheel_id < 3; wheel_id++)
+        {
+            // Transform position control output to actuator space
+            motor_voltage_cmds[2 * wheel_id] = wheel_velocity_cmd_[wheel_id] + steering_voltage_cmd_[wheel_id];
+            motor_voltage_cmds[2 * wheel_id + 1] = -wheel_velocity_cmd_[wheel_id] + steering_voltage_cmd_[wheel_id];
+        }
+
+        // Get largest speed magnitude
+        double max_voltage_val = 0;
+        for (float &voltage : motor_voltage_cmds)
+        {
+            max_voltage_val = std::max(fabs(voltage), max_voltage_val);
+        }
+
+        // Normalize if any motor exceeds maximum possible speed
+        if (max_voltage_val > 1.0)
+        {
+            for (float &voltage : motor_voltage_cmds)
+            {
+                voltage *= (1.0 / max_voltage_val);
+            }
+        }
+
+        // If we don't receive non-zero user input, zero everything
+        if ((fabs(linear_vel_cmd) < 1e-5) && (fabs(angular_vel_cmd) < 1e-5))
+        {
+            for (int motor_id = 0; motor_id < 6; motor_id++)
+            {
+                motor_speed_cmds[motor_id] = 0.0;
+                motor_voltage_cmds[motor_id] = 0.0;
+            }
+        }
+
+        // Update voltage commands
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].desired_voltage =     motor_voltage_cmds[0];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].desired_voltage =      motor_voltage_cmds[1];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].desired_voltage =    motor_voltage_cmds[2];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].desired_voltage =     motor_voltage_cmds[3];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_1_MOTOR].desired_voltage =   motor_voltage_cmds[4];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR].desired_voltage =   motor_voltage_cmds[4];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR].desired_voltage =    motor_voltage_cmds[5];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_voltage =    motor_voltage_cmds[5];
+
+        // Set Motor Names and Device IDs
+        for (auto pair : ghost_v5_config::actuator_command_config){
+            int dev_id = pair.first;
+            actuator_cmd_msg_.motor_commands[dev_id].motor_name =   ghost_v5_config::device_names.at(dev_id);
+            actuator_cmd_msg_.motor_commands[dev_id].device_id =    dev_id;
+        }
+    }
+
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+
     void RobotStateMachineNode::updateSwerveCommandsFromTwist(
         float angular_velocity,
         float x_velocity,
@@ -192,14 +320,6 @@ namespace ghost_ros
         Eigen::Vector2f xy_vel_cmd(x_velocity, y_velocity);
         float angular_vel_cmd = std::clamp<float>(angular_velocity, -1.0, 1.0) * max_angular_vel_;
         float linear_vel_cmd = std::clamp<float>(xy_vel_cmd.norm(), -1.0, 1.0) * max_linear_vel_;
-
-        // Swerve Drive Setpoints
-        std::vector<float> steering_angle_cmd_(3, 0.0);
-        std::vector<float> steering_velocity_cmd_(3, 0.0);
-        std::vector<float> steering_voltage_cmd_(3, 0.0);
-
-        std::vector<float> wheel_velocity_cmd_(3, 0.0);
-        std::vector<float> wheel_voltage_cmd_(3, 0.0);
 
         // Zero commands under 1%
         linear_vel_cmd = (fabs(linear_vel_cmd) > max_linear_vel_ * 0.01) ? linear_vel_cmd : 0.0;
@@ -219,8 +339,15 @@ namespace ghost_ros
             ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees),
         };
 
-        std::vector<Eigen::Vector2f> wheel_vel_vectors(3, Eigen::Vector2f(0, 0));
+        // Swerve Drive Setpoints
+        std::vector<float> steering_angle_cmd_(3, 0.0);
+        std::vector<float> steering_velocity_cmd_(3, 0.0);
+        std::vector<float> steering_voltage_cmd_(3, 0.0);
 
+        std::vector<float> wheel_velocity_cmd_(3, 0.0);
+        std::vector<float> wheel_voltage_cmd_(3, 0.0);
+
+        std::vector<Eigen::Vector2f> wheel_vel_vectors(3, Eigen::Vector2f(0, 0));
         std::vector<Eigen::Vector2f> wheel_positions = {left_wheel_pos_, right_wheel_pos_, back_wheel_pos_};
         for (int wheel_id = 0; wheel_id < 3; wheel_id++)
         {
@@ -273,7 +400,7 @@ namespace ghost_ros
             motor_speed_cmds[2 * wheel_id + 1] = actuator_vel_cmd[1];
 
             // Transform position control output to actuator space
-            Eigen::Vector2f wheel_module_voltage_cmd(0.0, steering_voltage_cmd_[wheel_id]);
+            Eigen::Vector2f wheel_module_voltage_cmd(wheel_voltage_cmd_[wheel_id], steering_voltage_cmd_[wheel_id]);
             Eigen::Vector2f actuator_voltage_cmd = diff_swerve_jacobian.transpose() * wheel_module_voltage_cmd;
             motor_voltage_cmds[2 * wheel_id] = actuator_voltage_cmd[0];
             motor_voltage_cmds[2 * wheel_id + 1] = actuator_voltage_cmd[1];
@@ -324,6 +451,12 @@ namespace ghost_ros
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR].desired_voltage =   motor_voltage_cmds[4];
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR].desired_voltage =    motor_voltage_cmds[5];
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_voltage =    motor_voltage_cmds[5];
+
+        // Set Motor Names and Device IDs
+        for (auto it = ghost_v5_config::actuator_command_config.begin(); it != ghost_v5_config::actuator_command_config.end(); it++){
+            actuator_cmd_msg_.motor_commands[it->second].motor_name =   ghost_v5_config::device_names.at(it->second);
+            actuator_cmd_msg_.motor_commands[it->second].device_id =    it->second;
+        }
     }
 
     void RobotStateMachineNode::publishSwerveKinematicsVisualization(
