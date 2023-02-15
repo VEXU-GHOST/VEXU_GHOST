@@ -86,8 +86,9 @@ namespace ghost_ros
                 motor_state_msg.data.push_back(encoder.angle_degrees);
                 motor_state_msg.data.push_back(encoder.velocity_rpm);
                 motor_state_msg.data.push_back(encoder.current_ma);
-                motor_state_msg.data.push_back((float) encoder.voltage_mv);
+                motor_state_msg.data.push_back(encoder.voltage_mv);
                 motor_state_msg.data.push_back(encoder.temp_c);
+                motor_state_msg.data.push_back(encoder.power_w);
                 motor_state_pubs_[encoder.device_name]->publish(motor_state_msg);
             }
         }

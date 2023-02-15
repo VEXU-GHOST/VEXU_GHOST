@@ -299,11 +299,11 @@ namespace ghost_ros
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_voltage =    motor_voltage_cmds[5];
 
         // Set Motor Names and Device IDs
-        // for (auto it = ghost_v5_config::actuator_command_config.begin(); it != ghost_v5_config::actuator_command_config.end(); it++){
-        //     int dev_id = it->first;
-        //     actuator_cmd_msg_.motor_commands[dev_id].motor_name =   ghost_v5_config::device_names[dev_id];
-        //     actuator_cmd_msg_.motor_commands[dev_id].device_id =    dev_id;
-        // }
+        for (auto pair : ghost_v5_config::actuator_command_config){
+            int dev_id = pair.first;
+            actuator_cmd_msg_.motor_commands[dev_id].motor_name =   ghost_v5_config::device_names.at(dev_id);
+            actuator_cmd_msg_.motor_commands[dev_id].device_id =    dev_id;
+        }
     }
 
 ////////////////////////////////////////////////

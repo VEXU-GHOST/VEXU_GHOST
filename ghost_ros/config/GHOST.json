@@ -59,358 +59,255 @@
       "isSynced": true
     },
     "Plot!2e04zxg": {
-      "title": "Plot",
+      "title": "Drive Motor Angles",
       "paths": [
         {
-          "value": "",
+          "value": "/foxglove/DRIVE_LEFT_BACK_MOTOR/state.0",
           "enabled": true,
           "timestampMethod": "receiveTime"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_LEFT_FRONT_MOTOR/state.0",
+          "label": "Series 2",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_RIGHT_FRONT_MOTOR/state.0",
+          "label": "Series 3",
+          "enabled": true,
+          "color": "#771386"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_RIGHT_BACK_MOTOR/state.0",
+          "label": "Series 4",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_LEFT_1_MOTOR/state.0",
+          "label": "Series 5",
+          "enabled": true,
+          "color": "#c20808"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_LEFT_2_MOTOR/state.0",
+          "label": "Series 6",
+          "enabled": true,
+          "color": "#0fcb23"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_RIGHT_2_MOTOR/state.0",
+          "label": "Series 7",
+          "enabled": true,
+          "color": "#dfca0c"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_RIGHT_1_MOTOR/state.0",
+          "label": "Series 8",
+          "enabled": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": true,
+      "showLegend": false,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": false,
       "isSynced": true,
       "xAxisVal": "timestamp",
       "sidebarDimension": 240
     },
-    "Plot!24xk8yx": {
-      "title": "Plot",
+    "Plot!3n3g9y9": {
+      "title": "Drive Motor Velocities",
       "paths": [
         {
-          "value": "",
+          "value": "/foxglove/DRIVE_LEFT_BACK_MOTOR/state.1",
           "enabled": true,
           "timestampMethod": "receiveTime"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_LEFT_FRONT_MOTOR/state.1",
+          "label": "Series 2",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_RIGHT_FRONT_MOTOR/state.1",
+          "label": "Series 3",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_RIGHT_BACK_MOTOR/state.1",
+          "label": "Series 4",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_LEFT_1_MOTOR/state.1",
+          "label": "Series 5",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_LEFT_2_MOTOR/state.1",
+          "label": "Series 6",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_RIGHT_2_MOTOR/state.1",
+          "label": "Series 7",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_RIGHT_1_MOTOR/state.1",
+          "label": "Series 8",
+          "enabled": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": true,
+      "showLegend": false,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": false,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "minYValue": -700,
+      "maxYValue": 700
     },
-    "Plot!1fzq37f": {
-      "title": "Plot",
+    "Plot!3uwwq4n": {
+      "title": "Drive Motor Currents",
       "paths": [
         {
-          "value": "",
+          "value": "/foxglove/DRIVE_LEFT_BACK_MOTOR/state.2",
           "enabled": true,
           "timestampMethod": "receiveTime"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_LEFT_FRONT_MOTOR/state.2",
+          "label": "Series 2",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_RIGHT_FRONT_MOTOR/state.2",
+          "label": "Series 3",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_RIGHT_BACK_MOTOR/state.2",
+          "label": "Series 4",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_LEFT_1_MOTOR/state.2",
+          "label": "Series 5",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_LEFT_2_MOTOR/state.2",
+          "label": "Series 6",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_RIGHT_2_MOTOR/state.2",
+          "label": "Series 7",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_RIGHT_1_MOTOR/state.2",
+          "label": "Series 8",
+          "enabled": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": true,
+      "showLegend": false,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": false,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "minYValue": 0,
+      "maxYValue": 3000
     },
-    "Plot!2kw7zbd": {
-      "title": "Plot",
+    "Plot!3mb25g4": {
+      "title": "Drive Motor Voltages",
       "paths": [
         {
-          "value": "",
+          "value": "/foxglove/DRIVE_LEFT_BACK_MOTOR/state.3",
           "enabled": true,
           "timestampMethod": "receiveTime"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_LEFT_FRONT_MOTOR/state.3",
+          "label": "Series 2",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_RIGHT_FRONT_MOTOR/state.3",
+          "label": "Series 3",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_RIGHT_BACK_MOTOR/state.3",
+          "label": "Series 4",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_LEFT_1_MOTOR/state.3",
+          "label": "Series 5",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_LEFT_2_MOTOR/state.3",
+          "label": "Series 6",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_RIGHT_2_MOTOR/state.3",
+          "label": "Series 7",
+          "enabled": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/foxglove/DRIVE_BACK_RIGHT_1_MOTOR/state.3",
+          "label": "Series 8",
+          "enabled": true
         }
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": true,
+      "showLegend": false,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": false,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "minYValue": -12000,
+      "maxYValue": 12000
     },
-    "Indicator!1pjbwnt": {
-      "path": "/foxglove/v5_ports.data.1",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "TURRET",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "TURRET"
-        }
-      ]
-    },
-    "Indicator!2q91522": {
-      "path": "/foxglove/v5_ports.data.6",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "6",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "6"
-        }
-      ]
-    },
-    "Indicator!187rd9f": {
-      "path": "/foxglove/v5_ports.data.11",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "DRIVE_LEFT_FRONT",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "DRIVE_LEFT_FRONT"
-        }
-      ]
-    },
-    "Indicator!18cdzks": {
-      "path": "/foxglove/v5_ports.data.16",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "DRIVE_BACK_LEFT_2",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "DRIVE_BACK_LEFT_2"
-        }
-      ]
-    },
-    "Indicator!anjb8h": {
-      "path": "/foxglove/v5_ports.data.2",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "INTAKE",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "INTAKE"
-        }
-      ]
-    },
-    "Indicator!2slqmvx": {
-      "path": "/foxglove/v5_ports.data.7",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "7",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "7"
-        }
-      ]
-    },
-    "Indicator!2wolf99": {
-      "path": "/foxglove/v5_ports.data.12",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "DRIVE_LEFT_BACK",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "DRIVE_LEFT_BACK"
-        }
-      ]
-    },
-    "Indicator!xi04jm": {
-      "path": "/foxglove/v5_ports.data.17",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "DRIVE_BACK_RIGHT_2",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "DRIVE_BACK_RIGHT_2"
-        }
-      ]
-    },
-    "Indicator!12w2soy": {
-      "path": "/foxglove/v5_ports.data.3",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "INDEXER",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "INDEXER"
-        }
-      ]
-    },
-    "Indicator!4erhmye": {
-      "path": "/foxglove/v5_ports.data.8",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "STEERING_REAR",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "STEERING_REAR"
-        }
-      ]
-    },
-    "Indicator!36zjcgb": {
-      "path": "/foxglove/v5_ports.data.13",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "DRIVE_RIGHT_FRONT",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "DRIVE_RIGHT_FRONT"
-        }
-      ]
-    },
-    "Indicator!3eeqg24": {
-      "path": "/foxglove/v5_ports.data.18",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "DRIVE_BACK_RIGHT_1",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "DRIVE_BACK_RIGHT_1"
-        }
-      ]
-    },
-    "Indicator!fftnn6": {
-      "path": "/foxglove/v5_ports.data.4",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "SHOOTER_LEFT",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "SHOOTER_LEFT"
-        }
-      ]
-    },
-    "Indicator!294ut68": {
-      "path": "/foxglove/v5_ports.data.9",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "9",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "9"
-        }
-      ]
-    },
-    "Indicator!3s9kh5l": {
-      "path": "/foxglove/v5_ports.data.14",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "DRIVE_RIGHT_BACK",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "DRIVE_RIGHT_BACK"
-        }
-      ]
-    },
-    "Indicator!35zwjq0": {
-      "path": "/foxglove/v5_ports.data.19",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "STEERING_RIGHT",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "STEERING_RIGHT"
-        }
-      ]
-    },
-    "Indicator!n7x8tf": {
-      "path": "/foxglove/v5_ports.data.5",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "SHOOTER_RIGHT",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "SHOOTER_RIGHT"
-        }
-      ]
-    },
-    "Indicator!3v5zpoh": {
-      "path": "/foxglove/v5_ports.data.10",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "10",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "10"
-        }
-      ]
-    },
-    "Indicator!465eahk": {
-      "path": "/foxglove/v5_ports.data.15",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "DRIVE_BACK_LEFT_1",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "DRIVE_BACK_LEFT_1"
-        }
-      ]
-    },
-    "Indicator!ila35w": {
-      "path": "/foxglove/v5_ports.data.20",
-      "style": "background",
-      "fallbackColor": "#a0a0a0",
-      "fallbackLabel": "STEERING_LEFT",
-      "rules": [
-        {
-          "operator": "=",
-          "rawValue": "1.0",
-          "color": "#7208b2",
-          "label": "STEERING_LEFT"
-        }
-      ]
-    },
-    "SourceInfo!1og1qyt": {},
     "Indicator!1f7hmyx": {
       "path": "/foxglove/v5_ports.data.0",
       "style": "background",
@@ -420,7 +317,7 @@
         {
           "operator": "=",
           "rawValue": "1.0",
-          "color": "#d5462b",
+          "color": "#7208b2",
           "label": ""
         }
       ]
@@ -706,7 +603,7 @@
       ]
     },
     "Tab!15pe91h": {
-      "activeTabIdx": 4,
+      "activeTabIdx": 1,
       "tabs": [
         {
           "title": "Match View",
@@ -718,107 +615,20 @@
           }
         },
         {
-          "title": "1",
+          "title": "Motor Stats",
           "layout": {
             "first": {
               "first": "Plot!2e04zxg",
-              "second": "Plot!24xk8yx",
+              "second": "Plot!3n3g9y9",
               "direction": "row"
             },
             "second": {
-              "first": "Plot!1fzq37f",
-              "second": "Plot!2kw7zbd",
+              "first": "Plot!3uwwq4n",
+              "second": "Plot!3mb25g4",
               "direction": "row"
             },
             "direction": "column"
           }
-        },
-        {
-          "title": "V5 Ports Old",
-          "layout": {
-            "first": {
-              "first": {
-                "first": {
-                  "first": "Indicator!1pjbwnt",
-                  "second": "Indicator!2q91522",
-                  "direction": "column"
-                },
-                "second": {
-                  "first": "Indicator!187rd9f",
-                  "second": "Indicator!18cdzks",
-                  "direction": "column"
-                },
-                "direction": "column"
-              },
-              "second": {
-                "first": {
-                  "first": "Indicator!anjb8h",
-                  "second": "Indicator!2slqmvx",
-                  "direction": "column"
-                },
-                "second": {
-                  "first": "Indicator!2wolf99",
-                  "second": "Indicator!xi04jm",
-                  "direction": "column"
-                },
-                "direction": "column"
-              },
-              "direction": "row",
-              "splitPercentage": 52.713507467708546
-            },
-            "second": {
-              "first": {
-                "first": {
-                  "first": "Indicator!12w2soy",
-                  "second": "Indicator!4erhmye",
-                  "direction": "column"
-                },
-                "second": {
-                  "first": "Indicator!36zjcgb",
-                  "second": "Indicator!3eeqg24",
-                  "direction": "column"
-                },
-                "direction": "column"
-              },
-              "second": {
-                "first": {
-                  "first": {
-                    "first": "Indicator!fftnn6",
-                    "second": "Indicator!294ut68",
-                    "direction": "column"
-                  },
-                  "second": {
-                    "first": "Indicator!3s9kh5l",
-                    "second": "Indicator!35zwjq0",
-                    "direction": "column"
-                  },
-                  "direction": "column"
-                },
-                "second": {
-                  "first": {
-                    "first": "Indicator!n7x8tf",
-                    "second": "Indicator!3v5zpoh",
-                    "direction": "column"
-                  },
-                  "second": {
-                    "first": "Indicator!465eahk",
-                    "second": "Indicator!ila35w",
-                    "direction": "column"
-                  },
-                  "direction": "column"
-                },
-                "direction": "row"
-              },
-              "direction": "row",
-              "splitPercentage": 34.31001890359168
-            },
-            "direction": "row",
-            "splitPercentage": 41.124095715080685
-          }
-        },
-        {
-          "title": "4",
-          "layout": "SourceInfo!1og1qyt"
         },
         {
           "title": "V5 Ports",

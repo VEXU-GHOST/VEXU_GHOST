@@ -40,10 +40,17 @@ def generate_launch_description():
         name='ghost_state_machine_node',
         output='screen',
         parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
+    )
 
+    foxglove_diagnostics_node = Node(
+        package='ghost_ros',
+        executable='foxglove_diagnostics_node',
+        name='foxglove_diagnostics_node',
+        parameters=[ghost_ros_base_dir + "/config/foxglove_diagnostics_config.yaml"]
     )
 
     return LaunchDescription([
+        foxglove_diagnostics_node,
         serial_node,
         estimator_node,
         state_machine_node,

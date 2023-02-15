@@ -48,6 +48,10 @@ namespace ghost_v5
 
         void updateMotor();
 
+        float getVoltageCommand(){
+            return cmd_voltage_mv_;
+        }
+
         float getVelocityFilteredRPM(){
             return velocity_filter_.getCurrentState();
         }

@@ -39,7 +39,7 @@ namespace ghost_ros
         }
         actuator_command_msg_len_ += ghost_v5_config::actuator_cmd_extra_byte_count;
 
-        sensor_update_msg_len_ = (ghost_v5_config::sensor_update_motor_config.size() * 5 + ghost_v5_config::sensor_update_sensor_config.size() * 2 ) * 4;
+        sensor_update_msg_len_ = (ghost_v5_config::sensor_update_motor_config.size() * 6 + ghost_v5_config::sensor_update_sensor_config.size() * 2 ) * 4;
         sensor_update_msg_len_ += ghost_v5_config::sensor_update_extra_byte_count;
 
         int incoming_packet_len = sensor_update_msg_len_ +
@@ -223,7 +223,7 @@ namespace ghost_ros
             encoder_state_msg.encoders[motor_id].velocity_rpm = velocity;
 
             // Copy motor voltage
-            int32_t voltage;
+            float voltage;
             memcpy(&voltage, buffer + 4 * (buffer_index++), 4);
             encoder_state_msg.encoders[motor_id].voltage_mv = voltage;
 
@@ -236,6 +236,11 @@ namespace ghost_ros
             float temp;
             memcpy(&temp, buffer + 4 * (buffer_index++), 4);
             encoder_state_msg.encoders[motor_id].temp_c = temp;
+
+            // Copy motor power
+            float power;
+            memcpy(&power, buffer + 4 * (buffer_index++), 4);
+            encoder_state_msg.encoders[motor_id].power_w = power;
         }
 
         for (auto sensor_id : ghost_v5_config::sensor_update_sensor_config)
