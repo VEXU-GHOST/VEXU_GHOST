@@ -30,6 +30,7 @@ namespace ghost_v5
         float ctl__vel_gain{10.0};
         float ctl__ff_vel_gain{1.0};
         float ctl__ff_voltage_gain{1.0};
+        float ctl__rpm_deadband{0.0};
 
         // Limit Instant Voltage Change
         float motor__torque_limit_norm{1.0};
@@ -90,8 +91,8 @@ namespace ghost_v5
         int32_t des_pos_encoder_;
         float des_vel_rpm_;
         float des_voltage_norm_;
-
         float cmd_voltage_mv_;
+        float ctl_rpm_deadband_;
 
         // Motor Models
         ghost_control::DCMotorModel motor_model_;

@@ -1,5 +1,6 @@
 #include "ghost_v5/motor/ghost_motor.hpp"
 
+#include "pros/apix.h"
 #include "pros/error.h"
 
 namespace ghost_v5
@@ -25,7 +26,6 @@ namespace ghost_v5
               config.motor__max_voltage,
               config.motor__gear_ratio),
           motor_is_3600_cart_{(config_.motor__gear_ratio == 36)},
-          trq_lim_norm_{config_.motor__torque_limit_norm},
           device_connected_{false},
           ctl_mode_{control_mode_e::VOLTAGE_CONTROL},
           des_voltage_norm_{0.0},
@@ -34,6 +34,8 @@ namespace ghost_v5
           cmd_voltage_mv_{0.0}
     {
         config_ = config;
+        trq_lim_norm_ = config_.motor__torque_limit_norm;
+        ctl_rpm_deadband_ = config_.ctl__rpm_deadband;
 
         // Doing this in the constructor causes data abort exception
         set_gearing(RPM_TO_GEARING[config_.motor__gear_ratio]);
@@ -79,6 +81,10 @@ namespace ghost_v5
 
         case control_mode_e::VELOCITY_CONTROL:
             cmd_voltage_mv_ = voltage_feedforward + velocity_feedforward + velocity_feedback;
+            // Apply velocity deadband
+            if(fabs(des_vel_rpm_) < ctl_rpm_deadband_ && fabs(ctl_rpm_deadband_) > 1e-3){
+                cmd_voltage_mv_ = 0.0;
+            }
             break;
 
         case control_mode_e::VOLTAGE_CONTROL:

@@ -123,20 +123,20 @@ void initialize()
 {
 	// Motor ports
 	// Motor IDs are zero based index. The only time we actually use ports are in init, so we add 1 for V5 Port ID scheme
-	v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR]   	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR,    false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR]    	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR,     false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR,   false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR]   	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR,    false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_1_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_1_MOTOR,   false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_1_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_1_MOTOR,  false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_2_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_2_MOTOR,   true,  	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_2_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_2_MOTOR,  true,  	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]             	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::TURRET_MOTOR,              false, 	turret_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INTAKE_LEFT_MOTOR]         = std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_LEFT_MOTOR,         false, 	intake_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INTAKE_RIGHT_MOTOR]        = std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_RIGHT_MOTOR,        false, 	intake_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]            	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INDEXER_MOTOR,             false, 	indexer_motor_config);
-    v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        false, 	shooter_motor_config);
-    v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       true, 	shooter_motor_config);
+	v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR]   		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR,    		false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR]    		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR,     		false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR]  		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR,   		false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR]   		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR,    		false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_REAR_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_REAR_MOTOR,  	false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_REAR_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_REAR_MOTOR, 	false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_FRONT_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_FRONT_MOTOR, 	true,  	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_FRONT_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_FRONT_MOTOR,	true,  	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]             		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::TURRET_MOTOR,              		false, 	turret_motor_config);
+    v5_globals::motors[v5_motor_id_enum::INTAKE_LEFT_MOTOR]         	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_LEFT_MOTOR,         		true, 	intake_motor_config);
+    v5_globals::motors[v5_motor_id_enum::INTAKE_RIGHT_MOTOR]        	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_RIGHT_MOTOR,        		false, 	intake_motor_config);
+    v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]            		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INDEXER_MOTOR,             		false, 	indexer_motor_config);
+    v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        		false, 	shooter_motor_config);
+    v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       		true, 	shooter_motor_config);
 
 	// Drive testing
 	// v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]->set_current_limit(0.0);

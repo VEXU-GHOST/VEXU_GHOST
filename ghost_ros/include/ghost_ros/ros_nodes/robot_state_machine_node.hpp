@@ -27,6 +27,12 @@ namespace ghost_ros
         AUTONOMOUS = 2,
     };
 
+    enum teleop_mode_e
+    {
+        SHOOTER_MODE,
+        INTAKE_MODE
+    };
+
     class RobotStateMachineNode : public rclcpp::Node
     {
     public:
@@ -74,6 +80,7 @@ namespace ghost_ros
         float max_steering_angular_vel_;
 
         float steering_kp_;
+        float turret_kp_;
         float max_motor_rpm_true_;
 
         Eigen::Vector2f left_wheel_pos_;
@@ -81,6 +88,10 @@ namespace ghost_ros
         Eigen::Vector2f back_wheel_pos_;
 
         ghost_msgs::msg::V5ActuatorCommand actuator_cmd_msg_;
+
+        // Flywheel teleop modes
+        bool r1_pressed_;
+        teleop_mode_e teleop_mode;
     };
 
 } // namespace ghost_ros

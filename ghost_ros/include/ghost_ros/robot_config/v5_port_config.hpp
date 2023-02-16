@@ -12,16 +12,16 @@ namespace ghost_v5_config
         DRIVE_LEFT_BACK_MOTOR       = 12,
         DRIVE_RIGHT_FRONT_MOTOR     = 13,
         DRIVE_RIGHT_BACK_MOTOR      = 14,
-        DRIVE_BACK_LEFT_1_MOTOR     = 15,
-        DRIVE_BACK_LEFT_2_MOTOR     = 16,
-        DRIVE_BACK_RIGHT_2_MOTOR    = 17,
-        DRIVE_BACK_RIGHT_1_MOTOR    = 18,
+        DRIVE_BACK_LEFT_REAR_MOTOR     = 15,
+        DRIVE_BACK_LEFT_FRONT_MOTOR     = 16,
+        DRIVE_BACK_RIGHT_REAR_MOTOR    = 17,
+        DRIVE_BACK_RIGHT_FRONT_MOTOR    = 18,
         TURRET_MOTOR                = 6,
-        INTAKE_LEFT_MOTOR           = 9,
-        INTAKE_RIGHT_MOTOR          = 10,
-        INDEXER_MOTOR               = 19,
-        SHOOTER_LEFT_MOTOR          = 4,
-        SHOOTER_RIGHT_MOTOR         = 5
+        INTAKE_RIGHT_MOTOR          = 9,
+        INTAKE_LEFT_MOTOR           = 10,
+        INDEXER_MOTOR               = 3,
+        SHOOTER_LEFT_MOTOR          = 1,
+        SHOOTER_RIGHT_MOTOR         = 2
     };
 
     enum v5_sensor_id_enum
