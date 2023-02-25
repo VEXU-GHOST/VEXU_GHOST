@@ -188,27 +188,29 @@ namespace ghost_ros
         // Intake Control
         float intake_cmd = 0.0;
         if(curr_joystick_msg_->joystick_btn_r2){
-            intake_cmd = 0.9;
+            intake_cmd = 600;
         }
         else if(curr_joystick_msg_->joystick_btn_down){
-            intake_cmd = -1.0;
+            intake_cmd = -600;
         }
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_voltage = intake_cmd;
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_voltage = intake_cmd;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_velocity = intake_cmd;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_velocity = intake_cmd;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_voltage = intake_cmd / 600.0;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_voltage = intake_cmd / 600.0;
 
         // Toggle shooter mode
         if(curr_joystick_msg_->joystick_btn_r1 && !r1_pressed_){
             if(teleop_mode == INTAKE_MODE){
                 teleop_mode = SHOOTER_MODE;
             }
-            else if(teleop_mode == SHOOTER_MODE){
-                teleop_mode = INTAKE_MODE;
-            }
             r1_pressed_ = true;
         }
-
-        if(!curr_joystick_msg_->joystick_btn_r1){
+        else if(!curr_joystick_msg_->joystick_btn_r1){
             r1_pressed_ = false;
+        }
+
+        if(curr_joystick_msg_->joystick_btn_b && teleop_mode == SHOOTER_MODE){
+            teleop_mode = INTAKE_MODE;
         }
 
         float turret_angle = ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::TURRET_ENCODER].angle_degrees);
@@ -222,25 +224,25 @@ namespace ghost_ros
                     actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_velocity = 0;
                 }
 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2100;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2400;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1600;
 
                 if(curr_joystick_msg_->joystick_btn_y){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_velocity = 100;
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 1.0;
                 }
                 else if(curr_joystick_msg_->joystick_btn_a){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_velocity = -100;
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = -1.0;
                 }
                 else{
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_velocity = 0;
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 0;
                 }
 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = (45.0 - turret_angle) * turret_kp_;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = (45.0 - turret_angle) * turret_kp_;
 
             break;
 
             case INTAKE_MODE:
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = -turret_angle * turret_kp_;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_velocity = -turret_angle * turret_kp_;
                 
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 0;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 0;
