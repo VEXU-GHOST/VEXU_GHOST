@@ -16,22 +16,25 @@ namespace ghost_ros
         using_reader_thread_ = get_parameter("using_reader_thread").as_bool();
 
         declare_parameter("use_checksum", true);
-        bool use_checksum_ = get_parameter("use_checksum").as_bool();
+        use_checksum_ = get_parameter("use_checksum").as_bool();
 
         declare_parameter("verbose", false);
         verbose_ = get_parameter("verbose").as_bool();
 
         declare_parameter("read_msg_start_seq", "sout");
-        std::string read_msg_start_seq_ = get_parameter("read_msg_start_seq").as_string();
+        read_msg_start_seq_ = get_parameter("read_msg_start_seq").as_string();
 
         declare_parameter("write_msg_start_seq", "msg");
-        std::string write_msg_start_seq_ = get_parameter("write_msg_start_seq").as_string();
+        write_msg_start_seq_ = get_parameter("write_msg_start_seq").as_string();
 
         declare_parameter("port_name", "/dev/ttyACM1");
-        std::string port_name_ = get_parameter("port_name").as_string();
+        port_name_ = get_parameter("port_name").as_string();
 
         declare_parameter("backup_port_name", "/dev/ttyACM2");
-        std::string backup_port_name_ = get_parameter("backup_port_name").as_string();
+        backup_port_name_ = get_parameter("backup_port_name").as_string();
+
+        RCLCPP_INFO(get_logger(), "Port Name: " + port_name_);
+        RCLCPP_INFO(get_logger(), "Backup Port Name: " + backup_port_name_);
 
         // Calculate Msg Sizes based on robot configuration
         actuator_command_msg_len_ = 2 * 4 * ghost_v5_config::actuator_command_config.size() + 1;
@@ -77,10 +80,10 @@ namespace ghost_ros
 
         // Timer for Connection timeout
         port_timer_ = this->create_wall_timer(
-            50ms,
+            1000ms,
             [this]()
             {
-                if (std::chrono::system_clock::now() - this->last_msg_time_ > 50ms && this->serial_open_)
+                if (std::chrono::system_clock::now() - this->last_msg_time_ > 1000ms && this->serial_open_)
                 {
                     // Acquire exclusive access to serial port, and then reset
                     std::unique_lock<std::mutex> serial_lock(this->serial_reset_mutex_);

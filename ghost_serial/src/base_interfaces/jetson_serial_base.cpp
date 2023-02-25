@@ -90,7 +90,7 @@ namespace ghost_serial
         cfsetospeed(&tty, B115200);
 
         // Save tty settings, also checking for error
-        return tcsetattr(serial_read_fd_, TCSANOW, &tty) == 0;
+        return (tcsetattr(serial_read_fd_, TCSANOW, &tty) == 0);
     }
 
     bool JetsonSerialBase::trySerialInit(std::string port_name)
