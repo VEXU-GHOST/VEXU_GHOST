@@ -30,13 +30,18 @@ namespace ghost_ros
         void publishV5SensorUpdate(unsigned char buffer[]);
 
         // Background thread loop for processing serial reads
-        void readerLoop();
+        void serialLoop();
 
         // Config Params
         YAML::Node config_yaml_;
         int max_msg_len_;
         bool using_reader_thread_;
         bool verbose_;
+        std::string write_msg_start_seq_;
+        std::string read_msg_start_seq_;
+        std::string port_name_;
+        std::string backup_port_name_;
+        bool use_checksum_;
 
         // ROS Topics
         rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
@@ -50,8 +55,15 @@ namespace ghost_ros
         std::vector<unsigned char> sensor_update_msg_;
 
         // Reader Thread
-        std::thread reader_thread_;
-        std::atomic_bool reader_thread_init_;
+        std::thread serial_thread_;
+        std::atomic_bool serial_thread_init_;
+
+        // Serial Port Timeout
+        std::atomic_bool serial_open_;
+        std::atomic_bool msg_received_;
+        std::chrono::time_point<std::chrono::system_clock> last_msg_time_;
+        rclcpp::TimerBase::SharedPtr port_timer_;
+        std::mutex serial_reset_mutex_;
 
         // Msg Config
         int actuator_command_msg_len_;

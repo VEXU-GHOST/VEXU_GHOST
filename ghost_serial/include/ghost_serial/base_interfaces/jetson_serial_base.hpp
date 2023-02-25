@@ -24,7 +24,6 @@ namespace ghost_serial
     {
     public:
         JetsonSerialBase(
-            std::string port_name,
             std::string write_msg_start_seq,
             std::string read_msg_start_seq,
             int read_msg_max_len,
@@ -34,11 +33,20 @@ namespace ghost_serial
         ~JetsonSerialBase();
         
         /**
-         * @brief Attempts once to open serial port, catching errors and printing to stdout.
-         *
-         * @return bool if port was opened or not
+         * @brief closes any open ports, effectively resetting state to default
+         * 
+         * Internally, this closes file descriptions and may propogate exceptions returned from close()
          */
-        bool trySerialInit();
+        void closeSerialPort();
+
+        /**
+         * @brief Attempts to open serial port for read/write and set port configuration.
+         * 
+         * THROWS runtime errors when serial device is not available or fails to open.
+         * 
+         * @returns if init is successful or not
+         */
+        bool trySerialInit(std::string port_name);
 
         /**
          * @brief Thread-safe method to read serial port for new msgs. Blocks until new msg is recieved
@@ -46,6 +54,8 @@ namespace ghost_serial
          *
          * Internally applies COBS decoding and checksum for msg validation. Searches for specified start sequence
          * and then reads for msg_len until null delimiter is found.
+         * 
+         * THROWS system_error if poll returns -1.
          *
          * @param msg_buffer buffer of length msg_len to store incoming serial msgs
          * @return bool if msg was found in serial stream
@@ -71,7 +81,7 @@ namespace ghost_serial
          * @brief Sets termios flags for serial port settings. Follows this nearly verbatim:
          * https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/
          * 
-         * @return bool if tty port config was set without error
+         * @return true if config was set without error
          */
         bool setSerialPortConfig() override;
 
