@@ -80,11 +80,12 @@ namespace ghost_ros
 
         // Timer for Connection timeout
         port_timer_ = this->create_wall_timer(
-            1000ms,
+            100ms,
             [this]()
             {
-                if (std::chrono::system_clock::now() - this->last_msg_time_ > 1000ms && this->serial_open_)
+                if (std::chrono::system_clock::now() - this->last_msg_time_ > 100ms && this->serial_open_)
                 {
+                    RCLCPP_WARN(get_logger(), "Serial Timed Out");
                     // Acquire exclusive access to serial port, and then reset
                     std::unique_lock<std::mutex> serial_lock(this->serial_reset_mutex_);
                     serial_open_ = false;
@@ -120,12 +121,15 @@ namespace ghost_ros
         while (rclcpp::ok() && !serial_open_)
         {
             try{
+                
                 if (!backup)
                 {
+                    RCLCPP_INFO(get_logger(), "Attempting to open " + port_name_);
                     serial_open_ = serial_base_interface_->trySerialInit(port_name_);
                 }
                 else
                 {
+                    RCLCPP_INFO(get_logger(), "Attempting to open " + backup_port_name_);
                     serial_open_ = serial_base_interface_->trySerialInit(backup_port_name_);
                 }
             }
@@ -146,8 +150,6 @@ namespace ghost_ros
 
     void JetsonV5SerialNode::serialLoop()
     {
-        RCLCPP_INFO(get_logger(), "Starting Serial Thread");
-
         serial_thread_init_ = true;
         while (rclcpp::ok())
         {
@@ -177,8 +179,6 @@ namespace ghost_ros
             }
             serial_lock.unlock();
         }
-
-        RCLCPP_INFO(get_logger(), "Ending Serial Reader Thread");
     }
 
     void JetsonV5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)

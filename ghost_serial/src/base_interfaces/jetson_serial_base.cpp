@@ -99,11 +99,11 @@ namespace ghost_serial
         serial_read_fd_ = open(port_name.c_str(), O_RDWR);
         serial_write_fd_ = serial_read_fd_;
 
-        if (!setSerialPortConfig())
-        {
-            std::string err_string = "Error " + std::to_string(errno) + " on port:" + port_name + ", " + strerror(errno);
-            throw std::runtime_error(err_string);
-        }
+        // if (!setSerialPortConfig())
+        // {
+        //     std::string err_string = "Error " + std::to_string(errno) + " on port:" + port_name + ", " + strerror(errno);
+        //     throw std::runtime_error(err_string);
+        // }
 
         if (serial_read_fd_ < 0)
         {
