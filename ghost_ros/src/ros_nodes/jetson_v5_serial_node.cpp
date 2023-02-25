@@ -9,8 +9,7 @@ namespace ghost_ros
 
     JetsonV5SerialNode::JetsonV5SerialNode() : Node("ghost_serial_node"),
                                                serial_thread_init_(false),
-                                               serial_open_(false),
-                                               msg_received_(false)
+                                               serial_open_(false)
     {
         // Load ROS Params
         declare_parameter("using_reader_thread", true);
@@ -78,15 +77,14 @@ namespace ghost_ros
 
         // Timer for Connection timeout
         port_timer_ = this->create_wall_timer(
-            250ms,
+            50ms,
             [this]()
             {
-                if (std::chrono::system_clock::now() - this->last_msg_time_ > 250ms && this->msg_received_)
+                if (std::chrono::system_clock::now() - this->last_msg_time_ > 50ms && this->serial_open_)
                 {
                     // Acquire exclusive access to serial port, and then reset
                     std::unique_lock<std::mutex> serial_lock(this->serial_reset_mutex_);
                     serial_open_ = false;
-                    msg_received_ = false;
 
                     // Serial Interface
                     serial_base_interface_ = std::make_shared<ghost_serial::JetsonSerialBase>(
@@ -161,7 +159,6 @@ namespace ghost_ros
 
                     if (msg_found)
                     {
-                        msg_received_ = true;
                         last_msg_time_ = std::chrono::system_clock::now();
                         publishV5SensorUpdate(sensor_update_msg_.data());
                     }

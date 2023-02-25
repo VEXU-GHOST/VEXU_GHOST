@@ -60,7 +60,6 @@ namespace ghost_ros
 
         // Serial Port Timeout
         std::atomic_bool serial_open_;
-        std::atomic_bool msg_received_;
         std::chrono::time_point<std::chrono::system_clock> last_msg_time_;
         rclcpp::TimerBase::SharedPtr port_timer_;
         std::mutex serial_reset_mutex_;
