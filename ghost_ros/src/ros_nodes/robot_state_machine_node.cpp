@@ -195,8 +195,8 @@ namespace ghost_ros
         }
         actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_velocity = intake_cmd;
         actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_velocity = intake_cmd;
-        // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_voltage = intake_cmd / 600.0;
-        // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_voltage = intake_cmd / 600.0;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_voltage = intake_cmd / 600.0;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_voltage = intake_cmd / 600.0;
 
         // Toggle shooter mode
         if(curr_joystick_msg_->joystick_btn_r1 && !r1_pressed_){
@@ -242,7 +242,7 @@ namespace ghost_ros
             break;
 
             case INTAKE_MODE:
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_velocity = -turret_angle * turret_kp_;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_velocity = -turret_angle * turret_kp_;
                 
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 0;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 0;

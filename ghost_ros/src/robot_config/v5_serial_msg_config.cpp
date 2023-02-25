@@ -40,6 +40,7 @@ namespace ghost_v5_config{
         STEERING_LEFT_ENCODER,
         STEERING_RIGHT_ENCODER,
         STEERING_BACK_ENCODER,
+        // TURRET_ENCODER
     };
 
     // 4x int32 Joystick Channels, 2x bytes of btns/competition modes, 4x Bytes of port status, Msg Sequence ID
@@ -47,22 +48,23 @@ namespace ghost_v5_config{
 
     // Maps device enum to device_name
     const std::map<int, std::string> device_names{
-        {DRIVE_LEFT_FRONT_MOTOR,    "DRIVE_LEFT_FRONT_MOTOR"},
-        {DRIVE_LEFT_BACK_MOTOR,     "DRIVE_LEFT_BACK_MOTOR"},
-        {DRIVE_RIGHT_FRONT_MOTOR,   "DRIVE_RIGHT_FRONT_MOTOR"},
-        {DRIVE_RIGHT_BACK_MOTOR,    "DRIVE_RIGHT_BACK_MOTOR"},
-        {DRIVE_BACK_LEFT_REAR_MOTOR,   "DRIVE_BACK_LEFT_REAR_MOTOR"},
-        {DRIVE_BACK_RIGHT_REAR_MOTOR,  "DRIVE_BACK_RIGHT_REAR_MOTOR"},
+        {DRIVE_LEFT_FRONT_MOTOR,        "DRIVE_LEFT_FRONT_MOTOR"},
+        {DRIVE_LEFT_BACK_MOTOR,         "DRIVE_LEFT_BACK_MOTOR"},
+        {DRIVE_RIGHT_FRONT_MOTOR,       "DRIVE_RIGHT_FRONT_MOTOR"},
+        {DRIVE_RIGHT_BACK_MOTOR,        "DRIVE_RIGHT_BACK_MOTOR"},
+        {DRIVE_BACK_LEFT_REAR_MOTOR,    "DRIVE_BACK_LEFT_REAR_MOTOR"},
+        {DRIVE_BACK_RIGHT_REAR_MOTOR,   "DRIVE_BACK_RIGHT_REAR_MOTOR"},
         {DRIVE_BACK_LEFT_FRONT_MOTOR,   "DRIVE_BACK_LEFT_FRONT_MOTOR"},
         {DRIVE_BACK_RIGHT_FRONT_MOTOR,  "DRIVE_BACK_RIGHT_FRONT_MOTOR"},
-        {TURRET_MOTOR,              "TURRET_MOTOR"},
-        {INTAKE_LEFT_MOTOR,         "INTAKE_LEFT_MOTOR"},
-        {INTAKE_RIGHT_MOTOR,        "INTAKE_RIGHT_MOTOR"},
-        {INDEXER_MOTOR,             "INDEXER_MOTOR"},
-        {SHOOTER_LEFT_MOTOR,        "SHOOTER_LEFT_MOTOR"},
-        {SHOOTER_RIGHT_MOTOR,       "SHOOTER_RIGHT_MOTOR"},
-        {STEERING_LEFT_ENCODER,     "STEERING_LEFT_ENCODER"},
-        {STEERING_RIGHT_ENCODER,    "STEERING_RIGHT_ENCODER"},
-        {STEERING_BACK_ENCODER,     "STEERING_BACK_ENCODER"},
+        {TURRET_MOTOR,                  "TURRET_MOTOR"},
+        {INTAKE_LEFT_MOTOR,             "INTAKE_LEFT_MOTOR"},
+        {INTAKE_RIGHT_MOTOR,            "INTAKE_RIGHT_MOTOR"},
+        {INDEXER_MOTOR,                 "INDEXER_MOTOR"},
+        {SHOOTER_LEFT_MOTOR,            "SHOOTER_LEFT_MOTOR"},
+        {SHOOTER_RIGHT_MOTOR,           "SHOOTER_RIGHT_MOTOR"},
+        {STEERING_LEFT_ENCODER,         "STEERING_LEFT_ENCODER"},
+        {STEERING_RIGHT_ENCODER,        "STEERING_RIGHT_ENCODER"},
+        {STEERING_BACK_ENCODER,         "STEERING_BACK_ENCODER"},
+        // {TURRET_ENCODER,                "TURRET_ENCODER"},
     };
 }
