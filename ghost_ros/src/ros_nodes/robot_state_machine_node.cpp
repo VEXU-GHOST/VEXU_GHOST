@@ -188,15 +188,18 @@ namespace ghost_ros
         // Intake Control
         float intake_cmd = 0.0;
         if(curr_joystick_msg_->joystick_btn_r2){
-            intake_cmd = 600;
+            intake_cmd = 625;
         }
         else if(curr_joystick_msg_->joystick_btn_down){
-            intake_cmd = -600;
+            intake_cmd = -625;
         }
         actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_velocity = intake_cmd;
         actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_velocity = intake_cmd;
-        // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_voltage = intake_cmd / 600.0;
-        // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_voltage = intake_cmd / 600.0;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_voltage = intake_cmd / 600.0;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_voltage = intake_cmd / 600.0;
+
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = -intake_cmd / 600.0 / 2.0;
+
 
         // Toggle shooter mode
         if(curr_joystick_msg_->joystick_btn_r1 && !r1_pressed_){
@@ -224,8 +227,8 @@ namespace ghost_ros
                     actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_velocity = 0;
                 }
 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2400;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1600;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
 
                 if(curr_joystick_msg_->joystick_btn_y){
                     actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 1.0;
