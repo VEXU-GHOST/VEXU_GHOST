@@ -31,7 +31,8 @@ namespace ghost_v5
           des_voltage_norm_{0.0},
           des_vel_rpm_{0.0},
           des_pos_encoder_{0},
-          cmd_voltage_mv_{0.0}
+          cmd_voltage_mv_{0.0},
+          is_active_{false}
     {
         config_ = config;
         trq_lim_norm_ = config_.motor__torque_limit_norm;
@@ -92,9 +93,13 @@ namespace ghost_v5
             break;
         }
 
-        // Set motor voltage w/ torque limiting (limiting change in voltage)
-        move_voltage(cmd_voltage_mv_);
-        // move_voltage_trq_lim(cmd_voltage_mv_);
+        if(is_active_){
+            move_voltage(cmd_voltage_mv_);
+        }
+        else{
+            set_current_limit(0);
+            move_voltage(0);
+        }
     }
 
     void GhostMotor::move_voltage_trq_lim(float voltage_mv)

@@ -6,3 +6,5 @@ float32 desired_velocity
 float32 desired_voltage
 
 bool use_position_control
+int32 current_limit
+bool active

@@ -82,6 +82,10 @@ namespace ghost_ros
 
     const Vector2f init_loc(config_params.init_x, config_params.init_y);
     const float init_angle = config_params.init_r;
+
+    odom_loc_(config_params.init_x, config_params.init_y);
+    odom_angle_ = config_params.init_r;
+    
     particle_filter_.Initialize(config_params.map, init_loc, config_params.init_r);
   }
 
@@ -187,9 +191,9 @@ namespace ghost_ros
     CalculateHSpaceICR(msg);
 
     // With ICR Estimate, accumulate encoder ticks off drivetrain to estimate robot motion
-    // CalculateOdometry(msg);
+    CalculateOdometry(msg);
 
-    ///// PREDICT /////
+    particle_filter_.Predict(odom_loc_, odom_angle_);
 
     // Publish newest robot state
     PublishGhostRobotState(msg);
@@ -198,6 +202,20 @@ namespace ghost_ros
     PublishJointStateMsg(msg);
     PublishWorldTransform();
     PublishVisualization();
+  }
+
+  void GhostEstimatorNode::CalculateOdometry(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
+    Eigen::Matrix2f diff_swerve_jacobian;
+    Eigen::Matrix2f diff_swerve_jacobian_inverse;
+    diff_swerve_jacobian << 12.0 / 18.0 / 2.0, -12.0 / 18.0 / 2.0,
+                            12.0 / 45.0 / 2.0, 12.0 / 45.0 / 2.0;
+                            
+    diff_swerve_jacobian_inverse << 18.0 / 12.0, 45.0 / 12.0,
+                                    -18.0 / 12.0, 45.0 / 12.0;
+
+    Eigen::Vector2f(
+      msg->encoders[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].velocity_rpm,
+      msg->encoders[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].velocity_rpm);
   }
 
   void GhostEstimatorNode::PublishGhostRobotState(const ghost_msgs::msg::V5SensorUpdate::SharedPtr sensor_update_msg){
@@ -294,6 +312,16 @@ namespace ghost_ros
         auto intersection_3d = Eigen::Vector3f(intersection.x(), intersection.y(), 1);
         h_space_icr_points.push_back(intersection_3d / intersection_3d.norm());
       }
+    }
+
+    // Calculate distance from first point and subsequent points and their antipoles
+    // Select closer of the two (point / antipole) for calculating average
+    if((h_space_icr_points[0] - h_space_icr_points[1]).norm() > (h_space_icr_points[0] + h_space_icr_points[1]).norm()){
+      h_space_icr_points[1] *= -1;
+    }
+
+    if((h_space_icr_points[0] - h_space_icr_points[2]).norm() > (h_space_icr_points[0] + h_space_icr_points[2]).norm()){
+      h_space_icr_points[2] *= -1;
     }
 
     // Average ICR points in H-Space as our estimated center of rotation

@@ -132,23 +132,16 @@ void initialize()
     v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_FRONT_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_FRONT_MOTOR, 	true,  	drive_motor_config);
     v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_FRONT_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_FRONT_MOTOR,	true,  	drive_motor_config);
     v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]             		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::TURRET_MOTOR,              		false, 	turret_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INTAKE_LEFT_MOTOR]         	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_LEFT_MOTOR,         		true, 	intake_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INTAKE_RIGHT_MOTOR]        	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_RIGHT_MOTOR,        		false, 	intake_motor_config);
+    v5_globals::motors[v5_motor_id_enum::INTAKE_MOTOR]         			= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_MOTOR,         			true, 	intake_motor_config);
     v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]            		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INDEXER_MOTOR,             		false, 	indexer_motor_config);
     v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        		false, 	shooter_motor_config);
     v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       		true, 	shooter_motor_config);
 
-	// Drive testing
-	// v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]->set_current_limit(0.0);
-	// v5_globals::motors[v5_motor_id_enum::INTAKE_MOTOR]->set_current_limit(0.0);
-	// v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]->set_current_limit(0.0);
-	// v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]->set_current_limit(0.0);
-	// v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]->set_current_limit(0.0);
-
 	// Encoder Ports
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_LEFT_ENCODER),
-    v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_RIGHT_ENCODER),
-    v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_BACK_ENCODER),
+	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_LEFT_ENCODER);
+    v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_RIGHT_ENCODER);
+    v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_BACK_ENCODER);
+	v5_globals::encoders[v5_sensor_id_enum::TURRET_ENCODER]			= std::make_shared<pros::Rotation>(v5_sensor_id_enum::TURRET_ENCODER);
 	
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->reverse();
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->reverse();
@@ -157,6 +150,7 @@ void initialize()
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->set_data_rate(5);
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->set_data_rate(5);
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->set_data_rate(5);
+	v5_globals::encoders[v5_sensor_id_enum::TURRET_ENCODER]->set_data_rate(5);
 
 	zero_actuators();
 

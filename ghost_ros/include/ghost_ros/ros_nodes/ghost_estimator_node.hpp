@@ -64,6 +64,7 @@ class GhostEstimatorNode : public rclcpp::Node {
     visualization_msgs::msg::MarkerArray viz_msg_;
 
     void CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg);
+    void CalculateOdometry(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg);
 
     // Subscribers
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
@@ -94,6 +95,10 @@ class GhostEstimatorNode : public rclcpp::Node {
 
     Eigen::Vector3f h_space_icr_avg_;
     Eigen::Vector3f icr_flat_estimation_;
+
+    Eigen::Vector2f odom_loc_;
+    float odom_angle_;
+
 
 };
 } // namespace ghost_ros

@@ -155,6 +155,7 @@ add_executable(robot_state_machine_node
 ament_target_dependencies(robot_state_machine_node
   rclcpp
   Eigen3
+  std_msgs
   ghost_msgs
   visualization_msgs
   ghost_estimation

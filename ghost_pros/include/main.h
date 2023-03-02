@@ -53,20 +53,20 @@ ghost_v5::GhostMotorConfig turret_motor_config = {
 // Intake Motor Config
 ghost_v5::GhostMotorConfig intake_motor_config = {
     .motor__gear_ratio = 6,
+    .motor__brake_mode = pros::E_MOTOR_BRAKE_BRAKE,
     .filter__cutoff_frequency = 100.0,
-    .ctl__vel_gain = 10.0,
-    .ctl__ff_vel_gain = 1.0,
+    .ctl__vel_gain = 25.0,
+    .ctl__ff_vel_gain = 1.2,
     .ctl__ff_voltage_gain = 1.0,
 };
 
 // Indexer Motor Config
 ghost_v5::GhostMotorConfig indexer_motor_config = {
-    .motor__gear_ratio = 6,
-    .motor__brake_mode = pros::E_MOTOR_BRAKE_BRAKE,
-    .filter__cutoff_frequency = 100.0,
+    .motor__gear_ratio = 2,
+    .filter__cutoff_frequency = 50.0,
     .ctl__pos_gain = 150.0,
-    .ctl__vel_gain = 15.0,
-    .ctl__ff_vel_gain = 1.0,
+    .ctl__vel_gain = 0.0,
+    .ctl__ff_vel_gain = 0.0,
     .ctl__ff_voltage_gain = 1.0,
 
 };
