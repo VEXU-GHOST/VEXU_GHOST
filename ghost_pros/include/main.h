@@ -62,7 +62,7 @@ ghost_v5::GhostMotorConfig intake_motor_config = {
 
 // Indexer Motor Config
 ghost_v5::GhostMotorConfig indexer_motor_config = {
-    .motor__gear_ratio = 1,
+    .motor__gear_ratio = 2,
     .filter__cutoff_frequency = 50.0,
     .ctl__pos_gain = 150.0,
     .ctl__vel_gain = 0.0,
