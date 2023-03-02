@@ -7,14 +7,9 @@ using namespace std::literals::chrono_literals;
 namespace ghost_ros
 {
 
-    JetsonV5SerialNode::JetsonV5SerialNode() : Node("ghost_serial_node"),
-                                               serial_thread_init_(false),
-                                               serial_open_(false)
+    JetsonV5SerialNode::JetsonV5SerialNode() : Node("ghost_serial_node"), serial_open_(false), using_backup_port_(false)
     {
         // Load ROS Params
-        declare_parameter("using_reader_thread", true);
-        using_reader_thread_ = get_parameter("using_reader_thread").as_bool();
-
         declare_parameter("use_checksum", true);
         use_checksum_ = get_parameter("use_checksum").as_bool();
 
@@ -33,8 +28,8 @@ namespace ghost_ros
         declare_parameter("backup_port_name", "/dev/ttyACM2");
         backup_port_name_ = get_parameter("backup_port_name").as_string();
 
-        RCLCPP_INFO(get_logger(), "Port Name: " + port_name_);
-        RCLCPP_INFO(get_logger(), "Backup Port Name: " + backup_port_name_);
+        RCLCPP_DEBUG(get_logger(), "Port Name: " + port_name_);
+        RCLCPP_DEBUG(get_logger(), "Backup Port Name: " + backup_port_name_);
 
         // Calculate Msg Sizes based on robot configuration
         actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
@@ -45,9 +40,9 @@ namespace ghost_ros
                                   read_msg_start_seq_.size() +
                                   2; // Cobs Encoding adds two bytes
 
-        RCLCPP_INFO(get_logger(), "Actuator Command Msg Length: %d", actuator_command_msg_len_);
-        RCLCPP_INFO(get_logger(), "State Update Msg Length: %d", sensor_update_msg_len_);
-        RCLCPP_INFO(get_logger(), "Incoming Packet Length: %d", incoming_packet_len);
+        RCLCPP_DEBUG(get_logger(), "Actuator Command Msg Length: %d", actuator_command_msg_len_);
+        RCLCPP_DEBUG(get_logger(), "State Update Msg Length: %d", sensor_update_msg_len_);
+        RCLCPP_DEBUG(get_logger(), "Incoming Packet Length: %d", incoming_packet_len);
 
         // Array to store latest incoming msg
         sensor_update_msg_ = std::vector<unsigned char>(sensor_update_msg_len_, 0);
@@ -71,36 +66,30 @@ namespace ghost_ros
             10,
             std::bind(&JetsonV5SerialNode::actuatorCommandCallback, this, _1));
 
-        // Timer for Connection timeout
-        port_timer_ = this->create_wall_timer(100ms, std::bind(&JetsonV5SerialNode::serialTimeoutLoop, this));
-
         // Start Serial Thread
         serial_thread_ = std::thread(&JetsonV5SerialNode::serialLoop, this);
+        serial_timeout_thread_ = std::thread(&JetsonV5SerialNode::serialTimeoutLoop, this);
     }
 
     JetsonV5SerialNode::~JetsonV5SerialNode()
     {
-        if (serial_thread_init_)
-        {
-            serial_thread_.join();
-        }
+        serial_thread_.join();
+        serial_timeout_thread_.join();
     }
 
-    bool JetsonV5SerialNode::initSerialBlocking()
+    bool JetsonV5SerialNode::initSerial()
     {
         // Wait for serial to become available
-        bool backup = false;
         try
         {
-
-            if (!backup)
+            if (!using_backup_port_)
             {
-                RCLCPP_INFO(get_logger(), "Attempting to open " + port_name_);
+                RCLCPP_DEBUG(get_logger(), "Attempting to open " + port_name_);
                 serial_open_ = serial_base_interface_->trySerialInit(port_name_);
             }
             else
             {
-                RCLCPP_INFO(get_logger(), "Attempting to open " + backup_port_name_);
+                RCLCPP_DEBUG(get_logger(), "Attempting to open " + backup_port_name_);
                 serial_open_ = serial_base_interface_->trySerialInit(backup_port_name_);
             }
         }
@@ -111,41 +100,43 @@ namespace ghost_ros
 
         if (!serial_open_)
         {
-            backup = !backup;
+            using_backup_port_ = !using_backup_port_;
         }
-        std::this_thread::sleep_for(100ms);
         return serial_open_;
     }
 
     void JetsonV5SerialNode::serialTimeoutLoop()
     {
-        if (std::chrono::system_clock::now() - last_msg_time_ > 100ms && serial_open_)
+        while (rclcpp::ok())
         {
-            // Acquire exclusive access to serial port, and then reset
-            std::unique_lock<std::mutex> serial_lock(serial_reset_mutex_);
-            serial_open_ = false;
+            if (std::chrono::system_clock::now() - last_msg_time_ > 100ms && serial_open_)
+            {
+                // Acquire exclusive access to serial port, and then reset
+                std::unique_lock<std::mutex> serial_lock(serial_reset_mutex_);
+                serial_open_ = false;
 
-            // Serial Interface
-            serial_base_interface_ = std::make_shared<ghost_serial::JetsonSerialBase>(
-                this->write_msg_start_seq_,
-                this->read_msg_start_seq_,
-                this->sensor_update_msg_len_,
-                this->use_checksum_,
-                this->verbose_);
+                // Serial Interface
+                serial_base_interface_ = std::make_shared<ghost_serial::JetsonSerialBase>(
+                    write_msg_start_seq_,
+                    read_msg_start_seq_,
+                    sensor_update_msg_len_,
+                    use_checksum_,
+                    verbose_);
 
-            serial_lock.unlock();
+                serial_lock.unlock();
+            }
         }
     }
 
     void JetsonV5SerialNode::serialLoop()
     {
-        serial_thread_init_ = true;
         while (rclcpp::ok())
         {
             // Ensure serial timeout does not interrupt a msg read operation
             std::unique_lock<std::mutex> serial_lock(serial_reset_mutex_);
             if (serial_open_)
             {
+                RCLCPP_DEBUG(get_logger(), "Serial Loop is Running");
                 try
                 {
                     int msg_len;
@@ -153,6 +144,7 @@ namespace ghost_ros
 
                     if (msg_found)
                     {
+                        RCLCPP_DEBUG(get_logger(), "Received new message over serial");
                         last_msg_time_ = std::chrono::system_clock::now();
                         publishV5SensorUpdate(sensor_update_msg_.data());
                     }
@@ -164,7 +156,9 @@ namespace ghost_ros
             }
             else
             {
-                initSerialBlocking();
+                RCLCPP_DEBUG(get_logger(), "Initializing Serial");
+                initSerial();
+                std::this_thread::sleep_for(10ms);
             }
             serial_lock.unlock();
         }
@@ -172,10 +166,7 @@ namespace ghost_ros
 
     void JetsonV5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)
     {
-        if (verbose_)
-        {
-            RCLCPP_INFO(get_logger(), "Received Actuator Command");
-        }
+        RCLCPP_DEBUG(get_logger(), "Received Actuator Command");
 
         if (!serial_open_)
         {
@@ -228,10 +219,7 @@ namespace ghost_ros
 
     void JetsonV5SerialNode::publishV5SensorUpdate(unsigned char buffer[])
     {
-        if (verbose_)
-        {
-            RCLCPP_INFO(get_logger(), "Publishing Sensor Update");
-        }
+        RCLCPP_DEBUG(get_logger(), "Publishing Sensor Update");
 
         auto curr_ros_time = get_clock()->now();
 
@@ -349,11 +337,6 @@ namespace ghost_ros
         encoder_state_msg.msg_id = msg_id;
         joystick_msg.msg_id = msg_id;
         competition_state_msg.msg_id = msg_id;
-
-        if (verbose_)
-        {
-            RCLCPP_INFO(get_logger(), "Going to publish?");
-        }
 
         // Publish update
         sensor_update_pub_->publish(encoder_state_msg);

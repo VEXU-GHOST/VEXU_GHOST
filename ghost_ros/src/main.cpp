@@ -66,7 +66,7 @@ int main(int argc, char* argv[]){
 
     // Wait for serial port, then start reader thread
     if(!main_config["simulated"].as<bool>()){
-        serial_node->initSerialBlocking();
+        serial_node->initSerial();
     }
 
     // Start ROS Executor
