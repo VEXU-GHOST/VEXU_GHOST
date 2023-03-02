@@ -61,6 +61,10 @@ namespace ghost_v5
             return device_connected_;
         }
 
+        void setActive(bool is_active){
+            is_active_ = is_active;
+        }
+
         void setMotorCommand(float voltage, float velocity, float position);
         void setMotorCommand(float voltage, float velocity);
         void setMotorCommand(float voltage);
@@ -93,6 +97,7 @@ namespace ghost_v5
         float des_voltage_norm_;
         float cmd_voltage_mv_;
         float ctl_rpm_deadband_;
+        bool is_active_;
 
         // Motor Models
         ghost_control::DCMotorModel motor_model_;
