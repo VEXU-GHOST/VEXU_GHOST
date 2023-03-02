@@ -17,8 +17,7 @@ namespace ghost_v5_config
         DRIVE_BACK_RIGHT_REAR_MOTOR     = 17,
         DRIVE_BACK_RIGHT_FRONT_MOTOR    = 18,
         TURRET_MOTOR                    = 6,
-        INTAKE_RIGHT_MOTOR              = 9,
-        INTAKE_LEFT_MOTOR               = 10,
+        INTAKE_MOTOR               = 10,
         SHOOTER_RIGHT_MOTOR             = 1,
         SHOOTER_LEFT_MOTOR              = 2,
         INDEXER_MOTOR                   = 3
