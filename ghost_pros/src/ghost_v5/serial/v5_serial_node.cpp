@@ -21,15 +21,9 @@ namespace ghost_v5
 		bool use_checksum) : read_msg_id_{1}, write_msg_id_{1}
 	{
 		// Calculate Msg Sizes based on robot configuration
-		actuator_command_msg_len_ = 2 * 4 * ghost_v5_config::actuator_command_config.size() + 1;
-		for (auto &pair : ghost_v5_config::actuator_command_config)
-		{
-			actuator_command_msg_len_ += (pair.second) ? 4 : 0; // Add four bytes for each motor using position control
-		}
-		actuator_command_msg_len_ += ghost_v5_config::actuator_cmd_extra_byte_count;
+        actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
 
-        sensor_update_msg_len_ = (ghost_v5_config::sensor_update_motor_config.size() * 6 + ghost_v5_config::sensor_update_sensor_config.size() * 2 ) * 4;
-		sensor_update_msg_len_ += ghost_v5_config::sensor_update_extra_byte_count;
+        sensor_update_msg_len_ = ghost_v5_config::get_sensor_update_msg_len();
 
 		// Array to store latest incoming msg
 		new_msg_ = std::vector<unsigned char>(actuator_command_msg_len_, 0);
@@ -69,12 +63,27 @@ namespace ghost_v5
 		// Index to count 32-bit values from buffer
 		int buffer_32bit_index = 0;
 
+        // Motor Active States
+        uint32_t actuator_active_vector = 0;
+        memcpy(&actuator_active_vector, buffer + 4 * (buffer_32bit_index++), 4);
+		for(int i = ghost_v5_config::actuator_command_config.size() - 1; i >= 0; i--)
+        {
+			auto motor_id = ghost_v5_config::actuator_command_config[i].first;
+			v5_globals::motors[motor_id]->setActive(actuator_active_vector & (0x0001));
+			actuator_active_vector >>= 1;
+        }
+
 		// Update each motor based on msg configuration and new values
 		for (auto &motor_pair : ghost_v5_config::actuator_command_config)
 		{
 			// For clarity of configuration file
 			auto motor_id = motor_pair.first;
 			bool use_position_control = motor_pair.second;
+
+			// Copy Current Limit
+			int32_t current_limit;
+			memcpy(&current_limit, buffer + 4 * (buffer_32bit_index++), 4);
+			v5_globals::motors[motor_id]->set_current_limit(current_limit);
 
 			// Copy Voltage Command
 			float voltage_command;

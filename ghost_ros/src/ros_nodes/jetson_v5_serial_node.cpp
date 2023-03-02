@@ -32,15 +32,9 @@ namespace ghost_ros
         std::string backup_port_name = get_parameter("backup_port_name").as_string();
 
         // Calculate Msg Sizes based on robot configuration
-        actuator_command_msg_len_ = 2 * 4 * ghost_v5_config::actuator_command_config.size() + 1;
-        for (auto &pair : ghost_v5_config::actuator_command_config)
-        {
-            actuator_command_msg_len_ += (pair.second) ? 4 : 0; // Add four bytes for each motor using position control
-        }
-        actuator_command_msg_len_ += ghost_v5_config::actuator_cmd_extra_byte_count;
+        actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
 
-        sensor_update_msg_len_ = (ghost_v5_config::sensor_update_motor_config.size() * 6 + ghost_v5_config::sensor_update_sensor_config.size() * 2 ) * 4;
-        sensor_update_msg_len_ += ghost_v5_config::sensor_update_extra_byte_count;
+        sensor_update_msg_len_ = ghost_v5_config::get_sensor_update_msg_len();
 
         int incoming_packet_len = sensor_update_msg_len_ +
                                   use_checksum +
@@ -162,9 +156,21 @@ namespace ghost_ros
             0,
         };
 
+        // Motor Active States
+        uint32_t actuator_active_vector = 0;
+        for (int i = 0; i < ghost_v5_config::actuator_command_config.size() - 1; i++)
+        {
+            actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config[i].first].active;
+			actuator_active_vector <<= 1;
+        }
+            actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config.back().first].active;
+
+        memcpy(msg_buffer + 4 * (buffer_index++), &actuator_active_vector, 4);
+
         // Assign motor commands
         for (auto motor_pair : ghost_v5_config::actuator_command_config)
         {
+            memcpy(msg_buffer + 4 * (buffer_index++), &(msg->motor_commands[motor_pair.first].current_limit), 4);
             memcpy(msg_buffer + 4 * (buffer_index++), &(msg->motor_commands[motor_pair.first].desired_voltage), 4);
             memcpy(msg_buffer + 4 * (buffer_index++), &(msg->motor_commands[motor_pair.first].desired_velocity), 4);
             if (motor_pair.second)
