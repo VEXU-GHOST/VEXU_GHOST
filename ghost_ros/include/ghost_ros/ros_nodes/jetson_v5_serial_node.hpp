@@ -32,6 +32,8 @@ namespace ghost_ros
         // Background thread loop for processing serial reads
         void serialLoop();
 
+        void serialTimeoutLoop();
+
         // Config Params
         YAML::Node config_yaml_;
         int max_msg_len_;
