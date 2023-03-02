@@ -86,8 +86,6 @@ void ghost_main_loop(){
 	if(pros::competition::is_disabled()){
 		zero_actuators();
 	}
-
-	update_actuators();
 }
 
 void test_flywheel_indexer_pulse(){
@@ -174,6 +172,7 @@ void disabled()
 	while (pros::competition::is_disabled())
 	{
 		ghost_main_loop();
+		update_actuators();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 }
@@ -206,6 +205,7 @@ void autonomous()
 	while (pros::competition::is_autonomous())
 	{
 		ghost_main_loop();
+		update_actuators();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 }
