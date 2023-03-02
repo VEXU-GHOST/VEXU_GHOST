@@ -198,9 +198,6 @@ namespace ghost_ros
         actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_LEFT_MOTOR].desired_voltage = intake_cmd / 600.0;
         actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_RIGHT_MOTOR].desired_voltage = intake_cmd / 600.0;
 
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = -intake_cmd / 600.0 / 2.0;
-
-
         // Toggle shooter mode
         if(curr_joystick_msg_->joystick_btn_r1 && !r1_pressed_){
             if(teleop_mode == INTAKE_MODE){
@@ -221,10 +218,10 @@ namespace ghost_ros
         switch(teleop_mode){
             case SHOOTER_MODE:
                 if(curr_joystick_msg_->joystick_btn_l1){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_velocity = 600;
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 85;
                 }
                 else{
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_velocity = 0;
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 0;
                 }
 
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
