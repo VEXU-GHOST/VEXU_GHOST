@@ -25,7 +25,7 @@ namespace ghost_ros
                                                      curr_joystick_msg_id_{0},
                                                      curr_comp_state_msg_id_{0},
                                                      r1_pressed_{false},
-                                                     teleop_mode{INTAKE_MODE}
+                                                     teleop_mode{INTAKE_MODE},
     {
         declare_parameter("max_linear_vel", 0.0);
         declare_parameter("max_steering_angular_vel", 0.0);
@@ -49,6 +49,9 @@ namespace ghost_ros
         declare_parameter("turret_kp", 0.0);
         turret_kp_ = get_parameter("turret_kp").as_double();
 
+        declare_parameter("turret_kd", 0.0);
+        turret_kd_ = get_parameter("turret_kd").as_double();
+
         declare_parameter("max_motor_rpm_true", 0.0);
         max_motor_rpm_true_ = get_parameter("max_motor_rpm_true").as_double();
 
@@ -61,12 +64,28 @@ namespace ghost_ros
             throw std::invalid_argument("Wheel Geometry has not been set.");
         }
 
+        declare_parameter("pose_reset_x", 0.0);
+        declare_parameter("pose_reset_y", 0.0);
+        declare_parameter("pose_reset_theta", 0.0);
+        declare_parameter("pose_reset_x_cov", 0.0);
+        declare_parameter("pose_reset_y_cov", 0.0);
+        declare_parameter("pose_reset_theta_cov", 0.0);
+
+        pose_reset_x_ = get_parameter("pose_reset_x").as_double();
+        pose_reset_y_ = get_parameter("pose_reset_y").as_double();
+        pose_reset_theta_ = get_parameter("pose_reset_theta").as_double();
+        pose_reset_x_sigma_ = get_parameter("pose_reset_x_cov").as_double();
+        pose_reset_y_sigma_ = get_parameter("pose_reset_y_cov").as_double();
+        pose_reset_theta_sigma_ = get_parameter("pose_reset_theta_cov").as_double();
+
         actuator_command_pub_ = create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
             "v5/actuator_commands",
             10);
         debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
             "controller_debug",
             10);
+
+        initial_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("initial_pose",10);
 
         competition_state_sub_ = create_subscription<ghost_msgs::msg::V5CompetitionState>(
             "v5/competition_state",
@@ -158,6 +177,24 @@ namespace ghost_ros
         }
     }
 
+    void RobotStateMachineNode::resetPose(){
+        geometry_msgs::msg::PoseWithCovarianceStamped msg{};
+
+        msg.header.frame_id = "world";
+        msg.header.stamp = this->get_clock()->now();
+
+        msg.pose.pose.position.x = pose_reset_x_;
+        msg.pose.pose.position.y = pose_reset_y_;
+        msg.pose.pose.orientation.w = cos(pose_reset_theta_ * M_PI/180.0 * 0.5);
+        msg.pose.pose.orientation.z = sin(pose_reset_theta_ * M_PI/180.0 * 0.5);
+
+        msg.pose.covariance[0] = pose_reset_x_sigma_*pose_reset_x_sigma_;
+        msg.pose.covariance[7] = pose_reset_y_sigma_*pose_reset_y_sigma_;
+        msg.pose.covariance[35] = pose_reset_theta_sigma_*pose_reset_theta_sigma_;
+
+        initial_pose_pub_->publish(msg);
+    }
+
     void RobotStateMachineNode::teleop()
     {
         updateSwerveCommandsFromTwist(
@@ -167,15 +204,17 @@ namespace ghost_ros
 
         // Intake Control
         if(curr_joystick_msg_->joystick_btn_r2){
-            float intake_cmd = 625;
+            float intake_cmd = 750;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_voltage = 1.0;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].active = true;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].current_limit = 2500;
             
         }
         else if(curr_joystick_msg_->joystick_btn_down){
-            float intake_cmd = -625;
+            float intake_cmd = -750;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_voltage = -1.0;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].active = true;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].current_limit = 2500;
         }
@@ -194,6 +233,10 @@ namespace ghost_ros
 
         if(curr_joystick_msg_->joystick_btn_b && teleop_mode == SHOOTER_MODE){
             teleop_mode = INTAKE_MODE;
+        }
+
+        if(curr_joystick_msg_->joystick_btn_left){
+            resetPose();
         }
 
         float turret_angle = ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::TURRET_ENCODER].angle_degrees);
@@ -234,17 +277,21 @@ namespace ghost_ros
             break;
 
             case INTAKE_MODE:
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_velocity = -turret_angle * turret_kp_;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 
+                    ghost_util::SmallestAngleDist(0.0, turret_angle) * turret_kp_ - 
+                    curr_encoder_msg_->encoders[ghost_v5_config::TURRET_ENCODER].velocity_rpm * turret_kd_;
                 
+                // RCLCPP_INFO(get_logger(), "Turret Angle: %f", turret_angle);
+
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 0;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 0;
 
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].current_limit = 0;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].current_limit = 2500;
                 // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 0;
                 // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 0;
                 // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 0;
 
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].active = false;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].active = true;
                 // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = false;
                 // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = false;
                 // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = false;

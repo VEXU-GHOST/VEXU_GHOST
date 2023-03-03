@@ -11,6 +11,14 @@ ghost_state_machine_node:
     back_wheel_y:   0.0
 
     steering_kp: 0.2
-    turret_kp: 0.2
+    turret_kp: 0.04
+    turret_kd: 0.75
+
+    pose_reset_x_: 0.0
+    pose_reset_y_: 0.0
+    pose_reset_theta_: 0.0
+    pose_reset_x_cov_: 0.0
+    pose_reset_y_cov_: 0.0
+    pose_reset_theta_cov_: 0.0
 
     max_motor_rpm_true: 625.0
