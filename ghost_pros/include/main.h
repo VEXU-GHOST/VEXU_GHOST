@@ -43,8 +43,8 @@ ghost_v5::GhostMotorConfig drive_motor_config = {
 // Turret Motor Config
 ghost_v5::GhostMotorConfig turret_motor_config = {
     .motor__gear_ratio = 1,
-    .filter__cutoff_frequency = 50.0, // Hz
-    .ctl__pos_gain = 150.0,
+    .filter__cutoff_frequency = 25.0, // Hz
+    .ctl__pos_gain = 0.0,
     .ctl__vel_gain = 15.0,
     .ctl__ff_vel_gain = 1.0,
     .ctl__ff_voltage_gain = 1.0,

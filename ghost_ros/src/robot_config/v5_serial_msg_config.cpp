@@ -40,7 +40,7 @@ namespace ghost_v5_config{
         STEERING_LEFT_ENCODER,
         STEERING_RIGHT_ENCODER,
         STEERING_BACK_ENCODER,
-        // TURRET_ENCODER
+        TURRET_ENCODER
     };
 
     // Each motor reports angle_degrees, velocity_rpm, voltage_mv, current_ma, power_w, temp_c  
@@ -68,7 +68,7 @@ namespace ghost_v5_config{
         {STEERING_LEFT_ENCODER,         "STEERING_LEFT_ENCODER"},
         {STEERING_RIGHT_ENCODER,        "STEERING_RIGHT_ENCODER"},
         {STEERING_BACK_ENCODER,         "STEERING_BACK_ENCODER"},
-        // {TURRET_ENCODER,                "TURRET_ENCODER"},
+        {TURRET_ENCODER,                "TURRET_ENCODER"},
     };
 
     int get_actuator_command_msg_len(){
