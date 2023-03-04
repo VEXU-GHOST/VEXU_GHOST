@@ -31,7 +31,10 @@ namespace ghost_ros
     enum teleop_mode_e
     {
         SHOOTER_MODE,
-        INTAKE_MODE
+        INTAKE_MODE,
+        EJECT_MODE,
+        TILT_MODE,
+        EXPANSION_MODE
     };
 
     class RobotStateMachineNode : public rclcpp::Node
