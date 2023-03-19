@@ -27,10 +27,10 @@ namespace v5_sim_node{
 
     // Create Subscriptions
     joy_sub_ = this->create_subscription<sensor_msgs::msg::Joy>("joy", 10, std::bind(&V5SimNode::JoystickCallback, this, _1));
-    actuator_cmd_sub_ = this->create_subscription<ghost_msgs::msg::RobotActuatorCommand>("actuator_cmd", 10, std::bind(&V5SimNode::ActuatorCmdCallback, this, _1));
+    actuator_cmd_sub_ = this->create_subscription<ghost_msgs::msg::V5ActuatorCommand>("actuator_cmd", 10, std::bind(&V5SimNode::ActuatorCmdCallback, this, _1));
 
     // Create Publishers
-    state_update_pub_ = this->create_publisher<ghost_msgs::msg::RobotStateUpdate>("state_update", 10);
+    sensor_update_pub_ = this->create_publisher<ghost_msgs::msg::V5SensorUpdate>("sensor_update", 10);
 
   }
 
@@ -38,8 +38,8 @@ namespace v5_sim_node{
 
   }
   
-  // Given a RobotActuatorCommand message, echoes all valid motor commands on their own topics (valid, i.e. a motor name that exists within the publisher map).
-  void V5SimNode::ActuatorCmdCallback(const ghost_msgs::msg::RobotActuatorCommand::SharedPtr msg){
+  // Given a V5ActuatorCommand message, echoes all valid motor commands on their own topics (valid, i.e. a motor name that exists within the publisher map).
+  void V5SimNode::ActuatorCmdCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
 
     for(ghost_msgs::msg::V5MotorCommand cmd : msg->motor_commands){
 

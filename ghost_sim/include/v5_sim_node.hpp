@@ -6,8 +6,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "yaml-cpp/yaml.h"
 
-#include "ghost_msgs/msg/robot_actuator_command.hpp"
-#include "ghost_msgs/msg/robot_state_update.hpp"
+#include "ghost_msgs/msg/v5_actuator_command.hpp"
+#include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 
 namespace v5_sim_node{
@@ -19,7 +19,7 @@ class V5SimNode : public rclcpp::Node {
 
     // Topic callback functions
     void JoystickCallback(const sensor_msgs::msg::Joy::SharedPtr msg);
-    void ActuatorCmdCallback(const ghost_msgs::msg::RobotActuatorCommand::SharedPtr msg);
+    void ActuatorCmdCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
     
     // Topic publish functions
     void PublishStateUpdate();
@@ -28,10 +28,10 @@ class V5SimNode : public rclcpp::Node {
 
     // Subscribers
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
-    rclcpp::Subscription<ghost_msgs::msg::RobotActuatorCommand>::SharedPtr actuator_cmd_sub_;
+    rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_cmd_sub_;
     
     // Publishers
-    rclcpp::Publisher<ghost_msgs::msg::RobotStateUpdate>::SharedPtr state_update_pub_;
+    rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
     std::map<std::string, rclcpp::Publisher<ghost_msgs::msg::V5MotorCommand>::SharedPtr> motor_pubs_;
 
     // Configuration
