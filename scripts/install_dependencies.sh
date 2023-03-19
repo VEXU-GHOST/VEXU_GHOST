@@ -4,16 +4,19 @@ sudo apt-get install -y ros-foxy-joint-state-publisher ros-foxy-joint-state-publ
 sudo apt-get install -y python3-pip libgtest-dev libgoogle-glog-dev
 sudo apt-get install -y ros-foxy-rplidar-ros  ros-foxy-realsense2*
 
-if [ -d ~/ghost_deps/ ]
+cd ~
+
+if [ ! -d ghost_deps ]
 then
-	echo "Directory \"~/ghost_deps\" already exists. Skipping YAML and rplidar installation..."
-else
-
-	cd ~/
+	echo "Creating directory \"~/ghost_deps\"."
 	mkdir ghost_deps
-	cd ghost_deps
+fi
 
-	echo "Building yaml-cpp from source in ~/ghost_deps"
+cd ghost_deps
+
+if [ ! -d yaml-cpp ]
+then
+	echo "yaml-cpp not found. Building from source in ~/ghost_deps/"
 	git clone git@github.com:jbeder/yaml-cpp.git
 	cd yaml-cpp
 	mkdir build
@@ -21,10 +24,12 @@ else
 	cmake -DYAML_BUILD_SHARED_LIBS=ON ..
 	make -j
 	sudo make install
-
 	cd ~/ghost_deps
+fi
 
-	echo "Building rplidar_ros from source in ~/ghost_deps"
+if [ ! -d rplidar_ros ]
+then
+	echo "rplidar_ros not found. Building from source in ~/ghost_deps"
 	git clone -b ros2 git@github.com:Slamtec/rplidar_ros.git
 	cd rplidar_ros
 	colcon build --symlink-install
