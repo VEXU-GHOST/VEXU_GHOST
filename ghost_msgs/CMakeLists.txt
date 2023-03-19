@@ -25,6 +25,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/V5CompetitionState.msg"
   "msg/V5ActuatorCommand.msg"
   "msg/V5SensorUpdate.msg"
+  "msg/CVDisc.msg"
   DEPENDENCIES std_msgs
  )
 ament_export_dependencies(rosidl_default_runtime)

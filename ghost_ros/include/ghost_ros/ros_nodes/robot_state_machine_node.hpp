@@ -10,6 +10,7 @@
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 
 #include "ghost_msgs/msg/v5_competition_state.hpp"
 #include "ghost_msgs/msg/v5_joystick.hpp"
@@ -27,6 +28,15 @@ namespace ghost_ros
         AUTONOMOUS = 2,
     };
 
+    enum teleop_mode_e
+    {
+        SHOOTER_MODE,
+        INTAKE_MODE,
+        EJECT_MODE,
+        TILT_MODE,
+        EXPANSION_MODE
+    };
+
     class RobotStateMachineNode : public rclcpp::Node
     {
     public:
@@ -35,8 +45,10 @@ namespace ghost_ros
     private:
         void updateController();
         void teleop();
+        void resetPose();
 
         void updateSwerveCommandsFromTwist(float angular_velocity, float x_velocity, float y_velocity);
+        void updateSwerveVoltageCommandsFromTwist(float angular_velocity, float x_velocity, float y_velocity);
 
         void publishSwerveKinematicsVisualization(
             const Eigen::Vector2f &left_wheel_cmd,
@@ -46,6 +58,8 @@ namespace ghost_ros
         // Publishers
         rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_pub_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
+        rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_pub_;
+        
 
         // Subscriptions
         rclcpp::Subscription<ghost_msgs::msg::V5CompetitionState>::SharedPtr competition_state_sub_;
@@ -73,13 +87,26 @@ namespace ghost_ros
         float max_steering_angular_vel_;
 
         float steering_kp_;
+        float turret_kp_;
+        float turret_kd_;
         float max_motor_rpm_true_;
+
+        double pose_reset_x_;
+        double pose_reset_y_;
+        double pose_reset_theta_;
+        double pose_reset_x_sigma_;
+        double pose_reset_y_sigma_;
+        double pose_reset_theta_sigma_;
 
         Eigen::Vector2f left_wheel_pos_;
         Eigen::Vector2f right_wheel_pos_;
         Eigen::Vector2f back_wheel_pos_;
 
         ghost_msgs::msg::V5ActuatorCommand actuator_cmd_msg_;
+
+        // Flywheel teleop modes
+        bool r1_pressed_;
+        teleop_mode_e teleop_mode;
     };
 
 } // namespace ghost_ros

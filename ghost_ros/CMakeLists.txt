@@ -43,6 +43,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(ghost_msgs REQUIRED)
 find_package(ghost_serial REQUIRED)
 find_package(ghost_estimation REQUIRED)
+find_package(ghost_util REQUIRED)
 
 find_library(v5_serial_node REQUIRED)
 
@@ -68,20 +69,25 @@ install(
   INCLUDES DESTINATION include
   )
 
-#####################
-##### ROS Nodes #####
-#####################
-# Basic Swerve Controller
-add_executable(basic_swerve_controller src/basic_swerve_controller.cpp)
-ament_target_dependencies(basic_swerve_controller
-  rclcpp
-  std_msgs
-  geometry_msgs
-  Eigen3
+#####################################
+##### Foxglove Diagnostics Node #####
+#####################################
+add_executable(foxglove_diagnostics_node
+  src/ros_nodes/foxglove_diagnostics_node.cpp
 )
+ament_target_dependencies(foxglove_diagnostics_node
+  rclcpp
+  sensor_msgs
+  ghost_msgs
+)
+target_include_directories(foxglove_diagnostics_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  basic_swerve_controller
+  foxglove_diagnostics_node
   DESTINATION lib/${PROJECT_NAME})
+
 
 ############################
 #### Jetson Serial Node ####
@@ -149,12 +155,15 @@ add_executable(robot_state_machine_node
 ament_target_dependencies(robot_state_machine_node
   rclcpp
   Eigen3
+  std_msgs
   ghost_msgs
   visualization_msgs
   ghost_estimation
+  ghost_util
 )
 target_link_libraries(robot_state_machine_node
   ghost_estimation::amrl_shared_lib
+  ghost_util::angle_util
   yaml-cpp
   v5_serial_msg_config
 )
@@ -165,43 +174,6 @@ target_include_directories(robot_state_machine_node
 install(TARGETS
 robot_state_machine_node
 DESTINATION lib/${PROJECT_NAME})
-
-#####################
-##### Examples ######
-#####################
-# ROS Publisher Example
-add_executable(ros_publisher_example src/examples/ros_publisher_example.cpp)
-ament_target_dependencies(ros_publisher_example
-  rclcpp
-  sensor_msgs
-  geometry_msgs
-)
-
-install(TARGETS
-  ros_publisher_example
-  DESTINATION lib/${PROJECT_NAME})
-
-# ROS Subscriber Example
-add_executable(ros_subscriber_example src/examples/ros_subscriber_example.cpp)
-ament_target_dependencies(ros_subscriber_example
-  rclcpp
-  sensor_msgs
-  geometry_msgs
-)
-
-install(TARGETS
-  ros_subscriber_example
-  DESTINATION lib/${PROJECT_NAME})
-
-# YAML Load Example
-add_executable(yaml_load_example src/examples/yaml_load.cpp)
-target_link_libraries(yaml_load_example
-  yaml-cpp
-)
-
-install(TARGETS
-  yaml_load_example
-  DESTINATION lib/${PROJECT_NAME})
 
 #################
 #### Testing ####

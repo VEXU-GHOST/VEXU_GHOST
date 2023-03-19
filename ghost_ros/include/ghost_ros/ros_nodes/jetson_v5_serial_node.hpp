@@ -22,21 +22,26 @@ namespace ghost_ros
         JetsonV5SerialNode();
         ~JetsonV5SerialNode();
 
-        bool initSerialBlocking();
+        bool initSerial();
 
     private:
         // Process incoming/outgoing msgs w/ ROS
         void actuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
         void publishV5SensorUpdate(unsigned char buffer[]);
 
-        // Background thread loop for processing serial reads
-        void readerLoop();
+        // Background thread for processing serial data and maintaining serial connection
+        void serialLoop();
 
-        // Config Params
-        YAML::Node config_yaml_;
-        int max_msg_len_;
-        bool using_reader_thread_;
+        // Background thread to periodically check if serial data has timed out
+        void serialTimeoutLoop();
+
+        // ROS Parameters
+        bool use_checksum_;
         bool verbose_;
+        std::string read_msg_start_seq_;
+        std::string write_msg_start_seq_;
+        std::string port_name_;
+        std::string backup_port_name_;
 
         // ROS Topics
         rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
@@ -46,16 +51,17 @@ namespace ghost_ros
 
         // Serial Interface
         std::shared_ptr<ghost_serial::JetsonSerialBase> serial_base_interface_;
-        std::shared_ptr<ghost_serial::JetsonSerialBase> backup_serial_interface;
         std::vector<unsigned char> sensor_update_msg_;
-
-        // Reader Thread
-        std::thread reader_thread_;
-        std::atomic_bool reader_thread_init_;
+        std::thread serial_thread_;
+        std::thread serial_timeout_thread_;
+        std::atomic_bool serial_open_;
+        std::chrono::time_point<std::chrono::system_clock> last_msg_time_;
+        std::mutex serial_reset_mutex_;
+        bool using_backup_port_;
 
         // Msg Config
-        int actuator_command_msg_len_;
         int sensor_update_msg_len_;
+        int actuator_command_msg_len_;
     };
 
 } // namespace ghost_serial

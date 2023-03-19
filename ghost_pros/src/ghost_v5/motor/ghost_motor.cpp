@@ -1,5 +1,6 @@
 #include "ghost_v5/motor/ghost_motor.hpp"
 
+#include "pros/apix.h"
 #include "pros/error.h"
 
 namespace ghost_v5
@@ -25,23 +26,27 @@ namespace ghost_v5
               config.motor__max_voltage,
               config.motor__gear_ratio),
           motor_is_3600_cart_{(config_.motor__gear_ratio == 36)},
-          trq_lim_norm_{config_.motor__torque_limit_norm},
           device_connected_{false},
           ctl_mode_{control_mode_e::VOLTAGE_CONTROL},
           des_voltage_norm_{0.0},
           des_vel_rpm_{0.0},
           des_pos_encoder_{0},
-          cmd_voltage_mv_{0.0}
+          cmd_voltage_mv_{0.0},
+          is_active_{false}
     {
         config_ = config;
+        trq_lim_norm_ = config_.motor__torque_limit_norm;
+        ctl_rpm_deadband_ = config_.ctl__rpm_deadband;
 
         // Doing this in the constructor causes data abort exception
         set_gearing(RPM_TO_GEARING[config_.motor__gear_ratio]);
 
-        // Dont strip the plastic gears
-        if(motor_is_3600_cart_){
-            trq_lim_norm_ = 0.75;
+        if(config.motor__gear_ratio == 36.0){
+            motor_is_3600_cart_ = true;
         }
+
+        // Set Brake Mode
+        set_brake_mode(config.motor__brake_mode);
     }
 
     void GhostMotor::updateMotor()
@@ -77,6 +82,10 @@ namespace ghost_v5
 
         case control_mode_e::VELOCITY_CONTROL:
             cmd_voltage_mv_ = voltage_feedforward + velocity_feedforward + velocity_feedback;
+            // Apply velocity deadband
+            if(fabs(des_vel_rpm_) < ctl_rpm_deadband_ && fabs(ctl_rpm_deadband_) > 1e-3){
+                cmd_voltage_mv_ = 0.0;
+            }
             break;
 
         case control_mode_e::VOLTAGE_CONTROL:
@@ -84,8 +93,13 @@ namespace ghost_v5
             break;
         }
 
-        // Set motor voltage w/ torque limiting (limiting change in voltage)
-        move_voltage_trq_lim(cmd_voltage_mv_);
+        if(is_active_){
+            move_voltage(cmd_voltage_mv_);
+        }
+        else{
+            set_current_limit(0);
+            move_voltage(0);
+        }
     }
 
     void GhostMotor::move_voltage_trq_lim(float voltage_mv)

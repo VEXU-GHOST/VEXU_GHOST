@@ -16,7 +16,9 @@ set(CMAKE_BUILD_TYPE "RELEASE")
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
@@ -130,6 +132,18 @@ install(
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
+)
+
+#######################
+#### Disc Detector ####
+#######################
+# Install Python modules
+ament_python_install_package(${PROJECT_NAME})
+ 
+# Install Python executables
+install(PROGRAMS
+  src/disc_detector/disc_detector.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 #################

@@ -4,11 +4,13 @@
 
 #include "eigen3/Eigen/Geometry"
 
+#include "math/math_util.h"
+#include "ghost_util/angle_util.hpp"
+
 #include "ghost_ros/robot_config/v5_port_config.hpp"
 #include "ghost_ros/robot_config/v5_serial_msg_config.hpp"
 #include "ghost_ros/ros_nodes/robot_state_machine_node.hpp"
 
-#include "math/math_util.h"
 
 using namespace std::chrono_literals;
 using namespace math_util;
@@ -21,7 +23,9 @@ namespace ghost_ros
                                                      curr_robot_state_{robot_state_e::DISABLED},
                                                      curr_robot_state_msg_{0},
                                                      curr_joystick_msg_id_{0},
-                                                     curr_comp_state_msg_id_{0}
+                                                     curr_comp_state_msg_id_{0},
+                                                     r1_pressed_{false},
+                                                     teleop_mode{INTAKE_MODE}
     {
         declare_parameter("max_linear_vel", 0.0);
         declare_parameter("max_steering_angular_vel", 0.0);
@@ -42,6 +46,12 @@ namespace ghost_ros
         declare_parameter("steering_kp", 0.0);
         steering_kp_ = get_parameter("steering_kp").as_double();
 
+        declare_parameter("turret_kp", 0.0);
+        turret_kp_ = get_parameter("turret_kp").as_double();
+
+        declare_parameter("turret_kd", 0.0);
+        turret_kd_ = get_parameter("turret_kd").as_double();
+
         declare_parameter("max_motor_rpm_true", 0.0);
         max_motor_rpm_true_ = get_parameter("max_motor_rpm_true").as_double();
 
@@ -54,12 +64,28 @@ namespace ghost_ros
             throw std::invalid_argument("Wheel Geometry has not been set.");
         }
 
+        declare_parameter("pose_reset_x", 0.0);
+        declare_parameter("pose_reset_y", 0.0);
+        declare_parameter("pose_reset_theta", 0.0);
+        declare_parameter("pose_reset_x_cov", 0.0);
+        declare_parameter("pose_reset_y_cov", 0.0);
+        declare_parameter("pose_reset_theta_cov", 0.0);
+
+        pose_reset_x_ = get_parameter("pose_reset_x").as_double();
+        pose_reset_y_ = get_parameter("pose_reset_y").as_double();
+        pose_reset_theta_ = get_parameter("pose_reset_theta").as_double();
+        pose_reset_x_sigma_ = get_parameter("pose_reset_x_cov").as_double();
+        pose_reset_y_sigma_ = get_parameter("pose_reset_y_cov").as_double();
+        pose_reset_theta_sigma_ = get_parameter("pose_reset_theta_cov").as_double();
+
         actuator_command_pub_ = create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
             "v5/actuator_commands",
             10);
         debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
             "controller_debug",
             10);
+
+        initial_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("initial_pose",10);
 
         competition_state_sub_ = create_subscription<ghost_msgs::msg::V5CompetitionState>(
             "v5/competition_state",
@@ -144,13 +170,29 @@ namespace ghost_ros
                 break;
             }
 
-            // Configure actuator command msg
+            // Publish actuator command
             actuator_cmd_msg_.header.stamp = get_clock()->now();
             actuator_cmd_msg_.msg_id = curr_joystick_msg_id_;
-
-            // Publish actuator command
             actuator_command_pub_->publish(actuator_cmd_msg_);
         }
+    }
+
+    void RobotStateMachineNode::resetPose(){
+        geometry_msgs::msg::PoseWithCovarianceStamped msg{};
+
+        msg.header.frame_id = "world";
+        msg.header.stamp = this->get_clock()->now();
+
+        msg.pose.pose.position.x = pose_reset_x_;
+        msg.pose.pose.position.y = pose_reset_y_;
+        msg.pose.pose.orientation.w = cos(pose_reset_theta_ * M_PI/180.0 * 0.5);
+        msg.pose.pose.orientation.z = sin(pose_reset_theta_ * M_PI/180.0 * 0.5);
+
+        msg.pose.covariance[0] = pose_reset_x_sigma_*pose_reset_x_sigma_;
+        msg.pose.covariance[7] = pose_reset_y_sigma_*pose_reset_y_sigma_;
+        msg.pose.covariance[35] = pose_reset_theta_sigma_*pose_reset_theta_sigma_;
+
+        initial_pose_pub_->publish(msg);
     }
 
     void RobotStateMachineNode::teleop()
@@ -160,24 +202,100 @@ namespace ghost_ros
             curr_joystick_msg_->joystick_left_y,
             -curr_joystick_msg_->joystick_left_x);
 
-        // digital_outs[ghost_v5_config::FLYWHEEL_TILT] = curr_joystick_msg_->joystick_btn_a;
-        // digital_outs[ghost_v5_config::INDEXER_ROOF] = curr_joystick_msg_->joystick_btn_b;
-
-        // Actuate Pneumatics
-        std::vector<bool> digital_outs(8, false);
-        if(curr_joystick_msg_->joystick_btn_a){
-            digital_outs[ghost_v5_config::ENDGAME] = true;
+        // Intake Control
+        if(curr_joystick_msg_->joystick_btn_r2){
+            float intake_cmd = 750;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_voltage = 1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].current_limit = 2500;
+            
         }
-        else{
-            digital_outs[ghost_v5_config::ENDGAME] = false;
+        else if(curr_joystick_msg_->joystick_btn_down){
+            float intake_cmd = -750;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_voltage = -1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].current_limit = 2500;
         }
-        // digital_outs[ghost_v5_config::INDEXER_ROOF] = curr_joystick_msg_->joystick_btn_b;
 
 
-        // Update digital outputs
-        for (int i = 0; i < 8; i++)
-        {
-            actuator_cmd_msg_.digital_out_vector[i] = digital_outs[i];
+        // Toggle shooter mode
+        if(curr_joystick_msg_->joystick_btn_r1 && !r1_pressed_){
+            if(teleop_mode == INTAKE_MODE){
+                teleop_mode = SHOOTER_MODE;
+            }
+            r1_pressed_ = true;
+        }
+        else if(!curr_joystick_msg_->joystick_btn_r1){
+            r1_pressed_ = false;
+        }
+
+        if(curr_joystick_msg_->joystick_btn_b && teleop_mode == SHOOTER_MODE){
+            teleop_mode = INTAKE_MODE;
+        }
+
+        if(curr_joystick_msg_->joystick_btn_left){
+            resetPose();
+        }
+
+        float turret_angle = ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::TURRET_ENCODER].angle_degrees);
+
+        switch(teleop_mode){
+            case SHOOTER_MODE:
+                if(curr_joystick_msg_->joystick_btn_l1){
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 85;
+                }
+                else{
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 0;
+                }
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
+
+                if(curr_joystick_msg_->joystick_btn_y){
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 1.0;
+                }
+                else if(curr_joystick_msg_->joystick_btn_a){
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = -1.0;
+                }
+                else{
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 0;
+                }
+                
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].current_limit = 2000;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2000;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2000;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2000;
+
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].active = true;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
+
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = (45.0 - turret_angle) * turret_kp_;
+
+            break;
+
+            case INTAKE_MODE:
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 
+                    ghost_util::SmallestAngleDist(0.0, turret_angle) * turret_kp_ - 
+                    curr_encoder_msg_->encoders[ghost_v5_config::TURRET_ENCODER].velocity_rpm * turret_kd_;
+                
+                // RCLCPP_INFO(get_logger(), "Turret Angle: %f", turret_angle);
+
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 0;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 0;
+
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].current_limit = 2500;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 0;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 0;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 0;
+
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].active = true;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = false;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = false;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = false;
+            break;
         }
     }
 
@@ -191,18 +309,6 @@ namespace ghost_ros
         float angular_vel_cmd = std::clamp<float>(angular_velocity, -1.0, 1.0) * max_angular_vel_;
         float linear_vel_cmd = std::clamp<float>(xy_vel_cmd.norm(), -1.0, 1.0) * max_linear_vel_;
 
-        // Swerve Drive Setpoints
-        std::vector<float> steering_angle_cmd_(3, 0.0);
-        std::vector<float> steering_velocity_cmd_(3, 0.0);
-        std::vector<float> steering_voltage_cmd_(3, 0.0);
-
-        std::vector<float> wheel_velocity_cmd_(3, 0.0);
-        std::vector<float> wheel_voltage_cmd_(3, 0.0);
-
-        // Convert steering and wheel commands to actuator space
-        std::vector<float> motor_speed_cmds(6, 0.0);
-        std::vector<float> motor_voltage_cmds(6, 0.0);
-
         // Zero commands under 1%
         linear_vel_cmd = (fabs(linear_vel_cmd) > max_linear_vel_ * 0.01) ? linear_vel_cmd : 0.0;
         angular_vel_cmd = (fabs(angular_vel_cmd) > max_angular_vel_ * 0.01) ? angular_vel_cmd : 0.0;
@@ -215,52 +321,61 @@ namespace ghost_ros
         }
 
         // Calculate Wheel and Steering Setpoints
+        std::vector<float> steering_angles = {
+            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees),
+            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees),
+            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees),
+        };
+
+        // Swerve Drive Setpoints
+        std::vector<float> steering_angle_cmd_(3, 0.0);
+        std::vector<float> steering_velocity_cmd_(3, 0.0);
+        std::vector<float> steering_voltage_cmd_(3, 0.0);
+
+        std::vector<float> wheel_velocity_cmd_(3, 0.0);
+        std::vector<float> wheel_voltage_cmd_(3, 0.0);
+
         std::vector<Eigen::Vector2f> wheel_vel_vectors(3, Eigen::Vector2f(0, 0));
         std::vector<Eigen::Vector2f> wheel_positions = {left_wheel_pos_, right_wheel_pos_, back_wheel_pos_};
         for (int wheel_id = 0; wheel_id < 3; wheel_id++)
         {
+            // Calculate linear velocity vector at wheel
             Eigen::Vector2f vel_vec(-wheel_positions[wheel_id].y(), wheel_positions[wheel_id].x());
-
             vel_vec *= angular_vel_cmd;
             vel_vec += linear_vel_cmd * linear_vel_dir;
-
             wheel_vel_vectors[wheel_id] = vel_vec;
 
-            steering_angle_cmd_[wheel_id] = atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI;   // Converts rad/s to degrees
+            // Calculate naive steering angle and wheel velocity setpoints
+            steering_angle_cmd_[wheel_id] = ghost_util::WrapAngle360(atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI);   // Converts rad/s to degrees
             wheel_velocity_cmd_[wheel_id] = vel_vec.norm() * 100 / 2.54 / (2.75 * M_PI) * 60; // Convert m/s to RPM
-        }
-        publishSwerveKinematicsVisualization(wheel_vel_vectors[0], wheel_vel_vectors[1], wheel_vel_vectors[2]);
-
-        // Apply Steering Control
-        std::vector<float> angles = {
-            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].current_angle,
-            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].current_angle,
-            curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].current_angle,
-        };
-
-        for (int i = 0; i < 3; i++)
-        {
-            // Ensure angles are mapped from 0 -> 360
-            steering_angle_cmd_[i] = (steering_angle_cmd_[i] < 0.0) ? fmod(steering_angle_cmd_[i] + 360.0, 360.0) : fmod(steering_angle_cmd_[i], 360.0);
-            angles[i] = (angles[i] < 0.0) ? fmod(angles[i] + 360.0, 360.0) : fmod(angles[i], 360.0);
 
             // Calculate angle error and then use direction of smallest error
-            float error = steering_angle_cmd_[i] - angles[i];
-            float err_sign = (error >= 0.0) ? 1.0 : -1.0;
-            if (fabs(error) > 180)
-            {
-                error = -(360 - fabs(error)) * err_sign;
+            float steering_error  = ghost_util::SmallestAngleDist(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+
+            // It is faster to reverse wheel direction and steer to opposite angle
+            if(fabs(steering_error) > 90.0){
+                // Flip commands
+                wheel_velocity_cmd_[wheel_id] *= -1.0;
+                steering_angle_cmd_[wheel_id] = ghost_util::FlipAngle180(steering_angle_cmd_[wheel_id]);
+
+                // Recalculate error
+                steering_error = ghost_util::SmallestAngleDist(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
             }
 
-            // Set voltage using position control law
-            steering_voltage_cmd_[i] = error * steering_kp_;
+            // Set steering voltage using position control law
+            steering_voltage_cmd_[wheel_id] = steering_error * steering_kp_;
         }
+        publishSwerveKinematicsVisualization(wheel_vel_vectors[0], wheel_vel_vectors[1], wheel_vel_vectors[2]);
 
         // Calculate Actuator Commands
         Eigen::Matrix2f diff_swerve_jacobian;
         Eigen::Matrix2f diff_swerve_jacobian_inverse;
-        diff_swerve_jacobian << 13.0 / 18.0 / 2.0, -13.0 / 18.0 / 2.0, 13.0 / 45.0 / 2.0, 13.0 / 45.0 / 2.0;
-        diff_swerve_jacobian_inverse << 18.0 / 13.0, 45.0 / 13.0, -18.0 / 13.0, 45.0 / 13.0;
+        diff_swerve_jacobian << 12.0 / 18.0 / 2.0, -12.0 / 18.0 / 2.0, 12.0 / 45.0 / 2.0, 12.0 / 45.0 / 2.0;
+        diff_swerve_jacobian_inverse << 18.0 / 12.0, 45.0 / 12.0, -18.0 / 12.0, 45.0 / 12.0;
+
+        // Convert steering and wheel commands to actuator space
+        std::vector<float> motor_speed_cmds(6, 0.0);
+        std::vector<float> motor_voltage_cmds(6, 0.0);
 
         // Normalize velocities based on vel saturation, transform velocities to actuator space
         for (int wheel_id = 0; wheel_id < 3; wheel_id++)
@@ -273,7 +388,7 @@ namespace ghost_ros
             motor_speed_cmds[2 * wheel_id + 1] = actuator_vel_cmd[1];
 
             // Transform position control output to actuator space
-            Eigen::Vector2f wheel_module_voltage_cmd(0.0, steering_voltage_cmd_[wheel_id]);
+            Eigen::Vector2f wheel_module_voltage_cmd(wheel_voltage_cmd_[wheel_id], steering_voltage_cmd_[wheel_id]);
             Eigen::Vector2f actuator_voltage_cmd = diff_swerve_jacobian.transpose() * wheel_module_voltage_cmd;
             motor_voltage_cmds[2 * wheel_id] = actuator_voltage_cmd[0];
             motor_voltage_cmds[2 * wheel_id + 1] = actuator_voltage_cmd[1];
@@ -310,20 +425,47 @@ namespace ghost_ros
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].desired_velocity =     motor_speed_cmds[1];
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].desired_velocity =   motor_speed_cmds[2];
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].desired_velocity =    motor_speed_cmds[3];
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_1_MOTOR].desired_velocity =  motor_speed_cmds[4];
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR].desired_velocity =  motor_speed_cmds[4];
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR].desired_velocity =   motor_speed_cmds[5];
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_velocity =   motor_speed_cmds[5];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].desired_velocity =  motor_speed_cmds[4];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_FRONT_MOTOR].desired_velocity =  motor_speed_cmds[4];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].desired_velocity =   motor_speed_cmds[5];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].desired_velocity =   motor_speed_cmds[5];
 
         // Update voltage commands
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].desired_voltage =     motor_voltage_cmds[0];
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].desired_voltage =      motor_voltage_cmds[1];
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].desired_voltage =    motor_voltage_cmds[2];
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].desired_voltage =     motor_voltage_cmds[3];
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_1_MOTOR].desired_voltage =   motor_voltage_cmds[4];
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_2_MOTOR].desired_voltage =   motor_voltage_cmds[4];
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_1_MOTOR].desired_voltage =    motor_voltage_cmds[5];
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_2_MOTOR].desired_voltage =    motor_voltage_cmds[5];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].desired_voltage =   motor_voltage_cmds[4];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_FRONT_MOTOR].desired_voltage =   motor_voltage_cmds[4];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].desired_voltage =    motor_voltage_cmds[5];
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].desired_voltage =    motor_voltage_cmds[5];
+
+        // Set Current Limits
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].current_limit         = 2500;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].current_limit          = 2500;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].current_limit        = 2500;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].current_limit         = 2500;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].current_limit    = 2500;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_FRONT_MOTOR].current_limit   = 2500;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].current_limit     = 2500;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].current_limit    = 2500;
+
+        // Set motors to be active
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].active         = true;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].active          = true;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].active        = true;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].active         = true;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].active    = true;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_FRONT_MOTOR].active   = true;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].active     = true;
+        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].active    = true;
+
+        // Set Motor Names and Device IDs
+        for (auto pair : ghost_v5_config::actuator_command_config){
+            int dev_id = pair.first;
+            actuator_cmd_msg_.motor_commands[dev_id].motor_name =   ghost_v5_config::device_names.at(dev_id);
+            actuator_cmd_msg_.motor_commands[dev_id].device_id =    dev_id;
+        }
     }
 
     void RobotStateMachineNode::publishSwerveKinematicsVisualization(

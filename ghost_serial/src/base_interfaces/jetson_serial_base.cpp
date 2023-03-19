@@ -13,7 +13,6 @@ namespace ghost_serial
      * @param config_file
      */
     JetsonSerialBase::JetsonSerialBase(
-        std::string port_name,
         std::string write_msg_start_seq,
         std::string read_msg_start_seq,
         int read_msg_max_len,
@@ -23,13 +22,14 @@ namespace ghost_serial
                                 read_msg_start_seq,
                                 read_msg_max_len,
                                 use_checksum),
-                        port_name_(port_name),
-                        verbose_{verbose}
+                                verbose_{verbose}
     {
     }
 
     JetsonSerialBase::~JetsonSerialBase(){
-        
+        close(serial_read_fd_);
+        close(serial_write_fd_);
+        port_open_ = false;
     }
 
     /**
@@ -90,99 +90,78 @@ namespace ghost_serial
         cfsetospeed(&tty, B115200);
 
         // Save tty settings, also checking for error
-        return tcsetattr(serial_read_fd_, TCSANOW, &tty) != 0;
+        return (tcsetattr(serial_read_fd_, TCSANOW, &tty) == 0);
     }
 
-    /**
-     * @brief Attempts to open serial port for read/write and set port configuration.
-     * 
-     * @returns if init is successful or not
-     */
-    bool JetsonSerialBase::trySerialInit()
+    bool JetsonSerialBase::trySerialInit(std::string port_name)
     {
-        try
+        // Attempt to open serial port for read/write
+        serial_read_fd_ = open(port_name.c_str(), O_RDWR);
+        serial_write_fd_ = serial_read_fd_;
+
+        if (!setSerialPortConfig())
         {
-            // Attempt to open serial port for read/write
-            serial_read_fd_ = open(port_name_.c_str(), O_RDWR);
-            serial_write_fd_ = serial_read_fd_;
-
-            if (setSerialPortConfig())
-            {
-                std::string err_string = "Error " + std::to_string(errno) + " on port:" + port_name_ + ", " + strerror(errno);
-                throw std::runtime_error(err_string);
-            }
-
-            if (serial_read_fd_ < 0)
-            {
-                // Failed to open, output error msg
-                std::string err_string = "Failed to open serial device on " + port_name_;
-                throw std::runtime_error(err_string);
-            }
-            else
-            {
-                // Serial port now open, flush buffer
-                flushStream();
-
-                // Initialize polling structs
-                pollfd_read_.fd = serial_read_fd_;
-                pollfd_read_.events = POLLIN;
-
-                // Success! Break loop
-                port_open_ = true;
-                return true;
-            }
+            std::string err_string = "Error " + std::to_string(errno) + " on port:" + port_name + ", " + strerror(errno);
+            throw std::runtime_error(err_string);
         }
-        catch (const std::exception &e)
+
+        if (serial_read_fd_ < 0)
         {
-            #ifdef GHOST_DEBUG_VERBOSE
-                std::cout << "[Serial Interface] Error: " << e.what() << std::endl;
-            #endif
+            // Failed to open, output error msg
+            std::string err_string = "Failed to open serial device on " + port_name;
+            throw std::runtime_error(err_string);
         }
-        return false;
+        else
+        {
+            // Serial port now open, flush buffer
+            flushStream();
+
+            // Initialize polling structs
+            pollfd_read_.fd = serial_read_fd_;
+            pollfd_read_.events = POLLIN;
+
+            // Success! Break loop
+            port_open_ = true;
+            port_name_ = port_name;
+            return true;
+        }
     }
 
     bool JetsonSerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len)
     {
         if (port_open_)
         {
-            try
+            // Block waiting for read or timeout (1s)
+            int ret = poll(&pollfd_read_, 1, 1000);
+
+            // File descriptor recieves signal
+            if ((pollfd_read_.revents & POLLIN) == POLLIN)
             {
-                // Block waiting for read or timeout (1s)
-                int ret = poll(&pollfd_read_, 1, 1000);
+                // Lock serial port mutex from writes and read serial data
+                std::unique_lock<CROSSPLATFORM_MUTEX_T> read_lock(serial_io_mutex_);
 
-                // File descriptor recieves signal
-                if ((pollfd_read_.revents & POLLIN) == POLLIN)
+                // Read available bytes, up to size of raw_serial_buffer (two msgs - one byte)
+                int bytes_to_read = std::min(getNumBytesAvailable(), (int)read_buffer_.size());
+                int num_bytes_read = read(serial_read_fd_, read_buffer_.data(), bytes_to_read);
+                read_lock.unlock();
+
+                // Extract any msgs from serial stream and return if msg is found
+                if (num_bytes_read > 0)
                 {
-                    // Lock serial port mutex from writes and read serial data
-                    std::unique_lock<CROSSPLATFORM_MUTEX_T> read_lock(serial_io_mutex_);
-
-                    // Read available bytes, up to size of raw_serial_buffer (two msgs - one byte)
-                    int bytes_to_read = std::min(getNumBytesAvailable(), (int)read_buffer_.size());
-                    int num_bytes_read = read(serial_read_fd_, read_buffer_.data(), bytes_to_read);
-                    read_lock.unlock();
-
-                    // Extract any msgs from serial stream and return if msg is found
-                    if (num_bytes_read > 0)
-                    {
-                        if(verbose_){
-                            std::cout << "Read " << num_bytes_read << " bytes" << std::endl;
-                        }
-                        return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer, parsed_msg_len);
+                    if(verbose_){
+                        std::cout << "Read " << num_bytes_read << " bytes" << std::endl;
                     }
-                    else if (num_bytes_read == -1)
-                    {
-                        perror("Error");
-                    }
+                    return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer, parsed_msg_len);
                 }
-                else if (ret == -1)
+                else if (num_bytes_read == -1)
                 {
-                    // Poll Error
-                    throw std::system_error(errno, std::generic_category());
+                    perror("Error");
                 }
             }
-            catch (const std::exception &e)
+            else if (ret == -1)
             {
-                std::cout << "[Serial Reader Error]: " << e.what() << std::endl;
+                // Poll Error
+                throw std::system_error(errno, std::generic_category());
             }
         }
         return false;

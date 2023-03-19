@@ -86,8 +86,29 @@ void ghost_main_loop(){
 	if(pros::competition::is_disabled()){
 		zero_actuators();
 	}
+}
 
-	update_actuators();
+void test_flywheel_indexer_pulse(){
+	static uint32_t last_index_time = pros::millis();
+	static bool indexer_on = false;
+
+	v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]->setMotorCommand(0.0, 1200.0);
+	v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]->setMotorCommand(0.0, 2400.0);
+
+	if(!indexer_on){
+		v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]->setMotorCommand(0.0, 0.0);
+		if(pros::millis() > last_index_time + 2000){
+			last_index_time = pros::millis();
+			indexer_on = true;
+		}
+	}
+	else{
+		v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]->setMotorCommand(0.0, 600.0);
+		if(pros::millis() > last_index_time + 150){
+			last_index_time = pros::millis();
+			indexer_on = false;
+		}
+	}
 }
 
 /**
@@ -100,31 +121,25 @@ void initialize()
 {
 	// Motor ports
 	// Motor IDs are zero based index. The only time we actually use ports are in init, so we add 1 for V5 Port ID scheme
-	v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR]   	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR,    false, drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR]    	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR,     false, drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR,   false, drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR]   	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR,    false, drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_1_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_1_MOTOR,   false, drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_1_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_1_MOTOR,  false, drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_2_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_2_MOTOR,   true,  drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_2_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_2_MOTOR,  true,  drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]             	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::TURRET_MOTOR,              false, turret_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INTAKE_MOTOR]             	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_MOTOR,              false, intake_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]            	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INDEXER_MOTOR,             true, 	indexer_motor_config);
-    v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        true, 	shooter_motor_config);
-    v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       false, shooter_motor_config);
-
-	// Drive testing
-	v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]->set_current_limit(0.0);
-	v5_globals::motors[v5_motor_id_enum::INTAKE_MOTOR]->set_current_limit(0.0);
-	v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]->set_current_limit(0.0);
-	v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]->set_current_limit(0.0);
-	v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]->set_current_limit(0.0);
+	v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR]   		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR,    		false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR]    		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR,     		false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR]  		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR,   		false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR]   		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR,    		false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_REAR_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_REAR_MOTOR,  	false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_REAR_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_REAR_MOTOR, 	false, 	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_FRONT_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_FRONT_MOTOR, 	true,  	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_FRONT_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_FRONT_MOTOR,	true,  	drive_motor_config);
+    v5_globals::motors[v5_motor_id_enum::TURRET_MOTOR]             		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::TURRET_MOTOR,              		true, 	turret_motor_config);
+    v5_globals::motors[v5_motor_id_enum::INTAKE_MOTOR]         			= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_MOTOR,         			true, 	intake_motor_config);
+    v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]            		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INDEXER_MOTOR,             		false, 	indexer_motor_config);
+    v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        		false, 	shooter_motor_config);
+    v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       		true, 	shooter_motor_config);
 
 	// Encoder Ports
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_LEFT_ENCODER),
-    v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_RIGHT_ENCODER),
-    v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_BACK_ENCODER),
+	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_LEFT_ENCODER);
+    v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_RIGHT_ENCODER);
+    v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_BACK_ENCODER);
+	v5_globals::encoders[v5_sensor_id_enum::TURRET_ENCODER]			= std::make_shared<pros::Rotation>(v5_sensor_id_enum::TURRET_ENCODER);
 	
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->reverse();
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->reverse();
@@ -133,6 +148,7 @@ void initialize()
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->set_data_rate(5);
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->set_data_rate(5);
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->set_data_rate(5);
+	v5_globals::encoders[v5_sensor_id_enum::TURRET_ENCODER]->set_data_rate(5);
 
 	zero_actuators();
 
@@ -156,6 +172,7 @@ void disabled()
 	while (pros::competition::is_disabled())
 	{
 		ghost_main_loop();
+		update_actuators();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 }
@@ -188,6 +205,7 @@ void autonomous()
 	while (pros::competition::is_autonomous())
 	{
 		ghost_main_loop();
+		update_actuators();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 }
@@ -210,6 +228,9 @@ void opcontrol(){
 	while (!pros::competition::is_autonomous() && !pros::competition::is_disabled())
 	{
 		ghost_main_loop();
+		// test_flywheel_indexer_pulse();
+		update_actuators();
+
 		pros::c::task_delay_until(&loop_time, 10);
 	}
 }

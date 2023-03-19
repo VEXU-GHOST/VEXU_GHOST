@@ -1,0 +1,11 @@
+foxglove_diagnostics_node:
+  ros__parameters:
+    motor_names:
+      - DRIVE_LEFT_FRONT_MOTOR
+      - DRIVE_LEFT_BACK_MOTOR   
+      - DRIVE_RIGHT_FRONT_MOTOR 
+      - DRIVE_RIGHT_BACK_MOTOR  
+      - DRIVE_BACK_LEFT_1_MOTOR 
+      - DRIVE_BACK_LEFT_2_MOTOR 
+      - DRIVE_BACK_RIGHT_2_MOTOR
+      - DRIVE_BACK_RIGHT_1_MOTOR

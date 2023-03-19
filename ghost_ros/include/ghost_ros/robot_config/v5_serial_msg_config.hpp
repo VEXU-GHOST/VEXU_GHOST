@@ -13,6 +13,9 @@ namespace ghost_v5_config{
     // Defines order to pack Jetson -> V5 serial msg
     extern const std::vector<std::pair<v5_motor_id_enum, bool>> actuator_command_config;
     extern const int actuator_cmd_extra_byte_count;
+    extern const int actuator_update_packet_byte_size;
+    extern const int motor_sensor_packet_byte_size;
+    extern const int encoder_sensor_packet_byte_size;
 
     // Defines order to pack V5 -> Jetson serial msg
     extern const std::vector<v5_motor_id_enum> sensor_update_motor_config;
@@ -23,6 +26,9 @@ namespace ghost_v5_config{
 
     // Maps device enum to device_name
     extern const std::map<int, std::string> device_names;
+
+    int get_actuator_command_msg_len();
+    int get_sensor_update_msg_len();
 
 }
 
