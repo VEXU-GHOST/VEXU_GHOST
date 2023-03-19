@@ -25,7 +25,7 @@ namespace ghost_ros
                                                      curr_joystick_msg_id_{0},
                                                      curr_comp_state_msg_id_{0},
                                                      r1_pressed_{false},
-                                                     teleop_mode{INTAKE_MODE},
+                                                     teleop_mode{INTAKE_MODE}
     {
         declare_parameter("max_linear_vel", 0.0);
         declare_parameter("max_steering_angular_vel", 0.0);
