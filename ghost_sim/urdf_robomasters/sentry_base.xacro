@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot name="sentry" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find ghost_sim)/urdf/macros/actuator_macros.xacro"/>
+    <xacro:include filename="$(find ghost_sim)/urdf/macros/sensor_macros.xacro"/>
+    
+    <!-- Import Primary Robot URDF -->
+    <xacro:include filename="$(find ghost_description)/urdf_robomasters/sentry.xacro"/>
+
+    <!-- Add Sensors -->
+    <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro>
+    <!-- <xacro:imu_macro parent_link="camera_view_link"></xacro:imu_macro> -->
+
+    <!-- Add Mecanum -->
+    <!-- https://github.com/qaz9517532846/gazebo_mecanum_plugins/tree/ros2-foxy -->
+    <gazebo>
+      <plugin name="gazebo_ros_mecanum_diff_drive" filename="libgazebo_ros_mecanum_diff_drive.so">
+        <commandTopic>cmd_vel</commandTopic>
+        <!-- <odometryTopic>odom</odometryTopic> -->
+        <odometryFrame>world</odometryFrame>
+        <robotBaseFrame>base_footprint</robotBaseFrame>
+        <LeftRear>base_back_left_wheel_joint</LeftRear>
+        <LeftFront>base_front_left_wheel_joint</LeftFront>
+        <RightFront>base_front_right_wheel_joint</RightFront>
+        <RightRear>base_back_right_wheel_joint</RightRear>
+        <odometryRate>20</odometryRate>      
+        <!-- <publishWheelTF>false</publishWheelTF>
+        <publishWheelJointState>false</publishWheelJointState> -->
+        <WheelTorque>1</WheelTorque>
+        <WheelSeparationW>${2 * y_dist_to_wheel}</WheelSeparationW>
+        <WheelSeparationL>${2 * x_dist_to_wheel}</WheelSeparationL>
+        <wheelAccel>5</wheelAccel>
+        <wheelDiameter>${mecanum_diameter}</wheelDiameter>
+        <publishOdom>true</publishOdom>
+        <!-- <isRollerModel>true</isRollerModel> -->
+      </plugin>
+    </gazebo>
+</robot>

@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<robot name="sentry" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find ghost_description)/urdf_robomasters/mecanum_macros.xacro"/>
+
+    <xacro:property name="mecanum_diameter" value="0.1525"/>
+    <xacro:property name="mecanum_width" value="0.04"/>
+    <xacro:property name="y_dist_to_wheel" value="0.183"/>
+    <xacro:property name="x_dist_to_wheel" value="0.170"/>
+
+    <material name="see-through-silver">
+        <color rgba="0.9 0.9 0.9 1.0"/>
+    </material>
+
+    <link name="base_link">
+        <visual>
+            <origin xyz="0 0 0.1"/>
+            <geometry>
+                <box size="0.47244 0.47244 0.2"/>
+            </geometry>
+            <material name="see-through-silver"/>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0.15"/>
+            <geometry>
+                <box size="0.47244 0.47244 0.1"/>
+            </geometry>
+        </collision>
+
+        <!--Inertia estimated for box of mass 10kg rotating about center with above dimensions-->
+        <!-- https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors -->
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="10"/>
+            <inertia
+                ixx="0.240843" ixy="0.0" ixz="0.0"
+                iyy="0.240843" iyz="0.0"
+                izz="0.371997"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
+    </link>
+
+    <link name="base_footprint">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.00001"/>
+            <inertia
+                ixx="0.00001" ixy="0.0" ixz="0.0"
+                iyy="0.00001" iyz="0.0"
+                izz="0.00001"/>
+        </inertial>
+    </link>
+
+    <joint name="base_footprint_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="base_footprint"/>
+        <origin xyz="0 0 -${mecanum_diameter/2}"/>
+    </joint>
+
+    <link name="turret">
+        <visual>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.025" length="0.1"/>
+            </geometry>
+            <material name="see-through-silver"/>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.025" length="0.1"/>
+            </geometry>
+        </collision>
+
+        <visual>
+            <origin xyz="0 0 0.1"/>
+            <geometry>
+                <box size="0.25 0.25 0.1"/>
+            </geometry>
+            <material name="see-through-silver"/>
+        </visual>
+    </link>
+
+    <joint name="base_turret_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="turret"/>
+        <origin xyz="0 0 0.25654"/>
+    </joint>
+
+    <xacro:mecanum_macro name="front_left_wheel" wheel_radius="${mecanum_diameter/2}" wheel_width="${mecanum_width}" x_pos="${x_dist_to_wheel}" y_pos="${y_dist_to_wheel}"/>
+    <xacro:mecanum_macro name="front_right_wheel" wheel_radius="${mecanum_diameter/2}" wheel_width="${mecanum_width}" x_pos="${x_dist_to_wheel}" y_pos="-${y_dist_to_wheel}"/>
+    <xacro:mecanum_macro name="back_left_wheel" wheel_radius="${mecanum_diameter/2}" wheel_width="${mecanum_width}" x_pos="-${x_dist_to_wheel}" y_pos="${y_dist_to_wheel}"/>
+    <xacro:mecanum_macro name="back_right_wheel" wheel_radius="${mecanum_diameter/2}" wheel_width="${mecanum_width}" x_pos="-${x_dist_to_wheel}" y_pos="-${y_dist_to_wheel}"/>
+
+    <!-- Sensors -->
+    <link name="lidar_link">
+        <inertial>
+            <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
+            <mass value="0.125"/>
+            <inertia ixx="0.001"  ixy="0"  ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+            <cylinder radius="${0.06985/2}" length="0.0254"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="lidar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="lidar_link"/>
+        <origin xyz="0.098 0 0.22" rpy="0 0 0"/>
+    </joint>
+</robot>

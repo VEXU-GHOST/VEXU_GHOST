@@ -150,6 +150,7 @@ install(
 install(DIRECTORY
   launch
   urdf
+  urdf_robomasters
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()

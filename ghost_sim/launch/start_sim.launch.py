@@ -30,10 +30,11 @@ def launch_setup(context, *args, **kwargs):
         filename = "ghost1_sim_voltage.urdf"
 
     # Load URDF and process to text
-    urdf_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
+    # urdf_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
+    urdf_path = os.path.join(ghost_sim_share_dir, "urdf_robomasters", "sentry_base.urdf")
     doc = xacro.process(urdf_path)
     
-    spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity ghost1 -topic robot_description").split()
+    spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity sentry -topic robot_description").split()
 
     # Node to spawn robot model in Gazebo
     gazebo_ros = Node(
@@ -113,12 +114,24 @@ def generate_launch_description():
         parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
     )
 
+    depth_node = Node(
+        package='depth',
+        executable='depth_calculations',
+        name='depth_calculations'
+    )
+
     state_machine_node = Node(
         package='ghost_ros',
         executable='robot_state_machine_node',
         name='ghost_state_machine_node',
         output='screen',
         parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
+    )
+
+    sentry_control_node = Node(
+        package='sentry_control',
+        executable='sentry_control',
+        name='sentry_control'
     )
 
     return LaunchDescription([
@@ -131,6 +144,8 @@ def generate_launch_description():
         rviz_node,
         joy_launch_description,
         estimator_node,
+        depth_node,
         state_machine_node,
+        sentry_control_node,
         OpaqueFunction(function = launch_setup)
     ])

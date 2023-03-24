@@ -97,7 +97,7 @@ public:
     void modelStatesCallback(const gazebo_msgs::msg::ModelStates::SharedPtr msg){
         int swerve_model_index = -1;
         for(int i = 0; i < msg->name.size(); i++){
-            if(msg->name[i] == "ghost1"){
+            if(msg->name[i] == "ghost1" || msg->name[i] == "sentry"){
                 swerve_model_index = i;
             }
         }

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Wheel Macro -->
+    <xacro:macro name="mecanum_macro" params="name wheel_radius wheel_width x_pos y_pos">
+        <link name="${name}">
+            <visual>
+                <geometry>
+                    <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+                </geometry>
+                <material name="black">
+                    <color rgba="0 0 0 1.0"/>
+                </material>
+            </visual>
+
+            <collision>
+                <origin xyz="0 0 0"/>
+                <geometry>
+                    <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+                </geometry>
+            </collision>
+
+            <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 1 lb-->
+            <!-- Just going with Maxx's math here and assuming swerve wheel ~ mecanum inertial-->
+            <inertial>
+                <origin xyz="0 0 0"/>
+                <mass value="0.4545"/>
+                <inertia
+                    ixx="0.000482" ixy="0.0" ixz="0.0"
+                    iyy="0.000482" iyz="0.0"
+                    izz="0.000914"/>
+            </inertial>
+        </link>
+
+        <joint name="base_${name}_joint" type="continuous">
+            <parent link="base_link"/>
+            <child link="${name}"/>
+            <origin xyz="${x_pos} ${y_pos} 0" rpy="-${pi/2} 0 0"/>
+            <axis xyz="0 0 1"/>
+        </joint>
+
+        <!-- Joint State Publisher -->
+        <gazebo>
+            <plugin name="gazebo_ros_joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+                <update_rate>100</update_rate>
+                <joint_name>base_${name}_joint</joint_name>
+            </plugin>
+        </gazebo>
+    </xacro:macro>
+</robot>
