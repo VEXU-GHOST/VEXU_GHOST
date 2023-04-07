@@ -41,7 +41,7 @@ ghost_v5::GhostMotorConfig drive_motor_config = {
 };
 
 // Turret Motor Config
-ghost_v5::GhostMotorConfig turret_motor_config = {
+ghost_v5::GhostMotorConfig tilter_motor_config = {
     .motor__gear_ratio = 1,
     .filter__cutoff_frequency = 25.0, // Hz
     .ctl__pos_gain = 0.0,

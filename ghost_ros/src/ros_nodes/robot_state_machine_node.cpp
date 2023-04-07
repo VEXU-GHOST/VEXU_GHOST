@@ -239,35 +239,22 @@ namespace ghost_ros
             resetPose();
         }
 
-        float turret_angle = ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::TURRET_ENCODER].angle_degrees);
 
         switch(teleop_mode){
             case SHOOTER_MODE:
                 if(curr_joystick_msg_->joystick_btn_l1){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 85;
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = -2200;
                 }
                 else{
                     actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 0;
                 }
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
-
-                if(curr_joystick_msg_->joystick_btn_y){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 1.0;
-                }
-                else if(curr_joystick_msg_->joystick_btn_a){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = -1.0;
-                }
-                else{
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 0;
-                }
                 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].current_limit = 2000;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2000;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2000;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2000;
 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].active = true;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
@@ -277,24 +264,6 @@ namespace ghost_ros
             break;
 
             case INTAKE_MODE:
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 
-                    ghost_util::SmallestAngleDist(0.0, turret_angle) * turret_kp_ - 
-                    curr_encoder_msg_->encoders[ghost_v5_config::TURRET_ENCODER].velocity_rpm * turret_kd_;
-                
-                // RCLCPP_INFO(get_logger(), "Turret Angle: %f", turret_angle);
-
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 0;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 0;
-
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].current_limit = 2500;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 0;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 0;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 0;
-
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].active = true;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = false;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = false;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = false;
             break;
         }
     }
@@ -370,8 +339,8 @@ namespace ghost_ros
         // Calculate Actuator Commands
         Eigen::Matrix2f diff_swerve_jacobian;
         Eigen::Matrix2f diff_swerve_jacobian_inverse;
-        diff_swerve_jacobian << 12.0 / 18.0 / 2.0, -12.0 / 18.0 / 2.0, 12.0 / 45.0 / 2.0, 12.0 / 45.0 / 2.0;
-        diff_swerve_jacobian_inverse << 18.0 / 12.0, 45.0 / 12.0, -18.0 / 12.0, 45.0 / 12.0;
+        diff_swerve_jacobian << 13.0 / 18.0 / 2.0, -13.0 / 18.0 / 2.0, 13.0 / 45.0 / 2.0, 13.0 / 45.0 / 2.0;
+        diff_swerve_jacobian_inverse << 18.0 / 13.0, 45.0 / 13.0, -18.0 / 13.0, 45.0 / 13.0;
 
         // Convert steering and wheel commands to actuator space
         std::vector<float> motor_speed_cmds(6, 0.0);

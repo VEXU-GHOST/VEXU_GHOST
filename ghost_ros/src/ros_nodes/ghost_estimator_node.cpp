@@ -257,10 +257,6 @@ namespace ghost_ros
     ///// Shooter States /////
     robot_state_msg.left_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_LEFT_MOTOR].velocity_rpm;
     robot_state_msg.right_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_RIGHT_MOTOR].velocity_rpm;
-
-    ///// Turret States /////
-    robot_state_msg.turret_angle = sensor_update_msg->encoders[ghost_v5_config::TURRET_MOTOR].angle_degrees;
-    robot_state_msg.turret_vel = sensor_update_msg->encoders[ghost_v5_config::TURRET_MOTOR].velocity_rpm;
   }
 
   void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg){
