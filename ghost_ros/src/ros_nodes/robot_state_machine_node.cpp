@@ -243,7 +243,7 @@ namespace ghost_ros
         switch(teleop_mode){
             case SHOOTER_MODE:
                 if(curr_joystick_msg_->joystick_btn_l1){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = -2200;
+                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = -1200;
                 }
                 else{
                     actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 0;
