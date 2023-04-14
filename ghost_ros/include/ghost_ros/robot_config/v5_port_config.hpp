@@ -16,11 +16,11 @@ namespace ghost_v5_config
         DRIVE_BACK_LEFT_FRONT_MOTOR     = 5,
         DRIVE_BACK_RIGHT_REAR_MOTOR     = 7,
         DRIVE_BACK_RIGHT_FRONT_MOTOR    = 8,
-        TILTER_MOTOR                    = 14,
-        INTAKE_MOTOR                    = 19,
+        INTAKE_MOTOR_1                  = 19,       // CHECK
+        INTAKE_MOTOR_2                  = 20,       // CHECK
         SHOOTER_RIGHT_MOTOR             = 15,
         SHOOTER_LEFT_MOTOR              = 18,
-        INDEXER_MOTOR                   = 20
+        INDEXER_MOTOR                   = 11        // CHELk
     };
 
     enum v5_sensor_id_enum
@@ -28,7 +28,6 @@ namespace ghost_v5_config
         STEERING_LEFT_ENCODER           = 1,
         STEERING_RIGHT_ENCODER          = 2,
         STEERING_BACK_ENCODER           = 12,
-        TILTER_ENCODER                  = 11
     };
 
     enum v5_pneumatic_id_enum

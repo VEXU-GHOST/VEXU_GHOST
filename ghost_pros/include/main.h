@@ -30,6 +30,7 @@
 ghost_v5::GhostMotorConfig drive_motor_config = {
     // DC Motor
     .motor__gear_ratio = 6,
+    .motor__brake_mode = pros::E_MOTOR_BRAKE_COAST,
 
     // 2nd Order Velocity Filter
     .filter__cutoff_frequency = 100.0, // Hz
@@ -37,16 +38,6 @@ ghost_v5::GhostMotorConfig drive_motor_config = {
     // FF-PD Controller
     .ctl__vel_gain = 17.5,  // RPM -> mV
     .ctl__ff_vel_gain = 1.1,
-    .ctl__ff_voltage_gain = 1.0,
-};
-
-// Turret Motor Config
-ghost_v5::GhostMotorConfig tilter_motor_config = {
-    .motor__gear_ratio = 1,
-    .filter__cutoff_frequency = 25.0, // Hz
-    .ctl__pos_gain = 0.0,
-    .ctl__vel_gain = 15.0,
-    .ctl__ff_vel_gain = 1.0,
     .ctl__ff_voltage_gain = 1.0,
 };
 
@@ -62,9 +53,9 @@ ghost_v5::GhostMotorConfig intake_motor_config = {
 
 // Indexer Motor Config
 ghost_v5::GhostMotorConfig indexer_motor_config = {
-    .motor__gear_ratio = 2,
+    .motor__gear_ratio = 6,
     .filter__cutoff_frequency = 50.0,
-    .ctl__pos_gain = 150.0,
+    .ctl__pos_gain = 0.0,
     .ctl__vel_gain = 0.0,
     .ctl__ff_vel_gain = 0.0,
     .ctl__ff_voltage_gain = 1.0,

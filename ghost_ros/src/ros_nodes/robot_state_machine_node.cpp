@@ -205,18 +205,27 @@ namespace ghost_ros
         // Intake Control
         if(curr_joystick_msg_->joystick_btn_r2){
             float intake_cmd = 750;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_velocity = intake_cmd;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_voltage = 1.0;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].active = true;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].current_limit = 2500;
-            
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_voltage = 1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].current_limit = 2500;
+
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_voltage = 1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].current_limit = 2500;   
         }
         else if(curr_joystick_msg_->joystick_btn_down){
             float intake_cmd = -750;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_velocity = intake_cmd;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_voltage = -1.0;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].active = true;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].current_limit = 2500;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_voltage = -1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].current_limit = 2500;
+
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_voltage = -1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].current_limit = 2500;
         }
 
 
@@ -242,24 +251,22 @@ namespace ghost_ros
 
         switch(teleop_mode){
             case SHOOTER_MODE:
-                if(curr_joystick_msg_->joystick_btn_l1){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = -450;
-                }
-                else{
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 0;
-                }
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
                 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2000;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2000;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2000;
 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
 
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = (45.0 - turret_angle) * turret_kp_;
+                if(curr_joystick_msg_->joystick_btn_l2){
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_voltage = 1.0;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 750;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
+
+
+                }
 
             break;
 

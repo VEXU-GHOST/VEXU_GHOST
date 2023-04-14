@@ -11,9 +11,9 @@ namespace ghost_v5_config{
         std::pair<v5_motor_id_enum, bool>(DRIVE_BACK_LEFT_FRONT_MOTOR,  false),
         std::pair<v5_motor_id_enum, bool>(DRIVE_BACK_RIGHT_REAR_MOTOR,  false),
         std::pair<v5_motor_id_enum, bool>(DRIVE_BACK_RIGHT_FRONT_MOTOR, false),
-        std::pair<v5_motor_id_enum, bool>(TILTER_MOTOR,                 false),
-        std::pair<v5_motor_id_enum, bool>(INTAKE_MOTOR,                 false),
-        std::pair<v5_motor_id_enum, bool>(INDEXER_MOTOR,                true),
+        std::pair<v5_motor_id_enum, bool>(INTAKE_MOTOR_1,               false),
+        std::pair<v5_motor_id_enum, bool>(INTAKE_MOTOR_2,               false),
+        std::pair<v5_motor_id_enum, bool>(INDEXER_MOTOR,                false),
         std::pair<v5_motor_id_enum, bool>(SHOOTER_LEFT_MOTOR,           false),
         std::pair<v5_motor_id_enum, bool>(SHOOTER_RIGHT_MOTOR,          false),
     };
@@ -31,7 +31,9 @@ namespace ghost_v5_config{
         DRIVE_BACK_LEFT_FRONT_MOTOR,
         DRIVE_BACK_RIGHT_REAR_MOTOR,
         DRIVE_BACK_RIGHT_FRONT_MOTOR,
-        TILTER_MOTOR,
+        INTAKE_MOTOR_1,
+        INTAKE_MOTOR_2,
+        INDEXER_MOTOR,
         SHOOTER_LEFT_MOTOR,
         SHOOTER_RIGHT_MOTOR,
     };
@@ -40,7 +42,6 @@ namespace ghost_v5_config{
         STEERING_LEFT_ENCODER,
         STEERING_RIGHT_ENCODER,
         STEERING_BACK_ENCODER,
-        TILTER_ENCODER
     };
 
     // Each motor reports angle_degrees, velocity_rpm, voltage_mv, current_ma, power_w, temp_c  
@@ -60,15 +61,14 @@ namespace ghost_v5_config{
         {DRIVE_BACK_RIGHT_REAR_MOTOR,   "DRIVE_BACK_RIGHT_REAR_MOTOR"},
         {DRIVE_BACK_LEFT_FRONT_MOTOR,   "DRIVE_BACK_LEFT_FRONT_MOTOR"},
         {DRIVE_BACK_RIGHT_FRONT_MOTOR,  "DRIVE_BACK_RIGHT_FRONT_MOTOR"},
-        {TILTER_MOTOR,                  "TILTER_MOTOR"},
-        {INTAKE_MOTOR,                  "INTAKE_MOTOR"},
+        {INTAKE_MOTOR_1,                "INTAKE_MOTOR_1"},
+        {INTAKE_MOTOR_2,                "INTAKE_MOTOR_2"},
         {INDEXER_MOTOR,                 "INDEXER_MOTOR"},
         {SHOOTER_LEFT_MOTOR,            "SHOOTER_LEFT_MOTOR"},
         {SHOOTER_RIGHT_MOTOR,           "SHOOTER_RIGHT_MOTOR"},
         {STEERING_LEFT_ENCODER,         "STEERING_LEFT_ENCODER"},
         {STEERING_RIGHT_ENCODER,        "STEERING_RIGHT_ENCODER"},
         {STEERING_BACK_ENCODER,         "STEERING_BACK_ENCODER"},
-        {TILTER_ENCODER,                "TILTER_ENCODER"},
     };
 
     int get_actuator_command_msg_len(){
