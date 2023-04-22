@@ -261,7 +261,7 @@ namespace ghost_ros
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
 
                 if(curr_joystick_msg_->joystick_btn_l2){
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_voltage = 1.0;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = 1.0;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 750;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
 
@@ -395,6 +395,10 @@ namespace ghost_ros
                 motor_voltage_cmds[motor_id] = 0.0;
             }
         }
+
+        Eigen::Vector2f wheel_mod_speed = diff_swerve_jacobian * Eigen::Vector2f(
+            curr_encoder_msg_->encoders[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].velocity_rpm,
+            curr_encoder_msg_->encoders[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].velocity_rpm);
 
         // Update velocity commands
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].desired_velocity =    motor_speed_cmds[0];
