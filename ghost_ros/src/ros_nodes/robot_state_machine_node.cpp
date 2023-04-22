@@ -262,7 +262,7 @@ namespace ghost_ros
 
                 if(curr_joystick_msg_->joystick_btn_l2){
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = 1.0;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 750;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2500;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
 
 
