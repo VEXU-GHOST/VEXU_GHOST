@@ -129,6 +129,7 @@ ament_target_dependencies(ghost_estimator_node
   sensor_msgs
   visualization_msgs
   ghost_msgs
+  ghost_util
   ghost_estimation
   Eigen3
 )

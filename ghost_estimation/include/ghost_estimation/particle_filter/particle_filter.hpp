@@ -65,6 +65,9 @@ struct ParticleFilterConfig {
   float k4;
   float k5;
   float k6;
+  float k7;
+  float k8;
+  float k9;
   float laser_offset;
   float min_update_dist;
   float min_update_angle;

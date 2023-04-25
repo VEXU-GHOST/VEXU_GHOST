@@ -309,19 +309,25 @@ void ParticleFilter::Predict(const Vector2f& odom_loc,
   Eigen::Vector2f delta_translation = rot_odom1_to_bl1 * (odom_loc - prev_odom_loc_);
   float delta_angle = math_util::AngleDiff(odom_angle, prev_odom_angle_);
 
+  // Get translation noise in Base Link 2
+  float sigma_x =
+    config_params_.k1 * delta_translation.x() +
+    config_params_.k2 * delta_translation.y() +
+    config_params_.k3 * abs(delta_angle);
+  float sigma_y =
+    config_params_.k4 * delta_translation.x() +
+    config_params_.k5 * delta_translation.y() +
+    config_params_.k6 * abs(delta_angle);
+  // Get noisy angle
+  float sigma_tht =
+    config_params_.k7 * delta_translation.x() +
+    config_params_.k8 * delta_translation.y() +
+    config_params_.k9 * abs(delta_angle);
+
   for(Particle &particle: particles_){
-    // Get noisy angle
-    float sigma_tht = config_params_.k5 * delta_translation.norm() + config_params_.k6 * abs(delta_angle);
-    float noisy_angle = delta_angle + rng_.Gaussian(0.0, sigma_tht);
-
-    // Get translation noise in Base Link 2
-    float sigma_x = config_params_.k1 * delta_translation.norm() + config_params_.k2 * abs(delta_angle);;
-    float sigma_y = config_params_.k3 * delta_translation.norm() + config_params_.k4 * abs(delta_angle);
     Eigen::Vector2f e_xy = Eigen::Vector2f((float) rng_.Gaussian(0.0, sigma_x),(float) rng_.Gaussian(0.0, sigma_y));
-
-    // Transform noise to Base Link 1 using estimated angle to get noisy translation
-    auto rot_b2_to_b1 = Eigen::Rotation2D<float>(delta_angle).toRotationMatrix();
-    Eigen::Vector2f noisy_translation = delta_translation + rot_b2_to_b1 * e_xy; // in previous base_link
+    Eigen::Vector2f noisy_translation = delta_translation + e_xy;
+    float noisy_angle = delta_angle + rng_.Gaussian(0.0, sigma_tht);
     
     // Transform noise to map using current particle angle
     auto rot_bl1_to_map = Eigen::Rotation2D<float>(particle.angle).toRotationMatrix();
@@ -346,6 +352,7 @@ void ParticleFilter::Initialize(const string& map_file,
   // was received from the log.
 
   particles_.resize(config_params_.num_particles);
+  std::cout << "Num Particles: " << config_params_.num_particles << std::endl;
 
   for(Particle &particle: particles_){
     particle.loc = Eigen::Vector2f(

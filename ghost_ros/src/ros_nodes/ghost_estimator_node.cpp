@@ -26,6 +26,7 @@
 #include "util/timer.h"
 #include "ghost_ros/robot_config/v5_port_config.hpp"
 #include "ghost_ros/ros_nodes/ghost_estimator_node.hpp"
+#include "ghost_util/angle_util.hpp"
 
 using Eigen::Vector2f;
 using geometry::Line;
@@ -45,6 +46,19 @@ namespace ghost_ros
   {
     // Loads configuration from ROS Parameters
     LoadROSParams();
+
+    // Calculate Pseudo-Inverse
+    A_ = Eigen::MatrixXf (6, 3);
+
+    A_ << 
+      1.0, 0.0, -left_wheel_link_.y(),
+      0.0, 1.0, left_wheel_link_.x(),
+      1.0, 0.0, -right_wheel_link_.y(),
+      0.0, 1.0, right_wheel_link_.x(),
+      1.0, 0.0, -back_wheel_link_.y(),
+      0.0, 1.0, back_wheel_link_.x();
+    
+    A_pinv_ = A_.completeOrthogonalDecomposition().pseudoInverse();
 
     // Use simulated time in ROS
     rclcpp::Parameter use_sim_time_param("use_sim_time", false);
@@ -77,7 +91,6 @@ namespace ghost_ros
     viz_msg_ = visualization_msgs::msg::MarkerArray{};
 
     particle_filter_ = ParticleFilter(config_params);
-    last_laser_msg_ = sensor_msgs::msg::LaserScan{};
     first_map_load_ = true;
 
     const Vector2f init_loc(config_params.init_x, config_params.init_y);
@@ -92,27 +105,16 @@ namespace ghost_ros
   void GhostEstimatorNode::LoadROSParams()
   {
     // Odometry
-    declare_parameter("odometry.left_mod_x", 0.0);
-    declare_parameter("odometry.left_mod_y", 0.0);
-    declare_parameter("odometry.right_mod_x", 0.0);
-    declare_parameter("odometry.right_mod_y", 0.0);
-    declare_parameter("odometry.back_mod_x", 0.0);
-    declare_parameter("odometry.back_mod_y", 0.0);
+    declare_parameter("odometry.left_wheel_x", 0.0);
+    declare_parameter("odometry.left_wheel_y", 0.0);
+    declare_parameter("odometry.right_wheel_x", 0.0);
+    declare_parameter("odometry.right_wheel_y", 0.0);
+    declare_parameter("odometry.back_wheel_x", 0.0);
+    declare_parameter("odometry.back_wheel_y", 0.0);
 
-    left_wheel_link_ = Eigen::Vector2f(
-      get_parameter("odometry.left_mod_x").as_double(), 
-      get_parameter("odometry.left_mod_y").as_double()
-    );
-
-    right_wheel_link_ = Eigen::Vector2f(
-      get_parameter("odometry.right_mod_x").as_double(),
-      get_parameter("odometry.right_mod_y").as_double()
-    );
-    
-    back_wheel_link_ = Eigen::Vector2f(
-      get_parameter("odometry.back_mod_x").as_double(),
-      get_parameter("odometry.back_mod_y").as_double()
-    );
+    left_wheel_link_ = Eigen::Vector2f(get_parameter("odometry.left_wheel_x").as_double(), get_parameter("odometry.left_wheel_y").as_double());
+    right_wheel_link_ = Eigen::Vector2f(get_parameter("odometry.right_wheel_x").as_double(), get_parameter("odometry.right_wheel_y").as_double());
+    back_wheel_link_ = Eigen::Vector2f(get_parameter("odometry.back_wheel_x").as_double(), get_parameter("odometry.back_wheel_y").as_double());
 
     // // Particle Filter
     config_params = ParticleFilterConfig();
@@ -143,12 +145,18 @@ namespace ghost_ros
     declare_parameter("particle_filter.k4", 0.0);
     declare_parameter("particle_filter.k5", 0.0);
     declare_parameter("particle_filter.k6", 0.0);
+    declare_parameter("particle_filter.k7", 0.0);
+    declare_parameter("particle_filter.k8", 0.0);
+    declare_parameter("particle_filter.k9", 0.0);
     config_params.k1 = get_parameter("particle_filter.k1").as_double();
     config_params.k2 = get_parameter("particle_filter.k2").as_double();
     config_params.k3 = get_parameter("particle_filter.k3").as_double();
     config_params.k4 = get_parameter("particle_filter.k4").as_double();
     config_params.k5 = get_parameter("particle_filter.k5").as_double();
     config_params.k6 = get_parameter("particle_filter.k6").as_double();
+    config_params.k7 = get_parameter("particle_filter.k7").as_double();
+    config_params.k8 = get_parameter("particle_filter.k8").as_double();
+    config_params.k9 = get_parameter("particle_filter.k9").as_double();
 
     declare_parameter("particle_filter.laser_offset", 0.0);
     declare_parameter("particle_filter.min_update_dist", 0.0);
@@ -164,6 +172,7 @@ namespace ghost_ros
     declare_parameter("particle_filter.range_min", 0.0);
     declare_parameter("particle_filter.range_max", 0.0);
     declare_parameter("particle_filter.resize_factor", 0.0);
+    declare_parameter("particle_filter.num_particles", 50);
     config_params.sigma_observation = get_parameter("particle_filter.sigma_observation").as_double();
     config_params.gamma = get_parameter("particle_filter.gamma").as_double();
     config_params.dist_short = get_parameter("particle_filter.dist_short").as_double();
@@ -171,15 +180,18 @@ namespace ghost_ros
     config_params.range_min = get_parameter("particle_filter.range_min").as_double();
     config_params.range_max = get_parameter("particle_filter.range_max").as_double();
     config_params.resize_factor = get_parameter("particle_filter.resize_factor").as_double();
+    config_params.num_particles = get_parameter("particle_filter.num_particles").as_int();
   }
 
   void GhostEstimatorNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
   {
-    // Process laser observation
-
-    // Update robot pose estimate
-
-    // Update unmapped obstacle scans
+    last_laser_msg_ = msg;
+    particle_filter_.ObserveLaser(
+        msg->ranges,
+        msg->range_min,
+        msg->range_max,
+        msg->angle_min,
+        msg->angle_max);
 
     PublishWorldTransform();
     PublishVisualization();
@@ -207,16 +219,44 @@ namespace ghost_ros
   void GhostEstimatorNode::CalculateOdometry(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
     Eigen::Matrix2f diff_swerve_jacobian;
     Eigen::Matrix2f diff_swerve_jacobian_inverse;
-    diff_swerve_jacobian << 12.0 / 18.0 / 2.0, -12.0 / 18.0 / 2.0,
-                            12.0 / 45.0 / 2.0, 12.0 / 45.0 / 2.0;
-                            
-    diff_swerve_jacobian_inverse << 18.0 / 12.0, 45.0 / 12.0,
-                                    -18.0 / 12.0, 45.0 / 12.0;
+    diff_swerve_jacobian << 13.0 / 18.0 / 2.0, -13.0 / 18.0 / 2.0, 13.0 / 45.0 / 2.0, 13.0 / 45.0 / 2.0;
+    diff_swerve_jacobian_inverse << 18.0 / 13.0, 45.0 / 13.0, -18.0 / 13.0, 45.0 / 13.0;
 
-    Eigen::Vector2f(
+    float left_wheel_speed = (diff_swerve_jacobian * Eigen::Vector2f(
       msg->encoders[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].velocity_rpm,
-      msg->encoders[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].velocity_rpm);
-  }
+      msg->encoders[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].velocity_rpm))[0]*2.75*3.14159*2.54/100.0/60.0;
+
+    float right_wheel_speed = (diff_swerve_jacobian * Eigen::Vector2f(
+      msg->encoders[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].velocity_rpm,
+      msg->encoders[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].velocity_rpm))[0]*2.75*3.14159*2.54/100.0/60.0;
+
+    float rear_wheel_speed = (diff_swerve_jacobian * Eigen::Vector2f(
+      msg->encoders[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].velocity_rpm,
+      msg->encoders[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].velocity_rpm))[0]*2.75*3.14159*2.54/100.0/60.0;
+
+    Eigen::VectorXf vel_vectors(6);
+    vel_vectors <<
+      cos(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees * M_PI / 180.0) * left_wheel_speed,
+      sin(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees * M_PI / 180.0) * left_wheel_speed,
+      cos(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees * M_PI / 180.0) * right_wheel_speed,
+      sin(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees * M_PI / 180.0) * right_wheel_speed,
+      cos(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees * M_PI / 180.0) * rear_wheel_speed,
+      sin(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees * M_PI / 180.0) * rear_wheel_speed;
+
+    Eigen::Vector3f base_twist = A_pinv_ * vel_vectors;
+
+    x_vel_ = base_twist[0];
+    y_vel_ = base_twist[1];
+    theta_vel_ = base_twist[2];
+
+    auto rotate_base_to_odom = Eigen::Rotation2D<float>(odom_angle_).toRotationMatrix();
+
+    odom_loc_ += rotate_base_to_odom * Eigen::Vector2f(x_vel_, y_vel_) * 0.01;
+    odom_angle_ += theta_vel_ * 0.01;
+    odom_angle_ = ghost_util::WrapAngle360(odom_angle_ * 180.0 / M_PI) * M_PI / 180.0; // Should make a wrap function for radians...
+
+    // std::cout << odom_loc_.x() << ", " << odom_loc_.y() << ", " << odom_angle_ << std::endl << std::endl;
+    }
 
   void GhostEstimatorNode::PublishGhostRobotState(const ghost_msgs::msg::V5SensorUpdate::SharedPtr sensor_update_msg){
     // Initialize robot state msg
@@ -236,9 +276,9 @@ namespace ghost_ros
 
     // Velocity estimate (from odometry)
 
-    robot_state_msg.x_vel = 0.0;
-    robot_state_msg.y_vel = 0.0;
-    robot_state_msg.theta_vel = 0.0;
+    robot_state_msg.x_vel = x_vel_;
+    robot_state_msg.y_vel = y_vel_;
+    robot_state_msg.theta_vel = theta_vel_;
 
     // Currently unimplemented (Should come from IMU / EKF)
     robot_state_msg.x_accel = 0.0;
@@ -396,11 +436,15 @@ namespace ghost_ros
 
     world_to_base_tf.transform.translation.x = robot_loc.x();
     world_to_base_tf.transform.translation.y = robot_loc.y();
+    // world_to_base_tf.transform.translation.x = odom_loc_.x();
+    // world_to_base_tf.transform.translation.y = odom_loc_.y();
     world_to_base_tf.transform.translation.z = 0.0;
     world_to_base_tf.transform.rotation.x = 0.0;
     world_to_base_tf.transform.rotation.y = 0.0;
     world_to_base_tf.transform.rotation.z = sin(robot_angle * 0.5);
     world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
+    // world_to_base_tf.transform.rotation.z = sin(odom_angle_ * 0.5);
+    // world_to_base_tf.transform.rotation.w = cos(odom_angle_ * 0.5);
 
     tf_msg.transforms.push_back(world_to_base_tf);
     world_tf_pub_->publish(tf_msg);

@@ -80,7 +80,7 @@ class GhostEstimatorNode : public rclcpp::Node {
 
     // Particle Filter
     particle_filter::ParticleFilter particle_filter_;
-    sensor_msgs::msg::LaserScan last_laser_msg_;
+    sensor_msgs::msg::LaserScan::SharedPtr last_laser_msg_;
 
     // Configuration
     YAML::Node config_yaml_;
@@ -98,6 +98,13 @@ class GhostEstimatorNode : public rclcpp::Node {
 
     Eigen::Vector2f odom_loc_;
     float odom_angle_;
+
+    Eigen::MatrixXf A_;
+    Eigen::MatrixXf A_pinv_;
+
+    float x_vel_;
+    float y_vel_;
+    float theta_vel_;
 
 
 };

@@ -28,9 +28,7 @@ namespace ghost_ros
                                                      teleop_mode{INTAKE_MODE}
     {
         declare_parameter("max_linear_vel", 0.0);
-        declare_parameter("max_steering_angular_vel", 0.0);
         max_linear_vel_ = get_parameter("max_linear_vel").as_double();
-        max_steering_angular_vel_ = get_parameter("max_steering_angular_vel").as_double();
 
         declare_parameter("left_wheel_x", 0.0);
         declare_parameter("left_wheel_y", 0.0);
