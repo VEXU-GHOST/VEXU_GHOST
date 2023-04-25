@@ -222,6 +222,7 @@ void ParticleFilter::Resample() {
 }
 
 void ParticleFilter::LowVarianceResample() {
+  std::cout << "RESAMPLE" << std::endl;
   vector<Particle> new_particles(particles_.size());
 
   double select_weight = rng_.UniformRandom(0, weight_sum_);

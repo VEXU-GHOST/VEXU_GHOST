@@ -66,8 +66,8 @@ namespace ghost_ros
 
     // Subscriptions
     laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-        "scan",
-        10,
+        "/scan",
+        rclcpp::SensorDataQoS(),
         std::bind(&GhostEstimatorNode::LaserCallback, this, _1));
 
     encoder_sub_ = this->create_subscription<ghost_msgs::msg::V5SensorUpdate>(
@@ -80,9 +80,12 @@ namespace ghost_ros
         10,
         std::bind(&GhostEstimatorNode::InitialPoseCallback, this, _1));
 
+    auto map_qos = rclcpp::QoS(10);
+    map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+
     // Publishers
     cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
-    map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", 10);
+    map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", map_qos);
     debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("estimation_debug", 10);
     world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
     joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
