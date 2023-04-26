@@ -593,11 +593,11 @@ namespace ghost_ros
   {
     static double t_last = 0;
 
-    if (GetMonotonicTime() - t_last < 1/30.0)
-    {
-      // Rate-limit visualization.
-      return;
-    }
+    // if (GetMonotonicTime() - t_last < 1/30.0)
+    // {
+    //   // Rate-limit visualization.
+    //   return;
+    // }
     t_last = GetMonotonicTime();
 
     // Publish Particle Cloud
