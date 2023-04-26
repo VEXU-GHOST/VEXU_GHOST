@@ -59,7 +59,8 @@ class GhostEstimatorNode : public rclcpp::Node {
     // Visualization
     void DrawWheelAxisVectors(std::vector<geometry::Line2f> & lines);
     void DrawICRPoints(std::vector<Eigen::Vector3f> & points);
-    void DrawParticles(geometry_msgs::msg::PoseArray &viz_msg);
+    void DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg);
+    void DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg);
 
     visualization_msgs::msg::MarkerArray viz_msg_;
 
@@ -87,6 +88,7 @@ class GhostEstimatorNode : public rclcpp::Node {
     particle_filter::ParticleFilterConfig config_params;
 
     bool first_map_load_;
+    bool laser_msg_received_;
 
     // Odometry Config
     Eigen::Vector2f left_wheel_link_;

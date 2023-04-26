@@ -14,6 +14,10 @@ endif()
 # set(CMAKE_BUILD_TYPE "DEBUG")
 set(CMAKE_BUILD_TYPE "RELEASE")
 
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+  add_compile_options(-g -O0 -DGHOST_DEBUG_VERBOSE)
+endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)

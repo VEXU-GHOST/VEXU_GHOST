@@ -64,6 +64,7 @@ namespace ghost_ros
     rclcpp::Parameter use_sim_time_param("use_sim_time", false);
     this->set_parameter(use_sim_time_param);
 
+
     // Subscriptions
     laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
         "/scan",
@@ -95,6 +96,7 @@ namespace ghost_ros
 
     particle_filter_ = ParticleFilter(config_params);
     first_map_load_ = true;
+    laser_msg_received_ = false;
 
     const Vector2f init_loc(config_params.init_x, config_params.init_y);
     const float init_angle = config_params.init_r;
@@ -162,9 +164,11 @@ namespace ghost_ros
     config_params.k9 = get_parameter("particle_filter.k9").as_double();
 
     declare_parameter("particle_filter.laser_offset", 0.0);
+    declare_parameter("particle_filter.laser_angle_offset", 0.0);
     declare_parameter("particle_filter.min_update_dist", 0.0);
     declare_parameter("particle_filter.min_update_angle", 0.0);
     config_params.laser_offset = get_parameter("particle_filter.laser_offset").as_double();
+    config_params.laser_angle_offset = get_parameter("particle_filter.laser_angle_offset").as_double();
     config_params.min_update_dist = get_parameter("particle_filter.min_update_dist").as_double();
     config_params.min_update_angle = get_parameter("particle_filter.min_update_angle").as_double();
 
@@ -184,30 +188,46 @@ namespace ghost_ros
     config_params.range_max = get_parameter("particle_filter.range_max").as_double();
     config_params.resize_factor = get_parameter("particle_filter.resize_factor").as_double();
     config_params.num_particles = get_parameter("particle_filter.num_particles").as_int();
+
+    declare_parameter("particle_filter.use_skip_range", false);
+    declare_parameter("particle_filter.skip_index_min", 0);
+    declare_parameter("particle_filter.skip_index_max", 0);
+
+    config_params.use_skip_range = get_parameter("particle_filter.use_skip_range").as_bool();
+    config_params.skip_index_min = get_parameter("particle_filter.skip_index_min").as_int();
+    config_params.skip_index_max = get_parameter("particle_filter.skip_index_max").as_int();
   }
 
   void GhostEstimatorNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
   {
+    if(!laser_msg_received_){
+      laser_msg_received_ = true;
+    }
+    try{
     last_laser_msg_ = msg;
     particle_filter_.ObserveLaser(
         msg->ranges,
         msg->range_min,
         msg->range_max,
-        msg->angle_min,
-        msg->angle_max);
+        msg->angle_min+config_params.laser_angle_offset,
+        msg->angle_max+config_params.laser_angle_offset);
 
     PublishWorldTransform();
     PublishVisualization();
+    }
+    catch(std::exception e){
+      RCLCPP_ERROR(this->get_logger(), "Laser: ", e.what());
+    }
   }
 
   void GhostEstimatorNode::EncoderCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg)
   {
+    try{
     // Calculate ICR Estimate from encoder angles
     CalculateHSpaceICR(msg);
 
     // With ICR Estimate, accumulate encoder ticks off drivetrain to estimate robot motion
     CalculateOdometry(msg);
-
     particle_filter_.Predict(odom_loc_, odom_angle_);
 
     // Publish newest robot state
@@ -217,6 +237,10 @@ namespace ghost_ros
     PublishJointStateMsg(msg);
     PublishWorldTransform();
     PublishVisualization();
+    }
+    catch(std::exception e){
+      RCLCPP_ERROR(this->get_logger(), "Odom: ", e.what());
+    }
   }
 
   void GhostEstimatorNode::CalculateOdometry(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
@@ -390,6 +414,7 @@ namespace ghost_ros
 
   void GhostEstimatorNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
   {
+    try{
     // Set new initial pose
     const Vector2f init_loc(msg->pose.pose.position.x, msg->pose.pose.position.y);
     const float init_angle = 2.0 * atan2(msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
@@ -407,9 +432,13 @@ namespace ghost_ros
     PublishWorldTransform();
     PublishVisualization();
     PublishMapViz();
+    }
+    catch(std::exception e){
+      RCLCPP_ERROR(this->get_logger(), "Initial Pose: ", e.what());
+    }
   }
 
-  void GhostEstimatorNode::DrawParticles(geometry_msgs::msg::PoseArray &viz_msg)
+  void GhostEstimatorNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg)
   {
     vector<particle_filter::Particle> particles;
     particle_filter_.GetParticles(&particles);
@@ -420,8 +449,79 @@ namespace ghost_ros
       pose_msg.position.y = p.loc.y();
       pose_msg.orientation.w = cos(p.angle * 0.5);
       pose_msg.orientation.z = sin(p.angle * 0.5);
-      viz_msg.poses.push_back(pose_msg);
+      cloud_msg.poses.push_back(pose_msg);
     }
+  }
+
+  void GhostEstimatorNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg) {
+    if(!laser_msg_received_){
+      return;
+    }
+    Vector2f robot_loc(0, 0);
+    float robot_angle(0);
+    particle_filter_.GetLocation(&robot_loc, &robot_angle);
+    vector<Vector2f> predicted_scan;
+
+    particle_filter_.GetPredictedPointCloud(
+        robot_loc,
+        robot_angle,
+        last_laser_msg_->ranges.size(),
+        last_laser_msg_->range_min,
+        last_laser_msg_->range_max,
+        last_laser_msg_->angle_min + config_params.laser_angle_offset,
+        last_laser_msg_->angle_max + config_params.laser_angle_offset,
+        &predicted_scan);
+
+    auto predicted_scan_msg = visualization_msgs::msg::Marker{};
+    predicted_scan_msg.header.stamp = this->get_clock()->now();
+    predicted_scan_msg.header.frame_id = "world";
+    predicted_scan_msg.id = 1;
+    predicted_scan_msg.type = 8; // Points
+    predicted_scan_msg.color.b = 1.0;
+    predicted_scan_msg.color.a = 1.0;
+    predicted_scan_msg.scale.x = 0.02;
+    predicted_scan_msg.scale.y = 0.02;
+
+    for(std::size_t i = 0; i < predicted_scan.size(); i++){
+      int laser_index = i * config_params.resize_factor;
+      if(!config_params.use_skip_range || laser_index < config_params.skip_index_min || laser_index > config_params.skip_index_max){
+        // Transform particle to map
+        auto point_msg = geometry_msgs::msg::Point{};
+        point_msg.x = predicted_scan[i].x();
+        point_msg.y = predicted_scan[i].y();
+        predicted_scan_msg.points.push_back(point_msg);
+      }
+    }
+    viz_msg.markers.push_back(predicted_scan_msg);
+
+
+    // Publish observed scan in world frame
+    auto true_scan_msg = visualization_msgs::msg::Marker{};
+    true_scan_msg.header.stamp = this->get_clock()->now();
+    true_scan_msg.header.frame_id = "world";
+    true_scan_msg.id = 2;
+    true_scan_msg.type = 8; // Points
+    true_scan_msg.color.r = 1.0;
+    true_scan_msg.color.a = 1.0;
+    true_scan_msg.scale.x = 0.02;
+    true_scan_msg.scale.y = 0.02;
+
+    auto rot_bl_to_world = Eigen::Rotation2D<float>(robot_angle).toRotationMatrix();
+    for(std::size_t i = 0; i < last_laser_msg_->ranges.size(); i++){
+      if(!config_params.use_skip_range || i < config_params.skip_index_min || i > config_params.skip_index_max){
+        // Transform particle to map
+        float range = std::max(std::min(last_laser_msg_->ranges[i], last_laser_msg_->range_max), last_laser_msg_->range_min);
+        float angle = last_laser_msg_->angle_min + i * last_laser_msg_->angle_increment + config_params.laser_angle_offset + robot_angle;
+
+        Eigen::Vector2f p = Eigen::Vector2f(range*cos(angle), range*sin(angle)) + robot_loc + rot_bl_to_world*Eigen::Vector2f(config_params.laser_offset, 0.0);
+
+        auto point_msg = geometry_msgs::msg::Point{};
+        point_msg.x = p.x();
+        point_msg.y = p.y();
+        true_scan_msg.points.push_back(point_msg);
+      }
+    }
+    viz_msg.markers.push_back(true_scan_msg);
   }
 
   void GhostEstimatorNode::PublishWorldTransform()
@@ -491,9 +591,9 @@ namespace ghost_ros
 
   void GhostEstimatorNode::PublishVisualization()
   {
-    viz_msg_ = visualization_msgs::msg::MarkerArray{};
     static double t_last = 0;
-    if (GetMonotonicTime() - t_last < 0.05)
+
+    if (GetMonotonicTime() - t_last < 1/30.0)
     {
       // Rate-limit visualization.
       return;
@@ -501,11 +601,15 @@ namespace ghost_ros
     t_last = GetMonotonicTime();
 
     // Publish Particle Cloud
-    auto viz_msg = geometry_msgs::msg::PoseArray{};
-    viz_msg.header.frame_id = "world";
-    viz_msg.header.stamp = this->get_clock()->now();
-    DrawParticles(viz_msg);
-    cloud_viz_pub_->publish(viz_msg);
+    auto cloud_msg = geometry_msgs::msg::PoseArray{};
+    cloud_msg.header.frame_id = "world";
+    cloud_msg.header.stamp = this->get_clock()->now();
+    DrawParticles(cloud_msg);
+    cloud_viz_pub_->publish(cloud_msg);
+
+    // Publish Debug Markers
+    viz_msg_ = visualization_msgs::msg::MarkerArray{};
+    DrawPredictedScan(viz_msg_);
 
     if (first_map_load_)
     {
