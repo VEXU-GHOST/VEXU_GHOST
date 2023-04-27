@@ -279,7 +279,7 @@ namespace ghost_ros
 
             if(sqrt(
                 fabs(des_x - curr_robot_state_msg_->x)*fabs(des_x - curr_robot_state_msg_->x) +
-                fabs(des_y - curr_robot_state_msg_->y)*fabs(des_y - curr_robot_state_msg_->y)) > translation_tolerance_){
+                fabs(des_y - curr_robot_state_msg_->y)*fabs(des_y - curr_robot_state_msg_->y)) < translation_tolerance_){
                     x_vel_cmd = 0.0;
                     y_vel_cmd = 0.0;
                 }
