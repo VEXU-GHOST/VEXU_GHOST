@@ -55,14 +55,14 @@ ghost_estimator_node:
       
       k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
       k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
-      k9: 1.25   # theta error from rotation     # 50% error in primary direction  
+      k9: 1.5   # theta error from rotation     # 50% error in primary direction  
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
       min_update_dist:  0.05
       min_update_angle: 0.005
 
       # Computation Factors
-      num_particles: 500        # Increase until computation runs out
+      num_particles: 200        # Increase until computation runs out
       resize_factor: 10.0       # num_points / resize_factor = num_rays
       resample_frequency: 4     # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
 
