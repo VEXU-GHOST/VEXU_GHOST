@@ -90,6 +90,7 @@ namespace ghost_ros
     debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("estimation_debug", 10);
     world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
     joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
+    robot_state_pub_ = this->create_publisher<ghost_msgs::msg::GhostRobotState>("/estimation/robot_state", 10);
 
     // Init debug msg
     viz_msg_ = visualization_msgs::msg::MarkerArray{};
@@ -290,6 +291,7 @@ namespace ghost_ros
     // Initialize robot state msg
     auto robot_state_msg = ghost_msgs::msg::GhostRobotState{};
     robot_state_msg.header.stamp = sensor_update_msg->header.stamp;
+    robot_state_msg.msg_id = sensor_update_msg->msg_id;
     robot_state_msg.header.frame_id = "base_link";
 
     ///// Drivetrain States /////
@@ -325,6 +327,8 @@ namespace ghost_ros
     ///// Shooter States /////
     robot_state_msg.left_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_LEFT_MOTOR].velocity_rpm;
     robot_state_msg.right_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_RIGHT_MOTOR].velocity_rpm;
+
+    robot_state_pub_->publish(robot_state_msg);
   }
 
   void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg){

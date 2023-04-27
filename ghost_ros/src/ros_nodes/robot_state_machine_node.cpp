@@ -133,7 +133,7 @@ namespace ghost_ros
             });
 
         robot_state_sub_ = create_subscription<ghost_msgs::msg::GhostRobotState>(
-            "estimation/robot_pose",
+            "/estimation/robot_state",
             10,
             [this](const ghost_msgs::msg::GhostRobotState::SharedPtr msg)
             {
@@ -250,13 +250,38 @@ namespace ghost_ros
         float des_x = 0.0;
         float des_y = 0.0;
 
+        if(curr_joystick_msg_->joystick_btn_l1){
+
+            float ang_vel_cmd = 
+                (des_angle - curr_robot_state_msg_->theta) * rotate_kp_ +
+                curr_robot_state_msg_->theta_vel * rotate_kd_;
+
+            float x_vel_cmd =
+                (des_x - curr_robot_state_msg_->x) * translate_kp_ +
+                curr_robot_state_msg_->x_vel * translate_kd_;
+            
+            float y_vel_cmd =
+                (des_y - curr_robot_state_msg_->y) * translate_kp_ +
+                curr_robot_state_msg_->y_vel * translate_kd_;
+
+            updateSwerveCommandsFromTwist(
+                ang_vel_cmd,  // Angular Velocity
+                x_vel_cmd,    // X Velocity (Forward)
+                y_vel_cmd);  // Y Velocity (Left)
+
+            // updateSwerveCommandsFromTwist(
+            //     ang_vel_cmd,  // Angular Velocity
+            //     curr_joystick_msg_->joystick_left_y,    // X Velocity (Forward)
+            //     -curr_joystick_msg_->joystick_left_x);  // Y Velocity (Left)
+        }
+
         switch(teleop_mode){
             case SHOOTER_MODE:
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
                 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2000;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2000;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2500;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2500;
 
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
@@ -265,31 +290,6 @@ namespace ghost_ros
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = 1.0;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2500;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
-                }
-
-                if(curr_joystick_msg_->joystick_btn_l1){
-
-                    float ang_vel_cmd = 
-                        (des_angle - curr_robot_state_msg_->theta) * rotate_kp_ +
-                        curr_robot_state_msg_->theta_vel * rotate_kd_;
-
-                    float x_vel_cmd =
-                        (des_x - curr_robot_state_msg_->x) * translate_kp_ +
-                        curr_robot_state_msg_->x_vel * translate_kd_;
-                    
-                    float y_vel_cmd =
-                        (des_y - curr_robot_state_msg_->y) * translate_kp_ +
-                        curr_robot_state_msg_->y_vel * translate_kd_;
-
-                    updateSwerveCommandsFromTwist(
-                        ang_vel_cmd,  // Angular Velocity
-                        x_vel_cmd,    // X Velocity (Forward)
-                        y_vel_cmd);  // Y Velocity (Left)
-
-                    // updateSwerveCommandsFromTwist(
-                    //     ang_vel_cmd,  // Angular Velocity
-                    //     curr_joystick_msg_->joystick_left_y,    // X Velocity (Forward)
-                    //     -curr_joystick_msg_->joystick_left_x);  // Y Velocity (Left)
                 }
 
             break;

@@ -10,7 +10,7 @@ ghost_estimator_node:
 
 
     particle_filter:
-      map: "/home/maxx/VEXU_GHOST/ghost_ros/maps/VEXField.txt"
+      map: "/home/ghost/VEXU_GHOST/ghost_ros/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0
