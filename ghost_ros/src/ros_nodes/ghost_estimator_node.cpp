@@ -513,7 +513,8 @@ namespace ghost_ros
 
     auto rot_bl_to_world = Eigen::Rotation2D<float>(robot_angle).toRotationMatrix();
     for(std::size_t i = 0; i < last_laser_msg_->ranges.size(); i++){
-      if(!config_params.use_skip_range || i < config_params.skip_index_min || i > config_params.skip_index_max){
+      int laser_index = ((int) (i / config_params.resize_factor)) * config_params.resize_factor;
+      if(!config_params.use_skip_range || laser_index < config_params.skip_index_min || laser_index > config_params.skip_index_max){
         // Transform particle to map
         float range = last_laser_msg_->ranges[i];
         if(range >= config_params.range_min && range <= config_params.range_max){

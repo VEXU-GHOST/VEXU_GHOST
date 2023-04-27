@@ -85,5 +85,5 @@ ghost_estimator_node:
 
       # Some robots can't place a LIDAR with 360° view. These parameters allow you to permanently ignore the obscured range of the scan.
       use_skip_range: true
-      skip_index_min: 220
-      skip_index_max: 530
+      skip_index_min: 1
+      skip_index_max: 2
