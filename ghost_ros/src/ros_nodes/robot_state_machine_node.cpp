@@ -264,10 +264,12 @@ namespace ghost_ros
                 (des_y - curr_robot_state_msg_->y) * translate_kp_ +
                 curr_robot_state_msg_->y_vel * translate_kd_;
 
+            auto rotate_base_to_world = Eigen::Rotation2D<float>(-curr_robot_state_msg_->theta).toRotationMatrix();
+            Eigen::Vector2f xy_vel = rotate_base_to_world * Eigen::Vector2f(x_vel_cmd, y_vel_cmd);
             updateSwerveCommandsFromTwist(
                 ang_vel_cmd,  // Angular Velocity
-                x_vel_cmd,    // X Velocity (Forward)
-                y_vel_cmd);  // Y Velocity (Left)
+                xy_vel.x(),    // X Velocity (Forward)
+                xy_vel.y());  // Y Velocity (Left)
 
             // updateSwerveCommandsFromTwist(
             //     ang_vel_cmd,  // Angular Velocity
