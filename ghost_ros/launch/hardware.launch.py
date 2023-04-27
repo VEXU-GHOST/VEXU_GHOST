@@ -15,7 +15,7 @@ def generate_launch_description():
         package='rplidar_ros2',
         executable='rplidar_scan_publisher',
         name='rplidar_scan_publisher',
-        parameters=[{"frame_id": "lidar_link"}]
+        parameters=[{"frame_id": "lidar_link", 'angle_compensate': True}]
     )
 
     serial_node = Node(
