@@ -11,9 +11,14 @@ ghost_state_machine_node:
 
     steering_kp: 0.18
     translate_kp: 5.0
-    translate_kd: 0.1
-    rotate_kp: 2.0
-    rotate_kd: 0.1
+    translate_kd: 0.5
+    rotate_kp: 1.5
+    rotate_kd: 0.0
+
+    translation_slew: 0.05
+    rotation_slew: 0.05
+
+    translation_tolerance: 0.05
 
     x_goal_: 1.330452
     y_goal_: 1.330452

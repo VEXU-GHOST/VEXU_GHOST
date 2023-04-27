@@ -25,7 +25,9 @@ namespace ghost_ros
                                                      curr_joystick_msg_id_{0},
                                                      curr_comp_state_msg_id_{0},
                                                      r1_pressed_{false},
-                                                     teleop_mode{INTAKE_MODE}
+                                                     teleop_mode{INTAKE_MODE},
+                                                     last_ang_vel_cmd_{0.0}
+                                                     
     {
         declare_parameter("max_linear_vel", 0.0);
         max_linear_vel_ = get_parameter("max_linear_vel").as_double();
@@ -53,6 +55,15 @@ namespace ghost_ros
         rotate_kp_ = get_parameter("rotate_kp").as_double();
         rotate_kd_ = get_parameter("rotate_kd").as_double();
 
+        declare_parameter("translation_slew", 0.0);
+        translation_slew_ = get_parameter("translation_slew").as_double();
+
+        declare_parameter("rotation_slew", 0.0);
+        rotation_slew_ = get_parameter("rotation_slew").as_double();
+
+        declare_parameter("translation_tolerance", 0.0);
+        translation_tolerance_ = get_parameter("translation_tolerance").as_double();
+
         declare_parameter("x_goal", 0.0);
         declare_parameter("y_goal", 0.0);
         x_goal_ = get_parameter("x_goal").as_double();
@@ -77,6 +88,8 @@ namespace ghost_ros
         pose_reset_x_ = get_parameter("pose_reset_x").as_double();
         pose_reset_y_ = get_parameter("pose_reset_y").as_double();
         pose_reset_theta_ = get_parameter("pose_reset_theta").as_double();
+
+        last_xy_vel_cmd_ = Eigen::Vector2f(0.0, 0.0);
 
         actuator_command_pub_ = create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
             "v5/actuator_commands",
@@ -253,23 +266,47 @@ namespace ghost_ros
         if(curr_joystick_msg_->joystick_btn_l1){
 
             float ang_vel_cmd = 
-                (des_angle - curr_robot_state_msg_->theta) * rotate_kp_ +
+                (des_angle - curr_robot_state_msg_->theta) * rotate_kp_ -
                 curr_robot_state_msg_->theta_vel * rotate_kd_;
 
             float x_vel_cmd =
-                (des_x - curr_robot_state_msg_->x) * translate_kp_ +
+                (des_x - curr_robot_state_msg_->x) * translate_kp_ -
                 curr_robot_state_msg_->x_vel * translate_kd_;
             
             float y_vel_cmd =
-                (des_y - curr_robot_state_msg_->y) * translate_kp_ +
+                (des_y - curr_robot_state_msg_->y) * translate_kp_ -
                 curr_robot_state_msg_->y_vel * translate_kd_;
+
+            if(sqrt(
+                fabs(des_x - curr_robot_state_msg_->x)*fabs(des_x - curr_robot_state_msg_->x) +
+                fabs(des_y - curr_robot_state_msg_->y)*fabs(des_y - curr_robot_state_msg_->y)) > translation_tolerance_){
+                    x_vel_cmd = 0.0;
+                    y_vel_cmd = 0.0;
+                }
 
             auto rotate_base_to_world = Eigen::Rotation2D<float>(-curr_robot_state_msg_->theta).toRotationMatrix();
             Eigen::Vector2f xy_vel = rotate_base_to_world * Eigen::Vector2f(x_vel_cmd, y_vel_cmd);
+
+            x_vel_cmd = xy_vel.x();
+            y_vel_cmd = xy_vel.y();
+
+            if((fabs(x_vel_cmd) - fabs(last_xy_vel_cmd_.x())) > translation_slew_){
+                x_vel_cmd = last_xy_vel_cmd_.x() + Sign(x_vel_cmd - last_xy_vel_cmd_.x()) * translation_slew_;
+            }
+            if((fabs(y_vel_cmd) - fabs(last_xy_vel_cmd_.y())) > translation_slew_){
+                y_vel_cmd = last_xy_vel_cmd_.y() + Sign(y_vel_cmd - last_xy_vel_cmd_.y()) * translation_slew_;
+            }
+            last_xy_vel_cmd_ = Eigen::Vector2f(x_vel_cmd, y_vel_cmd);
+            
+            if((fabs(ang_vel_cmd) - fabs(last_ang_vel_cmd_)) > rotation_slew_){
+                ang_vel_cmd = last_ang_vel_cmd_ + Sign(ang_vel_cmd - last_ang_vel_cmd_) * rotation_slew_;
+            }
+            last_ang_vel_cmd_ = ang_vel_cmd;
+
             updateSwerveCommandsFromTwist(
                 ang_vel_cmd,  // Angular Velocity
-                xy_vel.x(),    // X Velocity (Forward)
-                xy_vel.y());  // Y Velocity (Left)
+                x_vel_cmd,    // X Velocity (Forward)
+                y_vel_cmd);  // Y Velocity (Left)
 
             // updateSwerveCommandsFromTwist(
             //     ang_vel_cmd,  // Angular Velocity

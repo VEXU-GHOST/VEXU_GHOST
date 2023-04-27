@@ -91,7 +91,13 @@ namespace ghost_ros
         float translate_kd_;
         float rotate_kp_;
         float rotate_kd_;
+        float translation_slew_;
+        float rotation_slew_;
+        float translation_tolerance_;
         float max_motor_rpm_true_;
+
+        float last_ang_vel_cmd_;
+        Eigen::Vector2f last_xy_vel_cmd_;
 
         double pose_reset_x_;
         double pose_reset_y_;
