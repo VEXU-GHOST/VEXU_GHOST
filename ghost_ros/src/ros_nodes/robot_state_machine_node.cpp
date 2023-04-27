@@ -259,14 +259,14 @@ namespace ghost_ros
             resetPose();
         }
 
-        float des_angle = 0.0;
+        float des_angle = M_PI/180.0*ghost_util::WrapAngle360(atan2(y_goal_ - curr_robot_state_msg_->y, x_goal_ - curr_robot_state_msg_->x)*180.0/M_PI);
         float des_x = 0.0;
         float des_y = 0.0;
 
         if(curr_joystick_msg_->joystick_btn_l1){
 
             float ang_vel_cmd = 
-                (des_angle - curr_robot_state_msg_->theta) * rotate_kp_ -
+                ghost_util::SmallestAngleDist(des_angle * 180 / M_PI, curr_robot_state_msg_->theta * 180 / M_PI) * M_PI/180.0 * rotate_kp_ -
                 curr_robot_state_msg_->theta_vel * rotate_kd_;
 
             float x_vel_cmd =

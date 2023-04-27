@@ -10,8 +10,8 @@ ghost_state_machine_node:
     back_wheel_y:   0.0
 
     steering_kp: 0.18
-    translate_kp: 6.0
-    translate_kd: 0.5
+    translate_kp: 0.0 #6.0
+    translate_kd: 0.0 #0.5
     rotate_kp: 2.5
     rotate_kd: 0.0
 
@@ -20,8 +20,8 @@ ghost_state_machine_node:
 
     translation_tolerance: 0.075
 
-    x_goal_: 1.330452
-    y_goal_: 1.330452
+    x_goal_: 0.0 #1.330452
+    y_goal_: 0.0 #1.330452
 
     pose_reset_x_: 0.0
     pose_reset_y_: 0.0

@@ -10,7 +10,7 @@ namespace ghost_util
 
     float FlipAngle180(float angle);
 
-    float SmallestAngleDist(float a1, float a2);
+    float SmallestAngleDist(float a2, float a1);
 }
 
 #endif
