@@ -1,15 +1,15 @@
 ghost_state_machine_node:
   ros__parameters:
-    max_linear_vel: 1.58              # m/s
+    max_linear_vel: 1.65              # m/s
 
-    left_wheel_x:   0.10452
     left_wheel_y:   0.18092
-    right_wheel_y:  -0.10452
-    right_wheel_x:  0.18092
+    left_wheel_x:   0.10452
+    right_wheel_y:  0.18092
+    right_wheel_x:  -0.10452
     back_wheel_x:   -0.209
     back_wheel_y:   0.0
 
-    steering_kp: 0.2
+    steering_kp: 0.175
 
     pose_reset_x_: 0.0
     pose_reset_y_: 0.0

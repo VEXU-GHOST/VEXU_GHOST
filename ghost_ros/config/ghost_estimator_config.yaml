@@ -10,7 +10,7 @@ ghost_estimator_node:
 
 
     particle_filter:
-      map: "/home/maxx/VEXU_GHOST/ghost_ros/maps/VEXField.txt"
+      map: "/home/ghost/VEXU_GHOST/ghost_ros/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0
@@ -63,7 +63,7 @@ ghost_estimator_node:
 
       # Computation Factors
       num_particles: 200        # Increase until computation runs out
-      resize_factor: 4.0       # num_points / resize_factor = num_rays
+      resize_factor: 10.0       # num_points / resize_factor = num_rays
       resample_frequency: 2     # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
 
       # Statistical gain for lidar scan confidence (Requires experimental tuning)
