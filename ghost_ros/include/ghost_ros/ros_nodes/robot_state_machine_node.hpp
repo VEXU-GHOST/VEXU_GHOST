@@ -87,16 +87,18 @@ namespace ghost_ros
         float max_steering_angular_vel_;
 
         float steering_kp_;
-        float turret_kp_;
-        float turret_kd_;
+        float translate_kp_;
+        float translate_kd_;
+        float rotate_kp_;
+        float rotate_kd_;
         float max_motor_rpm_true_;
 
         double pose_reset_x_;
         double pose_reset_y_;
         double pose_reset_theta_;
-        double pose_reset_x_sigma_;
-        double pose_reset_y_sigma_;
-        double pose_reset_theta_sigma_;
+
+        float x_goal_;
+        float y_goal_;
 
         Eigen::Vector2f left_wheel_pos_;
         Eigen::Vector2f right_wheel_pos_;

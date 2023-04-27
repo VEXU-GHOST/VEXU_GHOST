@@ -212,6 +212,7 @@ namespace ghost_ros
         msg->angle_min+config_params.laser_angle_offset,
         msg->angle_max+config_params.laser_angle_offset);
 
+    // Publish Visualization
     PublishWorldTransform();
     PublishVisualization();
     }
