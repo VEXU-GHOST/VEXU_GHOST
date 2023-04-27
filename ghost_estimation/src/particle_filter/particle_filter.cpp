@@ -92,11 +92,11 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
     std::size_t v_search_index = v_start_index;
     std::size_t h_search_index = h_start_index;
 
-    if(h_dir > 0){
+    if(h_dir < 0){
       h_search_index -= 1;
     }
 
-    if(v_dir > 0){
+    if(v_dir < 0){
       v_search_index -= 1;
     }
 

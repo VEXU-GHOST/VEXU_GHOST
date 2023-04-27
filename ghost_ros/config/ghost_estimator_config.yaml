@@ -10,12 +10,17 @@ ghost_estimator_node:
 
 
     particle_filter:
-      map: "/home/ghost/VEXU_GHOST/ghost_ros/maps/VEXField.txt"
+      map: "/home/maxx/VEXU_GHOST/ghost_ros/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0
       init_y: 0.0
       init_r: 0.0
+
+      # Initial cloud distribution
+      init_x_sigma: 0.1         #
+      init_y_sigma: 0.1         #
+      init_r_sigma: 0.25        #
 
       # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
       # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
@@ -27,13 +32,8 @@ ghost_estimator_node:
       
       # RPLidar A1 datasheet
       range_min: 0.15
-      range_max: 6.0
-      sigma_observation: 0.1    # Prof recommends 0.15-0.2 based on sensor specs
-
-      # Initial cloud distribution
-      init_x_sigma: 0.05         #
-      init_y_sigma: 0.05         #
-      init_r_sigma: 0.15        #
+      range_max: 5.0
+      sigma_observation: 0.075 # Prof recommends 0.15-0.2 based on sensor specs
 
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
@@ -45,26 +45,26 @@ ghost_estimator_node:
       # Remember that LIDAR will correct periodically, so these can be a bit generous.
       # Too generous though, and you are either losing resolution or wasting computation.
 
-      k1: 1.0   # x error from x motion         # 50% error in primary direction
+      k1: 0.5   # x error from x motion         # 50% error in primary direction
       k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
       k3: 0.005 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k4: 0.05   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
-      k5: 1.0   # y error from y motion         # 50% error in primary direction           
+      k5: 0.5   # y error from y motion         # 50% error in primary direction           
       k6: 0.005 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
       
       k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
       k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
-      k9: 1.2   # theta error from rotation     # 50% error in primary direction  
+      k9: 2.0   # theta error from rotation     # 50% error in primary direction  
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
-      min_update_dist:  0.25
+      min_update_dist:  0.125
       min_update_angle: 0.05
 
       # Computation Factors
       num_particles: 200        # Increase until computation runs out
-      resize_factor: 10.0       # num_points / resize_factor = num_rays
-      resample_frequency: 2     # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
+      resize_factor: 8.0       # num_points / resize_factor = num_rays
+      resample_frequency: 10     # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
 
       # Statistical gain for lidar scan confidence (Requires experimental tuning)
       # Technically speaking, this is the statisical correlation between all the scans of the lidar. They aren't independent, because many scans
@@ -74,13 +74,13 @@ ghost_estimator_node:
       # In practice, this is a tunable param which will increase or decrease overall LIDAR confidence.
       # One good way to tune is to look at how different the particle weights are from each other. 
       # Decreasing gamma should decrease confidence in lidar observation and weight particles less harshly, IIRC?
-      gamma: 0.05
+      gamma: 0.075
 
       # Limits maximum penalty for a bad laser scan
       # Increasing these makes it harsher on short/long errors for scan
       # Short scans are very common for other robots and dynamic obstacles
       # Long scans are extremely unlikely for comp (you see through walls?). Doorways make this viable in buildings and when glass is present.
-      dist_short: 0.25          # 1 std from sensor 68.2%
+      dist_short: 0.24          # 1 std from sensor 68.2%
       dist_long: 0.28           # 2 std from sensor 95%
 
       # Some robots can't place a LIDAR with 360° view. These parameters allow you to permanently ignore the obscured range of the scan.

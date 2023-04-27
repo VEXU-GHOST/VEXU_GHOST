@@ -479,8 +479,8 @@ namespace ghost_ros
     predicted_scan_msg.type = 8; // Points
     predicted_scan_msg.color.b = 1.0;
     predicted_scan_msg.color.a = 1.0;
-    predicted_scan_msg.scale.x = 0.02;
-    predicted_scan_msg.scale.y = 0.02;
+    predicted_scan_msg.scale.x = 0.04;
+    predicted_scan_msg.scale.y = 0.04;
 
     for(std::size_t i = 0; i < predicted_scan.size(); i++){
       int laser_index = i * config_params.resize_factor;
@@ -510,15 +510,17 @@ namespace ghost_ros
     for(std::size_t i = 0; i < last_laser_msg_->ranges.size(); i++){
       if(!config_params.use_skip_range || i < config_params.skip_index_min || i > config_params.skip_index_max){
         // Transform particle to map
-        float range = std::max(std::min(last_laser_msg_->ranges[i], last_laser_msg_->range_max), last_laser_msg_->range_min);
-        float angle = last_laser_msg_->angle_min + i * last_laser_msg_->angle_increment + config_params.laser_angle_offset + robot_angle;
+        float range = last_laser_msg_->ranges[i];
+        if(range >= config_params.range_min && range <= config_params.range_max){
+          float angle = last_laser_msg_->angle_min + i * last_laser_msg_->angle_increment + config_params.laser_angle_offset + robot_angle;
 
-        Eigen::Vector2f p = Eigen::Vector2f(range*cos(angle), range*sin(angle)) + robot_loc + rot_bl_to_world*Eigen::Vector2f(config_params.laser_offset, 0.0);
+          Eigen::Vector2f p = Eigen::Vector2f(range*cos(angle), range*sin(angle)) + robot_loc + rot_bl_to_world*Eigen::Vector2f(config_params.laser_offset, 0.0);
 
-        auto point_msg = geometry_msgs::msg::Point{};
-        point_msg.x = p.x();
-        point_msg.y = p.y();
-        true_scan_msg.points.push_back(point_msg);
+          auto point_msg = geometry_msgs::msg::Point{};
+          point_msg.x = p.x();
+          point_msg.y = p.y();
+          true_scan_msg.points.push_back(point_msg);
+        }
       }
     }
     viz_msg.markers.push_back(true_scan_msg);
