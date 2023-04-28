@@ -19,6 +19,7 @@ namespace ghost_v5_config
         INTAKE_MOTOR_1                  = 19,
         INTAKE_MOTOR_2                  = 17,
         SHOOTER_RIGHT_MOTOR             = 15,
+        ENDGAME_MOTOR                   = 14,
         SHOOTER_LEFT_MOTOR              = 18,
         INDEXER_MOTOR                   = 11
     };

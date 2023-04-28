@@ -66,6 +66,7 @@ namespace ghost_v5_config{
         {INDEXER_MOTOR,                 "INDEXER_MOTOR"},
         {SHOOTER_LEFT_MOTOR,            "SHOOTER_LEFT_MOTOR"},
         {SHOOTER_RIGHT_MOTOR,           "SHOOTER_RIGHT_MOTOR"},
+        {ENDGAME_MOTOR,                 "ENDGAME_MOTOR"},
         {STEERING_LEFT_ENCODER,         "STEERING_LEFT_ENCODER"},
         {STEERING_RIGHT_ENCODER,        "STEERING_RIGHT_ENCODER"},
         {STEERING_BACK_ENCODER,         "STEERING_BACK_ENCODER"},

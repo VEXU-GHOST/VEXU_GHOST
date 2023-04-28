@@ -134,6 +134,7 @@ void initialize()
     v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]            		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INDEXER_MOTOR,             		true, 	indexer_motor_config);
     v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        		true, 	shooter_motor_config);
     v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       		false, 	shooter_motor_config);
+    v5_globals::motors[v5_motor_id_enum::ENDGAME_MOTOR]      			= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::ENDGAME_MOTOR,       			false, 	endgame_motor_config);
 
 	// Encoder Ports
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_LEFT_ENCODER);

@@ -41,6 +41,17 @@ ghost_v5::GhostMotorConfig drive_motor_config = {
     .ctl__ff_voltage_gain = 1.0,
 };
 
+ghost_v5::GhostMotorConfig endgame_motor_config = {
+    // DC Motor
+    .motor__gear_ratio = 2,
+
+    // 2nd Order Velocity Filter
+    .filter__cutoff_frequency = 100.0, // Hz
+
+    // FF-PD Controller
+    .ctl__ff_voltage_gain = 1.0,
+};
+
 // Intake Motor Config
 ghost_v5::GhostMotorConfig intake_motor_config = {
     .motor__gear_ratio = 6,

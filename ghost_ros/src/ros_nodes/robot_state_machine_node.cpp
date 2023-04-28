@@ -237,6 +237,12 @@ namespace ghost_ros
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].current_limit = 2500;
         }
 
+        if(curr_joystick_msg_->joystick_btn_up){
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].desired_voltage = 1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].current_limit = 2500;
+        }
+
         // Toggle shooter mode
         if(curr_joystick_msg_->joystick_btn_r1 && !r1_pressed_){
             if(teleop_mode == INTAKE_MODE){
