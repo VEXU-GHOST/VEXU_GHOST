@@ -22,11 +22,23 @@ namespace ghost_util
         return angle;
     }
 
+    float WrapAngle2PI(float angle){
+        return DEG_TO_RAD * WrapAngle360(angle * RAD_TO_DEG);
+    }
+
+    float WrapAnglePI(float angle){
+        return DEG_TO_RAD * WrapAngle180(angle * RAD_TO_DEG);
+    }
+
     float FlipAngle180(float angle){
         return WrapAngle180(angle + 180.0);
     }
 
-    float SmallestAngleDist(float a2, float a1){
+    float FlipAnglePI(float angle){
+        return WrapAnglePI(angle + M_PI);
+    }
+
+    float SmallestAngleDistDeg(float a2, float a1){
         a1 = WrapAngle360(a1);
         a2 = WrapAngle360(a2);
 
@@ -38,6 +50,10 @@ namespace ghost_util
             diff = 360.0 + diff;
         }
         return diff;
+    }
+
+    float SmallestAngleDistRad(float a2, float a1){
+        return DEG_TO_RAD * SmallestAngleDistDeg(RAD_TO_DEG * a2, RAD_TO_DEG * a1);
     }
 }
 

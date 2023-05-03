@@ -272,7 +272,7 @@ namespace ghost_ros
         if(curr_joystick_msg_->joystick_btn_l1){
 
             float ang_vel_cmd = 
-                ghost_util::SmallestAngleDist(des_angle * 180 / M_PI, curr_robot_state_msg_->theta * 180 / M_PI) * M_PI/180.0 * rotate_kp_ -
+                ghost_util::SmallestAngleDistDeg(des_angle * 180 / M_PI, curr_robot_state_msg_->theta * 180 / M_PI) * M_PI/180.0 * rotate_kp_ -
                 curr_robot_state_msg_->theta_vel * rotate_kd_;
 
             float x_vel_cmd =
@@ -395,7 +395,7 @@ namespace ghost_ros
             wheel_velocity_cmd_[wheel_id] = vel_vec.norm() * 100 / 2.54 / (2.75 * M_PI) * 60; // Convert m/s to RPM
 
             // Calculate angle error and then use direction of smallest error
-            float steering_error  = ghost_util::SmallestAngleDist(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+            float steering_error  = ghost_util::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
 
             // It is faster to reverse wheel direction and steer to opposite angle
             if(fabs(steering_error) > 90.0){
@@ -404,7 +404,7 @@ namespace ghost_ros
                 steering_angle_cmd_[wheel_id] = ghost_util::FlipAngle180(steering_angle_cmd_[wheel_id]);
 
                 // Recalculate error
-                steering_error = ghost_util::SmallestAngleDist(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+                steering_error = ghost_util::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
             }
 
             // Set steering voltage using position control law
