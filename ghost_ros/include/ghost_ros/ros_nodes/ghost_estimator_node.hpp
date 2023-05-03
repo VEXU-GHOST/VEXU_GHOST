@@ -28,7 +28,6 @@
 
 #include "yaml-cpp/yaml.h"
 
-#include "ghost_ros/globals/globals.hpp"
 #include "ghost_estimation/particle_filter/particle_filter.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "ghost_msgs/msg/ghost_robot_state.hpp"

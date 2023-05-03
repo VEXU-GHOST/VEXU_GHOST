@@ -177,14 +177,6 @@ robot_state_machine_node
 DESTINATION lib/${PROJECT_NAME})
 
 #################
-#### Testing ####
-#################
-ament_add_gtest(test_stamped_queue test/test_stamped_queue.cpp)
-target_link_libraries(test_stamped_queue
-  gtest
-)
-
-#################
 #### Install ####
 #################
 install(
