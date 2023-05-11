@@ -31,11 +31,12 @@ ln -s ../../../ghost_estimation/src/filters
 ### Symlink ghost_control ###
 # Add Folders
 cd ../ghost_control
-ln -s ../../../ghost_control/src/models
+mkdir models && cd models
+ln -s ../../../../ghost_control/src/models/dc_motor_model.cpp
 
 ### Symlink ghost_ros ###
 # Add Folders
-cd ../ghost_ros
+cd ../../ghost_ros
 ln -s ../../../ghost_ros/src/robot_config
 
 ##################
@@ -69,9 +70,10 @@ ln -s ../../../ghost_estimation/include/ghost_estimation/filters
 ### Symlink ghost_control ###
 # Add Folders
 cd ../ghost_control
-ln -s ../../../ghost_control/include/ghost_control/models
+mkdir models && cd models
+ln -s ../../../../ghost_control/include/ghost_control/models/dc_motor_model.hpp
 
 ### Symlink ghost_ros ###
 # Add Folders
-cd ../ghost_ros
+cd ../../ghost_ros
 ln -s ../../../ghost_ros/include/ghost_ros/robot_config
