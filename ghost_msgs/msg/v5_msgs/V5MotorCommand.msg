@@ -1,10 +1,13 @@
 string motor_name
-int32 device_id
+int32 device_id             # Corresponds to V5 Port Number
 
-int32 desired_angle
-float32 desired_velocity
-float32 desired_voltage
+int32 desired_angle         # Degrees
+float32 desired_velocity    # RPM
+float32 desired_torque      # N-m
+float32 desired_voltage     # Normalized (-1.0 -> 1.0)
+int32 current_limit         # milliAmps
 
-bool use_position_control
-int32 current_limit
-bool active
+bool angle_control
+bool velocity_control
+bool torque_control
+bool voltage_control

@@ -24,7 +24,7 @@
 #include "math/math_util.h"
 #include "math/line2d.h"
 #include "util/timer.h"
-#include "ghost_ros/robot_config/v5_port_config.hpp"
+#include "ghost_ros/robot_config/v5_robot_config.hpp"
 #include "ghost_ros/ros_nodes/ghost_estimator_node.hpp"
 #include "ghost_util/angle_util.hpp"
 
@@ -325,8 +325,8 @@ namespace ghost_ros
     robot_state_msg.back_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].velocity_rpm;
 
     ///// Shooter States /////
-    robot_state_msg.left_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_LEFT_MOTOR].velocity_rpm;
-    robot_state_msg.right_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_RIGHT_MOTOR].velocity_rpm;
+    // robot_state_msg.left_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_LEFT_MOTOR].velocity_rpm;
+    // robot_state_msg.right_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_RIGHT_MOTOR].velocity_rpm;
 
     robot_state_pub_->publish(robot_state_msg);
   }

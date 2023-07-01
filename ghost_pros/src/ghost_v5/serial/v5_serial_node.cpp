@@ -22,8 +22,8 @@ namespace ghost_v5
 	{
 		// Calculate Msg Sizes based on robot configuration
         actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
-
         sensor_update_msg_len_ = ghost_v5_config::get_sensor_update_msg_len();
+		int num_motors_ = 0;
 
 		// Array to store latest incoming msg
 		new_msg_ = std::vector<unsigned char>(actuator_command_msg_len_, 0);
@@ -69,7 +69,7 @@ namespace ghost_v5
 		for(int i = ghost_v5_config::actuator_command_config.size() - 1; i >= 0; i--)
         {
 			auto motor_id = ghost_v5_config::actuator_command_config[i].first;
-			v5_globals::motors[motor_id]->setActive(actuator_active_vector & (0x0001));
+			// v5_globals::motors[motor_id]->setActive(actuator_active_vector & (0x0001));
 			actuator_active_vector >>= 1;
         }
 
@@ -99,11 +99,11 @@ namespace ghost_v5
 				int32_t angle_command;
 				memcpy(&angle_command, buffer + 4 * (buffer_32bit_index++), 4);
 
-				v5_globals::motors[motor_id]->setMotorCommand(voltage_command, velocity_command, angle_command);
+				// v5_globals::motors[motor_id]->setMotorCommand(voltage_command, velocity_command, angle_command);
 			}
 			else
 			{
-				v5_globals::motors[motor_id]->setMotorCommand(voltage_command, velocity_command);
+				// v5_globals::motors[motor_id]->setMotorCommand(voltage_command, velocity_command);
 			}
 		}
 

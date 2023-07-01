@@ -120,27 +120,24 @@ void test_flywheel_indexer_pulse(){
 void initialize()
 {
 	// Motor ports
-	// Motor IDs are zero based index. The only time we actually use ports are in init, so we add 1 for V5 Port ID scheme
-	v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR]   		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_FRONT_MOTOR,    		false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR]    		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_LEFT_BACK_MOTOR,     		false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR]  		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_FRONT_MOTOR,   		false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR]   		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_RIGHT_BACK_MOTOR,    		false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_REAR_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_REAR_MOTOR,  	false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_REAR_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_REAR_MOTOR, 	false, 	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_LEFT_FRONT_MOTOR]  	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_LEFT_FRONT_MOTOR, 	true,  	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::DRIVE_BACK_RIGHT_FRONT_MOTOR] 	= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::DRIVE_BACK_RIGHT_FRONT_MOTOR,	true,  	drive_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INTAKE_MOTOR_1]         		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_MOTOR_1,         			false, 	intake_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INTAKE_MOTOR_2]         		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INTAKE_MOTOR_2,         			true, 	intake_motor_config);
-    v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]            		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::INDEXER_MOTOR,             		true, 	indexer_motor_config);
-    v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]       		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_LEFT_MOTOR,        		true, 	shooter_motor_config);
-    v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]      		= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::SHOOTER_RIGHT_MOTOR,       		false, 	shooter_motor_config);
-    v5_globals::motors[v5_motor_id_enum::ENDGAME_MOTOR]      			= std::make_shared<ghost_v5::GhostMotor>(v5_motor_id_enum::ENDGAME_MOTOR,       			false, 	endgame_motor_config);
+	for (const auto& kv : ghost_v5_config::motor_config_id_map){
+		auto motor_id = kv.first;
+		bool reversed = std::get<0>(kv.second);
+		auto config =std::get<2>(kv.second);
+		v5_globals::motors[motor_id] = std::make_shared<ghost_v5::GhostMotor>(motor_id, reversed, config);
+	}
 
 	// Encoder Ports
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_LEFT_ENCODER);
-    v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_RIGHT_ENCODER);
-    v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]	= std::make_shared<pros::Rotation>(v5_sensor_id_enum::STEERING_BACK_ENCODER);
-	
+	for (const auto& kv : ghost_v5_config::encoder_config_id_map){
+		auto encoder_id = kv.first;
+		std::string encoder_name = std::get<0>(kv.second);
+		bool reversed = std::get<1>(kv.second);
+		v5_globals::encoders[encoder_id] = std::make_shared<pros::Rotation>(encoder_id);
+		if(reversed){
+			v5_globals::encoders[encoder_id]->reverse();
+		}
+		v5_globals::encoders[encoder_id]->set_data_rate(5);
+	}
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->reverse();
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->reverse();
 	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->reverse();

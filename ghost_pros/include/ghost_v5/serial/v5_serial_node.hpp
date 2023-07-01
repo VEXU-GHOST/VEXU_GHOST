@@ -29,6 +29,7 @@ namespace ghost_v5{
         // Config Params
         int max_msg_len_;
         bool using_reader_thread_;
+        int num_motors_;
 
         // Serial Interface
         std::unique_ptr<ghost_serial::V5SerialBase> serial_base_interface_;

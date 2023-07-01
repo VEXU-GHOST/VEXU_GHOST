@@ -7,7 +7,7 @@
 #include "math/math_util.h"
 #include "ghost_util/angle_util.hpp"
 
-#include "ghost_ros/robot_config/v5_port_config.hpp"
+#include "ghost_ros/robot_config/v5_robot_config.hpp"
 #include "ghost_ros/robot_config/v5_serial_msg_config.hpp"
 #include "ghost_ros/ros_nodes/robot_state_machine_node.hpp"
 
@@ -216,30 +216,30 @@ namespace ghost_ros
             float intake_cmd = 750;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_velocity = intake_cmd;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_voltage = 1.0;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].active = true;
+            // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].active = true;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].current_limit = 2500;
 
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_velocity = intake_cmd;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_voltage = 1.0;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].active = true;
+            // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].active = true;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].current_limit = 2500;   
         }
         else if(curr_joystick_msg_->joystick_btn_down){
             float intake_cmd = -750;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_velocity = intake_cmd;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_voltage = -1.0;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].active = true;
+            // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].active = true;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].current_limit = 2500;
 
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_velocity = intake_cmd;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_voltage = -1.0;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].active = true;
+            // actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].active = true;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].current_limit = 2500;
         }
 
         if(curr_joystick_msg_->joystick_btn_up){
             actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].desired_voltage = 1.0;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].active = true;
+            // actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].active = true;
             actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].current_limit = 2500;
         }
 
@@ -328,13 +328,13 @@ namespace ghost_ros
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2500;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2500;
 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
 
                 if(curr_joystick_msg_->joystick_btn_l2){
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = 1.0;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2500;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
+                // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
                 }
 
             break;
@@ -500,14 +500,14 @@ namespace ghost_ros
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].current_limit    = 2500;
 
         // Set motors to be active
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].active         = true;
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].active          = true;
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].active        = true;
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].active         = true;
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].active    = true;
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_FRONT_MOTOR].active   = true;
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].active     = true;
-        actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].active    = true;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].active         = true;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].active          = true;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].active        = true;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].active         = true;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].active    = true;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_RIGHT_FRONT_MOTOR].active   = true;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].active     = true;
+        // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].active    = true;
 
         // Set Motor Names and Device IDs
         for (auto pair : ghost_v5_config::actuator_command_config){

@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 
-#include "v5_port_config.hpp"
+#include "v5_robot_config.hpp"
 
 namespace ghost_v5_config{
 

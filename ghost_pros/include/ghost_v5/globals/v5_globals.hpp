@@ -6,7 +6,7 @@
 #include "pros/apix.h"
 #include "ghost_v5/serial/v5_serial_node.hpp"
 #include "ghost_v5/motor/ghost_motor.hpp"
-#include "ghost_ros/robot_config/v5_port_config.hpp"
+#include "ghost_ros/robot_config/v5_robot_config.hpp"
 namespace v5_globals
 {
     extern uint32_t last_cmd_time;

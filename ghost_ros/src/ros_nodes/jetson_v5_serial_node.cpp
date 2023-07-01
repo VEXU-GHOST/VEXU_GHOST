@@ -184,10 +184,10 @@ namespace ghost_ros
         uint32_t actuator_active_vector = 0;
         for (int i = 0; i < ghost_v5_config::actuator_command_config.size() - 1; i++)
         {
-            actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config[i].first].active;
+            // actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config[i].first].active;
             actuator_active_vector <<= 1;
         }
-        actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config.back().first].active;
+        // actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config.back().first].active;
 
         memcpy(msg_buffer + 4 * (buffer_index++), &actuator_active_vector, 4);
 
@@ -207,10 +207,10 @@ namespace ghost_ros
         uint8_t digital_out_byte = 0;
         for (int i = 0; i < 7; i++)
         {
-            digital_out_byte += msg->digital_out_vector[i];
+            digital_out_byte += msg->digital_port_vector[i];
             digital_out_byte <<= 1;
         }
-        digital_out_byte += msg->digital_out_vector[7];
+        digital_out_byte += msg->digital_port_vector[7];
         memcpy(msg_buffer + 4 * (buffer_index), &digital_out_byte, 1);
         memcpy(msg_buffer + 4 * (buffer_index) + 1, &(msg->msg_id), 4);
 

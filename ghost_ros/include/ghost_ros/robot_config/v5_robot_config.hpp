@@ -1,11 +1,23 @@
+/*
+This file defines the motor and sensor port mappings on the V5 Brain via enumerations.
+This lets you refer to motors by name throughout the code.
+
+We also 
+
+*/
 #ifndef GHOST_ROS__V5_PORT_CONFIG_HPP
 #define GHOST_ROS__V5_PORT_CONFIG_HPP
 
 #include <string>
+#include <vector>
+#include <tuple>
 #include <map>
+
+#include "ghost_ros/robot_config/v5_robot_config_defs.hpp"
 
 namespace ghost_v5_config
 {
+    // Motor Ports
     enum v5_motor_id_enum
     {
         DRIVE_LEFT_FRONT_MOTOR          = 3,
@@ -24,6 +36,7 @@ namespace ghost_v5_config
         INDEXER_MOTOR                   = 11
     };
 
+    // Rotation Sensor Ports
     enum v5_sensor_id_enum
     {
         STEERING_LEFT_ENCODER           = 1,
@@ -31,12 +44,8 @@ namespace ghost_v5_config
         STEERING_BACK_ENCODER           = 12,
     };
 
-    enum v5_pneumatic_id_enum
-    {
-        FLYWHEEL_TILT   = 1,
-        INDEXER_ROOF    = 2,
-        ENDGAME         = 3,
-    };
+    extern const std::map<v5_motor_id_enum, std::tuple<bool, std::string, GhostMotorConfig>> motor_config_id_map;
+    extern const std::map<v5_sensor_id_enum, std::tuple<std::string, bool>> encoder_config_id_map;
     
 } // ghost_v5_config
 

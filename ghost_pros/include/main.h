@@ -24,66 +24,8 @@
 #include <map>
 
 #include "ghost_v5/globals/v5_globals.hpp"
-
-///// MOTOR CONFIGURATIONS /////
-// Drive Motor Config
-ghost_v5::GhostMotorConfig drive_motor_config = {
-    // DC Motor
-    .motor__gear_ratio = 6,
-    .motor__brake_mode = pros::E_MOTOR_BRAKE_COAST,
-
-    // 2nd Order Velocity Filter
-    .filter__cutoff_frequency = 100.0, // Hz
-
-    // FF-PD Controller
-    .ctl__vel_gain = 17.5,  // RPM -> mV
-    .ctl__ff_vel_gain = 1.1,
-    .ctl__ff_voltage_gain = 1.0,
-};
-
-ghost_v5::GhostMotorConfig endgame_motor_config = {
-    // DC Motor
-    .motor__gear_ratio = 2,
-
-    // 2nd Order Velocity Filter
-    .filter__cutoff_frequency = 100.0, // Hz
-
-    // FF-PD Controller
-    .ctl__ff_voltage_gain = 1.0,
-};
-
-// Intake Motor Config
-ghost_v5::GhostMotorConfig intake_motor_config = {
-    .motor__gear_ratio = 6,
-    .motor__brake_mode = pros::E_MOTOR_BRAKE_BRAKE,
-    .filter__cutoff_frequency = 100.0,
-    .ctl__vel_gain = 25.0,
-    .ctl__ff_vel_gain = 1.2,
-    .ctl__ff_voltage_gain = 1.0,
-};
-
-// Indexer Motor Config
-ghost_v5::GhostMotorConfig indexer_motor_config = {
-    .motor__gear_ratio = 6,
-    .motor__brake_mode = pros::E_MOTOR_BRAKE_BRAKE,
-    .filter__cutoff_frequency = 50.0,
-    .ctl__pos_gain = 0.0,
-    .ctl__vel_gain = 0.0,
-    .ctl__ff_vel_gain = 0.0,
-    .ctl__ff_voltage_gain = 1.0,
-
-};
-
-// Shooter Motor Config
-ghost_v5::GhostMotorConfig shooter_motor_config = {
-    .motor__gear_ratio = 36,
-    .motor__brake_mode = pros::E_MOTOR_BRAKE_BRAKE,
-    .filter__cutoff_frequency = 100.0, // Hz
-    .ctl__vel_gain = 20.0,  // RPM -> mV
-    .ctl__ff_vel_gain = 1.0,
-    .ctl__ff_voltage_gain = 1.0,
-    .ctl__rpm_deadband = 250.0
-};
+#include "ghost_ros/robot_config/v5_robot_config_defs.hpp"
+#include "ghost_ros/robot_config/v5_robot_config.hpp"
 
 // Global Variables
 namespace v5_globals
