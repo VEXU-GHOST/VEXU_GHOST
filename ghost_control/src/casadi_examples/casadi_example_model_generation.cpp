@@ -141,18 +141,18 @@ int main(int argc, char *argv[])
     ///////////////////////////////////
     // Quadratic cost on all accelerations
     auto f = SX::zeros(1);
-    for (int k = 0; k < num_knots; k++)
-    {
-        std::string knot_prefix = "k" + std::to_string(k) + "_";
-        f += 0.1*pow(get_state(knot_prefix + "base_accel_x"), 2);
-    }
 
-    // Quadratic cost for jerk
+    // Apply Quadratic costs
     for (int k = 0; k < num_knots-1; k++)
     {
         std::string curr_knot_prefix = "k" + std::to_string(k) + "_";
         std::string next_knot_prefix = "k" + std::to_string(k+1) + "_";
-        f += pow(get_state(next_knot_prefix + "base_accel_x") - get_state(curr_knot_prefix + "base_accel_x"), 2);
+
+        // Normalize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
+        f += 1/DT * (pow(get_state(curr_knot_prefix + "base_accel_x"), 2) + pow(get_state(next_knot_prefix + "base_accel_x"), 2));
+
+        // Minimize jerk via finite difference
+        f += 1/DT * (pow(get_state(next_knot_prefix + "base_accel_x") - get_state(curr_knot_prefix + "base_accel_x"), 2));
     }
 
     /////////////////////////
