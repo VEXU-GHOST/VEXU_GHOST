@@ -50,9 +50,7 @@ namespace ghost_control
         float dt_;
 
         int num_knots_;
-        int num_states_;
         int num_opt_vars_;
-        int num_params_;
 
         std::vector<std::string> state_names_;
         std::vector<std::string> input_names_;
@@ -67,6 +65,9 @@ namespace ghost_control
 
         casadi::SX cost_function_;
         casadi::SX constraint_vector_;
+
+        // std::unordered_map<std::string, std::vector<double>> state_solution_map_;
+
     };
 
 } // namespace ghost_control
