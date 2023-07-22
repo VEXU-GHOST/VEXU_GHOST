@@ -1,3 +1,21 @@
 [submodule "ghost_estimation/src/shared"]
 	path = ghost_estimation/src/shared
 	url = git@github.com:MaxxWilson/amrl_shared_lib.git
+[submodule "ghost_deps/yaml-cpp"]
+	path = ghost_deps/yaml-cpp
+	url = git@github.com:jbeder/yaml-cpp.git
+[submodule "ghost_deps/casadi"]
+	path = ghost_deps/casadi
+	url = https://github.com/casadi/casadi.git
+[submodule "ghost_deps/Ipopt"]
+	path = ghost_deps/Ipopt
+	url = git@github.com:coin-or/Ipopt.git
+[submodule "ghost_deps/rplidar_ros"]
+	path = ghost_deps/rplidar_ros
+	url = git@github.com:Slamtec/rplidar_ros.git
+[submodule "ghost_deps/matplotlib-cpp"]
+	path = ghost_deps/matplotlib-cpp
+	url = git@github.com:lava/matplotlib-cpp.git
+[submodule "ghost_deps/ThirdParty-Mumps"]
+	path = ghost_deps/ThirdParty-Mumps
+	url = git@github.com:coin-or-tools/ThirdParty-Mumps.git
