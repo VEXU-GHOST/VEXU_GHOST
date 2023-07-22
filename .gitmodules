@@ -25,3 +25,6 @@
 	path = ghost_deps/ThirdParty-Mumps
 	url = git@github.com:coin-or-tools/ThirdParty-Mumps.git
         ignore = untracked
+[submodule "ghost_deps/Casadi-Tutorial-CPP"]
+	path = ghost_deps/Casadi-Tutorial-CPP
+	url = git@github.com:zehuilu/Tutorial-on-CasADi-with-CPP.git
