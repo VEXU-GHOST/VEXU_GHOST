@@ -27,6 +27,8 @@ Follow Link: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.
 cd ~
 git clone git@github.com:VEXU-GHOST/VEXU_GHOST.git
 cd VEXU_GHOST
+git submodule init
+git submodule update --recursive
 ```
 #### Add Setup to ~/.bashrc (which "configures" a new terminal when you open it)
 ```
@@ -44,6 +46,10 @@ echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_
 
 #### Build Submodules
 ```
-./scripts/build_submodules
+./scripts/setup_submodules
 ```
 
+### Build Repository
+```
+./scripts/build_ros.sh
+```
