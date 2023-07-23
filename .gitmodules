@@ -16,6 +16,7 @@
 [submodule "ghost_deps/rplidar_ros"]
 	path = ghost_deps/rplidar_ros
 	url = git@github.com:Slamtec/rplidar_ros.git
+	branch = ros2
         ignore = untracked
 [submodule "ghost_deps/matplotlib-cpp"]
 	path = ghost_deps/matplotlib-cpp
