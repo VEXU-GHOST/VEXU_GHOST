@@ -24,7 +24,7 @@ find_package(matplotlib_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(PythonLibs REQUIRED)
 
-find_library(casadi REQUIRED)
+find_package(casadi REQUIRED)
 
 include_directories(${PYTHON_INCLUDE_DIRS})
 
