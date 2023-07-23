@@ -92,7 +92,7 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     
   for(std::string& param: params){
     if(!sdf->HasElement(param)){
-      RCLCPP_ERROR(logger, "Motor plugin missing <" + param + ">, cannot proceed");
+      RCLCPP_ERROR(logger, "Motor plugin missing <%s>, cannot proceed", param.c_str());
       return;
     }
   }
