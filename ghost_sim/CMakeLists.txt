@@ -32,7 +32,6 @@ find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
 # Gazebo
-find_package(gazebo REQUIRED)
 find_package(gazebo_dev REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
@@ -54,7 +53,6 @@ add_library(gazebo_motor_plugin SHARED src/gazebo_motor_plugin.cpp)
 ament_target_dependencies(gazebo_motor_plugin
   rclcpp
   std_msgs
-  gazebo
   gazebo_dev
   gazebo_msgs
   gazebo_ros
@@ -75,7 +73,6 @@ ament_target_dependencies(gazebo_joint_pid_plugin
   rclcpp
   std_msgs
   geometry_msgs
-  gazebo
   gazebo_dev
   gazebo_msgs
   gazebo_ros
@@ -98,7 +95,6 @@ ament_target_dependencies(swerve_odometry_plugin
   std_msgs
   geometry_msgs
   nav_msgs
-  gazebo
   gazebo_dev
   gazebo_msgs
   gazebo_ros
