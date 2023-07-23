@@ -25,12 +25,12 @@ namespace ghost_ros
                                                      curr_joystick_msg_id_{0},
                                                      curr_comp_state_msg_id_{0},
                                                      r1_pressed_{false},
-                                                     teleop_mode{INTAKE_MODE}
+                                                     teleop_mode{INTAKE_MODE},
+                                                     last_ang_vel_cmd_{0.0}
+                                                     
     {
         declare_parameter("max_linear_vel", 0.0);
-        declare_parameter("max_steering_angular_vel", 0.0);
         max_linear_vel_ = get_parameter("max_linear_vel").as_double();
-        max_steering_angular_vel_ = get_parameter("max_steering_angular_vel").as_double();
 
         declare_parameter("left_wheel_x", 0.0);
         declare_parameter("left_wheel_y", 0.0);
@@ -46,8 +46,28 @@ namespace ghost_ros
         declare_parameter("steering_kp", 0.0);
         steering_kp_ = get_parameter("steering_kp").as_double();
 
-        declare_parameter("turret_kp", 0.0);
-        turret_kp_ = get_parameter("turret_kp").as_double();
+        declare_parameter("translate_kp", 0.0);
+        declare_parameter("translate_kd", 0.0);
+        declare_parameter("rotate_kp", 0.0);
+        declare_parameter("rotate_kd", 0.0);
+        translate_kp_ = get_parameter("translate_kp").as_double();
+        translate_kd_ = get_parameter("translate_kd").as_double();
+        rotate_kp_ = get_parameter("rotate_kp").as_double();
+        rotate_kd_ = get_parameter("rotate_kd").as_double();
+
+        declare_parameter("translation_slew", 0.0);
+        translation_slew_ = get_parameter("translation_slew").as_double();
+
+        declare_parameter("rotation_slew", 0.0);
+        rotation_slew_ = get_parameter("rotation_slew").as_double();
+
+        declare_parameter("translation_tolerance", 0.0);
+        translation_tolerance_ = get_parameter("translation_tolerance").as_double();
+
+        declare_parameter("x_goal", 0.0);
+        declare_parameter("y_goal", 0.0);
+        x_goal_ = get_parameter("x_goal").as_double();
+        y_goal_ = get_parameter("y_goal").as_double();
 
         declare_parameter("max_motor_rpm_true", 0.0);
         max_motor_rpm_true_ = get_parameter("max_motor_rpm_true").as_double();
@@ -61,12 +81,24 @@ namespace ghost_ros
             throw std::invalid_argument("Wheel Geometry has not been set.");
         }
 
+        declare_parameter("pose_reset_x", 0.0);
+        declare_parameter("pose_reset_y", 0.0);
+        declare_parameter("pose_reset_theta", 0.0);
+
+        pose_reset_x_ = get_parameter("pose_reset_x").as_double();
+        pose_reset_y_ = get_parameter("pose_reset_y").as_double();
+        pose_reset_theta_ = get_parameter("pose_reset_theta").as_double();
+
+        last_xy_vel_cmd_ = Eigen::Vector2f(0.0, 0.0);
+
         actuator_command_pub_ = create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
             "v5/actuator_commands",
             10);
         debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
             "controller_debug",
             10);
+
+        initial_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("initial_pose",10);
 
         competition_state_sub_ = create_subscription<ghost_msgs::msg::V5CompetitionState>(
             "v5/competition_state",
@@ -114,7 +146,7 @@ namespace ghost_ros
             });
 
         robot_state_sub_ = create_subscription<ghost_msgs::msg::GhostRobotState>(
-            "estimation/robot_pose",
+            "/estimation/robot_state",
             10,
             [this](const ghost_msgs::msg::GhostRobotState::SharedPtr msg)
             {
@@ -129,8 +161,8 @@ namespace ghost_ros
         // Comparing msg ids ensures only one control update is performed for a given sensor update
         if (
             (curr_joystick_msg_id_ == curr_comp_state_msg_id_) &&
-            (curr_joystick_msg_id_ == curr_encoder_msg_id_)) // &&
-        // (curr_joystick_msg_id_ == curr_robot_state_msg_))
+            (curr_joystick_msg_id_ == curr_encoder_msg_id_) &&
+            (curr_joystick_msg_id_ == curr_robot_state_msg_id_))
         {
             // Clear actuator command msg
             actuator_cmd_msg_ = ghost_msgs::msg::V5ActuatorCommand{};
@@ -158,6 +190,20 @@ namespace ghost_ros
         }
     }
 
+    void RobotStateMachineNode::resetPose(){
+        geometry_msgs::msg::PoseWithCovarianceStamped msg{};
+
+        msg.header.frame_id = "world";
+        msg.header.stamp = this->get_clock()->now();
+
+        msg.pose.pose.position.x = pose_reset_x_;
+        msg.pose.pose.position.y = pose_reset_y_;
+        msg.pose.pose.orientation.w = cos(pose_reset_theta_ * M_PI/180.0 * 0.5);
+        msg.pose.pose.orientation.z = sin(pose_reset_theta_ * M_PI/180.0 * 0.5);
+
+        initial_pose_pub_->publish(msg);
+    }
+
     void RobotStateMachineNode::teleop()
     {
         updateSwerveCommandsFromTwist(
@@ -167,24 +213,43 @@ namespace ghost_ros
 
         // Intake Control
         if(curr_joystick_msg_->joystick_btn_r2){
-            float intake_cmd = 625;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_velocity = intake_cmd;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].active = true;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].current_limit = 2500;
-            
+            float intake_cmd = 750;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_voltage = 1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].current_limit = 2500;
+
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_voltage = 1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].current_limit = 2500;   
         }
         else if(curr_joystick_msg_->joystick_btn_down){
-            float intake_cmd = -625;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].desired_velocity = intake_cmd;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].active = true;
-            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR].current_limit = 2500;
+            float intake_cmd = -750;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].desired_voltage = -1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_1].current_limit = 2500;
+
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_velocity = intake_cmd;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].desired_voltage = -1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::INTAKE_MOTOR_2].current_limit = 2500;
         }
 
+        if(curr_joystick_msg_->joystick_btn_up){
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].desired_voltage = 1.0;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].active = true;
+            actuator_cmd_msg_.motor_commands[ghost_v5_config::ENDGAME_MOTOR].current_limit = 2500;
+        }
 
         // Toggle shooter mode
         if(curr_joystick_msg_->joystick_btn_r1 && !r1_pressed_){
             if(teleop_mode == INTAKE_MODE){
                 teleop_mode = SHOOTER_MODE;
+            }
+            else if(teleop_mode == SHOOTER_MODE){
+                teleop_mode = INTAKE_MODE;
             }
             r1_pressed_ = true;
         }
@@ -196,58 +261,85 @@ namespace ghost_ros
             teleop_mode = INTAKE_MODE;
         }
 
-        float turret_angle = ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::TURRET_ENCODER].angle_degrees);
+        if(curr_joystick_msg_->joystick_btn_left){
+            resetPose();
+        }
+
+        float des_angle = M_PI/180.0*ghost_util::WrapAngle360(atan2(y_goal_ - curr_robot_state_msg_->y, x_goal_ - curr_robot_state_msg_->x)*180.0/M_PI);
+        float des_x = 0.0;
+        float des_y = 0.0;
+
+        if(curr_joystick_msg_->joystick_btn_l1){
+
+            float ang_vel_cmd = 
+                ghost_util::SmallestAngleDistDeg(des_angle * 180 / M_PI, curr_robot_state_msg_->theta * 180 / M_PI) * M_PI/180.0 * rotate_kp_ -
+                curr_robot_state_msg_->theta_vel * rotate_kd_;
+
+            float x_vel_cmd =
+                (des_x - curr_robot_state_msg_->x) * translate_kp_ -
+                curr_robot_state_msg_->x_vel * translate_kd_;
+            
+            float y_vel_cmd =
+                (des_y - curr_robot_state_msg_->y) * translate_kp_ -
+                curr_robot_state_msg_->y_vel * translate_kd_;
+
+            if(sqrt(
+                fabs(des_x - curr_robot_state_msg_->x)*fabs(des_x - curr_robot_state_msg_->x) +
+                fabs(des_y - curr_robot_state_msg_->y)*fabs(des_y - curr_robot_state_msg_->y)) < translation_tolerance_){
+                    x_vel_cmd = 0.0;
+                    y_vel_cmd = 0.0;
+                }
+
+            auto rotate_base_to_world = Eigen::Rotation2D<float>(-curr_robot_state_msg_->theta).toRotationMatrix();
+            Eigen::Vector2f xy_vel = rotate_base_to_world * Eigen::Vector2f(x_vel_cmd, y_vel_cmd);
+
+            x_vel_cmd = xy_vel.x();
+            y_vel_cmd = xy_vel.y();
+
+            if((fabs(x_vel_cmd) - fabs(last_xy_vel_cmd_.x())) > translation_slew_){
+                x_vel_cmd = last_xy_vel_cmd_.x() + Sign(x_vel_cmd - last_xy_vel_cmd_.x()) * translation_slew_;
+            }
+            if((fabs(y_vel_cmd) - fabs(last_xy_vel_cmd_.y())) > translation_slew_){
+                y_vel_cmd = last_xy_vel_cmd_.y() + Sign(y_vel_cmd - last_xy_vel_cmd_.y()) * translation_slew_;
+            }
+            last_xy_vel_cmd_ = Eigen::Vector2f(x_vel_cmd, y_vel_cmd);
+            
+            if((fabs(ang_vel_cmd) - fabs(last_ang_vel_cmd_)) > rotation_slew_){
+                ang_vel_cmd = last_ang_vel_cmd_ + Sign(ang_vel_cmd - last_ang_vel_cmd_) * rotation_slew_;
+            }
+            last_ang_vel_cmd_ = ang_vel_cmd;
+
+            updateSwerveCommandsFromTwist(
+                ang_vel_cmd,  // Angular Velocity
+                x_vel_cmd,    // X Velocity (Forward)
+                y_vel_cmd);  // Y Velocity (Left)
+
+            // updateSwerveCommandsFromTwist(
+            //     ang_vel_cmd,  // Angular Velocity
+            //     curr_joystick_msg_->joystick_left_y,    // X Velocity (Forward)
+            //     -curr_joystick_msg_->joystick_left_x);  // Y Velocity (Left)
+        }
 
         switch(teleop_mode){
             case SHOOTER_MODE:
-                if(curr_joystick_msg_->joystick_btn_l1){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 85;
-                }
-                else{
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_angle = 0;
-                }
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
-
-                if(curr_joystick_msg_->joystick_btn_y){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 1.0;
-                }
-                else if(curr_joystick_msg_->joystick_btn_a){
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = -1.0;
-                }
-                else{
-                    actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = 0;
-                }
                 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].current_limit = 2000;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2000;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2000;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2000;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2500;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2500;
 
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].active = true;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
                 actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
 
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_voltage = (45.0 - turret_angle) * turret_kp_;
+                if(curr_joystick_msg_->joystick_btn_l2){
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = 1.0;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2500;
+                actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
+                }
 
             break;
 
             case INTAKE_MODE:
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].desired_velocity = -turret_angle * turret_kp_;
-                
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 0;
-                actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 0;
-
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].current_limit = 0;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 0;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 0;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 0;
-
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::TURRET_MOTOR].active = false;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = false;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = false;
-                // actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = false;
             break;
         }
     }
@@ -303,7 +395,7 @@ namespace ghost_ros
             wheel_velocity_cmd_[wheel_id] = vel_vec.norm() * 100 / 2.54 / (2.75 * M_PI) * 60; // Convert m/s to RPM
 
             // Calculate angle error and then use direction of smallest error
-            float steering_error  = ghost_util::SmallestAngleDist(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+            float steering_error  = ghost_util::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
 
             // It is faster to reverse wheel direction and steer to opposite angle
             if(fabs(steering_error) > 90.0){
@@ -312,7 +404,7 @@ namespace ghost_ros
                 steering_angle_cmd_[wheel_id] = ghost_util::FlipAngle180(steering_angle_cmd_[wheel_id]);
 
                 // Recalculate error
-                steering_error = ghost_util::SmallestAngleDist(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+                steering_error = ghost_util::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
             }
 
             // Set steering voltage using position control law
@@ -323,8 +415,8 @@ namespace ghost_ros
         // Calculate Actuator Commands
         Eigen::Matrix2f diff_swerve_jacobian;
         Eigen::Matrix2f diff_swerve_jacobian_inverse;
-        diff_swerve_jacobian << 12.0 / 18.0 / 2.0, -12.0 / 18.0 / 2.0, 12.0 / 45.0 / 2.0, 12.0 / 45.0 / 2.0;
-        diff_swerve_jacobian_inverse << 18.0 / 12.0, 45.0 / 12.0, -18.0 / 12.0, 45.0 / 12.0;
+        diff_swerve_jacobian << 13.0 / 18.0 / 2.0, -13.0 / 18.0 / 2.0, 13.0 / 45.0 / 2.0, 13.0 / 45.0 / 2.0;
+        diff_swerve_jacobian_inverse << 18.0 / 13.0, 45.0 / 13.0, -18.0 / 13.0, 45.0 / 13.0;
 
         // Convert steering and wheel commands to actuator space
         std::vector<float> motor_speed_cmds(6, 0.0);
@@ -372,6 +464,10 @@ namespace ghost_ros
                 motor_voltage_cmds[motor_id] = 0.0;
             }
         }
+
+        Eigen::Vector2f wheel_mod_speed = diff_swerve_jacobian * Eigen::Vector2f(
+            curr_encoder_msg_->encoders[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].velocity_rpm,
+            curr_encoder_msg_->encoders[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].velocity_rpm);
 
         // Update velocity commands
         actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].desired_velocity =    motor_speed_cmds[0];

@@ -1,0 +1,16 @@
+time_horizon: 2.0
+dt: 0.01
+
+base_state_names:
+  - "base_pose_x"
+  - "base_vel_x"
+
+base_input_names: 
+  - "base_accel_x"
+
+integration_state_pairs:
+  - ["base_pose_x", "base_vel_x"]
+  - ["base_vel_x", "base_accel_x"]
+
+param_names:
+  - "mass"

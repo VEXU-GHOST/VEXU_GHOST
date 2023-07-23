@@ -12,21 +12,24 @@ if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0)
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
+add_compile_options(-Wno-dev)
+
 ########################
 ##### DEPENDENCIES #####
 ########################
 # Base
 find_package(ament_cmake REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # ROS
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
-
 
 # Gazebo
 find_package(gazebo REQUIRED)
@@ -108,6 +111,30 @@ target_include_directories(swerve_odometry_plugin
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(swerve_odometry_plugin)
 
+##V5 Simulator Node
+add_library(v5_sim_node SHARED src/v5_sim_node.cpp)
+ament_target_dependencies(v5_sim_node
+  rclcpp
+  sensor_msgs
+  ghost_msgs
+)
+target_link_libraries(v5_sim_node
+  yaml-cpp
+)
+target_include_directories(v5_sim_node
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+ament_export_targets(v5_sim_node HAS_LIBRARY_TARGET)
+install(
+  TARGETS v5_sim_node
+  EXPORT v5_sim_node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 add_executable(ground_truth_pose_publisher
   src/ground_truth_pose_publisher.cpp
 )
@@ -122,22 +149,26 @@ install(TARGETS
   ground_truth_pose_publisher
   DESTINATION lib/${PROJECT_NAME})
 
-###################
-##### TESTING #####
-###################
-if(BUILD_TESTING)
-  find_package(ament_index_cpp REQUIRED)
-  find_package(ament_cmake_gtest REQUIRED)
+add_executable(v5_sim_node_main
+  src/v5_sim_node_main.cpp
+)
+target_link_libraries(v5_sim_node_main
+  v5_sim_node
+)
+install(TARGETS
+v5_sim_node_main
+  DESTINATION lib/${PROJECT_NAME})
 
-  # ament_add_gtest(test_gazebo_swerve_plugin test/test_gazebo_swerve_plugin.cpp)
-  # ament_target_dependencies(test_gazebo_swerve_plugin
-  #   ament_index_cpp
-  # )
-  # target_link_libraries(test_gazebo_swerve_plugin
-  #   gazebo_swerve_plugin
-  #   gazebo_test_fixture
-  #   gtest)
-endif()
+add_executable(test_v5_sim_node
+  test/test_v5_sim_node.cpp
+)
+target_link_libraries(test_v5_sim_node
+  yaml-cpp
+  v5_sim_node
+)
+install(TARGETS
+  test_v5_sim_node
+  DESTINATION lib/${PROJECT_NAME})
 
 # ################
 # ### Install ####
@@ -150,6 +181,7 @@ install(
 install(DIRECTORY
   launch
   urdf
+  config
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()

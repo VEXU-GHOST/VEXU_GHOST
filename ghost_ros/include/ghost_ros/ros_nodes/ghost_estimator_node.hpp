@@ -28,7 +28,6 @@
 
 #include "yaml-cpp/yaml.h"
 
-#include "ghost_ros/globals/globals.hpp"
 #include "ghost_estimation/particle_filter/particle_filter.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "ghost_msgs/msg/ghost_robot_state.hpp"
@@ -59,7 +58,8 @@ class GhostEstimatorNode : public rclcpp::Node {
     // Visualization
     void DrawWheelAxisVectors(std::vector<geometry::Line2f> & lines);
     void DrawICRPoints(std::vector<Eigen::Vector3f> & points);
-    void DrawParticles(geometry_msgs::msg::PoseArray &viz_msg);
+    void DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg);
+    void DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg);
 
     visualization_msgs::msg::MarkerArray viz_msg_;
 
@@ -77,16 +77,19 @@ class GhostEstimatorNode : public rclcpp::Node {
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
     rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr world_tf_pub_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
+    rclcpp::Publisher<ghost_msgs::msg::GhostRobotState>::SharedPtr robot_state_pub_;
+    
 
     // Particle Filter
     particle_filter::ParticleFilter particle_filter_;
-    sensor_msgs::msg::LaserScan last_laser_msg_;
+    sensor_msgs::msg::LaserScan::SharedPtr last_laser_msg_;
 
     // Configuration
     YAML::Node config_yaml_;
     particle_filter::ParticleFilterConfig config_params;
 
     bool first_map_load_;
+    bool laser_msg_received_;
 
     // Odometry Config
     Eigen::Vector2f left_wheel_link_;
@@ -98,6 +101,13 @@ class GhostEstimatorNode : public rclcpp::Node {
 
     Eigen::Vector2f odom_loc_;
     float odom_angle_;
+
+    Eigen::MatrixXf A_;
+    Eigen::MatrixXf A_pinv_;
+
+    float x_vel_;
+    float y_vel_;
+    float theta_vel_;
 
 
 };

@@ -10,6 +10,7 @@
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 
 #include "ghost_msgs/msg/v5_competition_state.hpp"
 #include "ghost_msgs/msg/v5_joystick.hpp"
@@ -30,7 +31,10 @@ namespace ghost_ros
     enum teleop_mode_e
     {
         SHOOTER_MODE,
-        INTAKE_MODE
+        INTAKE_MODE,
+        EJECT_MODE,
+        TILT_MODE,
+        EXPANSION_MODE
     };
 
     class RobotStateMachineNode : public rclcpp::Node
@@ -41,6 +45,7 @@ namespace ghost_ros
     private:
         void updateController();
         void teleop();
+        void resetPose();
 
         void updateSwerveCommandsFromTwist(float angular_velocity, float x_velocity, float y_velocity);
         void updateSwerveVoltageCommandsFromTwist(float angular_velocity, float x_velocity, float y_velocity);
@@ -53,6 +58,8 @@ namespace ghost_ros
         // Publishers
         rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_pub_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
+        rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_pub_;
+        
 
         // Subscriptions
         rclcpp::Subscription<ghost_msgs::msg::V5CompetitionState>::SharedPtr competition_state_sub_;
@@ -80,8 +87,24 @@ namespace ghost_ros
         float max_steering_angular_vel_;
 
         float steering_kp_;
-        float turret_kp_;
+        float translate_kp_;
+        float translate_kd_;
+        float rotate_kp_;
+        float rotate_kd_;
+        float translation_slew_;
+        float rotation_slew_;
+        float translation_tolerance_;
         float max_motor_rpm_true_;
+
+        float last_ang_vel_cmd_;
+        Eigen::Vector2f last_xy_vel_cmd_;
+
+        double pose_reset_x_;
+        double pose_reset_y_;
+        double pose_reset_theta_;
+
+        float x_goal_;
+        float y_goal_;
 
         Eigen::Vector2f left_wheel_pos_;
         Eigen::Vector2f right_wheel_pos_;

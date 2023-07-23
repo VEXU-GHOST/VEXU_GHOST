@@ -15,7 +15,7 @@ def generate_launch_description():
         package='rplidar_ros2',
         executable='rplidar_scan_publisher',
         name='rplidar_scan_publisher',
-        parameters=[{"frame_id": "lidar_link", 'angle_compensate': True}]
+        parameters=[{"frame_id": "lidar_link"}]
     )
 
     serial_node = Node(
@@ -50,9 +50,9 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        foxglove_diagnostics_node,
-        serial_node,
+        # foxglove_diagnostics_node,
+        # serial_node,
         estimator_node,
         state_machine_node,
-        rplidar_node,
+        # rplidar_node,
     ])

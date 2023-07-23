@@ -45,8 +45,6 @@ find_package(ghost_serial REQUIRED)
 find_package(ghost_estimation REQUIRED)
 find_package(ghost_util REQUIRED)
 
-find_library(v5_serial_node REQUIRED)
-
 include_directories(include)
 
 ###############################
@@ -129,6 +127,7 @@ ament_target_dependencies(ghost_estimator_node
   sensor_msgs
   visualization_msgs
   ghost_msgs
+  ghost_util
   ghost_estimation
   Eigen3
 )
@@ -174,14 +173,6 @@ target_include_directories(robot_state_machine_node
 install(TARGETS
 robot_state_machine_node
 DESTINATION lib/${PROJECT_NAME})
-
-#################
-#### Testing ####
-#################
-ament_add_gtest(test_stamped_queue test/test_stamped_queue.cpp)
-target_link_libraries(test_stamped_queue
-  gtest
-)
 
 #################
 #### Install ####

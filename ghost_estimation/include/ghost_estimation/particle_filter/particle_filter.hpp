@@ -65,7 +65,11 @@ struct ParticleFilterConfig {
   float k4;
   float k5;
   float k6;
+  float k7;
+  float k8;
+  float k9;
   float laser_offset;
+  float laser_angle_offset;
   float min_update_dist;
   float min_update_angle;
   double sigma_observation;
@@ -76,6 +80,9 @@ struct ParticleFilterConfig {
   double range_max;
   double resize_factor;
   int resample_frequency;
+  bool use_skip_range;
+  int skip_index_min;
+  int skip_index_max;
 };
 
 class ParticleFilter {
