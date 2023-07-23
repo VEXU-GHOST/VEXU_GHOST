@@ -14,17 +14,17 @@ This repository contains code intended to support VEXU and VEXAI teams intereste
 ## Prerequisites
 Ubuntu 22.04.
 
-If you are a seasoned Linux programmer, continue as normal. For new team members, please see [Setting Up My Environment](https://github.com/VEXU-GHOST/VEXU_GHOST/blob/master/SetupMyEnvironment.md).
+If you are a regular Linux developer, continue as normal. For new team members, please see [Setting Up My Environment](https://github.com/VEXU-GHOST/VEXU_GHOST/blob/master/SetupMyEnvironment.md).
 
 ## Installation
-#### Install ROS2
+#### Install ROS2 Humble
 
 Follow Link: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html
 
 ### Repo Setup
 #### Download Repository
 ```
-cd ~
+cd
 git clone git@github.com:VEXU-GHOST/VEXU_GHOST.git
 cd VEXU_GHOST
 git submodule init
@@ -34,7 +34,6 @@ git submodule update --recursive
 ```
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 echo "source ~/VEXU_GHOST/install/setup.bash" >> ~/.bashrc
-
 echo 'export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH' >> ~/.bashrc
 echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_PATH' >> ~/.bashrc
 ```
