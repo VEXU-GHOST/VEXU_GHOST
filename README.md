@@ -1,14 +1,22 @@
-# VEXU_GHOST
+## Description
+This repository contains code intended to support VEXU and VEXAI teams interested in leveraging advanced programming techniques on their competition robots. The most useful module is likely the ghost_serial package, which allows users to directly address V5 Sensors and Actuators through ROS Topics on a Linux device.
 
-### Requirements
-Ubuntu 22.04
+#### Robust Features:
+- Bidirectional Serial Communication module between a coprocessor and V5 Brain (address hardware directly from Ubuntu through ROS topics).
+- LIDAR-based Particle Filter localization
+- DC Motor Modeling / Simulation with Gazebo
 
-#### SSH Setup 
-If you just setup Github, you will need to add SSH keys. These let github recognize your computer (and this replaced using password last year).
+#### Up-and-Coming Features:
+- Model-Predictive Control for Differential Swerve Drive using CasADi and Ipopt
+- Computer Vision pipeline for detection of competition game elements
+- Behavior Tree based autonomy
 
-Generate Key: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
-Add Key: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
+## Prerequisites
+Ubuntu 22.04.
 
+If you are a seasoned Linux programmer, continue as normal. For new team members, please see [Setting Up My Environment](https://github.com/VEXU-GHOST/VEXU_GHOST/blob/master/SetupMyEnvironment.md).
+
+## Installation
 #### Install ROS2
 
 Follow Link: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html
