@@ -12,6 +12,8 @@ if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0)
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
+add_compile_options(-Wno-dev)
+
 ########################
 ##### DEPENDENCIES #####
 ########################
