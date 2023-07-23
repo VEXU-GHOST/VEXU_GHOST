@@ -25,6 +25,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(robot_localization REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
 find_package(eigen3_cmake_module REQUIRED)
