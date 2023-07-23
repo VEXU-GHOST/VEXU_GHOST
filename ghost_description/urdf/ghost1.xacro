@@ -68,7 +68,7 @@
     <joint name="front_bar_joint" type="fixed">
         <parent link="base_link"/>
         <child link="front_bar"/>
-        <origin xyz="0.175 0 0" rpy="0 0 0"/>
+        <origin xyz="0.156 0 0" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -87,7 +87,7 @@
     <joint name="left_bar_joint" type="fixed">
         <parent link="base_link"/>
         <child link="left_bar"/>
-        <origin xyz="-0.05 0.125 0" rpy="0 0 -1.0471"/>
+        <origin xyz="-0.069 0.125 0" rpy="0 0 -1.0471"/>
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -106,7 +106,7 @@
     <joint name="right_bar_joint" type="fixed">
         <parent link="base_link"/>
         <child link="right_bar"/>
-        <origin xyz="-0.05 -0.125 0" rpy="0 0 1.0471"/>
+        <origin xyz="-0.069 -0.125 0" rpy="0 0 1.0471"/>
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -124,21 +124,21 @@
     <joint name="steering_left" type="continuous">
         <parent link="base_link"/>
         <child link="mod_left"/>
-        <origin xyz="0.126365 0.180975 0.0812" rpy="0 0 0"/>
+        <origin xyz="0.10452 0.180975 0.0812" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="steering_right" type="continuous">
         <parent link="base_link"/>
         <child link="mod_right"/>
-        <origin xyz="0.126365 -0.180975 0.0812" rpy="0 0 0"/>
+        <origin xyz="0.10452 -0.180975 0.0812" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="steering_back" type="continuous">
         <parent link="base_link"/>
         <child link="mod_back"/>
-        <origin xyz="-0.187 0.0 0.0812" rpy="0 0 0"/>
+        <origin xyz="-0.209 0.0 0.0812" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -182,7 +182,7 @@
     <joint name="lidar_joint" type="fixed">
         <parent link="base_link"/>
         <child link="lidar_link"/>
-        <origin xyz="-0.19015 0 0.2145" rpy="0 0 0"/>
+        <origin xyz="-0.209 0 0.2145" rpy="0 0 ${67.562*d2r}"/>
     </joint>
 
     <!-- <link name="camera_base_link">

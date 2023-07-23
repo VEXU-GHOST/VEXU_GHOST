@@ -1,24 +1,30 @@
 ghost_state_machine_node:
   ros__parameters:
-    max_linear_vel: 1.5              # m/s
-    max_steering_angular_vel: 16.75  # rad/s
+    max_linear_vel: 1.65              # m/s
 
-    left_wheel_x:   0.126365
-    left_wheel_y:   0.180975
-    right_wheel_x:  0.126365
-    right_wheel_y:  -0.180975
-    back_wheel_x:   -0.187
+    left_wheel_y:   0.18092
+    left_wheel_x:   0.10452
+    right_wheel_y:  -0.18092
+    right_wheel_x:  0.10452
+    back_wheel_x:   -0.209
     back_wheel_y:   0.0
 
-    steering_kp: 0.2
-    turret_kp: 0.04
-    turret_kd: 0.75
+    steering_kp: 0.18
+    translate_kp: 0.0 #6.0
+    translate_kd: 0.0 #0.5
+    rotate_kp: 2.5
+    rotate_kd: 0.0
+
+    translation_slew: 0.05
+    rotation_slew: 0.05
+
+    translation_tolerance: 0.075
+
+    x_goal_: 0.0 #1.330452
+    y_goal_: 0.0 #1.330452
 
     pose_reset_x_: 0.0
     pose_reset_y_: 0.0
     pose_reset_theta_: 0.0
-    pose_reset_x_cov_: 0.0
-    pose_reset_y_cov_: 0.0
-    pose_reset_theta_cov_: 0.0
 
     max_motor_rpm_true: 625.0

@@ -93,12 +93,16 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
     std::size_t h_search_index = h_start_index;
 
     if(h_dir < 0){
-      h_search_index += 1;
+      h_search_index -= 1;
     }
 
-    if(v_dir > 0){
-      v_search_index += 1;
+    if(v_dir < 0){
+      v_search_index -= 1;
     }
+
+    // Clip bounds so that we don't accidently generate invalid index if we go outside map
+    h_search_index = std::min(std::max(h_search_index, std::size_t(0)), vertical_lines_.size());
+    v_search_index = std::min(std::max(v_search_index, std::size_t(0)), horizontal_lines_.size());
 
     Vector2f final_intersection_xy = final_intersection;
     bool intersection_found = false;
@@ -191,10 +195,13 @@ void ParticleFilter::Update(const vector<float>& ranges,
 
   // Calculate the particle weight
   for(std::size_t i = 0; i < predicted_cloud.size(); i++) {
-    trimmed_ranges[i] = ranges[i * config_params_.resize_factor];
-    double predicted_range = (predicted_cloud[i] - sensor_loc).norm();
-    double diff = GetRobustObservationLikelihood(trimmed_ranges[i], predicted_range, config_params_.dist_short, config_params_.dist_long);
-    particle.weight += -config_params_.gamma * Sq(diff) / Sq(config_params_.sigma_observation);
+    int laser_index = i * config_params_.resize_factor;
+    if(!config_params_.use_skip_range || laser_index < config_params_.skip_index_min || laser_index > config_params_.skip_index_max){
+      trimmed_ranges[i] = ranges[laser_index];
+      double predicted_range = (predicted_cloud[i] - sensor_loc).norm();
+      double diff = GetRobustObservationLikelihood(trimmed_ranges[i], predicted_range, config_params_.dist_short, config_params_.dist_long);
+      particle.weight += -config_params_.gamma * Sq(diff) / Sq(config_params_.sigma_observation);
+    }
   } 
 }
 
@@ -309,19 +316,25 @@ void ParticleFilter::Predict(const Vector2f& odom_loc,
   Eigen::Vector2f delta_translation = rot_odom1_to_bl1 * (odom_loc - prev_odom_loc_);
   float delta_angle = math_util::AngleDiff(odom_angle, prev_odom_angle_);
 
+  // Get translation noise in Base Link 2
+  float sigma_x =
+    config_params_.k1 * delta_translation.x() +
+    config_params_.k2 * delta_translation.y() +
+    config_params_.k3 * abs(delta_angle);
+  float sigma_y =
+    config_params_.k4 * delta_translation.x() +
+    config_params_.k5 * delta_translation.y() +
+    config_params_.k6 * abs(delta_angle);
+  // Get noisy angle
+  float sigma_tht =
+    config_params_.k7 * delta_translation.x() +
+    config_params_.k8 * delta_translation.y() +
+    config_params_.k9 * abs(delta_angle);
+
   for(Particle &particle: particles_){
-    // Get noisy angle
-    float sigma_tht = config_params_.k5 * delta_translation.norm() + config_params_.k6 * abs(delta_angle);
-    float noisy_angle = delta_angle + rng_.Gaussian(0.0, sigma_tht);
-
-    // Get translation noise in Base Link 2
-    float sigma_x = config_params_.k1 * delta_translation.norm() + config_params_.k2 * abs(delta_angle);;
-    float sigma_y = config_params_.k3 * delta_translation.norm() + config_params_.k4 * abs(delta_angle);
     Eigen::Vector2f e_xy = Eigen::Vector2f((float) rng_.Gaussian(0.0, sigma_x),(float) rng_.Gaussian(0.0, sigma_y));
-
-    // Transform noise to Base Link 1 using estimated angle to get noisy translation
-    auto rot_b2_to_b1 = Eigen::Rotation2D<float>(delta_angle).toRotationMatrix();
-    Eigen::Vector2f noisy_translation = delta_translation + rot_b2_to_b1 * e_xy; // in previous base_link
+    Eigen::Vector2f noisy_translation = delta_translation + e_xy;
+    float noisy_angle = delta_angle + rng_.Gaussian(0.0, sigma_tht);
     
     // Transform noise to map using current particle angle
     auto rot_bl1_to_map = Eigen::Rotation2D<float>(particle.angle).toRotationMatrix();
@@ -346,6 +359,7 @@ void ParticleFilter::Initialize(const string& map_file,
   // was received from the log.
 
   particles_.resize(config_params_.num_particles);
+  std::cout << "Num Particles: " << config_params_.num_particles << std::endl;
 
   for(Particle &particle: particles_){
     particle.loc = Eigen::Vector2f(
