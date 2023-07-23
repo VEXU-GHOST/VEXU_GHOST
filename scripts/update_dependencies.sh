@@ -2,6 +2,11 @@
 cd ~/VEXU_GHOST
 
 echo
+echo "--------------- Non-ROS Dependencies ---------------"
+sudo apt-get install -y libgoogle-glog-dev python3-colcon-common-extensions gfortran-10
+sudo apt-get install -y python3-pip libgtest-dev libgoogle-glog-dev
+
+echo
 echo "--------------- ROSDEP Init ---------------"
 sudo rosdep init
 
