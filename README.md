@@ -14,20 +14,25 @@ Add Key: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
 Follow Link: https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html
 
 ## Repo Setup
-
-cd ~
-
 Download Repository
 ```
+cd ~
 git clone git@github.com:VEXU-GHOST/VEXU_GHOST.git
 cd VEXU_GHOST
 ```
 
-Update ROS Dependencies
+Add Setup to ~/.bashrc (which "configures" a new terminal when you open it)
 ```
-sudo rosdep init
-rosdep update
-rosdep install --from-paths . --ignore-src -r -y
+echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+echo "source ~/VEXU_GHOST/install/setup.bash" >> ~/.bashrc
+
+echo 'export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH' >> ~/.bashrc
+echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_PATH' >> ~/.bashrc
+```
+
+Update Dependencies
+```
+./scripts/update_dependencies.sh
 ```
 
 Build Submodules
