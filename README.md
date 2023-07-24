@@ -48,7 +48,7 @@ echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_
 ./scripts/setup_submodules
 ```
 
-### Build Repository
+#### Build Repository
 ```
 ./scripts/build_ros.sh
 ```
