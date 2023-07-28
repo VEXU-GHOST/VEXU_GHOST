@@ -27,7 +27,7 @@ find_package(tf2_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(robot_localization REQUIRED)
 find_package(visualization_msgs REQUIRED)
-
+find_package(ghost_msgs REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
@@ -138,6 +138,35 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
+
+
+#########################
+#### State Estimator ####
+#########################
+add_executable(state_estimator_node
+  src/filters/state_estimator.cpp
+)
+
+ament_target_dependencies(state_estimator_node
+  robot_localization
+  rclcpp
+  sensor_msgs
+  ghost_msgs
+  Eigen3
+)
+
+target_link_libraries(state_estimator_node
+  yaml-cpp
+)
+
+target_include_directories(state_estimator_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  state_estimator_node
+  DESTINATION lib/${PROJECT_NAME})
+
 
 #######################
 #### Disc Detector ####
