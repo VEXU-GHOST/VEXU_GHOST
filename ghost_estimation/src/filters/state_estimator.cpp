@@ -1,19 +1,27 @@
-#include "ext_kalman_filter.hpp"
+#include "ghost_estimation/filters/state_estimator.hpp"
 
 using namespace std::chrono_literals;
 
 namespace ghost_estimation
 {
-    class ExtKalmanFilter: public rclcpp::Node
+    class StateEstimator: public rclcpp::Node
     {
         public:
-            ExtKalmanFilter()
-            : Node("ext_kalman_filter"), count_(0)
+            StateEstimator(): Node("state_estimator")
             {
+                publisher_ = this->create_publisher<ghost_msgs::msg::GhostRobotState>("/estimation/robot_state", 10);
 
+                
+                // Subscriptions
+                laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+                    "/scan",
+                    rclcpp::SensorDataQoS(),
+                    std::bind(&StateEstimator::LaserCallback, this, _1));
             }
         
         private:
+
+        
         // Predict Step
         // Estimated state. 0 is current state, 1 is predicted state
         // xk_0
