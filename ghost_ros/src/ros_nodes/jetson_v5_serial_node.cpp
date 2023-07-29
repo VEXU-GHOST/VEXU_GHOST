@@ -28,8 +28,8 @@ namespace ghost_ros
         declare_parameter("backup_port_name", "/dev/ttyACM2");
         backup_port_name_ = get_parameter("backup_port_name").as_string();
 
-        RCLCPP_DEBUG(get_logger(), "Port Name: " + port_name_);
-        RCLCPP_DEBUG(get_logger(), "Backup Port Name: " + backup_port_name_);
+        RCLCPP_DEBUG(get_logger(), "Port Name: %s", port_name_.c_str());
+        RCLCPP_DEBUG(get_logger(), "Backup Port Name: %s", backup_port_name_.c_str());
 
         // Calculate Msg Sizes based on robot configuration
         actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
@@ -84,12 +84,12 @@ namespace ghost_ros
         {
             if (!using_backup_port_)
             {
-                RCLCPP_DEBUG(get_logger(), "Attempting to open " + port_name_);
+                RCLCPP_DEBUG(get_logger(), "Attempting to open %s", port_name_.c_str());
                 serial_open_ = serial_base_interface_->trySerialInit(port_name_);
             }
             else
             {
-                RCLCPP_DEBUG(get_logger(), "Attempting to open " + backup_port_name_);
+                RCLCPP_DEBUG(get_logger(), "Attempting to open %s", backup_port_name_.c_str());
                 serial_open_ = serial_base_interface_->trySerialInit(backup_port_name_);
             }
         }
@@ -151,7 +151,7 @@ namespace ghost_ros
                 }
                 catch (std::exception &e)
                 {
-                    RCLCPP_ERROR(get_logger(), std::string(e.what()));
+                    RCLCPP_ERROR(get_logger(), e.what());
                 }
             }
             else
