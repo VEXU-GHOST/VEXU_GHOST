@@ -21,7 +21,7 @@ class ROSSubscriberExample : public rclcpp::Node
     {
       auto now = this->get_clock()->now();
       auto diff = now - msg->header.stamp;
-      RCLCPP_INFO(this->get_logger(), "%d us", diff.nanoseconds()/1000);
+      RCLCPP_INFO(this->get_logger(), "%ld us", diff.nanoseconds()/1000);
     }
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr subscription_;
 };

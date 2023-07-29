@@ -12,7 +12,7 @@ def generate_launch_description():
     ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "ghost_ros")
 
     rplidar_node = Node(
-        package='rplidar_ros2',
+        package='rplidar_ros',
         executable='rplidar_scan_publisher',
         name='rplidar_scan_publisher',
         parameters=[{"frame_id": "lidar_link", 'angle_compensate': True}]

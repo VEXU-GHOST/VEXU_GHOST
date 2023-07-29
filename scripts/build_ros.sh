@@ -10,12 +10,12 @@ echo "---Building Ghost ROS Packages---"
 # Build ignores simulator packages on embedded devices
 if [ "$arch" == 'x86_64' ];
 then 
-    colcon build
+    colcon build --packages-skip casadi matplotlib_cpp Tutorial
 fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --packages-up-to ghost_ros
+    colcon build --packages-up-to ghost_ros --packages-skip casadi matplotlib_cpp  Tutorial
 fi
 
 source install/setup.bash
