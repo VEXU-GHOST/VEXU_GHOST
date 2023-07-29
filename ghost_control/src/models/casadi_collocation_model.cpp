@@ -1,9 +1,8 @@
 #include "ghost_control/models/casadi_collocation_model.hpp"
+using namespace casadi;
 
 namespace ghost_control
 {
-
-    using namespace casadi;
 
     CasadiCollocationModel::CasadiCollocationModel(std::string config_file)
     {

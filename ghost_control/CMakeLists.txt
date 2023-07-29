@@ -18,6 +18,7 @@ set(CMAKE_BUILD_TYPE "RELEASE")
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
 
+find_package(ament_index_cpp REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(matplotlib_cpp REQUIRED)
@@ -71,7 +72,7 @@ install(
 ######################
 ### Casadi Example ###
 ######################
-add_executable(casadi_example_model_generation src/casadi_examples/casadi_example_model_generation.cpp)
+add_executable(casadi_example_model_generation src/examples/casadi_example_model_generation.cpp)
 ament_target_dependencies(casadi_example_model_generation
   Eigen3
   )

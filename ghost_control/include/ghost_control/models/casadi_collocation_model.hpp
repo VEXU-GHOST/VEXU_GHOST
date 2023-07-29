@@ -18,7 +18,6 @@ namespace ghost_control
 
         casadi::SX getIntegrationConstraints();
         casadi::SX getInitialStateConstraint();
-        
 
         // Shorthand to get symbolic state variable by name
         casadi::SX getState(std::string name)
@@ -38,8 +37,19 @@ namespace ghost_control
             return "k" + std::to_string(i) + "_";
         };
 
-        const std::vector<double>& getTimeVector(){
+        const std::vector<double> &getTimeVector()
+        {
             return time_vector_;
+        }
+
+        const casadi::SX  &getStateVector()
+        {
+            return state_vector_;
+        }
+
+        const casadi::SX  &getParamVector()
+        {
+            return param_vector_;
         }
 
     private:
@@ -67,7 +77,6 @@ namespace ghost_control
         casadi::SX constraint_vector_;
 
         // std::unordered_map<std::string, std::vector<double>> state_solution_map_;
-
     };
 
 } // namespace ghost_control
