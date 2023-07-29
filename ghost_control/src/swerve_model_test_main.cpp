@@ -7,10 +7,41 @@
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include "urdf_parser/urdf_parser.h"
+#include "urdf_model/link.h"
 
 #include <ghost_util/dfs_search.hpp>
 
 using ghost_util::DFSSearch;
+using ghost_util::SearchNode;
+
+class URDFLinkSearchNode : public SearchNode<urdf::Link>
+{
+public:
+    URDFLinkSearchNode(std::shared_ptr<urdf::Link> node) : SearchNode<urdf::Link>(node)
+    {
+        m_id = node->name;
+    }
+
+    std::vector<std::shared_ptr<ghost_util::SearchNodeBase>> getChildren() override
+    {
+        std::vector<std::shared_ptr<SearchNodeBase>> child_list{};
+        for (auto &child : m_node->child_links)
+        {
+            child_list.push_back(std::make_shared<URDFLinkSearchNode>(child));
+        }
+        return child_list;
+    };
+
+    void processNode(int depth) override
+    {
+        for (int i = 0; i < depth; i++)
+        {
+            std::cout << "\t";
+        }
+        std::cout << m_node->name << std::endl;
+        // link_names.push_back(link_ptr->name);
+    };
+};
 
 int main(int argc, char *argv[])
 {
@@ -20,22 +51,11 @@ int main(int argc, char *argv[])
     std::shared_ptr<urdf::ModelInterface> urdf = urdf::parseURDFFile(urdf_path);
 
     // Traverse URDF Tree
-    auto base_link = urdf->getLink("base_link");
-    std::cout << base_link->name << std::endl;
+    std::shared_ptr<urdf::Link> base_link_ptr;
+    urdf->getLink("base_link", base_link_ptr);
 
-    std::unordered_map<std::shared_ptr<const urdf::Link>, bool> visited;
-    int depth = 0;
+    DFSSearch(std::make_shared<URDFLinkSearchNode>(base_link_ptr));
 
-    auto print_link = [](std::shared_ptr<const urdf::Link> link_ptr, int depth)
-    {
-        for (int i = 0; i < depth; i++)
-        {
-            std::cout << "\t";
-        }
-        std::cout << link_ptr->name << std::endl;
-    };
-
-    DFSSearch<const urdf::Link>(base_link, print_link);
     // dfs(base_link, visited, depth, print_link);
 
     // for(const auto & link : links){
