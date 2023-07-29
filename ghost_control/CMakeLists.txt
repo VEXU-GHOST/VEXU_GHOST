@@ -17,14 +17,18 @@ set(CMAKE_BUILD_TYPE "RELEASE")
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
-
 find_package(ament_index_cpp REQUIRED)
+
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
+
+find_package(urdfdom REQUIRED)
+find_package(ghost_util REQUIRED)
+
 find_package(matplotlib_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
-find_package(PythonLibs REQUIRED)
 
+find_package(PythonLibs REQUIRED)
 find_package(casadi REQUIRED)
 
 include_directories(${PYTHON_INCLUDE_DIRS})
@@ -98,6 +102,9 @@ install(TARGETS
 add_executable(swerve_model_test_main src/swerve_model_test_main.cpp)
 ament_target_dependencies(swerve_model_test_main
   Eigen3
+  urdfdom
+  ament_index_cpp
+  ghost_util
 )
 target_link_libraries(swerve_model_test_main
 casadi)
