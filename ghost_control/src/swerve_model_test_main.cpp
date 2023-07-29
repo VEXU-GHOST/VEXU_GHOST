@@ -13,13 +13,19 @@
 
 using ghost_util::DFSSearch;
 using ghost_util::SearchNode;
+using urdf::Joint;
 
 class URDFLinkSearchNode : public SearchNode<urdf::Link>
 {
 public:
-    URDFLinkSearchNode(std::shared_ptr<urdf::Link> node) : SearchNode<urdf::Link>(node)
+    URDFLinkSearchNode(
+        std::shared_ptr<urdf::Link> node,
+        std::shared_ptr<std::vector<std::string>> &names_ptr)
+        : SearchNode<urdf::Link>(node)
     {
         m_id = node->name;
+        m_names_ptr = names_ptr;
+        m_names_ptr->push_back(m_id);
     }
 
     std::vector<std::shared_ptr<ghost_util::SearchNodeBase>> getChildren() override
@@ -27,20 +33,36 @@ public:
         std::vector<std::shared_ptr<SearchNodeBase>> child_list{};
         for (auto &child : m_node->child_links)
         {
-            child_list.push_back(std::make_shared<URDFLinkSearchNode>(child));
+            child_list.push_back(std::make_shared<URDFLinkSearchNode>(child, m_names_ptr));
         }
         return child_list;
     };
 
     void processNode(int depth) override
     {
-        for (int i = 0; i < depth; i++)
+        auto link = m_node;
+        auto joint = m_node->parent_joint;
+        if (joint != NULL)
         {
-            std::cout << "\t";
+            if (joint->type == Joint::CONTINUOUS)
+            {
+
+                std::cout << std::endl;
+                std::cout << "Link Name: " << link->name << std::endl;
+                std::cout << "Mass: " << link->inertial->mass << std::endl;
+                std::cout << "Inertia: " << link->inertial->izz << std::endl;
+
+                std::cout << "Joint Name: " << joint->name << std::endl;
+                std::cout << "Friction: " << joint->dynamics->friction << std::endl;
+                std::cout << "Damping: " << joint->dynamics->damping << std::endl;
+            }
         }
-        std::cout << m_node->name << std::endl;
+
         // link_names.push_back(link_ptr->name);
     };
+
+private:
+    std::shared_ptr<std::vector<std::string>> m_names_ptr;
 };
 
 int main(int argc, char *argv[])
@@ -54,9 +76,12 @@ int main(int argc, char *argv[])
     std::shared_ptr<urdf::Link> base_link_ptr;
     urdf->getLink("base_link", base_link_ptr);
 
-    DFSSearch(std::make_shared<URDFLinkSearchNode>(base_link_ptr));
+    std::cout << base_link_ptr->name << std::endl;
+    std::cout << base_link_ptr->inertial->mass << std::endl;
+    std::cout << base_link_ptr->inertial->izz << std::endl;
 
-    // dfs(base_link, visited, depth, print_link);
+    auto names = std::make_shared<std::vector<std::string>>();
+    DFSSearch(std::make_shared<URDFLinkSearchNode>(base_link_ptr, names));
 
     // for(const auto & link : links){
     // std::cout << "Name: " << link->name << std::endl;
@@ -72,15 +97,6 @@ int main(int argc, char *argv[])
     // std::cout << "\t\t\t" << link->inertial->origin.rotation.w << std::endl;
     // std::cout << "\t\tMass: " << link->inertial->mass << std::endl;
     // std::cout << "\t\tInertial: " << link->inertial->ixx << ", " << link->inertial->ixy << ", " << link->inertial->ixz << ", " << link->inertial->iyy << ", " << link->inertial->iyz << ", " << link->inertial->izz << std::endl;
-
-    // std::cout << "Child Joints:" << std::endl;
-    // for(const auto& joint : link->child_joints){
-    //     std::cout << "\t\t" << joint->name << std::endl;
-    // }
-    // std::cout << "Child Links:" << std::endl;
-    // for(const auto& link_name : link->child_links){
-    //     std::cout << "\t\t" << link_name << std::endl;
-    // }
 
     // std::cout << std::endl;
     // }
