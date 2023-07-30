@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
     <!-- Steering Module Macro -->
     <xacro:macro name="steering_macro" params="id">
-    <link name="mod_${id}">
+    <link name="steering_link_${id}">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <mass value="0.4545"/>
@@ -25,7 +25,7 @@
 
     <!-- Wheel Macro -->
     <xacro:macro name="wheel_macro" params="id r_wheel width_wheel collision_factor">
-    <link name="wheel_${id}">
+    <link name="wheel_link_${id}">
             <visual>
                 <geometry>
                     <cylinder radius="${r_wheel}" length="${width_wheel}"/>
