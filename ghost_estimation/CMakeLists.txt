@@ -166,6 +166,9 @@ target_include_directories(state_estimator_node
 install(TARGETS
   state_estimator_node
   DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY 
+  launch
+  DESTINATION share/${PROJECT_NAME})
 
 
 #######################
