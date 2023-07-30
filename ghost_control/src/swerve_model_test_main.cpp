@@ -46,7 +46,6 @@ public:
         {
             if (joint->type == Joint::CONTINUOUS)
             {
-
                 std::cout << std::endl;
                 std::cout << "Link Name: " << link->name << std::endl;
                 std::cout << "Mass: " << link->inertial->mass << std::endl;
@@ -55,6 +54,14 @@ public:
                 std::cout << "Joint Name: " << joint->name << std::endl;
                 std::cout << "Friction: " << joint->dynamics->friction << std::endl;
                 std::cout << "Damping: " << joint->dynamics->damping << std::endl;
+
+                // std::cout << "\t\t\t" << link->inertial->origin.position.x << std::endl;
+                // std::cout << "\t\t\t" << link->inertial->origin.position.y << std::endl;
+                // std::cout << "\t\t\t" << link->inertial->origin.position.z << std::endl;
+                // std::cout << "\t\t\t" << link->inertial->origin.rotation.x << std::endl;
+                // std::cout << "\t\t\t" << link->inertial->origin.rotation.y << std::endl;
+                // std::cout << "\t\t\t" << link->inertial->origin.rotation.z << std::endl;
+                // std::cout << "\t\t\t" << link->inertial->origin.rotation.w << std::endl;
             }
         }
 
@@ -82,25 +89,6 @@ int main(int argc, char *argv[])
 
     auto names = std::make_shared<std::vector<std::string>>();
     DFSSearch(std::make_shared<URDFLinkSearchNode>(base_link_ptr, names));
-
-    // for(const auto & link : links){
-    // std::cout << "Name: " << link->name << std::endl;
-    // std::cout << "\tParent Joint: " << link->parent_joint << std::endl;
-    // std::cout << "\tInertial:" << std::endl;
-    // std::cout << "\t\tPose: " << std::endl;
-    // std::cout << "\t\t\t" << link->inertial->origin.position.x << std::endl;
-    // std::cout << "\t\t\t" << link->inertial->origin.position.y << std::endl;
-    // std::cout << "\t\t\t" << link->inertial->origin.position.z << std::endl;
-    // std::cout << "\t\t\t" << link->inertial->origin.rotation.x << std::endl;
-    // std::cout << "\t\t\t" << link->inertial->origin.rotation.y << std::endl;
-    // std::cout << "\t\t\t" << link->inertial->origin.rotation.z << std::endl;
-    // std::cout << "\t\t\t" << link->inertial->origin.rotation.w << std::endl;
-    // std::cout << "\t\tMass: " << link->inertial->mass << std::endl;
-    // std::cout << "\t\tInertial: " << link->inertial->ixx << ", " << link->inertial->ixy << ", " << link->inertial->ixz << ", " << link->inertial->iyy << ", " << link->inertial->iyz << ", " << link->inertial->izz << std::endl;
-
-    // std::cout << std::endl;
-    // }
-    // model.initFile(urdf_path);
 
     return 0;
 }
