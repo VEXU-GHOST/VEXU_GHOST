@@ -43,5 +43,5 @@ Full disclosure, I've dual-booted for awhile and so I don't test these instructi
 ### SSH Setup 
 If you haven't used Github on your computer before, you will need to add SSH keys. These let github recognize your computer (and this replaced using password last year).
 
-**Generate Key: **https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
-**Add Key: **https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
+**Generate Key:** https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent \
+**Add Key:** https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
