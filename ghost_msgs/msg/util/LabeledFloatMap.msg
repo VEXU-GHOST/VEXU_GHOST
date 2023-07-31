@@ -1,0 +1,1 @@
+ghost_msgs/LabeledFloat[] entries
