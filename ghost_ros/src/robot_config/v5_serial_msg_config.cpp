@@ -3,20 +3,20 @@
 
 namespace ghost_v5_config{
     // Defines order to pack Jetson -> V5 serial msg
-    const std::vector<std::pair<v5_motor_id_enum, bool>> actuator_command_config = {
-        std::pair<v5_motor_id_enum, bool>(DRIVE_LEFT_FRONT_MOTOR,       false),
-        std::pair<v5_motor_id_enum, bool>(DRIVE_LEFT_BACK_MOTOR,        false),
-        std::pair<v5_motor_id_enum, bool>(DRIVE_RIGHT_FRONT_MOTOR,      false),
-        std::pair<v5_motor_id_enum, bool>(DRIVE_RIGHT_BACK_MOTOR,       false),
-        std::pair<v5_motor_id_enum, bool>(DRIVE_BACK_LEFT_REAR_MOTOR,   false),
-        std::pair<v5_motor_id_enum, bool>(DRIVE_BACK_LEFT_FRONT_MOTOR,  false),
-        std::pair<v5_motor_id_enum, bool>(DRIVE_BACK_RIGHT_REAR_MOTOR,  false),
-        std::pair<v5_motor_id_enum, bool>(DRIVE_BACK_RIGHT_FRONT_MOTOR, false),
-        std::pair<v5_motor_id_enum, bool>(INTAKE_MOTOR_1,               false),
-        std::pair<v5_motor_id_enum, bool>(INTAKE_MOTOR_2,               false),
-        std::pair<v5_motor_id_enum, bool>(INDEXER_MOTOR,                false),
-        std::pair<v5_motor_id_enum, bool>(SHOOTER_LEFT_MOTOR,           false),
-        std::pair<v5_motor_id_enum, bool>(SHOOTER_RIGHT_MOTOR,          false),
+    const std::vector<v5_motor_id_enum> actuator_command_config = {
+        DRIVE_LEFT_FRONT_MOTOR,
+        DRIVE_LEFT_BACK_MOTOR,
+        DRIVE_RIGHT_FRONT_MOTOR,
+        DRIVE_RIGHT_BACK_MOTOR,
+        DRIVE_BACK_LEFT_REAR_MOTOR,
+        DRIVE_BACK_LEFT_FRONT_MOTOR,
+        DRIVE_BACK_RIGHT_REAR_MOTOR,
+        DRIVE_BACK_RIGHT_FRONT_MOTOR,
+        INTAKE_MOTOR_1,
+        INTAKE_MOTOR_2,
+        INDEXER_MOTOR,
+        SHOOTER_LEFT_MOTOR,
+        SHOOTER_RIGHT_MOTOR,
     };
     
     const int num_motors = actuator_command_config.size();

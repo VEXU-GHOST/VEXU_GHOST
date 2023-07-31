@@ -510,8 +510,7 @@ namespace ghost_ros
         // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].active    = true;
 
         // Set Motor Names and Device IDs
-        for (auto pair : ghost_v5_config::actuator_command_config){
-            int dev_id = pair.first;
+        for (auto dev_id : ghost_v5_config::actuator_command_config){
             actuator_cmd_msg_.motor_commands[dev_id].motor_name =   ghost_v5_config::device_names.at(dev_id);
             actuator_cmd_msg_.motor_commands[dev_id].device_id =    dev_id;
         }

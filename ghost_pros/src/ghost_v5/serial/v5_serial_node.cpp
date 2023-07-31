@@ -70,17 +70,15 @@ namespace ghost_v5
 
 		for (int i = ghost_v5_config::actuator_command_config.size() - 1; i >= 0; i--)
 		{
-			auto motor_id = ghost_v5_config::actuator_command_config[i].first;
+			auto motor_id = ghost_v5_config::actuator_command_config[i];
 			// v5_globals::motors[motor_id]->setActive(actuator_active_vector & (0x0001));
 			actuator_active_vector >>= 1;
 		}
 
 		// Update each motor based on msg configuration and new values
-		for (auto &motor_pair : ghost_v5_config::actuator_command_config)
+		for (auto &motor_id : ghost_v5_config::actuator_command_config)
 		{
 			// For clarity of configuration file
-			auto motor_id = motor_pair.first;
-
 			// Copy Current Limit
 			int32_t current_limit;
 			memcpy(&current_limit, buffer + buffer_8bit_index, 4);

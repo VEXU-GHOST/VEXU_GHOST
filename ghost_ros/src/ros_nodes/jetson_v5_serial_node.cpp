@@ -193,16 +193,20 @@ namespace ghost_ros
         buffer_8bit_index += 4;
 
         // Assign motor commands
-        for (auto motor_pair : ghost_v5_config::actuator_command_config)
+        for (const auto motor_id : ghost_v5_config::actuator_command_config)
         {
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair.first].current_limit), 4);
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair].current_limit), 4);
             buffer_8bit_index += 4;
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair.first].desired_voltage), 4);
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair].desired_voltage), 4);
             buffer_8bit_index += 4;
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair.first].desired_velocity), 4);
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair].desired_velocity), 4);
             buffer_8bit_index += 4;
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair.first].desired_angle), 4);
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair].desired_angle), 4);
             buffer_8bit_index += 4;
+        }
+
+        for (int i = 0; i < ghost_v5_config::num_motors; i++)
+        {
         }
 
         // Msg ID
