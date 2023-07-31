@@ -175,7 +175,7 @@ namespace ghost_ros
         }
 
         // Pack into single msg
-        int buffer_index = 0;
+        int buffer_8bit_index = 0;
         unsigned char msg_buffer[actuator_command_msg_len_] = {
             0,
         };
@@ -189,19 +189,25 @@ namespace ghost_ros
         }
         // actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config.back().first].active;
 
-        memcpy(msg_buffer + 4 * (buffer_index++), &actuator_active_vector, 4);
+        memcpy(msg_buffer + buffer_8bit_index, &actuator_active_vector, 4);
+        buffer_8bit_index += 4;
 
         // Assign motor commands
         for (auto motor_pair : ghost_v5_config::actuator_command_config)
         {
-            memcpy(msg_buffer + 4 * (buffer_index++), &(msg->motor_commands[motor_pair.first].current_limit), 4);
-            memcpy(msg_buffer + 4 * (buffer_index++), &(msg->motor_commands[motor_pair.first].desired_voltage), 4);
-            memcpy(msg_buffer + 4 * (buffer_index++), &(msg->motor_commands[motor_pair.first].desired_velocity), 4);
-            if (motor_pair.second)
-            {
-                memcpy(msg_buffer + 4 * (buffer_index++), &(msg->motor_commands[motor_pair.first].desired_angle), 4);
-            }
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair.first].current_limit), 4);
+            buffer_8bit_index += 4;
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair.first].desired_voltage), 4);
+            buffer_8bit_index += 4;
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair.first].desired_velocity), 4);
+            buffer_8bit_index += 4;
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair.first].desired_angle), 4);
+            buffer_8bit_index += 4;
         }
+
+        // Msg ID
+        memcpy(msg_buffer + buffer_8bit_index, &(msg->msg_id), 4);
+        buffer_8bit_index += 4;
 
         // Digital Outputs
         uint8_t digital_out_byte = 0;
@@ -211,8 +217,7 @@ namespace ghost_ros
             digital_out_byte <<= 1;
         }
         digital_out_byte += msg->digital_port_vector[7];
-        memcpy(msg_buffer + 4 * (buffer_index), &digital_out_byte, 1);
-        memcpy(msg_buffer + 4 * (buffer_index) + 1, &(msg->msg_id), 4);
+        memcpy(msg_buffer + buffer_8bit_index, &digital_out_byte, 1);
 
         serial_base_interface_->writeMsgToSerial(msg_buffer, actuator_command_msg_len_);
     }
@@ -299,18 +304,18 @@ namespace ghost_ros
         memcpy(&digital_states, buffer + 4 * buffer_index, 2);
 
         // Joystick Buttons
-        joystick_msg.joystick_btn_a =        digital_states & 0x8000;
-        joystick_msg.joystick_btn_b =        digital_states & 0x4000;
-        joystick_msg.joystick_btn_x =        digital_states & 0x2000;
-        joystick_msg.joystick_btn_y =        digital_states & 0x1000;
-        joystick_msg.joystick_btn_up =       digital_states & 0x0800;
-        joystick_msg.joystick_btn_down =     digital_states & 0x0400;
-        joystick_msg.joystick_btn_left =     digital_states & 0x0200;
-        joystick_msg.joystick_btn_right =    digital_states & 0x0100;
-        joystick_msg.joystick_btn_l1 =       digital_states & 0x0080;
-        joystick_msg.joystick_btn_l2 =       digital_states & 0x0040;
-        joystick_msg.joystick_btn_r1 =       digital_states & 0x0020;
-        joystick_msg.joystick_btn_r2 =       digital_states & 0x0010;
+        joystick_msg.joystick_btn_a = digital_states & 0x8000;
+        joystick_msg.joystick_btn_b = digital_states & 0x4000;
+        joystick_msg.joystick_btn_x = digital_states & 0x2000;
+        joystick_msg.joystick_btn_y = digital_states & 0x1000;
+        joystick_msg.joystick_btn_up = digital_states & 0x0800;
+        joystick_msg.joystick_btn_down = digital_states & 0x0400;
+        joystick_msg.joystick_btn_left = digital_states & 0x0200;
+        joystick_msg.joystick_btn_right = digital_states & 0x0100;
+        joystick_msg.joystick_btn_l1 = digital_states & 0x0080;
+        joystick_msg.joystick_btn_l2 = digital_states & 0x0040;
+        joystick_msg.joystick_btn_r1 = digital_states & 0x0020;
+        joystick_msg.joystick_btn_r2 = digital_states & 0x0010;
 
         // Competition state
         competition_state_msg.is_disabled = digital_states & 0x0008;

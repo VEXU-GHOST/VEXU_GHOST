@@ -21,8 +21,8 @@ namespace ghost_v5
 		bool use_checksum) : read_msg_id_{1}, write_msg_id_{1}
 	{
 		// Calculate Msg Sizes based on robot configuration
-        actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
-        sensor_update_msg_len_ = ghost_v5_config::get_sensor_update_msg_len();
+		actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
+		sensor_update_msg_len_ = ghost_v5_config::get_sensor_update_msg_len();
 		int num_motors_ = 0;
 
 		// Array to store latest incoming msg
@@ -61,63 +61,63 @@ namespace ghost_v5
 	void V5SerialNode::updateActuatorCommands(unsigned char buffer[])
 	{
 		// Index to count 32-bit values from buffer
-		int buffer_32bit_index = 0;
+		int buffer_8bit_index = 0;
 
-        // Motor Active States
-        uint32_t actuator_active_vector = 0;
-        memcpy(&actuator_active_vector, buffer + 4 * (buffer_32bit_index++), 4);
-		for(int i = ghost_v5_config::actuator_command_config.size() - 1; i >= 0; i--)
-        {
+		// Motor Active States
+		uint32_t actuator_active_vector = 0;
+		memcpy(&actuator_active_vector, buffer + buffer_8bit_index, 4);
+		buffer_8bit_index += 4;
+
+		for (int i = ghost_v5_config::actuator_command_config.size() - 1; i >= 0; i--)
+		{
 			auto motor_id = ghost_v5_config::actuator_command_config[i].first;
 			// v5_globals::motors[motor_id]->setActive(actuator_active_vector & (0x0001));
 			actuator_active_vector >>= 1;
-        }
+		}
 
 		// Update each motor based on msg configuration and new values
 		for (auto &motor_pair : ghost_v5_config::actuator_command_config)
 		{
 			// For clarity of configuration file
 			auto motor_id = motor_pair.first;
-			bool use_position_control = motor_pair.second;
 
 			// Copy Current Limit
 			int32_t current_limit;
-			memcpy(&current_limit, buffer + 4 * (buffer_32bit_index++), 4);
+			memcpy(&current_limit, buffer + buffer_8bit_index, 4);
+			buffer_8bit_index += 4;
 			v5_globals::motors[motor_id]->set_current_limit(current_limit);
 
 			// Copy Voltage Command
 			float voltage_command;
-			memcpy(&voltage_command, buffer + 4 * (buffer_32bit_index++), 4);
+			memcpy(&voltage_command, buffer + buffer_8bit_index, 4);
+			buffer_8bit_index += 4;
 
 			// Copy Velocity Command
 			float velocity_command;
-			memcpy(&velocity_command, buffer + 4 * (buffer_32bit_index++), 4);
+			memcpy(&velocity_command, buffer + buffer_8bit_index, 4);
+			buffer_8bit_index += 4;
 
-			if (use_position_control)
-			{
-				// Copy Angle Command, if enabled for this motor
-				int32_t angle_command;
-				memcpy(&angle_command, buffer + 4 * (buffer_32bit_index++), 4);
+			// Copy Angle Command, if enabled for this motor
+			int32_t angle_command;
+			memcpy(&angle_command, buffer + buffer_8bit_index, 4);
+			buffer_8bit_index += 4;
 
-				// v5_globals::motors[motor_id]->setMotorCommand(voltage_command, velocity_command, angle_command);
-			}
-			else
-			{
-				// v5_globals::motors[motor_id]->setMotorCommand(voltage_command, velocity_command);
-			}
-		}
-
-		// Update Digital Outputs
-		uint8_t digital_out_vector = 0;
-		memcpy(&digital_out_vector, buffer + 4 * buffer_32bit_index, 1);
-		for (int i = 7; i >= 0; i--)
-		{
-			v5_globals::digital_out_cmds[i] = (bool) (digital_out_vector & 0x01);
-			digital_out_vector >>= 1;
+			v5_globals::motors[motor_id]->setMotorCommand(voltage_command, velocity_command, angle_command);
 		}
 
 		// Update incoming msg id
-		memcpy(&read_msg_id_, buffer + 4 * buffer_32bit_index + 1, 4);
+		memcpy(&msg_id, buffer + buffer_8bit_index, 4);
+		buffer_8bit_index += 4;
+
+		// Update Digital Outputs
+		uint8_t digital_out_vector = 0;
+		memcpy(&digital_out_vector, buffer + buffer_8bit_index, 1);
+		buffer_8bit_index += 4;
+		for (int i = 7; i >= 0; i--)
+		{
+			v5_globals::digital_out_cmds[i] = (bool)(digital_out_vector & 0x01);
+			digital_out_vector >>= 1;
+		}
 	}
 
 	void V5SerialNode::writeV5StateUpdate()
@@ -159,8 +159,8 @@ namespace ghost_v5
 		// Update V5 Sensors
 		for (auto &sensor_id : ghost_v5_config::sensor_update_sensor_config)
 		{
-			float position = ((float) v5_globals::encoders[sensor_id]->get_angle()) / 100.0;
-			float velocity = ((float) v5_globals::encoders[sensor_id]->get_velocity()) * 60.0 / 100.0 / 360.0; // Centidegrees -> RPM
+			float position = ((float)v5_globals::encoders[sensor_id]->get_angle()) / 100.0;
+			float velocity = ((float)v5_globals::encoders[sensor_id]->get_velocity()) * 60.0 / 100.0 / 360.0; // Centidegrees -> RPM
 
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
@@ -178,7 +178,7 @@ namespace ghost_v5
 		// Poll joystick channels
 		for (int i = 0; i < 4; i++)
 		{
-			float analog_input = ((float) v5_globals::controller_main.get_analog(v5_globals::joy_channels[i])) / 127.0;
+			float analog_input = ((float)v5_globals::controller_main.get_analog(v5_globals::joy_channels[i])) / 127.0;
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &analog_input, 4);
 		}
 
