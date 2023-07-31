@@ -35,7 +35,7 @@ public:
             );
 
         robot_pose_pub_ = this->create_publisher<ghost_msgs::msg::GhostRobotState>(
-            "/tf",
+            "/estimation/robot_state",
             10
             );
 
