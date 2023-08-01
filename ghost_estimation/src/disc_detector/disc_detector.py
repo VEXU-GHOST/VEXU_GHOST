@@ -113,10 +113,8 @@ def initCamera():
     vsize = 480
     hfov = 69
     vfov = 42
-    #lower_color = (20,140,100)
-    #upper_color = (50,255,255)
-    lower_color = (50,140,100)
-    upper_color = (100,255,255)
+    lower_color = (25,70,100)
+    upper_color = (80,255,255)
     camera_height = 18 #inch
     detector = DiscDetector(hsize, vsize, hfov, vfov, lower_color, upper_color)
     return detector
