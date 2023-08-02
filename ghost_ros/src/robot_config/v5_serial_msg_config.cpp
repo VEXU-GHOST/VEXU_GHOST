@@ -22,8 +22,8 @@ namespace ghost_v5_config{
     const int num_motors = actuator_command_config.size();
 
     // Each motor has position, velocity, torque, voltage, and current
-    // Each motor has four control active flags, pack these into half a byte (so round up for odd number of motors)
-    const int actuator_update_packet_byte_size = 5 * 4 + std::round((float) num_motors / 2.0 + 0.1);
+    // Each motor has four control active flags, add one byte per motor for flags
+    const int actuator_update_packet_byte_size = 5 * 4 + 1;
     const int actuator_cmd_extra_byte_count = 2 + 3; // 2x Bytes for Msg Sequence ID + 3x Bytes for Motor Active Vector
 
     // Defines order to pack V5 -> Jetson serial msg

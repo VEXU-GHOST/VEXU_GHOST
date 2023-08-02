@@ -9,6 +9,25 @@ using ghost_v5_config::ghost_gearset;
 using ghost_v5_config::ghost_encoder_unit;
 namespace ghost_v5
 {
+    // PROS Config Mappings
+    const std::map<ghost_v5_config::ghost_gearset, pros::motor_gearset_e_t> RPM_TO_GEARING_MAP{
+        {ghost_v5_config::ghost_gearset::GEARSET_100, pros::E_MOTOR_GEAR_100},
+        {ghost_v5_config::ghost_gearset::GEARSET_200, pros::E_MOTOR_GEAR_200},
+        {ghost_v5_config::ghost_gearset::GEARSET_600, pros::E_MOTOR_GEAR_600},
+        {ghost_v5_config::ghost_gearset::GEARSET_3600, pros::E_MOTOR_GEAR_600}};
+
+    const std::map<ghost_v5_config::ghost_brake_mode, pros::motor_brake_mode_e_t> GHOST_BRAKE_MODE_MAP{
+        {ghost_v5_config::ghost_brake_mode::BRAKE_MODE_COAST, pros::E_MOTOR_BRAKE_COAST},
+        {ghost_v5_config::ghost_brake_mode::BRAKE_MODE_BRAKE, pros::E_MOTOR_BRAKE_BRAKE},
+        {ghost_v5_config::ghost_brake_mode::BRAKE_MODE_HOLD, pros::E_MOTOR_BRAKE_HOLD},
+        {ghost_v5_config::ghost_brake_mode::BRAKE_MODE_INVALID, pros::E_MOTOR_BRAKE_INVALID}};
+
+    const std::map<ghost_v5_config::ghost_encoder_unit, pros::motor_encoder_units_e_t> GHOST_ENCODER_UNIT_MAP{
+        {ghost_v5_config::ghost_encoder_unit::ENCODER_DEGREES, pros::E_MOTOR_ENCODER_DEGREES},
+        {ghost_v5_config::ghost_encoder_unit::ENCODER_ROTATIONS, pros::E_MOTOR_ENCODER_ROTATIONS},
+        {ghost_v5_config::ghost_encoder_unit::ENCODER_COUNTS, pros::E_MOTOR_ENCODER_COUNTS},
+        {ghost_v5_config::ghost_encoder_unit::ENCODER_INVALID, pros::E_MOTOR_ENCODER_INVALID}};
+
     GhostMotor::GhostMotor(
         int motor_port,
         bool reversed,

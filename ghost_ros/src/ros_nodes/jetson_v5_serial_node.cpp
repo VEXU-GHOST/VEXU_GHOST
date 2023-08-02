@@ -180,33 +180,33 @@ namespace ghost_ros
             0,
         };
 
-        // Motor Active States
-        uint32_t actuator_active_vector = 0;
-        for (int i = 0; i < ghost_v5_config::actuator_command_config.size() - 1; i++)
-        {
-            // actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config[i].first].active;
-            actuator_active_vector <<= 1;
-        }
-        // actuator_active_vector += msg->motor_commands[ghost_v5_config::actuator_command_config.back().first].active;
-
-        memcpy(msg_buffer + buffer_8bit_index, &actuator_active_vector, 4);
-        buffer_8bit_index += 4;
-
         // Assign motor commands
         for (const auto motor_id : ghost_v5_config::actuator_command_config)
         {
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair].current_limit), 4);
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].current_limit), 4);
             buffer_8bit_index += 4;
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair].desired_voltage), 4);
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_voltage), 4);
             buffer_8bit_index += 4;
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair].desired_velocity), 4);
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_torque), 4);
             buffer_8bit_index += 4;
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_pair].desired_angle), 4);
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_velocity), 4);
             buffer_8bit_index += 4;
-        }
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_angle), 4);
+            buffer_8bit_index += 4;
 
-        for (int i = 0; i < ghost_v5_config::num_motors; i++)
-        {
+            // Pack actuator flags into one byte
+            uint8_t actuator_flags_byte = 0;
+            actuator_flags_byte += msg->motor_commands[motor_id].angle_control;
+            actuator_flags_byte <<= 1;
+            actuator_flags_byte += msg->motor_commands[motor_id].velocity_control;
+            actuator_flags_byte <<= 1;
+            actuator_flags_byte += msg->motor_commands[motor_id].torque_control;
+            actuator_flags_byte <<= 1;
+            actuator_flags_byte += msg->motor_commands[motor_id].voltage_control;
+
+            // Copy to msg buffer
+            memcpy(msg_buffer + buffer_8bit_index, &actuator_flags_byte, 1);
+            buffer_8bit_index++;
         }
 
         // Msg ID

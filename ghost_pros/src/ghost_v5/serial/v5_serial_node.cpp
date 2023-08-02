@@ -63,18 +63,6 @@ namespace ghost_v5
 		// Index to count 32-bit values from buffer
 		int buffer_8bit_index = 0;
 
-		// Motor Active States
-		uint32_t actuator_active_vector = 0;
-		memcpy(&actuator_active_vector, buffer + buffer_8bit_index, 4);
-		buffer_8bit_index += 4;
-
-		for (int i = ghost_v5_config::actuator_command_config.size() - 1; i >= 0; i--)
-		{
-			auto motor_id = ghost_v5_config::actuator_command_config[i];
-			// v5_globals::motors[motor_id]->setActive(actuator_active_vector & (0x0001));
-			actuator_active_vector >>= 1;
-		}
-
 		// Update each motor based on msg configuration and new values
 		for (auto &motor_id : ghost_v5_config::actuator_command_config)
 		{
@@ -91,19 +79,38 @@ namespace ghost_v5
 			buffer_8bit_index += 4;
 
 			// Copy Velocity Command
+			float torque_command;
+			memcpy(&torque_command, buffer + buffer_8bit_index, 4);
+			buffer_8bit_index += 4;
+
+			// Copy Velocity Command
 			float velocity_command;
 			memcpy(&velocity_command, buffer + buffer_8bit_index, 4);
 			buffer_8bit_index += 4;
 
-			// Copy Angle Command, if enabled for this motor
+			// Copy Angle Command
 			int32_t angle_command;
 			memcpy(&angle_command, buffer + buffer_8bit_index, 4);
 			buffer_8bit_index += 4;
 
-			v5_globals::motors[motor_id]->setMotorCommand(voltage_command, velocity_command, angle_command);
+			uint8_t actuator_flags_byte;
+			memcpy(&actuator_flags_byte, buffer + buffer_8bit_index, 1);
+			buffer_8bit_index++;
+
+			bool voltage_control = (bool)(actuator_flags_byte & 0x01);
+			actuator_flags_byte >>= 1;
+			bool torque_control = (bool)(actuator_flags_byte & 0x01);
+			actuator_flags_byte >>= 1;
+			bool velocity_control = (bool)(actuator_flags_byte & 0x01);
+			actuator_flags_byte >>= 1;
+			bool angle_control = (bool)(actuator_flags_byte & 0x01);
+
+			v5_globals::motors[motor_id]->setControlMode(voltage_control, torque_control, velocity_control, angle_control);
+			v5_globals::motors[motor_id]->setMotorCommand(voltage_command, torque_command, velocity_command, angle_command);
 		}
 
 		// Update incoming msg id
+		uint32_t msg_id;
 		memcpy(&msg_id, buffer + buffer_8bit_index, 4);
 		buffer_8bit_index += 4;
 

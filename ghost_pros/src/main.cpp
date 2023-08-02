@@ -21,7 +21,8 @@ void zero_actuators(){
 
 	// Zero all motor commands
 	for(auto & m : v5_globals::motors){
-		m.second->setMotorCommand(0.0);
+		m.second->setControlMode(false, false, false, false);
+		m.second->setMotorCommand(0.0, 0.0, 0.0, 0.0);
 	}
 
 	// Zero Pneumatics
