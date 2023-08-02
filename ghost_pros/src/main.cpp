@@ -46,10 +46,6 @@ void update_actuators(){
 	actuator_lock.unlock();
 }
 
-void button_callback()
-{
-}
-
 void actuator_timeout_loop()
 {
 	uint32_t loop_time = pros::millis();
@@ -88,29 +84,6 @@ void ghost_main_loop(){
 	}
 }
 
-void test_flywheel_indexer_pulse(){
-	static uint32_t last_index_time = pros::millis();
-	static bool indexer_on = false;
-
-	v5_globals::motors[v5_motor_id_enum::SHOOTER_RIGHT_MOTOR]->setMotorCommand(0.0, 1200.0);
-	v5_globals::motors[v5_motor_id_enum::SHOOTER_LEFT_MOTOR]->setMotorCommand(0.0, 2400.0);
-
-	if(!indexer_on){
-		v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]->setMotorCommand(0.0, 0.0);
-		if(pros::millis() > last_index_time + 2000){
-			last_index_time = pros::millis();
-			indexer_on = true;
-		}
-	}
-	else{
-		v5_globals::motors[v5_motor_id_enum::INDEXER_MOTOR]->setMotorCommand(0.0, 600.0);
-		if(pros::millis() > last_index_time + 150){
-			last_index_time = pros::millis();
-			indexer_on = false;
-		}
-	}
-}
-
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -138,13 +111,6 @@ void initialize()
 		}
 		v5_globals::encoders[encoder_id]->set_data_rate(5);
 	}
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->reverse();
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->reverse();
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->reverse();
-
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_LEFT_ENCODER]->set_data_rate(5);
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_RIGHT_ENCODER]->set_data_rate(5);
-	v5_globals::encoders[v5_sensor_id_enum::STEERING_BACK_ENCODER]->set_data_rate(5);
 
 	zero_actuators();
 
@@ -224,7 +190,6 @@ void opcontrol(){
 	while (!pros::competition::is_autonomous() && !pros::competition::is_disabled())
 	{
 		ghost_main_loop();
-		// test_flywheel_indexer_pulse();
 		update_actuators();
 
 		pros::c::task_delay_until(&loop_time, 10);
