@@ -3,7 +3,7 @@ For each motor configuration, we define a struct
 */
 
 
-#include "ghost_ros/robot_config/v5_robot_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 
 namespace ghost_v5_config
 {
@@ -46,25 +46,15 @@ namespace ghost_v5_config
     };
 
     START_MOTORS
-    ADD_MOTOR(DRIVE_LEFT_FRONT_MOTOR,       false,  drive_motor_config)
-    ADD_MOTOR(DRIVE_LEFT_BACK_MOTOR,        false,  drive_motor_config)
-    ADD_MOTOR(DRIVE_RIGHT_FRONT_MOTOR,      false,  drive_motor_config)
-    ADD_MOTOR(DRIVE_RIGHT_BACK_MOTOR,       false,  drive_motor_config)
-    ADD_MOTOR(DRIVE_BACK_LEFT_REAR_MOTOR,   false,  drive_motor_config)
-    ADD_MOTOR(DRIVE_BACK_LEFT_FRONT_MOTOR,  true,   drive_motor_config)
-    ADD_MOTOR(DRIVE_BACK_RIGHT_REAR_MOTOR,  false,  drive_motor_config)
-    ADD_MOTOR(DRIVE_BACK_RIGHT_FRONT_MOTOR, true,   drive_motor_config)
-    ADD_MOTOR(INTAKE_MOTOR_1,               false,  intake_motor_config)
-    ADD_MOTOR(INTAKE_MOTOR_2,               true,   intake_motor_config)
-    ADD_MOTOR(SHOOTER_RIGHT_MOTOR,          false,  shooter_motor_config)
-    ADD_MOTOR(SHOOTER_LEFT_MOTOR,           true,   shooter_motor_config)
-    ADD_MOTOR(INDEXER_MOTOR,                true,   indexer_motor_config)
-    ADD_MOTOR(ENDGAME_MOTOR,                false,  endgame_motor_config)
+    ADD_MOTOR("DRIVE_LEFT_FRONT_MOTOR",   1,  false,  drive_motor_config)
+    ADD_MOTOR("DRIVE_LEFT_BACK_MOTOR",    2,  false,  drive_motor_config)
+    ADD_MOTOR("DRIVE_RIGHT_FRONT_MOTOR",  3,  false,  drive_motor_config)
+    ADD_MOTOR("DRIVE_RIGHT_BACK_MOTOR",   4,  false,  drive_motor_config)
     END_MOTORS
 
     START_ENCODERS
-    ADD_ENCODER(STEERING_LEFT_ENCODER, false)
-    ADD_ENCODER(STEERING_RIGHT_ENCODER, false)
-    ADD_ENCODER(STEERING_BACK_ENCODER, false)
+    // ADD_ENCODER(STEERING_LEFT_ENCODER, false)
+    // ADD_ENCODER(STEERING_RIGHT_ENCODER, false)
+    // ADD_ENCODER(STEERING_BACK_ENCODER, false)
     END_ENCODERS
 }

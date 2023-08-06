@@ -37,10 +37,10 @@ namespace ghost_ros
         EXPANSION_MODE
     };
 
-    class RobotStateMachineNode : public rclcpp::Node
+    class SpinUpRobotStateMachineNode : public rclcpp::Node
     {
     public:
-        RobotStateMachineNode();
+        SpinUpRobotStateMachineNode();
 
     private:
         void updateController();

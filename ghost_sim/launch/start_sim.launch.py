@@ -105,21 +105,21 @@ def generate_launch_description():
         condition=launch.conditions.IfCondition(LaunchConfiguration("joystick"))
     )
 
-    estimator_node = Node(
-        package='ghost_ros',
-        executable='ghost_estimator_node',
-        name='ghost_estimator_node',
-        output='screen',
-        parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
-    )
+    # estimator_node = Node(
+    #     package='ghost_ros',
+    #     executable='ghost_estimator_node',
+    #     name='ghost_estimator_node',
+    #     output='screen',
+    #     parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
+    # )
 
-    state_machine_node = Node(
-        package='ghost_ros',
-        executable='robot_state_machine_node',
-        name='ghost_state_machine_node',
-        output='screen',
-        parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
-    )
+    # state_machine_node = Node(
+    #     package='ghost_ros',
+    #     executable='robot_state_machine_node',
+    #     name='ghost_state_machine_node',
+    #     output='screen',
+    #     parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
+    # )
 
     return LaunchDescription([
         DeclareLaunchArgument(name='enable_pid', default_value='true'),
@@ -127,10 +127,10 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_gui', default_value='false'),
         DeclareLaunchArgument('verbose', default_value='false'),
         simulation,
-        ground_truth_publisher,
+        # ground_truth_publisher,
         rviz_node,
         joy_launch_description,
-        estimator_node,
-        state_machine_node,
+        # estimator_node,
+        # state_machine_node,
         OpaqueFunction(function = launch_setup)
     ])

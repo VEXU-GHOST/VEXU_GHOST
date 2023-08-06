@@ -14,6 +14,7 @@
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>visualization_msgs</depend>
+  <depend>ghost_common</depend>
   <depend>ghost_serial</depend>
   <depend>ghost_msgs</depend>
   <depend>ghost_description</depend>

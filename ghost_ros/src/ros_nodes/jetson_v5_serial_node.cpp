@@ -1,5 +1,5 @@
 #include "ghost_ros/ros_nodes/jetson_v5_serial_node.hpp"
-#include "ghost_ros/robot_config/v5_serial_msg_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_serial/serial_utils/bitmasks.hpp"
 
 using std::placeholders::_1;
@@ -181,7 +181,7 @@ namespace ghost_ros
         };
 
         // Assign motor commands
-        for (const auto motor_id : ghost_v5_config::actuator_command_config)
+        for (const auto motor_id : ghost_v5_config::motor_config_map)
         {
             memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].current_limit), 4);
             buffer_8bit_index += 4;
@@ -243,7 +243,7 @@ namespace ghost_ros
 
         // Copy sensor device data to ros msg
         int buffer_index = 0;
-        for (auto motor_id : ghost_v5_config::sensor_update_motor_config)
+        for (auto motor_id : ghost_v5_config::motor_config_map)
         {
             // Set Device Name from Config Enum ID
             encoder_state_msg.encoders[motor_id].device_name = ghost_v5_config::device_names.at(motor_id);
@@ -280,7 +280,7 @@ namespace ghost_ros
             encoder_state_msg.encoders[motor_id].power_w = power;
         }
 
-        for (auto sensor_id : ghost_v5_config::sensor_update_sensor_config)
+        for (auto sensor_id : ghost_v5_config::sensor_config_map)
         {
             // Set Device Name from Config Enum ID
             encoder_state_msg.encoders[sensor_id].device_name = ghost_v5_config::device_names.at(sensor_id);
@@ -330,11 +330,11 @@ namespace ghost_ros
         uint32_t device_connected_bit_vector = 0;
         memcpy(&device_connected_bit_vector, buffer + 4 * buffer_index + 2, 4);
 
-        for (auto motor_id : ghost_v5_config::sensor_update_motor_config)
+        for (auto motor_id : ghost_v5_config::motor_config_map)
         {
             encoder_state_msg.encoders[motor_id].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[motor_id];
         }
-        for (auto sensor_id : ghost_v5_config::sensor_update_sensor_config)
+        for (auto sensor_id : ghost_v5_config::sensor_config_map)
         {
             encoder_state_msg.encoders[sensor_id].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[sensor_id];
         }

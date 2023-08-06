@@ -7,8 +7,7 @@
 #include "math/math_util.h"
 #include "ghost_util/angle_util.hpp"
 
-#include "ghost_ros/robot_config/v5_robot_config.hpp"
-#include "ghost_ros/robot_config/v5_serial_msg_config.hpp"
+#include "ghost_ros/robot_config/v5_robot_config_defs.hpp"
 #include "ghost_ros/ros_nodes/robot_state_machine_node.hpp"
 
 
@@ -19,7 +18,7 @@ using std::placeholders::_1;
 namespace ghost_ros
 {
 
-    RobotStateMachineNode::RobotStateMachineNode() : rclcpp::Node("ghost_state_machine"),
+    SpinUpRobotStateMachineNode::SpinUpRobotStateMachineNode() : rclcpp::Node("ghost_state_machine"),
                                                      curr_robot_state_{robot_state_e::DISABLED},
                                                      curr_robot_state_msg_{0},
                                                      curr_joystick_msg_id_{0},
@@ -156,7 +155,7 @@ namespace ghost_ros
             });
     }
 
-    void RobotStateMachineNode::updateController()
+    void SpinUpRobotStateMachineNode::updateController()
     {
         // Comparing msg ids ensures only one control update is performed for a given sensor update
         if (
@@ -190,7 +189,7 @@ namespace ghost_ros
         }
     }
 
-    void RobotStateMachineNode::resetPose(){
+    void SpinUpRobotStateMachineNode::resetPose(){
         geometry_msgs::msg::PoseWithCovarianceStamped msg{};
 
         msg.header.frame_id = "world";
@@ -204,7 +203,7 @@ namespace ghost_ros
         initial_pose_pub_->publish(msg);
     }
 
-    void RobotStateMachineNode::teleop()
+    void SpinUpRobotStateMachineNode::teleop()
     {
         updateSwerveCommandsFromTwist(
             -curr_joystick_msg_->joystick_right_x,
@@ -344,7 +343,7 @@ namespace ghost_ros
         }
     }
 
-    void RobotStateMachineNode::updateSwerveCommandsFromTwist(
+    void SpinUpRobotStateMachineNode::updateSwerveCommandsFromTwist(
         float angular_velocity,
         float x_velocity,
         float y_velocity)
@@ -510,13 +509,13 @@ namespace ghost_ros
         // actuator_cmd_msg_.motor_commands[ghost_v5_config::DRIVE_BACK_LEFT_FRONT_MOTOR].active    = true;
 
         // Set Motor Names and Device IDs
-        for (auto dev_id : ghost_v5_config::actuator_command_config){
+        for (auto dev_id : ghost_v5_config::motor_id_vector){
             actuator_cmd_msg_.motor_commands[dev_id].motor_name =   ghost_v5_config::device_names.at(dev_id);
             actuator_cmd_msg_.motor_commands[dev_id].device_id =    dev_id;
         }
     }
 
-    void RobotStateMachineNode::publishSwerveKinematicsVisualization(
+    void SpinUpRobotStateMachineNode::publishSwerveKinematicsVisualization(
         const Eigen::Vector2f &left_wheel_cmd,
         const Eigen::Vector2f &right_wheel_cmd,
         const Eigen::Vector2f &back_wheel_cmd)
@@ -576,7 +575,7 @@ namespace ghost_ros
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<ghost_ros::RobotStateMachineNode>());
+    rclcpp::spin(std::make_shared<ghost_ros::SpinUpRobotStateMachineNode>());
     rclcpp::shutdown();
     return 0;
 }

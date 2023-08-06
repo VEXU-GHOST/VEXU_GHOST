@@ -28,8 +28,8 @@ int main(int argc, char* argv[]){
     motor_cmd_msg.desired_voltage  = cur_motor_num;
     motor_cmd_msg.current_limit    = cur_motor_num;
     
-    motor_cmd_msg.use_position_control = true;
-    motor_cmd_msg.active               = true;
+    // motor_cmd_msg.use_position_control = true;
+    // motor_cmd_msg.active               = true;
 
     actuator_cmd_msg.motor_commands[cur_motor_num++] = motor_cmd_msg;
 

@@ -24,7 +24,7 @@
 #include "math/math_util.h"
 #include "math/line2d.h"
 #include "util/timer.h"
-#include "ghost_ros/robot_config/v5_robot_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_ros/ros_nodes/ghost_estimator_node.hpp"
 #include "ghost_util/angle_util.hpp"
 

@@ -13,9 +13,6 @@
 #include "ghost_v5/motor/ghost_motor.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
-using ghost_v5_config::v5_motor_id_enum;
-using ghost_v5_config::v5_sensor_id_enum;
-
 void zero_actuators(){
 	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
 
@@ -94,7 +91,7 @@ void ghost_main_loop(){
 void initialize()
 {
 	// Motor ports
-	for (const auto& kv : ghost_v5_config::motor_config_id_map){
+	for (const auto& kv : ghost_v5_config::motor_config_map){
 		auto motor_id = kv.first;
 		bool reversed = std::get<0>(kv.second);
 		auto config =std::get<2>(kv.second);
@@ -102,7 +99,7 @@ void initialize()
 	}
 
 	// Encoder Ports
-	for (const auto& kv : ghost_v5_config::encoder_config_id_map){
+	for (const auto& kv : ghost_v5_config::encoder_config_map){
 		auto encoder_id = kv.first;
 		std::string encoder_name = std::get<0>(kv.second);
 		bool reversed = std::get<1>(kv.second);

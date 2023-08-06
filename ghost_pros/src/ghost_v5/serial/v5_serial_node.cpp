@@ -10,9 +10,6 @@
 
 using ghost_serial::BITMASK_ARR_32BIT;
 
-using ghost_v5_config::v5_motor_id_enum;
-using ghost_v5_config::v5_sensor_id_enum;
-
 namespace ghost_v5
 {
 
@@ -64,7 +61,7 @@ namespace ghost_v5
 		int buffer_8bit_index = 0;
 
 		// Update each motor based on msg configuration and new values
-		for (auto &motor_id : ghost_v5_config::actuator_command_config)
+		for (auto &motor_id : ghost_v5_config::motor_id_vector)
 		{
 			// For clarity of configuration file
 			// Copy Current Limit
@@ -134,7 +131,7 @@ namespace ghost_v5
 		uint32_t device_connected_vector = 0;
 
 		// Update V5 Motor Encoders
-		for (auto &motor_id : ghost_v5_config::sensor_update_motor_config)
+		for (auto &motor_id : ghost_v5_config::motor_id_vector)
 		{
 			float position = v5_globals::motors[motor_id]->get_position();
 			float velocity = v5_globals::motors[motor_id]->getVelocityFilteredRPM();
