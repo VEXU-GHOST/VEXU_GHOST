@@ -28,13 +28,13 @@ public:
   gazebo_ros::Node::SharedPtr ros_node_;
 
   /// Subscribers
-  rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr input_setpoint_sub_;
+  rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr v5_actuator_cmd_sub_;
 
   /// Publishers
   rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr output_pub_;
 
   // Plugin params
-  std::string joint_name_;
+  std::string joint_name_; // TODO: is this the motor name. check that joint_name_ and V5port name in V5MotorCommand msg don't clash
   std::string link_name_;
   
   // Motor Parameters
@@ -56,6 +56,8 @@ public:
   double angle_setpoint_;
   double velocity_setpoint_;
   double voltage_setpoint_;
+  double torque_setpoint_;
+  double current_limit_;
 };
 
 GazeboJointPIDPlugin::GazeboJointPIDPlugin()
@@ -114,19 +116,14 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
   impl_->gear_ratio_ = sdf->GetElement("gear_ratio")->Get<double>();
 
   // Initialize Subscriptions
-  impl_->input_setpoint_sub_ = impl_->ros_node_->create_subscription<geometry_msgs::msg::Vector3>(
-    "motors/" + impl_->link_name_ + "/setpoint",
-    10,
-    [this](const geometry_msgs::msg::Vector3::SharedPtr msg){
-        impl_->angle_setpoint_ = msg->x;
-        impl_->velocity_setpoint_ = msg->y;
-        impl_->voltage_setpoint_ = msg->z;
-    }
-    );
+  impl_->v5_actuator_cmd_sub_ = impl_->ros_node_->create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
+    "/v5actuator/setpoint", 10, 
+    [this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
+    this-> GazeboJointPIDPlugin::v5ActuatorCallback(msg);});
 
   // Initialize Publisher
   impl_->output_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
-    "motors/" + impl_->link_name_ + "/output",
+    "v5actuator/output",
     10);
 
   // Initalize motor models
@@ -190,6 +187,40 @@ void GazeboJointPIDPlugin::OnUpdate()
   output_msg.y = joint_vel_rpm;   // Velocity in RPM
   output_msg.z = motor_torque;    // Torque in N-m
   impl_->output_pub_->publish(output_msg);
+}
+
+void GazeboJointPIDPlugin::v5ActuatorCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
+  // Parse V5ActuatorCommand.msg for corresponding motor command
+  // TODO: change V5MotorCommand device_id to correspond to joint_name_ if not already
+  for (ghost_msgs::msg::V5MotorCommand cmd : msg->motor_commands) {
+    if(cmd.motor_name == impl_->joint_name_){
+      // int32 desired_angle         # Degrees
+      // float32 desired_velocity    # RPM
+      // float32 desired_torque      # N-m
+      // float32 desired_voltage     # Normalized (-1.0 -> 1.0)
+      // int32 current_limit         # milliAmps
+
+      // bool angle_control
+      // bool velocity_control
+      // bool torque_control
+      // bool voltage_control
+      // Update setpoints
+      if(cmd.angle_control){
+        impl_->angle_setpoint_ = cmd.desired_angle;
+      }
+      if(cmd.velocity_control){
+        impl_->velocity_setpoint_ = cmd.desired_velocity;
+      }
+      if(cmd.torque_control){
+        impl_->torque_setpoint_ = cmd.desired_torque;
+      }
+      if(cmd.voltage_control){
+        impl_->voltage_setpoint_ = cmd.desired_voltage;
+      }
+
+      impl_-> current_limit_ = cmd.current_limit;
+    }
+  }
 }
 
 // Register this plugin with the simulator

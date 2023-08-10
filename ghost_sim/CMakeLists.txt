@@ -77,6 +77,7 @@ ament_target_dependencies(gazebo_joint_pid_plugin
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
+  ghost_msgs
   ghost_control
 )
 target_link_libraries(gazebo_joint_pid_plugin

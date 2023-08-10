@@ -14,6 +14,7 @@
 #include <math.h>
 #include <vector>
 #include <memory>
+#include <chrono>
 
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/physics/Model.hh>
@@ -24,8 +25,11 @@
 
 #include "std_msgs/msg/float32.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
-
+#include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_control/models/dc_motor_model.hpp"
+
+using namespace std::chrono_literals;
+using std::placeholders::_1;
 
 namespace gazebo_joint_pid_plugin
 {
@@ -53,6 +57,8 @@ protected:
   void OnUpdate();
 
 private:
+  void v5ActuatorCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
+
   /// Recommended PIMPL pattern. This variable should hold all private
   /// data members.
   std::unique_ptr<GazeboJointPIDPluginPrivate> impl_;
