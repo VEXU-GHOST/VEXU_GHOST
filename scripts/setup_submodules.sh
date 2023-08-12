@@ -23,6 +23,7 @@ echo "--------------- MUMPS ---------------"
 cd $HOME/VEXU_GHOST/ghost_deps/ThirdParty-Mumps
 sudo apt install gfortran-10 liblapack-dev pkg-config --install-recommends -y
 sudo apt install swig -y
+export FC=$(which gfortran-10)
 ./configure
 make
 sudo make install
