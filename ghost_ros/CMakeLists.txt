@@ -67,36 +67,6 @@ install(TARGETS
   foxglove_diagnostics_node
   DESTINATION lib/${PROJECT_NAME})
 
-
-############################
-#### Jetson Serial Node ####
-############################
-# add_executable(jetson_v5_serial_node
-#   src/ros_nodes/jetson_v5_serial_node.cpp
-# )
-# ament_target_dependencies(jetson_v5_serial_node
-#   rclcpp
-#   sensor_msgs
-#   ghost_msgs
-#   ghost_common
-#   ghost_serial
-#   ghost_estimation
-# )
-# target_link_libraries(jetson_v5_serial_node
-#   ghost_serial::jetson_serial_base
-#   ghost_serial::cobs
-#   ghost_estimation::amrl_shared_lib
-#   v5_serial_msg_config
-#   yaml-cpp
-# )
-# target_include_directories(jetson_v5_serial_node
-#   PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# install(TARGETS
-#   jetson_v5_serial_node
-#   DESTINATION lib/${PROJECT_NAME})
-
 ##############################
 #### Ghost Estimator Node ####
 ##############################

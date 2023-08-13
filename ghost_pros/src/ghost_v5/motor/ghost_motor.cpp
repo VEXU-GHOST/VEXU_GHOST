@@ -60,7 +60,6 @@ namespace ghost_v5
           voltage_active_{false}
     {
         config_ = config;
-        trq_lim_norm_ = config_.motor__torque_limit_norm;
 
         // Set Motor Config w PROS Enum values
         set_gearing(RPM_TO_GEARING_MAP.at(config_.motor__gear_ratio));
@@ -95,7 +94,7 @@ namespace ghost_v5
         float velocity_feedforward = (velocity_active_) ? motor_model_.getVoltageFromVelocityMillivolts(des_vel_rpm_) * config_.ctl__ff_vel_gain : 0.0;
         float velocity_feedback = (velocity_active_) ? (des_vel_rpm_ - curr_vel_rpm_) * config_.ctl__vel_gain : 0.0;
         float torque_feedforward = (torque_active_) ? motor_model_.getVoltageFromTorqueMillivolts(des_torque_nm_) * config_.ctl__ff_torque_gain : 0.0;
-        float voltage_feedforward = (voltage_active_) ? des_voltage_norm_ * config_.motor__max_voltage * 1000 * config_.ctl__ff_voltage_gain : 0.0;
+        float voltage_feedforward = (voltage_active_) ? des_voltage_norm_ * config_.motor__max_voltage * 1000 : 0.0;
 
         // Set voltage command based on control mode
         cmd_voltage_mv_ = voltage_feedforward + torque_feedforward + velocity_feedforward + velocity_feedback + position_feedback;
@@ -113,39 +112,6 @@ namespace ghost_v5
         velocity_active_ = false;
         torque_active_ = false;
         voltage_active_ = false;
-    }
-
-    /*
-    This was used for defected V5 REV 10 motors, no longer really relevant.
-    */
-    void GhostMotor::move_voltage_trq_lim(float voltage_mv)
-    {
-        // Normalize voltage command from millivolts
-        double voltage_normalized = voltage_mv / config_.motor__max_voltage / 1000.0;
-
-        // Normalize velocity by nominal free speed
-        double curr_vel_normalized = curr_vel_rpm_ / (config_.motor__nominal_free_speed * config_.motor__gear_ratio);
-
-        // Motor torque is proportional to armature current, which is approximated by difference between back EMF
-        // and driving voltage assuming constant resistance.
-        // Limiting voltage difference prevents voltage spikes and prolongs motor life when changing speed rapidly.
-        double cmd;
-        if (fabs(curr_vel_normalized - voltage_normalized) > trq_lim_norm_)
-        {
-            double sign = (curr_vel_normalized - voltage_normalized > 0) ? 1.0 : -1.0;
-            cmd = curr_vel_normalized - sign * fabs(trq_lim_norm_);
-        }
-        else
-        {
-            cmd = voltage_normalized;
-        }
-
-        // Limit cmd to voltage bounds
-        cmd = std::min(cmd, config_.motor__max_voltage * 1000.0);
-        cmd = std::max(cmd, -config_.motor__max_voltage * 1000.0);
-
-        // Set motor
-        move_voltage(cmd * config_.motor__max_voltage * 1000);
     }
 
 } // namespace ghost_motor

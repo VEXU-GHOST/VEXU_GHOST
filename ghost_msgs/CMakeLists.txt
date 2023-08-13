@@ -25,8 +25,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/v5_msgs/V5MotorCommand.msg"
   "msg/v5_msgs/V5EncoderState.msg"
   "msg/GhostRobotState.msg"
-  "msg/V5Joystick.msg"
-  "msg/V5CompetitionState.msg"
   "msg/V5ActuatorCommand.msg"
   "msg/V5SensorUpdate.msg"
   "msg/CVDisc.msg"
