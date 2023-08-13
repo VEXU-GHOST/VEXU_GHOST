@@ -4,11 +4,11 @@
 [submodule "ghost_deps/yaml-cpp"]
 	path = ghost_deps/yaml-cpp
 	url = git@github.com:jbeder/yaml-cpp.git
-        ignore = untracked
+    ignore = untracked
 [submodule "ghost_deps/casadi"]
 	path = ghost_deps/casadi
 	url = https://github.com/casadi/casadi.git
-        ignore = untracked
+    ignore = untracked
 [submodule "ghost_deps/Ipopt"]
 	path = ghost_deps/Ipopt
 	url = git@github.com:MaxxWilson/Ipopt.git
@@ -17,16 +17,16 @@
 	path = ghost_deps/rplidar_ros
 	url = git@github.com:Slamtec/rplidar_ros.git
 	branch = ros2
-        ignore = untracked
+    ignore = untracked
 [submodule "ghost_deps/matplotlib-cpp"]
 	path = ghost_deps/matplotlib-cpp
 	url = git@github.com:MaxxWilson/matplotlib-cpp.git
-        ignore = untracked
+    ignore = untracked
 [submodule "ghost_deps/ThirdParty-Mumps"]
 	path = ghost_deps/ThirdParty-Mumps
 	url = git@github.com:MaxxWilson/ThirdParty-Mumps.git
-	branch = with-src
-        ignore = untracked
+    branch = with-src
+	ignore = untracked
 [submodule "ghost_deps/Casadi-Tutorial-CPP"]
 	path = ghost_deps/Casadi-Tutorial-CPP
 	url = git@github.com:zehuilu/Tutorial-on-CasADi-with-CPP.git
