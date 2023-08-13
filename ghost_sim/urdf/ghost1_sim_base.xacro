@@ -34,6 +34,7 @@
                 motor_2
                 motor_3
             </motor_names>
+            <motor_ports>5 6 7</motor_ports>
 
             <encoder_names>encoder_1 encoder_2</encoder_names>
             <encoder_ports>5 6</encoder_ports>

@@ -97,11 +97,12 @@ ament_target_dependencies(v5_robot_plugin
   rclcpp
   std_msgs
   geometry_msgs
-  ghost_util
   gazebo_dev
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
+  ghost_msgs
+  ghost_util
   ghost_control
 )
 target_include_directories(v5_robot_plugin
