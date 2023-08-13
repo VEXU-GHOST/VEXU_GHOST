@@ -12,22 +12,7 @@ from launch_ros.actions import Node
 # Opaque Function hack to allow for better CLI arg parsing
 def launch_setup(context, *args, **kwargs):
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
-
-    # Select URDF Config based on CLI arg "enable_pid"
-    enable_pid_param = LaunchConfiguration("enable_pid").perform(context)
-
-    if(enable_pid_param in ['True', "true", True, 1]):
-        enable_pid = True
-    elif(enable_pid_param in ['False', "false", False, 0]):
-        enable_pid = False
-    else:
-        # For now default to true
-        enable_pid = True
-
-    if(bool(enable_pid)):
-        filename = "ghost1_sim_pid.urdf"
-    else:
-        filename = "ghost1_sim_voltage.urdf"
+    filename = "ghost1_sim_base.urdf"
 
     # Load URDF and process to text
     urdf_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
@@ -89,7 +74,6 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        output='screen',
         arguments=['-d', rviz_config_path],
     )
 
@@ -122,13 +106,12 @@ def generate_launch_description():
     # )
 
     return LaunchDescription([
-        DeclareLaunchArgument(name='enable_pid', default_value='true'),
         DeclareLaunchArgument(name='joystick', default_value='false'),
-        DeclareLaunchArgument('sim_gui', default_value='false'),
-        DeclareLaunchArgument('verbose', default_value='false'),
+        DeclareLaunchArgument('sim_gui', default_value='true'),
+        DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ground_truth_publisher,
-        rviz_node,
+        # rviz_node,
         joy_launch_description,
         # estimator_node,
         # state_machine_node,
