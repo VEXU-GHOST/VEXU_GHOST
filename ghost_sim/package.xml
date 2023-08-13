@@ -21,6 +21,7 @@
   <depend>gazebo_plugins</depend>
 
   <depend>ghost_msgs</depend>
+  <depend>ghost_util</depend>
   <depend>ghost_control</depend>
 
   <test_depend>ament_lint_auto</test_depend>

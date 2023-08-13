@@ -1,15 +1,5 @@
-/*
- * Filename: odometry_plugin
- * Created Date: Monday October 24th 2022
- * Author: Maxx Wilson
- * Author Email: JesseMaxxWilson@utexas.edu
- * 
- * Last Modified: Monday October 24th 2022 2:19:16 pm
- * Modified By: Maxx Wilson
- */
+#pragma once
 
-#ifndef GHOST_SIM__SWERVE_ODOMETRY_PLUGIN_HPP
-#define GHOST_SIM__SWERVE_ODOMETRY_PLUGIN_HPP
 #include <math.h>
 #include <vector>
 #include <memory>
@@ -22,22 +12,20 @@
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include "std_msgs/msg/float32.hpp"
-#include "nav_msgs/msg/odometry.hpp"
 
-namespace swerve_odometry_plugin
+namespace v5_robot_plugin
 {
 // Forward declaration of private data class.
-class SwerveOdometryPluginPrivate;
+class V5RobotPluginPrivate;
 
-class SwerveOdometryPlugin : public gazebo::ModelPlugin
+class V5RobotPlugin : public gazebo::ModelPlugin
 {
 public:
   /// Constructor
-  SwerveOdometryPlugin();
+  V5RobotPlugin();
 
   /// Destructor
-  ~SwerveOdometryPlugin();
+  ~V5RobotPlugin();
 
   /// Gazebo calls this when the plugin is loaded.
   /// \param[in] model Pointer to parent model. Other plugin types will expose different entities,
@@ -53,8 +41,6 @@ protected:
 private:
   /// Recommended PIMPL pattern. This variable should hold all private
   /// data members.
-  std::unique_ptr<SwerveOdometryPluginPrivate> impl_;
+  std::unique_ptr<V5RobotPluginPrivate> impl_;
 };
-}  // namespace swerve_odometry_plugin
-
-#endif  // GHOST_SIM__SWERVE_ODOMETRY_PLUGIN_HPP
+}  // namespace v5_robot_plugin
