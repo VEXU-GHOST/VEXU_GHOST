@@ -8,8 +8,7 @@ namespace ghost_v5_config
     {
         GEARSET_100,
         GEARSET_200,
-        GEARSET_600,
-        GEARSET_3600
+        GEARSET_600
     };
 
     enum ghost_brake_mode

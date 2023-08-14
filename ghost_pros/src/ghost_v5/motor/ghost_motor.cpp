@@ -13,8 +13,7 @@ namespace ghost_v5
     const std::map<ghost_v5_config::ghost_gearset, pros::motor_gearset_e_t> RPM_TO_GEARING_MAP{
         {ghost_v5_config::ghost_gearset::GEARSET_100, pros::E_MOTOR_GEAR_100},
         {ghost_v5_config::ghost_gearset::GEARSET_200, pros::E_MOTOR_GEAR_200},
-        {ghost_v5_config::ghost_gearset::GEARSET_600, pros::E_MOTOR_GEAR_600},
-        {ghost_v5_config::ghost_gearset::GEARSET_3600, pros::E_MOTOR_GEAR_600}};
+        {ghost_v5_config::ghost_gearset::GEARSET_600, pros::E_MOTOR_GEAR_600}};
 
     const std::map<ghost_v5_config::ghost_brake_mode, pros::motor_brake_mode_e_t> GHOST_BRAKE_MODE_MAP{
         {ghost_v5_config::ghost_brake_mode::BRAKE_MODE_COAST, pros::E_MOTOR_BRAKE_COAST},
@@ -48,7 +47,6 @@ namespace ghost_v5
               config.motor__stall_current,
               config.motor__max_voltage,
               config.motor__gear_ratio),
-          motor_is_3600_cart_{(config_.motor__gear_ratio == ghost_gearset::GEARSET_3600)},
           device_connected_{false},
           des_voltage_norm_{0.0},
           des_vel_rpm_{0.0},
@@ -66,10 +64,6 @@ namespace ghost_v5
         set_gearing(RPM_TO_GEARING_MAP.at(config_.motor__gear_ratio));
         set_brake_mode(GHOST_BRAKE_MODE_MAP.at(config_.motor__brake_mode));
         set_encoder_units(GHOST_ENCODER_UNIT_MAP.at(config_.motor__encoder_units));
-
-        if(config.motor__gear_ratio == ghost_gearset::GEARSET_3600){
-            motor_is_3600_cart_ = true;
-        }
     }
 
     void GhostMotor::updateMotor()
@@ -81,11 +75,8 @@ namespace ghost_v5
             raw_vel = 0.0;
         }
         
-        // Adjust reported velocity for direct drive motor gearing
-        auto true_vel = (motor_is_3600_cart_) ?  6*raw_vel : raw_vel;
-        
         // Update Low Pass Filter with velocity measurement
-        curr_vel_rpm_ = velocity_filter_.updateFilter(true_vel);
+        curr_vel_rpm_ = velocity_filter_.updateFilter(raw_vel);
 
         // Update DC Motor Model
         motor_model_.setMotorSpeedRPM(curr_vel_rpm_);

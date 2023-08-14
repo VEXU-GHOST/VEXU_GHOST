@@ -59,9 +59,6 @@ namespace ghost_v5
         // Motor Config
         ghost_v5_config::GhostMotorConfig config_;
 
-        bool motor_is_3600_cart_;
-        float trq_lim_norm_;
-
         // Velocity Filtering
         ghost_estimation::SecondOrderLowPassFilter velocity_filter_;
         float curr_vel_rpm_;
