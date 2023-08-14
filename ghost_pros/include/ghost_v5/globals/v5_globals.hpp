@@ -18,8 +18,8 @@ namespace v5_globals
 
     extern pros::Mutex actuator_update_lock;
 
-    extern std::map<ghost_v5_config::v5_motor_id_enum, std::shared_ptr<ghost_v5::GhostMotor>> motors;
-    extern std::map<ghost_v5_config::v5_sensor_id_enum, std::shared_ptr<pros::Rotation>> encoders;
+    extern std::map<std::string, std::shared_ptr<ghost_v5::GhostMotor>> motors;
+    extern std::map<std::string, std::shared_ptr<pros::Rotation>> encoders;
 
     extern const pros::controller_analog_e_t joy_channels[4];
     extern const pros::controller_digital_e_t joy_btns[12];

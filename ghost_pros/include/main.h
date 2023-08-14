@@ -24,8 +24,7 @@
 #include <map>
 
 #include "ghost_v5/globals/v5_globals.hpp"
-#include "ghost_ros/robot_config/v5_robot_config_defs.hpp"
-#include "ghost_ros/robot_config/v5_robot_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 
 // Global Variables
 namespace v5_globals
@@ -39,8 +38,8 @@ namespace v5_globals
     pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
     
     ///// MOTOR DEFINITIONS /////
-    std::map<ghost_v5_config::v5_motor_id_enum, std::shared_ptr<ghost_v5::GhostMotor>> motors;
-    std::map<ghost_v5_config::v5_sensor_id_enum, std::shared_ptr<pros::Rotation>> encoders;
+    std::map<std::string, std::shared_ptr<ghost_v5::GhostMotor>> motors;
+    std::map<std::string, std::shared_ptr<pros::Rotation>> encoders;
 
 
     const pros::controller_analog_e_t joy_channels[4] = {

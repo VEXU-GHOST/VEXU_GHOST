@@ -17,7 +17,7 @@ namespace ghost_v5
     class GhostMotor : public pros::Motor
     {
     public:
-        GhostMotor(int motor_port, bool reversed, ghost_v5_config::GhostMotorConfig &config);
+        GhostMotor(int motor_port, bool reversed, const ghost_v5_config::GhostMotorConfig &config);
 
         void updateMotor();
 

@@ -91,23 +91,17 @@ void ghost_main_loop(){
 void initialize()
 {
 	// Motor ports
-	for (const auto& kv : ghost_v5_config::motor_config_map){
-		auto motor_id = kv.first;
-		bool reversed = std::get<0>(kv.second);
-		auto config =std::get<2>(kv.second);
-		v5_globals::motors[motor_id] = std::make_shared<ghost_v5::GhostMotor>(motor_id, reversed, config);
+	for (const auto& [name, config] : ghost_v5_config::motor_config_map){
+		v5_globals::motors[name] = std::make_shared<ghost_v5::GhostMotor>(config.port, config.reversed, config.config);
 	}
 
 	// Encoder Ports
-	for (const auto& kv : ghost_v5_config::encoder_config_map){
-		auto encoder_id = kv.first;
-		std::string encoder_name = std::get<0>(kv.second);
-		bool reversed = std::get<1>(kv.second);
-		v5_globals::encoders[encoder_id] = std::make_shared<pros::Rotation>(encoder_id);
-		if(reversed){
-			v5_globals::encoders[encoder_id]->reverse();
+	for (const auto& [name, config] : ghost_v5_config::encoder_config_map){
+		v5_globals::encoders[name] = std::make_shared<pros::Rotation>(config.port);
+		if(config.reversed){
+			v5_globals::encoders[name]->reverse();
 		}
-		v5_globals::encoders[encoder_id]->set_data_rate(5);
+		v5_globals::encoders[name]->set_data_rate(5);
 	}
 
 	zero_actuators();

@@ -30,7 +30,7 @@ namespace ghost_v5
     GhostMotor::GhostMotor(
         int motor_port,
         bool reversed,
-        GhostMotorConfig &config)
+        const GhostMotorConfig &config)
         : pros::Motor(
               motor_port,
               pros::E_MOTOR_GEARSET_INVALID,
@@ -104,38 +104,4 @@ namespace ghost_v5
         torque_active_ = false;
         voltage_active_ = false;
     }
-
-    /*
-    This was used for defected V5 REV 10 motors, no longer really relevant.
-    */
-    void GhostMotor::move_voltage_trq_lim(float voltage_mv)
-    {
-        // Normalize voltage command from millivolts
-        double voltage_normalized = voltage_mv / config_.motor__max_voltage / 1000.0;
-
-        // Normalize velocity by nominal free speed
-        double curr_vel_normalized = curr_vel_rpm_ / (config_.motor__nominal_free_speed * config_.motor__gear_ratio);
-
-        // Motor torque is proportional to armature current, which is approximated by difference between back EMF
-        // and driving voltage assuming constant resistance.
-        // Limiting voltage difference prevents voltage spikes and prolongs motor life when changing speed rapidly.
-        double cmd;
-        if (fabs(curr_vel_normalized - voltage_normalized) > trq_lim_norm_)
-        {
-            double sign = (curr_vel_normalized - voltage_normalized > 0) ? 1.0 : -1.0;
-            cmd = curr_vel_normalized - sign * fabs(trq_lim_norm_);
-        }
-        else
-        {
-            cmd = voltage_normalized;
-        }
-
-        // Limit cmd to voltage bounds
-        cmd = std::min(cmd, config_.motor__max_voltage * 1000.0);
-        cmd = std::max(cmd, -config_.motor__max_voltage * 1000.0);
-
-        // Set motor
-        move_voltage(cmd * config_.motor__max_voltage * 1000);
-    }
-
 } // namespace ghost_motor
