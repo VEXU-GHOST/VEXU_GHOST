@@ -1,7 +1,7 @@
 
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
-#include "ghost_ros/robot_config/v5_serial_msg_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_v5/globals/v5_globals.hpp"
 #include "ghost_v5/motor/ghost_motor.hpp"
 

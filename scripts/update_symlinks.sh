@@ -7,8 +7,8 @@ V5_DIR="$PWD/ghost_pros"
 cd $V5_DIR/src
 
 # Clear existing directories
-rm -r ghost_serial ghost_estimation ghost_control ghost_ros
-mkdir ghost_serial ghost_estimation ghost_control ghost_ros
+rm -r ghost_serial ghost_estimation ghost_control ghost_common
+mkdir ghost_serial ghost_estimation ghost_control ghost_common
 
 ### Symlink ghost_serial ###
 cd ghost_serial
@@ -34,10 +34,10 @@ cd ../ghost_control
 mkdir models && cd models
 ln -s ../../../../ghost_control/src/models/dc_motor_model.cpp
 
-### Symlink ghost_ros ###
+### Symlink ghost_common ###
 # Add Folders
-cd ../../ghost_ros
-ln -s ../../../ghost_ros/src/robot_config
+cd ../../ghost_common
+ln -s ../../../ghost_common/src
 
 ##################
 ### V5 INCLUDE ###
@@ -46,8 +46,8 @@ ln -s ../../../ghost_ros/src/robot_config
 cd $V5_DIR/include
 
 # Clear existing directories
-rm -r ghost_serial ghost_estimation ghost_control ghost_ros
-mkdir ghost_serial ghost_estimation ghost_control ghost_ros
+rm -r ghost_serial ghost_estimation ghost_control ghost_common
+mkdir ghost_serial ghost_estimation ghost_control ghost_common
 
 ### Symlink ghost_serial ###
 cd ghost_serial
@@ -75,5 +75,5 @@ ln -s ../../../../ghost_control/include/ghost_control/models/dc_motor_model.hpp
 
 ### Symlink ghost_ros ###
 # Add Folders
-cd ../../ghost_ros
-ln -s ../../../ghost_ros/include/ghost_ros/robot_config
+cd ../../ghost_common
+ln -s ../../../ghost_common/include/ghost_common/v5_robot_config_defs.hpp

@@ -114,14 +114,14 @@ namespace v5_robot_plugin
         std::vector<double> sensor_jacobian_temp = ghost_util::getVectorFromString<double>(sdf->GetElement("sensor_jacobian")->Get<std::string>(), ' ');
 
         // Input Validation
-        if (motor_port_vector != impl_->motor_names_.size())
+        if (motor_port_vector.size() != impl_->motor_names_.size())
         {
             std::string err_string = "[V5 Robot Plugin], motor_names and motor_ports are different sizes!";
             RCLCPP_ERROR(logger, err_string.c_str());
             return;
         }
 
-        if (encoder_port_vector != impl_->encoder_names_.size())
+        if (encoder_port_vector.size() != impl_->encoder_names_.size())
         {
             std::string err_string = "[V5 Robot Plugin], encoder_names and encoder_ports are different sizes!";
             RCLCPP_ERROR(logger, err_string.c_str());

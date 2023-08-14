@@ -5,8 +5,7 @@
 #include "pros/motors.hpp"
 #include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
 #include "ghost_control/models/dc_motor_model.hpp"
-#include "ghost_ros/robot_config/v5_robot_config_defs.hpp"
-#include "ghost_ros/robot_config/v5_robot_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 
 namespace ghost_v5
 {
