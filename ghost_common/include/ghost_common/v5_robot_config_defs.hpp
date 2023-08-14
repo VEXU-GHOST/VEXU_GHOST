@@ -29,31 +29,41 @@ namespace ghost_v5_config
 
     struct GhostMotorConfig
     {
-        // PROS Motor
+        // These three map 1:1 to their PROS counterpart on the V5 Side.
         ghost_encoder_unit motor__encoder_units{ghost_encoder_unit::ENCODER_DEGREES};
-        float motor__nominal_free_speed{120};
-        float motor__stall_torque{3.6};
-        float motor__free_current{0.14};
-        float motor__stall_current{4.25};
-        float motor__max_voltage{12};
         ghost_gearset motor__gear_ratio{ghost_gearset::GEARSET_600};
         ghost_brake_mode motor__brake_mode{ghost_brake_mode::BRAKE_MODE_COAST};
 
-        // 2nd Order Velocity Filter
-        float filter__cutoff_frequency{100.0};
-        float filter__damping_ratio{0.707};
-        float filter__timestep{0.01};
-
-        // FF-PD Controllermotor__encoder_units
+        // FF-PD Controller
+        // pos_gain and vel_gain are standard PD control
+        // ff_vel_gain takes a velocity setpoint and scales it to estimate the required open-loop voltage
+        // Ideally this is 1.0. If your motor runs faster than nominal, increase this a bit.
+        // If you zero the other gains, you can tune this by sending a velocity and tweaking until true velocity matches.
+        // ff_torque_gain does the same as above but for torque. Controlling torque with voltage is not very accurate, fyi.
         float ctl__pos_gain{0.0};
         float ctl__vel_gain{10.0};
         float ctl__ff_vel_gain{1.0};
-        float ctl__ff_voltage_gain{1.0};
         float ctl__ff_torque_gain{0.0};
 
-        // Limit Instant Voltage Change
-        float motor__torque_limit_norm{1.0};
+        // 2nd Order Low Pass Filter for Motor Velocity
+        // If you aren't familiar with LPFs, default tuning is probably fine for any VEX system.
+        // If you want it smoother, lower the cutoff frequency.
+        // "Ideal setting" is 10 / ((time for system to go from zero to full speed given max voltage) * 0.632)
+        float filter__cutoff_frequency{100.0};
+        float filter__damping_ratio{0.707}; // Don't Change
+        float filter__timestep{0.01};       // Don't Change
+
+        // This configures an 11W V5 Motor.
+        // NOTE: The gear ratio is set by the ghost_gearset param above and scaling is applied within the motor class.
+        // This means, YOU PROBABLY SHOULDN'T TOUCH ANY OF THESE.
+        float motor__nominal_free_speed{120};   // Don't Change
+        float motor__stall_torque{3.6};         // Don't Change
+        float motor__free_current{0.14};        // Don't Change
+        float motor__stall_current{4.25};       // Don't Change
+        float motor__max_voltage{12};           // Don't Change
     };
+
+    // Helper classes for accessing motor/encoders from their config maps
     struct motor_access_helper
     {
         motor_access_helper(int port_init, bool reversed_init, GhostMotorConfig config_init)
@@ -90,26 +100,6 @@ namespace ghost_v5_config
     extern const int encoder_sensor_packet_byte_size;
     extern const int sensor_update_extra_byte_count;
 
-    const int get_actuator_command_msg_len();
-    const int get_sensor_update_msg_len();
-
-    // Maps device enum to device_name
-    extern const std::unordered_map<int, std::string> device_names;
+    int get_actuator_command_msg_len();
+    int get_sensor_update_msg_len();
 }
-
-// Macro for visually pleasant motor config (also sets string motor name from enum variable)
-#define START_MOTORS                                                            \
-    const std::unordered_map<std::string, motor_access_helper> motor_config_map \
-    {
-#define ADD_MOTOR(name, port, reversed, config) {name, motor_access_helper(port, reversed, config)},
-#define END_MOTORS \
-    }              \
-    ;
-
-#define START_ENCODERS                                                              \
-    const std::unordered_map<std::string, encoder_access_helper> encoder_config_map \
-    {
-#define ADD_ENCODER(name, port, reversed) {name, encoder_access_helper(port, reversed)},
-#define END_ENCODERS \
-    }                \
-    ;
