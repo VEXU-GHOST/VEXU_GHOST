@@ -26,7 +26,7 @@
 #include "util/timer.h"
 #include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_ros/ros_nodes/ghost_estimator_node.hpp"
-#include "ghost_util/angle_util.hpp"
+#include "ghost_common/angle_util.hpp"
 
 using Eigen::Vector2f;
 using geometry::Line;
@@ -282,7 +282,7 @@ namespace ghost_ros
 
     odom_loc_ += rotate_base_to_odom * Eigen::Vector2f(x_vel_, y_vel_) * 0.01;
     odom_angle_ += theta_vel_ * 0.01;
-    odom_angle_ = ghost_util::WrapAngle360(odom_angle_ * 180.0 / M_PI) * M_PI / 180.0; // Should make a wrap function for radians...
+    odom_angle_ = ghost_common::WrapAngle360(odom_angle_ * 180.0 / M_PI) * M_PI / 180.0; // Should make a wrap function for radians...
 
     // std::cout << odom_loc_.x() << ", " << odom_loc_.y() << ", " << odom_angle_ << std::endl << std::endl;
     }

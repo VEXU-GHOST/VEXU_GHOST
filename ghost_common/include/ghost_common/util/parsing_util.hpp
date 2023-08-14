@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-namespace ghost_util
+namespace ghost_common
 {
 
     template <typename T>
@@ -46,4 +46,4 @@ namespace ghost_util
         }
         return data;
     }
-}
+} // namespace ghost_common

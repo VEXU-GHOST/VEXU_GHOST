@@ -44,7 +44,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(ghost_msgs REQUIRED)
 find_package(ghost_serial REQUIRED)
 find_package(ghost_estimation REQUIRED)
-find_package(ghost_util REQUIRED)
+find_package(ghost_common REQUIRED)
 
 include_directories(include)
 

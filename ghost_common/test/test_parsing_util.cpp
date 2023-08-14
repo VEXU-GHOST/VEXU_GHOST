@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
-#include "ghost_util/parsing_util.hpp"
+#include "ghost_common/util/parsing_util.hpp"
 #include <iostream>
 
-using namespace ghost_util;
+using namespace ghost_common;
 
 class TestParsingUtil: public ::testing::Test {
     protected:

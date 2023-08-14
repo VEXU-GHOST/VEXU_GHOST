@@ -39,7 +39,7 @@ find_package(gazebo_plugins REQUIRED)
 
 # Custom
 find_package(ghost_msgs REQUIRED)
-find_package(ghost_util REQUIRED)
+find_package(ghost_common REQUIRED)
 find_package(ghost_control REQUIRED)
 
 # Include
@@ -102,7 +102,7 @@ ament_target_dependencies(v5_robot_plugin
   gazebo_ros
   gazebo_plugins
   ghost_msgs
-  ghost_util
+  ghost_common
   ghost_control
 )
 target_include_directories(v5_robot_plugin

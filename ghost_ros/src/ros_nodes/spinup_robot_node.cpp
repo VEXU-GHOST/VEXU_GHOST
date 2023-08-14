@@ -5,7 +5,7 @@
 #include "eigen3/Eigen/Geometry"
 
 #include "math/math_util.h"
-#include "ghost_util/angle_util.hpp"
+#include "ghost_common/angle_util.hpp"
 
 #include "ghost_ros/robot_config/v5_robot_config_defs.hpp"
 #include "ghost_ros/ros_nodes/robot_state_machine_node.hpp"
@@ -264,14 +264,14 @@ namespace ghost_ros
             resetPose();
         }
 
-        float des_angle = M_PI/180.0*ghost_util::WrapAngle360(atan2(y_goal_ - curr_robot_state_msg_->y, x_goal_ - curr_robot_state_msg_->x)*180.0/M_PI);
+        float des_angle = M_PI/180.0*ghost_common::WrapAngle360(atan2(y_goal_ - curr_robot_state_msg_->y, x_goal_ - curr_robot_state_msg_->x)*180.0/M_PI);
         float des_x = 0.0;
         float des_y = 0.0;
 
         if(curr_joystick_msg_->joystick_btn_l1){
 
             float ang_vel_cmd = 
-                ghost_util::SmallestAngleDistDeg(des_angle * 180 / M_PI, curr_robot_state_msg_->theta * 180 / M_PI) * M_PI/180.0 * rotate_kp_ -
+                ghost_common::SmallestAngleDistDeg(des_angle * 180 / M_PI, curr_robot_state_msg_->theta * 180 / M_PI) * M_PI/180.0 * rotate_kp_ -
                 curr_robot_state_msg_->theta_vel * rotate_kd_;
 
             float x_vel_cmd =
@@ -366,9 +366,9 @@ namespace ghost_ros
 
         // Calculate Wheel and Steering Setpoints
         std::vector<float> steering_angles = {
-            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees),
-            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees),
-            ghost_util::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees),
+            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees),
+            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees),
+            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees),
         };
 
         // Swerve Drive Setpoints
@@ -390,20 +390,20 @@ namespace ghost_ros
             wheel_vel_vectors[wheel_id] = vel_vec;
 
             // Calculate naive steering angle and wheel velocity setpoints
-            steering_angle_cmd_[wheel_id] = ghost_util::WrapAngle360(atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI);   // Converts rad/s to degrees
+            steering_angle_cmd_[wheel_id] = ghost_common::WrapAngle360(atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI);   // Converts rad/s to degrees
             wheel_velocity_cmd_[wheel_id] = vel_vec.norm() * 100 / 2.54 / (2.75 * M_PI) * 60; // Convert m/s to RPM
 
             // Calculate angle error and then use direction of smallest error
-            float steering_error  = ghost_util::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+            float steering_error  = ghost_common::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
 
             // It is faster to reverse wheel direction and steer to opposite angle
             if(fabs(steering_error) > 90.0){
                 // Flip commands
                 wheel_velocity_cmd_[wheel_id] *= -1.0;
-                steering_angle_cmd_[wheel_id] = ghost_util::FlipAngle180(steering_angle_cmd_[wheel_id]);
+                steering_angle_cmd_[wheel_id] = ghost_common::FlipAngle180(steering_angle_cmd_[wheel_id]);
 
                 // Recalculate error
-                steering_error = ghost_util::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
+                steering_error = ghost_common::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
             }
 
             // Set steering voltage using position control law

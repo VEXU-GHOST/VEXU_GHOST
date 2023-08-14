@@ -1,9 +1,8 @@
-#ifndef GHOST_UTILS__ANGLE_UTIL_HPP
-#define GHOST_UTILS__ANGLE_UTIL_HPP
+#pragma once
 
 #include <cmath>
 
-namespace ghost_util
+namespace ghost_common
 {
 
     const float DEG_TO_RAD = M_PI/180.0;
@@ -20,5 +19,3 @@ namespace ghost_util
     float SmallestAngleDistDeg(float a2, float a1);
     float SmallestAngleDistRad(float a2, float a1);
 }
-
-#endif

@@ -37,7 +37,8 @@ ln -s ../../../../ghost_control/src/models/dc_motor_model.cpp
 ### Symlink ghost_common ###
 # Add Folders
 cd ../../ghost_common
-ln -s ../../../ghost_common/src
+ln -s ../../../ghost_common/src/v5_robot_config_defs.cpp
+ln -s ../../../ghost_common/src/v5_robot_config.cpp
 
 ##################
 ### V5 INCLUDE ###

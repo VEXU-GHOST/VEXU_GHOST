@@ -16,7 +16,7 @@
 
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
-#include "ghost_util/parsing_util.hpp"
+#include "ghost_common/util/parsing_util.hpp"
 
 using Eigen::Dynamic;
 using Eigen::Matrix;
@@ -102,16 +102,16 @@ namespace v5_robot_plugin
         }
 
         // Parse input plugin parameters
-        impl_->joint_names_ = ghost_util::getVectorFromString<std::string>(sdf->GetElement("joint_names")->Get<std::string>(), ' ');
+        impl_->joint_names_ = ghost_common::getVectorFromString<std::string>(sdf->GetElement("joint_names")->Get<std::string>(), ' ');
 
-        impl_->motor_names_ = ghost_util::getVectorFromString<std::string>(sdf->GetElement("motor_names")->Get<std::string>(), ' ');
-        auto motor_port_vector = ghost_util::getVectorFromString<int>(sdf->GetElement("motor_ports")->Get<std::string>(), ' ');
+        impl_->motor_names_ = ghost_common::getVectorFromString<std::string>(sdf->GetElement("motor_names")->Get<std::string>(), ' ');
+        auto motor_port_vector = ghost_common::getVectorFromString<int>(sdf->GetElement("motor_ports")->Get<std::string>(), ' ');
 
-        impl_->encoder_names_ = ghost_util::getVectorFromString<std::string>(sdf->GetElement("encoder_names")->Get<std::string>(), ' ');
-        auto encoder_port_vector = ghost_util::getVectorFromString<int>(sdf->GetElement("encoder_ports")->Get<std::string>(), ' ');
+        impl_->encoder_names_ = ghost_common::getVectorFromString<std::string>(sdf->GetElement("encoder_names")->Get<std::string>(), ' ');
+        auto encoder_port_vector = ghost_common::getVectorFromString<int>(sdf->GetElement("encoder_ports")->Get<std::string>(), ' ');
 
-        std::vector<double> actuator_jacobian_temp = ghost_util::getVectorFromString<double>(sdf->GetElement("actuator_jacobian")->Get<std::string>(), ' ');
-        std::vector<double> sensor_jacobian_temp = ghost_util::getVectorFromString<double>(sdf->GetElement("sensor_jacobian")->Get<std::string>(), ' ');
+        std::vector<double> actuator_jacobian_temp = ghost_common::getVectorFromString<double>(sdf->GetElement("actuator_jacobian")->Get<std::string>(), ' ');
+        std::vector<double> sensor_jacobian_temp = ghost_common::getVectorFromString<double>(sdf->GetElement("sensor_jacobian")->Get<std::string>(), ' ');
 
         // Input Validation
         if (motor_port_vector.size() != impl_->motor_names_.size())

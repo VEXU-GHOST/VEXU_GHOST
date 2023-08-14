@@ -1,6 +1,6 @@
-#include "ghost_util/angle_util.hpp"
+#include "ghost_common/util/angle_util.hpp"
 
-namespace ghost_util
+namespace ghost_common
 {
     float WrapAngle360(float angle){
         angle = fmod(angle, 360.0);
@@ -55,6 +55,6 @@ namespace ghost_util
     float SmallestAngleDistRad(float a2, float a1){
         return DEG_TO_RAD * SmallestAngleDistDeg(RAD_TO_DEG * a2, RAD_TO_DEG * a1);
     }
-}
+} // namespace ghost_common
 
 
