@@ -155,38 +155,38 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
 
 void GazeboJointPIDPlugin::OnUpdate()
 {
-  // Get joint velocity
-  auto joint_vel_rpm = impl_->joint_->GetVelocity(2)*60/(2*3.14159);
-  auto joint_angle_deg = fmod(impl_->joint_->Position(2)*180/3.14159, 360);
+    // Get joint velocity
+    auto joint_vel_rpm = impl_->joint_->GetVelocity(2)*60/(2*3.14159);
+    auto joint_angle_deg = fmod(impl_->joint_->Position(2)*180/3.14159, 360);
 
-  // Wrap angle error
-  double angle_error = fmod(impl_->angle_setpoint_, 360) - joint_angle_deg;
-  double angle_sign = std::abs(angle_error)/angle_error;
-  angle_error = std::abs(angle_error) > 180 ? angle_sign*360 - angle_error : angle_error; 
+    // Wrap angle error
+    double angle_error = fmod(impl_->angle_setpoint_, 360) - joint_angle_deg;
+    double angle_sign = std::abs(angle_error)/angle_error;
+    angle_error = std::abs(angle_error) > 180 ? angle_sign*360 - angle_error : angle_error; 
 
-  // Update motor
-  impl_->motor_model_.setMotorSpeedRPM(joint_vel_rpm);
+    // Update motor
+    impl_->motor_model_.setMotorSpeedRPM(joint_vel_rpm);
 
-  // Calculate control inputs
-  float voltage_feedforward = impl_->voltage_setpoint_ * impl_->nominal_voltage_ * 1000 * impl_->feedforward_voltage_gain_;
-  float velocity_feedforward = impl_->motor_model_.getVoltageFromVelocityMillivolts(impl_->velocity_setpoint_) * impl_->feedforward_velocity_gain_;
-  float velocity_feedback = (impl_->velocity_setpoint_ - joint_vel_rpm) * impl_->velocity_gain_;
-  float position_feedback = (impl_->angle_setpoint_ - joint_angle_deg) * impl_->position_gain_;
+    // Calculate control inputs
+    float voltage_feedforward = impl_->voltage_setpoint_ * impl_->nominal_voltage_ * 1000 * impl_->feedforward_voltage_gain_;
+    float velocity_feedforward = impl_->motor_model_.getVoltageFromVelocityMillivolts(impl_->velocity_setpoint_) * impl_->feedforward_velocity_gain_;
+    float velocity_feedback = (impl_->velocity_setpoint_ - joint_vel_rpm) * impl_->velocity_gain_;
+    float position_feedback = (impl_->angle_setpoint_ - joint_angle_deg) * impl_->position_gain_;
 
-  impl_->motor_model_.setMotorEffort(voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback);
-  
-  auto motor_torque = impl_->motor_model_.getTorqueOutput();
-  // For simulatilon stability, only apply torque if larger than a threshhold
-  if(std::abs(motor_torque) > 1e-5){
+    impl_->motor_model_.setMotorEffort(voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback);
+
+    auto motor_torque = impl_->motor_model_.getTorqueOutput();
+    // For simulatilon stability, only apply torque if larger than a threshhold
+    if(std::abs(motor_torque) > 1e-5){
     impl_->link_->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, motor_torque));
-  }
+    }
 
-  // Publish current joint torque
-  auto output_msg = geometry_msgs::msg::Vector3{};
-  output_msg.x = joint_angle_deg; // Angle in degrees
-  output_msg.y = joint_vel_rpm;   // Velocity in RPM
-  output_msg.z = motor_torque;    // Torque in N-m
-  impl_->output_pub_->publish(output_msg);
+    // Publish current joint torque
+    auto output_msg = geometry_msgs::msg::Vector3{};
+    output_msg.x = joint_angle_deg; // Angle in degrees
+    output_msg.y = joint_vel_rpm;   // Velocity in RPM
+    output_msg.z = motor_torque;    // Torque in N-m
+    impl_->output_pub_->publish(output_msg);
 }
 
 void GazeboJointPIDPlugin::v5ActuatorCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
@@ -207,7 +207,10 @@ void GazeboJointPIDPlugin::v5ActuatorCallback(const ghost_msgs::msg::V5ActuatorC
       // Update setpoints
       if(cmd.angle_control){
         impl_->angle_setpoint_ = cmd.desired_angle;
-      }
+        RCLCPP_INFO(
+        impl_->ros_node_->get_logger(),
+        "angle_setpoint_: %f", impl_->angle_setpoint_);
+        }
       if(cmd.velocity_control){
         impl_->velocity_setpoint_ = cmd.desired_velocity;
       }
