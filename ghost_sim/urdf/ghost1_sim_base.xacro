@@ -23,10 +23,118 @@
             <joint_name>driveshaft_back</joint_name>
         </plugin>
 
-        <!-- <plugin name="swerve_odometry_plugin" filename="libswerve_odometry_plugin.so">
-        <x_stddev>0.05</x_stddev>
-        <y_stddev>0.05</y_stddev>
-        <r_stddev>0.03</r_stddev>
-        </plugin> -->
+        <plugin name="v5_robot_plugin" filename="libv5_robot_plugin.so">
+            <joint_names>
+                joint_1
+                joint_2
+            </joint_names>
+
+            <motor_names>
+                motor_1
+                motor_2
+                motor_3
+            </motor_names>
+            <motor_ports>5 6 7</motor_ports>
+
+            <encoder_names>encoder_1 encoder_2</encoder_names>
+            <encoder_ports>5 6</encoder_ports>
+
+            <!-- System Jacobians -->
+                <!-- To describe the relationship between motors/encoders and robot joints in a universal way, we encode them -->
+                <!-- as matrices which relate the vector of motor/encoder speeds to joint speeds. We can also take a pseudo-inverse -->
+                <!-- to relate torques. Examples are included below. -->
+
+                <!-- Example 1 -->
+                    <!--         motor_1 motor_2    -->
+                    <!-- joint_1    1       0       -->
+                    <!-- joint_2    0       1       -->
+        
+                    <!-- Both joints are directly driven by their respective motors, and their velocites and torques match. -->
+
+                <!-- Example 2 -->
+                <!--          motor_1   motor_2  motor_3    -->
+                    <!-- joint_1    0.5       0.5       0       -->
+                    <!-- joint_2     0         0        2       -->
+
+                    <!-- joint_1 is driven by motor_1 and motor_2. It moves at the average of the two motor velocites, and with -->
+                    <!-- the torque of both motors added together. This represents two motors attached to the same system --> 
+                    <!-- joint_2 moves twice as fast as motor_3, representing an external gear reduction on the motor -->
+
+                <!-- In general, describe the way the velocities are related and the torque relationship will be extracted inside the plugin -->
+
+            <!-- This matrix describes the relationship between motor velocities and joint velocities -->
+            <!-- Width = # Motors, Height = # Joints -->
+            <actuator_jacobian>
+            1 2 3
+            4 5 6
+            </actuator_jacobian>
+
+            <!-- This matrix describes the relationship between the encoders and the joints -->
+            <!-- Width = # Encoders, Height = # Joints -->
+            <sensor_jacobian>
+            1 0
+            0 1
+            </sensor_jacobian>
+
+        </plugin>
+    </gazebo>
+
+        <!-- Gazebo Plugins -->
+    <gazebo>
+        <!-- Motor Models -->
+        <!-- 0.05 Steering -->
+        <xacro:joint_pid_macro
+            joint_name="steering_left"
+            link_name="mod_left"
+            gear_ratio="2.0"
+            position_gain="0.05"
+            vel_gain="0.04"
+            accel_gain="0.0">
+        </xacro:joint_pid_macro>
+
+        <!-- <xacro:joint_pid_macro
+            joint_name="steering_right"
+            link_name="mod_right"
+            gear_ratio="2.0"
+            position_gain="0.05"
+            vel_gain="0.04"
+            accel_gain="0.0">
+        </xacro:joint_pid_macro>
+
+        <xacro:joint_pid_macro
+            joint_name="steering_back"
+            link_name="mod_back"
+            gear_ratio="2.0"
+            position_gain="0.05"
+            vel_gain="0.04"
+            accel_gain="0.0">
+        </xacro:joint_pid_macro>
+
+        <xacro:joint_pid_macro
+            joint_name="driveshaft_left"
+            link_name="wheel_left"
+            gear_ratio="5.0"
+            position_gain="0.0"
+            vel_gain="0.04"
+            accel_gain="0.0">
+        </xacro:joint_pid_macro>
+
+        <xacro:joint_pid_macro
+            joint_name="driveshaft_right"
+            link_name="wheel_right"
+            gear_ratio="5.0"
+            position_gain="0.0"
+            vel_gain="0.04"
+            accel_gain="0.0">
+        </xacro:joint_pid_macro>
+
+        <xacro:joint_pid_macro
+            joint_name="driveshaft_back"
+            link_name="wheel_back"
+            gear_ratio="5.0"
+            position_gain="0.0"
+            vel_gain="0.04"
+            accel_gain="0.0">
+        </xacro:joint_pid_macro>   -->
     </gazebo>
 </robot>

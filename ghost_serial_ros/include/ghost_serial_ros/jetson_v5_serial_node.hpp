@@ -1,6 +1,5 @@
 
-#ifndef GHOST_SERIAL__JETSON_V5_SERIAL_NODE_HPP
-#define GHOST_SERIAL__JETSON_V5_SERIAL_NODE_HPP
+#pragma once
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -8,12 +7,10 @@
 
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
-#include "ghost_msgs/msg/v5_competition_state.hpp"
-#include "ghost_msgs/msg/v5_joystick.hpp"
 
 #include "ghost_serial/base_interfaces/jetson_serial_base.hpp"
 
-namespace ghost_ros
+namespace ghost_serial_ros
 {
 
     class JetsonV5SerialNode : public rclcpp::Node
@@ -45,9 +42,7 @@ namespace ghost_ros
 
         // ROS Topics
         rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
-        rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
-        rclcpp::Publisher<ghost_msgs::msg::V5Joystick>::SharedPtr joystick_pub_;
-        rclcpp::Publisher<ghost_msgs::msg::V5CompetitionState>::SharedPtr competition_state_pub_;
+        rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr state_update_pub_;
 
         // Serial Interface
         std::shared_ptr<ghost_serial::JetsonSerialBase> serial_base_interface_;
@@ -64,5 +59,4 @@ namespace ghost_ros
         int actuator_command_msg_len_;
     };
 
-} // namespace ghost_serial
-#endif // GHOST_SERIAL__JETSON_V5_SERIAL_NODE_HPP
+} // namespace ghost_serial_ros

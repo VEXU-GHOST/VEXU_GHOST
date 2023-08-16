@@ -17,14 +17,14 @@ namespace ghost_v5_config
     // 4x int32 Joystick Channels, 2x bytes of btns/competition modes, 4x Bytes of port status, 4x Bytes of Msg Sequence ID
     constexpr int sensor_update_extra_byte_count = 4 * 4 + 2 + 4 + 4;
 
-    const int get_actuator_command_msg_len()
+    int get_actuator_command_msg_len()
     {
         int msg_len_ = actuator_update_packet_byte_size * motor_config_map.size();
         msg_len_ += actuator_cmd_extra_byte_count;
         return msg_len_;
     }
 
-    const int get_sensor_update_msg_len()
+    int get_sensor_update_msg_len()
     {
         int msg_len_ =
             motor_config_map.size() * motor_sensor_packet_byte_size +

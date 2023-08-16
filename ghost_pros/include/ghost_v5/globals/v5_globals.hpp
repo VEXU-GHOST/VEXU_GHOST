@@ -6,7 +6,7 @@
 #include "pros/apix.h"
 #include "ghost_v5/serial/v5_serial_node.hpp"
 #include "ghost_v5/motor/ghost_motor.hpp"
-#include "ghost_ros/robot_config/v5_robot_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 namespace v5_globals
 {
     extern uint32_t last_cmd_time;
@@ -18,8 +18,8 @@ namespace v5_globals
 
     extern pros::Mutex actuator_update_lock;
 
-    extern std::map<ghost_v5_config::v5_motor_id_enum, std::shared_ptr<ghost_v5::GhostMotor>> motors;
-    extern std::map<ghost_v5_config::v5_sensor_id_enum, std::shared_ptr<pros::Rotation>> encoders;
+    extern std::map<std::string, std::shared_ptr<ghost_v5::GhostMotor>> motors;
+    extern std::map<std::string, std::shared_ptr<pros::Rotation>> encoders;
 
     extern const pros::controller_analog_e_t joy_channels[4];
     extern const pros::controller_digital_e_t joy_btns[12];

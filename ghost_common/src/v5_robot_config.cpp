@@ -1,25 +1,25 @@
-/*
-For each motor configuration, we define a struct
-*/
-
+/**
+ * This file should be modified for your specific robot!
+ * 
+ * 
+ * 
+ * 
+ */
 
 #include "ghost_common/v5_robot_config_defs.hpp"
 
 namespace ghost_v5_config
 {
-    // Drive Motor Config
+    //////////////////////////////////////////
+    ////////// Motor Configurations //////////
+    //////////////////////////////////////////
     GhostMotorConfig drive_motor_config = {
         .motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
         .motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_COAST,
-        .ctl__vel_gain = 17.5,  // RPM -> mV
+        .ctl__vel_gain = 17.5, // RPM -> mV
         .ctl__ff_vel_gain = 1.1,
     };
 
-    GhostMotorConfig endgame_motor_config = {
-        .motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_200,
-    };
-
-    // Intake Motor Config
     GhostMotorConfig intake_motor_config = {
         .motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
         .motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_BRAKE,
@@ -27,34 +27,23 @@ namespace ghost_v5_config
         .ctl__ff_vel_gain = 1.2,
     };
 
-    // Indexer Motor Config
-    GhostMotorConfig indexer_motor_config = {
-        .motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
-        .motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_BRAKE,
-        .filter__cutoff_frequency = 50.0,
-        .ctl__pos_gain = 0.0,
-        .ctl__vel_gain = 0.0,
-        .ctl__ff_vel_gain = 0.0,
+    ///////////////////////////////////////
+    ////////// Motor Definitions //////////
+    ///////////////////////////////////////
+    const std::unordered_map<std::string, motor_access_helper> motor_config_map{
+        {"DRIVE_LEFT_FRONT_MOTOR",  motor_access_helper(1, false, drive_motor_config)},
+        {"DRIVE_LEFT_BACK_MOTOR",   motor_access_helper(2, false, drive_motor_config)},
+        {"DRIVE_RIGHT_FRONT_MOTOR",  motor_access_helper(3, false, drive_motor_config)},
+        {"DRIVE_RIGHT_BACK_MOTOR",  motor_access_helper(4, false, drive_motor_config)},
     };
 
-    // Shooter Motor Config
-    GhostMotorConfig shooter_motor_config = {
-        .motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_3600,
-        .motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_BRAKE,
-        .ctl__vel_gain = 20.0,  // RPM -> mV
-        .ctl__ff_vel_gain = 1.0,
+    /////////////////////////////////////////
+    ////////// Encoder Definitions //////////
+    /////////////////////////////////////////
+    const std::unordered_map<std::string, encoder_access_helper> encoder_config_map{
+        {"STEERING_FRONT_LEFT_ENCODER",     encoder_access_helper(5, true)},
+        {"STEERING_FRONT_RIGHT_ENCODER",    encoder_access_helper(6, true)},
+        {"STEERING_BACK_LEFT_ENCODER",      encoder_access_helper(7, true)},
+        {"STEERING_BACK_RIGHT_ENCODER",     encoder_access_helper(8, true)},
     };
-
-    START_MOTORS
-    ADD_MOTOR("DRIVE_LEFT_FRONT_MOTOR",   1,  false,  drive_motor_config)
-    ADD_MOTOR("DRIVE_LEFT_BACK_MOTOR",    2,  false,  drive_motor_config)
-    ADD_MOTOR("DRIVE_RIGHT_FRONT_MOTOR",  3,  false,  drive_motor_config)
-    ADD_MOTOR("DRIVE_RIGHT_BACK_MOTOR",   4,  false,  drive_motor_config)
-    END_MOTORS
-
-    START_ENCODERS
-    // ADD_ENCODER(STEERING_LEFT_ENCODER, false)
-    // ADD_ENCODER(STEERING_RIGHT_ENCODER, false)
-    // ADD_ENCODER(STEERING_BACK_ENCODER, false)
-    END_ENCODERS
-}
+} // namespace ghost_v5_config

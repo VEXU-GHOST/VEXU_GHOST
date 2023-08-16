@@ -39,6 +39,7 @@ find_package(gazebo_plugins REQUIRED)
 
 # Custom
 find_package(ghost_msgs REQUIRED)
+find_package(ghost_common REQUIRED)
 find_package(ghost_control REQUIRED)
 
 # Include
@@ -90,47 +91,25 @@ target_include_directories(gazebo_joint_pid_plugin
 ament_export_libraries(gazebo_joint_pid_plugin)
 
 # Gazebo Swerve Odometry Plugin
-add_library(swerve_odometry_plugin SHARED src/swerve_odometry_plugin.cpp)
-ament_target_dependencies(swerve_odometry_plugin
+add_library(v5_robot_plugin SHARED src/v5_robot_plugin.cpp)
+ament_target_dependencies(v5_robot_plugin
+  Eigen3  
   rclcpp
   std_msgs
   geometry_msgs
-  nav_msgs
   gazebo_dev
   gazebo_msgs
   gazebo_ros
   gazebo_plugins
+  ghost_msgs
+  ghost_common
   ghost_control
 )
-target_include_directories(swerve_odometry_plugin
+target_include_directories(v5_robot_plugin
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-ament_export_libraries(swerve_odometry_plugin)
-
-##V5 Simulator Node
-add_library(v5_sim_node SHARED src/v5_sim_node.cpp)
-ament_target_dependencies(v5_sim_node
-  rclcpp
-  sensor_msgs
-  ghost_msgs
-)
-target_link_libraries(v5_sim_node
-  yaml-cpp
-)
-target_include_directories(v5_sim_node
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-ament_export_targets(v5_sim_node HAS_LIBRARY_TARGET)
-install(
-  TARGETS v5_sim_node
-  EXPORT v5_sim_node
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
+ament_export_libraries(v5_robot_plugin)
 
 add_executable(ground_truth_pose_publisher
   src/ground_truth_pose_publisher.cpp

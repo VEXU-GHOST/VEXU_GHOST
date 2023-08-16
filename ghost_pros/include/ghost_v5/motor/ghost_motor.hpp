@@ -5,8 +5,7 @@
 #include "pros/motors.hpp"
 #include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
 #include "ghost_control/models/dc_motor_model.hpp"
-#include "ghost_ros/robot_config/v5_robot_config_defs.hpp"
-#include "ghost_ros/robot_config/v5_robot_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 
 namespace ghost_v5
 {
@@ -18,7 +17,7 @@ namespace ghost_v5
     class GhostMotor : public pros::Motor
     {
     public:
-        GhostMotor(int motor_port, bool reversed, ghost_v5_config::GhostMotorConfig &config);
+        GhostMotor(int motor_port, bool reversed, const ghost_v5_config::GhostMotorConfig &config);
 
         void updateMotor();
 
@@ -58,9 +57,6 @@ namespace ghost_v5
 
         // Motor Config
         ghost_v5_config::GhostMotorConfig config_;
-
-        bool motor_is_3600_cart_;
-        float trq_lim_norm_;
 
         // Velocity Filtering
         ghost_estimation::SecondOrderLowPassFilter velocity_filter_;

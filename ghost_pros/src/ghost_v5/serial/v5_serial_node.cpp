@@ -1,7 +1,7 @@
 
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
-#include "ghost_ros/robot_config/v5_serial_msg_config.hpp"
+#include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_v5/globals/v5_globals.hpp"
 #include "ghost_v5/motor/ghost_motor.hpp"
 
@@ -61,14 +61,14 @@ namespace ghost_v5
 		int buffer_8bit_index = 0;
 
 		// Update each motor based on msg configuration and new values
-		for (auto &motor_id : ghost_v5_config::motor_id_vector)
+		for (const auto &[name, config] : ghost_v5_config::motor_config_map)
 		{
 			// For clarity of configuration file
 			// Copy Current Limit
 			int32_t current_limit;
 			memcpy(&current_limit, buffer + buffer_8bit_index, 4);
 			buffer_8bit_index += 4;
-			v5_globals::motors[motor_id]->set_current_limit(current_limit);
+			v5_globals::motors[name]->set_current_limit(current_limit);
 
 			// Copy Voltage Command
 			float voltage_command;
@@ -102,8 +102,8 @@ namespace ghost_v5
 			actuator_flags_byte >>= 1;
 			bool angle_control = (bool)(actuator_flags_byte & 0x01);
 
-			v5_globals::motors[motor_id]->setControlMode(voltage_control, torque_control, velocity_control, angle_control);
-			v5_globals::motors[motor_id]->setMotorCommand(voltage_command, torque_command, velocity_command, angle_command);
+			v5_globals::motors[name]->setControlMode(voltage_control, torque_control, velocity_control, angle_control);
+			v5_globals::motors[name]->setMotorCommand(voltage_command, torque_command, velocity_command, angle_command);
 		}
 
 		// Update incoming msg id
@@ -131,23 +131,23 @@ namespace ghost_v5
 		uint32_t device_connected_vector = 0;
 
 		// Update V5 Motor Encoders
-		for (auto &motor_id : ghost_v5_config::motor_id_vector)
+		for (const auto &[name, config] : ghost_v5_config::motor_config_map)
 		{
-			float position = v5_globals::motors[motor_id]->get_position();
-			float velocity = v5_globals::motors[motor_id]->getVelocityFilteredRPM();
-			float voltage = v5_globals::motors[motor_id]->getVoltageCommand();
-			float current = v5_globals::motors[motor_id]->get_current_draw();
-			float temp = v5_globals::motors[motor_id]->get_temperature();
-			float power = v5_globals::motors[motor_id]->get_power();
+			float position = v5_globals::motors[name]->get_position();
+			float velocity = v5_globals::motors[name]->getVelocityFilteredRPM();
+			float voltage = v5_globals::motors[name]->getVoltageCommand();
+			float current = v5_globals::motors[name]->get_current_draw();
+			float temp = v5_globals::motors[name]->get_temperature();
+			float power = v5_globals::motors[name]->get_power();
 
 			// If device is connected (and recieving valid sensor updates), set corresponding bit in connected vector
-			if (v5_globals::motors[motor_id]->getDeviceIsConnected())
+			if (v5_globals::motors[name]->getDeviceIsConnected())
 			{
-				device_connected_vector |= (BITMASK_ARR_32BIT[motor_id]);
+				device_connected_vector |= (BITMASK_ARR_32BIT[config.port]);
 			}
 			else
 			{
-				device_connected_vector &= (~BITMASK_ARR_32BIT[motor_id]);
+				device_connected_vector &= (~BITMASK_ARR_32BIT[config.port]);
 			}
 
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
@@ -159,21 +159,21 @@ namespace ghost_v5
 		}
 
 		// Update V5 Sensors
-		for (auto &sensor_id : ghost_v5_config::sensor_update_sensor_config)
+		for (const auto &[name, config] : ghost_v5_config::encoder_config_map)
 		{
-			float position = ((float)v5_globals::encoders[sensor_id]->get_angle()) / 100.0;
-			float velocity = ((float)v5_globals::encoders[sensor_id]->get_velocity()) * 60.0 / 100.0 / 360.0; // Centidegrees -> RPM
+			float position = ((float)v5_globals::encoders[name]->get_angle()) / 100.0;
+			float velocity = ((float)v5_globals::encoders[name]->get_velocity()) * 60.0 / 100.0 / 360.0; // Centidegrees -> RPM
 
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
 
 			if (position != PROS_ERR && velocity != PROS_ERR_F)
 			{
-				device_connected_vector |= (BITMASK_ARR_32BIT[sensor_id]);
+				device_connected_vector |= (BITMASK_ARR_32BIT[config.port]);
 			}
 			else
 			{
-				device_connected_vector &= (~BITMASK_ARR_32BIT[sensor_id]);
+				device_connected_vector &= (~BITMASK_ARR_32BIT[config.port]);
 			}
 		}
 
