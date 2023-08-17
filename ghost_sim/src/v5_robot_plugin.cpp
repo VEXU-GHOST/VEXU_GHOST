@@ -16,7 +16,9 @@
 
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
+#include "ghost_msgs/srv/broadcast_jacobian.hpp"
 #include "ghost_common/util/parsing_util.hpp"
+
 
 using Eigen::Dynamic;
 using Eigen::Matrix;
@@ -69,18 +71,26 @@ namespace v5_robot_plugin
         impl_->model_ = model;
 
         // Initialize ROS Subscriptions
-        impl_->actuator_command_sub_ = impl_->ros_node_->create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
-            "v5/actuator_commands",
-            10,
-            [this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)
-            {
-                // 1) Iterate through motor_names and use motor_port_map to get motor command
-            });
+        // impl_->actuator_command_sub_ = impl_->ros_node_->create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
+        //     "v5/actuator_commands",
+        //     10,
+        //     [this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)
+        //     {
+        //         // 1) Iterate through motor_names and use motor_port_map to get motor command
+        //     });
 
         // Initialize ROS Publishers
         impl_->sensor_update_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5SensorUpdate>(
             "v5/sensor_update",
             10);
+
+        impl_->actuator_jacobian_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5SensorUpdate>(
+            "v5/sensor_update",
+            10);
+
+        // Service to publish jacobians to motors
+        impl_->actuator_jacobian_srv = impl_->ros_node_->create_service<ghost_msgs::srv::BroadcastJacobian>(
+            "broadcast_jacobian", &broadcastJacobian);
 
         // Check for required parameters
         std::vector<std::string> params{
@@ -168,8 +178,19 @@ namespace v5_robot_plugin
 
         // Create a connection so the OnUpdate function is called at every simulation
         // iteration. Remove this call, the connection and the callback if not needed.
-        impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-            std::bind(&V5RobotPlugin::OnUpdate, this));
+        // impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
+        //     std::bind(&V5RobotPlugin::OnUpdate, this));
+
+    }
+
+    void V5RobotPlugin::broadcastJacobian(const std::shared_ptr<ghost_msgs::srv::BroadcastJacobian::Request> request_motor_name,
+                                        std::shared_prt<ghost_msgs::srv::BroadcastJacobian::Response> response){
+        // Parses number from motor name
+        int motor_index = request_motor_name.back();
+        RCLCPP_INFO(
+            logger, 
+            "MOTOR INDEX: %d", motor_index);
+        actuator_jacobian_msg->actuator_jacobian = impl_->actuator_jacobian_.col(motor_index);
     }
 
     void V5RobotPlugin::OnUpdate()

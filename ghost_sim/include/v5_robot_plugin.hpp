@@ -12,7 +12,6 @@
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-
 namespace v5_robot_plugin
 {
 // Forward declaration of private data class.
@@ -34,6 +33,8 @@ public:
   /// \param[in] sdf SDF element containing user-defined parameters.
   void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
 
+  void broadcastJacobian(const std::shared_ptr<ghost_msgs::srv::BroadcastJacobian::Request> request_motor_name,
+                                        std::shared_prt<ghost_msgs::srv::BroadcastJacobian::Response> response);
 protected:
   /// Optional callback to be called at every simulation iteration.
   void OnUpdate();

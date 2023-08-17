@@ -25,14 +25,23 @@
 
         <plugin name="v5_robot_plugin" filename="libv5_robot_plugin.so">
             <joint_names>
-                joint_1
-                joint_2
+                steering_left
+                steering_right
+                steering_back
+                driveshaft_left
+                driveshaft_right
+                driveshaft_back
             </joint_names>
 
             <motor_names>
                 motor_1
                 motor_2
                 motor_3
+                motor_4
+                motor_5
+                motor_6
+                motor_7
+                motor_8
             </motor_names>
             <motor_ports>5 6 7</motor_ports>
 
@@ -65,8 +74,12 @@
             <!-- This matrix describes the relationship between motor velocities and joint velocities -->
             <!-- Width = # Motors, Height = # Joints -->
             <actuator_jacobian>
-            1 2 3
-            4 5 6
+            0.5  0.5    0    0    0    0    0    0
+              0    0  0.5  0.5    0    0    0    0 
+              0    0    0    0  0.5  0.5    0    0
+              0    0    0    0    0    0  0.5  0.5
+            0.5  0.5    0    0    0    0    0    0
+              0    0  0.5  0.5    0    0    0    0
             </actuator_jacobian>
 
             <!-- This matrix describes the relationship between the encoders and the joints -->

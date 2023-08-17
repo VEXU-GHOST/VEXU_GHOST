@@ -34,8 +34,9 @@ public:
   rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr output_pub_;
 
   // Plugin params
-  std::string joint_name_; // TODO: is this the motor name. check that joint_name_ and V5port name in V5MotorCommand msg don't clash
+  std::string joint_name_; 
   std::string link_name_;
+  std::vector<double> actuator_jacobian_;
   
   // Motor Parameters
   ghost_control::DCMotorModel motor_model_;
@@ -102,7 +103,7 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
   // Get plugin config
   impl_->joint_name_ = sdf->GetElement("joint_name")->Get<std::string>();
   impl_->link_name_ = sdf->GetElement("link_name")->Get<std::string>();
-
+  impl_-> actuator_jacobian_ = sdf->GetElement("actuator_jacobian")->Get<std::vector<double>>();
   impl_->position_gain_ = sdf->GetElement("position_gain")->Get<double>();
   impl_->velocity_gain_ = sdf->GetElement("velocity_gain")->Get<double>();
   impl_->feedforward_velocity_gain_ = sdf->GetElement("feedforward_velocity_gain")->Get<double>();
@@ -122,9 +123,9 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
     this-> GazeboJointPIDPlugin::v5ActuatorCallback(msg);});
 
   // Initialize Publisher
-  impl_->output_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
-    "v5actuator/output",
-    10);
+//   impl_->output_pub_ = impl_->ros_node_->create_publisher<geometry_msgs::msg::Vector3>(
+//     "v5actuator/output",
+//     10);
 
   // Initalize motor models
   impl_->motor_model_ = ghost_control::DCMotorModel(

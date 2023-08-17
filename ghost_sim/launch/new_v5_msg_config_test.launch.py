@@ -24,10 +24,11 @@ def launch_setup(context, *args, **kwargs):
         # For now default to true
         enable_pid = True
 
-    if(bool(enable_pid)):
-        filename = "ghost1_sim_pid.urdf"
-    else:
-        filename = "ghost1_sim_voltage.urdf"
+    # if(bool(enable_pid)):
+    #     filename = "ghost1_sim_pid.urdf"
+    # else:
+    #     filename = "ghost1_sim_voltage.urdf"
+    filename = "ghost1_sim_base.xacro"
 
     # Load URDF and process to text
     urdf_path = os.path.join(ghost_sim_share_dir, "urdf", filename)

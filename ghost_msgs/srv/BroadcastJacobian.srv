@@ -1,0 +1,3 @@
+string motor_name
+---
+float32[6] motor_to_joints_vector

@@ -125,27 +125,6 @@ install(TARGETS
   ground_truth_pose_publisher
   DESTINATION lib/${PROJECT_NAME})
 
-add_executable(v5_sim_node_main
-  src/v5_sim_node_main.cpp
-)
-target_link_libraries(v5_sim_node_main
-  v5_sim_node
-)
-install(TARGETS
-v5_sim_node_main
-  DESTINATION lib/${PROJECT_NAME})
-
-add_executable(test_v5_sim_node
-  test/test_v5_sim_node.cpp
-)
-target_link_libraries(test_v5_sim_node
-  yaml-cpp
-  v5_sim_node
-)
-install(TARGETS
-  test_v5_sim_node
-  DESTINATION lib/${PROJECT_NAME})
-
 # Node to test new V5ActuactorCommand communication
 add_executable(test_publisher_v5_actuator_cmd
   test/test_publisher_v5_actuator_cmd.cpp
