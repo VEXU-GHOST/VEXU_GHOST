@@ -48,6 +48,9 @@ namespace v5_robot_plugin
         std::vector<double> joint_velocities_;
         std::vector<double> joint_efforts_;
 
+        // Outgoing encoder data
+        std::vector<double> encoder_data_;
+
         std::unordered_map<std::string, int> motor_port_map_;
         std::unordered_map<std::string, int> encoder_port_map_;
 
@@ -59,7 +62,7 @@ namespace v5_robot_plugin
         rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
         rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
-        rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr actuator_jacobian_pub_;
+        rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_jacobian_pub_;
     };
 
     V5RobotPlugin::V5RobotPlugin()
@@ -199,18 +202,26 @@ namespace v5_robot_plugin
     }
 
     void V5RobotPlugin::jointToEncoderTransform(){
+        int col_index = 0;
         // Lamda for-each expression to get encoder values for every joint
-        for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](sensor_msgs::msg::JointState& joint_data){
-            // get encoder Jacobian row index in encoder_names given joint_data name
-            std::string jacobian_row_index = impl_->joint_names_.indexOf(joint_data.name);
-            
-            // 
-            encoder_data = this->populate_encoder_data(loop_index);
+        for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](std::string& joint_data){
+            // get encoder Jacobian row index in encoder_names given joint_data name            
+            // Get iterator that points to corresponding joint name in joint_names_
+            std::vector<std::string>::iterator joint_name_itr = find(impl_->joint_names_.begin(), impl_-> joint_names_.end(), joint_data);
+           
+            // Convert iterator to index
+            size_t jacobian_row_index = distance(begin(impl_->joint_names_), joint_name_itr); 
+
+            impl_->encoder_data_[col_index] = impl_->joint_positions_[col_index] * impl_->sensor_jacobian_(jacobian_row_index, col_index);  
+            col_index++;             
         });
     }
 
     void V5RobotPlugin::OnUpdate()
     {
+        // Converts joint data from Gazebo to encoder data using sensor jacobian matrix
+        this->jointToEncoderTransform();
+        // impl_->sensor_update_pub_->publish(impl_->encoder_data_);
     }
 
     // Register this plugin with the simulator

@@ -103,7 +103,7 @@ void GazeboJointPIDPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr
   // Get plugin config
   impl_->joint_name_ = sdf->GetElement("joint_name")->Get<std::string>();
   impl_->link_name_ = sdf->GetElement("link_name")->Get<std::string>();
-  impl_-> actuator_jacobian_ = sdf->GetElement("actuator_jacobian")->Get<std::vector<double>>();
+//   impl_-> actuator_jacobian_ = sdf->GetElement("actuator_jacobian")->Get<std::vector<double>>();
   impl_->position_gain_ = sdf->GetElement("position_gain")->Get<double>();
   impl_->velocity_gain_ = sdf->GetElement("velocity_gain")->Get<double>();
   impl_->feedforward_velocity_gain_ = sdf->GetElement("feedforward_velocity_gain")->Get<double>();
