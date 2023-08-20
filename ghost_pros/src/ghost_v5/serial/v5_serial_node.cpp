@@ -3,7 +3,7 @@
 
 #include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_v5/globals/v5_globals.hpp"
-#include "ghost_v5/motor/ghost_motor.hpp"
+#include "ghost_v5/motor/v5_motor_interface.hpp"
 
 #include "pros/adi.h"
 #include "pros/apix.h"
@@ -68,7 +68,7 @@ namespace ghost_v5
 			int32_t current_limit;
 			memcpy(&current_limit, buffer + buffer_8bit_index, 4);
 			buffer_8bit_index += 4;
-			v5_globals::motors[name]->set_current_limit(current_limit);
+			v5_globals::motors[name]->setCurrentLimit(current_limit);
 
 			// Copy Voltage Command
 			float voltage_command;
@@ -133,12 +133,12 @@ namespace ghost_v5
 		// Update V5 Motor Encoders
 		for (const auto &[name, config] : ghost_v5_config::motor_config_map)
 		{
-			float position = v5_globals::motors[name]->get_position();
+			float position = v5_globals::motors[name]->getInterfacePosition();
 			float velocity = v5_globals::motors[name]->getVelocityFilteredRPM();
 			float voltage = v5_globals::motors[name]->getVoltageCommand();
-			float current = v5_globals::motors[name]->get_current_draw();
-			float temp = v5_globals::motors[name]->get_temperature();
-			float power = v5_globals::motors[name]->get_power();
+			float current = v5_globals::motors[name]->getCurrentDraw();
+			float temp = v5_globals::motors[name]->getTemperature();
+			float power = v5_globals::motors[name]->getPower();
 
 			// If device is connected (and recieving valid sensor updates), set corresponding bit in connected vector
 			if (v5_globals::motors[name]->getDeviceIsConnected())

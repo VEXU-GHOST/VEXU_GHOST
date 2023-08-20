@@ -17,34 +17,42 @@ add_compile_options(-Wno-dev)
 ########################
 ##### DEPENDENCIES #####
 ########################
-# Base
-find_package(ament_cmake REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(yaml-cpp REQUIRED)
+set(DEPENDENCIES
+  ament_cmake
+  Eigen3
+  yaml-cpp
+  rclcpp
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  tf2_msgs
+  nav_msgs
+  visualization_msgs
+  gazebo_dev
+  gazebo_msgs
+  gazebo_ros
+  gazebo_plugins
+  ghost_msgs
+  ghost_common
+  ghost_control
+)
 
-# ROS
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(tf2_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(visualization_msgs REQUIRED)
+foreach(pkg ${DEPENDENCIES})
+  find_package(${pkg} REQUIRED)
+endforeach()
+ament_export_dependencies(${DEPENDENCIES})
 
-# Gazebo
-find_package(gazebo_dev REQUIRED)
-find_package(gazebo_msgs REQUIRED)
-find_package(gazebo_ros REQUIRED)
-find_package(gazebo_plugins REQUIRED)
+# Set Include Directories
+set(INCLUDE
+include
+${PYTHON_INCLUDE_DIRS}
+)
 
-# Custom
-find_package(ghost_msgs REQUIRED)
-find_package(ghost_common REQUIRED)
-find_package(ghost_control REQUIRED)
+include_directories(${INCLUDE})
+ament_export_include_directories(${INCLUDE})
 
-# Include
-include_directories(include)
 link_directories(${gazebo_dev_LIBRARY_DIRS})
+
 
 ###################
 ##### TARGETS #####
@@ -52,13 +60,7 @@ link_directories(${gazebo_dev_LIBRARY_DIRS})
 # Gazebo Motor Plugin
 add_library(gazebo_motor_plugin SHARED src/gazebo_motor_plugin.cpp)
 ament_target_dependencies(gazebo_motor_plugin
-  rclcpp
-  std_msgs
-  gazebo_dev
-  gazebo_msgs
-  gazebo_ros
-  gazebo_plugins
-  ghost_control
+  ${DEPENDENCIES}
 )
 target_link_libraries(gazebo_motor_plugin
   ghost_control::dc_motor_model)
@@ -68,43 +70,33 @@ target_include_directories(gazebo_motor_plugin
     $<INSTALL_INTERFACE:include>)
 ament_export_libraries(gazebo_motor_plugin)
 
-# Gazebo Joint PID Plugin
-add_library(gazebo_joint_pid_plugin SHARED src/gazebo_joint_pid_plugin.cpp)
-ament_target_dependencies(gazebo_joint_pid_plugin
-  rclcpp
-  std_msgs
-  geometry_msgs
-  gazebo_dev
-  gazebo_msgs
-  gazebo_ros
-  gazebo_plugins
-  ghost_msgs
-  ghost_control
-)
-target_link_libraries(gazebo_joint_pid_plugin
-  ghost_control::dc_motor_model
-)
-target_include_directories(gazebo_joint_pid_plugin
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-ament_export_libraries(gazebo_joint_pid_plugin)
 
-# Gazebo Swerve Odometry Plugin
+# Gazebo Joint PID Plugin
+# add_library(gazebo_joint_pid_plugin SHARED src/gazebo_joint_pid_plugin.cpp)
+# ament_target_dependencies(gazebo_joint_pid_plugin
+#   rclcpp
+#   std_msgs
+#   geometry_msgs
+#   gazebo_dev
+#   gazebo_msgs
+#   gazebo_ros
+#   gazebo_plugins
+#   ghost_msgs
+#   ghost_control
+# )
+# target_link_libraries(gazebo_joint_pid_plugin
+#   ghost_control::dc_motor_model
+# )
+# target_include_directories(gazebo_joint_pid_plugin
+#   PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>)
+# ament_export_libraries(gazebo_joint_pid_plugin)
+
+# Gazebo V5 Robot Plugin
 add_library(v5_robot_plugin SHARED src/v5_robot_plugin.cpp)
 ament_target_dependencies(v5_robot_plugin
-  Eigen3  
-  rclcpp
-  std_msgs
-  geometry_msgs
-  gazebo_dev
-  gazebo_msgs
-  gazebo_ros
-  gazebo_plugins
-  ghost_msgs
-  ghost_common
-  ghost_control
-  sensor_msgs
+  ${DEPENDENCIES}
 )
 target_include_directories(v5_robot_plugin
   PUBLIC
@@ -116,11 +108,7 @@ add_executable(ground_truth_pose_publisher
   src/ground_truth_pose_publisher.cpp
 )
 ament_target_dependencies(ground_truth_pose_publisher
-  rclcpp
-  tf2_msgs
-  geometry_msgs
-  gazebo_msgs
-  ghost_msgs
+  ${DEPENDENCIES}
 )
 install(TARGETS
   ground_truth_pose_publisher
@@ -131,10 +119,7 @@ add_executable(test_publisher_v5_actuator_cmd
   test/test_publisher_v5_actuator_cmd.cpp
 )
 ament_target_dependencies(test_publisher_v5_actuator_cmd
-  rclcpp
-  tf2_msgs
-  geometry_msgs
-  ghost_msgs
+  ${DEPENDENCIES}
 )
 install(TARGETS
   test_publisher_v5_actuator_cmd

@@ -10,7 +10,7 @@
 #include "pros/apix.h"
 #include "pros/rtos.h"
 
-#include "ghost_v5/motor/ghost_motor.hpp"
+#include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
 void zero_actuators(){
@@ -34,7 +34,7 @@ void update_actuators(){
 
 	// Update velocity filter and motor controller for all motors
 	for(auto & m : v5_globals::motors){
-		m.second->updateMotor();
+		m.second->updateInterface();
 	}
 
 	// Update Pneumatics
@@ -92,7 +92,7 @@ void initialize()
 {
 	// Motor ports
 	for (const auto& [name, config] : ghost_v5_config::motor_config_map){
-		v5_globals::motors[name] = std::make_shared<ghost_v5::GhostMotor>(config.port, config.reversed, config.config);
+		v5_globals::motors[name] = std::make_shared<ghost_v5::V5MotorInterface>(config.port, config.reversed, config.config);
 	}
 
 	// Encoder Ports

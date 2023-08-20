@@ -12,7 +12,7 @@
 #include <gazebo/physics/Link.hh>
 #include <gazebo_ros/node.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include "gazebo_plugins/gazebo_ros_joint_state_publisher.hpp"
+// #include "gazebo_plugins/gazebo_ros_joint_state_publisher.hpp"
 
 
 namespace v5_robot_plugin
@@ -42,8 +42,11 @@ protected:
     void OnUpdate();
 
 private:
-    /// Recommended PIMPL pattern. This variable should hold all private
-    /// data members.
-    std::unique_ptr<V5RobotPluginPrivate> impl_;
+  /// Recommended PIMPL pattern. This variable should hold all private
+  /// data members.
+  std::unique_ptr<V5RobotPluginPrivate> impl_;
+  
+  void jointToEncoderTransform();
+
 };
 }  // namespace v5_robot_plugin

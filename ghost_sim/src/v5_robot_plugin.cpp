@@ -8,7 +8,7 @@
  * Modified By: Maxx Wilson
  */
 
-#include "v5_robot_plugin.hpp"
+#include "ghost_sim/v5_robot_plugin.hpp"
 
 #include <iostream>
 #include <unordered_map>
@@ -62,7 +62,6 @@ namespace v5_robot_plugin
         rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
         rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
-        rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_jacobian_pub_;
     };
 
     V5RobotPlugin::V5RobotPlugin()
@@ -104,10 +103,6 @@ namespace v5_robot_plugin
         // Initialize ROS Publishers
         impl_->sensor_update_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5SensorUpdate>(
             "v5/sensor_update",
-            10);
-
-        impl_->actuator_jacobian_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
-            "v5/sensor_update", // TODO: same topic name as sensor pub??
             10);
 
         // Check for required parameters
