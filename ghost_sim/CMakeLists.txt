@@ -69,28 +69,28 @@ target_include_directories(gazebo_motor_plugin
 ament_export_libraries(gazebo_motor_plugin)
 
 # Gazebo Joint PID Plugin
-add_library(gazebo_joint_pid_plugin SHARED src/gazebo_joint_pid_plugin.cpp)
-ament_target_dependencies(gazebo_joint_pid_plugin
-  rclcpp
-  std_msgs
-  geometry_msgs
-  gazebo_dev
-  gazebo_msgs
-  gazebo_ros
-  gazebo_plugins
-  ghost_msgs
-  ghost_control
-)
-target_link_libraries(gazebo_joint_pid_plugin
-  ghost_control::dc_motor_model
-)
-target_include_directories(gazebo_joint_pid_plugin
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-ament_export_libraries(gazebo_joint_pid_plugin)
+# add_library(gazebo_joint_pid_plugin SHARED src/gazebo_joint_pid_plugin.cpp)
+# ament_target_dependencies(gazebo_joint_pid_plugin
+#   rclcpp
+#   std_msgs
+#   geometry_msgs
+#   gazebo_dev
+#   gazebo_msgs
+#   gazebo_ros
+#   gazebo_plugins
+#   ghost_msgs
+#   ghost_control
+# )
+# target_link_libraries(gazebo_joint_pid_plugin
+#   ghost_control::dc_motor_model
+# )
+# target_include_directories(gazebo_joint_pid_plugin
+#   PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>)
+# ament_export_libraries(gazebo_joint_pid_plugin)
 
-# Gazebo Swerve Odometry Plugin
+# Gazebo V5 Robot Plugin
 add_library(v5_robot_plugin SHARED src/v5_robot_plugin.cpp)
 ament_target_dependencies(v5_robot_plugin
   Eigen3  

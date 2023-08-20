@@ -59,7 +59,6 @@ namespace v5_robot_plugin
         rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
         rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
-        rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr actuator_jacobian_pub_;
     };
 
     V5RobotPlugin::V5RobotPlugin()
@@ -101,10 +100,6 @@ namespace v5_robot_plugin
         // Initialize ROS Publishers
         impl_->sensor_update_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5SensorUpdate>(
             "v5/sensor_update",
-            10);
-
-        impl_->actuator_jacobian_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
-            "v5/sensor_update", // TODO: same topic name as sensor pub??
             10);
 
         // Check for required parameters
@@ -200,13 +195,13 @@ namespace v5_robot_plugin
 
     void V5RobotPlugin::jointToEncoderTransform(){
         // Lamda for-each expression to get encoder values for every joint
-        for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](sensor_msgs::msg::JointState& joint_data){
-            // get encoder Jacobian row index in encoder_names given joint_data name
-            std::string jacobian_row_index = impl_->joint_names_.indexOf(joint_data.name);
+        // for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](sensor_msgs::msg::JointState& joint_data){
+        //     // get encoder Jacobian row index in encoder_names given joint_data name
+        //     std::string jacobian_row_index = impl_->joint_names_.indexOf(joint_data.name);
             
-            // 
-            encoder_data = this->populate_encoder_data(loop_index);
-        });
+        //     // 
+        //     encoder_data = this->populate_encoder_data(loop_index);
+        // });
     }
 
     void V5RobotPlugin::OnUpdate()
