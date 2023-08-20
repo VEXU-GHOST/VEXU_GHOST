@@ -21,6 +21,7 @@
   <depend>gazebo_plugins</depend>
 
   <depend>ghost_msgs</depend>
+  <depend>sensor_msgs</depend>
   <depend>ghost_common</depend>
   <depend>ghost_control</depend>
 

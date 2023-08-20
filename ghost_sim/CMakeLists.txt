@@ -104,6 +104,7 @@ ament_target_dependencies(v5_robot_plugin
   ghost_msgs
   ghost_common
   ghost_control
+  sensor_msgs
 )
 target_include_directories(v5_robot_plugin
   PUBLIC

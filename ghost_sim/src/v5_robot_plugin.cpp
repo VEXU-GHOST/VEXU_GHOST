@@ -16,8 +16,8 @@
 
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
-#include "ghost_msgs/srv/broadcast_jacobian.hpp"
 #include "ghost_common/util/parsing_util.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 
 
 using Eigen::Dynamic;
@@ -42,6 +42,12 @@ namespace v5_robot_plugin
         std::vector<std::string> encoder_names_;
         std::vector<std::string> joint_names_;
 
+        // Incoming joint state data
+        std::vector<std::string> joint_msg_list_;
+        std::vector<double> joint_positions_;
+        std::vector<double> joint_velocities_;
+        std::vector<double> joint_efforts_;
+
         std::unordered_map<std::string, int> motor_port_map_;
         std::unordered_map<std::string, int> encoder_port_map_;
 
@@ -51,7 +57,9 @@ namespace v5_robot_plugin
         /// Node for ROS communication.
         gazebo_ros::Node::SharedPtr ros_node_;
         rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
+        rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
         rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
+        rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr actuator_jacobian_pub_;
     };
 
     V5RobotPlugin::V5RobotPlugin()
@@ -71,26 +79,33 @@ namespace v5_robot_plugin
         impl_->model_ = model;
 
         // Initialize ROS Subscriptions
-        // impl_->actuator_command_sub_ = impl_->ros_node_->create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
-        //     "v5/actuator_commands",
-        //     10,
-        //     [this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)
-        //     {
-        //         // 1) Iterate through motor_names and use motor_port_map to get motor command
-        //     });
+        impl_->actuator_command_sub_ = impl_->ros_node_->create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
+            "v5/actuator_commands",
+            10,
+            [this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)
+            {
+                // 1) Iterate through motor_names and use motor_port_map to get motor command
+            });
+        
+        impl_->joint_state_sub_ = impl_->ros_node_->create_subscription<sensor_msgs::msg::JointState>(
+            "/joint_states",
+            10,
+            [this](const sensor_msgs::msg::JointState::SharedPtr msg)
+            {
+                impl_->joint_msg_list_ = msg->name;
+                impl_->joint_positions_ = msg->position;
+                impl_->joint_velocities_ = msg->velocity;
+                impl_->joint_efforts_ = msg->effort;
+            });
 
         // Initialize ROS Publishers
         impl_->sensor_update_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5SensorUpdate>(
             "v5/sensor_update",
             10);
 
-        impl_->actuator_jacobian_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5SensorUpdate>(
-            "v5/sensor_update",
+        impl_->actuator_jacobian_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
+            "v5/sensor_update", // TODO: same topic name as sensor pub??
             10);
-
-        // Service to publish jacobians to motors
-        impl_->actuator_jacobian_srv = impl_->ros_node_->create_service<ghost_msgs::srv::BroadcastJacobian>(
-            "broadcast_jacobian", &broadcastJacobian);
 
         // Check for required parameters
         std::vector<std::string> params{
@@ -183,14 +198,15 @@ namespace v5_robot_plugin
 
     }
 
-    void V5RobotPlugin::broadcastJacobian(const std::shared_ptr<ghost_msgs::srv::BroadcastJacobian::Request> request_motor_name,
-                                        std::shared_prt<ghost_msgs::srv::BroadcastJacobian::Response> response){
-        // Parses number from motor name
-        int motor_index = request_motor_name.back();
-        RCLCPP_INFO(
-            logger, 
-            "MOTOR INDEX: %d", motor_index);
-        actuator_jacobian_msg->actuator_jacobian = impl_->actuator_jacobian_.col(motor_index);
+    void V5RobotPlugin::jointToEncoderTransform(){
+        // Lamda for-each expression to get encoder values for every joint
+        for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](sensor_msgs::msg::JointState& joint_data){
+            // get encoder Jacobian row index in encoder_names given joint_data name
+            std::string jacobian_row_index = impl_->joint_names_.indexOf(joint_data.name);
+            
+            // 
+            encoder_data = this->populate_encoder_data(loop_index);
+        });
     }
 
     void V5RobotPlugin::OnUpdate()
