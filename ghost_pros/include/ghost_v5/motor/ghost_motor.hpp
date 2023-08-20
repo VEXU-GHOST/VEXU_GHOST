@@ -17,7 +17,7 @@ namespace ghost_v5
     class GhostMotor : public pros::Motor
     {
     public:
-        GhostMotor(int motor_port, bool reversed, const ghost_v5_config::GhostMotorConfig &config);
+        GhostMotor(int motor_port, bool reversed, const ghost_v5_config::MotorConfigStruct &config);
 
         void updateMotor();
 
@@ -56,7 +56,7 @@ namespace ghost_v5
         void move_voltage_trq_lim(float voltage_mv);
 
         // Motor Config
-        ghost_v5_config::GhostMotorConfig config_;
+        ghost_v5_config::MotorConfigStruct config_;
 
         // Velocity Filtering
         ghost_estimation::SecondOrderLowPassFilter velocity_filter_;

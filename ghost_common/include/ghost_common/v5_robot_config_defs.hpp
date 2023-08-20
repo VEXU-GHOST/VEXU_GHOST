@@ -27,7 +27,7 @@ namespace ghost_v5_config
         ENCODER_INVALID
     };
 
-    struct GhostMotorConfig
+    struct MotorConfigStruct
     {
         // These three map 1:1 to their PROS counterpart on the V5 Side.
         ghost_encoder_unit motor__encoder_units{ghost_encoder_unit::ENCODER_DEGREES};
@@ -66,7 +66,7 @@ namespace ghost_v5_config
     // Helper classes for accessing motor/encoders from their config maps
     struct motor_access_helper
     {
-        motor_access_helper(int port_init, bool reversed_init, GhostMotorConfig config_init)
+        motor_access_helper(int port_init, bool reversed_init, MotorConfigStruct config_init)
         {
             port = port_init;
             reversed = reversed_init;
@@ -75,7 +75,7 @@ namespace ghost_v5_config
 
         int port;
         bool reversed;
-        GhostMotorConfig config;
+        MotorConfigStruct config;
     };
 
     struct encoder_access_helper

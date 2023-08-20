@@ -3,7 +3,7 @@
 #include "pros/apix.h"
 #include "pros/error.h"
 
-using ghost_v5_config::GhostMotorConfig;
+using ghost_v5_config::MotorConfigStruct;
 using ghost_v5_config::ghost_brake_mode;
 using ghost_v5_config::ghost_gearset;
 using ghost_v5_config::ghost_encoder_unit;
@@ -30,7 +30,7 @@ namespace ghost_v5
     GhostMotor::GhostMotor(
         int motor_port,
         bool reversed,
-        const GhostMotorConfig &config)
+        const MotorConfigStruct &config)
         : pros::Motor(
               motor_port,
               pros::E_MOTOR_GEARSET_INVALID,

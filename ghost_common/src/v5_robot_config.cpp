@@ -13,14 +13,14 @@ namespace ghost_v5_config
     //////////////////////////////////////////
     ////////// Motor Configurations //////////
     //////////////////////////////////////////
-    GhostMotorConfig drive_motor_config = {
+    MotorConfigStruct drive_motor_config = {
         .motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
         .motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_COAST,
         .ctl__vel_gain = 17.5, // RPM -> mV
         .ctl__ff_vel_gain = 1.1,
     };
 
-    GhostMotorConfig intake_motor_config = {
+    MotorConfigStruct intake_motor_config = {
         .motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
         .motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_BRAKE,
         .ctl__vel_gain = 25.0,
