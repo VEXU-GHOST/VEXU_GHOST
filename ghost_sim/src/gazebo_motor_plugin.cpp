@@ -8,7 +8,7 @@
  * Modified By: Maxx Wilson
  */
 
-#include "gazebo_motor_plugin.hpp"
+#include "ghost_sim/gazebo_motor_plugin.hpp"
 #include "ghost_control/models/dc_motor_model.hpp"
 
 #include <gazebo/physics/Model.hh>

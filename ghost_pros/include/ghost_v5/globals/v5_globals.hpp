@@ -5,7 +5,7 @@
 
 #include "pros/apix.h"
 #include "ghost_v5/serial/v5_serial_node.hpp"
-#include "ghost_v5/motor/ghost_motor.hpp"
+#include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_common/v5_robot_config_defs.hpp"
 namespace v5_globals
 {
@@ -18,7 +18,7 @@ namespace v5_globals
 
     extern pros::Mutex actuator_update_lock;
 
-    extern std::map<std::string, std::shared_ptr<ghost_v5::GhostMotor>> motors;
+    extern std::map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface>> motors;
     extern std::map<std::string, std::shared_ptr<pros::Rotation>> encoders;
 
     extern const pros::controller_analog_e_t joy_channels[4];

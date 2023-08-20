@@ -8,7 +8,7 @@
  * Modified By: Maxx Wilson
  */
 
-#include "v5_robot_plugin.hpp"
+#include "ghost_sim/v5_robot_plugin.hpp"
 
 #include <iostream>
 #include <unordered_map>
@@ -198,9 +198,7 @@ namespace v5_robot_plugin
         // for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](sensor_msgs::msg::JointState& joint_data){
         //     // get encoder Jacobian row index in encoder_names given joint_data name
         //     std::string jacobian_row_index = impl_->joint_names_.indexOf(joint_data.name);
-            
-        //     // 
-        //     encoder_data = this->populate_encoder_data(loop_index);
+        //     encoder_data = joint_data.position * sensor_jacobian[jacobian_row_index][encoder_index];               
         // });
     }
 

@@ -1,4 +1,4 @@
-#include "ghost_control/ghost_motor.hpp"
+#include "ghost_control/motor_controller.hpp"
 
 using ghost_v5_config::MotorConfigStruct;
 using ghost_v5_config::ghost_brake_mode;
@@ -6,7 +6,7 @@ using ghost_v5_config::ghost_gearset;
 using ghost_v5_config::ghost_encoder_unit;
 namespace ghost_control
 {
-    GhostMotor::GhostMotor(
+    MotorController::MotorController(
         const MotorConfigStruct &config) :
           velocity_filter_(
               config.filter__cutoff_frequency,
@@ -31,7 +31,7 @@ namespace ghost_control
     {
     }
 
-    float GhostMotor::updateMotor(float position, float velocity)
+    float MotorController::updateMotor(float position, float velocity)
     {
         // Update Low Pass Filter with velocity measurement
         curr_vel_rpm_ = velocity_filter_.updateFilter(velocity);

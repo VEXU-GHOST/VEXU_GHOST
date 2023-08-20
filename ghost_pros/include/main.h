@@ -38,7 +38,7 @@ namespace v5_globals
     pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
     
     ///// MOTOR DEFINITIONS /////
-    std::map<std::string, std::shared_ptr<ghost_v5::GhostMotor>> motors;
+    std::map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface>> motors;
     std::map<std::string, std::shared_ptr<pros::Rotation>> encoders;
 
 

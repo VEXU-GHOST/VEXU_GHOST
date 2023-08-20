@@ -91,7 +91,7 @@ namespace ghost_control
          *
          * @return double speed (RPM)
          */
-        double getSpeedRPM()
+        double getSpeedRPM() const
         {
             return curr_speed_*gear_ratio_;
         }
@@ -101,7 +101,7 @@ namespace ghost_control
          *
          * @return double speed (rad/s)
          */
-        double getSpeedRad()
+        double getSpeedRad() const
         {
             return curr_speed_*gear_ratio_*(2*3.14159)/60;
         }
@@ -111,7 +111,7 @@ namespace ghost_control
          *
          * @return double voltage (volts)
          */
-        double getVoltage()
+        double getVoltage() const
         {
             return curr_voltage_percent_ * nominal_voltage_;
         }
@@ -121,7 +121,7 @@ namespace ghost_control
          *
          * @return double current (amps)
          */
-        double getMotorCurrent()
+        double getMotorCurrent() const
         {
             return curr_current_;
         }
@@ -131,7 +131,7 @@ namespace ghost_control
          *
          * @return double torque (N-m)
          */
-        double getTorqueOutput()
+        double getTorqueOutput() const
         {
             return curr_torque_/gear_ratio_;
         }
@@ -142,7 +142,7 @@ namespace ghost_control
          * @param torque_desired 
          * @return double voltage_cmd
          */
-        double getVoltageFromTorqueMillivolts(double torque_desired);
+        double getVoltageFromTorqueMillivolts(double torque_desired) const;
 
         /**
          * @brief Solves for feed forward voltage command given desired velocity
@@ -150,7 +150,7 @@ namespace ghost_control
          * @param velocity_desired 
          * @return double voltage_cmd
          */
-        double getVoltageFromVelocityMillivolts(double velocity_desired);
+        double getVoltageFromVelocityMillivolts(double velocity_desired) const;
 
     private:
 

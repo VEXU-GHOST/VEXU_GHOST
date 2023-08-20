@@ -8,7 +8,7 @@
  * Modified By: Maxx Wilson
  */
 
-#include "test_publisher_v5_actuator_cmd.hpp"
+#include "ghost_sim/test_publisher_v5_actuator_cmd.hpp"
 
 namespace ghost_sim
 {

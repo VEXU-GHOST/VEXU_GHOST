@@ -7,10 +7,10 @@
 
 namespace ghost_control
 {
-    class GhostMotor
+    class MotorController
     {
     public:
-        GhostMotor(const ghost_v5_config::MotorConfigStruct &config);
+        MotorController(const ghost_v5_config::MotorConfigStruct &config);
 
         /**
          * @brief Updates motor with new position and velocity readings, returning a voltage command based on the
@@ -78,7 +78,7 @@ namespace ghost_control
             torque_active_ = torque_active;
         }
 
-    private:
+    protected:
         // Motor Config
         ghost_v5_config::MotorConfigStruct config_;
 
