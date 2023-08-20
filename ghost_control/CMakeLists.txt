@@ -11,23 +11,36 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+# Set Package Dependencies
+set(DEPENDENCIES
+  ament_cmake
+  ament_cmake_gtest
+  eigen3_cmake_module
+  Eigen3
+  matplotlib_cpp
+  yaml-cpp
+  PythonLibs
+  casadi
+  ghost_estimation
+  ghost_common
+  )
+
+foreach(pkg ${DEPENDENCIES})
+  find_package(${pkg} REQUIRED)
+endforeach()
+ament_export_dependencies(${DEPENDENCIES})
+
+# Set Include Directories
+set(INCLUDE
+include
+${PYTHON_INCLUDE_DIRS}
+)
+
+include_directories(${INCLUDE})
+ament_export_include_directories(${INCLUDE})
+
 # set(CMAKE_BUILD_TYPE "DEBUG")
 set(CMAKE_BUILD_TYPE "RELEASE")
-
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_gtest REQUIRED)
-find_package(Eigen3 REQUIRED)
-
-find_package(eigen3_cmake_module REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(matplotlib_cpp REQUIRED)
-find_package(yaml-cpp REQUIRED)
-find_package(PythonLibs REQUIRED)
-
-find_package(casadi REQUIRED)
-
-include_directories(${PYTHON_INCLUDE_DIRS})
 
 #################
 ### Libraries ###
@@ -49,6 +62,25 @@ install(
   INCLUDES DESTINATION include
 )
 
+# Ghost Motor Library
+add_library(ghost_motor SHARED src/ghost_motor.cpp)
+ament_target_dependencies(ghost_motor
+${DEPENDENCIES}
+)
+target_include_directories(ghost_motor
+PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+$<INSTALL_INTERFACE:include>)
+ament_export_targets(ghost_motor HAS_LIBRARY_TARGET)
+install(
+  TARGETS ghost_motor
+  EXPORT ghost_motor
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 # Mechanical Differential Library
 add_library(mechanical_differential SHARED src/models/mechanical_differential.cpp)
 target_include_directories(mechanical_differential
@@ -57,7 +89,7 @@ target_include_directories(mechanical_differential
   $<INSTALL_INTERFACE:include>)
 ament_export_targets(mechanical_differential HAS_LIBRARY_TARGET)
 ament_target_dependencies(mechanical_differential
-  Eigen3
+  ${DEPENDENCIES}
 )
 install(
   TARGETS mechanical_differential
@@ -116,7 +148,7 @@ install(TARGETS
 # Main to test Diff Swerve State Space Modeling for MPC
 add_executable(swerve_model_test_main src/swerve_model_test_main.cpp)
 ament_target_dependencies(swerve_model_test_main
-  Eigen3
+  ${DEPENDENCIES}
 )
 target_link_libraries(swerve_model_test_main
 casadi)
@@ -131,7 +163,7 @@ install(TARGETS
 # Main to generate Problem Formulation for MDS MPC
 add_executable(casadi_swerve_model_generation src/casadi_swerve_model_generation.cpp)
 ament_target_dependencies(casadi_swerve_model_generation
-  Eigen3
+  ${DEPENDENCIES}
 )
 target_link_libraries(casadi_swerve_model_generation
   casadi_collocation_model

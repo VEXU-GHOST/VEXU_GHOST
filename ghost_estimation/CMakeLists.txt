@@ -19,19 +19,26 @@ if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
 # find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclpy REQUIRED)
-find_package(tf2_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(visualization_msgs REQUIRED)
+set(DEPENDENCIES
+  ament_cmake
+  ament_cmake_python
+  rclcpp
+  rclpy
+  tf2_msgs
+  sensor_msgs
+  visualization_msgs
+  eigen3_cmake_module
+  Eigen3
+  )
 
-find_package(eigen3_cmake_module REQUIRED)
-find_package(Eigen3 REQUIRED)
+foreach(pkg ${DEPENDENCIES})
+  find_package(${pkg} REQUIRED)
+endforeach()
+ament_export_dependencies(${DEPENDENCIES})
 
 include_directories(include)
-
+ament_export_include_directories(include)
+  
 ######################
 ### AMRL Share Lib ###
 ######################
@@ -94,7 +101,7 @@ target_link_libraries(vector_map
   gflags
 )
 ament_target_dependencies(vector_map
-  Eigen3
+  ${DEPENDENCIES}
 )
 target_include_directories(vector_map
   PUBLIC
@@ -113,11 +120,7 @@ install(
 # Particle Filter Library
 add_library(particle_filter SHARED src/particle_filter/particle_filter.cpp)
 ament_target_dependencies(particle_filter
-  rclcpp
-  tf2_msgs
-  sensor_msgs
-  visualization_msgs
-  Eigen3
+  ${DEPENDENCIES}
 )
 target_link_libraries(particle_filter
   amrl_shared_lib
