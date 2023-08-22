@@ -78,6 +78,30 @@ namespace ghost_control
             torque_active_ = torque_active;
         }
 
+        bool positionActive()
+        {
+            return position_active_;
+        }
+
+        bool velocityActive()
+        {
+            return velocity_active_;
+        }
+
+        bool voltageActive()
+        {
+            return voltage_active_;
+        }
+
+        bool torqueActive()
+        {
+            return torque_active_;
+        }
+
+        bool controllerActive(){
+            return position_active_ || velocity_active_ || torque_active_ || voltage_active_;
+        }
+
     protected:
         // Motor Config
         ghost_v5_config::MotorConfigStruct config_;

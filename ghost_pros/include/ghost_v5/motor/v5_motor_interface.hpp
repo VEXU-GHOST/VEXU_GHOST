@@ -12,22 +12,20 @@ namespace ghost_v5
     public:
         V5MotorInterface(int port, bool reversed, const ghost_v5_config::MotorConfigStruct &config);
 
-        float getInterfaceVelocity() const;
-        float getInterfacePosition() const;
+        void updateInterface();
 
-        bool getDeviceIsConnected();
-        float getCurrentDraw() const;
-        float getTemperature() const;
-        float getPower() const;
+        bool getDeviceIsConnected()
+        {
+            return device_connected_;
+        }
 
-        void setCurrentLimit(float limit);
+        std::shared_ptr<pros::Motor> getMotorInterfacePtr(){
+            return motor_interface_ptr_;
+        }
 
     private:
-        void setInterfaceCommand(float voltage);
-
+        std::shared_ptr<pros::Motor> motor_interface_ptr_;
         bool device_connected_;
-
-        std::unique_ptr<pros::Motor> motor_interface_ptr_;
     };
 
 } // namespace ghost_v5
