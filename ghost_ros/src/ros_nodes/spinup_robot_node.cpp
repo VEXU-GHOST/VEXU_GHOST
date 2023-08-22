@@ -366,9 +366,9 @@ namespace ghost_ros
 
         // Calculate Wheel and Steering Setpoints
         std::vector<float> steering_angles = {
-            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees),
-            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees),
-            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees),
+            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].position_degrees),
+            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].position_degrees),
+            ghost_common::WrapAngle360(curr_encoder_msg_->encoders[ghost_v5_config::STEERING_BACK_ENCODER].position_degrees),
         };
 
         // Swerve Drive Setpoints

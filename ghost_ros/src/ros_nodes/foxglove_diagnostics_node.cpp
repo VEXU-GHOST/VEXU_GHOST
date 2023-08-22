@@ -59,7 +59,7 @@ namespace ghost_ros
             {
                 // Update motor msg
                 auto motor_setpoint_msg = std_msgs::msg::Float32MultiArray{};
-                motor_setpoint_msg.data.push_back(cmd.desired_angle);
+                motor_setpoint_msg.data.push_back(cmd.desired_position);
                 motor_setpoint_msg.data.push_back(cmd.desired_velocity);
                 motor_setpoint_msg.data.push_back(cmd.desired_voltage);
                 motor_setpoint_pubs_[cmd.motor_name]->publish(motor_setpoint_msg);
@@ -102,7 +102,7 @@ namespace ghost_ros
             {
                 // Update motor msg
                 auto motor_state_msg = std_msgs::msg::Float32MultiArray{};
-                motor_state_msg.data.push_back(encoder.angle_degrees);
+                motor_state_msg.data.push_back(encoder.position_degrees);
                 motor_state_msg.data.push_back(encoder.velocity_rpm);
                 motor_state_msg.data.push_back(encoder.current_ma);
                 motor_state_msg.data.push_back(encoder.voltage_mv);

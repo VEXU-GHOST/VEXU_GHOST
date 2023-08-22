@@ -8,7 +8,7 @@ namespace ghost_v5_config
     constexpr int actuator_update_packet_byte_size = 5 * 4 + 1;
     constexpr int actuator_cmd_extra_byte_count = 2; // 2x Bytes for Msg Sequence ID + 3x Bytes for Motor Active Vector
 
-    // Each motor reports angle_degrees, velocity_rpm, voltage_mv, torque_nm, current_ma, power_w, temp_c
+    // Each motor reports position_degrees, velocity_rpm, voltage_mv, torque_nm, current_ma, power_w, temp_c
     constexpr int motor_sensor_packet_byte_size = 7 * 4;
 
     // Each encoder reports position and velocity

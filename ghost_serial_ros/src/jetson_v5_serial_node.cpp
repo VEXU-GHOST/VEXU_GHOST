@@ -181,24 +181,24 @@ namespace ghost_serial_ros
             auto motor_id = motor_config.port;
             memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].current_limit), 4);
             buffer_8bit_index += 4;
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_position), 4);
+            buffer_8bit_index += 4;
+            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_velocity), 4);
+            buffer_8bit_index += 4;
             memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_voltage), 4);
             buffer_8bit_index += 4;
             memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_torque), 4);
             buffer_8bit_index += 4;
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_velocity), 4);
-            buffer_8bit_index += 4;
-            memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_angle), 4);
-            buffer_8bit_index += 4;
 
             // Pack actuator flags into one byte
             uint8_t actuator_flags_byte = 0;
-            actuator_flags_byte += msg->motor_commands[motor_id].angle_control;
+            actuator_flags_byte += msg->motor_commands[motor_id].position_control;
             actuator_flags_byte <<= 1;
             actuator_flags_byte += msg->motor_commands[motor_id].velocity_control;
             actuator_flags_byte <<= 1;
-            actuator_flags_byte += msg->motor_commands[motor_id].torque_control;
-            actuator_flags_byte <<= 1;
             actuator_flags_byte += msg->motor_commands[motor_id].voltage_control;
+            actuator_flags_byte <<= 1;
+            actuator_flags_byte += msg->motor_commands[motor_id].torque_control;
 
             // Copy to msg buffer
             memcpy(msg_buffer + buffer_8bit_index, &actuator_flags_byte, 1);
@@ -241,9 +241,9 @@ namespace ghost_serial_ros
             state_update_msg.encoders[motor_id].device_id = motor_id;
 
             // Copy encoder angle
-            float angle;
-            memcpy(&angle, buffer + 4 * (buffer_index++), 4);
-            state_update_msg.encoders[motor_id].angle_degrees = angle;
+            float position;
+            memcpy(&position, buffer + 4 * (buffer_index++), 4);
+            state_update_msg.encoders[motor_id].position_degrees = position;
 
             // Copy encoder velocity
             float velocity;
@@ -279,9 +279,9 @@ namespace ghost_serial_ros
             state_update_msg.encoders[sensor_id].device_id = sensor_id;
 
             // Copy encoder angle
-            float angle;
-            memcpy(&angle, buffer + 4 * (buffer_index++), 4);
-            state_update_msg.encoders[sensor_id].angle_degrees = angle;
+            float position;
+            memcpy(&position, buffer + 4 * (buffer_index++), 4);
+            state_update_msg.encoders[sensor_id].position_degrees = position;
 
             // Copy encoder velocity
             float velocity;

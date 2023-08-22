@@ -70,6 +70,16 @@ namespace ghost_v5
 			buffer_8bit_index += 4;
 			v5_globals::motors[name]->getMotorInterfacePtr()->set_current_limit(current_limit);
 
+			// Copy Position Command
+			int32_t position_command;
+			memcpy(&position_command, buffer + buffer_8bit_index, 4);
+			buffer_8bit_index += 4;
+
+			// Copy Velocity Command
+			float velocity_command;
+			memcpy(&velocity_command, buffer + buffer_8bit_index, 4);
+			buffer_8bit_index += 4;
+
 			// Copy Voltage Command
 			float voltage_command;
 			memcpy(&voltage_command, buffer + buffer_8bit_index, 4);
@@ -80,30 +90,20 @@ namespace ghost_v5
 			memcpy(&torque_command, buffer + buffer_8bit_index, 4);
 			buffer_8bit_index += 4;
 
-			// Copy Velocity Command
-			float velocity_command;
-			memcpy(&velocity_command, buffer + buffer_8bit_index, 4);
-			buffer_8bit_index += 4;
-
-			// Copy Angle Command
-			int32_t angle_command;
-			memcpy(&angle_command, buffer + buffer_8bit_index, 4);
-			buffer_8bit_index += 4;
-
 			uint8_t actuator_flags_byte;
 			memcpy(&actuator_flags_byte, buffer + buffer_8bit_index, 1);
 			buffer_8bit_index++;
 
-			bool voltage_control = (bool)(actuator_flags_byte & 0x01);
-			actuator_flags_byte >>= 1;
-			bool torque_control = (bool)(actuator_flags_byte & 0x01);
+			bool position_control = (bool)(actuator_flags_byte & 0x01);
 			actuator_flags_byte >>= 1;
 			bool velocity_control = (bool)(actuator_flags_byte & 0x01);
 			actuator_flags_byte >>= 1;
-			bool angle_control = (bool)(actuator_flags_byte & 0x01);
+			bool voltage_control = (bool)(actuator_flags_byte & 0x01);
+			actuator_flags_byte >>= 1;
+			bool torque_control = (bool)(actuator_flags_byte & 0x01);
 
-			v5_globals::motors[name]->setControlMode(voltage_control, torque_control, velocity_control, angle_control);
-			v5_globals::motors[name]->setMotorCommand(voltage_command, torque_command, velocity_command, angle_command);
+			v5_globals::motors[name]->setControlMode(position_control, velocity_control, voltage_control, torque_control);
+			v5_globals::motors[name]->setMotorCommand(position_command, velocity_command, voltage_command, torque_command);
 		}
 
 		// Update incoming msg id
@@ -161,7 +161,7 @@ namespace ghost_v5
 		// Update V5 Sensors
 		for (const auto &[name, config] : ghost_v5_config::encoder_config_map)
 		{
-			float position = ((float)v5_globals::encoders[name]->get_angle()) / 100.0;
+			float position = ((float)v5_globals::encoders[name]->get_position()) / 100.0;
 			float velocity = ((float)v5_globals::encoders[name]->get_velocity()) * 60.0 / 100.0 / 360.0; // Centidegrees -> RPM
 
 			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);

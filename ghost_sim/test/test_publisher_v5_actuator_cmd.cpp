@@ -49,13 +49,13 @@ namespace ghost_sim
         ghost_msgs::msg::V5MotorCommand v5_motor_cmd = ghost_msgs::msg::V5MotorCommand();
         v5_motor_cmd.motor_name = "motor_" + std::to_string(loop_index);
         v5_motor_cmd.device_id = loop_index;
-        v5_motor_cmd.desired_angle = loop_index * 2; //degrees
+        v5_motor_cmd.desired_position = loop_index * 2; //degrees
         v5_motor_cmd.desired_velocity = 0.0;
         v5_motor_cmd.desired_torque = 0.0;
         v5_motor_cmd.desired_voltage = 0.0;
         v5_motor_cmd.current_limit = 5; //milliAmps
 
-        v5_motor_cmd.angle_control = true;
+        v5_motor_cmd.position_control = true;
         v5_motor_cmd.velocity_control = false;
         v5_motor_cmd.torque_control = false;
         v5_motor_cmd.voltage_control = false;

@@ -12,7 +12,13 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
 
-include_directories(include)
+# Set Include Directories
+set(INCLUDE
+  include
+)
+
+include_directories(${INCLUDE})
+ament_export_include_directories(${INCLUDE})
 
 ###############################
 ##### Robot Configuration #####

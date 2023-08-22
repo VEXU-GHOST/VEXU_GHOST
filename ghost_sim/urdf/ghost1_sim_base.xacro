@@ -43,10 +43,11 @@
                 motor_7
                 motor_8
             </motor_names>
-            <motor_ports>5 6 7</motor_ports>
 
-            <encoder_names>encoder_1 encoder_2</encoder_names>
-            <encoder_ports>5 6</encoder_ports>
+            <encoder_names>
+                encoder_1
+                encoder_2
+            </encoder_names>
 
             <!-- System Jacobians -->
                 <!-- To describe the relationship between motors/encoders and robot joints in a universal way, we encode them -->

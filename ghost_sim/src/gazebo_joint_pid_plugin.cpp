@@ -195,19 +195,19 @@ void GazeboJointPIDPlugin::v5ActuatorCallback(const ghost_msgs::msg::V5ActuatorC
   // TODO: change V5MotorCommand device_id to correspond to joint_name_ if not already
   for (ghost_msgs::msg::V5MotorCommand cmd : msg->motor_commands) {
     if(cmd.motor_name == impl_->joint_name_){
-      // int32 desired_angle         # Degrees
+      // int32 desired_position         # Degrees
       // float32 desired_velocity    # RPM
       // float32 desired_torque      # N-m
       // float32 desired_voltage     # Normalized (-1.0 -> 1.0)
       // int32 current_limit         # milliAmps
 
-      // bool angle_control
+      // bool position_control
       // bool velocity_control
       // bool torque_control
       // bool voltage_control
       // Update setpoints
-      if(cmd.angle_control){
-        impl_->angle_setpoint_ = cmd.desired_angle;
+      if(cmd.position_control){
+        impl_->angle_setpoint_ = cmd.desired_position;
         RCLCPP_INFO(
         impl_->ros_node_->get_logger(),
         "angle_setpoint_: %f", impl_->angle_setpoint_);

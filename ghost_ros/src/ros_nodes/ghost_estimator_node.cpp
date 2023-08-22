@@ -265,12 +265,12 @@ namespace ghost_ros
 
     Eigen::VectorXf vel_vectors(6);
     vel_vectors <<
-      cos(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees * M_PI / 180.0) * left_wheel_speed,
-      sin(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees * M_PI / 180.0) * left_wheel_speed,
-      cos(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees * M_PI / 180.0) * right_wheel_speed,
-      sin(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees * M_PI / 180.0) * right_wheel_speed,
-      cos(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees * M_PI / 180.0) * rear_wheel_speed,
-      sin(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees * M_PI / 180.0) * rear_wheel_speed;
+      cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].position_degrees) * M_PI / 180.0) * left_wheel_speed,
+      sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].position_degrees) * M_PI / 180.0) * left_wheel_speed,
+      cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].position_degrees) * M_PI / 180.0) * right_wheel_speed,
+      sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].position_degrees) * M_PI / 180.0) * right_wheel_speed,
+      cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].position_degrees) * M_PI / 180.0) * rear_wheel_speed,
+      sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].position_degrees) * M_PI / 180.0) * rear_wheel_speed;
 
     Eigen::Vector3f base_twist = A_pinv_ * vel_vectors;
 
@@ -316,13 +316,13 @@ namespace ghost_ros
     robot_state_msg.theta_accel = 0.0;
 
     ///// Steering States /////
-    robot_state_msg.left_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].angle_degrees;
-    robot_state_msg.right_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].angle_degrees;
-    robot_state_msg.back_steering_angle = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].angle_degrees;
+    robot_state_msg.left_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].position_degrees);
+    robot_state_msg.right_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].position_degrees);
+    robot_state_msg.back_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].position_degrees);
 
-    robot_state_msg.left_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].velocity_rpm;
-    robot_state_msg.right_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].velocity_rpm;
-    robot_state_msg.back_steering_vel = sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].velocity_rpm;
+    robot_state_msg.left_steering_vel = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].velocity_rpm);
+    robot_state_msg.right_steering_vel = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].velocity_rpm);
+    robot_state_msg.back_steering_vel = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].velocity_rpm);
 
     ///// Shooter States /////
     // robot_state_msg.left_shooter_vel = sensor_update_msg->encoders[ghost_v5_config::SHOOTER_LEFT_MOTOR].velocity_rpm;
@@ -342,14 +342,14 @@ namespace ghost_ros
 
     // Calculate Wheel Axis Unit Direction Vectors
     Eigen::Vector2f left_encoder_dir(
-        sin(left_encoder.angle_degrees * M_PI / 180.0),
-        -cos(left_encoder.angle_degrees * M_PI / 180.0));
+        sin(ghost_common::WrapAngle360(left_encoder.position_degrees) * M_PI / 180.0),
+        -cos(ghost_common::WrapAngle360(left_encoder.position_degrees) * M_PI / 180.0));
     Eigen::Vector2f right_encoder_dir(
-        sin(right_encoder.angle_degrees * M_PI / 180.0),
-        -cos(right_encoder.angle_degrees * M_PI / 180.0));
+        sin(ghost_common::WrapAngle360(right_encoder.position_degrees) * M_PI / 180.0),
+        -cos(ghost_common::WrapAngle360(right_encoder.position_degrees) * M_PI / 180.0));
     Eigen::Vector2f back_encoder_dir(
-        sin(back_encoder.angle_degrees * M_PI / 180.0),
-        -cos(back_encoder.angle_degrees * M_PI / 180.0));
+        sin(ghost_common::WrapAngle360(back_encoder.position_degrees) * M_PI / 180.0),
+        -cos(ghost_common::WrapAngle360(back_encoder.position_degrees) * M_PI / 180.0));
 
     // Calculate Wheel Axis Vectors
     geometry::Line2f left_encoder_vector(left_wheel_link_, left_encoder_dir + left_wheel_link_);
@@ -642,9 +642,9 @@ namespace ghost_ros
     joint_state_msg.name.push_back("steering_right"); joint_state_msg.name.push_back("driveshaft_right"); 
     joint_state_msg.name.push_back("steering_back");  joint_state_msg.name.push_back("driveshaft_back");
 
-    joint_state_msg.position.push_back(left_encoder.angle_degrees * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
-    joint_state_msg.position.push_back(right_encoder.angle_degrees * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
-    joint_state_msg.position.push_back(back_encoder.angle_degrees * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+    joint_state_msg.position.push_back(ghost_common::WrapAngle360(left_encoder.position_degrees) * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+    joint_state_msg.position.push_back(ghost_common::WrapAngle360(right_encoder.position_degrees) * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
+    joint_state_msg.position.push_back(ghost_common::WrapAngle360(back_encoder.position_degrees) * M_PI / 180.0); joint_state_msg.position.push_back(0.0);
 
     joint_state_pub_->publish(joint_state_msg);
   }
