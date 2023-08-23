@@ -89,7 +89,7 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 		"v5/actuator_commands",
 		10,
 		[this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
-			std::unique_lock<std::mutex> update_lock(impl_->actuator_update_callback_mutex);
+			std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
 			for(const std::string &name : impl_->motor_names_){
 				// Get V5 Motor Command msg, Motor Model, and Motor Controller for each motor
 				const auto &motor_cmd_msg = msg->motor_commands[ghost_v5_config::motor_config_map.at(name).port];
@@ -172,7 +172,7 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 		try{
 			ghost_v5_config::MotorConfigStruct config = (ghost_v5_config::motor_config_map.at(name)).config;
 		}
-		catch(std::exception e){
+		catch(const std::exception& e){
 			throw(std::runtime_exception("[V5 Robot Plugin] Error: Motor Name <" + name + ">"));
 		}
 
@@ -197,10 +197,10 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 void V5RobotPlugin::jointToEncoderTransform(){
 	int col_index = 0;
 	// Lamda for-each expression to get encoder values for every joint
-	for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](std::string &joint_data){
+	for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](const std::string &joint_data){
 			// get encoder Jacobian row index in encoder_names given joint_data name
 			// Get iterator that points to corresponding joint name in joint_names_
-			std::vector<std::string>::iterator joint_name_itr = find(impl_->joint_names_.begin(), impl_->joint_names_.end(), joint_data);
+			auto joint_name_itr = find(impl_->joint_names_.begin(), impl_->joint_names_.end(), joint_data);
 
 			// Convert iterator to index
 			size_t jacobian_row_index = distance(begin(impl_->joint_names_), joint_name_itr);
@@ -211,7 +211,7 @@ void V5RobotPlugin::jointToEncoderTransform(){
 }
 
 void V5RobotPlugin::OnUpdate(){
-	std::unique_lock<std::mutex> update_lock(impl_->actuator_update_callback_mutex);
+	std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
 
 	// Converts joint data from Gazebo to encoder data using sensor jacobian matrix
 	// this->jointToEncoderTransform();
