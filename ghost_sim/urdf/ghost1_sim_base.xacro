@@ -32,21 +32,23 @@
                 driveshaft_right
                 driveshaft_back
             </joint_names>
-
+            <!-- Motor names must be formatted in this manner in order to index actuator jacobian -->
             <motor_names>
-                motor_1
-                motor_2
-                motor_3
-                motor_4
-                motor_5
-                motor_6
-                motor_7
-                motor_8
+                DRIVE_LEFT_FRONT_LEFT_MOTOR
+                DRIVE_LEFT_FRONT_RIGHT_MOTOR
+                DRIVE_LEFT_BACK_LEFT_MOTOR
+                DRIVE_LEFT_BACK_RIGHT_MOTOR
+                DRIVE_RIGHT_FRONT_LEFT_MOTOR
+                DRIVE_RIGHT_FRONT_RIGHT_MOTOR
+                DRIVE_RIGHT_BACK_LEFT_MOTOR
+                DRIVE_RIGHT_BACK_RIGHT_MOTOR
             </motor_names>
 
             <encoder_names>
-                encoder_1
-                encoder_2
+                STEERING_FRONT_LEFT_ENCODER
+                STEERING_FRONT_RIGHT_ENCODER
+                STEERING_BACK_LEFT_ENCODER
+                STEERING_BACK_RIGHT_ENCODER
             </encoder_names>
 
             <!-- System Jacobians -->
@@ -86,10 +88,13 @@
             <!-- This matrix describes the relationship between the encoders and the joints -->
             <!-- Width = # Encoders, Height = # Joints -->
             <sensor_jacobian>
-            1 0
-            0 1
+            1 0 0 0 0 0
+            0 1 0 0 0 0
+            0 0 1 0 0 0
+            0 0 0 1 0 0
+            0 0 0 0 1 0
+            0 0 0 0 0 1
             </sensor_jacobian>
-
         </plugin>
     </gazebo>
 
