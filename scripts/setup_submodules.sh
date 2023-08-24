@@ -15,16 +15,22 @@ then
 else
 	echo "Build already exists"
 fi
+echo
+echo
 
 # Build Mumps
 echo "--------------- MUMPS ---------------"
 cd $HOME/VEXU_GHOST/ghost_deps/ThirdParty-Mumps
-sudo apt install gfortran-10 liblapack-dev pkg-config --install-recommends
-sudo apt install swig
+sudo apt install gfortran-10 liblapack-dev pkg-config --install-recommends -y
+sudo apt install swig -y
+export FC=$(which gfortran-10)
 ./configure
 make
 sudo make install
 cd ..
+
+echo
+echo
 
 # Build IPOPT
 echo "--------------- IPOPT ---------------"
@@ -33,6 +39,9 @@ cd Ipopt
 make
 make test
 sudo make install
+
+echo
+echo
 
 # Build Casadi
 echo "--------------- CASADI ---------------"
@@ -48,6 +57,8 @@ else
         echo "Build already exists"
 fi
 
+echo
+echo
 
 # Build Casadi Tutorial CPP
 echo "--------------- CASADI_TUTORIAL_CPP ---------------"
@@ -63,3 +74,5 @@ else
         echo "Build already exists"
 fi
 
+echo
+echo
