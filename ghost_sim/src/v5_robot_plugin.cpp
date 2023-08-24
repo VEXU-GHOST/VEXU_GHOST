@@ -173,7 +173,7 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 			ghost_v5_config::MotorConfigStruct config = (ghost_v5_config::motor_config_map.at(name)).config;
 		}
 		catch(const std::exception& e){
-			throw(std::runtime_exception("[V5 Robot Plugin] Error: Motor Name <" + name + ">"));
+			throw(std::runtime_error("[V5 Robot Plugin] Error: Motor Name <" + name + ">"));
 		}
 
 		//     impl_->motor_model_map_[name] = std::make_shared<DCMotorModel>(

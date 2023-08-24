@@ -88,12 +88,12 @@
             <!-- This matrix describes the relationship between the encoders and the joints -->
             <!-- Width = # Encoders, Height = # Joints -->
             <sensor_jacobian>
-            1 0 0 0 0 0
-            0 1 0 0 0 0
-            0 0 1 0 0 0
-            0 0 0 1 0 0
-            0 0 0 0 1 0
-            0 0 0 0 0 1
+            1 0 0 0
+            0 1 0 0
+            0 0 1 0
+            0 0 0 1
+            0 0 0 0
+            0 0 0 0
             </sensor_jacobian>
         </plugin>
     </gazebo>
@@ -102,14 +102,14 @@
     <gazebo>
         <!-- Motor Models -->
         <!-- 0.05 Steering -->
-        <xacro:joint_pid_macro
+        <!-- <xacro:joint_pid_macro
             joint_name="steering_left"
             link_name="mod_left"
             gear_ratio="2.0"
             position_gain="0.05"
             vel_gain="0.04"
             accel_gain="0.0">
-        </xacro:joint_pid_macro>
+        </xacro:joint_pid_macro> -->
 
         <!-- <xacro:joint_pid_macro
             joint_name="steering_right"
