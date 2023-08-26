@@ -37,7 +37,7 @@ then
 else
     echo
     echo "---Generating Ghost Description URDF---"
-    xacro ghost_description/urdf/ghost1.xacro > $URDF_PATH
+    xacro 3_ROS/ghost_description/urdf/ghost1.xacro > $URDF_PATH
     echo "URDF written to" $URDF_PATH
 fi
 
@@ -53,7 +53,7 @@ then
     else
         echo
         echo "---Generating Ghost Simulation URDFs---"
-        xacro ghost_sim/urdf/ghost1_sim_base.xacro > $URDF_SIM_PATH
+        xacro 3_ROS/ghost_sim/urdf/ghost1_sim_base.xacro > $URDF_SIM_PATH
         echo "URDF written to" $URDF_SIM_PATH
     fi
 fi
@@ -69,7 +69,7 @@ then
         echo "---Updating V5 Project Symbolic Links---"
         bash scripts/update_symlinks.sh
 
-        cd ghost_pros
+        cd 2_V5/ghost_pros
 
         echo
         echo "---Cleaning PROS Project---"

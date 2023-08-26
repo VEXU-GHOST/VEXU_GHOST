@@ -5,12 +5,11 @@ log
 *.pyc
 .cache/*
 
-ghost_pros/include/ghost_control/**
-ghost_pros/include/ghost_estimation/**
-ghost_pros/include/ghost_serial/**
-ghost_pros/include/ghost_ros/**
-
-ghost_pros/src/ghost_control/**
-ghost_pros/src/ghost_estimation/**
-ghost_pros/src/ghost_serial/**
-ghost_pros/src/ghost_ros/**
+2_V5/ghost_pros/include/ghost_control/**
+2_V5/ghost_pros/include/ghost_estimation/**
+2_V5/ghost_pros/include/ghost_serial/**
+2_V5/ghost_pros/include/ghost_ros/**
+2_V5/ghost_pros/src/ghost_control/**
+2_V5/ghost_pros/src/ghost_estimation/**
+2_V5/ghost_pros/src/ghost_serial/**
+2_V5/ghost_pros/src/ghost_ros/**
