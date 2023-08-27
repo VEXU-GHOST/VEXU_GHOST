@@ -124,11 +124,11 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(name='enable_pid', default_value='true'),
         DeclareLaunchArgument(name='joystick', default_value='false'),
-        DeclareLaunchArgument('sim_gui', default_value='false'),
+        DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='false'),
         simulation,
         ground_truth_publisher,
-        rviz_node,
+        # rviz_node,
         joy_launch_description,
         estimator_node,
         state_machine_node,
