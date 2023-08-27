@@ -282,9 +282,9 @@ class ObjectDetectorNode(Node):
                 covariance[0] = d.distance_covariance**2
                 covariance[1+6*1] = (d.angle_covariance*d.distance)**2+(d.angle*d.distance_covariance)**2
                 cv_object.covariance = covariance
-                cv_object_list.objects.append(cv_object)
-            self.log_string += f'{len(cv_object_list.objects)} objects found, '
-            cv_object_list.num_objects = len(cv_object_list.objects)
+                cv_object_list.objs.append(cv_object)
+            self.log_string += f'{len(cv_object_list.objs)} objects found, '
+            cv_object_list.num_objects = len(cv_object_list.objs)
             self.object_publisher_.publish(cv_object_list)
                     
         self.get_logger().info(self.log_string)
