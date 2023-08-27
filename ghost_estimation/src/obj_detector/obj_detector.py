@@ -284,7 +284,7 @@ class ObjectDetectorNode(Node):
                 cv_object.covariance = covariance
                 cv_object_list.objs.append(cv_object)
             self.log_string += f'{len(cv_object_list.objs)} objects found, '
-            cv_object_list.num_objects = len(cv_object_list.objs)
+            cv_object_list.num_objs = len(cv_object_list.objs)
             self.object_publisher_.publish(cv_object_list)
                     
         self.get_logger().info(self.log_string)
