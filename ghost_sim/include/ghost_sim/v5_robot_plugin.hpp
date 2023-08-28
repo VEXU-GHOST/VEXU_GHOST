@@ -35,6 +35,7 @@ public:
 
 protected:
 	void jointToEncoderTransform();
+	ghost_msgs::msg::v5_msgs::V5EncoderState wrapEncoderMsg(const int col_index);
 	/// Optional callback to be called at every simulation iteration.
 	void OnUpdate();
 
