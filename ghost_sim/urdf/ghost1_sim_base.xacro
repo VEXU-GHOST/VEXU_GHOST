@@ -86,6 +86,8 @@
             </actuator_jacobian>
 
             <!-- This matrix describes the relationship between the encoders and the joints -->
+            <!-- This encoder matrix does not include encoders within motors. The relation ship between motor encoders and 
+            joints is defined in the actuator_jacobian -->
             <!-- Width = # Encoders, Height = # Joints -->
             <sensor_jacobian>
             1 0 0 0
