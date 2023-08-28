@@ -15,7 +15,7 @@
 #include "eigen3/Eigen/Geometry"
 
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
-#include "ghost_msgs/msg/v5_msgs/v5_encoder_state.hpp"
+#include "ghost_msgs/msg/v5_encoder_state.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 
 #include "ghost_common/util/parsing_util.hpp"
@@ -56,9 +56,8 @@ public:
 	Eigen::VectorXd joint_efforts_;
 
 	// Outgoing encoder data
-	Eigen::VectorXd encoder_vel_data_;
-	Eigen::VectorXd last_encoder_vel_data_
-	ghost_msgs::msg::v5_msgs::V5EncoderState encoder_state_;
+	Eigen::VectorXf encoder_vel_data_;
+	ghost_msgs::msg::V5EncoderState encoder_msg_;
 
 	std::unordered_map<std::string, std::shared_ptr<DCMotorModel> > motor_model_map_;
 	std::unordered_map<std::string, std::shared_ptr<MotorController> > motor_controller_map_;
@@ -206,20 +205,20 @@ void V5RobotPlugin::jointToEncoderTransform(){
 			// Convert iterator to index
 			size_t jacobian_row_index = distance(begin(impl_->joint_names_), joint_name_itr);
 
-			impl_->encoder_vel_data_[col_index] = impl_->model_->GetJoint(joint_data)->Position() * impl_->sensor_jacobian_(jacobian_row_index, col_index);
+			// impl_->encoder_vel_data_[col_index] = impl_->model_->GetJoint(joint_data)->Position() * impl_->sensor_jacobian_(jacobian_row_index, col_index);
 			col_index++;
-			encoder_state_ = this->wrapEncoderMsg(col_index);
+			impl_->encoder_msg_ = this->wrapEncoderMsg(col_index);
 		});
 }
 
-ghost_msgs::msg::v5_msgs::V5EncoderState V5RobotPlugin::wrapEncoderMsg(const int col_index){
-	ghost_msgs::msg::v5_msgs::V5EncoderState::SharedPtr msg = ghost_msgs::msg::v5_msgs::V5EncoderState();
-	msg.device_name = encoder_name_(col_index);
+ghost_msgs::msg::V5EncoderState V5RobotPlugin::wrapEncoderMsg(const int col_index){
+	auto msg = ghost_msgs::msg::V5EncoderState();
+	msg.device_name = impl_->encoder_names_[col_index];
 	msg.device_id = 1;
 	msg.device_connected = true;
-
-	msg.position_degrees = (encoder_vel_data_[col_index] - last_encoder_vel_data_[col_index]) * dt;
-	msg.velocity_rpm = encoder_vel_data_[col_index];
+	msg.position_degrees = 30.0;
+	// msg.position_degrees = (encoder_vel_data_[col_index] - last_encoder_vel_data_[col_index]) * dt;
+	msg.velocity_rpm = impl_->encoder_vel_data_(col_index);
 	msg.torque_nm = 0.0;
 	msg.voltage_mv = 0.0;
 	msg.current_ma = 0.0;
@@ -230,19 +229,23 @@ ghost_msgs::msg::v5_msgs::V5EncoderState V5RobotPlugin::wrapEncoderMsg(const int
 }
 
 ghost_msgs::msg::V5SensorUpdate V5RobotPlugin::populateSensorMsg(){
-	ghost_msgs::msg::v5_msgs::V5SensorUPdate::SharedPtr msg = ghost_msgs::msg::v5_msgs::V5SensorUpdate();
-	msg.header =;
-	msg.msg_id = 1;
-	msg.encoders =
+	auto msg = ghost_msgs::msg::V5SensorUpdate();
+	// msg.header =;
+	// msg.msg_id = 1;
+	// msg.encoders =
+
+	return msg;
 }
 
-void getJointStates(){
+void V5RobotPlugin::getJointStates(){
 	int index = 0;
 	// Lamda for-each expression to get encoder values for every joint
-	for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](const std::string &joint_name)){
-		joint_position_(index) = impl_->model_->GetJoint(joint_data)->Position();
-		index++;
-	}
+	for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](const std::string &joint_name){
+			impl_->joint_positions_(index) = impl_->model_->GetJoint(joint_name)->Position(2);
+			impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
+			impl_->joint_efforts_(index) = impl_->model_->GetJoint(joint_name)->GetForce(2);
+			index++;
+		});
 }
 
 void V5RobotPlugin::OnUpdate(){
@@ -250,6 +253,7 @@ void V5RobotPlugin::OnUpdate(){
 	std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
 
 	this->getJointStates();
+	std::cout << impl_->joint_positions_ << std::endl;
 
 	// 1) Populate Joint Position and Velocity Vectors
 	// 2) Process Sensor Update
@@ -269,8 +273,8 @@ void V5RobotPlugin::OnUpdate(){
 
 	// Converts joint data from Gazebo to encoder data using sensor jacobian matrix
 	this->jointToEncoderTransform();
-	impl_->sensor_update_pub_->publish(impl_->encoder_data_);
-	last_encoder_vel_data_ = encoder_vel_data_;
+	// sensor update pub publishes a sensor msg: wrap encoder_msg again to a sensor msg
+	// impl_->sensor_update_pub_->publish(impl_->encoder_msg_);
 	this->populateSensorMsg();
 }
 
