@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <Eigen/QR>
 #include <memory>
 #include <random>
 #include <vector>
@@ -35,8 +36,8 @@ public:
 
 protected:
 	void jointToEncoderTransform();
-	ghost_msgs::msg::V5EncoderState wrapEncoderMsg(const int col_index);
-	ghost_msgs::msg::V5SensorUpdate populateSensorMsg();
+	void wrapEncoderMsg();
+	void populateSensorMsg();
 	void getJointStates();
 
 	/// Optional callback to be called at every simulation iteration.
