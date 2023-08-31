@@ -1,32 +1,32 @@
-[submodule "9_External/yaml-cpp"]
-	path = 9_External/yaml-cpp
+[submodule "09_External/yaml-cpp"]
+	path = 09_External/yaml-cpp
 	url = git@github.com:jbeder/yaml-cpp.git
     ignore = untracked
-[submodule "9_External/casadi"]
-	path = 9_External/casadi
+[submodule "09_External/casadi"]
+	path = 09_External/casadi
 	url = https://github.com/casadi/casadi.git
     ignore = untracked
-[submodule "9_External/Ipopt"]
-	path = 9_External/Ipopt
+[submodule "09_External/Ipopt"]
+	path = 09_External/Ipopt
 	url = git@github.com:MaxxWilson/Ipopt.git
 	ignore = untracked
-[submodule "9_External/rplidar_ros"]
-	path = 9_External/rplidar_ros
+[submodule "09_External/rplidar_ros"]
+	path = 09_External/rplidar_ros
 	url = git@github.com:Slamtec/rplidar_ros.git
 	branch = ros2
     ignore = untracked
-[submodule "9_External/matplotlib-cpp"]
-	path = 9_External/matplotlib-cpp
+[submodule "09_External/matplotlib-cpp"]
+	path = 09_External/matplotlib-cpp
 	url = git@github.com:MaxxWilson/matplotlib-cpp.git
     ignore = untracked
-[submodule "9_External/ThirdParty-Mumps"]
-	path = 9_External/ThirdParty-Mumps
+[submodule "09_External/ThirdParty-Mumps"]
+	path = 09_External/ThirdParty-Mumps
 	url = git@github.com:MaxxWilson/ThirdParty-Mumps.git
 	branch = with-src
 	ignore = untracked
-[submodule "9_External/Casadi-Tutorial-CPP"]
-	path = 9_External/Casadi-Tutorial-CPP
+[submodule "09_External/Casadi-Tutorial-CPP"]
+	path = 09_External/Casadi-Tutorial-CPP
 	url = git@github.com:zehuilu/Tutorial-on-CasADi-with-CPP.git
-[submodule "1_Libraries/ghost_estimation/src/shared"]
-	path = 1_Libraries/ghost_estimation/src/shared
+[submodule "01_Libraries/ghost_estimation/src/shared"]
+	path = 01_Libraries/ghost_estimation/src/shared
 	url = git@github.com:MaxxWilson/amrl_shared_lib.git
