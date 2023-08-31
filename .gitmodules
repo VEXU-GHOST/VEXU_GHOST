@@ -1,6 +1,3 @@
-[submodule "ghost_estimation/src/shared"]
-	path = ghost_estimation/src/shared
-	url = git@github.com:MaxxWilson/amrl_shared_lib.git
 [submodule "9_External/yaml-cpp"]
 	path = 9_External/yaml-cpp
 	url = git@github.com:jbeder/yaml-cpp.git
