@@ -17,12 +17,12 @@ echo "---Building Ghost ROS Packages---"
 # Build ignores simulator packages on embedded devices
 if [ "$arch" == 'x86_64' ];
 then 
-    colcon build --packages-skip casadi matplotlib_cpp Tutorial --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    colcon build --packages-skip YAML_CPP casadi matplotlib_cpp Tutorial --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --packages-up-to ghost_ros --packages-skip casadi matplotlib_cpp  Tutorial --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    colcon build --packages-skip ghost_sim YAML_CPP casadi matplotlib_cpp Tutorial --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 fi
 
 source install/setup.bash
