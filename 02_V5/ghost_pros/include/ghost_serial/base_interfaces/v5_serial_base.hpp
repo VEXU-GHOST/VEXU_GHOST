@@ -1,0 +1,1 @@
+../../../../../1_Libraries/ghost_serial/include/ghost_serial/base_interfaces/v5_serial_base.hpp

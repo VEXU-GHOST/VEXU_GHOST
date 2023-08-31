@@ -1,0 +1,32 @@
+name: Unit-Tests
+# Run this workflow every time a new commit pushed to your repository
+on: push
+
+jobs:
+  # Set the job key. The key is displayed as the job name
+  # when a job name is not provided
+  build-test:
+    # Name the Job
+    name: Unit tests
+    # Set the type of machine to run on
+    runs-on: ubuntu-20.04
+
+    steps:
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y libgtest-dev libeigen3-dev  libgoogle-glog-dev cmake build-essential
+
+      # Checks out a copy of your repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      # Compiles the code
+      - name: Run build
+        run: make
+
+      # Run tests
+      - name: Run unit tests
+        run: make test
