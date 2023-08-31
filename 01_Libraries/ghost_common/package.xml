@@ -3,7 +3,7 @@
 <package format="3">
   <name>ghost_common</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Provides shared utilities for ghost packages</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
   <license>GPLv3.0</license>
 

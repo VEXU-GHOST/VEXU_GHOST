@@ -3,7 +3,7 @@
 <package format="3">
   <name>ghost_serial</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Provides libraries for msg handling over serial interfaces</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
   <license>GPLv3.0</license>
 

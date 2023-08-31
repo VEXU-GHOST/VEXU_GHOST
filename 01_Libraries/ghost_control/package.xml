@@ -3,7 +3,7 @@
 <package format="3">
   <name>ghost_control</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Provides C++ Libraries for Modeling and Control for VEX V5 Robots</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
   <license>GPLv3.0</license>
 
