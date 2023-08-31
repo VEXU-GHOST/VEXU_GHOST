@@ -29,7 +29,7 @@ This is the most important part!
 - Link any relevant documentation
 
 ### Checklist
-- [ ] Confirmed all test pass on a clean build
+- [ ] Confirmed all tests pass on a clean build
 - [ ] Added reviewers in Github
 - [ ] Posted PR Summary to Discord PR's Channel
 - [ ] Ran uncrustify on any modified C++ files
