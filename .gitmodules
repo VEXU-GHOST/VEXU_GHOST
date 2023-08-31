@@ -1,32 +1,26 @@
-# [submodule "09_External/yaml-cpp"]
-# 	path = 09_External/yaml-cpp
-# 	url = git@github.com:jbeder/yaml-cpp.git
-#     ignore = untracked
-# [submodule "09_External/casadi"]
-# 	path = 09_External/casadi
-# 	url = https://github.com/casadi/casadi.git
-#     ignore = untracked
-# [submodule "09_External/Ipopt"]
-# 	path = 09_External/Ipopt
-# 	url = git@github.com:MaxxWilson/Ipopt.git
-# 	ignore = untracked
-# [submodule "09_External/rplidar_ros"]
-# 	path = 09_External/rplidar_ros
-# 	url = git@github.com:Slamtec/rplidar_ros.git
-# 	branch = ros2
-#     ignore = untracked
-# [submodule "09_External/matplotlib-cpp"]
-# 	path = 09_External/matplotlib-cpp
-# 	url = git@github.com:MaxxWilson/matplotlib-cpp.git
-#     ignore = untracked
-# [submodule "09_External/ThirdParty-Mumps"]
-# 	path = 09_External/ThirdParty-Mumps
-# 	url = git@github.com:MaxxWilson/ThirdParty-Mumps.git
-# 	branch = with-src
-# 	ignore = untracked
-# [submodule "09_External/Casadi-Tutorial-CPP"]
-# 	path = 09_External/Casadi-Tutorial-CPP
-# 	url = git@github.com:zehuilu/Tutorial-on-CasADi-with-CPP.git
-# [submodule "01_Libraries/ghost_estimation/src/shared"]
-# 	path = 01_Libraries/ghost_estimation/src/shared
-# 	url = git@github.com:MaxxWilson/amrl_shared_lib.git
+[submodule "01_Libraries/ghost_estimation/src/shared"]
+	path = 01_Libraries/ghost_estimation/src/shared
+	url = git@github.com:MaxxWilson/amrl_shared_lib.git
+[submodule "09_External/yaml-cpp"]
+	path = 09_External/yaml-cpp
+	url = git@github.com:jbeder/yaml-cpp.git
+[submodule "09_External/Casadi-Tutorial-CPP"]
+	path = 09_External/Casadi-Tutorial-CPP
+	url = git@github.com:zehuilu/Tutorial-on-CasADi-with-CPP.git
+[submodule "09_External/casadi"]
+	path = 09_External/casadi
+	url = https://github.com/casadi/casadi.git
+[submodule "09_External/Ipopt"]
+	path = 09_External/Ipopt
+	url = git@github.com:MaxxWilson/Ipopt.git
+[submodule "09_External/rplidar_ros"]
+	path = 09_External/rplidar_ros
+	url = git@github.com:Slamtec/rplidar_ros.git
+	branch = ros2
+[submodule "09_External/matplotlib-cpp"]
+	path = 09_External/matplotlib-cpp
+	url = git@github.com:MaxxWilson/matplotlib-cpp.git
+[submodule "09_External/ThirdParty-Mumps"]
+	path = 09_External/ThirdParty-Mumps
+	url = git@github.com:MaxxWilson/ThirdParty-Mumps.git
+	branch = with-src
