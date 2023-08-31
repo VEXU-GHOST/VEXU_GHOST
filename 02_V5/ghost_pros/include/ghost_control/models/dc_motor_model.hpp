@@ -1,1 +1,0 @@
-../../../../../1_Libraries/ghost_control/include/ghost_control/models/dc_motor_model.hpp
