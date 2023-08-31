@@ -1,5 +1,5 @@
 #!/bin/bash
-source /opt/ros/foxy/setup.bash
+source /opt/ros/humble/setup.bash
 source ~/rplidar_ros/install/setup.bash
 source ~/VEXU_GHOST/install/setup.bash
 
