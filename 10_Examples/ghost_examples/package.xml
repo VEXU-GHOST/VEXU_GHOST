@@ -7,8 +7,19 @@
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
   <license>GPLv3.0</license>
 
+  <!--
+    In a ROS Package, the package.xml and CMakeLists.txt are what tell the compiler how to build the code in the package.
+    
+    ROS Packages can use Python or C++ (or both!). The ability to mix these is why ROS has its own build system.
+    
+    The best way to ensure this file is correct is to run colcon lint.
+    
+    Here, we list out any packages that our code depends on. This is especially important when we depend on other packages in
+    the same workspace, so that we can build them in the right order.
+  -->
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>ament_cmake_gtest</depend>
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
