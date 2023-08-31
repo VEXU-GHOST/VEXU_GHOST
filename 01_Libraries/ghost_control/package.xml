@@ -9,8 +9,16 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>ghost_common</depend>
-  <depend>ghost_estimation</depend>
+  <build_depend>ament_cmake_gtest</build_depend>
+  <build_depend>eigen3_cmake_module</build_depend>
+  <build_depend>ghost_common</build_depend>
+  <build_depend>ghost_estimation</build_depend>
+
+  <build_export_depend>ament_cmake</build_export_depend>
+  <build_export_depend>ament_cmake_gtest</build_export_depend>
+  <build_export_depend>eigen3_cmake_module</build_export_depend>
+  <build_export_depend>ghost_common</build_export_depend>
+  <build_export_depend>ghost_estimation</build_export_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
