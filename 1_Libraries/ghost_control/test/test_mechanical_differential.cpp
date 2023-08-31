@@ -14,21 +14,21 @@
 
 using ghost_control::MechanicalDifferential;
 
-class TestDifferential: public ::testing::Test {
-    protected:
+class TestDifferential : public ::testing::Test {
+protected:
 
-    void SetUp() override {
-        differential = MechanicalDifferential(1/10, 1/2);
-    }
+	void SetUp() override {
+		differential = MechanicalDifferential(1 / 10, 1 / 2);
+	}
 
-    MechanicalDifferential differential;
+	MechanicalDifferential differential;
 };
 
 TEST_F(TestDifferential, testTest){
-    EXPECT_TRUE(true);
+	EXPECT_TRUE(true);
 }
 
 int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }
