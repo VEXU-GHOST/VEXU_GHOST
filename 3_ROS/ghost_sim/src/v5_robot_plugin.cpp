@@ -15,6 +15,7 @@
 #include "eigen3/Eigen/Geometry"
 
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
+#include "ghost_msgs/msg/v5_encoder_state.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 
 #include "ghost_common/util/parsing_util.hpp"
@@ -55,7 +56,8 @@ public:
 	Eigen::VectorXd joint_efforts_;
 
 	// Outgoing encoder data
-	std::vector<double> encoder_data_;
+	Eigen::VectorXf encoder_vel_data_;
+	ghost_msgs::msg::V5EncoderState encoder_msg_;
 
 	std::unordered_map<std::string, std::shared_ptr<DCMotorModel> > motor_model_map_;
 	std::unordered_map<std::string, std::shared_ptr<MotorController> > motor_controller_map_;
@@ -171,51 +173,109 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 		//     // Get config from global definitions
 		try{
 			ghost_v5_config::MotorConfigStruct config = (ghost_v5_config::motor_config_map.at(name)).config;
+
+			impl_->motor_model_map_[name] = std::make_shared<DCMotorModel>(
+				config.motor__nominal_free_speed,
+				config.motor__stall_torque,
+				config.motor__free_current,
+				config.motor__stall_current,
+				config.motor__max_voltage,
+				config.motor__gear_ratio);
+
+			impl_->motor_controller_map_[name] = std::make_shared<MotorController>(config);
 		}
 		catch(const std::exception& e){
 			throw(std::runtime_error("[V5 Robot Plugin] Error: Motor Name <" + name + ">"));
 		}
-
-		//     impl_->motor_model_map_[name] = std::make_shared<DCMotorModel>(
-		//         config.motor__nominal_free_speed,
-		//         config.motor__stall_torque,
-		//         config.motor__free_current,
-		//         config.motor__stall_current,
-		//         config.motor__max_voltage,
-		//         config.motor__gear_ratio);
-
-		//     impl_->motor_controller_map_[name] = std::make_shared<MotorController>(config);
 	}
 
-	std::cout << "here" << std::endl;
 	// Create a connection so the OnUpdate function is called at every simulation
 	// iteration. Remove this call, the connection and the callback if not needed.
-	// impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
-	//     std::bind(&V5RobotPlugin::OnUpdate, this));
+	impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
+		std::bind(&V5RobotPlugin::OnUpdate, this));
 }
 
 void V5RobotPlugin::jointToEncoderTransform(){
 	int col_index = 0;
 	// Lamda for-each expression to get encoder values for every joint
 	for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](const std::string &joint_data){
-			// get encoder Jacobian row index in encoder_names given joint_data name
 			// Get iterator that points to corresponding joint name in joint_names_
 			auto joint_name_itr = find(impl_->joint_names_.begin(), impl_->joint_names_.end(), joint_data);
 
 			// Convert iterator to index
 			size_t jacobian_row_index = distance(begin(impl_->joint_names_), joint_name_itr);
 
-			impl_->encoder_data_[col_index] = impl_->joint_positions_(col_index) * impl_->sensor_jacobian_(jacobian_row_index, col_index);
+			// impl_->encoder_vel_data_[col_index] = impl_->model_->GetJoint(joint_data)->Position() * impl_->sensor_jacobian_(jacobian_row_index, col_index);
 			col_index++;
+			impl_->encoder_msg_ = this->wrapEncoderMsg(col_index);
+		});
+}
+
+ghost_msgs::msg::V5EncoderState V5RobotPlugin::wrapEncoderMsg(const int col_index){
+	auto msg = ghost_msgs::msg::V5EncoderState();
+	msg.device_name = impl_->encoder_names_[col_index];
+	msg.device_id = 1;
+	msg.device_connected = true;
+	msg.position_degrees = 30.0;
+	// msg.position_degrees = (encoder_vel_data_[col_index] - last_encoder_vel_data_[col_index]) * dt;
+	msg.velocity_rpm = impl_->encoder_vel_data_(col_index);
+	msg.torque_nm = 0.0;
+	msg.voltage_mv = 0.0;
+	msg.current_ma = 0.0;
+	msg.power_w = 0.0;
+	msg.temp_c = 0.0;
+
+	return msg;
+}
+
+ghost_msgs::msg::V5SensorUpdate V5RobotPlugin::populateSensorMsg(){
+	auto msg = ghost_msgs::msg::V5SensorUpdate();
+	// msg.header =;
+	// msg.msg_id = 1;
+	// msg.encoders =
+
+	return msg;
+}
+
+void V5RobotPlugin::getJointStates(){
+	int index = 0;
+	// Lamda for-each expression to get encoder values for every joint
+	for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](const std::string &joint_name){
+			impl_->joint_positions_(index) = impl_->model_->GetJoint(joint_name)->Position(2);
+			impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
+			impl_->joint_efforts_(index) = impl_->model_->GetJoint(joint_name)->GetForce(2);
+			index++;
 		});
 }
 
 void V5RobotPlugin::OnUpdate(){
+	// Acquire msg update lock
 	std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
 
+	this->getJointStates();
+	std::cout << impl_->joint_positions_ << std::endl;
+
+	// 1) Populate Joint Position and Velocity Vectors
+	// 2) Process Sensor Update
+	//  2.1) Transform Joint Position/Velocity vectors into actuator/encoder states using Jacobian pseudoinverse
+	//  2.3) Populate SensorUpdateMsg
+	//  2.4) (Optional) Populate joystick update based on the data from joystick subscriber (That I'm gonna add!)
+	//  2.5) Publish
+	// 3) Process Actuator Update
+	//  3.1) Transform Joint Position/Velocity vectors into actuator space using Jacobian pseudoinverse
+	//  3.2) For each motor controller, update position and velocity and async gets setpoints
+	//  3.3) For each motor controller, calculate the motor effort (voltage) based on error from 3.2
+	//  3.4) For each motor model update velocity from sim
+	//  3.5) For each motor model, update the motor effort (voltage)
+	//  3.6) Concatenate the simulated torques from each motor model into a vector
+	//  3.7) Transform actuator torques to joint torques using  using Jacobian transpose
+	//  3.8) Update each joint in gazebo
+
 	// Converts joint data from Gazebo to encoder data using sensor jacobian matrix
-	// this->jointToEncoderTransform();
-	// impl_->sensor_update_pub_->publish(impl_->encoder_data_);
+	this->jointToEncoderTransform();
+	// sensor update pub publishes a sensor msg: wrap encoder_msg again to a sensor msg
+	// impl_->sensor_update_pub_->publish(impl_->encoder_msg_);
+	this->populateSensorMsg();
 }
 
 // Register this plugin with the simulator
