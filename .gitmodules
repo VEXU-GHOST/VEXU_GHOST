@@ -27,3 +27,6 @@
 [submodule "9_External/Casadi-Tutorial-CPP"]
 	path = 9_External/Casadi-Tutorial-CPP
 	url = git@github.com:zehuilu/Tutorial-on-CasADi-with-CPP.git
+[submodule "1_Libraries/ghost_estimation/src/shared"]
+	path = 1_Libraries/ghost_estimation/src/shared
+	url = git@github.com:MaxxWilson/amrl_shared_lib.git
