@@ -1,60 +1,59 @@
 #include "ghost_common/util/angle_util.hpp"
 
-namespace ghost_common
-{
-    float WrapAngle360(float angle){
-        angle = fmod(angle, 360.0);
+namespace ghost_common {
 
-        if(angle < 0.0){
-            angle += 360.0;
-        }
+float WrapAngle360(float angle){
+	angle = fmod(angle, 360.0);
 
-        return angle;
-    }
+	if(angle < 0.0){
+		angle += 360.0;
+	}
 
-    float WrapAngle180(float angle){
-        angle = WrapAngle360(angle);
+	return angle;
+}
 
-        if(angle > 180.0){
-            angle -= 360.0;
-        }
+float WrapAngle180(float angle){
+	angle = WrapAngle360(angle);
 
-        return angle;
-    }
+	if(angle > 180.0){
+		angle -= 360.0;
+	}
 
-    float WrapAngle2PI(float angle){
-        return DEG_TO_RAD * WrapAngle360(angle * RAD_TO_DEG);
-    }
+	return angle;
+}
 
-    float WrapAnglePI(float angle){
-        return DEG_TO_RAD * WrapAngle180(angle * RAD_TO_DEG);
-    }
+float WrapAngle2PI(float angle){
+	return DEG_TO_RAD * WrapAngle360(angle * RAD_TO_DEG);
+}
 
-    float FlipAngle180(float angle){
-        return WrapAngle180(angle + 180.0);
-    }
+float WrapAnglePI(float angle){
+	return DEG_TO_RAD * WrapAngle180(angle * RAD_TO_DEG);
+}
 
-    float FlipAnglePI(float angle){
-        return WrapAnglePI(angle + M_PI);
-    }
+float FlipAngle180(float angle){
+	return WrapAngle180(angle + 180.0);
+}
 
-    float SmallestAngleDistDeg(float a2, float a1){
-        a1 = WrapAngle360(a1);
-        a2 = WrapAngle360(a2);
+float FlipAnglePI(float angle){
+	return WrapAnglePI(angle + M_PI);
+}
 
-        float diff = a2 - a1;
-        if(diff > 180.0){
-            diff = -(360.0 - diff);
-        }
-        else if(diff < -180.0){
-            diff = 360.0 + diff;
-        }
-        return diff;
-    }
+float SmallestAngleDistDeg(float a2, float a1){
+	a1 = WrapAngle360(a1);
+	a2 = WrapAngle360(a2);
 
-    float SmallestAngleDistRad(float a2, float a1){
-        return DEG_TO_RAD * SmallestAngleDistDeg(RAD_TO_DEG * a2, RAD_TO_DEG * a1);
-    }
+	float diff = a2 - a1;
+	if(diff > 180.0){
+		diff = -(360.0 - diff);
+	}
+	else if(diff < -180.0){
+		diff = 360.0 + diff;
+	}
+	return diff;
+}
+
+float SmallestAngleDistRad(float a2, float a1){
+	return DEG_TO_RAD * SmallestAngleDistDeg(RAD_TO_DEG * a2, RAD_TO_DEG * a1);
+}
+
 } // namespace ghost_common
-
-
