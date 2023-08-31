@@ -14,4 +14,19 @@ void ROSSubscriberExample::topic_callback(const geometry_msgs::msg::PoseWithCova
 	RCLCPP_INFO(this->get_logger(), "%ld us", diff.nanoseconds() / 1000);
 }
 
+int ROSSubscriberExample::add_ints(int a, int b){
+	return a + b;
+}
+
+float ROSSubscriberExample::add_floats(float a, float b){
+	return a + b;
+}
+
+void ROSSubscriberExample::function_that_throws_error(){
+	throw(std::runtime_error("Yup, thats what this function does!"));
+}
+
+void ROSSubscriberExample::do_nothing(){
+}
+
 } // namespace ghost_examples

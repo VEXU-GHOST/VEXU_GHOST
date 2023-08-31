@@ -24,7 +24,7 @@ endforeach()
 # Tell any packages that depend on us what dependencies we need.
 ament_export_dependencies(${DEPENDENCIES})
 
-# This is another way to find packages, you can use either:
+# This is another way to find packages, you can use either.
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -35,7 +35,7 @@ find_package(yaml-cpp REQUIRED)
 # Add any include directories to a list
 # Usually this is just "include", but for some depedencies there could be extras.
 set(INCLUDE
-include
+  include
 )
 
 # Tells the package where all our header files live
@@ -54,7 +54,7 @@ ament_export_include_directories(${INCLUDE})
 # Usually, your Executables should be small and most of your code should live in a Library.
 # This is because it makes it easier to test (because we can have a separate executable for testing).
 
-# EXAMPLES
+# EXAMPLE 1
 # This block adds a new executable called "ros_publisher_example".
 # add_executable:
 #   defines the name of the executable, and then follows it with ALL related cpp files.
@@ -71,25 +71,8 @@ install(TARGETS
   ros_publisher_example
   DESTINATION lib/${PROJECT_NAME})
 
-# The following two blocks will add an executable and a library for the ROS subscriber.
-# In this case, this could have been done exactly like the publisher, but this provides a simple example.
-add_library(ros_subscriber_example SHARED src/ros_subscriber_example.cpp)
-ament_target_dependencies(ros_subscriber_example
-  ${DEPENDENCIES}
-)
-install(TARGETS
-  ros_subscriber_example
-  DESTINATION lib/${PROJECT_NAME})
-
-add_executable(ros_subscriber_example_main src/ros_subscriber_example_main.cpp)
-ament_target_dependencies(ros_subscriber_example_main
-  ${DEPENDENCIES}
-)
-install(TARGETS
-  ros_subscriber_example_main
-  DESTINATION lib/${PROJECT_NAME})
-
-# Adds an example for using YAML files. This block has one important difference.
+# EXAMPLE 2
+# Thus adds an example for using YAML files. This block has one important difference.
 # Instead of ament_target_dependencies, we use target_link_libraries.
 # That is because yaml-cpp is not a ROS package, it is just raw C++.
 # This block would be valid even if we weren't using ROS, although we will usually use ament_target_dependencies.
@@ -102,6 +85,49 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# EXAMPLE 3
+# The following two blocks will add an executable and a library for the ROS subscriber.
+# In this case, this could have been done exactly like the publisher, but this provides a simple example.
+# The most important use of this is that we can now reuse the subscriber code in other executables.
+
+# add_library
+#   similar to add_executable, we name the target and provide source files. There is one difference with the additional second
+#   argument. This tells the compiler whether to make this a Shared or Static Library. We usually use Shared, and the difference
+#   is not super important right now.
+# ament_target_dependencies
+#   same as executables
+# ament_export_targets
+#   This function makes the library available to other targets to use (by "linking" against them). This may only be needed
+#   if using the library outside the package, but doesn't hurt to add.
+# install
+#   This serves the same purpose as installing an executable, but has additional arguments for a library target.
+add_library(ros_subscriber_example SHARED src/ros_subscriber_example.cpp)
+ament_target_dependencies(ros_subscriber_example
+  ${DEPENDENCIES}
+)
+ament_export_targets(ros_subscriber_example HAS_LIBRARY_TARGET)
+install(
+  TARGETS ros_subscriber_example
+  EXPORT ros_subscriber_example
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+# Here, we add the executable which runs the subscriber node.
+# Notice that we used target_link_libraries to link the ros_subscriber_example.
+add_executable(ros_subscriber_example_main src/ros_subscriber_example_main.cpp)
+ament_target_dependencies(ros_subscriber_example_main
+  ${DEPENDENCIES}
+)
+target_link_libraries(ros_subscriber_example_main
+  ros_subscriber_example
+)
+install(TARGETS
+  ros_subscriber_example_main
+  DESTINATION lib/${PROJECT_NAME})
+
 #################
 ##### Test ######
 #################
@@ -111,12 +137,11 @@ install(TARGETS
 #   Most GTests have the same main function, so you might see the test link to "gtest_main" instead of "gtest"
 # and then not have a main function in the test file. They are equivalent.
 
-# TODO FIX!
-# ament_add_gtest(test_dc_motor_model test/test_dc_motor_model.cpp)
-# target_link_libraries(test_dc_motor_model
-#   dc_motor_model
-#   gtest
-# )
+ament_add_gtest(test_example test/test_example.cpp)
+target_link_libraries(test_example
+  ros_subscriber_example
+  gtest
+)
 
 ####################
 ##### Install ######
@@ -125,21 +150,21 @@ install(TARGETS
 # Typically if you download code from somewhere else, you won't get the source files, just the headers, binaries, and
 # any extras (like the config files).
 
+# This copies our install folder to ~/VEXU_GHOST/install/ghost_examples/include/
+# Note:
+#   The slash after include causes it to copy the contents of the folder and not the folder itself.
+#   Without it, we would have "include/include" because we already have include as the DESTINATION.
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
 # This copies the launch/urdf/config folders to ~/VEXU_GHOST/install/ghost_examples/share/ghost_examples.
 install(DIRECTORY
   launch
   urdf
   config
   DESTINATION share/${PROJECT_NAME})
-
-# This copies our install folder to ~/VEXU_GHOST/install/ghost_examples/include/
-# Note:
-#   The slash after include causes it to copy the contents of the folder and not the folder itself.
-#   Without it, we would have "include/include" because we already have include as the DESTINATION.
-install(DIRECTORY 
-  include/
-  DESTINATION include
-)
 
 # This generates the ROS2 package and should always be the last line.
 ament_package()

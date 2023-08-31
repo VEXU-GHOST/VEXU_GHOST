@@ -12,9 +12,14 @@ namespace ghost_examples {
 class ROSSubscriberExample : public rclcpp::Node {
 public:
 	ROSSubscriberExample();
-
-private:
 	void topic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+
+	// These functions are for our GTest example, and have nothing to do with the ROS Subscriber :)
+	int add_ints(int a, int b);
+	float add_floats(float a, float b);
+	void function_that_throws_error();
+	void do_nothing();
+private:
 	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr subscription_;
 };
 
