@@ -9,7 +9,7 @@ Skip windows setup and continue to [SSH Setup](#ssh-setup).
 ### Windows Users
 While you really need an Ubuntu operating system if you want to do software for robotics in the long-term (see https://itsfoss.com/install-ubuntu-1404-dual-boot-mode-windows-8-81-uefi/), if you want to try things out without committing to reconfiguring your whole computer, we have a workaround using WSL2.
 
-WSL2 is "Windows Subsystem for Linux" and allows you to develop using Linux within your Windows OS. I _**highly**_ recommend using this option over a standard Virtual Machine, as VM's have terrible performance in my experience. We will be rendering graphics on the Windows-side using a concept called X11 Forwarding, so WSL2 ends up with subtantially improved performance.
+WSL2 is "Windows Subsystem for Linux" and allows you to develop using Linux within your Windows OS. I _**highly**_ recommend using this option over a standard Virtual Machine, as VM's have terrible performance in my experience. We will be rendering graphics on the Windows-side using a concept called X11 Forwarding, so WSL2 ends up with substantially improved performance.
 
 The biggest tradeoff with not having a "true" Linux installation is you will not be able to interface directly to robot hardware and will likely have trouble with USB input (Might work out on Windows 11 via usb-passthrough).
 
