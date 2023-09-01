@@ -14,7 +14,7 @@ This repository contains code intended to support VEXU and VEXAI teams intereste
 ## Prerequisites
 Ubuntu 22.04.
 
-If you are a regular Linux developer, continue as normal. For new team members, please see [Setting Up My Environment](https://github.com/VEXU-GHOST/VEXU_GHOST/blob/master/SetupMyEnvironment.md).
+If you are a regular Linux developer, continue as normal. For new team members, please see [Setting Up My Environment](https://github.com/VEXU-GHOST/VEXU_GHOST/blob/develop/SetupMyEnvironment.md).
 
 ## Installation
 #### Install ROS2 Humble
