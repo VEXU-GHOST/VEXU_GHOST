@@ -21,9 +21,6 @@ foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
 endforeach()
 
-# Tell any packages that depend on us what dependencies we need.
-ament_export_dependencies(${DEPENDENCIES})
-
 # This is another way to find packages, you can use either.
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
@@ -31,6 +28,9 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+
+# Tell any packages that depend on us what dependencies we need.
+ament_export_dependencies(${DEPENDENCIES})
 
 # Add any include directories to a list
 # Usually this is just "include", but for some depedencies there could be extras.
@@ -72,7 +72,7 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME})
 
 # EXAMPLE 2
-# Thus adds an example for using YAML files. This block has one important difference.
+# This adds an example for using YAML files. This block has one important difference.
 # Instead of ament_target_dependencies, we use target_link_libraries.
 # That is because yaml-cpp is not a ROS package, it is just raw C++.
 # This block would be valid even if we weren't using ROS, although we will usually use ament_target_dependencies.
