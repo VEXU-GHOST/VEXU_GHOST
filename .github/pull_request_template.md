@@ -1,6 +1,7 @@
 # PR Summary
-PR Link: <LINK>
-Issue Link: <LINK>
+PR Link: INSERT-LINK-HERE
+
+Issue Link: INSERT-LINK-HERE
 
 ### Description
 Add a single line summary describing the purpose of this PR.
