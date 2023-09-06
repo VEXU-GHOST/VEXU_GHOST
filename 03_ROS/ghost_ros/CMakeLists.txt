@@ -80,7 +80,7 @@ install(TARGETS
 #   visualization_msgs
 #   ghost_common
 #   ghost_msgs
-#   ghost_util
+#   ghost_common
 #   ghost_estimation
 #   Eigen3
 # )
@@ -111,11 +111,11 @@ install(TARGETS
 #   ghost_msgs
 #   visualization_msgs
 #   ghost_estimation
-#   ghost_util
+#   ghost_common
 # )
 # target_link_libraries(robot_state_machine_node
 #   ghost_estimation::amrl_shared_lib
-#   ghost_util::angle_util
+#   ghost_common::angle_common
 #   yaml-cpp
 #   v5_serial_msg_config
 # )

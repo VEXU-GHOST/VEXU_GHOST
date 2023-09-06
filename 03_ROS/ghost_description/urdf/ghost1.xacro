@@ -121,45 +121,51 @@
     <xacro:wheel_macro id="back" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
 
     <!-- Joints -->
-    <joint name="steering_left" type="continuous">
+    <joint name="steering_joint_left" type="continuous">
         <parent link="base_link"/>
-        <child link="mod_left"/>
+        <child link="steering_link_left"/>
         <origin xyz="0.10452 0.180975 0.0812" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="steering_right" type="continuous">
+    <joint name="steering_joint_right" type="continuous">
         <parent link="base_link"/>
-        <child link="mod_right"/>
+        <child link="steering_link_right"/>
         <origin xyz="0.10452 -0.180975 0.0812" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="steering_back" type="continuous">
+    <joint name="steering_joint_back" type="continuous">
         <parent link="base_link"/>
-        <child link="mod_back"/>
+        <child link="steering_link_back"/>
         <origin xyz="-0.209 0.0 0.0812" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="driveshaft_left" type="continuous">
-        <parent link="mod_left"/>
-        <child link="wheel_left"/>
+    <joint name="wheel_joint_left" type="continuous">
+        <parent link="steering_link_left"/>
+        <child link="wheel_link_left"/>
         <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="driveshaft_right" type="continuous">
-        <parent link="mod_right"/>
-        <child link="wheel_right"/>
+    <joint name="wheel_joint_right" type="continuous">
+        <parent link="steering_link_right"/>
+        <child link="wheel_link_right"/>
         <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="driveshaft_back" type="continuous">
-        <parent link="mod_back"/>
-        <child link="wheel_back"/>
+    <joint name="wheel_joint_back" type="continuous">
+        <parent link="steering_link_back"/>
+        <child link="wheel_link_back"/>
         <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 

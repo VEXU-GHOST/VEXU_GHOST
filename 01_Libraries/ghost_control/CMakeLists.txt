@@ -15,8 +15,10 @@ endif()
 set(DEPENDENCIES
   ament_cmake
   ament_cmake_gtest
+  ament_index_cpp
   eigen3_cmake_module
   Eigen3
+  urdf
   matplotlib_cpp
   yaml-cpp
   PythonLibs
@@ -124,7 +126,7 @@ install(
 ######################
 add_executable(casadi_example_model_generation src/casadi_examples/casadi_example_model_generation.cpp)
 ament_target_dependencies(casadi_example_model_generation
-  Eigen3
+  ${DEPENDENCIES}
   )
   target_link_libraries(casadi_example_model_generation
   casadi_collocation_model
@@ -150,7 +152,8 @@ ament_target_dependencies(swerve_model_test_main
   ${DEPENDENCIES}
 )
 target_link_libraries(swerve_model_test_main
-casadi)
+  casadi
+)
 target_include_directories(swerve_model_test_main
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
