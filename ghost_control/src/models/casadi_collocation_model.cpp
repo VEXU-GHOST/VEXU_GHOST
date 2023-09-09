@@ -1,9 +1,8 @@
 #include "ghost_control/models/casadi_collocation_model.hpp"
+using namespace casadi;
 
 namespace ghost_control
 {
-
-    using namespace casadi;
 
     CasadiCollocationModel::CasadiCollocationModel(std::string config_file)
     {
@@ -26,13 +25,11 @@ namespace ghost_control
         }
 
         num_knots_ = int(time_horizon_ / dt_) + 1;
-        num_states_ = state_names_.size();
-        num_opt_vars_ = num_states_ * num_knots_;
-        num_params_ = param_names_.size();
+        num_opt_vars_ = (state_names_.size() + input_names_.size()) * num_knots_;
 
         // Initialize containers for optimization variables
         state_vector_ = casadi::SX::zeros(num_opt_vars_);
-        param_vector_ = casadi::SX::zeros(num_params_);
+        param_vector_ = casadi::SX::zeros(param_names_.size());
 
         time_vector_ = std::vector<double>(num_knots_);
         for (int i = 0; i < num_knots_; i++)
@@ -83,11 +80,14 @@ namespace ghost_control
             std::string curr_knot_prefix = getKnotPrefix(k);
             std::string next_knot_prefix = getKnotPrefix(k + 1);
 
-            // Normalize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
-            cost_function_ += 1 / dt_ * (pow(getState(curr_knot_prefix + "base_accel_x"), 2) + pow(getState(next_knot_prefix + "base_accel_x"), 2));
+            for (const auto &input : input_names_)
+            {
+                // Normalize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
+                cost_function_ += 1 / dt_ * (pow(getState(curr_knot_prefix + input), 2) + pow(getState(next_knot_prefix + input), 2));
 
-            // Minimize jerk via finite difference
-            cost_function_ += 1 / dt_ * (pow(getState(next_knot_prefix + "base_accel_x") - getState(curr_knot_prefix + "base_accel_x"), 2));
+                // Minimize jerk via finite difference
+                cost_function_ += 1 / dt_ * (pow(getState(next_knot_prefix + input) - getState(curr_knot_prefix + input), 2));
+            }
         }
     }
 
@@ -124,5 +124,7 @@ namespace ghost_control
             getState("k0_base_vel_x") - getParam("init_base_vel_x"),
             -getState("k0_base_vel_x") - getParam("init_base_vel_x"));
     }
+
+    // const std::unordered_map& getSolutionTimeseries()
 
 } // namespace ghost_control

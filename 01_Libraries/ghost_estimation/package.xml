@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ghost_estimation</name>
+  <version>0.0.0</version>
+  <description>Provides libraries for filtering and estimation for VEX V5 Robots</description>
+  <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
+ <license>GPLv3.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <build_depend>eigen3_cmake_module</build_depend>
+  <build_depend>ament_cmake_python</build_depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclpy</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>tf2_msgs</build_depend>
+
+  <build_export_depend>ament_cmake</build_export_depend>
+  <build_export_depend>ament_cmake_python</build_export_depend>
+  <build_export_depend>eigen3_cmake_module</build_export_depend>
+  <build_export_depend>rclcpp</build_export_depend>
+  <build_export_depend>rclpy</build_export_depend>
+  <build_export_depend>visualization_msgs</build_export_depend>
+  <build_export_depend>sensor_msgs</build_export_depend>
+  <build_export_depend>tf2_msgs</build_export_depend>
+
+  <test_depend>ament_lint_auto </test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

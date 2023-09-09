@@ -17,12 +17,12 @@ echo "---Building Ghost ROS Packages---"
 # Build ignores simulator packages on embedded devices
 if [ "$arch" == 'x86_64' ];
 then 
-    colcon build --packages-skip casadi matplotlib_cpp Tutorial --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    colcon build --packages-skip --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --packages-up-to ghost_ros --packages-skip casadi matplotlib_cpp  Tutorial --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    colcon build --packages-skip ghost_sim --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 fi
 
 source install/setup.bash
@@ -37,7 +37,7 @@ then
 else
     echo
     echo "---Generating Ghost Description URDF---"
-    xacro ghost_description/urdf/ghost1.xacro > $URDF_PATH
+    xacro 03_ROS/ghost_description/urdf/ghost1.xacro > $URDF_PATH
     echo "URDF written to" $URDF_PATH
 fi
 
@@ -53,7 +53,7 @@ then
     else
         echo
         echo "---Generating Ghost Simulation URDFs---"
-        xacro ghost_sim/urdf/ghost1_sim_base.xacro > $URDF_SIM_PATH
+        xacro 03_ROS/ghost_sim/urdf/ghost1_sim_base.xacro > $URDF_SIM_PATH
         echo "URDF written to" $URDF_SIM_PATH
     fi
 fi
@@ -69,7 +69,7 @@ then
         echo "---Updating V5 Project Symbolic Links---"
         bash scripts/update_symlinks.sh
 
-        cd ghost_pros
+        cd 02_V5/ghost_pros
 
         echo
         echo "---Cleaning PROS Project---"

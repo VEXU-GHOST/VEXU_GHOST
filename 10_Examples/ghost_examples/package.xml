@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ghost_examples</name>
+  <version>0.0.0</version>
+  <description>Provides example code for new VEXU team members</description>
+  <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
+  <license>GPLv3.0</license>
+
+  <!--
+    In a ROS Package, the package.xml and CMakeLists.txt are what tell the compiler how to build the code in the package.
+    
+    ROS Packages can use Python or C++ (or both!). The ability to mix these is why ROS has its own build system. We default
+    to building C++ packages since you can add Python files to a C++ package, but you can't add C++ files to a Python package.
+    
+    The best way to ensure this file is correct is to run colcon lint.
+    
+    Here, we list out any packages that our code depends on. This is especially important when we depend on other packages in
+    the same workspace, so that we can build them in the right order.
+  -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>ament_cmake_gtest</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
