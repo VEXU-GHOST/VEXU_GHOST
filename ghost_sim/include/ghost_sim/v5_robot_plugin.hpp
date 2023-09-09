@@ -36,9 +36,12 @@ public:
 
 protected:
 	void jointToEncoderTransform();
+	Eigen::VectorXd motorToJointTransform(Eigen::VectorXd motor_data);
+	void updateMotorController();
 	void wrapEncoderMsg();
 	void populateSensorMsg();
 	void getJointStates();
+	void applySimJointTorques();
 
 	/// Optional callback to be called at every simulation iteration.
 	void OnUpdate();

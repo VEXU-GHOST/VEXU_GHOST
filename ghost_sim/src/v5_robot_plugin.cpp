@@ -53,12 +53,29 @@ public:
 	std::vector<std::string> joint_names_;
 
 	// Incoming joint state data
-	Eigen::VectorXd joint_positions_;
+	Eigen::VectorXd joint_angles_;
 	Eigen::VectorXd joint_velocities_;
 	Eigen::VectorXd joint_efforts_;
+	Eigen::VectorXd joint_cmd_torques_;
+
+	// Incoming high level motor state data
+	Eigen::VectorXd motor_positions_;
+	Eigen::VectorXd motor_velocities_;
+	Eigen::VectorXd motor_efforts_;
 
 	// Outgoing encoder data
+	Eigen::VectorXd encoder_positions_;
 	Eigen::VectorXd encoder_velocities_;
+
+	// Setpoint data that needed to be exposed
+	Eigen::VectorXd motor_msg_setpoint_;
+
+	// Motor Controller Gains
+	double feedforward_voltage_gain_ = 0.01;
+	double feedforward_velocity_gain_ = 0.01;
+	double velocity_gain_ = 0.01;
+	double position_gain_ = 0.01;
+	double nominal_voltage_;
 
 	// Note that the float32 torque_nm parameter of this msg type is ignored since
 	// torques can only be applied not measured in Gazebo
@@ -102,6 +119,7 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 		10,
 		[this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
 			std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
+			int motor_index = 0;
 			for(const std::string &name : impl_->motor_names_){
 				// Get V5 Motor Command msg, Motor Model, and Motor Controller for each motor
 				const auto &motor_cmd_msg = msg->motor_commands[ghost_v5_config::motor_config_map.at(name).port];
@@ -124,6 +142,9 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 
 				// Update Current Limit
 				motor_model_ptr->setMaxCurrent(motor_cmd_msg.current_limit);
+
+				impl_->motor_msg_setpoint_(motor_index) = motor_cmd_msg.desired_position;
+				motor_index++;
 			}
 		});
 
@@ -154,7 +175,7 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 	impl_->encoder_names_ = ghost_common::getVectorFromString<std::string>(sdf->GetElement("encoder_names")->Get<std::string>(), ' ');
 
 	// Define eigen vector sizes using number of joints
-	impl_->joint_positions_.resize(impl_->joint_names_.size());
+	impl_->joint_angles_.resize(impl_->joint_names_.size());
 	impl_->joint_velocities_.resize(impl_->joint_names_.size());
 	impl_->joint_efforts_.resize(impl_->joint_names_.size());
 	impl_->encoder_velocities_.resize(impl_->encoder_names_.size());
@@ -196,10 +217,12 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 				config.motor__stall_torque,
 				config.motor__free_current,
 				config.motor__stall_current,
-				config.motor__max_voltage,
+				config.motor__max_voltage, // TODO: max voltage is nominal voltage?
 				config.motor__gear_ratio);
 
 			impl_->motor_controller_map_[name] = std::make_shared<MotorController>(config);
+
+			impl_->nominal_voltage_ = config.motor__max_voltage;
 		}
 		catch(const std::exception& e){
 			throw(std::runtime_error("[V5 Robot Plugin] Error: Motor Name <" + name + ">"));
@@ -213,7 +236,13 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 }
 
 void V5RobotPlugin::jointToEncoderTransform(){
+	impl_->encoder_positions_ = impl_->sensor_jacobian_.completeOrthogonalDecomposition().pseudoInverse() * impl_->joint_angles_;
 	impl_->encoder_velocities_ = impl_->sensor_jacobian_.completeOrthogonalDecomposition().pseudoInverse() * impl_->joint_velocities_;
+}
+
+Eigen::VectorXd V5RobotPlugin::motorToJointTransform(Eigen::VectorXd motor_data){
+	auto joint_data = impl_->actuator_jacobian_ * motor_data;
+	return joint_data;
 }
 
 // Wraps encoder matrix into V5Encoder state msg[21]
@@ -221,12 +250,13 @@ void V5RobotPlugin::wrapEncoderMsg(){
 	int col_index = 0;
 
 	for_each(begin(impl_->encoder_names_), end(impl_->encoder_names_), [&](const std::string &encoder_name){
+			auto encoder_vel_data = impl_->encoder_velocities_;
+			auto encoder_pos_data = impl_->encoder_positions_;
 			impl_->encoder_msg_[col_index].device_name = encoder_name;
 			impl_->encoder_msg_[col_index].device_id = 1;
 			impl_->encoder_msg_[col_index].device_connected = true;
-			impl_->encoder_msg_[col_index].position_degrees = 30.0;
-			auto encoder_data = impl_->encoder_velocities_;
-			impl_->encoder_msg_[col_index].velocity_rpm = encoder_data(col_index);
+			impl_->encoder_msg_[col_index].position_degrees = encoder_pos_data(col_index);
+			impl_->encoder_msg_[col_index].velocity_rpm = encoder_vel_data(col_index);
 			impl_->encoder_msg_[col_index].torque_nm = 0.0;
 			impl_->encoder_msg_[col_index].voltage_mv = 0.0;
 			impl_->encoder_msg_[col_index].current_ma = 0.0;
@@ -273,16 +303,61 @@ void V5RobotPlugin::getJointStates(){
 	int index = 0;
 	// Lamda for-each expression to get encoder values for every joint
 	for_each(begin(impl_->joint_names_), end(impl_->joint_names_), [&](const std::string &joint_name){
-			impl_->joint_positions_(index) = impl_->model_->GetJoint(joint_name)->Position(2) * impl_->RAD_TO_DEG;
+			impl_->joint_angles_(index) = fmod(impl_->model_->GetJoint(joint_name)->Position(2) * impl_->RAD_TO_DEG, 360);
 			impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
 			index++;
 		});
 }
 
+void V5RobotPlugin::updateMotorController(){
+	int motor_index = 0;
+	Eigen::VectorXd motor_torques;
+	Eigen::VectorXd motor_angles = this->motorToJointTransform(impl_->joint_angles_);
+	Eigen::VectorXd motor_velocities = this->motorToJointTransform(impl_->joint_velocities_);
+	for(const std::string &name : impl_->motor_names_){
+		// Get V5 Motor Motor Model, and Motor Controller for each motor
+		auto motor_model_ptr = impl_->motor_model_map_.at(name);
+		auto motor_controller_ptr = impl_->motor_controller_map_.at(name);
+
+		// Wrap angle error
+		double angle_error = fmod(impl_->motor_msg_setpoint_(motor_index), 360) - motor_angles(motor_index);
+		double angle_sign = std::abs(angle_error) / angle_error;
+		angle_error = std::abs(angle_error) > 180 ? angle_sign * 360 - angle_error : angle_error;
+
+		// Update motor
+		motor_model_ptr->setMotorSpeedRPM(motor_velocities(motor_index));
+
+		// Calculate control inputs
+		float voltage_feedforward = motor_controller_ptr->getVoltageCommand() * impl_->nominal_voltage_ * 1000 * impl_->feedforward_voltage_gain_;
+		float velocity_feedforward = motor_model_ptr->getVoltageFromVelocityMillivolts(motor_controller_ptr->getVoltageCommand()) * impl_->feedforward_velocity_gain_;
+		float velocity_feedback = (motor_controller_ptr->getVoltageCommand() - motor_velocities(motor_index)) * impl_->velocity_gain_;
+		float position_feedback = (angle_error) * impl_->position_gain_;
+
+		motor_model_ptr->setMotorEffort(voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback);
+		motor_torques(motor_index) = motor_model_ptr->getTorqueOutput();
+		motor_index++;
+	}
+	impl_->joint_cmd_torques_ = this->motorToJointTransform(motor_torques);
+	// TODO: is interface to publish current joint torque the same as gz joint pid plugin?
+	// Nothing is publishing the output joint torques
+}
+
+void V5RobotPlugin::applySimJointTorques(){
+	int joint_index = 0;
+	for(const std::string &name : impl_->joint_names_){
+		auto link = impl_->model_->GetJoint(name)->GetJointLink(1);
+
+		// For simulatilon stability, only apply torque if larger than a threshhold
+		if(std::abs(impl_->joint_cmd_torques_(joint_index)) > 1e-5){
+			link->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->joint_cmd_torques_(joint_index)));
+		}
+		joint_index++;
+	}
+}
+
 void V5RobotPlugin::OnUpdate(){
 	// Acquire msg update lock
 	std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
-
 
 	// 1) Populate Joint Position and Velocity Vectors
 	// 2) Process Sensor Update
@@ -301,11 +376,19 @@ void V5RobotPlugin::OnUpdate(){
 	//  3.8) Update each joint in gazebo
 
 	this->getJointStates();
+
+	this->updateMotorController();
+	this->applySimJointTorques();
+
+
 	// Converts joint data from Gazebo to encoder data using sensor jacobian matrix
 	this->jointToEncoderTransform();
+
 	// sensor update pub publishes a sensor msg: wrap encoder_msg again to a sensor msg
 	this->wrapEncoderMsg();
+
 	this->populateSensorMsg();
+
 	impl_->sensor_update_pub_->publish(impl_->sensor_msg_);
 }
 
