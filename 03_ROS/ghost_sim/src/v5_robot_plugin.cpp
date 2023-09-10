@@ -183,6 +183,9 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 	std::vector<double> actuator_jacobian_temp = ghost_common::getVectorFromString<double>(sdf->GetElement("actuator_jacobian")->Get<std::string>(), ' ');
 	std::vector<double> sensor_jacobian_temp = ghost_common::getVectorFromString<double>(sdf->GetElement("sensor_jacobian")->Get<std::string>(), ' ');
 
+	// Define here so that gazebo updates don't rely on when v5Actuator sub updates, especially on first iteration
+	impl_->motor_msg_setpoint_ = Eigen::VectorXd::Zero(impl_->motor_names_.size());
+
 	// Input Validation
 	if(actuator_jacobian_temp.size() != impl_->motor_names_.size() * impl_->joint_names_.size()){
 		std::string err_string = "[V5 Robot Plugin], Actuator Jacobian is incorrect size, cannot proceed!";
@@ -241,8 +244,17 @@ void V5RobotPlugin::jointToEncoderTransform(){
 }
 
 Eigen::VectorXd V5RobotPlugin::motorToJointTransform(Eigen::VectorXd motor_data){
-	auto joint_data = impl_->actuator_jacobian_ * motor_data;
+	// Actuator Jacobian 6X8
+	// Motor Data 6X1
+	auto joint_data = impl_->actuator_jacobian_.transpose() * motor_data;
 	return joint_data;
+}
+
+Eigen::VectorXd V5RobotPlugin::jointToMotorTransform(Eigen::VectorXd joint_data){
+	// Actuator Jacobian 6X8
+	// Joint Data 6X1
+	auto motor_data = impl_->actuator_jacobian_ * joint_data;
+	return motor_data;
 }
 
 // Wraps encoder matrix into V5Encoder state msg[21]
@@ -303,15 +315,22 @@ void V5RobotPlugin::getJointStates(){
 	int index = 0;
 	// Lamda for-each expression to get encoder values for every joint
 	for_each(begin(impl_->joint_names_), end(impl_->joint_names_), [&](const std::string &joint_name){
-			impl_->joint_angles_(index) = fmod(impl_->model_->GetJoint(joint_name)->Position(2) * impl_->RAD_TO_DEG, 360);
-			impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
-			index++;
+			try{
+				impl_->joint_angles_(index) = fmod(impl_->model_->GetJoint(joint_name)->Position(2) * impl_->RAD_TO_DEG, 360);
+				impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
+				index++;
+			}
+			catch(const std::exception& e){
+				// What type exception does GetJoint return
+				throw(std::runtime_error("[V5 Robot Plugin] Error: GetJoint passed non-existent joint name <" + joint_name + ">."));
+			}
 		});
 }
 
 void V5RobotPlugin::updateMotorController(){
 	int motor_index = 0;
-	Eigen::VectorXd motor_torques;
+	// Defined to avoid out of bounds indexing
+	Eigen::VectorXd motor_torques = Eigen::VectorXd::Zero(impl_->motor_names_.size());
 	Eigen::VectorXd motor_angles = this->motorToJointTransform(impl_->joint_angles_);
 	Eigen::VectorXd motor_velocities = this->motorToJointTransform(impl_->joint_velocities_);
 	for(const std::string &name : impl_->motor_names_){
@@ -334,10 +353,11 @@ void V5RobotPlugin::updateMotorController(){
 		float position_feedback = (angle_error) * impl_->position_gain_;
 
 		motor_model_ptr->setMotorEffort(voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback);
+
 		motor_torques(motor_index) = motor_model_ptr->getTorqueOutput();
 		motor_index++;
 	}
-	impl_->joint_cmd_torques_ = this->motorToJointTransform(motor_torques);
+	impl_->joint_cmd_torques_ = this->jointToMotorTransform(motor_torques);
 	// TODO: is interface to publish current joint torque the same as gz joint pid plugin?
 	// Nothing is publishing the output joint torques
 }
@@ -345,13 +365,19 @@ void V5RobotPlugin::updateMotorController(){
 void V5RobotPlugin::applySimJointTorques(){
 	int joint_index = 0;
 	for(const std::string &name : impl_->joint_names_){
-		auto link = impl_->model_->GetJoint(name)->GetJointLink(1);
-
-		// For simulatilon stability, only apply torque if larger than a threshhold
-		if(std::abs(impl_->joint_cmd_torques_(joint_index)) > 1e-5){
-			link->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->joint_cmd_torques_(joint_index)));
+		try{
+			auto link = impl_->model_->GetJoint(name)->GetJointLink(1);
+			// For simulatilon stability, only apply torque if larger than a threshhold
+			std::cout << impl_->joint_cmd_torques_.rows() << "X" << impl_->joint_cmd_torques_.cols() << std::endl;
+			if(std::abs(impl_->joint_cmd_torques_(joint_index)) > 1e-5){
+				link->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->joint_cmd_torques_(joint_index)));
+			}
+			joint_index++;
 		}
-		joint_index++;
+		catch(const std::runtime_error& e){
+			// What type exception does GetJoint return
+			throw(std::runtime_error("[V5 Robot Plugin] Error: GetJoint passed non-existent joint name <" + name + ">."));
+		}
 	}
 }
 

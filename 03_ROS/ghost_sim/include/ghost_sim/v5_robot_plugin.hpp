@@ -37,6 +37,7 @@ public:
 protected:
 	void jointToEncoderTransform();
 	Eigen::VectorXd motorToJointTransform(Eigen::VectorXd motor_data);
+	Eigen::VectorXd jointToMotorTransform(Eigen::VectorXd joint_data);
 	void updateMotorController();
 	void wrapEncoderMsg();
 	void populateSensorMsg();
