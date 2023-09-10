@@ -85,7 +85,7 @@
         </link>
       </model>
 
-      <model name="walls">
+      <!-- <model name="walls">
         <static>true</static>
         <pose>0 0 0.1524 0 0 0</pose>
 
@@ -164,7 +164,22 @@
             </geometry>
           </collision>
         </link>
-      </model>
+      </model> -->
 
+      <model name="field">
+        <static>true</static>
+        <pose>1 0 0 0 0 0</pose>
+        <link name="field_link">
+          <!-- <pose>0 0 0.1524 0 0 0</pose> -->
+          <visual name="visual">
+            <geometry>
+              <mesh>
+                <uri>field.stl</uri>
+                 <!-- filename="package://urdf/field.stl"/> -->
+              </mesh>
+            </geometry>
+          </visual>
+        </link>
+      </model>
     </world>
   </sdf>
