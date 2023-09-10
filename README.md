@@ -45,15 +45,18 @@ echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_
 
 #### Build Submodules
 ```
+source ~/.bashrc
 ./scripts/setup_submodules.sh
 ```
 
 #### Build Repository
 ```
+source ~/.bashrc
 ./scripts/build.sh -r
 ```
 
 #### Start Simulator
 ```
+source ~/.bashrc
 ./scripts/launch_sim.sh
 ```
