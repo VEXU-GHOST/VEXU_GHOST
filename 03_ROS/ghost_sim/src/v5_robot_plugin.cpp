@@ -368,7 +368,6 @@ void V5RobotPlugin::applySimJointTorques(){
 		try{
 			auto link = impl_->model_->GetJoint(name)->GetJointLink(1);
 			// For simulatilon stability, only apply torque if larger than a threshhold
-			std::cout << impl_->joint_cmd_torques_.rows() << "X" << impl_->joint_cmd_torques_.cols() << std::endl;
 			if(std::abs(impl_->joint_cmd_torques_(joint_index)) > 1e-5){
 				link->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->joint_cmd_torques_(joint_index)));
 			}
