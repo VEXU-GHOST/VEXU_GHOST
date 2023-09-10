@@ -52,3 +52,8 @@ echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_
 ```
 ./scripts/build_ros.sh -r
 ```
+
+#### Start Simulator
+```
+./scripts/launch_sim.sh
+```
