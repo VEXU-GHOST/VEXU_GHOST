@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+# These would be determined by solving the coefficient matrix from the initial and final position/velocity/time
 a = -8/27
 b = 20/9
 c = -32/9
