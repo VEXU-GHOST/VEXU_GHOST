@@ -42,10 +42,10 @@ int main(int argc, char *argv[]){
 	const int NUM_OPT_VARS = NUM_STATES * NUM_KNOTS;
 
 	// Initialize containers for optimization variables
+	// This makes it easier to access the CasADi symbolic variables by name
 	std::unordered_map<std::string, int> state_index_map;
-	auto state_vector = casadi::SX::zeros(NUM_OPT_VARS);
-
 	std::unordered_map<std::string, int> param_index_map;
+	auto state_vector = casadi::SX::zeros(NUM_OPT_VARS);
 	auto param_vector = casadi::SX::zeros(PARAM_NAMES.size());
 
 	////////////////////////////
@@ -77,9 +77,10 @@ int main(int argc, char *argv[]){
 
 	// Generate optimization variables and populate state_vector and state_index_map
 	int state_index = 0;
+	// For every timestep
 	for(int i = 0; i < NUM_KNOTS; i++){
 		std::string knot_prefix = get_knot_prefix(i);
-		for(auto name : STATE_NAMES){
+		for(const auto & name : STATE_NAMES){
 			state_index_map[knot_prefix + name] = state_index;
 			state_vector(state_index) = SX::sym(knot_prefix + name);
 			state_index++;
