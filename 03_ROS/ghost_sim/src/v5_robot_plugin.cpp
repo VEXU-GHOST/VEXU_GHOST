@@ -72,8 +72,8 @@ public:
 
 	// Motor Controller Gains
 	double feedforward_voltage_gain_ = 0.01;
-	double feedforward_velocity_gain_ = 0.01;
-	double velocity_gain_ = 0.01;
+	double feedforward_velocity_gain_ = 1.0;
+	double velocity_gain_ = 1.0;
 	double position_gain_ = 0.01;
 	double nominal_voltage_;
 
@@ -115,7 +115,7 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 
 	// Initialize ROS Subscriptions
 	impl_->actuator_command_sub_ = impl_->ros_node_->create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
-		"v5/actuator_commands",
+		"v5/actuator_command",
 		10,
 		[this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
 			std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
@@ -353,6 +353,9 @@ void V5RobotPlugin::updateMotorController(){
 		float position_feedback = (angle_error) * impl_->position_gain_;
 
 		motor_model_ptr->setMotorEffort(voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback);
+		std::cout << "velocity feedforward: " << velocity_feedforward << std::endl;
+		std::cout << "getVoltageCommand():  " << (motor_controller_ptr->getVoltageCommand() ) << std::endl;
+		std::cout << "motor_velocities(motor_index): " << motor_velocities(motor_index) << std::endl;
 
 		motor_torques(motor_index) = motor_model_ptr->getTorqueOutput();
 		motor_index++;
@@ -370,6 +373,7 @@ void V5RobotPlugin::applySimJointTorques(){
 			// For simulatilon stability, only apply torque if larger than a threshhold
 			if(std::abs(impl_->joint_cmd_torques_(joint_index)) > 1e-5){
 				link->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->joint_cmd_torques_(joint_index)));
+				std::cout << impl_->joint_cmd_torques_(joint_index) << std::endl;
 			}
 			joint_index++;
 		}

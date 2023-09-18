@@ -67,12 +67,12 @@
             <!-- This matrix describes the relationship between motor velocities and joint velocities -->
             <!-- Width = # Motors, Height = # Joints -->
             <actuator_jacobian>
-            0.5  0.5    0    0    0    0    0    0
-              0    0  0.5  0.5    0    0    0    0 
-              0    0    0    0  0.5  0.5    0    0
-              0    0    0    0    0    0  0.5  0.5
-            0.5  0.5    0    0    0    0    0    0
-              0    0  0.5  0.5    0    0    0    0
+            1.0    0    0    0    0    0    0    0
+              0    0    0    0    0    0    0    0 
+              0    0    0    0    0    0    0    0
+              0    0    0    0    0    0    0    0
+              0    0    0    0    0    0    0    0
+              0    0    0    0    0    0    0    0
             </actuator_jacobian>
 
             <!-- This matrix describes the relationship between the encoders and the joints -->
