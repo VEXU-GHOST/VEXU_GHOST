@@ -36,6 +36,8 @@ echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 echo "source ~/VEXU_GHOST/install/setup.bash" >> ~/.bashrc
 echo 'export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH' >> ~/.bashrc
 echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_PATH' >> ~/.bashrc
+echo 'export GAZEBO_RESOURCE_PATH=$HOME/VEXU_GHOST/install/ghost_sim/share/ghost_sim:$GAZEBO_RESOURCE_PATH' >> ~/.bashrc
+echo 'export GAZEBO_MODEL_PATH=$HOME/VEXU_GHOST/install/ghost_sim/share/ghost_sim:$GAZEBO_MODEL_PATH' >> ~/.bashrc
 ```
 
 #### Update Dependencies
