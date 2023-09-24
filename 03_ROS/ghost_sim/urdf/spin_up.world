@@ -1,3 +1,4 @@
+
 <?xml version="1.0"?>
   <sdf version='1.6'>
     <world name="default">
@@ -85,7 +86,24 @@
         </link>
       </model>
 
-      <model name="walls">
+      <model name="field">
+        <static>true</static>
+        <pose>0 0 0 0 0 0</pose>
+        <link name="field_link">
+          <visual name='visual'>
+            <geometry>
+              <mesh><uri>model://urdf/meshes/field.stl</uri></mesh>
+            </geometry>
+          </visual>
+          <collision name='collison'>
+            <geometry>
+              <mesh><uri>model://urdf/meshes/field.stl</uri></mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+
+      <!-- <model name="walls">
         <static>true</static>
         <pose>0 0 0.1524 0 0 0</pose>
 
@@ -163,8 +181,8 @@
               </box>
             </geometry>
           </collision>
-        </link>
-      </model>
+        </link> -->
+      <!-- </model> -->
 
     </world>
   </sdf>
