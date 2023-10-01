@@ -103,7 +103,60 @@
         </link>
       </model>
 
-      <!-- <model name="walls">
+      <model name="triball1">
+        <static>false</static>
+        <pose>0.5 0 0 0 0 0</pose>
+        <link name="triball_link">
+          <visual name='visual'>
+            <geometry>
+              <mesh><uri>model://urdf/meshes/triball.stl</uri></mesh>
+            </geometry>
+          </visual>
+          <collision name='collison'>
+            <geometry>
+              <mesh><uri>model://urdf/meshes/triball.stl</uri></mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+
+      <model name="triball2">
+        <static>false</static>
+        <pose>0.5 0.5 0 0 0 0</pose>
+        <link name="triball_link">
+          <visual name='visual'>
+            <geometry>
+              <mesh><uri>model://urdf/meshes/triball.stl</uri></mesh>
+            </geometry>
+          </visual>
+          <collision name='collison'>
+            <geometry>
+              <mesh><uri>model://urdf/meshes/triball.stl</uri></mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+
+      <model name="triball3">
+        <static>false</static>
+        <pose>0.5 -0.5 0 0 0 0</pose>
+        <link name="triball_link">
+          <visual name='visual'>
+            <geometry>
+              <mesh><uri>model://urdf/meshes/triball.stl</uri></mesh>
+            </geometry>
+          </visual>
+          <collision name='collison'>
+            <geometry>
+              <mesh><uri>model://urdf/meshes/triball.stl</uri></mesh>
+            </geometry>
+          </collision>
+        </link>
+      </model>
+
+
+
+      <model name="walls">
         <static>true</static>
         <pose>0 0 0.1524 0 0 0</pose>
 
@@ -181,8 +234,8 @@
               </box>
             </geometry>
           </collision>
-        </link> -->
-      <!-- </model> -->
+        </link>
+      </model>
 
     </world>
   </sdf>
