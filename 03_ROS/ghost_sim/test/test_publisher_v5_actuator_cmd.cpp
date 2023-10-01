@@ -44,7 +44,7 @@ ghost_msgs::msg::V5MotorCommand testPublisherV5ActuatorCmd::populateMotorCmd(con
 		v5_motor_cmd.motor_name = motors_[loop_index];
 		v5_motor_cmd.device_id = loop_index;
 		v5_motor_cmd.desired_position = 0; // degrees
-		v5_motor_cmd.desired_velocity = 0.0001;
+		v5_motor_cmd.desired_velocity = 0.5;
 		v5_motor_cmd.desired_torque = 0.0;
 		v5_motor_cmd.desired_voltage = 0.0;
 		v5_motor_cmd.current_limit = 5; // milliAmps
