@@ -69,6 +69,12 @@ def generate_launch_description():
         name='ground_truth_pose_publisher',
     )
 
+    v5_actuator_cmd_publisher = Node(
+        package='ghost_sim',
+        executable = 'test_publisher_v5_actuator_cmd',
+        name = 'test_publisher_v5_actuator_cmd',
+    )
+
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -115,5 +121,6 @@ def generate_launch_description():
         joy_launch_description,
         # estimator_node,
         # state_machine_node,
+        v5_actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)
     ])

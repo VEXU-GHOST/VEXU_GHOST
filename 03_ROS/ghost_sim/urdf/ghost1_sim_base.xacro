@@ -13,24 +13,14 @@
 
     <!-- Joint State Publisher -->
     <gazebo>
-        <plugin name="gazebo_ros_joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-            <update_rate>100</update_rate>
-            <joint_name>steering_left</joint_name>
-            <joint_name>steering_right</joint_name>
-            <joint_name>steering_back</joint_name>
-            <joint_name>driveshaft_left</joint_name>
-            <joint_name>driveshaft_right</joint_name>
-            <joint_name>driveshaft_back</joint_name>
-        </plugin>
-
         <plugin name="v5_robot_plugin" filename="libv5_robot_plugin.so">
             <joint_names>
-                steering_left
-                steering_right
-                steering_back
-                driveshaft_left
-                driveshaft_right
-                driveshaft_back
+                steering_joint_left
+                steering_joint_right
+                steering_joint_back
+                wheel_joint_left
+                wheel_joint_right
+                wheel_joint_back
             </joint_names>
             <!-- Motor names must be formatted in this manner in order to index actuator jacobian -->
             <motor_names>
@@ -77,12 +67,12 @@
             <!-- This matrix describes the relationship between motor velocities and joint velocities -->
             <!-- Width = # Motors, Height = # Joints -->
             <actuator_jacobian>
-            0.5  0.5    0    0    0    0    0    0
-              0    0  0.5  0.5    0    0    0    0 
-              0    0    0    0  0.5  0.5    0    0
-              0    0    0    0    0    0  0.5  0.5
-            0.5  0.5    0    0    0    0    0    0
-              0    0  0.5  0.5    0    0    0    0
+            1.0    0    0    0    0    0    0    0
+              0    0    0    0    0    0    0    0 
+              0    0    0    0    0    0    0    0
+              0    0    0    0    0    0    0    0
+              0    0    0    0    0    0    0    0
+              0    0    0    0    0    0    0    0
             </actuator_jacobian>
 
             <!-- This matrix describes the relationship between the encoders and the joints -->
