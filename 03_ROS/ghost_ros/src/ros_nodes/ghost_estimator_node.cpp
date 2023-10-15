@@ -21,7 +21,7 @@
 // ========================================================================
 
 #include "eigen3/Eigen/Geometry"
-#include "ghost_common/angle_util.hpp"
+#include "ghost_common/util/angle_util.hpp"
 #include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_ros/ros_nodes/ghost_estimator_node.hpp"
 #include "math/line2d.h"
