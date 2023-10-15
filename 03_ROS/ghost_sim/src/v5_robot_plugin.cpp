@@ -17,6 +17,7 @@
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_encoder_state.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
+#include "sensor_msgs/msg/joy.hpp"
 
 #include "ghost_common/util/parsing_util.hpp"
 #include "ghost_common/v5_robot_config_defs.hpp"
@@ -92,6 +93,10 @@ public:
 
 	std::mutex actuator_update_callback_mutex;
 
+	// node for simulator joystick commands
+	rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joystick_command_sub_;
+	ghost_msgs::msg::V5Joystick joystick_msg_;
+
 	// Constants
 	float DEG_TO_RAD = M_PI / 180;
 	float RAD_TO_DEG = 180 / M_PI;
@@ -140,6 +145,30 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 				// Update Current Limit
 				motor_model_ptr->setMaxCurrent(motor_cmd_msg.current_limit);
 			}
+		});
+
+	impl_->joystick_command_sub_ = impl_->ros_node_->create_subscription<sensor_msgs::msg::Joy>(
+		"/joy",
+		10,
+		[this](const sensor_msgs::msg::Joy::SharedPtr msg){
+			impl_->joystick_msg_.joystick_left_x = msg->axes[0];
+			impl_->joystick_msg_.joystick_left_y = msg->axes[1];
+			impl_->joystick_msg_.joystick_right_x = msg->axes[2];
+			impl_->joystick_msg_.joystick_right_y = msg->axes[3];
+
+			impl_->joystick_msg_.btn_x = msg->buttons[0];
+			impl_->joystick_msg_.btn_a = msg->buttons[1];
+			impl_->joystick_msg_.btn_b = msg->buttons[2];
+			impl_->joystick_msg_.btn_y = msg->buttons[3];
+			impl_->joystick_msg_.btn_l1 = msg->buttons[4];
+			impl_->joystick_msg_.btn_r1 = msg->buttons[5];
+			impl_->joystick_msg_.btn_l2 = msg->buttons[6];
+			impl_->joystick_msg_.btn_r2 = msg->buttons[7];
+
+			impl_->joystick_msg_.btn_left = std::max(0,int(msg->axes[4]));
+			impl_->joystick_msg_.btn_right = std::max(0,-int(msg->axes[4]));
+			impl_->joystick_msg_.btn_up = std::max(0,int(msg->axes[5]));
+			impl_->joystick_msg_.btn_down = std::max(0,-int(msg->axes[5]));
 		});
 
 	// Initialize ROS Publishers
@@ -228,6 +257,27 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 	// iteration. Remove this call, the connection and the callback if not needed.
 	impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
 		std::bind(&V5RobotPlugin::OnUpdate, this));
+
+	// initialize joystick msg
+	impl_->sensor_msg_.joystick_msg.joystick_left_x = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_left_y = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_right_x = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_right_y = 0.0;
+
+	impl_->sensor_msg_.joystick_msg.btn_a = false;
+	impl_->sensor_msg_.joystick_msg.btn_b = false;
+	impl_->sensor_msg_.joystick_msg.btn_x = false;
+	impl_->sensor_msg_.joystick_msg.btn_y = false;
+	impl_->sensor_msg_.joystick_msg.btn_up = false;
+	impl_->sensor_msg_.joystick_msg.btn_down = false;
+	impl_->sensor_msg_.joystick_msg.btn_left = false;
+	impl_->sensor_msg_.joystick_msg.btn_right = false;
+	impl_->sensor_msg_.joystick_msg.btn_l1 = false;
+	impl_->sensor_msg_.joystick_msg.btn_l2 = false;
+	impl_->sensor_msg_.joystick_msg.btn_r1 = false;
+	impl_->sensor_msg_.joystick_msg.btn_r2 = false;
+
+	impl_->joystick_msg_ = impl_->sensor_msg_.joystick_msg;
 }
 
 void V5RobotPlugin::jointToEncoderTransform(){
@@ -281,23 +331,7 @@ void V5RobotPlugin::populateSensorMsg(){
 	// hardware parameters
 	impl_->sensor_msg_.digital_port_vector[8] = (false, false, false, false, false, false, false, false);
 
-	impl_->sensor_msg_.joystick_msg.joystick_left_x = 0.0;
-	impl_->sensor_msg_.joystick_msg.joystick_left_y = 0.0;
-	impl_->sensor_msg_.joystick_msg.joystick_right_x = 0.0;
-	impl_->sensor_msg_.joystick_msg.joystick_right_y = 0.0;
-
-	impl_->sensor_msg_.joystick_msg.btn_a = false;
-	impl_->sensor_msg_.joystick_msg.btn_b = false;
-	impl_->sensor_msg_.joystick_msg.btn_x = false;
-	impl_->sensor_msg_.joystick_msg.btn_y = false;
-	impl_->sensor_msg_.joystick_msg.btn_up = false;
-	impl_->sensor_msg_.joystick_msg.btn_down = false;
-	impl_->sensor_msg_.joystick_msg.btn_left = false;
-	impl_->sensor_msg_.joystick_msg.btn_right = false;
-	impl_->sensor_msg_.joystick_msg.btn_l1 = false;
-	impl_->sensor_msg_.joystick_msg.btn_l2 = false;
-	impl_->sensor_msg_.joystick_msg.btn_r1 = false;
-	impl_->sensor_msg_.joystick_msg.btn_r2 = false;
+	impl_->sensor_msg_.joystick_msg = impl_->joystick_msg_;
 }
 
 // Preserves order of joints listed in xacro

@@ -112,7 +112,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        DeclareLaunchArgument(name='joystick', default_value='false'),
+        DeclareLaunchArgument(name='joystick', default_value='true'),
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
@@ -120,7 +120,7 @@ def generate_launch_description():
         # rviz_node,
         joy_launch_description,
         # estimator_node,
-        state_machine_node,
+        # state_machine_node,
         # v5_actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)
     ])

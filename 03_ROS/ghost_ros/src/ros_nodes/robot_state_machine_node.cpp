@@ -114,7 +114,7 @@ RobotStateMachineNode::RobotStateMachineNode() :
 				curr_robot_state_ = robot_state_e::TELEOP;
 			}
 
-			updateController();
+			// updateController();
 		});
 
 	v5_joystick_sub_ = create_subscription<ghost_msgs::msg::V5Joystick>(
@@ -122,8 +122,8 @@ RobotStateMachineNode::RobotStateMachineNode() :
 		10,
 		[this](const ghost_msgs::msg::V5Joystick::SharedPtr msg){
 			curr_joystick_msg_id_ = msg->msg_id;
-			curr_joystick_msg_ = msg;
-			updateController();
+			// curr_joystick_msg_ = msg;
+			// updateController();
 		});
 
 	v5_sensor_update_sub_ = create_subscription<ghost_msgs::msg::V5SensorUpdate>(
@@ -132,6 +132,7 @@ RobotStateMachineNode::RobotStateMachineNode() :
 		[this](const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
 			curr_encoder_msg_id_ = msg->msg_id;
 			curr_encoder_msg_ = msg;
+			curr_joystick_msg_ = std::make_shared<ghost_msgs::msg::V5Joystick>(msg->joystick_msg);
 			updateController();
 		});
 
@@ -141,39 +142,23 @@ RobotStateMachineNode::RobotStateMachineNode() :
 		[this](const ghost_msgs::msg::GhostRobotState::SharedPtr msg){
 			curr_robot_state_msg_id_ = msg->msg_id;
 			curr_robot_state_msg_ = msg;
-			updateController();
+			// updateController();
 		});
 }
 
 void RobotStateMachineNode::updateController(){
 	// Comparing msg ids ensures only one control update is performed for a given sensor update
-	if(
-		(curr_joystick_msg_id_ == curr_comp_state_msg_id_) &&
-		(curr_joystick_msg_id_ == curr_encoder_msg_id_) &&
-		(curr_joystick_msg_id_ == curr_robot_state_msg_id_)){
 		// Clear actuator command msg
 		actuator_cmd_msg_ = ghost_msgs::msg::V5ActuatorCommand{};
 
-		// Calculate robot actuator command dependent on competition state
-		switch(curr_robot_state_){
-		case robot_state_e::AUTONOMOUS:
 
-			break;
-
-		case robot_state_e::TELEOP:
-			teleop();
-			break;
-
-		case robot_state_e::DISABLED:
-
-			break;
-		}
+		std::cout << "Update Controller" << std::endl;
+		teleop();
 
 		// Publish actuator command
 		actuator_cmd_msg_.header.stamp = get_clock()->now();
 		actuator_cmd_msg_.msg_id = curr_joystick_msg_id_;
 		actuator_command_pub_->publish(actuator_cmd_msg_);
-	}
 }
 
 void RobotStateMachineNode::resetPose(){
@@ -308,11 +293,11 @@ void RobotStateMachineNode::updateSwerveCommandsFromTwist(float angular_velocity
 		}
 	}
 
-	Eigen::Vector2f wheel_mod_speed = diff_swerve_jacobian * Eigen::Vector2f(
-		curr_encoder_msg_->encoders[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_RIGHT_MOTOR").port].velocity_rpm,
-		curr_encoder_msg_->encoders[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_LEFT_MOTOR").port].velocity_rpm);
+	// Eigen::Vector2f wheel_mod_speed = diff_swerve_jacobian * Eigen::Vector2f(
+	// 	curr_encoder_msg_->encoders[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_RIGHT_MOTOR").port].velocity_rpm,
+	// 	curr_encoder_msg_->encoders[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_LEFT_MOTOR").port].velocity_rpm);
 
-	// Update velocity commands
+	// // Update velocity commands
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_FRONT_LEFT_MOTOR").port].desired_velocity =    motor_speed_cmds[0];
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_FRONT_RIGHT_MOTOR").port].desired_velocity =     motor_speed_cmds[1];
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_BACK_LEFT_MOTOR").port].desired_velocity =   motor_speed_cmds[2];
@@ -322,7 +307,7 @@ void RobotStateMachineNode::updateSwerveCommandsFromTwist(float angular_velocity
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_LEFT_MOTOR").port].desired_velocity =   motor_speed_cmds[5];
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_RIGHT_MOTOR").port].desired_velocity =   motor_speed_cmds[5];
 
-	// Update voltage commands
+	// // Update voltage commands
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_FRONT_LEFT_MOTOR").port].desired_voltage =     motor_voltage_cmds[0];
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_FRONT_RIGHT_MOTOR").port].desired_voltage =      motor_voltage_cmds[1];
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_BACK_LEFT_MOTOR").port].desired_voltage =    motor_voltage_cmds[2];
@@ -342,25 +327,25 @@ void RobotStateMachineNode::updateSwerveCommandsFromTwist(float angular_velocity
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_LEFT_MOTOR").port].current_limit     = 2500;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_RIGHT_MOTOR").port].current_limit    = 2500;
 
-	// Set motors to be active
+	// // Set motors to be active
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_FRONT_LEFT_MOTOR").port].voltage_control         = true;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_FRONT_RIGHT_MOTOR").port].voltage_control          = true;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_BACK_LEFT_MOTOR").port].voltage_control        = true;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_BACK_RIGHT_MOTOR").port].voltage_control         = true;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_FRONT_LEFT_MOTOR").port].voltage_control    = true;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_FRONT_RIGHT_MOTOR").port].voltage_control   = true;
-	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_LEFT_MOTOR ").port].voltage_control    = true;
-	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_RIGHT_MOTOR ").port].voltage_control   = true;
+	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_LEFT_MOTOR").port].voltage_control    = true;
+	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_RIGHT_MOTOR").port].voltage_control   = true;
 
-	// Set motors to be active
+	// // Set motors to be active
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_FRONT_LEFT_MOTOR").port].velocity_control         = true;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_FRONT_RIGHT_MOTOR").port].velocity_control          = true;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_BACK_LEFT_MOTOR").port].velocity_control        = true;
 	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_LEFT_BACK_RIGHT_MOTOR").port].velocity_control         = true;
-	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_FRONT_LEFT_MOTOR").port].voltage_control    = true;
-	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_FRONT_RIGHT_MOTOR").port].voltage_control    = true;
-	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_LEFT_MOTOR").port].voltage_control    = true;
-	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_RIGHT_MOTOR").port].voltage_control    = true;
+	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_FRONT_LEFT_MOTOR").port].velocity_control    = true;
+	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_FRONT_RIGHT_MOTOR").port].velocity_control    = true;
+	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_LEFT_MOTOR").port].velocity_control    = true;
+	actuator_cmd_msg_.motor_commands[ghost_v5_config::motor_config_map.at("DRIVE_RIGHT_BACK_RIGHT_MOTOR").port].velocity_control    = true;
 
 	// Set Motor Names and Device IDs
 	for(auto pair : ghost_v5_config::motor_config_map){
