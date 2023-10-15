@@ -45,7 +45,7 @@ def generate_launch_description():
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
 
     home_dir = os.path.expanduser('~')
-    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "ghost_ros")
+    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros")
 
     world_file = os.path.join(ghost_sim_share_dir, "urdf", "spin_up.world")
     rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')
@@ -106,7 +106,7 @@ def generate_launch_description():
     state_machine_node = Node(
         package='ghost_ros',
         executable='robot_state_machine_node',
-        name='ghost_state_machine_node',
+        name='ghost_state_machine',
         output='screen',
         parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
     )
@@ -117,10 +117,10 @@ def generate_launch_description():
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ground_truth_publisher,
-        # rviz_node,
-        joy_launch_description,
+        rviz_node,
+        # joy_launch_description,
         # estimator_node,
-        # state_machine_node,
+        state_machine_node,
         # v5_actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)
     ])
