@@ -37,10 +37,9 @@
             </motor_names>
 
             <encoder_names>
-                STEERING_FRONT_LEFT_ENCODER
-                STEERING_FRONT_RIGHT_ENCODER
-                STEERING_BACK_LEFT_ENCODER
-                STEERING_BACK_RIGHT_ENCODER
+                STEERING_LEFT_ENCODER
+                STEERING_RIGHT_ENCODER
+                STEERING_BACK_ENCODER
             </encoder_names>
 
             <!-- System Jacobians -->
@@ -84,14 +83,14 @@
             joints is defined in the actuator_jacobian -->
             <!-- Width = # Encoders, Height = # Joints -->
             <sensor_jacobian>
-            1 0 0 0
-            0 1 0 0
-            0 0 1 0
-            0 0 0 1
-            0 0 0 0
-            0 0 0 0
-            0 0 0 0
-            0 0 0 0
+            1 0 0
+            0 1 0
+            0 0 1
+            0 0 0
+            0 0 0
+            0 0 0
+            0 0 0
+            0 0 0
             </sensor_jacobian>
         </plugin>
     </gazebo>

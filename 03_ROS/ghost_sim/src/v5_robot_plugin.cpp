@@ -200,6 +200,7 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 	          << impl_->sensor_jacobian_ << std::endl;
 
 
+	std::cout << "reading motor names in constructor" << std::endl;
 	// // Instantiate Motor Models and Motor Controllers for each motor
 	for(const std::string &name : impl_->motor_names_){
 		//     // Get config from global definitions
@@ -279,27 +280,24 @@ void V5RobotPlugin::populateSensorMsg(){
 
 	// hardware parameters
 	impl_->sensor_msg_.digital_port_vector[8] = (false, false, false, false, false, false, false, false);
-	impl_->sensor_msg_.is_disabled = false;
-	impl_->sensor_msg_.is_autonomous = false;
-	impl_->sensor_msg_.is_connected = false;
 
-	impl_->sensor_msg_.joystick_left_x = 0.0;
-	impl_->sensor_msg_.joystick_left_y = 0.0;
-	impl_->sensor_msg_.joystick_right_x = 0.0;
-	impl_->sensor_msg_.joystick_right_y = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_left_x = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_left_y = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_right_x = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_right_y = 0.0;
 
-	impl_->sensor_msg_.joystick_btn_a = false;
-	impl_->sensor_msg_.joystick_btn_b = false;
-	impl_->sensor_msg_.joystick_btn_x = false;
-	impl_->sensor_msg_.joystick_btn_y = false;
-	impl_->sensor_msg_.joystick_btn_up = false;
-	impl_->sensor_msg_.joystick_btn_down = false;
-	impl_->sensor_msg_.joystick_btn_left = false;
-	impl_->sensor_msg_.joystick_btn_right = false;
-	impl_->sensor_msg_.joystick_btn_l1 = false;
-	impl_->sensor_msg_.joystick_btn_l2 = false;
-	impl_->sensor_msg_.joystick_btn_r1 = false;
-	impl_->sensor_msg_.joystick_btn_r2 = false;
+	impl_->sensor_msg_.joystick_msg.btn_a = false;
+	impl_->sensor_msg_.joystick_msg.btn_b = false;
+	impl_->sensor_msg_.joystick_msg.btn_x = false;
+	impl_->sensor_msg_.joystick_msg.btn_y = false;
+	impl_->sensor_msg_.joystick_msg.btn_up = false;
+	impl_->sensor_msg_.joystick_msg.btn_down = false;
+	impl_->sensor_msg_.joystick_msg.btn_left = false;
+	impl_->sensor_msg_.joystick_msg.btn_right = false;
+	impl_->sensor_msg_.joystick_msg.btn_l1 = false;
+	impl_->sensor_msg_.joystick_msg.btn_l2 = false;
+	impl_->sensor_msg_.joystick_msg.btn_r1 = false;
+	impl_->sensor_msg_.joystick_msg.btn_r2 = false;
 }
 
 // Preserves order of joints listed in xacro
@@ -346,12 +344,6 @@ void V5RobotPlugin::updateMotorController(){
 		float position_feedback = (angle_error) * impl_->position_gain_;
 
 		motor_model_ptr->setMotorEffort(voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback);
-
-		if(velocity_feedback != 0.0){
-			std::cout << "velocity feedback: " << velocity_feedback << std::endl;
-			std::cout << "velocity feedforward: " << velocity_feedforward << std::endl;
-			std::cout << "volage feedforward: " << voltage_feedforward << std::endl;
-		}
 
 		motor_torques(motor_index) = motor_model_ptr->getTorqueOutput();
 		motor_index++;

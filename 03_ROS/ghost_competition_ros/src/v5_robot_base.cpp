@@ -25,7 +25,7 @@ void V5RobotBase::configure(const std::string& robot_name, const YAML::Node& con
 }
 
 void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
-	updateCompetitionState(msg->is_disabled, msg->is_autonomous);
+	updateCompetitionState(msg->competition_state_msg.is_disabled, msg->competition_state_msg.is_autonomous);
 
 	// Competition State Machine
 	switch(curr_comp_state_){
