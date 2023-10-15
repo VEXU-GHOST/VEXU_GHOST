@@ -192,9 +192,9 @@ void RobotStateMachineNode::resetPose(){
 
 void RobotStateMachineNode::teleop(){
 	updateSwerveCommandsFromTwist(
-		-curr_joystick_msg_->joystick_right_x,
-		curr_joystick_msg_->joystick_left_y,
-		-curr_joystick_msg_->joystick_left_x);
+		-curr_joystick_msg_->right_x,
+		curr_joystick_msg_->left_y,
+		-curr_joystick_msg_->left_x);
 }
 
 void RobotStateMachineNode::updateSwerveCommandsFromTwist(float angular_velocity,

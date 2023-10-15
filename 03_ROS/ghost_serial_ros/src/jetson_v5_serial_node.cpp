@@ -266,10 +266,10 @@ void JetsonV5SerialNode::publishV5SensorUpdate(unsigned char buffer[]){
 	}
 
 	// Joystick Channels
-	memcpy(&(state_update_msg.joystick_msg.joystick_left_x), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_msg.joystick_left_y), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_msg.joystick_right_x), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_msg.joystick_right_y), buffer + 4 * (buffer_index++), 4);
+	memcpy(&(state_update_msg.joystick_msg.left_x), buffer + 4 * (buffer_index++), 4);
+	memcpy(&(state_update_msg.joystick_msg.left_y), buffer + 4 * (buffer_index++), 4);
+	memcpy(&(state_update_msg.joystick_msg.right_x), buffer + 4 * (buffer_index++), 4);
+	memcpy(&(state_update_msg.joystick_msg.right_y), buffer + 4 * (buffer_index++), 4);
 
 	// Buffers to store extracted V5 Msg
 	uint16_t digital_states = 0;

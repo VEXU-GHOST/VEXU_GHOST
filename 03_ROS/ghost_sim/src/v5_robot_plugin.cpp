@@ -281,10 +281,10 @@ void V5RobotPlugin::populateSensorMsg(){
 	// hardware parameters
 	impl_->sensor_msg_.digital_port_vector[8] = (false, false, false, false, false, false, false, false);
 
-	impl_->sensor_msg_.joystick_msg.joystick_left_x = 0.0;
-	impl_->sensor_msg_.joystick_msg.joystick_left_y = 0.0;
-	impl_->sensor_msg_.joystick_msg.joystick_right_x = 0.0;
-	impl_->sensor_msg_.joystick_msg.joystick_right_y = 0.0;
+	impl_->sensor_msg_.joystick_msg.left_x = 0.0;
+	impl_->sensor_msg_.joystick_msg.left_y = 0.0;
+	impl_->sensor_msg_.joystick_msg.right_x = 0.0;
+	impl_->sensor_msg_.joystick_msg.right_y = 0.0;
 
 	impl_->sensor_msg_.joystick_msg.btn_a = false;
 	impl_->sensor_msg_.joystick_msg.btn_b = false;
