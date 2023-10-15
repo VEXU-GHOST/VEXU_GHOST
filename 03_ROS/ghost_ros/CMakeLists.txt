@@ -51,21 +51,21 @@ include_directories(include)
 #####################################
 ##### Foxglove Diagnostics Node #####
 #####################################
-add_executable(foxglove_diagnostics_node
-  src/ros_nodes/foxglove_diagnostics_node.cpp
-)
-ament_target_dependencies(foxglove_diagnostics_node
-  rclcpp
-  sensor_msgs
-  ghost_msgs
-)
-target_include_directories(foxglove_diagnostics_node
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  foxglove_diagnostics_node
-  DESTINATION lib/${PROJECT_NAME})
+# add_executable(foxglove_diagnostics_node
+#   src/ros_nodes/foxglove_diagnostics_node.cpp
+# )
+# ament_target_dependencies(foxglove_diagnostics_node
+#   rclcpp
+#   sensor_msgs
+#   ghost_msgs
+# )
+# target_include_directories(foxglove_diagnostics_node
+#   PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
+# install(TARGETS
+#   foxglove_diagnostics_node
+#   DESTINATION lib/${PROJECT_NAME})
 
 ##############################
 #### Ghost Estimator Node ####
@@ -101,31 +101,31 @@ install(TARGETS
 ##################################
 #### Robot State Machine Node ####
 ##################################
-# add_executable(robot_state_machine_node
-#   src/ros_nodes/robot_state_machine_node.cpp
-# )
-# ament_target_dependencies(robot_state_machine_node
-#   rclcpp
-#   Eigen3
-#   std_msgs
-#   ghost_msgs
-#   visualization_msgs
-#   ghost_estimation
-#   ghost_common
-# )
-# target_link_libraries(robot_state_machine_node
-#   ghost_estimation::amrl_shared_lib
-#   ghost_common::angle_common
-#   yaml-cpp
-#   v5_serial_msg_config
-# )
-# target_include_directories(robot_state_machine_node
-#   PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# install(TARGETS
-# robot_state_machine_node
-# DESTINATION lib/${PROJECT_NAME})
+add_executable(robot_state_machine_node
+  src/ros_nodes/robot_state_machine_node.cpp
+)
+ament_target_dependencies(robot_state_machine_node
+  rclcpp
+  Eigen3
+  std_msgs
+  ghost_msgs
+  visualization_msgs
+  ghost_estimation
+  ghost_common
+)
+target_link_libraries(robot_state_machine_node
+  ghost_estimation::amrl_shared_lib
+  ghost_common::angle_util
+  ghost_common::v5_robot_config
+  yaml-cpp
+)
+target_include_directories(robot_state_machine_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+robot_state_machine_node
+DESTINATION lib/${PROJECT_NAME})
 
 #################
 #### Install ####

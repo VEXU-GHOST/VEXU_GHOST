@@ -53,14 +53,23 @@
             </geometry>
             <surface>
               <friction>
+              <ode>
+                <mu>1</mu>
+                <mu2>1</mu2>
+                <fdir1>0 0 0</fdir1>
+                <slip1>0</slip1>
+                <slip2>0</slip2>
+              </ode>
+              <torsional>
+                <coefficient>1</coefficient>
+                <patch_radius>0</patch_radius>
+                <surface_radius>0</surface_radius>
+                <use_patch_radius>1</use_patch_radius>
                 <ode>
-                  <mu>100</mu>
-                  <mu2>100</mu2>
+                  <slip>0</slip>
                 </ode>
-                <torsional>
-                  <ode/>
-                </torsional>
-              </friction>
+              </torsional>
+            </friction>
               <contact>
                 <ode>
                   <kp>1000000</kp>

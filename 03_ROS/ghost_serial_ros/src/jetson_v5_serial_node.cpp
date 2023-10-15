@@ -266,33 +266,33 @@ void JetsonV5SerialNode::publishV5SensorUpdate(unsigned char buffer[]){
 	}
 
 	// Joystick Channels
-	memcpy(&(state_update_msg.joystick_left_x), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_left_y), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_right_x), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_right_y), buffer + 4 * (buffer_index++), 4);
+	memcpy(&(state_update_msg.joystick_msg.joystick_left_x), buffer + 4 * (buffer_index++), 4);
+	memcpy(&(state_update_msg.joystick_msg.joystick_left_y), buffer + 4 * (buffer_index++), 4);
+	memcpy(&(state_update_msg.joystick_msg.joystick_right_x), buffer + 4 * (buffer_index++), 4);
+	memcpy(&(state_update_msg.joystick_msg.joystick_right_y), buffer + 4 * (buffer_index++), 4);
 
 	// Buffers to store extracted V5 Msg
 	uint16_t digital_states = 0;
 	memcpy(&digital_states, buffer + 4 * buffer_index, 2);
 
 	// Joystick Buttons
-	state_update_msg.joystick_btn_a = digital_states & 0x8000;
-	state_update_msg.joystick_btn_b = digital_states & 0x4000;
-	state_update_msg.joystick_btn_x = digital_states & 0x2000;
-	state_update_msg.joystick_btn_y = digital_states & 0x1000;
-	state_update_msg.joystick_btn_up = digital_states & 0x0800;
-	state_update_msg.joystick_btn_down = digital_states & 0x0400;
-	state_update_msg.joystick_btn_left = digital_states & 0x0200;
-	state_update_msg.joystick_btn_right = digital_states & 0x0100;
-	state_update_msg.joystick_btn_l1 = digital_states & 0x0080;
-	state_update_msg.joystick_btn_l2 = digital_states & 0x0040;
-	state_update_msg.joystick_btn_r1 = digital_states & 0x0020;
-	state_update_msg.joystick_btn_r2 = digital_states & 0x0010;
+	state_update_msg.joystick_msg.btn_a = digital_states & 0x8000;
+	state_update_msg.joystick_msg.btn_b = digital_states & 0x4000;
+	state_update_msg.joystick_msg.btn_x = digital_states & 0x2000;
+	state_update_msg.joystick_msg.btn_y = digital_states & 0x1000;
+	state_update_msg.joystick_msg.btn_up = digital_states & 0x0800;
+	state_update_msg.joystick_msg.btn_down = digital_states & 0x0400;
+	state_update_msg.joystick_msg.btn_left = digital_states & 0x0200;
+	state_update_msg.joystick_msg.btn_right = digital_states & 0x0100;
+	state_update_msg.joystick_msg.btn_l1 = digital_states & 0x0080;
+	state_update_msg.joystick_msg.btn_l2 = digital_states & 0x0040;
+	state_update_msg.joystick_msg.btn_r1 = digital_states & 0x0020;
+	state_update_msg.joystick_msg.btn_r2 = digital_states & 0x0010;
 
 	// Competition state
-	state_update_msg.is_disabled = digital_states & 0x0008;
-	state_update_msg.is_autonomous = digital_states & 0x0004;
-	state_update_msg.is_connected = digital_states & 0x0002;
+	state_update_msg.competition_state_msg.is_disabled = digital_states & 0x0008;
+	state_update_msg.competition_state_msg.is_autonomous = digital_states & 0x0004;
+	state_update_msg.competition_state_msg.is_connected = digital_states & 0x0002;
 
 	// Device Connected Vector
 	uint32_t device_connected_bit_vector = 0;

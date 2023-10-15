@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <Eigen/QR>
 #include <memory>
 #include <random>
 #include <vector>
@@ -35,9 +36,13 @@ public:
 
 protected:
 	void jointToEncoderTransform();
-	ghost_msgs::msg::V5EncoderState wrapEncoderMsg(const int col_index);
-	ghost_msgs::msg::V5SensorUpdate populateSensorMsg();
+	Eigen::VectorXd motorToJointTransform(Eigen::VectorXd motor_data);
+	Eigen::VectorXd jointToMotorTransform(Eigen::VectorXd joint_data);
+	void updateMotorController();
+	void wrapEncoderMsg();
+	void populateSensorMsg();
 	void getJointStates();
+	void applySimJointTorques();
 
 	/// Optional callback to be called at every simulation iteration.
 	void OnUpdate();

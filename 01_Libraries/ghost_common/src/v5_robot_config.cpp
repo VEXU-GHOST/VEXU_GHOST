@@ -45,10 +45,9 @@ const std::unordered_map<std::string, motor_access_helper> motor_config_map{
 ////////// Encoder Definitions //////////
 /////////////////////////////////////////
 const std::unordered_map<std::string, encoder_access_helper> encoder_config_map{
-	{"STEERING_FRONT_LEFT_ENCODER",     encoder_access_helper(9, true)},
-	{"STEERING_FRONT_RIGHT_ENCODER",    encoder_access_helper(10, true)},
-	{"STEERING_BACK_LEFT_ENCODER",      encoder_access_helper(11, true)},
-	{"STEERING_BACK_RIGHT_ENCODER",     encoder_access_helper(12, true)},
+	{"STEERING_LEFT_ENCODER",     encoder_access_helper(9, true)},
+	{"STEERING_RIGHT_ENCODER",    encoder_access_helper(10, true)},
+	{"STEERING_BACK_ENCODER",      encoder_access_helper(11, true)},
 };
 
 } // namespace ghost_v5_config
