@@ -161,8 +161,6 @@ install(
 
 # This copies the launch/urdf/config folders to ~/VEXU_GHOST/install/ghost_examples/share/ghost_examples.
 install(DIRECTORY
-  launch
-  urdf
   config
   DESTINATION share/${PROJECT_NAME})
 

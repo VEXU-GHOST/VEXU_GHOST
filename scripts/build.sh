@@ -15,7 +15,7 @@ cd ~/VEXU_GHOST
 echo "---Building Ghost ROS Packages---"
 
 # Build ignores simulator packages on embedded devices
-if [ "$arch" == 'x86_64' ];
+if [ "$arch" == 'x86_64'  ] | [ "$1" == '-x' ];
 then 
     colcon build --packages-skip --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 fi
