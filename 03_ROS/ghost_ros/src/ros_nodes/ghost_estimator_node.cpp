@@ -199,8 +199,6 @@ void GhostEstimatorNode::LoadROSParams(){
 
 void GhostEstimatorNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 
-    std::cout << "entering LaserCallback" << std::endl;
-
 	if(!laser_msg_received_){
 		laser_msg_received_ = true;
 	}
@@ -224,16 +222,12 @@ void GhostEstimatorNode::LaserCallback(const sensor_msgs::msg::LaserScan::Shared
 
 void GhostEstimatorNode::EncoderCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
 
-    std::cout << "entering EncoderCallback" << std::endl;
-
 	try{
 		// Calculate ICR Estimate from encoder angles
 		CalculateHSpaceICR(msg);
-
 		// With ICR Estimate, accumulate encoder ticks off drivetrain to estimate robot motion
 		CalculateOdometry(msg);
 		particle_filter_.Predict(odom_loc_, odom_angle_);
-
 		// Publish newest robot state
 		PublishGhostRobotState(msg);
 
@@ -415,8 +409,6 @@ void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::Sha
 
 void GhostEstimatorNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
 
-    std::cout << "entering IntialPoseCallback" << std::endl;
-    
 	try{
 		// Set new initial pose
 		const Vector2f init_loc(msg->pose.pose.position.x, msg->pose.pose.position.y);
