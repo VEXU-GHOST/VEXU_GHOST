@@ -198,6 +198,9 @@ void GhostEstimatorNode::LoadROSParams(){
 }
 
 void GhostEstimatorNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
+
+    std::cout << "entering LaserCallback" << std::endl;
+
 	if(!laser_msg_received_){
 		laser_msg_received_ = true;
 	}
@@ -220,6 +223,9 @@ void GhostEstimatorNode::LaserCallback(const sensor_msgs::msg::LaserScan::Shared
 }
 
 void GhostEstimatorNode::EncoderCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
+
+    std::cout << "entering EncoderCallback" << std::endl;
+
 	try{
 		// Calculate ICR Estimate from encoder angles
 		CalculateHSpaceICR(msg);
@@ -259,12 +265,12 @@ void GhostEstimatorNode::CalculateOdometry(const ghost_msgs::msg::V5SensorUpdate
 
 	Eigen::VectorXf vel_vectors(6);
 	vel_vectors <<
-	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_LEFT_ENCODER").port].position_degrees) * M_PI / 180.0) * left_wheel_speed,
-	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_LEFT_ENCODER").port].position_degrees) * M_PI / 180.0) * left_wheel_speed,
-	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_RIGHT_ENCODER").port].position_degrees) * M_PI / 180.0) * right_wheel_speed,
-	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_RIGHT_ENCODER").port].position_degrees) * M_PI / 180.0) * right_wheel_speed,
-	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_BACK_ENCODER").port].position_degrees) * M_PI / 180.0) * rear_wheel_speed,
-	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_BACK_ENCODER").port].position_degrees) * M_PI / 180.0) * rear_wheel_speed;
+	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_LEFT_ENCODER").port].angle_degrees) * M_PI / 180.0) * left_wheel_speed,
+	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_LEFT_ENCODER").port].angle_degrees) * M_PI / 180.0) * left_wheel_speed,
+	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_RIGHT_ENCODER").port].angle_degrees) * M_PI / 180.0) * right_wheel_speed,
+	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_RIGHT_ENCODER").port].angle_degrees) * M_PI / 180.0) * right_wheel_speed,
+	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_BACK_ENCODER").port].angle_degrees) * M_PI / 180.0) * rear_wheel_speed,
+	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_BACK_ENCODER").port].angle_degrees) * M_PI / 180.0) * rear_wheel_speed;
 
 	Eigen::Vector3f base_twist = A_pinv_ * vel_vectors;
 
@@ -310,9 +316,9 @@ void GhostEstimatorNode::PublishGhostRobotState(const ghost_msgs::msg::V5SensorU
 	robot_state_msg.theta_accel = 0.0;
 
 	///// Steering States /////
-	robot_state_msg.left_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_LEFT_ENCODER").port].position_degrees);
-	robot_state_msg.right_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_RIGHT_ENCODER").port].position_degrees);
-	robot_state_msg.back_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_BACK_ENCODER").port].position_degrees);
+	robot_state_msg.left_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_LEFT_ENCODER").port].angle_degrees);
+	robot_state_msg.right_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_RIGHT_ENCODER").port].angle_degrees);
+	robot_state_msg.back_steering_angle = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_BACK_ENCODER").port].angle_degrees);
 
 	robot_state_msg.left_steering_vel = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_LEFT_ENCODER").port].velocity_rpm);
 	robot_state_msg.right_steering_vel = ghost_common::WrapAngle360(sensor_update_msg->encoders[ghost_v5_config::encoder_config_map.at("STEERING_RIGHT_ENCODER").port].velocity_rpm);
@@ -336,14 +342,14 @@ void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::Sha
 
 	// Calculate Wheel Axis Unit Direction Vectors
 	Eigen::Vector2f left_encoder_dir(
-		sin(ghost_common::WrapAngle360(left_encoder.position_degrees) * M_PI / 180.0),
-		-cos(ghost_common::WrapAngle360(left_encoder.position_degrees) * M_PI / 180.0));
+		sin(ghost_common::WrapAngle360(left_encoder.angle_degrees) * M_PI / 180.0),
+		-cos(ghost_common::WrapAngle360(left_encoder.angle_degrees) * M_PI / 180.0));
 	Eigen::Vector2f right_encoder_dir(
-		sin(ghost_common::WrapAngle360(right_encoder.position_degrees) * M_PI / 180.0),
-		-cos(ghost_common::WrapAngle360(right_encoder.position_degrees) * M_PI / 180.0));
+		sin(ghost_common::WrapAngle360(right_encoder.angle_degrees) * M_PI / 180.0),
+		-cos(ghost_common::WrapAngle360(right_encoder.angle_degrees) * M_PI / 180.0));
 	Eigen::Vector2f back_encoder_dir(
-		sin(ghost_common::WrapAngle360(back_encoder.position_degrees) * M_PI / 180.0),
-		-cos(ghost_common::WrapAngle360(back_encoder.position_degrees) * M_PI / 180.0));
+		sin(ghost_common::WrapAngle360(back_encoder.angle_degrees) * M_PI / 180.0),
+		-cos(ghost_common::WrapAngle360(back_encoder.angle_degrees) * M_PI / 180.0));
 
 	// Calculate Wheel Axis Vectors
 	geometry::Line2f left_encoder_vector(left_wheel_link_, left_encoder_dir + left_wheel_link_);
@@ -408,6 +414,9 @@ void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::Sha
 }
 
 void GhostEstimatorNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
+
+    std::cout << "entering IntialPoseCallback" << std::endl;
+    
 	try{
 		// Set new initial pose
 		const Vector2f init_loc(msg->pose.pose.position.x, msg->pose.pose.position.y);
@@ -625,11 +634,11 @@ void GhostEstimatorNode::PublishJointStateMsg(const ghost_msgs::msg::V5SensorUpd
 	joint_state_msg.name.push_back("steering_back");
 	joint_state_msg.name.push_back("driveshaft_back");
 
-	joint_state_msg.position.push_back(ghost_common::WrapAngle360(left_encoder.position_degrees) * M_PI / 180.0);
+	joint_state_msg.position.push_back(ghost_common::WrapAngle360(left_encoder.angle_degrees) * M_PI / 180.0);
 	joint_state_msg.position.push_back(0.0);
-	joint_state_msg.position.push_back(ghost_common::WrapAngle360(right_encoder.position_degrees) * M_PI / 180.0);
+	joint_state_msg.position.push_back(ghost_common::WrapAngle360(right_encoder.angle_degrees) * M_PI / 180.0);
 	joint_state_msg.position.push_back(0.0);
-	joint_state_msg.position.push_back(ghost_common::WrapAngle360(back_encoder.position_degrees) * M_PI / 180.0);
+	joint_state_msg.position.push_back(ghost_common::WrapAngle360(back_encoder.angle_degrees) * M_PI / 180.0);
 	joint_state_msg.position.push_back(0.0);
 
 	joint_state_pub_->publish(joint_state_msg);
