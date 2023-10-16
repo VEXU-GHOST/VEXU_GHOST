@@ -94,15 +94,15 @@ ament_export_libraries(gazebo_motor_plugin)
 # ament_export_libraries(gazebo_joint_pid_plugin)
 
 # Gazebo V5 Robot Plugin
-add_library(v5_robot_plugin SHARED src/v5_robot_plugin.cpp)
-ament_target_dependencies(v5_robot_plugin
-  ${DEPENDENCIES}
-)
-target_include_directories(v5_robot_plugin
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-ament_export_libraries(v5_robot_plugin)
+# add_library(v5_robot_plugin SHARED src/v5_robot_plugin.cpp)
+# ament_target_dependencies(v5_robot_plugin
+#   ${DEPENDENCIES}
+# )
+# target_include_directories(v5_robot_plugin
+#   PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>)
+# ament_export_libraries(v5_robot_plugin)
 
 add_executable(ground_truth_pose_publisher
   src/ground_truth_pose_publisher.cpp

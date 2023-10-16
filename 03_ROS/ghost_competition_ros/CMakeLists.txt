@@ -33,23 +33,23 @@ set(CMAKE_BUILD_TYPE "RELEASE")
 ### Libraries ###
 #################
 # V5 Robot Base
-add_library(v5_robot_base SHARED src/v5_robot_base.cpp)
-ament_target_dependencies(v5_robot_base
-${DEPENDENCIES}
-)
-target_include_directories(v5_robot_base
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(v5_robot_base HAS_LIBRARY_TARGET)
-install(
-  TARGETS v5_robot_base
-  EXPORT v5_robot_base
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
+# add_library(v5_robot_base SHARED src/v5_robot_base.cpp)
+# ament_target_dependencies(v5_robot_base
+# ${DEPENDENCIES}
+# )
+# target_include_directories(v5_robot_base
+#   PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
+# ament_export_targets(v5_robot_base HAS_LIBRARY_TARGET)
+# install(
+#   TARGETS v5_robot_base
+#   EXPORT v5_robot_base
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#   RUNTIME DESTINATION bin
+#   INCLUDES DESTINATION include
+# )
 
 ###################
 ### Executables ###
