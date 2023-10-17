@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -57,6 +58,24 @@ struct MotorConfigStruct {
 	float motor__free_current{0.14};        // Don't Change
 	float motor__stall_current{4.25};       // Don't Change
 	float motor__max_voltage{12};           // Don't Change
+
+	bool operator==(const MotorConfigStruct& rhs) const {
+		return (motor__encoder_units == rhs.motor__encoder_units) &&
+		       (motor__gear_ratio == rhs.motor__gear_ratio) &&
+		       (motor__brake_mode == rhs.motor__brake_mode) &&
+		       std::fabs(ctl__pos_gain - rhs.ctl__pos_gain) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(ctl__vel_gain - rhs.ctl__vel_gain) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(ctl__ff_vel_gain - rhs.ctl__ff_vel_gain) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(ctl__ff_torque_gain - rhs.ctl__ff_torque_gain) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(filter__cutoff_frequency - rhs.filter__cutoff_frequency) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(filter__damping_ratio - rhs.filter__damping_ratio) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(filter__timestep - rhs.filter__timestep) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(motor__nominal_free_speed - rhs.motor__nominal_free_speed) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(motor__stall_torque - rhs.motor__stall_torque) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(motor__free_current - rhs.motor__free_current) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(motor__stall_current - rhs.motor__stall_current) < std::numeric_limits<float>::epsilon() &&
+		       std::fabs(motor__max_voltage - rhs.motor__max_voltage) < std::numeric_limits<float>::epsilon();
+	}
 };
 
 // Helper classes for accessing motor/encoders from their config maps
@@ -67,21 +86,27 @@ struct motor_access_helper {
 		config = config_init;
 	}
 
+	bool operator==(const motor_access_helper& rhs) const {
+		return (port == rhs.port) && (reversed == rhs.reversed) && (config == rhs.config);
+	}
+
 	int port;
 	bool reversed;
 	MotorConfigStruct config;
 };
-
 struct encoder_access_helper {
 	encoder_access_helper(int port_init, bool reversed_init){
 		port = port_init;
 		reversed = reversed_init;
 	}
 
+	bool operator==(const encoder_access_helper& rhs) const {
+		return (port == rhs.port) && (reversed == rhs.reversed);
+	}
+
 	int port;
 	bool reversed;
 };
-
 extern const std::unordered_map<std::string, motor_access_helper> motor_config_map;
 extern const std::unordered_map<std::string, encoder_access_helper> encoder_config_map;
 

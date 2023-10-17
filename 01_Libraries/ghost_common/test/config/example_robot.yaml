@@ -1,0 +1,43 @@
+
+# actuator_jacobian:
+
+# sensor_jacobian:
+
+# joint_names:
+
+# motor_names:
+
+# sensor_names:
+
+hardware_configuration:
+    motors:
+        left_drive_motor:
+            reversed: false
+            port: 1
+            config: drive_motor
+        right_drive_motor:
+            reversed: true
+            port: 2
+            config: drive_motor
+    motor_configurations:
+        drive_motor_config:
+            filter:
+                cutoff_frequency: 100.0
+                damping_ratio: 0.707
+                timestep: 0.01
+            controller:
+                pos_gain: 7.5
+                vel_gain: 0.0
+                ff_vel_gain: 0.0
+                ff_torque_gain: 0.0
+            model:
+                gear_ratio: GEARSET_600
+                brake_mode: COAST
+                encoder_units: DEGREES
+
+                nominal_speed: 120.0
+                stall_torque: 3.6
+                free_current: 0.14
+                stall_current: 4.25
+                max_voltage: 12.0   
+

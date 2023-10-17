@@ -8,9 +8,17 @@ endif()
 ######################
 #### Dependencies ####
 ######################
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_gtest REQUIRED)
+# Set Package Dependencies
+set(DEPENDENCIES
+  ament_cmake
+  ament_cmake_gtest
+  yaml-cpp
+  )
+
+foreach(pkg ${DEPENDENCIES})
+  find_package(${pkg} REQUIRED)
+endforeach()
+ament_export_dependencies(${DEPENDENCIES})
 
 # Set Include Directories
 set(INCLUDE
@@ -61,6 +69,26 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_library(load_robot_config_utils SHARED
+  src/util/load_robot_config.cpp
+)
+target_include_directories(load_robot_config_utils
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(load_robot_config_utils
+  ${DEPENDENCIES}
+)
+ament_export_targets(load_robot_config_utils HAS_LIBRARY_TARGET)
+install(
+  TARGETS load_robot_config_utils
+  EXPORT load_robot_config_utils
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 #################
 #### Install ####
 #################
@@ -79,7 +107,15 @@ target_link_libraries(test_angle_util
 )
 
 ament_add_gtest(test_parsing_util test/test_parsing_util.cpp)
-target_link_libraries(test_angle_util
+target_link_libraries(test_parsing_util
+  gtest
+)
+
+ament_add_gtest(test_load_config_yaml test/test_load_config_yaml.cpp)
+ament_target_dependencies(test_load_config_yaml ${DEPENDENCIES})
+target_link_libraries(test_load_config_yaml
+  load_robot_config_utils
+  yaml-cpp
   gtest
 )
 
