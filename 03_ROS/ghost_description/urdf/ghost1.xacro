@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot name="ghost1" xmlns:xacro="http://ros.org/wiki/xacro">
-
+    <origin xyz="1 1 0" rpy="0 0 0"/><!--${pi}-->
     <xacro:include filename="$(find ghost_description)/urdf/swerve_macros.xacro"/>
 
     <xacro:property name="dist_to_wheel" value="0.2286"/> <!-- 9" center to wheel modules-->
@@ -114,11 +114,14 @@
     <xacro:steering_macro id="left"></xacro:steering_macro>
     <xacro:steering_macro id="right"></xacro:steering_macro>
     <xacro:steering_macro id="back"></xacro:steering_macro>
+    <xacro:steering_macro id="top_test"></xacro:steering_macro>
+
 
     <!-- Wheel Modules -->
     <xacro:wheel_macro id="left" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
     <xacro:wheel_macro id="right" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
     <xacro:wheel_macro id="back" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="top_test" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
 
     <!-- Joints -->
     <joint name="steering_joint_left" type="continuous">
@@ -141,6 +144,14 @@
         <parent link="base_link"/>
         <child link="steering_link_back"/>
         <origin xyz="-0.209 0.0 0.0812" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="steering_top_test" type="continuous">
+        <parent link="base_link"/>
+        <child link="steering_link_top_test"/>
+        <origin xyz="0 0 0.0812" rpy="${180*d2r} 0 0"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
@@ -169,6 +180,13 @@
         <axis xyz="0 0 1"/>
     </joint>
 
+    <joint name="wheel_top_test" type="continuous">
+        <parent link="steering_link_top_test"/>
+        <child link="wheel_link_top_test"/>
+        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 0"/>
+    </joint>
     <!-- Sensors -->
     <link name="lidar_link">
         <inertial>
