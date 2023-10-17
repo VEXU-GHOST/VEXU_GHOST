@@ -18,20 +18,20 @@
                 steering_joint_left
                 steering_joint_right
                 steering_joint_back
-                steering_top_test
                 wheel_joint_left
                 wheel_joint_right
                 wheel_joint_back
+                steering_top_test
                 wheel_top_test
             </joint_names>
             <!-- Motor names must be formatted in this manner in order to index actuator jacobian -->
             <motor_names>
                 DRIVE_LEFT_FRONT_LEFT_MOTOR
                 DRIVE_LEFT_FRONT_RIGHT_MOTOR
-                DRIVE_LEFT_BACK_LEFT_MOTOR
-                DRIVE_LEFT_BACK_RIGHT_MOTOR
                 DRIVE_RIGHT_FRONT_LEFT_MOTOR
                 DRIVE_RIGHT_FRONT_RIGHT_MOTOR
+                DRIVE_LEFT_BACK_LEFT_MOTOR
+                DRIVE_LEFT_BACK_RIGHT_MOTOR
                 DRIVE_RIGHT_BACK_LEFT_MOTOR
                 DRIVE_RIGHT_BACK_RIGHT_MOTOR
             </motor_names>
@@ -68,15 +68,18 @@
             <!-- This matrix describes the relationship between motor velocities and joint velocities -->
             <!-- Width = # Motors, Height = # Joints -->
             <actuator_jacobian>
-              0    0    0    0    0    0    0    0
-              0    0    0    0    0    0    0    0 
-              0    0    0    0    0    0    0    0
-            1.0    0    0    0    0    0    0    0
-              0    0    0    0    0    0    0    0
-              0    0    0    0    0    0    0    0
-              0    0    0    0    0    0    0    0
-              0    0    0    0    0    0    0    0
+                0.144     0.144       0           0           0           0           0           0
+                0         0           0.144       0.144       0           0           0           0
+                0         0           0           0           0.144       0.144       0           0
+                0         0           0           0           0           0           0           0
+                0         0           0           0           0           0           0           0
+                0         0           0           0           0           0           0           0
+                0         0           0           0           0           0           0           0
+                0         0           0           0           0           0           0           0
             </actuator_jacobian>
+                <!-- 0.361     -0.361      0           0           0           0           0           0 -->
+                <!-- 0         0           0.361     -0.361        0           0           0           0 -->
+                <!-- 0         0           0           0           0.361     -0.361        0           0 -->
 
             <!-- This matrix describes the relationship between the encoders and the joints -->
             <!-- This encoder matrix does not include encoders within motors. The relation ship between motor encoders and 
