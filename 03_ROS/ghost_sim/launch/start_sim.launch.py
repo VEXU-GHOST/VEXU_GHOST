@@ -35,7 +35,22 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[{'use_sim_time': False}, {"robot_description": doc}])
 
-    return [gazebo_ros, robot_state_publisher]
+    # Joystick (Only launched if joystick CLI arg is set to True)
+    joy_launch_description = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                ghost_sim_share_dir,
+                "launch",
+                "joystick.launch.py"
+            )
+        ),
+        condition=launch.conditions.IfCondition(LaunchConfiguration("use_joy")),
+        launch_arguments={
+            'channel_id': LaunchConfiguration("channel_id"),
+        }.items()
+    )
+
+    return [gazebo_ros, robot_state_publisher, joy_launch_description]
 
 
 def generate_launch_description():
@@ -83,18 +98,6 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
-    # Joystick (Only launched if joystick CLI arg is set to True)
-    joy_launch_description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                ghost_sim_share_dir,
-                "launch",
-                "joystick.launch.py"
-            )
-        ),
-        condition=launch.conditions.IfCondition(LaunchConfiguration("joystick"))
-    )
-
     # estimator_node = Node(
     #     package='ghost_ros',
     #     executable='ghost_estimator_node',
@@ -112,13 +115,13 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        DeclareLaunchArgument(name='joystick', default_value='true'),
-        DeclareLaunchArgument('sim_gui', default_value='true'),
+        DeclareLaunchArgument(name='use_joy', default_value='true'),
+        DeclareLaunchArgument(name='channel_id', default_value='1'),
+        DeclareLaunchArgument('sim_gui', default_value='false'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ground_truth_publisher,
         rviz_node,
-        # joy_launch_description,
         # estimator_node,
         state_machine_node,
         # v5_actuator_cmd_publisher,
