@@ -24,3 +24,6 @@
 	path = 09_External/ThirdParty-Mumps
 	url = git@github.com:MaxxWilson/ThirdParty-Mumps.git
 	branch = with-src
+[submodule "09_External/BehaviorTree.CPP"]
+	path = 09_External/BehaviorTree.CPP
+	url = git@github.com:BehaviorTree/BehaviorTree.CPP.git
