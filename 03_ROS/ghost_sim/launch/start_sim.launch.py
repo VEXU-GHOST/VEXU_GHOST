@@ -98,13 +98,13 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
-    # estimator_node = Node(
-    #     package='ghost_ros',
-    #     executable='ghost_estimator_node',
-    #     name='ghost_estimator_node',
-    #     output='screen',
-    #     parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
-    # )
+    estimator_node = Node(
+        package='ghost_ros',
+        executable='ghost_estimator_node',
+        name='ghost_estimator_node',
+        output='screen',
+        parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
+    )
 
     state_machine_node = Node(
         package='ghost_ros',
@@ -117,7 +117,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(name='use_joy', default_value='true'),
         DeclareLaunchArgument(name='channel_id', default_value='1'),
-        DeclareLaunchArgument('sim_gui', default_value='false'),
+        DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ground_truth_publisher,

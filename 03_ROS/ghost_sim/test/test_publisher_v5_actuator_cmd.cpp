@@ -47,7 +47,7 @@ ghost_msgs::msg::V5MotorCommand testPublisherV5ActuatorCmd::populateMotorCmd(con
 		v5_motor_cmd.desired_velocity = 0.5;
 		v5_motor_cmd.desired_torque = 0.0;
 		v5_motor_cmd.desired_voltage = 0.0;
-		v5_motor_cmd.current_limit = 5; // milliAmps
+		v5_motor_cmd.current_limit = 2500; // milliAmps
 
 		v5_motor_cmd.position_control = false;
 		v5_motor_cmd.velocity_control = true;
@@ -61,7 +61,7 @@ ghost_msgs::msg::V5MotorCommand testPublisherV5ActuatorCmd::populateMotorCmd(con
 		v5_motor_cmd.desired_velocity = 0.0;
 		v5_motor_cmd.desired_torque = 0.0;
 		v5_motor_cmd.desired_voltage = 0.0;
-		v5_motor_cmd.current_limit = 5; // milliAmps
+		v5_motor_cmd.current_limit = 2500; // milliAmps
 
 		v5_motor_cmd.position_control = false;
 		v5_motor_cmd.velocity_control = true;

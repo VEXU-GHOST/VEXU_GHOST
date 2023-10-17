@@ -148,17 +148,15 @@ RobotStateMachineNode::RobotStateMachineNode() :
 
 void RobotStateMachineNode::updateController(){
 	// Comparing msg ids ensures only one control update is performed for a given sensor update
-		// Clear actuator command msg
-		actuator_cmd_msg_ = ghost_msgs::msg::V5ActuatorCommand{};
+	// Clear actuator command msg
+	actuator_cmd_msg_ = ghost_msgs::msg::V5ActuatorCommand{};
 
+	teleop();
 
-		std::cout << "Update Controller" << std::endl;
-		teleop();
-
-		// Publish actuator command
-		actuator_cmd_msg_.header.stamp = get_clock()->now();
-		actuator_cmd_msg_.msg_id = curr_joystick_msg_id_;
-		actuator_command_pub_->publish(actuator_cmd_msg_);
+	// Publish actuator command
+	actuator_cmd_msg_.header.stamp = get_clock()->now();
+	actuator_cmd_msg_.msg_id = curr_joystick_msg_id_;
+	actuator_command_pub_->publish(actuator_cmd_msg_);
 }
 
 void RobotStateMachineNode::resetPose(){

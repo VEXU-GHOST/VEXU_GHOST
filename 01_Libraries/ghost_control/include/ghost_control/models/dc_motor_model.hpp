@@ -63,6 +63,13 @@ public:
 	void setMotorEffort(double voltage_percent);
 
 	/**
+	 * @brief Set new motor input effort in millivolts
+	 *
+	 * @param voltage_mv voltage in millivolts
+	 */
+	void setMotorEffortMillivolts(double voltage_mv);
+
+	/**
 	 * @brief Set maximum motor current
 	 *
 	 * @param max_current Amps
