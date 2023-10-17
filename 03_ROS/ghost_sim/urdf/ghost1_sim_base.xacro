@@ -71,15 +71,12 @@
                 0.144     0.144       0           0           0           0           0           0
                 0         0           0.144       0.144       0           0           0           0
                 0         0           0           0           0.144       0.144       0           0
-                0         0           0           0           0           0           0           0
-                0         0           0           0           0           0           0           0
-                0         0           0           0           0           0           0           0
+                0.361     -0.361      0           0           0           0           0           0
+                0         0           0.361     -0.361        0           0           0           0
+                0         0           0           0           0.361     -0.361        0           0
                 0         0           0           0           0           0           0           0
                 0         0           0           0           0           0           0           0
             </actuator_jacobian>
-                <!-- 0.361     -0.361      0           0           0           0           0           0 -->
-                <!-- 0         0           0.361     -0.361        0           0           0           0 -->
-                <!-- 0         0           0           0           0.361     -0.361        0           0 -->
 
             <!-- This matrix describes the relationship between the encoders and the joints -->
             <!-- This encoder matrix does not include encoders within motors. The relation ship between motor encoders and 
