@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-namespace ghost_common {
+namespace ghost_util {
 
 class SearchNodeBase {
 public:
@@ -28,4 +28,4 @@ protected:
 	std::shared_ptr<T> m_node;
 };
 
-} // namespace ghost_common
+} // namespace ghost_util

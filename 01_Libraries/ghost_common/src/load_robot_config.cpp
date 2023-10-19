@@ -28,8 +28,8 @@ MotorConfigStruct loadMotorConfigStruct(YAML::Node node){
 		loadYAMLParam(node["motor"], "max_voltage", motor_config.motor__max_voltage, true);
 
 
-		if(node["motor"]["encoder_units"]){
-			auto unit = node["motor"]["encoder_units"].as<std::string>();
+		if(node["encoder_units"]){
+			auto unit = node["encoder_units"].as<std::string>();
 			if(unit == "DEGREES"){
 				motor_config.motor__encoder_units = ghost_v5_config::ghost_encoder_unit::ENCODER_DEGREES;
 			}
@@ -44,8 +44,8 @@ MotorConfigStruct loadMotorConfigStruct(YAML::Node node){
 			}
 		}
 
-		if(node["motor"]["gear_ratio"]){
-			auto gear_ratio = node["motor"]["gear_ratio"].as<int>();
+		if(node["gear_ratio"]){
+			auto gear_ratio = node["gear_ratio"].as<int>();
 			if(gear_ratio == 100){
 				motor_config.motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_100;
 			}
@@ -60,8 +60,8 @@ MotorConfigStruct loadMotorConfigStruct(YAML::Node node){
 			}
 		}
 
-		if(node["motor"]["brake_mode"]){
-			auto brake_mode = node["motor"]["brake_mode"].as<std::string>();
+		if(node[]["brake_mode"]){
+			auto brake_mode = node["brake_mode"].as<std::string>();
 			if(brake_mode == "COAST"){
 				motor_config.motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_COAST;
 			}

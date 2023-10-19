@@ -1,7 +1,7 @@
-#include "ghost_common/util/angle_util.hpp"
+#include "ghost_util/angle_util.hpp"
 #include "gtest/gtest.h"
 
-using namespace ghost_common;
+using namespace ghost_util;
 
 class TestAngleUtil : public ::testing::Test {
 protected:

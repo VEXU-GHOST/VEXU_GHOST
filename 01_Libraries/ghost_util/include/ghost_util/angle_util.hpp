@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace ghost_common {
+namespace ghost_util {
 
 const float DEG_TO_RAD = M_PI / 180.0;
 const float RAD_TO_DEG = 180.0 / M_PI;
@@ -18,4 +18,4 @@ float FlipAnglePI(float angle);
 float SmallestAngleDistDeg(float a2, float a1);
 float SmallestAngleDistRad(float a2, float a1);
 
-}
+} // namespace ghost_util

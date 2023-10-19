@@ -5,11 +5,11 @@
 
 using ghost_v5_config::encoder_access_helper;
 using ghost_v5_config::motor_access_helper;
-using ghost_v5_config::MotorConfigStruct;
+using ghost_v5_config::V5MotorInterfaceConfig;
 
 namespace ghost_common {
 
-MotorConfigStruct loadMotorConfigStruct(YAML::Node node);
+V5MotorInterfaceConfig loadMotorConfigStruct(YAML::Node node);
 
 std::unordered_map<std::string, motor_access_helper> loadMotorConfigurations(YAML::Node node);
 

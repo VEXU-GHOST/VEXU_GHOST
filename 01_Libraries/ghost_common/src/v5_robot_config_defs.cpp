@@ -17,18 +17,13 @@ constexpr int encoder_sensor_packet_byte_size = 2 * 4;
 // 4x int32 Joystick Channels, 2x bytes of btns/competition modes, 4x Bytes of port status, 4x Bytes of Msg Sequence ID
 constexpr int sensor_update_extra_byte_count = 4 * 4 + 2 + 4 + 4;
 
-int get_actuator_command_msg_len(){
-	int msg_len_ = actuator_update_packet_byte_size * motor_config_map.size();
-	msg_len_ += actuator_cmd_extra_byte_count;
-	return msg_len_;
-}
+// Define full msg lengths for bi-directional serial
 
-int get_sensor_update_msg_len(){
-	int msg_len_ =
-		motor_config_map.size() * motor_sensor_packet_byte_size +
-		encoder_config_map.size() * encoder_sensor_packet_byte_size;
-	msg_len_ += ghost_v5_config::sensor_update_extra_byte_count;
-	return msg_len_;
-}
+// TODO(maxxwilson): Loading motor and encoder sizes needs to come from the generated compile-time config
+
+// const int actuator_command_msg_len = actuator_update_packet_byte_size * motor_config_map.size() + actuator_cmd_extra_byte_count;
+// const int sensor_update_msg_len = motor_config_map.size() * motor_sensor_packet_byte_size +
+//                                   encoder_config_map.size() * encoder_sensor_packet_byte_size +
+//                                   ghost_v5_config::sensor_update_extra_byte_count;
 
 }

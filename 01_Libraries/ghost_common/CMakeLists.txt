@@ -31,23 +31,23 @@ ament_export_include_directories(${INCLUDE})
 ###############################
 ##### Robot Configuration #####
 ###############################
-add_library(v5_robot_config SHARED
-  src/v5_robot_config_defs.cpp
-  src/v5_robot_config.cpp
-)
-target_include_directories(v5_robot_config
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(v5_robot_config HAS_LIBRARY_TARGET)
-install(
-  TARGETS v5_robot_config
-  EXPORT v5_robot_config
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-  )
+# add_library(v5_robot_config SHARED
+#   src/v5_robot_config_defs.cpp
+#   src/v5_robot_config.cpp
+# )
+# target_include_directories(v5_robot_config
+#   PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
+# ament_export_targets(v5_robot_config HAS_LIBRARY_TARGET)
+# install(
+#   TARGETS v5_robot_config
+#   EXPORT v5_robot_config
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#   RUNTIME DESTINATION bin
+#   INCLUDES DESTINATION include
+#   )
 
 ######################
 ##### Ghost Util #####
@@ -100,18 +100,7 @@ install(
 #################
 #### Testing ####
 #################
-ament_add_gtest(test_angle_util test/test_angle_util.cpp)
-target_link_libraries(test_angle_util
-  angle_util
-  gtest
-)
-
-ament_add_gtest(test_parsing_util test/test_parsing_util.cpp)
-target_link_libraries(test_parsing_util
-  gtest
-)
-
-ament_add_gtest(test_load_config_yaml test/test_load_config_yaml.cpp)
+ament_add_gtest(test_load_config_yaml test/interfaces/test_load_config_yaml.cpp)
 ament_target_dependencies(test_load_config_yaml ${DEPENDENCIES})
 target_link_libraries(test_load_config_yaml
   load_robot_config_utils

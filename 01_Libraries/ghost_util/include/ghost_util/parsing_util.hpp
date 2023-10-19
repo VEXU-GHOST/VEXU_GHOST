@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-namespace ghost_common {
+namespace ghost_util {
 
 template <typename T>
 T convertFromString(std::string val){
@@ -40,4 +40,4 @@ std::vector<T> getVectorFromString(const std::string& input, const char delim){
 	return data;
 }
 
-} // namespace ghost_common
+} // namespace ghost_util

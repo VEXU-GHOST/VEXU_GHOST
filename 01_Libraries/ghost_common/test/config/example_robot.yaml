@@ -21,6 +21,9 @@ hardware_configuration:
             config: drive_motor
     motor_configurations:
         drive_motor_config:
+            gear_ratio: 600
+            brake_mode: COAST
+            encoder_units: DEGREES
             filter:
                 cutoff_frequency: 100.0
                 damping_ratio: 0.707
@@ -31,9 +34,7 @@ hardware_configuration:
                 ff_vel_gain: 1.0
                 ff_torque_gain: 0.0
             motor:
-                gear_ratio: 600
-                brake_mode: COAST
-                encoder_units: DEGREES
+
 
                 nominal_free_speed: 120.0
                 stall_torque: 3.6

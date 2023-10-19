@@ -13,18 +13,18 @@ namespace ghost_v5_config {
 //////////////////////////////////////////
 ////////// Motor Configurations //////////
 //////////////////////////////////////////
-const MotorConfigStruct drive_motor_config = {
-	.motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
-	.motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_COAST,
-	.ctl__vel_gain = 17.5,  // RPM -> mV
-	.ctl__ff_vel_gain = 1.1f,
+const V5MotorInterfaceConfig drive_motor_config = {
+	.gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
+	.brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_COAST,
+	// .ctl__vel_gain = 17.5,  // RPM -> mV
+	// .ctl__ff_vel_gain = 1.1f,
 };
 
-const MotorConfigStruct intake_motor_config = {
-	.motor__gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
-	.motor__brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_BRAKE,
-	.ctl__vel_gain = 25.0,
-	.ctl__ff_vel_gain = 1.2f,
+const V5MotorInterfaceConfig intake_motor_config = {
+	.gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
+	.brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_BRAKE,
+	// .ctl__vel_gain = 25.0,
+	// .ctl__ff_vel_gain = 1.2f,
 };
 
 ///////////////////////////////////////

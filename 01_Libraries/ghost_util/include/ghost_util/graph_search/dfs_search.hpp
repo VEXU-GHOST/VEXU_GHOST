@@ -3,7 +3,7 @@
 #include <memory>
 #include "search_node.hpp"
 
-namespace ghost_common {
+namespace ghost_util {
 
 class DFSSearch {
 public:
@@ -33,4 +33,4 @@ private:
 	int m_depth;
 };
 
-} // namespace ghost_common
+} // namespace ghost_util
