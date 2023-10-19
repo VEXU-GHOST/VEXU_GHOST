@@ -1,7 +1,7 @@
 #include <cmath>
-#include "ghost_common/v5_robot_config_defs.hpp"
+#include "ghost_interfaces/v5_robot_config_defs.hpp"
 
-namespace ghost_v5_config {
+namespace ghost_interfaces {
 
 // Each motor has position, velocity, torque, voltage, and current
 // Each motor has four control active flags, add one byte per motor for flags

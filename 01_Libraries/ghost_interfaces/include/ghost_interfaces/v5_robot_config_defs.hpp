@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-namespace ghost_v5_config {
+namespace ghost_interfaces {
 
 enum ghost_gearset {
 	GEARSET_100,
@@ -48,13 +48,12 @@ struct LowPassFilterConfig {
 	// If you aren't familiar with LPFs, default tuning is probably fine for any VEX system.
 	// If you want it smoother, lower the cutoff frequency.
 	// "Ideal setting" is 10 / ((time for system to go from zero to full speed given max voltage) * 0.632)
-	float filter__cutoff_frequency{100.0};
-	float filter__damping_ratio{0.707}; // Don't Change
-	float filter__timestep{0.01};       // Don't Change
+	float cutoff_frequency{100.0};
+	float damping_ratio{0.707}; // Don't Change
+	float timestep{0.01};       // Don't Change
 
 	bool operator==(const LowPassFilterConfig& rhs) const {
-		return (filter__cutoff_frequency == rhs.filter__cutoff_frequency) &&
-		       (filter__damping_ratio == rhs.filter__damping_ratio) && (filter__timestep == rhs.filter__timestep);
+		return (cutoff_frequency == rhs.cutoff_frequency) && (damping_ratio == rhs.damping_ratio) && (timestep == rhs.timestep);
 	}
 };
 
@@ -78,7 +77,7 @@ public:
 struct V5MotorInterfaceConfig {
 	// These three map 1:1 to their PROS counterpart on the V5 Side.
 	ghost_encoder_unit encoder_units{ghost_encoder_unit::ENCODER_DEGREES};
-	ghost_gearset gear_ratio{ghost_gearset::GEARSET_600};
+	ghost_gearset gearset{ghost_gearset::GEARSET_600};
 	ghost_brake_mode brake_mode{ghost_brake_mode::BRAKE_MODE_COAST};
 
 	// Configures control and estimation modules for a given motor
@@ -87,7 +86,7 @@ struct V5MotorInterfaceConfig {
 	MotorModelConfig model;
 
 	bool operator==(const V5MotorInterfaceConfig& rhs) const {
-		return (encoder_units == rhs.encoder_units) && (gear_ratio == rhs.gear_ratio) && (brake_mode == rhs.brake_mode) &&
+		return (encoder_units == rhs.encoder_units) && (gearset == rhs.gearset) && (brake_mode == rhs.brake_mode) &&
 		       (controller == rhs.controller) && (filter == rhs.filter) && (model == rhs.model);
 	}
 };
@@ -131,4 +130,4 @@ extern const int motor_sensor_packet_byte_size;
 extern const int encoder_sensor_packet_byte_size;
 extern const int sensor_update_extra_byte_count;
 
-}
+} // namespace ghost_interfaces

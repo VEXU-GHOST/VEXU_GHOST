@@ -6,23 +6,23 @@
  *
  */
 
-#include "ghost_common/v5_robot_config_defs.hpp"
+#include "ghost_interfaces/v5_robot_config_defs.hpp"
 
-namespace ghost_v5_config {
+namespace ghost_interfaces {
 
 //////////////////////////////////////////
 ////////// Motor Configurations //////////
 //////////////////////////////////////////
 const V5MotorInterfaceConfig drive_motor_config = {
-	.gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
-	.brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_COAST,
+	.gear_ratio = ghost_gearset::GEARSET_600,
+	.brake_mode = ghost_brake_mode::BRAKE_MODE_COAST,
 	// .ctl__vel_gain = 17.5,  // RPM -> mV
 	// .ctl__ff_vel_gain = 1.1f,
 };
 
 const V5MotorInterfaceConfig intake_motor_config = {
-	.gear_ratio = ghost_v5_config::ghost_gearset::GEARSET_600,
-	.brake_mode = ghost_v5_config::ghost_brake_mode::BRAKE_MODE_BRAKE,
+	.gear_ratio = ghost_gearset::GEARSET_600,
+	.brake_mode = ghost_brake_mode::BRAKE_MODE_BRAKE,
 	// .ctl__vel_gain = 25.0,
 	// .ctl__ff_vel_gain = 1.2f,
 };
@@ -51,4 +51,4 @@ const std::unordered_map<std::string, encoder_access_helper> encoder_config_map{
 	{"STEERING_BACK_RIGHT_ENCODER",     encoder_access_helper(12, true)},
 };
 
-} // namespace ghost_v5_config
+} // namespace ghost_interfaces
