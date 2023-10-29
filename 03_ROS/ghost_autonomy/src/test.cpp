@@ -1,5 +1,3 @@
-// Example of custom SyncActionNode (synchronous action)
-// without ports.
 #include "behaviortree_cpp/behavior_tree.h"
 
 class ApproachObject : public BT::SyncActionNode
