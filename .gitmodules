@@ -27,3 +27,6 @@
 [submodule "09_External/BehaviorTree.CPP"]
 	path = 09_External/BehaviorTree.CPP
 	url = git@github.com:BehaviorTree/BehaviorTree.CPP.git
+[submodule "09_External/BehaviorTree.ROS2"]
+	path = 09_External/BehaviorTree.ROS2
+	url = https://github.com/JakeWendling/BehaviorTree.ROS2
