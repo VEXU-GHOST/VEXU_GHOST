@@ -2,5 +2,7 @@
 <root BTCPP_format="4" project_name="Project">
     <include path="bt.xml"/>
     <!-- Description of Node Models (used by Groot) -->
-    <TreeNodesModel/>
+    <TreeNodesModel>
+        <Action ID="SaySomething" editable="true"/>
+    </TreeNodesModel>
 </root>

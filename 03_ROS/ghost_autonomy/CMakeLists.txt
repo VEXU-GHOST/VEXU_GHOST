@@ -12,8 +12,9 @@ set(DEPENDENCIES
   behaviortree_cpp
   behaviortree_ros2
   pluginlib
+  std_msgs
   ghost_msgs
-  )
+)
 
 foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
@@ -22,7 +23,7 @@ ament_export_dependencies(${DEPENDENCIES})
 
 # Set Include Directories
 set(INCLUDE
-include
+  include
 )
 
 include_directories(${INCLUDE})
@@ -36,6 +37,20 @@ ament_target_dependencies(run_tree
 install(TARGETS
   run_tree
   DESTINATION lib/${PROJECT_NAME})
+
+# install(FILES
+#   bt.xml
+#   DESTINATION share/${PROJECT_NAME})
+
+# add_executable(run_tree src/run_tree.cpp)
+#   ament_target_dependencies(run_tree
+#     ${DEPENDENCIES}
+#   )
+
+install(DIRECTORY
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
