@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<robot name="test_diff_drive" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:include filename="$(find ghost_description)/urdf/swerve_macros.xacro"/>
+    <xacro:include filename="$(find ghost_sim)/urdf/macros/actuator_macros.xacro"/>
+
+    <xacro:property name="dist_to_wheel" value="0.2286"/> <!-- 9" center to wheel modules-->
+    <xacro:property name="r_wheel" value="0.034925"/> <!-- 1.375" wheel radius-->
+    <xacro:property name="width_wheel" value="0.0254"/> <!-- 1" wheel width-->
+    <xacro:property name="com_radius" value="0.02"/>
+    <xacro:property name="d2r" value="${3.14159/180}"/>
+
+    <link name="base_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.0254 0.29 0.0254"/>
+            </geometry>
+                <material name="silver">
+                    <color rgba="0.9 0.9 0.9 1.0"/>
+                </material>
+        </visual>
+
+        <!--Inertia estimated for solid cylinder of radius 9" and height 3" with mass 7kg-->
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="10"/>
+            <inertia
+                ixx="0.094839" ixy="0.0" ixz="0.0"
+                iyy="0.094839" iyz="0.0"
+                izz="0.182903"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
+    </link>
+
+    <link name="base_footprint">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.00001"/>
+            <inertia
+                ixx="0.00001" ixy="0.0" ixz="0.0"
+                iyy="0.00001" iyz="0.0"
+                izz="0.00001"/>
+        </inertial>
+    </link>
+
+    <joint name="base_footprint_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="base_footprint"/>
+        <origin xyz="0 0 -0.052585" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="left_bar">
+        <visual>
+            <origin xyz="0 -0.125 0" rpy="0 0 ${90*d2r}"/>
+            <geometry>
+                <box size="0.0254 0.29 0.0254"/>
+            </geometry>
+                <material name="silver">
+                    <color rgba="0.9 0.9 0.9 1.0"/>
+                </material>
+        </visual>
+    </link>
+
+    <joint name="left_bar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="left_bar"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="right_bar">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 ${90*d2r}"/>
+            <geometry>
+                <box size="0.0254 0.29 0.0254"/>
+            </geometry>
+                <material name="silver">
+                    <color rgba="0.9 0.9 0.9 1.0"/>
+                </material>
+        </visual>
+    </link>
+
+    <joint name="right_bar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="right_bar"/>
+        <origin xyz="0 0.125 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <!-- Steering Modules -->
+    <xacro:steering_macro id="left_front"></xacro:steering_macro>
+    <xacro:steering_macro id="left_back"></xacro:steering_macro>
+    <xacro:steering_macro id="right_front"></xacro:steering_macro>
+    <xacro:steering_macro id="right_back"></xacro:steering_macro>
+
+    <!-- Joints -->
+    <joint name="steering_joint_left_front" type="continuous">
+        <parent link="base_link"/>
+        <child link="steering_link_left_front"/>
+        <origin xyz="0.145 -0.145 0.0812" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="steering_joint_left_back" type="continuous">
+        <parent link="base_link"/>
+        <child link="steering_link_left_back"/>
+        <origin xyz="-0.145 -0.145 0.0812" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="steering_joint_right_front" type="continuous">
+        <parent link="base_link"/>
+        <child link="steering_link_right_front"/>
+        <origin xyz="0.145 0.145 0.0812" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="steering_joint_right_back" type="continuous">
+        <parent link="base_link"/>
+        <child link="steering_link_right_back"/>
+        <origin xyz="-0.145 0.145 0.0812" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <xacro:wheel_macro id="left_front" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="left_back" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="right_front" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="right_back" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+
+    <joint name="wheel_joint_left_front" type="continuous">
+        <parent link="steering_link_left_front"/>
+        <child link="wheel_link_left_front"/>
+        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="wheel_joint_left_back" type="continuous">
+        <parent link="steering_link_left_back"/>
+        <child link="wheel_link_left_back"/>
+        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="wheel_joint_right_front" type="continuous">
+        <parent link="steering_link_right_front"/>
+        <child link="wheel_link_right_front"/>
+        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="wheel_joint_right_back" type="continuous">
+        <parent link="steering_link_right_back"/>
+        <child link="wheel_link_right_back"/>
+        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+ 
+</robot>

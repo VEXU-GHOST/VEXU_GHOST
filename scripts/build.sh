@@ -31,6 +31,7 @@ source install/setup.bash
 GHOST_DESCRIPTION_SHARE_DIR="$PWD/install/ghost_description/share/ghost_description"
 URDF_PATH="${GHOST_DESCRIPTION_SHARE_DIR}/urdf/ghost1.urdf"
 
+
 if [ ! -d $GHOST_DESCRIPTION_SHARE_DIR ];
 then
     touch $URDF_PATH
@@ -54,6 +55,37 @@ then
         echo
         echo "---Generating Ghost Simulation URDFs---"
         xacro 03_ROS/ghost_sim/urdf/ghost1_sim_base.xacro > $URDF_SIM_PATH
+        echo "URDF written to" $URDF_SIM_PATH
+    fi
+fi
+
+# Processes URDF for test robot tank drive
+if [ "$arch" == 'x86_64' ];
+then 
+    GHOST_SIM_SHARE_DIR="$PWD/install/ghost_sim/share/ghost_sim"
+    URDF_SIM_PATH="${GHOST_SIM_SHARE_DIR}/urdf/test_tank_description.urdf"
+
+    if [ ! -d $GHOST_SIM_SHARE_DIR ];
+    then
+        touch $URDF_SIM_PATH
+    else
+        echo
+        echo "---Generating Ghost Simulation Test URDFs---"
+        xacro 03_ROS/ghost_sim/urdf/test_tank_description.xacro > $URDF_SIM_PATH
+        echo "URDF written to" $URDF_SIM_PATH
+    fi
+fi
+
+if [ "$arch" == 'x86_64' ];
+then 
+    GHOST_SIM_SHARE_DIR="$PWD/install/ghost_sim/share/ghost_sim"
+    URDF_SIM_PATH="${GHOST_SIM_SHARE_DIR}/urdf/test_tank_init.urdf"
+
+    if [ ! -d $GHOST_SIM_SHARE_DIR ];
+    then
+        touch $URDF_SIM_PATH
+    else
+        xacro 03_ROS/ghost_sim/urdf/test_tank_init.xacro > $URDF_SIM_PATH
         echo "URDF written to" $URDF_SIM_PATH
     fi
 fi
