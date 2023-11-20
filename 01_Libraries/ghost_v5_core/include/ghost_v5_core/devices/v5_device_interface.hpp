@@ -18,13 +18,20 @@ enum device_type_e {
 	Radio           // Unsupported
 };
 
-class DeviceConfigBase {
-public:
-	int port;
-	std::string device_name;
-	device_type_e device_type;
+class DeviceConfig {
 };
 
-using DeviceConfigMap = std::unordered_map < std::string, std::shared_ptr<DeviceConfigBase> >;
+class DeviceData {
+};
+
+class DeviceInterface {
+public:
+	int port;
+	device_type_e type;
+	std::shared_ptr<DeviceConfig> config;
+	std::shared_ptr<DeviceData> data;
+};
+
+using DeviceConfigMap = std::unordered_map < std::string, std::shared_ptr<DeviceInterface> >;
 
 } // namespace ghost_v5_core

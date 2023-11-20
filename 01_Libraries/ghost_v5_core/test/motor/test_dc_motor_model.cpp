@@ -164,8 +164,3 @@ TEST_F(TestMotorModel, testMotorZeroPower){
 //     EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getMotorCurrent());
 //     EXPECT_FLOAT_EQ(2*stall_torque, motor_393_ptr->getTorqueOutput());
 // }
-
-int main(int argc, char **argv) {
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
-}

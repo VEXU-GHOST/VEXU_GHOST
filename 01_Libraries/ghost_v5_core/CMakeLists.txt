@@ -106,28 +106,28 @@ install(
 ### Device Interfaces ###
 #########################
 
-##########################
-##### Util Libraries #####
-##########################
-# add_library(load_robot_config_utils SHARED
-#   src/util/load_robot_config.cpp
-# )
-# target_include_directories(load_robot_config_utils
-#   PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# ament_target_dependencies(load_robot_config_utils
-#   ${DEPENDENCIES}
-# )
-# ament_export_targets(load_robot_config_utils HAS_LIBRARY_TARGET)
-# install(
-#   TARGETS load_robot_config_utils
-#   EXPORT load_robot_config_utils
-#   LIBRARY DESTINATION lib
-#   ARCHIVE DESTINATION lib
-#   RUNTIME DESTINATION bin
-#   INCLUDES DESTINATION include
-# )
+#############################
+##### Utility Libraries #####
+#############################
+add_library(load_config_yaml SHARED
+  src/utils/load_config_yaml.cpp
+)
+target_include_directories(load_config_yaml
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(load_config_yaml
+  ${DEPENDENCIES}
+)
+ament_export_targets(load_config_yaml HAS_LIBRARY_TARGET)
+install(
+  TARGETS load_config_yaml
+  EXPORT load_config_yaml
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 #################
 #### Install ####
@@ -148,16 +148,16 @@ install(
 
 ament_add_gtest(test_dc_motor_model test/motor/test_dc_motor_model.cpp)
 target_link_libraries(test_dc_motor_model
+  gtest_main
   dc_motor_model
-  gtest
 )
 
-# ament_add_gtest(test_load_config_yaml test/test_load_config_yaml.cpp)
-# ament_target_dependencies(test_load_config_yaml ${DEPENDENCIES})
-# target_link_libraries(test_load_config_yaml
-#   load_robot_config_utils
-#   yaml-cpp
-#   gtest
-# )
+ament_add_gtest(test_load_config_yaml test/utils/test_load_config_yaml.cpp)
+ament_target_dependencies(test_load_config_yaml ${DEPENDENCIES})
+target_link_libraries(test_load_config_yaml
+  gtest_main
+  load_config_yaml
+  yaml-cpp
+)
 
 ament_package()

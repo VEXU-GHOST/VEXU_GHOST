@@ -1,45 +1,48 @@
 #include <iostream>
-#include <ghost_v5_core/util/load_robot_config.hpp>
+#include <ghost_v5_core/utils/load_config_yaml.hpp>
 
 namespace ghost_v5_core {
 
 namespace util {
 
 template <typename T>
-void loadYAMLParam(YAML::Node node, std::string param_name, T& var, bool verbose){
+bool loadYAMLParam(YAML::Node node, std::string param_name, T& var, bool verbose){
 	if(node[param_name]){
 		var = node[param_name].as<T>();
 		if(verbose){
 			std::cout << "Loaded <" << param_name << "> with value " << var << std::endl;
 		}
+		return true;
 	}
 	else if(verbose){
 		std::cout << "Failed to Load <" + param_name << ">" << std::endl;
 	}
+	return false;
 }
 
-MotorModelConfig loadMotorModelConfigFromYAML(YAML::Node node){
-	MotorModelConfig config;
-	loadYAMLParam(node, "nominal_free_speed", config.nominal_free_speed, true);
-	loadYAMLParam(node, "stall_torque", config.stall_torque, true);
-	loadYAMLParam(node, "free_current", config.free_current, true);
-	loadYAMLParam(node, "stall_current", config.stall_current, true);
-	loadYAMLParam(node, "max_voltage", config.max_voltage, true);
+DCMotorModel::Config loadMotorModelConfigFromYAML(YAML::Node node, bool verbose){
+	DCMotorModel::Config config;
+	loadYAMLParam(node, "free_speed", config.free_speed, verbose);
+	loadYAMLParam(node, "stall_torque", config.stall_torque, verbose);
+	loadYAMLParam(node, "free_current", config.free_current, verbose);
+	loadYAMLParam(node, "stall_current", config.stall_current, verbose);
+	loadYAMLParam(node, "nominal_voltage", config.nominal_voltage, verbose);
+	loadYAMLParam(node, "gear_ratio", config.gear_ratio, verbose);
 	return config;
 }
-MotorControllerConfig loadMotorControllerConfigFromYAML(YAML::Node node){
-	MotorControllerConfig config;
-	loadYAMLParam(node, "pos_gain", config.pos_gain, true);
-	loadYAMLParam(node, "vel_gain", config.vel_gain, true);
-	loadYAMLParam(node, "ff_vel_gain", config.ff_vel_gain, true);
-	loadYAMLParam(node, "ff_torque_gain", config.ff_torque_gain, true);
+MotorController::Config loadMotorControllerConfigFromYAML(YAML::Node node, bool verbose){
+	MotorController::Config config;
+	loadYAMLParam(node, "pos_gain", config.pos_gain, verbose);
+	loadYAMLParam(node, "vel_gain", config.vel_gain, verbose);
+	loadYAMLParam(node, "ff_vel_gain", config.ff_vel_gain, verbose);
+	loadYAMLParam(node, "ff_torque_gain", config.ff_torque_gain, verbose);
 	return config;
 }
-LowPassFilterConfig loadLowPassFilterConfigFromYAML(YAML::Node node){
-	LowPassFilterConfig config;
-	loadYAMLParam(node, "cutoff_frequency", config.cutoff_frequency, true);
-	loadYAMLParam(node, "damping_ratio", config.damping_ratio, true);
-	loadYAMLParam(node, "timestep", config.timestep, true);
+SecondOrderLowPassFilter::Config loadLowPassFilterConfigFromYAML(YAML::Node node, bool verbose){
+	SecondOrderLowPassFilter::Config config;
+	loadYAMLParam(node, "cutoff_frequency", config.cutoff_frequency, verbose);
+	loadYAMLParam(node, "damping_ratio", config.damping_ratio, verbose);
+	loadYAMLParam(node, "timestep", config.timestep, verbose);
 	return config;
 }
 
@@ -112,44 +115,38 @@ bool loadBrakeModeFromYAML(YAML::Node node, ghost_brake_mode& brake_mode_value){
 }
 
 
-V5MotorInterfaceConfig loadV5MotorInterfaceConfigFromYAML(YAML::Node node){
-	V5MotorInterfaceConfig config{};
-
+std::shared_ptr<V5MotorConfig> loadV5MotorConfigFromYAML(YAML::Node node){
+	std::shared_ptr<V5MotorConfig> config = std::make_shared<V5MotorConfig>();
 	if(node["model"]){
-		config.model = loadMotorModelConfigFromYAML(node["model"]);
+		config->model_config = loadMotorModelConfigFromYAML(node["model"]);
 	}
 
 	if(node["controller"]){
-		config.controller = loadMotorControllerConfigFromYAML(node["controller"]);
+		config->controller_config = loadMotorControllerConfigFromYAML(node["controller"]);
 	}
 
 	if(node["filter"]){
-		config.filter = loadLowPassFilterConfigFromYAML(node["filter"]);
+		config->filter_config = loadLowPassFilterConfigFromYAML(node["filter"]);
 	}
 
-	if(!loadEncoderUnitFromYAML(node, config.encoder_units)){
+	if(!loadEncoderUnitFromYAML(node, config->encoder_units)){
 		throw std::runtime_error("[loadV5MotorInterfaceConfig] Error: Failed to load Encoder Units.");
 	}
 
-	if(!loadGearsetFromYAML(node, config.gearset)){
+	if(!loadGearsetFromYAML(node, config->gearset)){
 		throw std::runtime_error("[loadV5MotorInterfaceConfig] Error: Failed to load Gearset.");
 	}
 
-	if(!loadBrakeModeFromYAML(node, config.brake_mode)){
+	if(!loadBrakeModeFromYAML(node, config->brake_mode)){
 		throw std::runtime_error("[loadV5MotorInterfaceConfig] Error: Failed to load Brake Mode.");
 	}
 
 	return config;
 }
 
-std::unordered_map<std::string, motor_access_helper> loadMotorConfigurations(YAML::Node node){
-	std::unordered_map<std::string, motor_access_helper> motor_config_map;
-	return motor_config_map;
-}
-
-std::unordered_map<std::string, encoder_access_helper> loadEncoderConfigurations(YAML::Node node){
-	std::unordered_map<std::string, encoder_access_helper> encoder_config_map;
-	return encoder_config_map;
+DeviceConfigMap loadDeviceConfigMapFromYAML(YAML::Node node){
+	DeviceConfigMap device_config_map;
+	return device_config_map;
 }
 
 } // namespace util
