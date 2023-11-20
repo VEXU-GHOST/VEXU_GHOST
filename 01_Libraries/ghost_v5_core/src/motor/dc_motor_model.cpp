@@ -8,9 +8,9 @@
  * Modified By: Maxx Wilson
  */
 
-#include "ghost_control/models/dc_motor_model.hpp"
+#include "ghost_v5_core/motor/dc_motor_model.hpp"
 
-namespace ghost_control {
+namespace ghost_v5_core {
 
 DCMotorModel::DCMotorModel(double free_speed,
                            double stall_torque,
@@ -30,6 +30,16 @@ DCMotorModel::DCMotorModel(double free_speed,
 	curr_current_ = 0;
 	curr_torque_ = 0;
 }
+
+DCMotorModel::DCMotorModel(Config config) :
+	DCMotorModel(config.free_speed,
+	             config.stall_torque,
+	             config.free_current,
+	             config.stall_current,
+	             config.nominal_voltage,
+	             config.gear_ratio){
+}
+
 
 void DCMotorModel::setMotorEffort(double voltage_percent){
 	// Clip inputs to bounds
@@ -64,4 +74,4 @@ void DCMotorModel::updateMotor(){
 	// curr_current_ = (curr_current_ > max_current_) ? max_current_ : curr_current_;
 }
 
-} // namespace ghost_control
+} // namespace ghost_v5_core

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <ghost_interfaces/v5_robot_config_defs.hpp>
 #include "yaml-cpp/yaml.h"
 
-namespace ghost_interfaces {
+namespace ghost_v5_core {
 
 namespace util {
 
@@ -22,4 +21,4 @@ std::unordered_map<std::string, encoder_access_helper> loadEncoderConfigurations
 
 } // namespace util
 
-} // namespace ghost_interfaces
+} // namespace ghost_v5_core

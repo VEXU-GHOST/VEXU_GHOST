@@ -1,9 +1,8 @@
-#ifndef GHOST_ESTIMATION__FIRST_ORDER_LOW_PASS_FILTER_HPP
-#define GHOST_ESTIMATION__FIRST_ORDER_LOW_PASS_FILTER_HPP
+#pragma once
 
 #include <math.h>
 
-namespace ghost_estimation {
+namespace ghost_v5_core {
 
 /**
  * @brief Implements Discrete First Order Low Pass Filter
@@ -66,6 +65,4 @@ private:
 	float y1_;
 };
 
-} // namespace ghost_estimation
-
-#endif // GHOST_ESTIMATION__SECOND_ORDER_LOW_PASS_FILTER_HPP
+} // namespace ghost_v5_core

@@ -1,8 +1,8 @@
 #include <math.h>
 
-#include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
+#include "ghost_v5_core/filters/second_order_low_pass_filter.hpp"
 
-namespace ghost_estimation {
+namespace ghost_v5_core {
 
 SecondOrderLowPassFilter::SecondOrderLowPassFilter(float w0, float zeta, float ts) :
 	w0_(w0),
@@ -34,6 +34,10 @@ SecondOrderLowPassFilter::SecondOrderLowPassFilter(float w0, float zeta, float t
 	y2_coeff_ = -d0_coeff_;
 }
 
+SecondOrderLowPassFilter::SecondOrderLowPassFilter(Config config) :
+	SecondOrderLowPassFilter(config.cutoff_frequency, config.damping_ratio, config.timestep) {
+}
+
 float SecondOrderLowPassFilter::updateFilter(float u0){
 	// Update filter states
 	u2_ = u1_;
@@ -51,4 +55,4 @@ float SecondOrderLowPassFilter::getCurrentState(){
 	return y0_;
 }
 
-} // namespace ghost_estimation
+} // namespace ghost_v5_core

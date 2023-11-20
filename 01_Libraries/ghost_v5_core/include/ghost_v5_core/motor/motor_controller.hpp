@@ -1,15 +1,33 @@
 #pragma once
 
-#include <map>
-#include "ghost_common/v5_robot_config_defs.hpp"
-#include "ghost_control/models/dc_motor_model.hpp"
-#include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
+#include "ghost_v5_core/filters/second_order_low_pass_filter.hpp"
+#include "ghost_v5_core/motor/dc_motor_model.hpp"
 
-namespace ghost_control {
+namespace ghost_v5_core {
 
 class MotorController {
 public:
-	MotorController(const ghost_v5_config::MotorConfigStruct &config);
+	struct Config {
+		// FF-PD Controller
+		// pos_gain and vel_gain are standard PD control
+		// ff_vel_gain takes a velocity setpoint and scales it to estimate the required open-loop voltage
+		// Ideally this is 1.0. If your motor runs faster than nominal, increase this a bit.
+		// If you zero the other gains, you can tune this by sending a velocity and tweaking until true velocity matches.
+		// ff_torque_gain does the same as above but for torque. Controlling torque with voltage is not very accurate, fyi.
+		float pos_gain{0.0};
+		float vel_gain{10.0};
+		float ff_vel_gain{1.0};
+		float ff_torque_gain{0.0};
+
+		bool operator==(const Config& rhs) const {
+			return (pos_gain == rhs.pos_gain) && (vel_gain == rhs.vel_gain) &&
+			       (ff_vel_gain == rhs.ff_vel_gain) && (ff_torque_gain == rhs.ff_torque_gain);
+		}
+	};
+
+	MotorController(const MotorController::Config &controller_config,
+	                const SecondOrderLowPassFilter::Config &filter_config,
+	                const DCMotorModel::Config &model_config);
 
 	/**
 	 * @brief Updates motor with new position and velocity readings, returning a voltage command based on the
@@ -94,27 +112,27 @@ public:
 	}
 
 protected:
-	// Motor Config
-	ghost_v5_config::MotorConfigStruct config_;
+	// Configuration
+	MotorController::Config controller_config_;
+	SecondOrderLowPassFilter::Config filter_config_;
+	DCMotorModel::Config model_config_;
 
-	// Velocity Filtering
-	ghost_estimation::SecondOrderLowPassFilter velocity_filter_;
-	float curr_vel_rpm_;
+	// Velocity Filter
+	ghost_v5_core::SecondOrderLowPassFilter velocity_filter_;
+
+	// Motor Model
+	ghost_v5_core::DCMotorModel motor_model_;
 
 	// Motor Controller
-	int32_t des_pos_encoder_;
-	float des_vel_rpm_;
-	float des_torque_nm_;
-	float des_voltage_norm_;
-	float cmd_voltage_mv_;
-	float ctl_rpm_deadband_;
-	bool position_active_;
-	bool velocity_active_;
-	bool voltage_active_;
-	bool torque_active_;
-
-	// Motor Models
-	ghost_control::DCMotorModel motor_model_;
+	int32_t des_pos_encoder_ = 0;
+	float des_vel_rpm_ = 0.0;
+	float des_torque_nm_ = 0.0;
+	float des_voltage_norm_ = 0.0;
+	float cmd_voltage_mv_ = 0.0;
+	bool position_active_ = false;
+	bool velocity_active_ = false;
+	bool voltage_active_ = false;
+	bool torque_active_ = false;
 };
 
-} // namespace ghost_control
+} // namespace ghost_v5_core

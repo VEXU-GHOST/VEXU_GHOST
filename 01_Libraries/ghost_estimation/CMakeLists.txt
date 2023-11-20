@@ -39,52 +39,15 @@ ament_export_dependencies(${DEPENDENCIES})
 include_directories(include)
 ament_export_include_directories(include)
   
-######################
-### AMRL Share Lib ###
-######################
+#######################
+### AMRL Shared Lib ###
+#######################
 include_directories(src/shared)
 add_subdirectory(src/shared)
 ament_export_targets(amrl_shared_lib HAS_LIBRARY_TARGET)
 install(
   TARGETS amrl_shared_lib
   EXPORT amrl_shared_lib
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-###############
-### Filters ###
-###############
-add_library(first_order_low_pass_filter SHARED
-src/filters/first_order_low_pass_filter.cpp
-)
-target_include_directories(first_order_low_pass_filter
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(first_order_low_pass_filter HAS_LIBRARY_TARGET)
-install(
-  TARGETS first_order_low_pass_filter
-  EXPORT first_order_low_pass_filter
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-add_library(second_order_low_pass_filter SHARED
-src/filters/second_order_low_pass_filter.cpp
-)
-target_include_directories(second_order_low_pass_filter
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(second_order_low_pass_filter HAS_LIBRARY_TARGET)
-install(
-  TARGETS second_order_low_pass_filter
-  EXPORT second_order_low_pass_filter
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin

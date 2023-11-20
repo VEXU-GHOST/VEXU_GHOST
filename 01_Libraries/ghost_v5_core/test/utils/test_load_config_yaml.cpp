@@ -1,17 +1,16 @@
-#include <ghost_interfaces/util/load_robot_config.hpp>
-#include <ghost_interfaces/v5_robot_config_defs.hpp>
+#include <ghost_v5_core/util/load_robot_config.hpp>
 #include "gtest/gtest.h"
 #include "yaml-cpp/yaml.h"
 
-using namespace ghost_interfaces::util;
-using namespace ghost_interfaces;
+using namespace ghost_v5_core::util;
+using namespace ghost_v5_core;
 
 
 class TestLoadConfigYAML : public ::testing::Test {
 protected:
 
 	void SetUp() override {
-		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_interfaces/test/config/example_robot.yaml";
+		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/example_robot.yaml";
 		config_yaml_ = YAML::LoadFile(config_path);
 		expected_motor_config_.controller.pos_gain = 7.5;
 
@@ -30,24 +29,24 @@ protected:
 };
 
 TEST_F(TestLoadConfigYAML, testLoadMotorModelConfig){
-	MotorModelConfig default_config{};
-	MotorModelConfig loaded_config;
-	EXPECT_NO_THROW(loaded_config = loadMotorModelConfigFromYAML(config_yaml_["hardware_configuration"]["motor_configurations"]["default_config"]["model"]));
-	EXPECT_EQ(default_config, loaded_config);
+	MotorModelConfig default_model_config{};
+	MotorModelConfig loaded_model_config;
+	EXPECT_NO_THROW(loaded_model_config = loadMotorModelConfigFromYAML(config_yaml_["hardware_configuration"]["motor_configurations"]["default_config"]["model"]));
+	EXPECT_EQ(default_model_config, loaded_model_config);
 }
 
 TEST_F(TestLoadConfigYAML, testLoadMotorControllerConfig){
-	MotorControllerConfig default_config{};
-	MotorControllerConfig loaded_config;
-	EXPECT_NO_THROW(loaded_config = loadMotorControllerConfigFromYAML(config_yaml_["hardware_configuration"]["motor_configurations"]["default_config"]["controller"]));
-	EXPECT_EQ(default_config, loaded_config);
+	MotorControllerConfig default_controller_config{};
+	MotorControllerConfig loaded_controller_config;
+	EXPECT_NO_THROW(loaded_controller_config = loadMotorControllerConfigFromYAML(config_yaml_["hardware_configuration"]["motor_configurations"]["default_config"]["controller"]));
+	EXPECT_EQ(default_controller_config, loaded_controller_config);
 }
 
 TEST_F(TestLoadConfigYAML, testLoadLowPassFilterConfig){
-	LowPassFilterConfig default_config{};
-	LowPassFilterConfig loaded_config;
-	EXPECT_NO_THROW(loaded_config = loadLowPassFilterConfigFromYAML(config_yaml_["hardware_configuration"]["motor_configurations"]["default_config"]["filter"]));
-	EXPECT_EQ(default_config, loaded_config);
+	LowPassFilterConfig default_filter_config{};
+	LowPassFilterConfig loaded_filter_config;
+	EXPECT_NO_THROW(loaded_filter_config = loadLowPassFilterConfigFromYAML(config_yaml_["hardware_configuration"]["motor_configurations"]["default_config"]["filter"]));
+	EXPECT_EQ(default_filter_config, loaded_filter_config);
 }
 
 TEST_F(TestLoadConfigYAML, testLoadV5MotorInterfaceConfigFromYAML){

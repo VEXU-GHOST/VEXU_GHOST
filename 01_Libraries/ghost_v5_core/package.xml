@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ghost_interfaces</name>
+  <name>ghost_v5_core</name>
   <version>0.0.0</version>
-  <description>Interface classes for working with V5 Hardware</description>
+  <description>Core libraries for working with VEX V5</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
   <license>GPLv3.0</license>
 

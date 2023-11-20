@@ -1,15 +1,25 @@
-#ifndef GHOST_ESTIMATION__SECOND_ORDER_LOW_PASS_FILTER_HPP
-#define GHOST_ESTIMATION__SECOND_ORDER_LOW_PASS_FILTER_HPP
+#pragma once
 
 #include <math.h>
 
-namespace ghost_estimation {
+namespace ghost_v5_core {
 
 /**
  * @brief Implements Discrete Second Order Low Pass Filter
  */
 class SecondOrderLowPassFilter {
 public:
+	// Configuration Struct
+	struct Config {
+		float cutoff_frequency{100.0};
+		float damping_ratio{0.707}; // Don't Change
+		float timestep{0.01};       // Don't Change
+
+		bool operator==(const Config& rhs) const {
+			return (cutoff_frequency == rhs.cutoff_frequency) && (damping_ratio == rhs.damping_ratio) && (timestep == rhs.timestep);
+		}
+	};
+
 	/**
 	 * @brief Constructor for Second Order Low Pass Filter Object
 	 *
@@ -25,6 +35,13 @@ public:
 	 * @param ts    timestep in seconds
 	 */
 	SecondOrderLowPassFilter(float w0, float zeta, float ts);
+
+	/**
+	 * @brief Constructor from config struct instead of individual parameters
+	 * @param config
+	 */
+	SecondOrderLowPassFilter(Config config);
+
 	/**
 	 * @brief Called at regular interval specific by timestep with new raw data input.
 	 * Performs Discrete time second order low pass filter.
@@ -94,6 +111,4 @@ private:
 	float u2_;
 };
 
-} // namespace ghost_estimation
-
-#endif // GHOST_ESTIMATION__SECOND_ORDER_LOW_PASS_FILTER_HPP
+} // namespace ghost_v5_core

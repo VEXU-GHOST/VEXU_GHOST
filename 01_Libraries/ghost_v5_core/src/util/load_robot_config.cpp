@@ -1,7 +1,7 @@
 #include <iostream>
-#include <ghost_interfaces/util/load_robot_config.hpp>
+#include <ghost_v5_core/util/load_robot_config.hpp>
 
-namespace ghost_interfaces {
+namespace ghost_v5_core {
 
 namespace util {
 
@@ -154,4 +154,4 @@ std::unordered_map<std::string, encoder_access_helper> loadEncoderConfigurations
 
 } // namespace util
 
-} // namespace ghost_interfaces
+} // namespace ghost_v5_core
