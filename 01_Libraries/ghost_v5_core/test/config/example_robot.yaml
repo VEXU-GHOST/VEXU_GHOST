@@ -12,13 +12,15 @@
 port_configuration:
     devices:
         left_drive_motor:
-            reversed: false
             port: 1
-            config: drive_motor
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
         right_drive_motor:
-            reversed: true
             port: 2
-            config: drive_motor
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
 
     device_configurations:
         test_motor_config:

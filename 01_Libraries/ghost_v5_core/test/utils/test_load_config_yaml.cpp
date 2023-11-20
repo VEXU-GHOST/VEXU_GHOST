@@ -23,24 +23,28 @@ protected:
 		// Expected Motor Interfaces
 		left_drive_motor_interface_ptr_ = std::make_shared<V5MotorInterface>();
 		left_drive_motor_interface_ptr_->port = 1;
-		left_drive_motor_interface_ptr_->type = device_type_e::Motor;
+		left_drive_motor_interface_ptr_->name = "left_drive_motor";
+		left_drive_motor_interface_ptr_->type = device_type_e::MOTOR;
 		left_drive_motor_interface_ptr_->config = drive_motor_config_;
+		left_drive_motor_interface_ptr_->data = std::make_shared<DeviceData>();
 
 		right_drive_motor_interface_ptr_ = std::make_shared<V5MotorInterface>();
 		right_drive_motor_interface_ptr_->port = 2;
+		right_drive_motor_interface_ptr_->name = "right_drive_motor";
 		right_drive_motor_interface_ptr_->reversed = true;
-		right_drive_motor_interface_ptr_->type = device_type_e::Motor;
+		right_drive_motor_interface_ptr_->type = device_type_e::MOTOR;
 		right_drive_motor_interface_ptr_->config = drive_motor_config_;
+		right_drive_motor_interface_ptr_->data = std::make_shared<DeviceData>();
 
-		device_config_map_.emplace("left_drive", left_drive_motor_interface_ptr_);
-		device_config_map_.emplace("right_drive", right_drive_motor_interface_ptr_);
+		expected_device_interface_map_.emplace("left_drive_motor", left_drive_motor_interface_ptr_);
+		expected_device_interface_map_.emplace("right_drive_motor", right_drive_motor_interface_ptr_);
 	}
 
 	std::shared_ptr<V5MotorConfig> default_motor_config_;
 	std::shared_ptr<V5MotorConfig> drive_motor_config_;
 	std::shared_ptr<V5MotorInterface> left_drive_motor_interface_ptr_;
 	std::shared_ptr<V5MotorInterface> right_drive_motor_interface_ptr_;
-	DeviceConfigMap device_config_map_;
+	DeviceInterfaceMap expected_device_interface_map_;
 
 	YAML::Node config_yaml_;
 };
@@ -93,6 +97,23 @@ TEST_F(TestLoadConfigYAML, testLoadDriveMotorConfigFromYAML){
 	auto motor_config = loadV5MotorConfigFromYAML(
 		config_yaml_["port_configuration"]["device_configurations"]["drive_motor_config"]);
 	EXPECT_EQ(*motor_config, *drive_motor_config_);
+}
+
+TEST_F(TestLoadConfigYAML, testLoadDeviceInterfaceMapFromYAML){
+	auto device_interface_map = loadDeviceInterfaceMapFromYAML(config_yaml_["port_configuration"]);
+
+	// Check same number of entries
+	EXPECT_EQ(expected_device_interface_map_.size(), device_interface_map.size());
+
+	for(const auto& [device_name, device_interface] : expected_device_interface_map_){
+		// Check keys match
+		EXPECT_TRUE(device_interface_map.count(device_name) == 1) <<
+		        "[testLoadDeviceInterfaceMapFromYAML] Error: Device Name " << device_name <<
+		        " does not exist in the loaded interface map.";
+
+		// Check interfaces are identical
+		EXPECT_EQ(*device_interface, *device_interface_map.at(device_name));
+	}
 }
 
 // TEST_F(TestLoadConfigYAML, testEnforcesUniquePorts){

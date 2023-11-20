@@ -19,7 +19,7 @@ bool loadBrakeModeFromYAML(YAML::Node node, ghost_brake_mode& brake_mode_value);
 
 std::shared_ptr<V5MotorConfig> loadV5MotorConfigFromYAML(YAML::Node node);
 
-DeviceConfigMap loadDeviceConfigMapFromYAML(YAML::Node node);
+DeviceInterfaceMap loadDeviceInterfaceMapFromYAML(YAML::Node node, bool verbose = false);
 
 } // namespace util
 

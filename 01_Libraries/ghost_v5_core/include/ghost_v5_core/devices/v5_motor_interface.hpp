@@ -49,6 +49,13 @@ public:
 
 class V5MotorInterface : public DeviceInterface {
 public:
+	V5MotorInterface() :
+		V5MotorInterface(std::make_shared<V5MotorConfig>()){
+	}
+
+	V5MotorInterface(std::shared_ptr<V5MotorConfig> motor_config){
+		config = motor_config;
+	}
 	bool reversed = false;
 };
 
