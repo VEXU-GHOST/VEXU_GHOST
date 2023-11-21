@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 project(ghost_v5_core)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+# Add Global CMake Config for Ghost Packages
+set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+find_package(Ghost CONFIG REQUIRED)
 
 ######################
 #### Dependencies ####
