@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ghost_v5_core/devices/v5_device_interface.hpp"
+#include "ghost_v5_core/device_base/device_config.hpp"
 #include "ghost_v5_core/filters/second_order_low_pass_filter.hpp"
 #include "ghost_v5_core/motor/dc_motor_model.hpp"
 #include "ghost_v5_core/motor/motor_controller.hpp"
@@ -27,15 +27,20 @@ enum ghost_encoder_unit {
 	ENCODER_INVALID
 };
 
-class V5MotorConfig : public DeviceConfig {
+class MotorDeviceConfig : public DeviceConfig {
 public:
 
-	bool operator==(const V5MotorConfig& rhs) const {
+	std::shared_ptr<DeviceConfig> clone() const override {
+		return std::make_shared<MotorDeviceConfig>(*this);
+	}
+
+	bool operator==(const MotorDeviceConfig& rhs) const {
 		return (encoder_units == rhs.encoder_units) && (gearset == rhs.gearset) && (brake_mode == rhs.brake_mode) &&
 		       (controller_config == rhs.controller_config) && (filter_config == rhs.filter_config) &&
 		       (model_config == rhs.model_config);
 	}
 
+	bool reversed = false;
 	MotorController::Config controller_config;
 	SecondOrderLowPassFilter::Config filter_config;
 	DCMotorModel::Config model_config;
@@ -44,19 +49,6 @@ public:
 	ghost_encoder_unit encoder_units{ghost_encoder_unit::ENCODER_COUNTS};
 	ghost_gearset gearset{ghost_gearset::GEARSET_200};
 	ghost_brake_mode brake_mode{ghost_brake_mode::BRAKE_MODE_COAST};
-};
-
-
-class V5MotorInterface : public DeviceInterface {
-public:
-	V5MotorInterface() :
-		V5MotorInterface(std::make_shared<V5MotorConfig>()){
-	}
-
-	V5MotorInterface(std::shared_ptr<V5MotorConfig> motor_config){
-		config = motor_config;
-	}
-	bool reversed = false;
 };
 
 } // namespace ghost_v5_core

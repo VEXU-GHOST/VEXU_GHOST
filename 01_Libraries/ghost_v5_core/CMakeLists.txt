@@ -12,6 +12,7 @@ find_package(Ghost CONFIG REQUIRED)
 set(DEPENDENCIES
   ament_cmake
   ament_cmake_gtest
+  ghost_util
   yaml-cpp
   )
 
@@ -102,27 +103,23 @@ install(
   INCLUDES DESTINATION include
 )
 
-#########################
-### Device Interfaces ###
-#########################
-
 #############################
 ##### Utility Libraries #####
 #############################
-add_library(load_config_yaml SHARED
-  src/utils/load_config_yaml.cpp
+add_library(load_motor_config_yaml SHARED
+  src/motor/load_motor_config_yaml.cpp
 )
-target_include_directories(load_config_yaml
+target_include_directories(load_motor_config_yaml
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(load_config_yaml
+ament_target_dependencies(load_motor_config_yaml
   ${DEPENDENCIES}
 )
-ament_export_targets(load_config_yaml HAS_LIBRARY_TARGET)
+ament_export_targets(load_motor_config_yaml HAS_LIBRARY_TARGET)
 install(
-  TARGETS load_config_yaml
-  EXPORT load_config_yaml
+  TARGETS load_motor_config_yaml
+  EXPORT load_motor_config_yaml
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -140,11 +137,11 @@ install(
 #################
 #### Testing ####
 #################
-# ament_add_gtest(test_interface_constructors test/test_interface_constructors.cpp)
-# ament_target_dependencies(test_interface_constructors ${DEPENDENCIES})
-# target_link_libraries(test_interface_constructors
-#   gtest_main
-# )
+ament_add_gtest(test_device_config_interfaces test/device_base/test_device_config_interfaces.cpp)
+ament_target_dependencies(test_device_config_interfaces ${DEPENDENCIES})
+target_link_libraries(test_device_config_interfaces
+  gtest_main
+)
 
 ament_add_gtest(test_dc_motor_model test/motor/test_dc_motor_model.cpp)
 target_link_libraries(test_dc_motor_model
@@ -152,11 +149,11 @@ target_link_libraries(test_dc_motor_model
   dc_motor_model
 )
 
-ament_add_gtest(test_load_config_yaml test/utils/test_load_config_yaml.cpp)
-ament_target_dependencies(test_load_config_yaml ${DEPENDENCIES})
-target_link_libraries(test_load_config_yaml
+ament_add_gtest(test_load_motor_config_yaml test/motor/test_load_motor_config_yaml.cpp)
+ament_target_dependencies(test_load_motor_config_yaml ${DEPENDENCIES})
+target_link_libraries(test_load_motor_config_yaml
   gtest_main
-  load_config_yaml
+  load_motor_config_yaml
   yaml-cpp
 )
 

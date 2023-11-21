@@ -21,6 +21,11 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
+        default_motor:
+            port: 0
+            type: MOTOR
+            reversed: false
+            config: default_motor_config
 
     device_configurations:
         test_motor_config:

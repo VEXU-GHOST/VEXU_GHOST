@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo ------ Building ------
-colcon build --packages-select $1
+colcon build --packages-up-to $1
 
 echo
 
