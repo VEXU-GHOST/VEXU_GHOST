@@ -1,24 +1,8 @@
-#include <iostream>
 #include <ghost_v5_core/utils/load_config_yaml.hpp>
 
 namespace ghost_v5_core {
 
 namespace util {
-
-template <typename T>
-bool loadYAMLParam(YAML::Node node, std::string param_name, T& var, bool verbose){
-	if(node[param_name]){
-		var = node[param_name].as<T>();
-		if(verbose){
-			std::cout << "Loaded <" << param_name << "> with value " << var << std::endl;
-		}
-		return true;
-	}
-	else if(verbose){
-		std::cout << "Failed to Load <" + param_name << ">" << std::endl;
-	}
-	return false;
-}
 
 DCMotorModel::Config loadMotorModelConfigFromYAML(YAML::Node node, bool verbose){
 	DCMotorModel::Config config;
@@ -115,7 +99,7 @@ bool loadBrakeModeFromYAML(YAML::Node node, ghost_brake_mode& brake_mode_value){
 }
 
 
-std::shared_ptr<V5MotorConfig> loadV5MotorConfigFromYAML(YAML::Node node){
+std::shared_ptr<V5MotorConfig> loadV5MotorConfigFromYAML(YAML::Node node, bool verbose){
 	std::shared_ptr<V5MotorConfig> config = std::make_shared<V5MotorConfig>();
 	if(node["model"]){
 		config->model_config = loadMotorModelConfigFromYAML(node["model"]);
@@ -129,16 +113,16 @@ std::shared_ptr<V5MotorConfig> loadV5MotorConfigFromYAML(YAML::Node node){
 		config->filter_config = loadLowPassFilterConfigFromYAML(node["filter"]);
 	}
 
-	if(!loadEncoderUnitFromYAML(node, config->encoder_units)){
-		throw std::runtime_error("[loadV5MotorInterfaceConfig] Error: Failed to load Encoder Units.");
+	if(!loadEncoderUnitFromYAML(node, config->encoder_units) && verbose){
+		std::cout << "[loadV5MotorInterfaceConfig] Error: Failed to load Encoder Units." << std::endl;
 	}
 
-	if(!loadGearsetFromYAML(node, config->gearset)){
-		throw std::runtime_error("[loadV5MotorInterfaceConfig] Error: Failed to load Gearset.");
+	if(!loadGearsetFromYAML(node, config->gearset) && verbose){
+		std::cout << "[loadV5MotorInterfaceConfig] Error: Failed to load Gearset." << std::endl;
 	}
 
-	if(!loadBrakeModeFromYAML(node, config->brake_mode)){
-		throw std::runtime_error("[loadV5MotorInterfaceConfig] Error: Failed to load Brake Mode.");
+	if(!loadBrakeModeFromYAML(node, config->brake_mode) && verbose){
+		std::cout << "[loadV5MotorInterfaceConfig] Error: Failed to load Brake Mode." << std::endl;
 	}
 
 	return config;
@@ -146,17 +130,18 @@ std::shared_ptr<V5MotorConfig> loadV5MotorConfigFromYAML(YAML::Node node){
 
 DeviceInterfaceMap loadDeviceInterfaceMapFromYAML(YAML::Node node, bool verbose){
 	DeviceInterfaceMap device_interface_map;
+	// Iterate through each device defined in the YAML file
 	for(auto it = node["devices"].begin(); it != node["devices"].end(); it++){
-		// Unpack Device Name and YAML Node
-		YAML::Node device_yaml_node = it->second;
+		// Unpack Device Name and associated YAML Node
 		std::string device_name = it->first.as<std::string>();
+		YAML::Node device_yaml_node = it->second;
 
 		// Load device type and device_config (if it exists)
 		std::string device_type, device_config_name;
 		loadYAMLParam(device_yaml_node, "type", device_type, verbose);
 		bool config_found = loadYAMLParam(device_yaml_node, "config", device_config_name, verbose);
 
-		// Custom initialize device based on type
+		// Custom initialization based on device type
 		switch(device_type_name_enum_map.at(device_type)){
 			case device_type_e::MOTOR:
 			{

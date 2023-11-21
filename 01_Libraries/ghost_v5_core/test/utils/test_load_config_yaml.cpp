@@ -42,6 +42,7 @@ protected:
 
 	std::shared_ptr<V5MotorConfig> default_motor_config_;
 	std::shared_ptr<V5MotorConfig> drive_motor_config_;
+
 	std::shared_ptr<V5MotorInterface> left_drive_motor_interface_ptr_;
 	std::shared_ptr<V5MotorInterface> right_drive_motor_interface_ptr_;
 	DeviceInterfaceMap expected_device_interface_map_;
@@ -50,6 +51,9 @@ protected:
 };
 
 
+/**
+ * @brief Test that a DCMotorModel::Config struct can be properly loaded from YAML
+ */
 TEST_F(TestLoadConfigYAML, testLoadMotorModelConfig){
 	DCMotorModel::Config test_model_config{};
 	test_model_config.free_speed = 1104.0;
@@ -64,6 +68,9 @@ TEST_F(TestLoadConfigYAML, testLoadMotorModelConfig){
 	EXPECT_EQ(test_model_config, loaded_model_config);
 }
 
+/**
+ * @brief Test that a MotorController::Config struct can be properly loaded from YAML
+ */
 TEST_F(TestLoadConfigYAML, testLoadMotorControllerConfig){
 	MotorController::Config test_controller_config{};
 	test_controller_config.pos_gain = 8000.0;
@@ -76,6 +83,9 @@ TEST_F(TestLoadConfigYAML, testLoadMotorControllerConfig){
 	EXPECT_EQ(test_controller_config, loaded_controller_config);
 }
 
+/**
+ * @brief Test that a SecondOrderLowPassFilter::Config struct can be properly loaded from YAML
+ */
 TEST_F(TestLoadConfigYAML, testLoadLowPassFilterConfig){
 	SecondOrderLowPassFilter::Config test_filter_config{};
 	test_filter_config.cutoff_frequency = 62.0;
@@ -87,18 +97,28 @@ TEST_F(TestLoadConfigYAML, testLoadLowPassFilterConfig){
 	EXPECT_EQ(test_filter_config, loaded_filter_config);
 }
 
-TEST_F(TestLoadConfigYAML, testLoadDefaultMotorConfigFromYAML){
-	auto motor_config = loadV5MotorConfigFromYAML(
-		config_yaml_["port_configuration"]["device_configurations"]["default_motor_config"]);
-	EXPECT_EQ(*motor_config, *default_motor_config_);
-}
-
+/**
+ * @brief Test that all fields are properly set when loading the V5MotorConfig class
+ */
 TEST_F(TestLoadConfigYAML, testLoadDriveMotorConfigFromYAML){
 	auto motor_config = loadV5MotorConfigFromYAML(
 		config_yaml_["port_configuration"]["device_configurations"]["drive_motor_config"]);
 	EXPECT_EQ(*motor_config, *drive_motor_config_);
 }
 
+/**
+ * @brief Test that missing fields will be populated with the default args for the V5MotorConfig class
+ */
+TEST_F(TestLoadConfigYAML, testLoadDefaultMotorConfigFromYAML){
+	auto config_node = config_yaml_["port_configuration"]["device_configurations"]["default_motor_config"];
+	std::shared_ptr<V5MotorConfig> config_ptr;
+	EXPECT_NO_THROW(config_ptr = loadV5MotorConfigFromYAML(config_node));
+	EXPECT_EQ(*config_ptr, *default_motor_config_);
+}
+
+/**
+ * @brief Test that we can populate a full DeviceConfigMap from YAML
+ */
 TEST_F(TestLoadConfigYAML, testLoadDeviceInterfaceMapFromYAML){
 	auto device_interface_map = loadDeviceInterfaceMapFromYAML(config_yaml_["port_configuration"]);
 
