@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ghost_v5_core/device_base/device_config.hpp"
+#include "ghost_v5_core/devices/base/device_config.hpp"
 #include "ghost_v5_core/filters/second_order_low_pass_filter.hpp"
 #include "ghost_v5_core/motor/dc_motor_model.hpp"
 #include "ghost_v5_core/motor/motor_controller.hpp"

@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
-#include <ghost_v5_core/device_base/device_types.hpp>
+#include <ghost_v5_core/devices/base/device_types.hpp>
 
 namespace ghost_v5_core {
 

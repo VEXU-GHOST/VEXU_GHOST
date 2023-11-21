@@ -107,7 +107,7 @@ install(
 ##### Utility Libraries #####
 #############################
 add_library(load_motor_config_yaml SHARED
-  src/motor/load_motor_config_yaml.cpp
+  src/devices/motor/load_motor_config_yaml.cpp
 )
 target_include_directories(load_motor_config_yaml
   PUBLIC
@@ -137,7 +137,7 @@ install(
 #################
 #### Testing ####
 #################
-ament_add_gtest(test_device_config_interfaces test/device_base/test_device_config_interfaces.cpp)
+ament_add_gtest(test_device_config_interfaces test/devices/base/test_device_config_interfaces.cpp)
 ament_target_dependencies(test_device_config_interfaces ${DEPENDENCIES})
 target_link_libraries(test_device_config_interfaces
   gtest_main
@@ -149,7 +149,7 @@ target_link_libraries(test_dc_motor_model
   dc_motor_model
 )
 
-ament_add_gtest(test_load_motor_config_yaml test/motor/test_load_motor_config_yaml.cpp)
+ament_add_gtest(test_load_motor_config_yaml test/devices/motor/test_load_motor_config_yaml.cpp)
 ament_target_dependencies(test_load_motor_config_yaml ${DEPENDENCIES})
 target_link_libraries(test_load_motor_config_yaml
   gtest_main
