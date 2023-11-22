@@ -23,8 +23,8 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
  * @brief Test that we can convert a DeviceConfigMap into source code, compile it, and then load it succesfully.
  * See https://0x00sec.org/t/c-dynamic-loading-of-shared-objects-at-runtime/1498
  *
- * This may feel wildly excessive, but it allows us to store ALL parameters in one YAML, and then use them universally across
- * both simulation and hardware, and across two different hardware devices (coprocessor and V5 Brain). This also means that ANY
+ * This may feel excessive, but it allows us to store ALL parameters in one YAML and then use them universally across both
+ * simulation and hardware and across two different hardware devices (coprocessor and V5 Brain). This also means that ANY
  * robot can have all the relevant info needed to reconstruct it in sim saved in a ROS Bag on the coprocessor.
  *
  * For adding new devices, make sure you can load a default device and a device with all params changed. If it makes it through
