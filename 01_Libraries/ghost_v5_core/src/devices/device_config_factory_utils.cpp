@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 
 namespace ghost_v5_core {
 
@@ -11,6 +12,31 @@ namespace util {
 
 DeviceConfigMap loadRobotConfigFromYAML(YAML::Node node, bool verbose){
 }
+
+const std::unordered_map<ghost_encoder_unit, std::string> MOTOR_ENCODER_UNIT_STRING_MAP{
+	{ghost_encoder_unit::ENCODER_DEGREES,   "ghost_encoder_unit::ENCODER_DEGREES"},
+	{ghost_encoder_unit::ENCODER_ROTATIONS, "ghost_encoder_unit::ENCODER_ROTATIONS"},
+	{ghost_encoder_unit::ENCODER_COUNTS,    "ghost_encoder_unit::ENCODER_COUNTS"},
+	{ghost_encoder_unit::ENCODER_INVALID,   "ghost_encoder_unit::ENCODER_INVALID"}
+};
+
+const std::unordered_map<ghost_gearset, std::string> MOTOR_GEARSET_STRING_MAP{
+	{ghost_gearset::GEARSET_100, "ghost_gearset::GEARSET_100"},
+	{ghost_gearset::GEARSET_200, "ghost_gearset::GEARSET_200"},
+	{ghost_gearset::GEARSET_600, "ghost_gearset::GEARSET_600"}
+};
+
+const std::unordered_map<ghost_brake_mode, std::string> MOTOR_BRAKE_MODE_STRING_MAP{
+	{ghost_brake_mode::BRAKE_MODE_COAST,      "ghost_brake_mode::BRAKE_MODE_COAST"},
+	{ghost_brake_mode::BRAKE_MODE_BRAKE,      "ghost_brake_mode::BRAKE_MODE_BRAKE"},
+	{ghost_brake_mode::BRAKE_MODE_HOLD,       "ghost_brake_mode::BRAKE_MODE_HOLD"},
+	{ghost_brake_mode::BRAKE_MODE_INVALID,    "ghost_brake_mode::BRAKE_MODE_INVALID"}
+};
+
+const std::unordered_map<bool, std::string> MOTOR_REVERSED_STRING_MAP{
+	{true, "true"},
+	{false, "false"}
+};
 
 void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, std::string output_filepath){
 	// Check if file already exists and overwrites
@@ -30,9 +56,7 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 	output_file << "#include \"ghost_v5_core/devices/base/device_config_map.hpp\"\n";
 	output_file << "#include \"ghost_v5_core/devices/motor/motor_device_config.hpp\"\n";
 	output_file << "\n";
-	output_file << "using ghost_v5_core::device_type_e;\n";
-	output_file << "using ghost_v5_core::DeviceConfigMap;\n";
-	output_file << "using ghost_v5_core::MotorDeviceConfig;\n";
+	output_file << "using namespace ghost_v5_core;\n";
 	output_file << "\n";
 	output_file << "// This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.\n";
 	output_file << "// It returns a raw pointer to a dynamically allocated object, so if you are poking around, please wrap in a smart pointer!\n";
@@ -40,29 +64,49 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 	output_file << "\tDeviceConfigMap* robot_config = new DeviceConfigMap;\n";
 	output_file << "\n";
 
-	std::cout << std::endl;
-	std::cout << "--------------------------------" << std::endl;
-	std::cout << "--------------------------------" << std::endl;
-	std::cout << std::endl;
-
 	// Generate code from DeviceConfigMap
 	for(const auto& [key, val] : *config_ptr){
-		if(val->type == device_type_e::INVALID){
-			std::cout << "[WARNING] Device " + val->name + " has invalid device type. Skipping.";
-		}
 		if(val->type == device_type_e::MOTOR){
-			auto motor_config_ptr = val->as<const MotorDeviceConfig>();
-			std::string motor_name = motor_config_ptr->name;
+			auto config_ptr = val->as<const MotorDeviceConfig>();
+			std::string motor_name = config_ptr->name;
 
 			output_file << "\tstd::shared_ptr<MotorDeviceConfig> " + motor_name + " = std::make_shared<MotorDeviceConfig>();\n";
-			output_file << "\t" + motor_name + "->port = " + std::to_string(motor_config_ptr->port) + ";\n";
-			output_file << "\t" + motor_name + "->name = \"" + motor_name + "\";\n";
-			output_file << "\t" + motor_name + "->type = device_type_e::MOTOR;\n";
-			output_file << "\trobot_config->addDeviceConfig(" + motor_name + ");\n\n";
+			output_file << "\t" + motor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+			output_file << "\t" + motor_name + "->" + "name = \"" + motor_name + "\";\n";
+			output_file << "\t" + motor_name + "->" + "type = device_type_e::MOTOR;\n";
+			output_file << "\t" + motor_name + "->" + "reversed = " + MOTOR_REVERSED_STRING_MAP.at(config_ptr->reversed) + ";\n";
+			output_file << "\t" + motor_name + "->" + "encoder_units = " + MOTOR_ENCODER_UNIT_STRING_MAP.at(config_ptr->encoder_units) + ";\n";
+			output_file << "\t" + motor_name + "->" + "gearset = " + MOTOR_GEARSET_STRING_MAP.at(config_ptr->gearset) + ";\n";
+			output_file << "\t" + motor_name + "->" + "brake_mode = " + MOTOR_BRAKE_MODE_STRING_MAP.at(config_ptr->brake_mode) + ";\n";
+			output_file << "\t" + motor_name + "->" + "filter_config.cutoff_frequency = " + std::to_string(config_ptr->filter_config.cutoff_frequency) + ";\n";
+			output_file << "\t" + motor_name + "->" + "filter_config.damping_ratio = " +    std::to_string(config_ptr->filter_config.damping_ratio) + ";\n";
+			output_file << "\t" + motor_name + "->" + "filter_config.timestep = " +         std::to_string(config_ptr->filter_config.timestep) + ";\n";
+			output_file << "\t" + motor_name + "->" + "model_config.free_speed = " +        std::to_string(config_ptr->model_config.free_speed) + ";\n";
+			output_file << "\t" + motor_name + "->" + "model_config.stall_torque = " +      std::to_string(config_ptr->model_config.stall_torque) + ";\n";
+			output_file << "\t" + motor_name + "->" + "model_config.free_current = " +      std::to_string(config_ptr->model_config.free_current) + ";\n";
+			output_file << "\t" + motor_name + "->" + "model_config.stall_current = " +     std::to_string(config_ptr->model_config.stall_current) + ";\n";
+			output_file << "\t" + motor_name + "->" + "model_config.nominal_voltage = " +   std::to_string(config_ptr->model_config.nominal_voltage) + ";\n";
+			output_file << "\t" + motor_name + "->" + "model_config.gear_ratio = " +        std::to_string(config_ptr->model_config.gear_ratio) + ";\n";
+			output_file << "\t" + motor_name + "->" + "controller_config.pos_gain = " +         std::to_string(config_ptr->controller_config.pos_gain) + ";\n";
+			output_file << "\t" + motor_name + "->" + "controller_config.vel_gain = " +         std::to_string(config_ptr->controller_config.vel_gain) + ";\n";
+			output_file << "\t" + motor_name + "->" + "controller_config.ff_vel_gain = " +      std::to_string(config_ptr->controller_config.ff_vel_gain) + ";\n";
+			output_file << "\t" + motor_name + "->" + "controller_config.ff_torque_gain = " +   std::to_string(config_ptr->controller_config.ff_torque_gain) + ";\n";
+
+			// output_file << "\t" + motor_name + "->" + "" + ";\n";
+			output_file << "\trobot_config->addDeviceConfig(" + motor_name + ");\n";
+			output_file << "\n";
+		}
+		else if(val->type == device_type_e::ROTATION_SENSOR){
+		}
+		else if(val->type == device_type_e::INVALID){
+			std::cout << "[WARNING] Device " + val->name + " has invalid device type.Skipping this entry.";
+		}
+		else{
+			std::cout << "[WARNING] Device " + val->name + " has unsupported device type.Skipping.";
 		}
 	}
 
-	output_file << "\n\treturn robot_config;\n";
+	output_file << "\treturn robot_config;\n";
 	output_file << "}\n";
 
 	output_file.close();

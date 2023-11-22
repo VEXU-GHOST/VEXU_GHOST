@@ -7,42 +7,63 @@
 #include <ghost_v5_core/devices/motor/motor_device_config.hpp>
 #include <gtest/gtest.h>
 
-using ghost_v5_core::device_type_e;
-using ghost_v5_core::DeviceConfigMap;
-using ghost_v5_core::MotorDeviceConfig;
+using namespace ghost_v5_core::util;
+using namespace ghost_v5_core;
 
-using ghost_v5_core::util::generateCodeFromRobotConfig;
-using ghost_v5_core::util::loadRobotConfigFromYAML;
 class DeviceConfigMapTestFixture : public ::testing::Test {
 protected:
 	void SetUp() override {
 	}
 };
 
-TEST_F(DeviceConfigMapTestFixture, testYAMLConstructor){
-}
-
-TEST_F(DeviceConfigMapTestFixture, testDeviceMapConstructor){
+TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
 }
 
 /**
  * @brief Test that we can convert a DeviceConfigMap into source code, compile it, and then load it succesfully.
  * See https://0x00sec.org/t/c-dynamic-loading-of-shared-objects-at-runtime/1498
+ *
+ * This may feel wildly excessive, but it allows us to store ALL parameters in one YAML, and then use them universally across
+ * both simulation and hardware, and across two different hardware devices (coprocessor and V5 Brain). This also means that ANY
+ * robot can have all the relevant info needed to reconstruct it in sim saved in a ROS Bag on the coprocessor.
+ *
+ * For adding new devices, make sure you can load a default device and a device with all params changed. If it makes it through
+ * this test, it should be good to go!
  */
 TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 	// Compare to expected output
 	auto robot_config_ptr = std::make_shared<DeviceConfigMap>();
-	std::shared_ptr<MotorDeviceConfig> motor_1 = std::make_shared<MotorDeviceConfig>();
-	motor_1->name = "motor_1";
-	motor_1->port = 1;
-	motor_1->type = device_type_e::MOTOR;
-	robot_config_ptr->addDeviceConfig(motor_1);
 
+	// Default motor, minimally required info.
 	std::shared_ptr<MotorDeviceConfig> motor_2 = std::make_shared<MotorDeviceConfig>();
 	motor_2->name = "motor_2";
 	motor_2->port = 2;
 	motor_2->type = device_type_e::MOTOR;
 	robot_config_ptr->addDeviceConfig(motor_2);
+
+	// Motor with every parameter changed.
+	std::shared_ptr<MotorDeviceConfig> motor_1 = std::make_shared<MotorDeviceConfig>();
+	motor_1->name = "motor_1";
+	motor_1->port = 1;
+	motor_1->type = device_type_e::MOTOR;
+	motor_1->reversed = true;
+	motor_1->encoder_units = ghost_encoder_unit::ENCODER_ROTATIONS;
+	motor_1->gearset = ghost_gearset::GEARSET_100;
+	motor_1->brake_mode = ghost_brake_mode::BRAKE_MODE_BRAKE;
+	motor_1->filter_config.cutoff_frequency = 62.0;
+	motor_1->filter_config.damping_ratio = 0.10;
+	motor_1->filter_config.timestep = 0.21;
+	motor_1->model_config.free_speed = 1104.0;
+	motor_1->model_config.stall_torque = 52.25;
+	motor_1->model_config.free_current = 0.9090;
+	motor_1->model_config.stall_current = 21.58;
+	motor_1->model_config.nominal_voltage = 1200.0;
+	motor_1->model_config.gear_ratio = 2915.0;
+	motor_1->controller_config.pos_gain = 8000.0;
+	motor_1->controller_config.vel_gain = 118.0;
+	motor_1->controller_config.ff_vel_gain = 400.0;
+	motor_1->controller_config.ff_torque_gain = 2587.0;
+	robot_config_ptr->addDeviceConfig(motor_1);
 
 	// Create directory for code generation
 	std::string codegen_dir = "/tmp/testGenerateCodeFromRobotConfig";
@@ -78,6 +99,5 @@ TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 
 	// Call function, wrap new DeviceConfigMap in shared_ptr
 	std::shared_ptr<DeviceConfigMap> test_config_map(func());
-
 	EXPECT_EQ(*robot_config_ptr, *test_config_map);
 }
