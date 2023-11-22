@@ -16,14 +16,7 @@ protected:
 	void SetUp() override {
 		robot_config_ptr_ = std::make_shared<DeviceConfigMap>();
 
-		// Default motor, minimally required info.
-		std::shared_ptr<MotorDeviceConfig> default_motor = std::make_shared<MotorDeviceConfig>();
-		default_motor->name = "default_motor";
-		default_motor->port = 3;
-		default_motor->type = device_type_e::MOTOR;
-		robot_config_ptr_->addDeviceConfig(default_motor);
-
-		// Motor with every parameter changed.
+		// Motor some parameters changed
 		std::shared_ptr<MotorDeviceConfig> left_drive_motor = std::make_shared<MotorDeviceConfig>();
 		left_drive_motor->name = "left_drive_motor";
 		left_drive_motor->port = 1;
@@ -57,6 +50,13 @@ protected:
 		test_motor->controller_config.ff_vel_gain = 400.0;
 		test_motor->controller_config.ff_torque_gain = 2587.0;
 		robot_config_ptr_->addDeviceConfig(test_motor);
+
+		// Default motor, minimally required info.
+		std::shared_ptr<MotorDeviceConfig> default_motor = std::make_shared<MotorDeviceConfig>();
+		default_motor->name = "default_motor";
+		default_motor->port = 3;
+		default_motor->type = device_type_e::MOTOR;
+		robot_config_ptr_->addDeviceConfig(default_motor);
 	}
 
 	std::shared_ptr<DeviceConfigMap> robot_config_ptr_;
