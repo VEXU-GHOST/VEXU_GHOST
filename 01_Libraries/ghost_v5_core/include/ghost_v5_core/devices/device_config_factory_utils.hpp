@@ -40,7 +40,7 @@ namespace util {
  * @param verbose
  * @return DeviceConfigMap
  */
-DeviceConfigMap loadRobotConfigFromYAML(YAML::Node node, bool verbose = false);
+std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool verbose = false);
 
 /**
  * @brief Given a DeviceConfigMap, generate C++ source code which reconstructs the DeviceConfigMap at compile-time.

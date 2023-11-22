@@ -105,12 +105,22 @@ void loadMotorDeviceConfigFromYAML(YAML::Node node,
                                    std::string motor_name,
                                    std::shared_ptr<MotorDeviceConfig> motor_device_config_ptr,
                                    bool verbose){
-	// Unpack into device YAML and config YAML
+	// Get device base config
 	auto device_node = node["devices"][motor_name];
-	auto config_node = node["device_configurations"][device_node["config"].as<std::string>()];
-
 	if(!device_node){
 		throw std::runtime_error("[loadMotorDeviceConfigFromYAML] Error: Motor " + motor_name + " not found!");
+	}
+
+	// Get name of motor-specific config
+	if(!device_node["config"]){
+		throw std::runtime_error("[loadMotorDeviceConfigFromYAML] Error: Motor Config not found for motor " + motor_name + "!");
+	}
+	auto config_name = device_node["config"].as<std::string>();
+
+	// Retrieve motor-specific config node
+	auto config_node = node["device_configurations"][config_name];
+	if(!config_node){
+		throw std::runtime_error("[loadMotorDeviceConfigFromYAML] Error: Motor Config not found for motor config " + config_name + "!");
 	}
 
 	// Set base attributes
@@ -152,52 +162,6 @@ void loadMotorDeviceConfigFromYAML(YAML::Node node,
 		std::cout << "[loadV5MotorInterfaceConfig] Error: Failed to load Brake Mode." << std::endl;
 	}
 }
-
-// DeviceInterfaceMap loadDeviceInterfaceMapFromYAML(YAML::Node node, bool verbose){
-// 	DeviceInterfaceMap device_interface_map;
-// 	// Iterate through each device defined in the YAML file
-// 	for(auto it = node["devices"].begin(); it != node["devices"].end(); it++){
-// 		// Unpack Device Name and associated YAML Node
-// 		std::string device_name = it->first.as<std::string>();
-// 		YAML::Node device_yaml_node = it->second;
-
-// 		// Load device type and device_config (if it exists)
-// 		std::string device_type, device_config_name;
-// 		loadYAMLParam(device_yaml_node, "type", device_type, verbose);
-// 		bool config_found = loadYAMLParam(device_yaml_node, "config", device_config_name, verbose);
-
-// 		// Custom initialization based on device type
-// 		switch(device_type_name_enum_map.at(device_type)){
-// 			case device_type_e::MOTOR:
-// 			{
-// 				// Load motor config (or default if not specified)
-// 				std::shared_ptr<V5MotorConfig> config_ptr;
-// 				if(config_found){
-// 					config_ptr = loadV5MotorConfigFromYAML(node["device_configurations"][device_config_name]);
-// 				}
-// 				else{
-// 					config_ptr = std::make_shared<V5MotorConfig>();
-// 				}
-
-// 				device_interface_map[device_name] = std::make_shared<V5MotorInterface>(config_ptr);
-// 				device_interface_map[device_name]->data = std::make_shared<DeviceData>();
-// 			}
-// 			break;
-
-// 			default:
-// 			{
-// 				throw std::runtime_error("[loadDeviceInterfaceMapFromYAML] Error: Device type " + device_type + " is not currently supported.");
-// 			}
-// 			break;
-// 		}
-
-// 		// Set device base attributes
-// 		device_interface_map[device_name]->name = device_name;
-// 		device_interface_map[device_name]->port = device_yaml_node["port"].as<int>();
-// 		device_interface_map[device_name]->type = device_type_name_enum_map.at(device_type);
-// 	}
-// 	return device_interface_map;
-// }
 
 } // namespace util
 

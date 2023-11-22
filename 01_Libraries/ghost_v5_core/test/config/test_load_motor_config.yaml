@@ -5,22 +5,22 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        test_motor:
+        right_drive_motor:
             port: 2
             type: MOTOR
             reversed: true
-            config: test_motor_config
+            config: drive_motor_config
         default_motor:
-            port: 3
+            port: 0
             type: MOTOR
             reversed: false
             config: default_motor_config
 
     device_configurations:
         test_motor_config:
-            gearset: 100
-            brake_mode: BRAKE
-            encoder_units: ROTATIONS
+            gearset: 200
+            brake_mode: COAST
+            encoder_units: COUNTS
             filter:
                 cutoff_frequency: 62.0
                 damping_ratio: 0.10

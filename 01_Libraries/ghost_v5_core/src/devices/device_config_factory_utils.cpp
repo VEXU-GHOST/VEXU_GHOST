@@ -1,4 +1,6 @@
+#include <ghost_util/yaml_utils.hpp>
 #include <ghost_v5_core/devices/device_config_factory_utils.hpp>
+#include <ghost_v5_core/devices/motor/load_motor_config_yaml.hpp>
 #include <ghost_v5_core/devices/motor/motor_device_config.hpp>
 
 #include <filesystem>
@@ -10,7 +12,66 @@ namespace ghost_v5_core {
 
 namespace util {
 
-DeviceConfigMap loadRobotConfigFromYAML(YAML::Node node, bool verbose){
+const std::unordered_map<std::string, device_type_e> DEVICE_TYPE_NAME_STRING_MAP{
+	{"MOTOR",           device_type_e::MOTOR},
+	{"ROTATION_SENSOR", device_type_e::ROTATION_SENSOR},
+	{"INERTIAL_SENSOR", device_type_e::INERTIAL_SENSOR},
+	{"DISTANCE_SENSOR", device_type_e::DISTANCE_SENSOR},
+	{"OPTICAL_SENSOR",  device_type_e::OPTICAL_SENSOR},
+	{"VISION_SENSOR",   device_type_e::VISION_SENSOR},
+	{"GPS_SENSOR",      device_type_e::GPS_SENSOR},
+	{"RADIO",           device_type_e::RADIO},
+};
+
+std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool verbose){
+	auto device_config_map_ptr = std::make_shared<DeviceConfigMap>();
+
+	// Iterate through each device defined in the YAML file
+	for(auto it = node["port_configuration"]["devices"].begin(); it != node["port_configuration"]["devices"].end(); it++){
+		// Unpack Device Name and associated YAML Node
+		std::string device_name = it->first.as<std::string>();
+		YAML::Node device_yaml_node = it->second;
+
+		// Load device type and device_config (if it exists)
+		std::string device_type, device_config_name;
+		loadYAMLParam(device_yaml_node, "type", device_type, verbose);
+		bool config_found = loadYAMLParam(device_yaml_node, "config", device_config_name, verbose);
+
+		std::shared_ptr<DeviceConfig> device_config_base_ptr;
+		// Custom initialization based on device type
+		switch(DEVICE_TYPE_NAME_STRING_MAP.at(device_type)){
+			case device_type_e::MOTOR:
+			{
+				// // Load motor config (or default if not specified)
+				auto motor_config_ptr = std::make_shared<MotorDeviceConfig>();
+				if(config_found){
+					loadMotorDeviceConfigFromYAML(node["port_configuration"], device_name, motor_config_ptr);
+				}
+				device_config_base_ptr = motor_config_ptr;
+			}
+			break;
+
+			case device_type_e::INVALID:
+			{
+				throw std::runtime_error("[loadDeviceInterfaceMapFromYAML] Error: Device name " + device_name + " has invalid type.");
+			}
+			break;
+
+			default:
+			{
+				throw std::runtime_error("[loadDeviceInterfaceMapFromYAML] Error: Device type " + device_type + " is not currently supported.");
+			}
+			break;
+		}
+
+		// Set device base attributes
+		device_config_base_ptr->name = device_name;
+		loadYAMLParam(device_yaml_node, "port", device_config_base_ptr->port, verbose);
+		device_config_base_ptr->type = DEVICE_TYPE_NAME_STRING_MAP.at(device_type);
+
+		device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
+	}
+	return device_config_map_ptr;
 }
 
 const std::unordered_map<ghost_encoder_unit, std::string> MOTOR_ENCODER_UNIT_STRING_MAP{

@@ -9,7 +9,7 @@ class TestLoadConfigYAML : public ::testing::Test {
 protected:
 
 	void SetUp() override {
-		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/example_robot.yaml";
+		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/test_load_motor_config.yaml";
 		config_yaml_ = YAML::LoadFile(config_path);
 
 		// Expected motor configurations
@@ -42,7 +42,6 @@ protected:
 
 	YAML::Node config_yaml_;
 };
-
 
 /**
  * @brief Test that a DCMotorModel::Config struct can be properly loaded from YAML

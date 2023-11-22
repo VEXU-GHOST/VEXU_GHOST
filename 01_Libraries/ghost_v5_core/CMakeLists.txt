@@ -136,6 +136,9 @@ target_include_directories(device_config_factory_utils
 ament_target_dependencies(device_config_factory_utils
   ${DEPENDENCIES}
 )
+target_link_libraries(device_config_factory_utils
+  load_motor_config_yaml
+)
 ament_export_targets(device_config_factory_utils HAS_LIBRARY_TARGET)
 install(
   TARGETS device_config_factory_utils
@@ -157,12 +160,6 @@ install(
 #################
 #### Testing ####
 #################
-ament_add_gtest(test_device_config_interfaces test/devices/base/test_device_config_interfaces.cpp)
-ament_target_dependencies(test_device_config_interfaces ${DEPENDENCIES})
-target_link_libraries(test_device_config_interfaces
-  gtest_main
-)
-
 ament_add_gtest(test_dc_motor_model test/motor/test_dc_motor_model.cpp)
 target_link_libraries(test_dc_motor_model
   gtest_main
@@ -177,11 +174,18 @@ target_link_libraries(test_load_motor_config_yaml
   yaml-cpp
 )
 
+ament_add_gtest(test_device_config_interfaces test/devices/base/test_device_config_interfaces.cpp)
+ament_target_dependencies(test_device_config_interfaces ${DEPENDENCIES})
+target_link_libraries(test_device_config_interfaces
+  gtest_main
+)
+
 ament_add_gtest(test_device_config_map_factory test/devices/base/test_device_config_map_factory.cpp)
 ament_target_dependencies(test_device_config_map_factory ${DEPENDENCIES})
 target_link_libraries(test_device_config_map_factory
   gtest_main
   device_config_factory_utils
+  yaml-cpp
 )
 
 ament_package()
