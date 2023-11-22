@@ -72,7 +72,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
 }
 
 /**
- * @brief Test that mismatched YAML will fail.
+ * @brief Test that mismatched motor port will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig){
 	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/example_robot.yaml");
@@ -82,7 +82,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig
 }
 
 /**
- * @brief Test that mismatched YAML will fail.
+ * @brief Test that mismatched motor config will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchMotorConfig){
 	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/example_robot.yaml");
