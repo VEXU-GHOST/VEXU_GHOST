@@ -2,9 +2,10 @@
 
 #include <iostream>
 #include <memory>
-#include "ghost_v5_core/devices/base/device_config.hpp"
-#include "ghost_v5_core/devices/motor/motor_device_config.hpp"
+#include "../base/device_config.hpp"
+#include "motor_device_config.hpp"
 #include "yaml-cpp/yaml.h"
+
 namespace ghost_v5_core {
 
 namespace util {

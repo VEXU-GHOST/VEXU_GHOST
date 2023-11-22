@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ghost_v5_core/devices/base/device_config.hpp"
-#include "ghost_v5_core/filters/second_order_low_pass_filter.hpp"
-#include "ghost_v5_core/motor/dc_motor_model.hpp"
-#include "ghost_v5_core/motor/motor_controller.hpp"
+#include "../../filters/second_order_low_pass_filter.hpp"
+#include "../../motor/dc_motor_model.hpp"
+#include "../../motor/motor_controller.hpp"
+#include "../base/device_config.hpp"
 
 namespace ghost_v5_core {
 
@@ -34,10 +34,18 @@ public:
 		return std::make_shared<MotorDeviceConfig>(*this);
 	}
 
-	bool operator==(const MotorDeviceConfig& rhs) const {
-		return (encoder_units == rhs.encoder_units) && (gearset == rhs.gearset) && (brake_mode == rhs.brake_mode) &&
-		       (controller_config == rhs.controller_config) && (filter_config == rhs.filter_config) &&
-		       (model_config == rhs.model_config);
+	bool operator==(const DeviceConfig &rhs) const override {
+		const MotorDeviceConfig *m_rhs = dynamic_cast<const MotorDeviceConfig *>(&rhs);
+		if(m_rhs){
+			return (port == m_rhs->port) && (name == m_rhs->name) && (type == m_rhs->type) &&
+			       (encoder_units == m_rhs->encoder_units) && (gearset == m_rhs->gearset) &&
+			       (brake_mode == m_rhs->brake_mode) && (controller_config == m_rhs->controller_config) &&
+			       (filter_config == m_rhs->filter_config) && (model_config == m_rhs->model_config);
+		}
+		else{
+			// Failed to cast base class, thus can't be equal.
+			return false;
+		}
 	}
 
 	bool reversed = false;

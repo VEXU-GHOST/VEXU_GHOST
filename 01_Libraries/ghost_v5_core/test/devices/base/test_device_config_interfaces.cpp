@@ -19,10 +19,27 @@ public:
 		return std::make_shared<TestDeviceConfig>(*this);
 	}
 
-	bool operator==(const TestDeviceConfig& rhs) const {
-		return (port == rhs.port) && (name == rhs.name) && (type == rhs.type) && (a == rhs.a) && (b == rhs.b);
+	bool operator==(const DeviceConfig &rhs) const override {
+		const TestDeviceConfig *m_rhs = dynamic_cast<const TestDeviceConfig *>(&rhs);
+		if(m_rhs){
+			return (port == m_rhs->port) && (name == m_rhs->name) && (type == m_rhs->type) &&
+			       (a == m_rhs->a) && (b == m_rhs->b);
+		}
+		else{
+			// Failed to cast base class, thus can't be equal.
+			return false;
+		}
 	}
 };
+
+/**
+ * @brief Test equality operator
+ */
+TEST(TestDeviceConfigInterfaces, testDeviceEqualityOperator){
+	std::shared_ptr<DeviceConfig> device_1 = std::make_shared<TestDeviceConfig>();
+	std::shared_ptr<DeviceConfig> device_2 = std::make_shared<TestDeviceConfig>();
+	EXPECT_EQ(*device_1, *device_2);
+}
 
 /**
  * @brief Test that we can cast DeviceConfig to its derived class.

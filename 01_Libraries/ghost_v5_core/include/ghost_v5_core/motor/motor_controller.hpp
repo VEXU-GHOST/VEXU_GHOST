@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ghost_v5_core/filters/second_order_low_pass_filter.hpp"
-#include "ghost_v5_core/motor/dc_motor_model.hpp"
+#include "../filters/second_order_low_pass_filter.hpp"
+#include "dc_motor_model.hpp"
 
 namespace ghost_v5_core {
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <ghost_v5_core/devices/base/device_config.hpp>
-#include <ghost_v5_core/devices/base/device_types.hpp>
+#include "device_config.hpp"
+#include "device_types.hpp"
 
 namespace ghost_v5_core {
 
@@ -31,12 +31,40 @@ public:
 		}
 	}
 
+	bool getDeviceConfig(std::string device_name, std::shared_ptr<const DeviceConfig> config_ptr) const {
+		if(device_configs_.count(device_name) == 1){
+			config_ptr = device_configs_.at(device_name);
+			return true;
+		}
+	}
+
 	std::unordered_map<std::string, std::shared_ptr<const DeviceConfig> >::const_iterator begin() const {
 		return device_configs_.begin();
 	}
 
 	std::unordered_map<std::string, std::shared_ptr<const DeviceConfig> >::const_iterator end() const {
 		return device_configs_.end();
+	}
+
+	size_t size() const {
+		return device_configs_.size();
+	}
+
+	bool contains(std::string device_name) const {
+		return device_configs_.count(device_name) != 0;
+	}
+
+	bool operator==(const DeviceConfigMap& rhs) const {
+		bool result = (size() == rhs.size());
+		for(const auto& [key, val] : device_configs_){
+			if(rhs.contains(key)){
+				result &= ((*val) == *(rhs.getDeviceConfig(key)));
+			}
+			else{
+				return false;
+			}
+		}
+		return result;
 	}
 
 private:

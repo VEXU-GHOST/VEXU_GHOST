@@ -126,6 +126,26 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_library(device_config_factory_utils SHARED
+  src/devices/device_config_factory_utils.cpp
+)
+target_include_directories(device_config_factory_utils
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(device_config_factory_utils
+  ${DEPENDENCIES}
+)
+ament_export_targets(device_config_factory_utils HAS_LIBRARY_TARGET)
+install(
+  TARGETS device_config_factory_utils
+  EXPORT device_config_factory_utils
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 #################
 #### Install ####
 #################
@@ -155,6 +175,13 @@ target_link_libraries(test_load_motor_config_yaml
   gtest_main
   load_motor_config_yaml
   yaml-cpp
+)
+
+ament_add_gtest(test_device_config_map_factory test/devices/base/test_device_config_map_factory.cpp)
+ament_target_dependencies(test_device_config_map_factory ${DEPENDENCIES})
+target_link_libraries(test_device_config_map_factory
+  gtest_main
+  device_config_factory_utils
 )
 
 ament_package()

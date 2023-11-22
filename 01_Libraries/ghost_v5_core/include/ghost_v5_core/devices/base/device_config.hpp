@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
-#include <ghost_v5_core/devices/base/device_types.hpp>
+#include "device_types.hpp"
 
 namespace ghost_v5_core {
 
@@ -27,13 +27,30 @@ public:
 	 * @return std::shared_ptr<Derived> pointer to this object as its derived class
 	 */
 	template<typename Derived>
-	std::shared_ptr<Derived> as(){
+	std::shared_ptr<Derived> as() {
 		auto derived_ptr = dynamic_cast<Derived*>(this);
 		if(derived_ptr == nullptr){
 			throw std::runtime_error("[DeviceConfig::as] Error: Cannot downcast device " + name + "!");
 		}
 		return std::make_shared<Derived>(*derived_ptr);
 	}
+
+	/**
+	 * @brief Helper to convert const base class pointer to const derived class pointer.
+	 * DeviceConfig is pure virtual, so a DeviceConfig pointer is always actually pointing to a Derived class.
+	 *
+	 * @return std::shared_ptr<const Derived> pointer to this object as its derived class
+	 */
+	template<typename Derived>
+	std::shared_ptr<const Derived> as() const {
+		auto derived_ptr = dynamic_cast<const Derived*>(this);
+		if(derived_ptr == nullptr){
+			throw std::runtime_error("[DeviceConfig::as] Error: Cannot downcast device " + name + "!");
+		}
+		return std::make_shared<Derived>(*derived_ptr);
+	}
+
+	virtual bool operator==(const DeviceConfig &rhs) const = 0;
 };
 
 } // namespace ghost_v5_core

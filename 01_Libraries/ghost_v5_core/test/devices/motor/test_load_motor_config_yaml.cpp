@@ -14,6 +14,9 @@ protected:
 
 		// Expected motor configurations
 		default_motor_config_ = std::make_shared<MotorDeviceConfig>();
+		default_motor_config_->name = "default_motor";
+		default_motor_config_->type = device_type_e::MOTOR;
+
 
 		left_drive_motor_config_ = std::make_shared<MotorDeviceConfig>();
 		left_drive_motor_config_->gearset = ghost_gearset::GEARSET_600;
@@ -30,7 +33,7 @@ protected:
 		right_drive_motor_config_->port = 2;
 		right_drive_motor_config_->name = "right_drive_motor";
 		right_drive_motor_config_->reversed = true;
-		left_drive_motor_config_->type = device_type_e::MOTOR;
+		right_drive_motor_config_->type = device_type_e::MOTOR;
 	}
 
 	std::shared_ptr<MotorDeviceConfig> default_motor_config_;
@@ -95,6 +98,7 @@ TEST_F(TestLoadConfigYAML, testLoadDriveMotorConfigFromYAML){
 	std::string motor_name = "right_drive_motor";
 	auto config_ptr = std::make_shared<MotorDeviceConfig>();
 	loadMotorDeviceConfigFromYAML(config_node, motor_name, config_ptr);
+
 	EXPECT_EQ(*config_ptr, *right_drive_motor_config_);
 }
 
