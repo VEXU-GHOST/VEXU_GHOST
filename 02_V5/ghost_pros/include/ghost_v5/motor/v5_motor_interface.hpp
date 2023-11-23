@@ -1,31 +1,34 @@
 #pragma once
-#include "ghost_control/motor_controller.hpp"
-#include "pros/motors.hpp"
+#include "ghost_v5_core/devices/motor/motor_device_config.hpp"
+#include "ghost_v5_core/motor/motor_controller.hpp"
 #include "pros/apix.h"
 #include "pros/error.h"
+#include "pros/motors.hpp"
 
 #include <unordered_map>
-namespace ghost_v5
-{
-    class V5MotorInterface : public ghost_control::MotorController
-    {
-    public:
-        V5MotorInterface(int port, bool reversed, const ghost_v5_config::MotorConfigStruct &config);
 
-        void updateInterface();
+using ghost_v5_core::MotorController;
+using ghost_v5_core::MotorDeviceConfig;
 
-        bool getDeviceIsConnected()
-        {
-            return device_connected_;
-        }
+namespace ghost_v5 {
 
-        std::shared_ptr<pros::Motor> getMotorInterfacePtr(){
-            return motor_interface_ptr_;
-        }
+class V5MotorInterface : public MotorController {
+public:
+	V5MotorInterface(const MotorDeviceConfig &config);
 
-    private:
-        std::shared_ptr<pros::Motor> motor_interface_ptr_;
-        bool device_connected_;
-    };
+	void updateInterface();
+
+	bool getDeviceIsConnected(){
+		return device_connected_;
+	}
+
+	std::shared_ptr<pros::Motor> getMotorInterfacePtr(){
+		return motor_interface_ptr_;
+	}
+
+private:
+	std::shared_ptr<pros::Motor> motor_interface_ptr_;
+	bool device_connected_;
+};
 
 } // namespace ghost_v5

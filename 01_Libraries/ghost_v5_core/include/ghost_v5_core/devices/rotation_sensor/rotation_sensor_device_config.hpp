@@ -1,17 +1,17 @@
 #pragma once
 
-#include "../base/device_config.hpp"
+#include "../base/device_interfaces.hpp"
 
 namespace ghost_v5_core {
 
 class RotationSensorDeviceConfig : public DeviceConfig {
 public:
 
-	std::shared_ptr<DeviceConfig> clone() const override {
+	std::shared_ptr<DeviceBase> clone() const override {
 		return std::make_shared<RotationSensorDeviceConfig>(*this);
 	}
 
-	bool operator==(const DeviceConfig &rhs) const override {
+	bool operator==(const DeviceBase &rhs) const override {
 		const RotationSensorDeviceConfig *m_rhs = dynamic_cast<const RotationSensorDeviceConfig *>(&rhs);
 		if(m_rhs){
 			return (port == m_rhs->port) && (name == m_rhs->name) && (type == m_rhs->type) &&

@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <memory>
-#include "../base/device_config.hpp"
+#include "../base/device_interfaces.hpp"
 #include "rotation_sensor_device_config.hpp"
 #include "yaml-cpp/yaml.h"
 

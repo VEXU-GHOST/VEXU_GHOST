@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include "../filters/second_order_low_pass_filter.hpp"
 #include "dc_motor_model.hpp"
 

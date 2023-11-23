@@ -3,33 +3,32 @@
 
 #include <map>
 
-#include "pros/apix.h"
-#include "ghost_v5/serial/v5_serial_node.hpp"
 #include "ghost_v5/motor/v5_motor_interface.hpp"
-#include "ghost_common/v5_robot_config_defs.hpp"
-namespace v5_globals
-{
-    extern uint32_t last_cmd_time;
-    extern uint32_t cmd_timeout_ms;
-    extern uint32_t loop_frequency;
-    extern bool run;
+#include "ghost_v5/serial/v5_serial_node.hpp"
+#include "pros/apix.h"
+namespace v5_globals {
 
-    extern pros::Controller controller_main;
+extern uint32_t last_cmd_time;
+extern uint32_t cmd_timeout_ms;
+extern uint32_t loop_frequency;
+extern bool run;
 
-    extern pros::Mutex actuator_update_lock;
+extern pros::Controller controller_main;
 
-    extern std::map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface>> motors;
-    extern std::map<std::string, std::shared_ptr<pros::Rotation>> encoders;
+extern pros::Mutex actuator_update_lock;
 
-    extern const pros::controller_analog_e_t joy_channels[4];
-    extern const pros::controller_digital_e_t joy_btns[12];
+extern std::map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motors;
+extern std::map<std::string, std::shared_ptr<pros::Rotation> > encoders;
 
-    extern pros::ADIDigitalOut adi_ports[8];
-    extern pros::Mutex digitial_out_lock;
-    extern std::vector<bool> digital_out_cmds;
+extern const pros::controller_analog_e_t joy_channels[4];
+extern const pros::controller_digital_e_t joy_btns[12];
 
-    // Serial Port
-    extern ghost_v5::V5SerialNode serial_node_;
+extern pros::ADIDigitalOut adi_ports[8];
+extern pros::Mutex digitial_out_lock;
+extern std::vector<bool> digital_out_cmds;
+
+// Serial Port
+extern ghost_v5::V5SerialNode serial_node_;
 
 } // namespace v5_globals
 

@@ -3,7 +3,7 @@
 #include "../../filters/second_order_low_pass_filter.hpp"
 #include "../../motor/dc_motor_model.hpp"
 #include "../../motor/motor_controller.hpp"
-#include "../base/device_config.hpp"
+#include "../base/device_interfaces.hpp"
 
 namespace ghost_v5_core {
 
@@ -30,11 +30,11 @@ enum ghost_encoder_unit {
 class MotorDeviceConfig : public DeviceConfig {
 public:
 
-	std::shared_ptr<DeviceConfig> clone() const override {
+	std::shared_ptr<DeviceBase> clone() const override {
 		return std::make_shared<MotorDeviceConfig>(*this);
 	}
 
-	bool operator==(const DeviceConfig &rhs) const override {
+	bool operator==(const DeviceBase &rhs) const override {
 		const MotorDeviceConfig *m_rhs = dynamic_cast<const MotorDeviceConfig *>(&rhs);
 		if(m_rhs){
 			return (port == m_rhs->port) && (name == m_rhs->name) && (type == m_rhs->type) && (reversed == m_rhs->reversed) &&

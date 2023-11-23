@@ -1,7 +1,8 @@
 #pragma once
 
-#include "device_config.hpp"
-#include "device_types.hpp"
+#include <iostream>
+#include "device_interfaces.hpp"
+
 
 namespace ghost_v5_core {
 
@@ -17,7 +18,7 @@ public:
 			throw std::runtime_error("[DeviceConfigMap::addDeviceConfig] Error: Port " + std::to_string(device->port) + " is already in use!");
 		}
 		else{
-			device_configs_[device->name] = device->clone();
+			device_configs_[device->name] = device->clone()->as<DeviceConfig>();
 			port_to_device_name_map_[device->port] = device->name;
 		}
 	}

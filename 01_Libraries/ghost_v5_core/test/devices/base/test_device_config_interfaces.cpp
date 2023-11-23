@@ -1,9 +1,9 @@
-#include <ghost_v5_core/devices/base/device_config.hpp>
 #include <ghost_v5_core/devices/base/device_config_map.hpp>
-#include <ghost_v5_core/devices/base/device_types.hpp>
+#include <ghost_v5_core/devices/base/device_interfaces.hpp>
 #include <gtest/gtest.h>
 
 using ghost_v5_core::device_type_e;
+using ghost_v5_core::DeviceBase;
 using ghost_v5_core::DeviceConfig;
 using ghost_v5_core::DeviceConfigMap;
 
@@ -15,11 +15,11 @@ public:
 	int a = 2;
 	bool b = false;
 
-	std::shared_ptr<DeviceConfig> clone() const override {
+	std::shared_ptr<DeviceBase> clone() const override {
 		return std::make_shared<TestDeviceConfig>(*this);
 	}
 
-	bool operator==(const DeviceConfig &rhs) const override {
+	bool operator==(const DeviceBase &rhs) const override {
 		const TestDeviceConfig *m_rhs = dynamic_cast<const TestDeviceConfig *>(&rhs);
 		if(m_rhs){
 			return (port == m_rhs->port) && (name == m_rhs->name) && (type == m_rhs->type) &&
@@ -42,6 +42,14 @@ TEST(TestDeviceConfigInterfaces, testDeviceEqualityOperator){
 }
 
 /**
+ * @brief Test that we can cast DeviceBase to its derived class.
+ */
+TEST(TestDeviceConfigInterfaces, testDeviceBaseCastToDerived){
+	std::shared_ptr<DeviceBase> device = std::make_shared<TestDeviceConfig>();
+	EXPECT_NO_THROW(auto derived_ptr = device->as<TestDeviceConfig>());
+}
+
+/**
  * @brief Test that we can cast DeviceConfig to its derived class.
  */
 TEST(TestDeviceConfigInterfaces, testDeviceConfigCastToDerived){
@@ -52,9 +60,25 @@ TEST(TestDeviceConfigInterfaces, testDeviceConfigCastToDerived){
 /**
  * @brief Test that the downcast helper will fail as expected on classes that aren't derived from DeviceConfig.
  */
+TEST(TestDeviceConfigInterfaces, testDeviceBaseCastFailsOnNonDerivedClass){
+	std::shared_ptr<DeviceBase> device = std::make_shared<TestDeviceConfig>();
+	EXPECT_THROW(auto derived_ptr = device->as<std::string>(), std::runtime_error);
+}
+
+/**
+ * @brief Test that the downcast helper will fail as expected on classes that aren't derived from DeviceConfig.
+ */
 TEST(TestDeviceConfigInterfaces, testDeviceConfigCastFailsOnNonDerivedClass){
 	std::shared_ptr<DeviceConfig> device = std::make_shared<TestDeviceConfig>();
 	EXPECT_THROW(auto derived_ptr = device->as<std::string>(), std::runtime_error);
+}
+
+/**
+ * @brief Test that we can cast DeviceBase to its derived virtual class, DeviceConfig.
+ */
+TEST(TestDeviceConfigInterfaces, testDeviceBaseCastToDeviceConfig){
+	std::shared_ptr<DeviceBase> device = std::make_shared<TestDeviceConfig>();
+	EXPECT_NO_THROW(auto derived_ptr = device->as<DeviceConfig>());
 }
 
 /**
