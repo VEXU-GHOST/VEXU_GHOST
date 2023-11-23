@@ -20,11 +20,11 @@ void loadRotationSensorDeviceConfigFromYAML(YAML::Node node,
 	sensor_device_config_ptr->type = device_type_e::ROTATION_SENSOR;
 
 	if(device_node["type"].as<std::string>() != "ROTATION_SENSOR"){
-		throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Device type is incorrect for rotation sensor " + sensor_name + "!");
+		throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Device type is incorrect for Rotation Sensor " + sensor_name + "!");
 	}
 
 	if(!loadYAMLParam(device_node, "port", sensor_device_config_ptr->port, verbose)){
-		throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Port not specified for rotation sensor " + sensor_name + "!");
+		throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Port not specified for Rotation Sensor " + sensor_name + "!");
 	}
 
 	// Set Sensor specific attributes
