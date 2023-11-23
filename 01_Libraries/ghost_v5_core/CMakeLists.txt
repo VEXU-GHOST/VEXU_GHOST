@@ -106,20 +106,40 @@ install(
 #############################
 ##### Utility Libraries #####
 #############################
-add_library(load_motor_config_yaml SHARED
-  src/devices/motor/load_motor_config_yaml.cpp
+add_library(load_motor_device_config_yaml SHARED
+  src/devices/motor/load_motor_device_config_yaml.cpp
 )
-target_include_directories(load_motor_config_yaml
+target_include_directories(load_motor_device_config_yaml
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(load_motor_config_yaml
+ament_target_dependencies(load_motor_device_config_yaml
   ${DEPENDENCIES}
 )
-ament_export_targets(load_motor_config_yaml HAS_LIBRARY_TARGET)
+ament_export_targets(load_motor_device_config_yaml HAS_LIBRARY_TARGET)
 install(
-  TARGETS load_motor_config_yaml
-  EXPORT load_motor_config_yaml
+  TARGETS load_motor_device_config_yaml
+  EXPORT load_motor_device_config_yaml
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+add_library(load_rotation_sensor_device_config_yaml SHARED
+  src/devices/rotation_sensor/load_rotation_sensor_device_config_yaml.cpp
+)
+target_include_directories(load_rotation_sensor_device_config_yaml
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(load_rotation_sensor_device_config_yaml
+  ${DEPENDENCIES}
+)
+ament_export_targets(load_rotation_sensor_device_config_yaml HAS_LIBRARY_TARGET)
+install(
+  TARGETS load_rotation_sensor_device_config_yaml
+  EXPORT load_rotation_sensor_device_config_yaml
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -137,7 +157,8 @@ ament_target_dependencies(device_config_factory_utils
   ${DEPENDENCIES}
 )
 target_link_libraries(device_config_factory_utils
-  load_motor_config_yaml
+  load_motor_device_config_yaml
+  load_rotation_sensor_device_config_yaml
 )
 ament_export_targets(device_config_factory_utils HAS_LIBRARY_TARGET)
 install(
@@ -166,11 +187,19 @@ target_link_libraries(test_dc_motor_model
   dc_motor_model
 )
 
-ament_add_gtest(test_load_motor_config_yaml test/devices/motor/test_load_motor_config_yaml.cpp)
-ament_target_dependencies(test_load_motor_config_yaml ${DEPENDENCIES})
-target_link_libraries(test_load_motor_config_yaml
+ament_add_gtest(test_load_motor_device_config_yaml test/devices/motor/test_load_motor_device_config_yaml.cpp)
+ament_target_dependencies(test_load_motor_device_config_yaml ${DEPENDENCIES})
+target_link_libraries(test_load_motor_device_config_yaml
   gtest_main
-  load_motor_config_yaml
+  load_motor_device_config_yaml
+  yaml-cpp
+)
+
+ament_add_gtest(test_load_rotation_sensor_device_config_yaml test/devices/rotation_sensor/test_load_rotation_sensor_device_config_yaml.cpp)
+ament_target_dependencies(test_load_rotation_sensor_device_config_yaml ${DEPENDENCIES})
+target_link_libraries(test_load_rotation_sensor_device_config_yaml
+  gtest_main
+  load_rotation_sensor_device_config_yaml
   yaml-cpp
 )
 

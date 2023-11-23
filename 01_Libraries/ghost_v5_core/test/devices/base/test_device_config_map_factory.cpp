@@ -4,6 +4,7 @@
 #include <ghost_v5_core/devices/base/device_config_map.hpp>
 #include <ghost_v5_core/devices/device_config_factory_utils.hpp>
 #include <ghost_v5_core/devices/motor/motor_device_config.hpp>
+#include <ghost_v5_core/devices/rotation_sensor/rotation_sensor_device_config.hpp>
 
 #include <gtest/gtest.h>
 #include "yaml-cpp/yaml.h"
@@ -17,7 +18,7 @@ protected:
 		robot_config_ptr_ = std::make_shared<DeviceConfigMap>();
 
 		// Motor some parameters changed
-		std::shared_ptr<MotorDeviceConfig> left_drive_motor = std::make_shared<MotorDeviceConfig>();
+		auto left_drive_motor = std::make_shared<MotorDeviceConfig>();
 		left_drive_motor->name = "left_drive_motor";
 		left_drive_motor->port = 1;
 		left_drive_motor->type = device_type_e::MOTOR;
@@ -28,7 +29,7 @@ protected:
 		robot_config_ptr_->addDeviceConfig(left_drive_motor);
 
 		// Motor with every parameter changed.
-		std::shared_ptr<MotorDeviceConfig> test_motor = std::make_shared<MotorDeviceConfig>();
+		auto test_motor = std::make_shared<MotorDeviceConfig>();
 		test_motor->name = "test_motor";
 		test_motor->port = 2;
 		test_motor->type = device_type_e::MOTOR;
@@ -52,11 +53,27 @@ protected:
 		robot_config_ptr_->addDeviceConfig(test_motor);
 
 		// Default motor, minimally required info.
-		std::shared_ptr<MotorDeviceConfig> default_motor = std::make_shared<MotorDeviceConfig>();
+		auto default_motor = std::make_shared<MotorDeviceConfig>();
 		default_motor->name = "default_motor";
 		default_motor->port = 3;
 		default_motor->type = device_type_e::MOTOR;
 		robot_config_ptr_->addDeviceConfig(default_motor);
+
+		// Changed every param
+		auto rotation_sensor_1_ = std::make_shared<RotationSensorDeviceConfig>();
+		rotation_sensor_1_->port = 4;
+		rotation_sensor_1_->name = "rotation_sensor_1";
+		rotation_sensor_1_->type = device_type_e::ROTATION_SENSOR;
+		rotation_sensor_1_->reversed = true;
+		rotation_sensor_1_->data_rate = 10;
+		robot_config_ptr_->addDeviceConfig(rotation_sensor_1_);
+
+		// Default (minimal required params)
+		auto rotation_sensor_2_ = std::make_shared<RotationSensorDeviceConfig>();
+		rotation_sensor_2_->port = 5;
+		rotation_sensor_2_->name = "rotation_sensor_2";
+		rotation_sensor_2_->type = device_type_e::ROTATION_SENSOR;
+		robot_config_ptr_->addDeviceConfig(rotation_sensor_2_);
 	}
 
 	std::shared_ptr<DeviceConfigMap> robot_config_ptr_;

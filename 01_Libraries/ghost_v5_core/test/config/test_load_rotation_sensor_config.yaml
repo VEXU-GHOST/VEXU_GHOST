@@ -1,0 +1,14 @@
+port_configuration:
+    devices:
+        rotation_sensor_1:
+            port: 1
+            type: ROTATION_SENSOR
+            reversed: true
+            data_rate: 10
+        rotation_sensor_2:
+            port: 2
+            type: ROTATION_SENSOR
+        rotation_sensor_no_port:
+            type: ROTATION_SENSOR
+        rotation_sensor_no_type:
+            port: 2

@@ -3,7 +3,6 @@ port_configuration:
         left_drive_motor:
             port: 1
             type: MOTOR
-            reversed: false
             config: drive_motor_config
         test_motor:
             port: 2
@@ -13,8 +12,15 @@ port_configuration:
         default_motor:
             port: 3
             type: MOTOR
-            reversed: false
             config: default_motor_config
+        rotation_sensor_1:
+            port: 4
+            type: ROTATION_SENSOR
+            reversed: true
+            data_rate: 10
+        rotation_sensor_2:
+            port: 5
+            type: ROTATION_SENSOR
 
     device_configurations:
         test_motor_config:

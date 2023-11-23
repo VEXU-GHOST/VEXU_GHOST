@@ -10,11 +10,17 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        default_motor:
+        motor_empty_config:
             port: 0
             type: MOTOR
-            reversed: false
             config: default_motor_config
+        motor_no_config:
+            port: 0
+            type: MOTOR
+        motor_no_port:
+            type: MOTOR
+        motor_no_type:
+            port: 0
 
     device_configurations:
         test_motor_config:
@@ -39,12 +45,6 @@ port_configuration:
                 gear_ratio: 2915.0
 
         default_motor_config:
-            filter:
-                cutoff_frequency: 100.0
-            controller:
-                pos_gain: 0.0
-            model:
-                gear_ratio: 1.0
 
         drive_motor_config:
             gearset: 600

@@ -1,11 +1,11 @@
-#include <ghost_v5_core/devices/motor/load_motor_config_yaml.hpp>
+#include <ghost_v5_core/devices/motor/load_motor_device_config_yaml.hpp>
 #include "gtest/gtest.h"
 #include "yaml-cpp/yaml.h"
 
 using namespace ghost_v5_core::util;
 using namespace ghost_v5_core;
 
-class TestLoadConfigYAML : public ::testing::Test {
+class TestLoadMotorDeviceConfigYAML : public ::testing::Test {
 protected:
 
 	void SetUp() override {
@@ -13,10 +13,10 @@ protected:
 		config_yaml_ = YAML::LoadFile(config_path);
 
 		// Expected motor configurations
-		default_motor_config_ = std::make_shared<MotorDeviceConfig>();
-		default_motor_config_->name = "default_motor";
-		default_motor_config_->type = device_type_e::MOTOR;
-
+		motor_empty_config_ = std::make_shared<MotorDeviceConfig>();
+		motor_empty_config_->port = 0;
+		motor_empty_config_->name = "motor_empty_config";
+		motor_empty_config_->type = device_type_e::MOTOR;
 
 		left_drive_motor_config_ = std::make_shared<MotorDeviceConfig>();
 		left_drive_motor_config_->gearset = ghost_gearset::GEARSET_600;
@@ -36,7 +36,8 @@ protected:
 		right_drive_motor_config_->type = device_type_e::MOTOR;
 	}
 
-	std::shared_ptr<MotorDeviceConfig> default_motor_config_;
+	std::shared_ptr<MotorDeviceConfig> motor_empty_config_;
+	std::shared_ptr<MotorDeviceConfig> motor_no_config_;
 	std::shared_ptr<MotorDeviceConfig> left_drive_motor_config_;
 	std::shared_ptr<MotorDeviceConfig> right_drive_motor_config_;
 
@@ -46,7 +47,7 @@ protected:
 /**
  * @brief Test that a DCMotorModel::Config struct can be properly loaded from YAML
  */
-TEST_F(TestLoadConfigYAML, testLoadMotorModelConfig){
+TEST_F(TestLoadMotorDeviceConfigYAML, testLoadMotorModelConfig){
 	DCMotorModel::Config test_model_config{};
 	test_model_config.free_speed = 1104.0;
 	test_model_config.stall_torque = 52.25;
@@ -63,7 +64,7 @@ TEST_F(TestLoadConfigYAML, testLoadMotorModelConfig){
 /**
  * @brief Test that a MotorController::Config struct can be properly loaded from YAML
  */
-TEST_F(TestLoadConfigYAML, testLoadMotorControllerConfig){
+TEST_F(TestLoadMotorDeviceConfigYAML, testLoadMotorControllerConfig){
 	MotorController::Config test_controller_config{};
 	test_controller_config.pos_gain = 8000.0;
 	test_controller_config.vel_gain = 118.0;
@@ -78,7 +79,7 @@ TEST_F(TestLoadConfigYAML, testLoadMotorControllerConfig){
 /**
  * @brief Test that a SecondOrderLowPassFilter::Config struct can be properly loaded from YAML
  */
-TEST_F(TestLoadConfigYAML, testLoadLowPassFilterConfig){
+TEST_F(TestLoadMotorDeviceConfigYAML, testLoadLowPassFilterConfig){
 	SecondOrderLowPassFilter::Config test_filter_config{};
 	test_filter_config.cutoff_frequency = 62.0;
 	test_filter_config.damping_ratio = 0.10;
@@ -92,22 +93,51 @@ TEST_F(TestLoadConfigYAML, testLoadLowPassFilterConfig){
 /**
  * @brief Test that all fields are properly set when loading the MotorDeviceConfig class
  */
-TEST_F(TestLoadConfigYAML, testLoadDriveMotorConfigFromYAML){
+TEST_F(TestLoadMotorDeviceConfigYAML, testLoadCustomMotorConfigFromYAML){
 	auto config_node = config_yaml_["port_configuration"];
 	std::string motor_name = "right_drive_motor";
 	auto config_ptr = std::make_shared<MotorDeviceConfig>();
 	loadMotorDeviceConfigFromYAML(config_node, motor_name, config_ptr);
-
 	EXPECT_EQ(*config_ptr, *right_drive_motor_config_);
 }
 
 /**
  * @brief Test that missing fields will be populated with the default args for the MotorDeviceConfig class
  */
-TEST_F(TestLoadConfigYAML, testLoadDefaultMotorConfigFromYAML){
+TEST_F(TestLoadMotorDeviceConfigYAML, testLoadDefaultMotorConfigFromYAML){
 	auto config_node = config_yaml_["port_configuration"];
-	std::string motor_name = "default_motor";
+	std::string motor_name = "motor_empty_config";
 	auto config_ptr = std::make_shared<MotorDeviceConfig>();
-	EXPECT_NO_THROW(loadMotorDeviceConfigFromYAML(config_node, motor_name, config_ptr));
-	EXPECT_EQ(*config_ptr, *default_motor_config_);
+	loadMotorDeviceConfigFromYAML(config_node, motor_name, config_ptr);
+	EXPECT_EQ(*config_ptr, *motor_empty_config_);
+}
+
+/**
+ * @brief Test that if the motor config is not found, it throws.
+ */
+TEST_F(TestLoadMotorDeviceConfigYAML, testMissingConfigThrows){
+	auto config_node = config_yaml_["port_configuration"];
+	std::string motor_name = "motor_no_config";
+	auto config_ptr = std::make_shared<MotorDeviceConfig>();
+	EXPECT_THROW(loadMotorDeviceConfigFromYAML(config_node, motor_name, config_ptr), std::runtime_error);
+}
+
+/**
+ * @brief Test that if the device config is missing the port attribute, it throws.
+ */
+TEST_F(TestLoadMotorDeviceConfigYAML, testMissingPortThrowsError){
+	auto config_node = config_yaml_["port_configuration"];
+	std::string motor_name = "motor_no_port";
+	auto config_ptr = std::make_shared<MotorDeviceConfig>();
+	EXPECT_THROW(loadMotorDeviceConfigFromYAML(config_node, motor_name, config_ptr), std::runtime_error);
+}
+
+/**
+ * @brief Test that if the device config is missing the type attribute, it throws
+ */
+TEST_F(TestLoadMotorDeviceConfigYAML, testMissingTypeThrowsError){
+	auto config_node = config_yaml_["port_configuration"];
+	std::string motor_name = "motor_no_type";
+	auto config_ptr = std::make_shared<MotorDeviceConfig>();
+	EXPECT_THROW(loadMotorDeviceConfigFromYAML(config_node, motor_name, config_ptr), std::runtime_error);
 }

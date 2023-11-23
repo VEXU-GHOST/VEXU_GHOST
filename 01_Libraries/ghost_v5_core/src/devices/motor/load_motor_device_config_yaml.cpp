@@ -1,5 +1,5 @@
 #include <ghost_util/yaml_utils.hpp>
-#include <ghost_v5_core/devices/motor/load_motor_config_yaml.hpp>
+#include <ghost_v5_core/devices/motor/load_motor_device_config_yaml.hpp>
 
 namespace ghost_v5_core {
 
@@ -120,7 +120,7 @@ void loadMotorDeviceConfigFromYAML(YAML::Node node,
 	// Retrieve motor-specific config node
 	auto config_node = node["device_configurations"][config_name];
 	if(!config_node){
-		throw std::runtime_error("[loadMotorDeviceConfigFromYAML] Error: Motor Config not found for motor config " + config_name + "!");
+		throw std::runtime_error("[loadMotorDeviceConfigFromYAML] Error: Motor Config not found for name " + config_name + "!");
 	}
 
 	// Set base attributes

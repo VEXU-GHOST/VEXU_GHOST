@@ -37,7 +37,7 @@ public:
 	bool operator==(const DeviceConfig &rhs) const override {
 		const MotorDeviceConfig *m_rhs = dynamic_cast<const MotorDeviceConfig *>(&rhs);
 		if(m_rhs){
-			return (port == m_rhs->port) && (name == m_rhs->name) && (type == m_rhs->type) &&
+			return (port == m_rhs->port) && (name == m_rhs->name) && (type == m_rhs->type) && (reversed == m_rhs->reversed) &&
 			       (encoder_units == m_rhs->encoder_units) && (gearset == m_rhs->gearset) &&
 			       (brake_mode == m_rhs->brake_mode) && (controller_config == m_rhs->controller_config) &&
 			       (filter_config == m_rhs->filter_config) && (model_config == m_rhs->model_config);

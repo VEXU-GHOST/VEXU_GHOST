@@ -25,6 +25,7 @@ namespace util {
  *              port: 2
  *              type: ROTATION_SENSOR
  *              reversed: true/false
+ *              data_rate: 5
  *          ...
  *      device_configurations:
  *          my_motor_config_name:
