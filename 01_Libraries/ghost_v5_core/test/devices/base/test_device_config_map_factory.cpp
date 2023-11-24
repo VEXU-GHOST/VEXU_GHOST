@@ -3,8 +3,8 @@
 
 #include <ghost_v5_core/devices/base/device_config_map.hpp>
 #include <ghost_v5_core/devices/device_config_factory_utils.hpp>
-#include <ghost_v5_core/devices/motor/motor_device_config.hpp>
-#include <ghost_v5_core/devices/rotation_sensor/rotation_sensor_device_config.hpp>
+#include <ghost_v5_core/devices/motor/motor_device_interface.hpp>
+#include <ghost_v5_core/devices/rotation_sensor/rotation_sensor_device_interface.hpp>
 
 #include <gtest/gtest.h>
 #include "yaml-cpp/yaml.h"
@@ -136,7 +136,9 @@ TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 	generateCodeFromRobotConfig(robot_config_ptr_, src_dir + "test.cpp");
 
 	// Compile
-	std::string compile_cmd = "g++ --std=c++17 -fPIC -rdynamic -I" + include_dir  + " -shared -o " + codegen_dir + "/test.so " + src_dir + "test.cpp";
+	std::string compile_cmd = "g++ --std=c++17 -fPIC -rdynamic -I" + include_dir +
+	                          "ghost_util/include -I" + include_dir + "ghost_v5_core/include -shared -o" +
+	                          codegen_dir + "/test.so " + src_dir + "test.cpp ";
 	std::system(compile_cmd.c_str());
 
 	// Load library

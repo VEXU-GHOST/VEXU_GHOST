@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include "device_interfaces.hpp"
+#include "ghost_v5_core/devices/base/device_interfaces.hpp"
 
 
 namespace ghost_v5_core {

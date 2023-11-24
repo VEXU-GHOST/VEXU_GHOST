@@ -1,8 +1,8 @@
-#include "ghost_serial/serial_utils/bitmasks.hpp"
+#include "ghost_util/bitmasks.hpp"
 
-namespace ghost_serial {
+namespace ghost_util {
 
-uint32_t BITMASK_ARR_32BIT[32] = {
+const uint32_t BITMASK_ARR_32BIT[32] = {
 	0x00000001, 0x00000002, 0x00000004, 0x00000008,
 	0x00000010, 0x00000020, 0x00000040, 0x00000080,
 	0x00000100, 0x00000200, 0x00000400, 0x00000800,
@@ -13,4 +13,4 @@ uint32_t BITMASK_ARR_32BIT[32] = {
 	0x10000000, 0x20000000, 0x40000000, 0x80000000,
 };
 
-}
+} // namespace ghost_util

@@ -217,4 +217,16 @@ target_link_libraries(test_device_config_map_factory
   yaml-cpp
 )
 
+ament_add_gtest(test_motor_device_interface test/devices/motor/test_motor_device_interface.cpp)
+ament_target_dependencies(test_motor_device_interface ${DEPENDENCIES})
+target_link_libraries(test_motor_device_interface
+  gtest_main
+)
+
+ament_add_gtest(test_rotation_sensor_device_interface test/devices/rotation_sensor/test_rotation_sensor_device_interface.cpp)
+ament_target_dependencies(test_rotation_sensor_device_interface ${DEPENDENCIES})
+target_link_libraries(test_rotation_sensor_device_interface
+  gtest_main
+)
+
 ament_package()

@@ -47,6 +47,23 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_library(bitmasks SHARED
+  src/bitmasks.cpp
+)
+target_include_directories(bitmasks
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(bitmasks HAS_LIBRARY_TARGET)
+install(
+  TARGETS bitmasks
+  EXPORT bitmasks
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 #################
 #### Install ####
 #################

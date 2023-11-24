@@ -61,16 +61,6 @@ public:
 		}
 		return derived_ptr;
 	}
-	// template<typename Derived>
-	// std::shared_ptr<const Derived> as() const {
-	// 	auto derived_ptr_raw = dynamic_cast<const Derived*>(this);
-	// 	if(derived_ptr_raw == nullptr){
-	// 		throw std::runtime_error("[DeviceBase::as] Error: Cannot downcast device " + name + "!");
-	// 	}
-	// 	std::shared_ptr<const Derived> derived_ptr;
-	// 	derived_ptr.reset(derived_ptr_raw);
-	// 	return derived_ptr;
-	// }
 
 	virtual bool operator==(const DeviceBase &rhs) const = 0;
 };
@@ -86,8 +76,8 @@ class DeviceData : public DeviceBase {
 public:
 	virtual std::shared_ptr<DeviceBase> clone() const = 0;
 	virtual bool operator==(const DeviceBase &rhs) const = 0;
-	virtual std::vector<unsigned char> serialize() const = 0;
-	virtual void deserialize(std::vector<unsigned char> data)  = 0;
+	virtual std::vector<unsigned char> serialize(bool to_v5) const = 0;
+	virtual void deserialize(const std::vector<unsigned char>& data, bool from_coprocessor)  = 0;
 };
 
 } // namespace ghost_v5_core

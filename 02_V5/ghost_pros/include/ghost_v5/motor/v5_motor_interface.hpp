@@ -1,5 +1,5 @@
 #pragma once
-#include "ghost_v5_core/devices/motor/motor_device_config.hpp"
+#include "ghost_v5_core/devices/motor/motor_device_interface.hpp"
 #include "ghost_v5_core/motor/motor_controller.hpp"
 #include "pros/apix.h"
 #include "pros/error.h"

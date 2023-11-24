@@ -6,7 +6,7 @@
 #include "pros/adi.h"
 #include "pros/apix.h"
 
-using ghost_serial::BITMASK_ARR_32BIT;
+using ghost_util::BITMASK_ARR_32BIT;
 
 namespace ghost_v5 {
 
