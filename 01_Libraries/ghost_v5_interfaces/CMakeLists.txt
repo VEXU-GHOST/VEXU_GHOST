@@ -35,7 +35,7 @@ ament_export_include_directories(${INCLUDE})
 ##### Utility Libraries #####
 #############################
 add_library(load_motor_device_config_yaml SHARED
-  src/motor/load_motor_device_config_yaml.cpp
+  src/util/load_motor_device_config_yaml.cpp
 )
 target_include_directories(load_motor_device_config_yaml
   PUBLIC
@@ -55,7 +55,7 @@ install(
 )
 
 add_library(load_rotation_sensor_device_config_yaml SHARED
-  src/rotation_sensor/load_rotation_sensor_device_config_yaml.cpp
+  src/util/load_rotation_sensor_device_config_yaml.cpp
 )
 target_include_directories(load_rotation_sensor_device_config_yaml
   PUBLIC
@@ -75,7 +75,7 @@ install(
 )
 
 add_library(device_config_factory_utils SHARED
-  src/device_config_factory_utils.cpp
+  src/util/device_config_factory_utils.cpp
 )
 target_include_directories(device_config_factory_utils
   PUBLIC
@@ -109,7 +109,7 @@ install(
 #################
 #### Testing ####
 #################
-ament_add_gtest(test_load_motor_device_config_yaml test/motor/test_load_motor_device_config_yaml.cpp)
+ament_add_gtest(test_load_motor_device_config_yaml test/util/test_load_motor_device_config_yaml.cpp)
 ament_target_dependencies(test_load_motor_device_config_yaml ${DEPENDENCIES})
 target_link_libraries(test_load_motor_device_config_yaml
   gtest_main
@@ -117,7 +117,7 @@ target_link_libraries(test_load_motor_device_config_yaml
   yaml-cpp
 )
 
-ament_add_gtest(test_load_rotation_sensor_device_config_yaml test/rotation_sensor/test_load_rotation_sensor_device_config_yaml.cpp)
+ament_add_gtest(test_load_rotation_sensor_device_config_yaml test/util/test_load_rotation_sensor_device_config_yaml.cpp)
 ament_target_dependencies(test_load_rotation_sensor_device_config_yaml ${DEPENDENCIES})
 target_link_libraries(test_load_rotation_sensor_device_config_yaml
   gtest_main
@@ -125,13 +125,13 @@ target_link_libraries(test_load_rotation_sensor_device_config_yaml
   yaml-cpp
 )
 
-ament_add_gtest(test_device_config_interfaces test/base/test_device_config_interfaces.cpp)
+ament_add_gtest(test_device_config_interfaces test/devices/test_device_config_interfaces.cpp)
 ament_target_dependencies(test_device_config_interfaces ${DEPENDENCIES})
 target_link_libraries(test_device_config_interfaces
   gtest_main
 )
 
-ament_add_gtest(test_device_config_map_factory test/base/test_device_config_map_factory.cpp)
+ament_add_gtest(test_device_config_map_factory test/util/test_device_config_map_factory.cpp)
 ament_target_dependencies(test_device_config_map_factory ${DEPENDENCIES})
 target_link_libraries(test_device_config_map_factory
   gtest_main
@@ -139,13 +139,13 @@ target_link_libraries(test_device_config_map_factory
   yaml-cpp
 )
 
-ament_add_gtest(test_motor_device_interface test/motor/test_motor_device_interface.cpp)
+ament_add_gtest(test_motor_device_interface test/devices/test_motor_device_interface.cpp)
 ament_target_dependencies(test_motor_device_interface ${DEPENDENCIES})
 target_link_libraries(test_motor_device_interface
   gtest_main
 )
 
-ament_add_gtest(test_rotation_sensor_device_interface test/rotation_sensor/test_rotation_sensor_device_interface.cpp)
+ament_add_gtest(test_rotation_sensor_device_interface test/devices/test_rotation_sensor_device_interface.cpp)
 ament_target_dependencies(test_rotation_sensor_device_interface ${DEPENDENCIES})
 target_link_libraries(test_rotation_sensor_device_interface
   gtest_main

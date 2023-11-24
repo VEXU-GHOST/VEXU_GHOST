@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <ghost_v5_interfaces/base/device_config_map.hpp>
+#include <ghost_v5_interfaces/devices/device_config_map.hpp>
 #include "yaml-cpp/yaml.h"
 
 namespace ghost_v5_interfaces {

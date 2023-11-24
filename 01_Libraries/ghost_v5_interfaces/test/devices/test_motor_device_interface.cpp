@@ -1,4 +1,4 @@
-#include "ghost_v5_interfaces/motor/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 
 #include <stdlib.h>
 #include "gtest/gtest.h"

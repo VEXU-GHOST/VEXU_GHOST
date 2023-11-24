@@ -52,12 +52,7 @@ ln -s ../../../../../01_Libraries/ghost_serial/include/ghost_serial/base_interfa
 
 ### Symlink ghost_v5_interfaces ###
 cd $V5_DIR/include/ghost_v5_interfaces
-ln -s ../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/base
-mkdir motor && cd motor
-ln -s ../../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/motor/motor_device_interface.hpp
-cd ..
-mkdir rotation_sensor && cd rotation_sensor
-ln -s ../../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/rotation_sensor/rotation_sensor_device_interface.hpp
+ln -s ../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/devices
 
 ### Symlink ghost_util ###
 cd $V5_DIR/include/ghost_util

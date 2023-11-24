@@ -1,4 +1,4 @@
-#include <ghost_v5_interfaces/motor/load_motor_device_config_yaml.hpp>
+#include <ghost_v5_interfaces/util/load_motor_device_config_yaml.hpp>
 #include "gtest/gtest.h"
 #include "yaml-cpp/yaml.h"
 

@@ -1,4 +1,4 @@
-#include "ghost_v5_interfaces/rotation_sensor/rotation_sensor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 
 #include <stdlib.h>
 #include "gtest/gtest.h"

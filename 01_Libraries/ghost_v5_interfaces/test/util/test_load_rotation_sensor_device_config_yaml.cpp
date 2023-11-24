@@ -1,4 +1,4 @@
-#include <ghost_v5_interfaces/rotation_sensor/load_rotation_sensor_device_config_yaml.hpp>
+#include <ghost_v5_interfaces/util/load_rotation_sensor_device_config_yaml.hpp>
 #include "gtest/gtest.h"
 #include "yaml-cpp/yaml.h"
 

@@ -1,5 +1,5 @@
-#include <ghost_v5_interfaces/base/device_config_map.hpp>
-#include <ghost_v5_interfaces/base/device_interfaces.hpp>
+#include <ghost_v5_interfaces/devices/device_config_map.hpp>
+#include <ghost_v5_interfaces/devices/device_interfaces.hpp>
 #include <gtest/gtest.h>
 
 using ghost_v5_interfaces::device_type_e;

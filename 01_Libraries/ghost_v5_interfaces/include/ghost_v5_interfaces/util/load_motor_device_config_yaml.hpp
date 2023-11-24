@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <memory>
-#include "ghost_v5_interfaces/base/device_interfaces.hpp"
-#include "ghost_v5_interfaces/motor/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/device_interfaces.hpp"
+#include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "yaml-cpp/yaml.h"
 
 namespace ghost_v5_interfaces {

@@ -1,6 +1,6 @@
 #pragma once
 #include "ghost_control/motor_controller.hpp"
-#include "ghost_v5_interfaces/motor/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "pros/apix.h"
 #include "pros/error.h"
 #include "pros/motors.hpp"

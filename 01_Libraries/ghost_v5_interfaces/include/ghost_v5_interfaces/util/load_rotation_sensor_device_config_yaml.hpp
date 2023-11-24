@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <memory>
-#include "../base/device_interfaces.hpp"
-#include "rotation_sensor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/device_interfaces.hpp"
+#include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 #include "yaml-cpp/yaml.h"
 
 namespace ghost_v5_interfaces {

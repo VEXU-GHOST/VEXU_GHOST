@@ -2,7 +2,7 @@
 
 #include <cstring>
 #include "ghost_util/byte_utils.hpp"
-#include "ghost_v5_interfaces/base/device_interfaces.hpp"
+#include "ghost_v5_interfaces/devices/device_interfaces.hpp"
 
 using ghost_util::getBit;
 using ghost_util::packByte;

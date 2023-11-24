@@ -1,9 +1,9 @@
 #include <ghost_util/yaml_utils.hpp>
-#include <ghost_v5_interfaces/device_config_factory_utils.hpp>
-#include <ghost_v5_interfaces/motor/load_motor_device_config_yaml.hpp>
-#include <ghost_v5_interfaces/motor/motor_device_interface.hpp>
-#include <ghost_v5_interfaces/rotation_sensor/load_rotation_sensor_device_config_yaml.hpp>
-#include <ghost_v5_interfaces/rotation_sensor/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
+#include <ghost_v5_interfaces/util/load_motor_device_config_yaml.hpp>
+#include <ghost_v5_interfaces/util/load_rotation_sensor_device_config_yaml.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -126,9 +126,9 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 	output_file << "///////////////////////////////////////////////////////////////\n\n";
 
 	output_file << "#include <memory>\n";
-	output_file << "#include \"ghost_v5_interfaces/base/device_config_map.hpp\"\n";
-	output_file << "#include \"ghost_v5_interfaces/motor/motor_device_interface.hpp\"\n";
-	output_file << "#include \"ghost_v5_interfaces/rotation_sensor/rotation_sensor_device_interface.hpp\"\n";
+	output_file << "#include \"ghost_v5_interfaces/devices/device_config_map.hpp\"\n";
+	output_file << "#include \"ghost_v5_interfaces/devices/motor_device_interface.hpp\"\n";
+	output_file << "#include \"ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp\"\n";
 	output_file << "\n";
 	output_file << "using namespace ghost_v5_interfaces;\n";
 	output_file << "\n";

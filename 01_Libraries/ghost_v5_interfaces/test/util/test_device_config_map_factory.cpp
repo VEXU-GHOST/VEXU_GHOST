@@ -1,10 +1,10 @@
 #include <filesystem>
 #include <dlfcn.h>
 
-#include <ghost_v5_interfaces/base/device_config_map.hpp>
-#include <ghost_v5_interfaces/device_config_factory_utils.hpp>
-#include <ghost_v5_interfaces/motor/motor_device_interface.hpp>
-#include <ghost_v5_interfaces/rotation_sensor/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/device_config_map.hpp>
+#include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
 #include <gtest/gtest.h>
 #include "yaml-cpp/yaml.h"
