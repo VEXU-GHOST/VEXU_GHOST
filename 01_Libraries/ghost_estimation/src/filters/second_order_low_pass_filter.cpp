@@ -1,6 +1,6 @@
 #include <math.h>
 
-#include "ghost_v5_core/filters/second_order_low_pass_filter.hpp"
+#include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
 
 namespace ghost_v5_core {
 

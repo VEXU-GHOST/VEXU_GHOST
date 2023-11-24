@@ -137,7 +137,8 @@ TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 
 	// Compile
 	std::string compile_cmd = "g++ --std=c++17 -fPIC -rdynamic -I" + include_dir +
-	                          "ghost_util/include -I" + include_dir + "ghost_v5_core/include -shared -o" +
+	                          "ghost_util/include -I" + include_dir + "ghost_v5_core/include -I" + include_dir +
+	                          "ghost_estimation/include -I" + include_dir + "ghost_control/include -shared -o" +
 	                          codegen_dir + "/test.so " + src_dir + "test.cpp ";
 	std::system(compile_cmd.c_str());
 
