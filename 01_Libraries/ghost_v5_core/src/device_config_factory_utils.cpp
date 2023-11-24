@@ -10,6 +10,7 @@
 #include <iostream>
 #include <unordered_map>
 
+using ghost_util::loadYAMLParam;
 namespace ghost_v5_core {
 
 namespace util {

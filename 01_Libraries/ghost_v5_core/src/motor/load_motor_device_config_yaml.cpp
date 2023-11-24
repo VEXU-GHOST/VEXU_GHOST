@@ -1,6 +1,7 @@
 #include <ghost_util/yaml_utils.hpp>
 #include <ghost_v5_core/motor/load_motor_device_config_yaml.hpp>
 
+using ghost_util::loadYAMLParam;
 namespace ghost_v5_core {
 
 namespace util {

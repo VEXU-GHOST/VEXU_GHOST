@@ -1,9 +1,7 @@
 #include <iostream>
 #include "yaml-cpp/yaml.h"
 
-namespace ghost_v5_core {
-
-namespace util {
+namespace ghost_util {
 
 template <typename T>
 bool loadYAMLParam(YAML::Node node, std::string param_name, T& var, bool verbose){
@@ -20,6 +18,4 @@ bool loadYAMLParam(YAML::Node node, std::string param_name, T& var, bool verbose
 	return false;
 }
 
-} // namespace util
-
-} // namespace ghost_v5_core
+} // namespace ghost_util
