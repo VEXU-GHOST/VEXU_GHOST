@@ -1,15 +1,15 @@
-#include <ghost_v5_core/motor/load_motor_device_config_yaml.hpp>
+#include <ghost_v5_interfaces/motor/load_motor_device_config_yaml.hpp>
 #include "gtest/gtest.h"
 #include "yaml-cpp/yaml.h"
 
-using namespace ghost_v5_core::util;
-using namespace ghost_v5_core;
+using namespace ghost_v5_interfaces::util;
+using namespace ghost_v5_interfaces;
 
 class TestLoadMotorDeviceConfigYAML : public ::testing::Test {
 protected:
 
 	void SetUp() override {
-		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/test_load_motor_config.yaml";
+		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/test_load_motor_config.yaml";
 		config_yaml_ = YAML::LoadFile(config_path);
 
 		// Expected motor configurations

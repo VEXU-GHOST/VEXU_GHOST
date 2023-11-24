@@ -1,10 +1,10 @@
 #pragma once
 
 #include <iostream>
-#include "ghost_v5_core/base/device_interfaces.hpp"
+#include "ghost_v5_interfaces/base/device_interfaces.hpp"
 
 
-namespace ghost_v5_core {
+namespace ghost_v5_interfaces {
 
 class DeviceConfigMap {
 public:
@@ -73,4 +73,4 @@ private:
 	std::unordered_map<int, std::string> port_to_device_name_map_;
 };
 
-} // namespace ghost_v5_core
+} // namespace ghost_v5_interfaces

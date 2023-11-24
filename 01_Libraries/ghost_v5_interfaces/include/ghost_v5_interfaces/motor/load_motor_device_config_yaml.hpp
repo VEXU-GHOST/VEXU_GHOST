@@ -2,11 +2,11 @@
 
 #include <iostream>
 #include <memory>
-#include "ghost_v5_core/base/device_interfaces.hpp"
-#include "ghost_v5_core/motor/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/base/device_interfaces.hpp"
+#include "ghost_v5_interfaces/motor/motor_device_interface.hpp"
 #include "yaml-cpp/yaml.h"
 
-namespace ghost_v5_core {
+namespace ghost_v5_interfaces {
 
 namespace util {
 
@@ -25,4 +25,4 @@ void loadMotorDeviceConfigFromYAML(YAML::Node node,
 
 } // namespace util
 
-} // namespace ghost_v5_core
+} // namespace ghost_v5_interfaces

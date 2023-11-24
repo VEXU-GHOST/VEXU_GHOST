@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ghost_v5_core)
+project(ghost_v5_interfaces)
 
 # Add Global CMake Config for Ghost Packages
 set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")

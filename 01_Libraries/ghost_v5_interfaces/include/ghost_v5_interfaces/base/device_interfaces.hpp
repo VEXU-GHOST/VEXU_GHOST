@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace ghost_v5_core {
+namespace ghost_v5_interfaces {
 
 // List available V5 Devices
 enum device_type_e {
@@ -80,4 +80,4 @@ public:
 	virtual void deserialize(const std::vector<unsigned char>& data, bool from_coprocessor)  = 0;
 };
 
-} // namespace ghost_v5_core
+} // namespace ghost_v5_interfaces

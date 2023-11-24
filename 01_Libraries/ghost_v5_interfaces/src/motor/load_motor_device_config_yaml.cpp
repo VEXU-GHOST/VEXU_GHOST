@@ -1,8 +1,8 @@
 #include <ghost_util/yaml_utils.hpp>
-#include <ghost_v5_core/motor/load_motor_device_config_yaml.hpp>
+#include <ghost_v5_interfaces/motor/load_motor_device_config_yaml.hpp>
 
 using ghost_util::loadYAMLParam;
-namespace ghost_v5_core {
+namespace ghost_v5_interfaces {
 
 namespace util {
 
@@ -166,4 +166,4 @@ void loadMotorDeviceConfigFromYAML(YAML::Node node,
 
 } // namespace util
 
-} // namespace ghost_v5_core
+} // namespace ghost_v5_interfaces

@@ -5,7 +5,7 @@
 #include "ghost_control/motor_controller.hpp"
 #include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
 #include "ghost_util/byte_utils.hpp"
-#include "ghost_v5_core/base/device_interfaces.hpp"
+#include "ghost_v5_interfaces/base/device_interfaces.hpp"
 
 using ghost_util::packByte;
 using ghost_util::unpackByte;
@@ -13,7 +13,7 @@ using ghost_util::unpackByte;
 using ghost_control::DCMotorModel;
 using ghost_control::MotorController;
 
-namespace ghost_v5_core {
+namespace ghost_v5_interfaces {
 
 enum ghost_gearset {
 	GEARSET_100,
@@ -211,4 +211,4 @@ public:
 	}
 };
 
-} // namespace ghost_v5_core
+} // namespace ghost_v5_interfaces

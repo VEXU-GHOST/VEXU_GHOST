@@ -1,10 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <ghost_v5_core/base/device_config_map.hpp>
+#include <ghost_v5_interfaces/base/device_config_map.hpp>
 #include "yaml-cpp/yaml.h"
 
-namespace ghost_v5_core {
+namespace ghost_v5_interfaces {
 
 namespace util {
 
@@ -54,4 +54,4 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 
 } // namespace util
 
-} // namespace ghost_v5_core{
+} // namespace ghost_v5_interfaces{

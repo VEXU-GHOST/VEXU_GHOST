@@ -6,7 +6,7 @@
 #include "rotation_sensor_device_interface.hpp"
 #include "yaml-cpp/yaml.h"
 
-namespace ghost_v5_core {
+namespace ghost_v5_interfaces {
 
 namespace util {
 
@@ -17,4 +17,4 @@ void loadRotationSensorDeviceConfigFromYAML(YAML::Node node,
 
 } // namespace util
 
-} // namespace ghost_v5_core
+} // namespace ghost_v5_interfaces

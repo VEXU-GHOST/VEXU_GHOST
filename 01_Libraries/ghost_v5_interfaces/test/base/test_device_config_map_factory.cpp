@@ -1,16 +1,16 @@
 #include <filesystem>
 #include <dlfcn.h>
 
-#include <ghost_v5_core/base/device_config_map.hpp>
-#include <ghost_v5_core/device_config_factory_utils.hpp>
-#include <ghost_v5_core/motor/motor_device_interface.hpp>
-#include <ghost_v5_core/rotation_sensor/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/base/device_config_map.hpp>
+#include <ghost_v5_interfaces/device_config_factory_utils.hpp>
+#include <ghost_v5_interfaces/motor/motor_device_interface.hpp>
+#include <ghost_v5_interfaces/rotation_sensor/rotation_sensor_device_interface.hpp>
 
 #include <gtest/gtest.h>
 #include "yaml-cpp/yaml.h"
 
-using namespace ghost_v5_core::util;
-using namespace ghost_v5_core;
+using namespace ghost_v5_interfaces::util;
+using namespace ghost_v5_interfaces;
 
 class DeviceConfigMapTestFixture : public ::testing::Test {
 protected:
@@ -83,7 +83,7 @@ protected:
  * @brief Test that we can load a DeviceConfigMap from YAML.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
-	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/example_robot.yaml");
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
 	EXPECT_EQ(*device_config_ptr, *robot_config_ptr_);
 }
@@ -92,7 +92,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
  * @brief Test that mismatched motor port will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig){
-	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/example_robot.yaml");
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["devices"]["left_drive_motor"]["port"] = 10;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
 	EXPECT_FALSE(*device_config_ptr == *robot_config_ptr_);
@@ -102,7 +102,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig
  * @brief Test that mismatched motor config will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchMotorConfig){
-	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_core/test/config/example_robot.yaml");
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["device_configurations"]["test_motor_config"]["filter"]["timestep"] = 0.1;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
 	EXPECT_FALSE(*device_config_ptr == *robot_config_ptr_);
@@ -132,12 +132,12 @@ TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 
 	// Generate code
 	std::string include_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/install/";
-	std::string src_dir = include_dir + "ghost_v5_core/include/";
+	std::string src_dir = include_dir + "ghost_v5_interfaces/include/";
 	generateCodeFromRobotConfig(robot_config_ptr_, src_dir + "test.cpp");
 
 	// Compile
 	std::string compile_cmd = "g++ --std=c++17 -fPIC -rdynamic -I" + include_dir +
-	                          "ghost_util/include -I" + include_dir + "ghost_v5_core/include -I" + include_dir +
+	                          "ghost_util/include -I" + include_dir + "ghost_v5_interfaces/include -I" + include_dir +
 	                          "ghost_estimation/include -I" + include_dir + "ghost_control/include -shared -o" +
 	                          codegen_dir + "/test.so " + src_dir + "test.cpp ";
 	std::system(compile_cmd.c_str());

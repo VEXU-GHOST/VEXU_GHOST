@@ -39,8 +39,8 @@ ln -s ../../../../../01_Libraries/ghost_control/src/models/dc_motor_model.cpp
 cd $V5_DIR/include
 
 # Clear existing directories
-rm -r ghost_serial ghost_v5_core ghost_util ghost_estimation ghost_control
-mkdir ghost_serial ghost_v5_core ghost_util ghost_estimation ghost_control
+rm -r ghost_serial ghost_v5_interfaces ghost_util ghost_estimation ghost_control
+mkdir ghost_serial ghost_v5_interfaces ghost_util ghost_estimation ghost_control
 
 ### Symlink ghost_serial ###
 cd ghost_serial
@@ -50,14 +50,14 @@ mkdir base_interfaces && cd base_interfaces
 ln -s ../../../../../01_Libraries/ghost_serial/include/ghost_serial/base_interfaces/generic_serial_base.hpp
 ln -s ../../../../../01_Libraries/ghost_serial/include/ghost_serial/base_interfaces/v5_serial_base.hpp
 
-### Symlink ghost_v5_core ###
-cd $V5_DIR/include/ghost_v5_core
-ln -s ../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/base
+### Symlink ghost_v5_interfaces ###
+cd $V5_DIR/include/ghost_v5_interfaces
+ln -s ../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/base
 mkdir motor && cd motor
-ln -s ../../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/motor/motor_device_interface.hpp
+ln -s ../../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/motor/motor_device_interface.hpp
 cd ..
 mkdir rotation_sensor && cd rotation_sensor
-ln -s ../../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/rotation_sensor/rotation_sensor_device_interface.hpp
+ln -s ../../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/rotation_sensor/rotation_sensor_device_interface.hpp
 
 ### Symlink ghost_util ###
 cd $V5_DIR/include/ghost_util

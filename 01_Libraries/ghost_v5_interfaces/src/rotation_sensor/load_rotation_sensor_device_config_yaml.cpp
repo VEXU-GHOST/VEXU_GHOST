@@ -1,9 +1,9 @@
 #include <ghost_util/yaml_utils.hpp>
-#include <ghost_v5_core/rotation_sensor/load_rotation_sensor_device_config_yaml.hpp>
+#include <ghost_v5_interfaces/rotation_sensor/load_rotation_sensor_device_config_yaml.hpp>
 
 using ghost_util::loadYAMLParam;
 
-namespace ghost_v5_core {
+namespace ghost_v5_interfaces {
 
 namespace util {
 
@@ -36,4 +36,4 @@ void loadRotationSensorDeviceConfigFromYAML(YAML::Node node,
 
 } // namespace util
 
-} // namespace ghost_v5_core
+} // namespace ghost_v5_interfaces

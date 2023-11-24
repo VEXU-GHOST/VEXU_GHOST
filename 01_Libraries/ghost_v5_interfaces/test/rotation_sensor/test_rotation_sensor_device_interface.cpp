@@ -1,9 +1,9 @@
-#include "ghost_v5_core/rotation_sensor/rotation_sensor_device_interface.hpp"
+#include "ghost_v5_interfaces/rotation_sensor/rotation_sensor_device_interface.hpp"
 
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
-using ghost_v5_core::RotationSensorDeviceData;
+using ghost_v5_interfaces::RotationSensorDeviceData;
 
 TEST(TestRotationSensorDeviceInterface, testSerialization){
 	RotationSensorDeviceData data_1;

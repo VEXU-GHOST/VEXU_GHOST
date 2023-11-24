@@ -1,8 +1,8 @@
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 
-using ghost_v5_core::ghost_brake_mode;
-using ghost_v5_core::ghost_encoder_unit;
-using ghost_v5_core::ghost_gearset;
+using ghost_v5_interfaces::ghost_brake_mode;
+using ghost_v5_interfaces::ghost_encoder_unit;
+using ghost_v5_interfaces::ghost_gearset;
 
 namespace ghost_v5 {
 
