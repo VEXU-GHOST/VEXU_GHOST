@@ -10,6 +10,14 @@ class DeviceConfigMap {
 public:
 	DeviceConfigMap() = default;
 
+	std::shared_ptr<DeviceConfigMap> clone() {
+		auto cloned_config_map_ptr = std::make_shared<DeviceConfigMap>();
+		for(const auto& [key, val] : device_configs_){
+			cloned_config_map_ptr->addDeviceConfig(val->clone()->as<DeviceConfig>());
+		}
+		return cloned_config_map_ptr;
+	}
+
 	void addDeviceConfig(std::shared_ptr<DeviceConfig> device){
 		if(device_configs_.count(device->name) != 0){
 			throw std::runtime_error("[DeviceConfigMap::addDeviceConfig] Error: " + device->name + " already exists!");

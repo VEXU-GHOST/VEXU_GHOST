@@ -190,3 +190,35 @@ TEST(TestDeviceConfigInterfaces, testGetNonexistentValueThrows){
 	DeviceConfigMap device_config_map;
 	EXPECT_THROW(device_config_map.getDeviceConfig("test"), std::runtime_error);
 }
+
+TEST(TestDeviceConfigInterfaces, testCloneDeviceConfigMap){
+	auto config_1 = std::make_shared<TestDeviceConfig>();
+	config_1->port = 2;
+	config_1->name = "motor_1";
+	config_1->type = device_type_e::MOTOR;
+	config_1->a = 17;
+
+	auto config_2 = std::make_shared<TestDeviceConfig>();
+	config_1->port = 3;
+	config_1->name = "sensor_1";
+	config_1->type = device_type_e::ROTATION_SENSOR;
+	config_1->a = 99;
+	config_1->b = true;
+
+	auto device_config_map_ptr = std::make_shared<DeviceConfigMap>();
+	EXPECT_NO_THROW(device_config_map_ptr->addDeviceConfig(config_1));
+	EXPECT_NO_THROW(device_config_map_ptr->addDeviceConfig(config_2));
+
+	std::shared_ptr<DeviceConfigMap> cloned_config_map_ptr;
+	EXPECT_NO_THROW(cloned_config_map_ptr = device_config_map_ptr->clone());
+
+	EXPECT_EQ(*cloned_config_map_ptr, *device_config_map_ptr);
+
+	for(auto it = device_config_map_ptr->begin(); it != device_config_map_ptr->end(); it++){
+		auto name = it->first;
+		auto device_config_ptr = it->second;
+
+		EXPECT_TRUE(cloned_config_map_ptr->contains(name));
+		EXPECT_FALSE(device_config_ptr == cloned_config_map_ptr->getDeviceConfig(name));
+	}
+}

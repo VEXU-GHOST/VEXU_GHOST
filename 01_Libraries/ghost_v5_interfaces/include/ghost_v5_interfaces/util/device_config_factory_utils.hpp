@@ -54,4 +54,4 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 
 } // namespace util
 
-} // namespace ghost_v5_interfaces{
+} // namespace ghost_v5_interfaces

@@ -31,71 +31,80 @@ set(INCLUDE
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
+################################
+### Robot Hardware Interface ###
+################################
+add_library(robot_hardware_interface SHARED
+  src/robot_hardware_interface.cpp
+)
+target_include_directories(robot_hardware_interface
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(robot_hardware_interface
+  ${DEPENDENCIES}
+)
+ament_export_targets(robot_hardware_interface HAS_LIBRARY_TARGET)
+install(
+  TARGETS robot_hardware_interface
+  EXPORT robot_hardware_interface
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 #############################
 ##### Utility Libraries #####
 #############################
-add_library(load_motor_device_config_yaml SHARED
-  src/util/load_motor_device_config_yaml.cpp
-)
-target_include_directories(load_motor_device_config_yaml
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(load_motor_device_config_yaml
-  ${DEPENDENCIES}
-)
-ament_export_targets(load_motor_device_config_yaml HAS_LIBRARY_TARGET)
-install(
-  TARGETS load_motor_device_config_yaml
-  EXPORT load_motor_device_config_yaml
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-add_library(load_rotation_sensor_device_config_yaml SHARED
-  src/util/load_rotation_sensor_device_config_yaml.cpp
-)
-target_include_directories(load_rotation_sensor_device_config_yaml
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(load_rotation_sensor_device_config_yaml
-  ${DEPENDENCIES}
-)
-ament_export_targets(load_rotation_sensor_device_config_yaml HAS_LIBRARY_TARGET)
-install(
-  TARGETS load_rotation_sensor_device_config_yaml
-  EXPORT load_rotation_sensor_device_config_yaml
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-add_library(device_config_factory_utils SHARED
-  src/util/device_config_factory_utils.cpp
-)
-target_include_directories(device_config_factory_utils
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(device_config_factory_utils
-  ${DEPENDENCIES}
-)
-target_link_libraries(device_config_factory_utils
+set(UTIL_LIBS
   load_motor_device_config_yaml
   load_rotation_sensor_device_config_yaml
 )
+
+foreach(UTIL ${UTIL_LIBS})
+  add_library(${UTIL} SHARED
+    src/util/${UTIL}.cpp
+  )
+  target_include_directories(${UTIL}
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  ament_target_dependencies(${UTIL}
+    ${DEPENDENCIES}
+  )
+  ament_export_targets(${UTIL} HAS_LIBRARY_TARGET)
+  install(
+    TARGETS ${UTIL}
+    EXPORT ${UTIL}
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+  )
+endforeach()
+
+add_library(device_config_factory_utils SHARED
+src/util/device_config_factory_utils.cpp
+)
+target_include_directories(device_config_factory_utils
+PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+$<INSTALL_INTERFACE:include>)
+ament_target_dependencies(device_config_factory_utils
+${DEPENDENCIES}
+)
+target_link_libraries(device_config_factory_utils
+  ${UTIL_LIBS}
+)
 ament_export_targets(device_config_factory_utils HAS_LIBRARY_TARGET)
 install(
-  TARGETS device_config_factory_utils
-  EXPORT device_config_factory_utils
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
+TARGETS device_config_factory_utils
+EXPORT device_config_factory_utils
+LIBRARY DESTINATION lib
+ARCHIVE DESTINATION lib
+RUNTIME DESTINATION bin
+INCLUDES DESTINATION include
 )
 
 #################
@@ -109,46 +118,41 @@ install(
 #################
 #### Testing ####
 #################
-ament_add_gtest(test_load_motor_device_config_yaml test/util/test_load_motor_device_config_yaml.cpp)
-ament_target_dependencies(test_load_motor_device_config_yaml ${DEPENDENCIES})
-target_link_libraries(test_load_motor_device_config_yaml
-  gtest_main
-  load_motor_device_config_yaml
-  yaml-cpp
+# Device Interface Tests
+set(DEVICE_TESTS
+  test_device_config_interfaces
+  test_motor_device_interface
+  test_rotation_sensor_device_interface
+  test_joystick_device_interface
 )
+foreach(TEST ${DEVICE_TESTS})
+  ament_add_gtest(${TEST} test/devices/${TEST}.cpp)
+  ament_target_dependencies(${TEST} ${DEPENDENCIES})
+  target_link_libraries(${TEST} 
+    gtest_main
+  )
+endforeach()
 
-ament_add_gtest(test_load_rotation_sensor_device_config_yaml test/util/test_load_rotation_sensor_device_config_yaml.cpp)
-ament_target_dependencies(test_load_rotation_sensor_device_config_yaml ${DEPENDENCIES})
-target_link_libraries(test_load_rotation_sensor_device_config_yaml
-  gtest_main
-  load_rotation_sensor_device_config_yaml
-  yaml-cpp
-)
+# Utility Tests
+foreach(TEST ${UTIL_LIBS})
+  ament_add_gtest(test_${TEST} test/util/test_${TEST}.cpp)
+  ament_target_dependencies(test_${TEST} ${DEPENDENCIES})
+  target_link_libraries(test_${TEST}
+    gtest_main
+    load_motor_device_config_yaml
+    load_rotation_sensor_device_config_yaml
+    device_config_factory_utils
+    yaml-cpp
+  )
+endforeach()
 
-ament_add_gtest(test_device_config_interfaces test/devices/test_device_config_interfaces.cpp)
-ament_target_dependencies(test_device_config_interfaces ${DEPENDENCIES})
-target_link_libraries(test_device_config_interfaces
-  gtest_main
-)
-
-ament_add_gtest(test_device_config_map_factory test/util/test_device_config_map_factory.cpp)
-ament_target_dependencies(test_device_config_map_factory ${DEPENDENCIES})
-target_link_libraries(test_device_config_map_factory
+# Hardware Interface Tests
+ament_add_gtest(test_robot_hardware_interface test/test_robot_hardware_interface.cpp)
+ament_target_dependencies(test_robot_hardware_interface ${DEPENDENCIES})
+target_link_libraries(test_robot_hardware_interface
   gtest_main
   device_config_factory_utils
-  yaml-cpp
-)
-
-ament_add_gtest(test_motor_device_interface test/devices/test_motor_device_interface.cpp)
-ament_target_dependencies(test_motor_device_interface ${DEPENDENCIES})
-target_link_libraries(test_motor_device_interface
-  gtest_main
-)
-
-ament_add_gtest(test_rotation_sensor_device_interface test/devices/test_rotation_sensor_device_interface.cpp)
-ament_target_dependencies(test_rotation_sensor_device_interface ${DEPENDENCIES})
-target_link_libraries(test_rotation_sensor_device_interface
-  gtest_main
+  robot_hardware_interface
 )
 
 ament_package()

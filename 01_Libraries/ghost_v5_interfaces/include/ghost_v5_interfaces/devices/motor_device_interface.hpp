@@ -88,6 +88,26 @@ public:
 	float curr_power_w = 0.0;       // Watts
 	float curr_temp_c = 0.0;        // Celsius
 
+	void update(std::shared_ptr<DeviceData> data_ptr) override {
+		auto motor_data_ptr = data_ptr->as<MotorDeviceData>();
+		desired_position = motor_data_ptr->desired_position;
+		desired_velocity = motor_data_ptr->desired_velocity;
+		desired_torque = motor_data_ptr->desired_torque;
+		desired_voltage = motor_data_ptr->desired_voltage;
+		current_limit = motor_data_ptr->current_limit;
+		position_control = motor_data_ptr->position_control;
+		velocity_control = motor_data_ptr->velocity_control;
+		torque_control = motor_data_ptr->torque_control;
+		voltage_control = motor_data_ptr->voltage_control;
+		curr_position = motor_data_ptr->curr_position;
+		curr_velocity_rpm = motor_data_ptr->curr_velocity_rpm;
+		curr_torque_nm  = motor_data_ptr->curr_torque_nm;
+		curr_voltage_mv = motor_data_ptr->curr_voltage_mv;
+		curr_current_ma = motor_data_ptr->curr_current_ma;
+		curr_power_w = motor_data_ptr->curr_power_w;
+		curr_temp_c = motor_data_ptr->curr_temp_c;
+	}
+
 	std::shared_ptr<DeviceBase> clone() const override {
 		return std::make_shared<MotorDeviceData>(*this);
 	}
@@ -103,13 +123,6 @@ public:
 		       (curr_velocity_rpm == d_rhs->curr_velocity_rpm) && (curr_torque_nm == d_rhs->curr_torque_nm) &&
 		       (curr_voltage_mv == d_rhs->curr_voltage_mv) && (curr_current_ma == d_rhs->curr_current_ma) &&
 		       (curr_power_w == d_rhs->curr_power_w) && (curr_temp_c == d_rhs->curr_temp_c);
-	}
-
-	void checkMsgSize(std::vector<unsigned char> data, int msg_size){
-		if(data.size() != msg_size){
-			throw std::runtime_error("[MotorDeviceData::checkMsgSize] Error: Motor " + name + " recieved incorrect serial msg size. " +
-			                         "Expecting " + std::to_string(msg_size) + " bytes, received " + std::to_string(data.size()) + " bytes.");
-		}
 	}
 
 	std::vector<unsigned char> serialize(bool to_v5) const override {

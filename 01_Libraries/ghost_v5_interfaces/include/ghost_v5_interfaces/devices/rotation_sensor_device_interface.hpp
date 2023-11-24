@@ -39,6 +39,12 @@ public:
 	float curr_position = 0.0;      // Degrees
 	float curr_velocity_rpm = 0.0;  // RPM
 
+	virtual void update(std::shared_ptr<DeviceData> data_ptr){
+		auto rotation_sensor_data_ptr = data_ptr->as<RotationSensorDeviceData>();
+		curr_position = rotation_sensor_data_ptr->curr_position;
+		curr_velocity_rpm = rotation_sensor_data_ptr->curr_velocity_rpm;
+	}
+
 	std::shared_ptr<DeviceBase> clone() const override {
 		return std::make_shared<RotationSensorDeviceData>(*this);
 	}
@@ -47,14 +53,6 @@ public:
 		const RotationSensorDeviceData *d_rhs = dynamic_cast<const RotationSensorDeviceData *>(&rhs);
 		return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) &&
 		       (curr_position == d_rhs->curr_position) && (curr_velocity_rpm == d_rhs->curr_velocity_rpm);
-	}
-
-	void checkMsgSize(std::vector<unsigned char> data, int msg_size){
-		if(data.size() != msg_size){
-			throw std::runtime_error("[RotationSensorDeviceData::checkMsgSize] Error: Rotation Sensor " + name +
-			                         " recieved incorrect serial msg size. " + "Expecting " + std::to_string(msg_size) +
-			                         " bytes, received " + std::to_string(data.size()) + " bytes.");
-		}
 	}
 
 	std::vector<unsigned char> serialize(bool to_v5) const override {
