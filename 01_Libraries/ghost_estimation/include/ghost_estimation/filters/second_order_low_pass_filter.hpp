@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-namespace ghost_v5_core {
+namespace ghost_estimation {
 
 /**
  * @brief Implements Discrete Second Order Low Pass Filter
@@ -111,4 +111,4 @@ private:
 	float u2_;
 };
 
-} // namespace ghost_v5_core
+} // namespace ghost_estimation

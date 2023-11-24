@@ -1,13 +1,13 @@
 #pragma once
-#include "ghost_v5_core/devices/motor/motor_device_interface.hpp"
-#include "ghost_v5_core/motor/motor_controller.hpp"
+#include "ghost_control/motor_controller.hpp"
+#include "ghost_v5_core/motor/motor_device_interface.hpp"
 #include "pros/apix.h"
 #include "pros/error.h"
 #include "pros/motors.hpp"
 
 #include <unordered_map>
 
-using ghost_v5_core::MotorController;
+using ghost_control::MotorController;
 using ghost_v5_core::MotorDeviceConfig;
 
 namespace ghost_v5 {

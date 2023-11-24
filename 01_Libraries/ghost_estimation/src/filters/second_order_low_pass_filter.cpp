@@ -2,7 +2,7 @@
 
 #include "ghost_estimation/filters/second_order_low_pass_filter.hpp"
 
-namespace ghost_v5_core {
+namespace ghost_estimation {
 
 SecondOrderLowPassFilter::SecondOrderLowPassFilter(float w0, float zeta, float ts) :
 	w0_(w0),
@@ -55,4 +55,4 @@ float SecondOrderLowPassFilter::getCurrentState(){
 	return y0_;
 }
 
-} // namespace ghost_v5_core
+} // namespace ghost_estimation

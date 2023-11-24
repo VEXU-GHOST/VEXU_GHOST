@@ -7,66 +7,69 @@ V5_DIR="${HOME}/VEXU_GHOST/02_V5/ghost_pros"
 cd $V5_DIR/src
 
 # Clear existing directories
-rm -r ghost_serial ghost_v5_core ghost_util
-mkdir ghost_serial ghost_v5_core ghost_util
+rm -r ghost_serial ghost_util ghost_estimation ghost_control
+mkdir ghost_serial ghost_util ghost_estimation ghost_control
 
 ### Symlink ghost_serial ###
 cd ghost_serial
-
-# Add Folders
 ln -s ../../../../01_Libraries/ghost_serial/src/cobs
 ln -s ../../../../01_Libraries/ghost_serial/src/msg_parser
-
-# Add Specific Files
 mkdir base_interfaces && cd base_interfaces
 ln -s ../../../../../01_Libraries/ghost_serial/src/base_interfaces/generic_serial_base.cpp
 ln -s ../../../../../01_Libraries/ghost_serial/src/base_interfaces/v5_serial_base.cpp
 
-### Symlink ghost_v5_core ###
-# Add Folders
-cd ../../ghost_v5_core
-ln -s ../../../../01_Libraries/ghost_v5_core/src/filters
-ln -s ../../../../01_Libraries/ghost_v5_core/src/motor
-
-cd ../ghost_util
+### Symlink ghost_util ###
+cd $V5_DIR/src/ghost_util
 ln -s ../../../../01_Libraries/ghost_util/src/angle_util.cpp
 ln -s ../../../../01_Libraries/ghost_util/src/byte_utils.cpp
+
+### Symlink ghost_estimation ###
+cd $V5_DIR/src/ghost_estimation
+ln -s ../../../../01_Libraries/ghost_estimation/src/filters
+
+### Symlink ghost_control ###
+cd $V5_DIR/src/ghost_control
+ln -s ../../../../01_Libraries/ghost_control/src/motor_controller.cpp
+mkdir models && cd models
+ln -s ../../../../../01_Libraries/ghost_control/src/models/dc_motor_model.cpp
 
 ##################
 ### V5 INCLUDE ###
 ##################
-
 cd $V5_DIR/include
 
 # Clear existing directories
-rm -r ghost_serial ghost_v5_core ghost_util
-mkdir ghost_serial ghost_v5_core ghost_util
+rm -r ghost_serial ghost_v5_core ghost_util ghost_estimation ghost_control
+mkdir ghost_serial ghost_v5_core ghost_util ghost_estimation ghost_control
 
 ### Symlink ghost_serial ###
 cd ghost_serial
-
-# Add Folders
 ln -s ../../../../01_Libraries/ghost_serial/include/ghost_serial/cobs
 ln -s ../../../../01_Libraries/ghost_serial/include/ghost_serial/msg_parser
-
-# Add Specific Files
 mkdir base_interfaces && cd base_interfaces
 ln -s ../../../../../01_Libraries/ghost_serial/include/ghost_serial/base_interfaces/generic_serial_base.hpp
 ln -s ../../../../../01_Libraries/ghost_serial/include/ghost_serial/base_interfaces/v5_serial_base.hpp
 
 ### Symlink ghost_v5_core ###
-# Add Folders
-cd ../../ghost_v5_core
-ln -s ../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/filters
-ln -s ../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/motor
-mkdir devices && cd devices
-ln -s ../../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/devices/base
+cd $V5_DIR/include/ghost_v5_core
+ln -s ../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/base
 mkdir motor && cd motor
-ln -s ../../../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/devices/motor/motor_device_interface.hpp
+ln -s ../../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/motor/motor_device_interface.hpp
 cd ..
 mkdir rotation_sensor && cd rotation_sensor
-ln -s ../../../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/devices/rotation_sensor/rotation_sensor_device_interface.hpp
+ln -s ../../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/rotation_sensor/rotation_sensor_device_interface.hpp
 
-cd ../../../ghost_util
+### Symlink ghost_util ###
+cd $V5_DIR/include/ghost_util
 ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/byte_utils.hpp
 ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/angle_util.hpp
+
+### Symlink ghost_estimation ###
+cd $V5_DIR/include/ghost_estimation
+ln -s ../../../../01_Libraries/ghost_estimation/include/ghost_estimation/filters
+
+### Symlink ghost_control ###
+cd $V5_DIR/include/ghost_control
+ln -s ../../../../01_Libraries/ghost_control/include/ghost_control/motor_controller.hpp
+mkdir models && cd models
+ln -s ../../../../../01_Libraries/ghost_control/include/ghost_control/models/dc_motor_model.hpp
