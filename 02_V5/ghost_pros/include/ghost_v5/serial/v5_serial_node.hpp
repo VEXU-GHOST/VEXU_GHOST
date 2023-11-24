@@ -7,7 +7,7 @@
 #include "pros/apix.h"
 
 #include "ghost_serial/base_interfaces/v5_serial_base.hpp"
-#include "ghost_util/bitmasks.hpp"
+#include "ghost_util/byte_utils.hpp"
 
 namespace ghost_v5 {
 

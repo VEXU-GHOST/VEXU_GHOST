@@ -30,7 +30,7 @@ ln -s ../../../../01_Libraries/ghost_v5_core/src/motor
 
 cd ../ghost_util
 ln -s ../../../../01_Libraries/ghost_util/src/angle_util.cpp
-ln -s ../../../../01_Libraries/ghost_util/src/bitmasks.cpp
+ln -s ../../../../01_Libraries/ghost_util/src/byte_utils.cpp
 
 ##################
 ### V5 INCLUDE ###
@@ -68,5 +68,5 @@ mkdir rotation_sensor && cd rotation_sensor
 ln -s ../../../../../../01_Libraries/ghost_v5_core/include/ghost_v5_core/devices/rotation_sensor/rotation_sensor_device_interface.hpp
 
 cd ../../../ghost_util
-ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/bitmasks.hpp
+ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/byte_utils.hpp
 ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/angle_util.hpp

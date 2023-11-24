@@ -1,4 +1,4 @@
-#include "ghost_util/bitmasks.hpp"
+#include "ghost_util/byte_utils.hpp"
 
 namespace ghost_util {
 

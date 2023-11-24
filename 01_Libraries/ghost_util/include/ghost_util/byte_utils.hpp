@@ -8,6 +8,17 @@ namespace ghost_util {
 
 extern const uint32_t BITMASK_ARR_32BIT[32];
 
+bool isBigEndian(){
+	unsigned int i = 1;
+	char *c = (char*)&i;
+	if(*c){
+		return false;
+	}
+	else{
+		return true;
+	}
+}
+
 void setBit(unsigned char& byte, int bit_num, bool val){
 	if(bit_num >= 8){
 		throw std::runtime_error("[ghost_util::setBit] Error: bit_num must be between 0 and 7.");
@@ -27,18 +38,24 @@ bool getBit(unsigned char byte, int bit_num){
 	return byte & BITMASK_ARR_32BIT[bit_num];
 }
 
-unsigned char packByte(const std::vector<bool>& bool_arr, bool big_endian = true){
+std::vector<bool> unpackByte(unsigned char& val){
+	std::vector<bool> bit_arr;
+	bit_arr.resize(8);
+	for(int i = 0; i < 8; i++){
+		auto index = (isBigEndian()) ? i : 7 - i;
+		bit_arr[i] = val & BITMASK_ARR_32BIT[index];
+	}
+	return bit_arr;
+}
+
+unsigned char packByte(const std::vector<bool>& bool_arr){
 	if(bool_arr.size() != 8){
 		throw std::runtime_error("[ghost_util::packByte] Error: bool array must be of size 8.");
 	}
 	unsigned char byte = 0;
 	for(int i = 0; i < 8; i++){
-		if(big_endian){
-			setBit(byte, i, bool_arr[i]);
-		}
-		else{
-			setBit(byte, 7 - i, bool_arr[i]);
-		}
+		auto index = (isBigEndian()) ? i : 7 - i;
+		setBit(byte, index, bool_arr[i]);
 	}
 	return byte;
 }

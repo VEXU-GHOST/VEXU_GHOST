@@ -1,15 +1,14 @@
 #pragma once
 
 #include <cstring>
-#include "ghost_util/bitmasks.hpp"
+#include "ghost_util/byte_utils.hpp"
 #include "ghost_v5_core/devices/base/device_interfaces.hpp"
 #include "ghost_v5_core/filters/second_order_low_pass_filter.hpp"
 #include "ghost_v5_core/motor/dc_motor_model.hpp"
 #include "ghost_v5_core/motor/motor_controller.hpp"
 
-using ghost_util::getBit;
 using ghost_util::packByte;
-using ghost_util::setBit;
+using ghost_util::unpackByte;
 
 namespace ghost_v5_core {
 
@@ -136,8 +135,7 @@ public:
 					0,
 					0,
 					0,
-					0},
-				true);
+					0});
 
 			memcpy(msg_buffer + byte_offset, &ctrl_byte, 1);
 		}
@@ -181,10 +179,12 @@ public:
 			unsigned char ctrl_byte;
 			memcpy(&ctrl_byte, msg_buffer + byte_offset, 1);
 
-			position_control = getBit(ctrl_byte, 0);
-			velocity_control = getBit(ctrl_byte, 1);
-			torque_control = getBit(ctrl_byte, 2);
-			voltage_control = getBit(ctrl_byte, 3);
+			auto ctrl_vec = unpackByte(ctrl_byte);
+
+			position_control = ctrl_vec[0];
+			velocity_control = ctrl_vec[1];
+			torque_control = ctrl_vec[2];
+			voltage_control = ctrl_vec[3];
 		}
 		else{
 			// Sensor Msg

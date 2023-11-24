@@ -1,5 +1,5 @@
 #include "ghost_common/v5_robot_config_defs.hpp"
-#include "ghost_serial/serial_utils/bitmasks.hpp"
+#include "ghost_serial/serial_utils/byte_utils.hpp"
 #include "ghost_serial_ros/jetson_v5_serial_node.hpp"
 
 using namespace std::literals::chrono_literals;

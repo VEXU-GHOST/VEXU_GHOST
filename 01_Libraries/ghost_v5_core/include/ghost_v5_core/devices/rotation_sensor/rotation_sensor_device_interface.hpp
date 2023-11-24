@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstring>
-#include "ghost_util/bitmasks.hpp"
+#include "ghost_util/byte_utils.hpp"
 #include "ghost_v5_core/devices/base/device_interfaces.hpp"
 
 using ghost_util::getBit;
