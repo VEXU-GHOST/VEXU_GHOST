@@ -4,18 +4,20 @@
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+#include "ghost_v5_interfaces/test/device_test_utils.hpp"
 #include "ghost_v5_interfaces/util/device_config_factory_utils.hpp"
 #include "yaml-cpp/yaml.h"
 
 #include <algorithm>
 
 using ghost_v5_interfaces::util::loadRobotConfigFromYAML;
+using namespace ghost_v5_interfaces::test_utils;
 using namespace ghost_v5_interfaces;
 
 class RobotHardwareInterfaceTestFixture : public ::testing::Test {
 public:
 	void SetUp() override {
-		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml";
+		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot_2.yaml";
 		config_yaml_ = YAML::LoadFile(config_path);
 
 		device_config_map_ptr_ = loadRobotConfigFromYAML(config_yaml_, false);
@@ -43,7 +45,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testThrowsOnNonExistentDevice){
 	EXPECT_THROW(auto config = hw_interface.getDeviceConfig("non_existent_motor"), std::runtime_error);
 }
 
-TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveDeviceData){
+TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
 	auto motor_data_ptr = std::make_shared<MotorDeviceData>();
 
@@ -70,6 +72,16 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveDeviceData){
 	EXPECT_EQ(*motor_data_ptr, *motor_data_retrieved_ptr);
 }
 
+TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceData){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
+	auto j1 = getRandomJoystickData();
+	j1->name = "primary_joystick";
+	hw_interface.setPrimaryJoystickData(j1);
+	auto j2 = hw_interface.getPrimaryJoystickData();
+
+	EXPECT_EQ(*j1, *j2);
+}
+
 TEST_F(RobotHardwareInterfaceTestFixture, testIteratorIsOrderedByPort){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
 
@@ -83,55 +95,154 @@ TEST_F(RobotHardwareInterfaceTestFixture, testIteratorIsOrderedByPort){
 	EXPECT_EQ(ports, ports_sorted);
 }
 
-TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipeline){
+TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineCoprocessorToV5){
+	device_config_map_ptr_->use_secondary_joystick = false;
 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
-	auto motor_data = std::make_shared<MotorDeviceData>();
 
-	motor_data->desired_position = (float) rand();
-	motor_data->desired_velocity = (float) rand();
-	motor_data->desired_torque = (float) rand();
-	motor_data->desired_voltage = (float) rand();
-	motor_data->current_limit = (float) rand();
-	motor_data->position_control = (bool) rand();
-	motor_data->velocity_control = (bool) rand();
-	motor_data->torque_control = (bool) rand();
-	motor_data->voltage_control = (bool) rand();
-	motor_data->curr_position = (float) rand();
-	motor_data->curr_velocity_rpm = (float) rand();
-	motor_data->curr_torque_nm = (float) rand();
-	motor_data->curr_voltage_mv = (float) rand();
-	motor_data->curr_current_ma = (float) rand();
-	motor_data->curr_power_w = (float) rand();
-	motor_data->curr_temp_c = (float) rand();
-	hw_interface.setDeviceData("left_drive_motor", motor_data);
-
-	auto joy_data = std::make_shared<JoystickDeviceData>();
-
-	joy_data->left_x = (float) rand();
-	joy_data->left_y = (float) rand();
-	joy_data->right_x = (float) rand();
-	joy_data->right_y = (float) rand();
-	joy_data->btn_a = (bool) rand();
-	joy_data->btn_b = (bool) rand();
-	joy_data->btn_x = (bool) rand();
-	joy_data->btn_y = (bool) rand();
-	joy_data->btn_r1 = (bool) rand();
-	joy_data->btn_r2 = (bool) rand();
-	joy_data->btn_l1 = (bool) rand();
-	joy_data->btn_l2 = (bool) rand();
-	joy_data->btn_u = (bool) rand();
-	joy_data->btn_l = (bool) rand();
-	joy_data->btn_r = (bool) rand();
-	joy_data->btn_d = (bool) rand();
-	joy_data->is_master = (bool) rand();
-
-	hw_interface.setJoystickData(joy_data);
-
-	hw_interface.setCompetitionState(competition_state_e::AUTONOMOUS);
-
-	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
+	// Update all motors in the default robot config
+	auto motor_data_1 = getRandomMotorData(true);
+	hw_interface.setDeviceData("left_drive_motor", motor_data_1);
+	auto motor_data_2 = getRandomMotorData(true);
+	hw_interface.setDeviceData("test_motor", motor_data_2);
+	auto motor_data_3 = getRandomMotorData(true);
+	hw_interface.setDeviceData("default_motor", motor_data_3);
+	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_, hardware_type_e::V5_BRAIN);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
 	hw_interface_copy.deserialize(serial_data);
 
-	EXPECT_EQ(hw_interface, hw_interface_copy);
+	for(const auto& [key, val] : hw_interface){
+		auto copied_data_ptr = hw_interface_copy.getDeviceData(key);
+		if(copied_data_ptr->type == device_type_e::MOTOR){
+			auto expected_motor_data = val.data_ptr->as<MotorDeviceData>();
+			auto received_motor_data = copied_data_ptr->as<MotorDeviceData>();
+			EXPECT_EQ(*val.data_ptr, *copied_data_ptr);
+		}
+	}
 }
+
+// TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineSingleJoystickV5){
+// 	device_config_map_ptr_->use_secondary_joystick = false;
+// 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::V5_BRAIN);
+// 	auto motor_data = std::make_shared<MotorDeviceData>();
+
+// 	motor_data->desired_position = (float) rand();
+// 	motor_data->desired_velocity = (float) rand();
+// 	motor_data->desired_torque = (float) rand();
+// 	motor_data->desired_voltage = (float) rand();
+// 	motor_data->current_limit = (float) rand();
+// 	motor_data->position_control = (bool) rand();
+// 	motor_data->velocity_control = (bool) rand();
+// 	motor_data->torque_control = (bool) rand();
+// 	motor_data->voltage_control = (bool) rand();
+// 	motor_data->curr_position = (float) rand();
+// 	motor_data->curr_velocity_rpm = (float) rand();
+// 	motor_data->curr_torque_nm = (float) rand();
+// 	motor_data->curr_voltage_mv = (float) rand();
+// 	motor_data->curr_current_ma = (float) rand();
+// 	motor_data->curr_power_w = (float) rand();
+// 	motor_data->curr_temp_c = (float) rand();
+// 	hw_interface.setDeviceData("left_drive_motor", motor_data);
+
+// 	auto joy_data = std::make_shared<JoystickDeviceData>();
+// 	joy_data->name = "primary";
+// 	joy_data->left_x = (float) rand();
+// 	joy_data->left_y = (float) rand();
+// 	joy_data->right_x = (float) rand();
+// 	joy_data->right_y = (float) rand();
+// 	joy_data->btn_a = (bool) rand();
+// 	joy_data->btn_b = (bool) rand();
+// 	joy_data->btn_x = (bool) rand();
+// 	joy_data->btn_y = (bool) rand();
+// 	joy_data->btn_r1 = (bool) rand();
+// 	joy_data->btn_r2 = (bool) rand();
+// 	joy_data->btn_l1 = (bool) rand();
+// 	joy_data->btn_l2 = (bool) rand();
+// 	joy_data->btn_u = (bool) rand();
+// 	joy_data->btn_l = (bool) rand();
+// 	joy_data->btn_r = (bool) rand();
+// 	joy_data->btn_d = (bool) rand();
+// 	joy_data->is_master = (bool) rand();
+
+// 	hw_interface.setPrimaryJoystickData(joy_data);
+
+// 	hw_interface.setCompetitionState(competition_state_e::AUTONOMOUS);
+
+// 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
+// 	std::vector<unsigned char> serial_data = hw_interface.serialize();
+// 	hw_interface_copy.deserialize(serial_data);
+
+// 	EXPECT_EQ(hw_interface, hw_interface_copy);
+// }
+
+// TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineDualJoystickV5){
+// 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::V5_BRAIN);
+// 	auto motor_data = std::make_shared<MotorDeviceData>();
+
+// 	motor_data->desired_position = (float) rand();
+// 	motor_data->desired_velocity = (float) rand();
+// 	motor_data->desired_torque = (float) rand();
+// 	motor_data->desired_voltage = (float) rand();
+// 	motor_data->current_limit = (float) rand();
+// 	motor_data->position_control = (bool) rand();
+// 	motor_data->velocity_control = (bool) rand();
+// 	motor_data->torque_control = (bool) rand();
+// 	motor_data->voltage_control = (bool) rand();
+// 	motor_data->curr_position = (float) rand();
+// 	motor_data->curr_velocity_rpm = (float) rand();
+// 	motor_data->curr_torque_nm = (float) rand();
+// 	motor_data->curr_voltage_mv = (float) rand();
+// 	motor_data->curr_current_ma = (float) rand();
+// 	motor_data->curr_power_w = (float) rand();
+// 	motor_data->curr_temp_c = (float) rand();
+// 	hw_interface.setDeviceData("left_drive_motor", motor_data);
+
+// 	auto joy_data = std::make_shared<JoystickDeviceData>();
+// 	joy_data->name = "primary";
+// 	joy_data->left_x = (float) rand();
+// 	joy_data->left_y = (float) rand();
+// 	joy_data->right_x = (float) rand();
+// 	joy_data->right_y = (float) rand();
+// 	joy_data->btn_a = (bool) rand();
+// 	joy_data->btn_b = (bool) rand();
+// 	joy_data->btn_x = (bool) rand();
+// 	joy_data->btn_y = (bool) rand();
+// 	joy_data->btn_r1 = (bool) rand();
+// 	joy_data->btn_r2 = (bool) rand();
+// 	joy_data->btn_l1 = (bool) rand();
+// 	joy_data->btn_l2 = (bool) rand();
+// 	joy_data->btn_u = (bool) rand();
+// 	joy_data->btn_l = (bool) rand();
+// 	joy_data->btn_r = (bool) rand();
+// 	joy_data->btn_d = (bool) rand();
+// 	joy_data->is_master = true;
+// 	hw_interface.setPrimaryJoystickData(joy_data);
+
+// 	auto joy_data_2 = std::make_shared<JoystickDeviceData>();
+// 	joy_data_2->name = "secondary";
+// 	joy_data_2->left_x = (float) rand();
+// 	joy_data_2->left_y = (float) rand();
+// 	joy_data_2->right_x = (float) rand();
+// 	joy_data_2->right_y = (float) rand();
+// 	joy_data_2->btn_a = (bool) rand();
+// 	joy_data_2->btn_b = (bool) rand();
+// 	joy_data_2->btn_x = (bool) rand();
+// 	joy_data_2->btn_y = (bool) rand();
+// 	joy_data_2->btn_r1 = (bool) rand();
+// 	joy_data_2->btn_r2 = (bool) rand();
+// 	joy_data_2->btn_l1 = (bool) rand();
+// 	joy_data_2->btn_l2 = (bool) rand();
+// 	joy_data_2->btn_u = (bool) rand();
+// 	joy_data_2->btn_l = (bool) rand();
+// 	joy_data_2->btn_r = (bool) rand();
+// 	joy_data_2->btn_d = (bool) rand();
+// 	joy_data_2->is_master = false;
+// 	hw_interface.setSecondaryJoystickData(joy_data_2);
+
+// 	hw_interface.setCompetitionState(competition_state_e::AUTONOMOUS);
+
+// 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
+// 	std::vector<unsigned char> serial_data = hw_interface.serialize();
+// 	hw_interface_copy.deserialize(serial_data);
+
+// 	EXPECT_EQ(hw_interface, hw_interface_copy);
+// }

@@ -31,9 +31,18 @@ public:
 class RotationSensorDeviceData : public DeviceData {
 public:
 
+	RotationSensorDeviceData(){
+		type = device_type_e::ROTATION_SENSOR;
+	}
+
 	// Msg Size
-	const int actuator_msg_byte_count = 0;
-	const int sensor_msg_byte_count = 2 * 4;
+	int getActuatorPacketSize() const {
+		return 0;
+	}
+
+	int getSensorPacketSize() const {
+		return 4 * 2;
+	}
 
 	// Sensor Values
 	float curr_position = 0.0;      // Degrees
@@ -58,7 +67,7 @@ public:
 	std::vector<unsigned char> serialize(bool to_v5) const override {
 		std::vector<unsigned char> msg;
 		if(!to_v5){
-			msg.resize(sensor_msg_byte_count, 0);
+			msg.resize(getSensorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
 			memcpy(msg_buffer + byte_offset, &curr_position, 4);
@@ -71,7 +80,7 @@ public:
 	void deserialize(const std::vector<unsigned char>& msg, bool from_coprocessor) override {
 		if(!from_coprocessor){
 			// Sensor Msg
-			checkMsgSize(msg, sensor_msg_byte_count);
+			checkMsgSize(msg, getSensorPacketSize());
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
 			memcpy(&curr_position, msg_buffer + byte_offset, 4);

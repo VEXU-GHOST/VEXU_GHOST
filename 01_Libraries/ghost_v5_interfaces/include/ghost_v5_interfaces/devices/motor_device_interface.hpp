@@ -63,10 +63,18 @@ public:
 
 class MotorDeviceData : public DeviceData {
 public:
+	MotorDeviceData(){
+		type = device_type_e::MOTOR;
+	}
 
 	// Msg Size
-	const int actuator_msg_byte_count = 5 * 4 + 1;
-	const int sensor_msg_byte_count = 7 * 4;
+	int getActuatorPacketSize() const {
+		return 5 * 4 + 1;
+	}
+
+	int getSensorPacketSize() const {
+		return 7 * 4;
+	}
 
 	// Actuator Values
 	float desired_position = 0.0;   // Degrees
@@ -125,10 +133,10 @@ public:
 		       (curr_power_w == d_rhs->curr_power_w) && (curr_temp_c == d_rhs->curr_temp_c);
 	}
 
-	std::vector<unsigned char> serialize(bool to_v5) const override {
+	std::vector<unsigned char> serialize(bool coprocessor_to_v5_brain) const override {
 		std::vector<unsigned char> msg;
-		if(to_v5){
-			msg.resize(actuator_msg_byte_count, 0);
+		if(coprocessor_to_v5_brain){
+			msg.resize(getActuatorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
 			memcpy(msg_buffer + byte_offset, &desired_position, 4);
@@ -154,9 +162,10 @@ public:
 					0});
 
 			memcpy(msg_buffer + byte_offset, &ctrl_byte, 1);
+			byte_offset++;
 		}
 		else{
-			msg.resize(sensor_msg_byte_count, 0);
+			msg.resize(getSensorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
 			memcpy(msg_buffer + byte_offset, &curr_position, 4);
@@ -172,14 +181,15 @@ public:
 			memcpy(msg_buffer + byte_offset, &curr_power_w, 4);
 			byte_offset += 4;
 			memcpy(msg_buffer + byte_offset, &curr_temp_c, 4);
+			byte_offset += 4;
 		}
 		return msg;
 	}
 
-	void deserialize(const std::vector<unsigned char>& msg, bool from_coprocessor) override {
-		if(from_coprocessor){
+	void deserialize(const std::vector<unsigned char>& msg, bool coprocessor_to_v5_brain) override {
+		if(coprocessor_to_v5_brain){
 			// Actuator Msg
-			checkMsgSize(msg, actuator_msg_byte_count);
+			checkMsgSize(msg, getActuatorPacketSize());
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
 			memcpy(&desired_position, msg_buffer + byte_offset, 4);
@@ -204,7 +214,7 @@ public:
 		}
 		else{
 			// Sensor Msg
-			checkMsgSize(msg, sensor_msg_byte_count);
+			checkMsgSize(msg, getSensorPacketSize());
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
 			memcpy(&curr_position, msg_buffer + byte_offset, 4);

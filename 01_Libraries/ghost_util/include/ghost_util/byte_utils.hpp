@@ -50,7 +50,7 @@ std::vector<bool> unpackByte(unsigned char& val){
 
 unsigned char packByte(const std::vector<bool>& bool_arr){
 	if(bool_arr.size() != 8){
-		throw std::runtime_error("[ghost_util::packByte] Error: bool array must be of size 8.");
+		throw std::runtime_error("[ghost_util::packByte] Error: bool array must be of size 8. Size: " + std::to_string(bool_arr.size()));
 	}
 	unsigned char byte = 0;
 	for(int i = 0; i < 8; i++){

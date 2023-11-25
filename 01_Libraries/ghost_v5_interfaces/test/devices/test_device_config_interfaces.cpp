@@ -206,6 +206,7 @@ TEST(TestDeviceConfigInterfaces, testCloneDeviceConfigMap){
 	config_1->b = true;
 
 	auto device_config_map_ptr = std::make_shared<DeviceConfigMap>();
+	device_config_map_ptr->use_secondary_joystick = true;
 	EXPECT_NO_THROW(device_config_map_ptr->addDeviceConfig(config_1));
 	EXPECT_NO_THROW(device_config_map_ptr->addDeviceConfig(config_2));
 

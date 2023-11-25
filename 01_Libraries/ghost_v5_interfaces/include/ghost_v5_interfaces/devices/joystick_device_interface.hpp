@@ -23,8 +23,19 @@ public:
 
 class JoystickDeviceData : public DeviceData {
 public:
+
+	JoystickDeviceData(){
+		type = device_type_e::JOYSTICK;
+	}
+
 	// Msg Size
-	const int sensor_msg_byte_count = 4 * 4 + 2;
+	int getActuatorPacketSize() const {
+		return 0;
+	}
+
+	int getSensorPacketSize() const {
+		return 4 * 4 + 2;
+	}
 
 	// Joystick State
 	float left_x = 0.0;
@@ -81,12 +92,13 @@ public:
 		       (btn_d == d_rhs->btn_d) && (is_master == d_rhs->is_master);
 	}
 
-	std::vector<unsigned char> serialize(bool to_v5) const override {
+	std::vector<unsigned char> serialize(bool coprocessor_to_v5_brain) const override {
 		std::vector<unsigned char> msg;
-		msg.resize(sensor_msg_byte_count);
-		auto msg_data = msg.data();
-		if(!to_v5){
-			int byte_offset = 0;
+		int byte_offset = 0;
+		bool v5_to_coprocessor = !coprocessor_to_v5_brain;
+		if(v5_to_coprocessor){
+			msg.resize(getSensorPacketSize(), 0);
+			auto msg_data = msg.data();
 			memcpy(msg_data + byte_offset, &left_x, 4);
 			byte_offset += 4;
 			memcpy(msg_data + byte_offset, &left_y, 4);
@@ -108,15 +120,16 @@ public:
 			memcpy(msg_data + byte_offset, &byte_pack_2, 1);
 			byte_offset += 1;
 		}
-
-
 		return msg;
 	}
 
-	void deserialize(const std::vector<unsigned char>& msg, bool from_coprocessor) override {
+	void deserialize(const std::vector<unsigned char>& msg, bool coprocessor_to_v5_brain) override {
+		int msg_size = (coprocessor_to_v5_brain) ? getActuatorPacketSize() : getSensorPacketSize();
+		checkMsgSize(msg, msg_size);
 		auto msg_data = msg.data();
-		if(!from_coprocessor){
-			int byte_offset = 0;
+		int byte_offset = 0;
+		bool v5_to_coprocessor = !coprocessor_to_v5_brain;
+		if(v5_to_coprocessor){
 			memcpy(&left_x, msg_data + byte_offset, 4);
 			byte_offset += 4;
 			memcpy(&left_y, msg_data + byte_offset, 4);
@@ -130,6 +143,7 @@ public:
 			memcpy(&byte_pack_1, msg_data + byte_offset, 1);
 			byte_offset += 1;
 			memcpy(&byte_pack_2, msg_data + byte_offset, 1);
+			byte_offset += 1;
 
 			auto byte_vector_1 = unpackByte(byte_pack_1);
 			auto byte_vector_2 = unpackByte(byte_pack_2);

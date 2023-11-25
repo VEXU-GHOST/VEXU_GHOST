@@ -92,6 +92,20 @@ public:
 	virtual void update(std::shared_ptr<DeviceData> data_ptr) = 0;
 
 	/**
+	 * @brief Returns the size of the serial packet in bytes going from the coprocessor to the V5 Brain.
+	 *
+	 * @return int
+	 */
+	virtual int getActuatorPacketSize() const = 0;
+
+	/**
+	 * @brief Returns the size of the serial packet in bytes going from the V5 Brain to the coprocessor.
+	 *
+	 * @return int
+	 */
+	virtual int getSensorPacketSize() const = 0;
+
+	/**
 	 * @brief Returns a pointer to a deep copy of this object
 	 *
 	 * @return std::shared_ptr<DeviceBase>
@@ -109,7 +123,7 @@ public:
 	 * @param to_v5	set to true when the data is going from coprocessor -> V5 Brain
 	 * @return std::vector<unsigned char> byte stream
 	 */
-	virtual std::vector<unsigned char> serialize(bool to_v5) const = 0;
+	virtual std::vector<unsigned char> serialize(bool coprocessor_to_v5_brain) const = 0;
 
 	/**
 	 * @brief Updates device data from byte stream.
@@ -117,7 +131,7 @@ public:
 	 * @param data byte stream as unsigned char vector
 	 * @param from_coprocessor set to true when the data is going from coprocesspr -> V5 Brain
 	 */
-	virtual void deserialize(const std::vector<unsigned char>& data, bool from_coprocessor)  = 0;
+	virtual void deserialize(const std::vector<unsigned char>& data, bool coprocessor_to_v5_brain)  = 0;
 
 	void checkMsgSize(std::vector<unsigned char> data, int msg_size) const {
 		if(data.size() != msg_size){

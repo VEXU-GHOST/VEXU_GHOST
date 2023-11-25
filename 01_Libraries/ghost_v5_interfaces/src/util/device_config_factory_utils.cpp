@@ -29,6 +29,8 @@ const std::unordered_map<std::string, device_type_e> DEVICE_TYPE_NAME_STRING_MAP
 std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool verbose){
 	auto device_config_map_ptr = std::make_shared<DeviceConfigMap>();
 
+	loadYAMLParam(node, "use_secondary_joystick", device_config_map_ptr->use_secondary_joystick, false);
+
 	// Iterate through each device defined in the YAML file
 	for(auto it = node["port_configuration"]["devices"].begin(); it != node["port_configuration"]["devices"].end(); it++){
 		// Unpack Device Name and associated YAML Node
@@ -106,7 +108,7 @@ const std::unordered_map<ghost_brake_mode, std::string> MOTOR_BRAKE_MODE_STRING_
 	{ghost_brake_mode::BRAKE_MODE_INVALID,    "ghost_brake_mode::BRAKE_MODE_INVALID"}
 };
 
-const std::unordered_map<bool, std::string> DEVICE_REVERSED_STRING_MAP{
+const std::unordered_map<bool, std::string> BOOL_STRING_MAP{
 	{true, "true"},
 	{false, "false"}
 };
@@ -136,6 +138,7 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 	output_file << "// It returns a raw pointer to a dynamically allocated object, so if you are poking around, please wrap in a smart pointer!\n";
 	output_file << "extern \"C\" DeviceConfigMap* getRobotConfig(void) {\n";
 	output_file << "\tDeviceConfigMap* robot_config = new DeviceConfigMap;\n";
+	output_file << "\trobot_config->use_secondary_joystick = " + BOOL_STRING_MAP.at(config_ptr->use_secondary_joystick) + ";\n";
 	output_file << "\n";
 
 	// Generate code from DeviceConfigMap
@@ -148,7 +151,7 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			output_file << "\t" + motor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
 			output_file << "\t" + motor_name + "->" + "name = \"" + motor_name + "\";\n";
 			output_file << "\t" + motor_name + "->" + "type = device_type_e::MOTOR;\n";
-			output_file << "\t" + motor_name + "->" + "reversed = " + DEVICE_REVERSED_STRING_MAP.at(config_ptr->reversed) + ";\n";
+			output_file << "\t" + motor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(config_ptr->reversed) + ";\n";
 			output_file << "\t" + motor_name + "->" + "encoder_units = " + MOTOR_ENCODER_UNIT_STRING_MAP.at(config_ptr->encoder_units) + ";\n";
 			output_file << "\t" + motor_name + "->" + "gearset = " + MOTOR_GEARSET_STRING_MAP.at(config_ptr->gearset) + ";\n";
 			output_file << "\t" + motor_name + "->" + "brake_mode = " + MOTOR_BRAKE_MODE_STRING_MAP.at(config_ptr->brake_mode) + ";\n";
@@ -176,7 +179,7 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			output_file << "\t" + sensor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
 			output_file << "\t" + sensor_name + "->" + "name = \"" + sensor_name + "\";\n";
 			output_file << "\t" + sensor_name + "->" + "type = device_type_e::ROTATION_SENSOR;\n";
-			output_file << "\t" + sensor_name + "->" + "reversed = " + DEVICE_REVERSED_STRING_MAP.at(config_ptr->reversed) + ";\n";
+			output_file << "\t" + sensor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(config_ptr->reversed) + ";\n";
 			output_file << "\t" + sensor_name + "->" + "data_rate = " + std::to_string(config_ptr->data_rate) + ";\n";
 			output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
 			output_file << "\n";

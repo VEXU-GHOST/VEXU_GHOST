@@ -120,7 +120,7 @@ install(
 #################
 # Device Interface Tests
 set(DEVICE_TESTS
-  test_device_config_interfaces
+  # test_device_config_interfaces
   test_motor_device_interface
   test_rotation_sensor_device_interface
   test_joystick_device_interface

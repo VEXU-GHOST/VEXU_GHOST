@@ -89,6 +89,27 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
 }
 
 /**
+ * @brief Test that we can load a DeviceConfigMap from YAML with secondary joystick set to true
+ */
+TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+	example_robot_config["port_configuration"]["use_secondary_joystick"] = true;
+	robot_config_ptr_->use_secondary_joystick = true;
+	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
+	EXPECT_EQ(*device_config_ptr, *robot_config_ptr_);
+}
+
+/**
+ * @brief Test that we can load a DeviceConfigMap from YAML and it mismatches if we change joystick settings.
+ */
+TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+	example_robot_config["port_configuration"]["use_secondary_joystick"] = true;
+	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
+	EXPECT_FALSE(*device_config_ptr == *robot_config_ptr_);
+}
+
+/**
  * @brief Test that mismatched motor port will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig){

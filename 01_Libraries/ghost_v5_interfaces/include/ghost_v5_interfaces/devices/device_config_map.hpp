@@ -15,6 +15,7 @@ public:
 		for(const auto& [key, val] : device_configs_){
 			cloned_config_map_ptr->addDeviceConfig(val->clone()->as<DeviceConfig>());
 		}
+		cloned_config_map_ptr->use_secondary_joystick = use_secondary_joystick;
 		return cloned_config_map_ptr;
 	}
 
@@ -73,8 +74,11 @@ public:
 				return false;
 			}
 		}
+		result &= (use_secondary_joystick && rhs.use_secondary_joystick);
 		return result;
 	}
+
+	bool use_secondary_joystick = false;
 
 private:
 	std::unordered_map < std::string, std::shared_ptr<const DeviceConfig> > device_configs_;

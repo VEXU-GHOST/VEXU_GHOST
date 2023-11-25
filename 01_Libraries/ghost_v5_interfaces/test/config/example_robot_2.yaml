@@ -1,0 +1,24 @@
+port_configuration:
+    use_secondary_joystick: falses
+    devices:
+        left_drive_motor:
+            port: 1
+            type: MOTOR
+        test_motor:
+            port: 2
+            type: MOTOR
+            reversed: true
+        default_motor:
+            port: 3
+            type: MOTOR
+        rotation_sensor_1:
+            port: 4
+            type: ROTATION_SENSOR
+            reversed: true
+            data_rate: 10
+        rotation_sensor_2:
+            port: 5
+            type: ROTATION_SENSOR
+
+    device_configurations:
+
