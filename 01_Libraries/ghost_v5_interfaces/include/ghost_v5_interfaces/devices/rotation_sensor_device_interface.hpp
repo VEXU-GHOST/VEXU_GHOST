@@ -64,9 +64,9 @@ public:
 		       (curr_position == d_rhs->curr_position) && (curr_velocity_rpm == d_rhs->curr_velocity_rpm);
 	}
 
-	std::vector<unsigned char> serialize(bool to_v5) const override {
+	std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override {
 		std::vector<unsigned char> msg;
-		if(!to_v5){
+		if(hardware_type == hardware_type_e::V5_BRAIN){
 			msg.resize(getSensorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
@@ -77,8 +77,8 @@ public:
 		return msg;
 	}
 
-	void deserialize(const std::vector<unsigned char>& msg, bool from_coprocessor) override {
-		if(!from_coprocessor){
+	void deserialize(const std::vector<unsigned char>& msg, hardware_type_e hardware_type) override {
+		if(hardware_type == hardware_type_e::COPROCESSOR){
 			// Sensor Msg
 			checkMsgSize(msg, getSensorPacketSize());
 			auto msg_buffer = msg.data();

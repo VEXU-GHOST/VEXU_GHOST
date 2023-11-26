@@ -8,17 +8,6 @@
 
 namespace ghost_v5_interfaces {
 
-enum competition_state_e {
-	DISABLED,
-	AUTONOMOUS,
-	TELEOP
-};
-
-enum hardware_type_e {
-	COPROCESSOR,
-	V5_BRAIN
-};
-
 struct DevicePair {
 	std::shared_ptr<const DeviceConfig> config_ptr;
 	std::shared_ptr<DeviceData> data_ptr;
@@ -80,14 +69,6 @@ public:
 		device_pair_name_map_.at(name).data_ptr->update(device_data);
 	}
 
-	const competition_state_e& getCompetitionState(){
-		return competition_state_;
-	}
-
-	void setCompetitionState(const competition_state_e& state){
-		competition_state_ = state;
-	}
-
 	std::shared_ptr<JoystickDeviceData> getPrimaryJoystickData(){
 		return primary_joystick_data_ptr_->clone()->as<JoystickDeviceData>();
 	}
@@ -126,7 +107,6 @@ private:
 	}
 
 	hardware_type_e hardware_type_;
-	competition_state_e competition_state_;
 	bool is_disabled_ = true;
 	bool is_autonomous_ = false;
 	bool is_connected_ = false;

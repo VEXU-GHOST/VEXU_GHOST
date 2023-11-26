@@ -28,12 +28,11 @@ public:
 		type = device_type_e::JOYSTICK;
 	}
 
-	// Msg Size
-	int getActuatorPacketSize() const {
+	int getActuatorPacketSize() const override {
 		return 0;
 	}
 
-	int getSensorPacketSize() const {
+	int getSensorPacketSize() const override {
 		return 4 * 4 + 2;
 	}
 
@@ -92,11 +91,10 @@ public:
 		       (btn_d == d_rhs->btn_d) && (is_master == d_rhs->is_master);
 	}
 
-	std::vector<unsigned char> serialize(bool coprocessor_to_v5_brain) const override {
+	std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override {
 		std::vector<unsigned char> msg;
 		int byte_offset = 0;
-		bool v5_to_coprocessor = !coprocessor_to_v5_brain;
-		if(v5_to_coprocessor){
+		if((hardware_type == hardware_type_e::V5_BRAIN)){
 			msg.resize(getSensorPacketSize(), 0);
 			auto msg_data = msg.data();
 			memcpy(msg_data + byte_offset, &left_x, 4);
@@ -123,13 +121,13 @@ public:
 		return msg;
 	}
 
-	void deserialize(const std::vector<unsigned char>& msg, bool coprocessor_to_v5_brain) override {
-		int msg_size = (coprocessor_to_v5_brain) ? getActuatorPacketSize() : getSensorPacketSize();
+	void deserialize(const std::vector<unsigned char>& msg, hardware_type_e hardware_type) override {
+		int msg_size = (hardware_type == hardware_type_e::V5_BRAIN) ? getActuatorPacketSize() : getSensorPacketSize();
 		checkMsgSize(msg, msg_size);
+
 		auto msg_data = msg.data();
 		int byte_offset = 0;
-		bool v5_to_coprocessor = !coprocessor_to_v5_brain;
-		if(v5_to_coprocessor){
+		if(hardware_type == hardware_type_e::COPROCESSOR){
 			memcpy(&left_x, msg_data + byte_offset, 4);
 			byte_offset += 4;
 			memcpy(&left_y, msg_data + byte_offset, 4);

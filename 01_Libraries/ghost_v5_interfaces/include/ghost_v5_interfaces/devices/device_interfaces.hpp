@@ -21,6 +21,11 @@ enum device_type_e {
 	INVALID
 };
 
+enum hardware_type_e {
+	COPROCESSOR,
+	V5_BRAIN
+};
+
 class DeviceBase : public std::enable_shared_from_this<DeviceBase> {
 public:
 	std::string name = "";
@@ -104,7 +109,6 @@ public:
 	 * @return int
 	 */
 	virtual int getSensorPacketSize() const = 0;
-
 	/**
 	 * @brief Returns a pointer to a deep copy of this object
 	 *
@@ -123,7 +127,7 @@ public:
 	 * @param to_v5	set to true when the data is going from coprocessor -> V5 Brain
 	 * @return std::vector<unsigned char> byte stream
 	 */
-	virtual std::vector<unsigned char> serialize(bool coprocessor_to_v5_brain) const = 0;
+	virtual std::vector<unsigned char> serialize(hardware_type_e hardware_type) const = 0;
 
 	/**
 	 * @brief Updates device data from byte stream.
@@ -131,7 +135,7 @@ public:
 	 * @param data byte stream as unsigned char vector
 	 * @param from_coprocessor set to true when the data is going from coprocesspr -> V5 Brain
 	 */
-	virtual void deserialize(const std::vector<unsigned char>& data, bool coprocessor_to_v5_brain)  = 0;
+	virtual void deserialize(const std::vector<unsigned char>& data, hardware_type_e hardware_type)  = 0;
 
 	void checkMsgSize(std::vector<unsigned char> data, int msg_size) const {
 		if(data.size() != msg_size){

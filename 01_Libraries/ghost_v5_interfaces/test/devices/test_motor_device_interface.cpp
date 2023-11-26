@@ -1,40 +1,33 @@
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/test/device_test_utils.hpp"
 
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
+using ghost_v5_interfaces::hardware_type_e;
 using ghost_v5_interfaces::MotorDeviceData;
+using ghost_v5_interfaces::test_utils::getRandomMotorData;
 
-TEST(TestMotorDeviceInterface, testSerialization){
-	MotorDeviceData data_1;
+TEST(TestMotorDeviceInterface, testSerializationV5ToCoprocessor){
 	int NUM_TESTS = 50;
 	for(int i = 0; i < NUM_TESTS; i++){
-		data_1.desired_position = (float) rand();
-		data_1.desired_velocity = (float) rand();
-		data_1.desired_torque = (float) rand();
-		data_1.desired_voltage = (float) rand();
-		data_1.current_limit = (float) rand();
+		auto data_2 = std::make_shared<MotorDeviceData>();
+		auto data_1 = getRandomMotorData(false);
+		auto serial_stream_2 = data_1->serialize(hardware_type_e::V5_BRAIN);
+		data_2->deserialize(serial_stream_2, hardware_type_e::COPROCESSOR);
 
-		data_1.position_control = (bool) rand();
-		data_1.velocity_control = (bool) rand();
-		data_1.torque_control = (bool) rand();
-		data_1.voltage_control = (bool) rand();
+		EXPECT_EQ(*data_1, *data_2);
+	}
+}
 
-		data_1.curr_position = (float) rand();
-		data_1.curr_velocity_rpm = (float) rand();
-		data_1.curr_torque_nm = (float) rand();
-		data_1.curr_voltage_mv = (float) rand();
-		data_1.curr_current_ma = (float) rand();
-		data_1.curr_power_w = (float) rand();
-		data_1.curr_temp_c = (float) rand();
+TEST(TestMotorDeviceInterface, testSerializationCoprocessorToV5){
+	int NUM_TESTS = 50;
+	for(int i = 0; i < NUM_TESTS; i++){
+		auto data_2 = std::make_shared<MotorDeviceData>();
+		auto data_1 = getRandomMotorData(true);
+		auto serial_stream_1 = data_1->serialize(hardware_type_e::COPROCESSOR);
+		data_2->deserialize(serial_stream_1, hardware_type_e::V5_BRAIN);
 
-		MotorDeviceData data_2;
-		auto serial_stream_1 = data_1.serialize(true);
-		data_2.deserialize(serial_stream_1, true);
-
-		auto serial_stream_2 = data_1.serialize(false);
-		data_2.deserialize(serial_stream_2, false);
-
-		EXPECT_EQ(data_1, data_2);
+		EXPECT_EQ(*data_1, *data_2);
 	}
 }

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
+using ghost_v5_interfaces::hardware_type_e;
 using ghost_v5_interfaces::RotationSensorDeviceData;
 
 TEST(TestRotationSensorDeviceInterface, testSerialization){
@@ -13,11 +14,11 @@ TEST(TestRotationSensorDeviceInterface, testSerialization){
 		data_1.curr_velocity_rpm = (float) rand();
 
 		RotationSensorDeviceData data_2;
-		auto serial_stream_1 = data_1.serialize(true);
-		data_2.deserialize(serial_stream_1, true);
+		auto serial_stream_1 = data_1.serialize(hardware_type_e::COPROCESSOR);
+		data_2.deserialize(serial_stream_1, hardware_type_e::V5_BRAIN);
 
-		auto serial_stream_2 = data_1.serialize(false);
-		data_2.deserialize(serial_stream_2, false);
+		auto serial_stream_2 = data_1.serialize(hardware_type_e::V5_BRAIN);
+		data_2.deserialize(serial_stream_2, hardware_type_e::COPROCESSOR);
 
 		EXPECT_EQ(data_1, data_2);
 	}

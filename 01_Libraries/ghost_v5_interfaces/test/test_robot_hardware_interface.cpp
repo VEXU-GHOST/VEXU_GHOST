@@ -146,6 +146,10 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	auto rotation_sensor_2 = getRandomRotationSensorData();
 	hw_interface.setDeviceData("rotation_sensor_2", rotation_sensor_2);
 
+	hw_interface.setDisabledStatus(getRandomBool());
+	hw_interface.setAutonomousStatus(getRandomBool());
+	hw_interface.setConnectedStatus(getRandomBool());
+
 	auto joy = getRandomJoystickData();
 	joy->name = "primary_joystick";
 	hw_interface.setPrimaryJoystickData(joy);
@@ -155,6 +159,10 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	hw_interface_copy.deserialize(serial_data);
 
 	EXPECT_EQ(*hw_interface.getPrimaryJoystickData(), *hw_interface_copy.getPrimaryJoystickData());
+
+	EXPECT_EQ(hw_interface.isDisabled(), hw_interface_copy.isDisabled());
+	EXPECT_EQ(hw_interface.isAutonomous(), hw_interface_copy.isAutonomous());
+	EXPECT_EQ(hw_interface.isConnected(), hw_interface_copy.isConnected());
 
 	for(const auto& [key, val] : hw_interface){
 		auto copied_data_ptr = hw_interface_copy.getDeviceData(key);
@@ -182,6 +190,10 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	auto rotation_sensor_2 = getRandomRotationSensorData();
 	hw_interface.setDeviceData("rotation_sensor_2", rotation_sensor_2);
 
+	hw_interface.setDisabledStatus(getRandomBool());
+	hw_interface.setAutonomousStatus(getRandomBool());
+	hw_interface.setConnectedStatus(getRandomBool());
+
 	auto joy = getRandomJoystickData();
 	joy->name = "primary_joystick";
 	hw_interface.setPrimaryJoystickData(joy);
@@ -196,6 +208,10 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 
 	EXPECT_EQ(*hw_interface.getPrimaryJoystickData(), *hw_interface_copy.getPrimaryJoystickData());
 	EXPECT_EQ(*hw_interface.getSecondaryJoystickData(), *hw_interface_copy.getSecondaryJoystickData());
+
+	EXPECT_EQ(hw_interface.isDisabled(), hw_interface_copy.isDisabled());
+	EXPECT_EQ(hw_interface.isAutonomous(), hw_interface_copy.isAutonomous());
+	EXPECT_EQ(hw_interface.isConnected(), hw_interface_copy.isConnected());
 
 	for(const auto& [key, val] : hw_interface){
 		auto copied_data_ptr = hw_interface_copy.getDeviceData(key);

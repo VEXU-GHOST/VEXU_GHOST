@@ -68,11 +68,11 @@ public:
 	}
 
 	// Msg Size
-	int getActuatorPacketSize() const {
+	int getActuatorPacketSize() const override {
 		return 5 * 4 + 1;
 	}
 
-	int getSensorPacketSize() const {
+	int getSensorPacketSize() const override {
 		return 7 * 4;
 	}
 
@@ -133,9 +133,9 @@ public:
 		       (curr_power_w == d_rhs->curr_power_w) && (curr_temp_c == d_rhs->curr_temp_c);
 	}
 
-	std::vector<unsigned char> serialize(bool coprocessor_to_v5_brain) const override {
+	std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override {
 		std::vector<unsigned char> msg;
-		if(coprocessor_to_v5_brain){
+		if(hardware_type == hardware_type_e::COPROCESSOR){
 			msg.resize(getActuatorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
@@ -164,7 +164,7 @@ public:
 			memcpy(msg_buffer + byte_offset, &ctrl_byte, 1);
 			byte_offset++;
 		}
-		else{
+		else if(hardware_type == hardware_type_e::V5_BRAIN){
 			msg.resize(getSensorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
@@ -183,11 +183,14 @@ public:
 			memcpy(msg_buffer + byte_offset, &curr_temp_c, 4);
 			byte_offset += 4;
 		}
+		else{
+			throw std::runtime_error("[MotorDeviceData::deserialize] Error: Received unsupported hardware type " + std::to_string(hardware_type) + " on motor " + name);
+		}
 		return msg;
 	}
 
-	void deserialize(const std::vector<unsigned char>& msg, bool coprocessor_to_v5_brain) override {
-		if(coprocessor_to_v5_brain){
+	void deserialize(const std::vector<unsigned char>& msg, hardware_type_e hardware_type) override {
+		if(hardware_type == hardware_type_e::V5_BRAIN){
 			// Actuator Msg
 			checkMsgSize(msg, getActuatorPacketSize());
 			auto msg_buffer = msg.data();
@@ -212,7 +215,7 @@ public:
 			torque_control = ctrl_vec[2];
 			voltage_control = ctrl_vec[3];
 		}
-		else{
+		else if(hardware_type == hardware_type_e::COPROCESSOR){
 			// Sensor Msg
 			checkMsgSize(msg, getSensorPacketSize());
 			auto msg_buffer = msg.data();
@@ -230,6 +233,9 @@ public:
 			memcpy(&curr_power_w, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
 			memcpy(&curr_temp_c, msg_buffer + byte_offset, 4);
+		}
+		else{
+			throw std::runtime_error("[MotorDeviceData::deserialize] Error: Received unsupported hardware type " + std::to_string(hardware_type) + " on motor " + name);
 		}
 	}
 };

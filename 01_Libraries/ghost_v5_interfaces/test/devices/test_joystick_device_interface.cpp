@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
+using ghost_v5_interfaces::hardware_type_e;
 using ghost_v5_interfaces::JoystickDeviceData;
 using namespace ghost_v5_interfaces::test_utils;
 
@@ -22,8 +23,8 @@ TEST(TestJoystickDeviceInterface, testSerializationCoprocessorToV5){
 
 	// Test Serialization from Coprocessor -> V5
 	// We expect this to do nothing, joysticks dont go from Coprocessor to V5
-	auto serial_stream_1 = j1->serialize(true);
-	j2->deserialize(serial_stream_1, true);
+	auto serial_stream_1 = j1->serialize(hardware_type_e::COPROCESSOR);
+	j2->deserialize(serial_stream_1, hardware_type_e::V5_BRAIN);
 
 	EXPECT_EQ(*j2, *j3);
 }
@@ -34,28 +35,8 @@ TEST(TestJoystickDeviceInterface, testSerializationV5ToCoprocessor){
 	j2->name = j1->name;
 
 	// Test Serialization from Coprocessor -> V5
-	auto serial_stream_1 = j1->serialize(false);
-	j2->deserialize(serial_stream_1, false);
-
-	EXPECT_EQ(j2->name, j1->name);
-	EXPECT_EQ(j2->type, j1->type);
-	EXPECT_EQ(j2->left_x, j1->left_x);
-	EXPECT_EQ(j2->left_y, j1->left_y);
-	EXPECT_EQ(j2->right_x, j1->right_x);
-	EXPECT_EQ(j2->right_y, j1->right_y);
-	EXPECT_EQ(j2->btn_a, j1->btn_a);
-	EXPECT_EQ(j2->btn_b, j1->btn_b);
-	EXPECT_EQ(j2->btn_x, j1->btn_x);
-	EXPECT_EQ(j2->btn_y, j1->btn_y);
-	EXPECT_EQ(j2->btn_r1, j1->btn_r1);
-	EXPECT_EQ(j2->btn_r2, j1->btn_r2);
-	EXPECT_EQ(j2->btn_l1, j1->btn_l1);
-	EXPECT_EQ(j2->btn_l2, j1->btn_l2);
-	EXPECT_EQ(j2->btn_u, j1->btn_u);
-	EXPECT_EQ(j2->btn_l, j1->btn_l);
-	EXPECT_EQ(j2->btn_r, j1->btn_r);
-	EXPECT_EQ(j2->btn_d, j1->btn_d);
-	EXPECT_EQ(j2->is_master, j1->is_master);
+	auto serial_stream_1 = j1->serialize(hardware_type_e::V5_BRAIN);
+	j2->deserialize(serial_stream_1, hardware_type_e::COPROCESSOR);
 
 	EXPECT_EQ(*j1, *j2);
 }

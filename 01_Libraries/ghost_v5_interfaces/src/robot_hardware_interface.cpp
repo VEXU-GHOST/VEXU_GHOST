@@ -43,39 +43,35 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const {
 
 	// Send state of all Digital IO Ports
 	serial_data.push_back(packByte(digital_io_vector_));
-	bool coprocessor_to_v5 = (hardware_type_ == hardware_type_e::COPROCESSOR);
-	bool v5_to_coprocessor = !coprocessor_to_v5;
 
 	// Only send competition state and joystick info from V5 Brain to Coprocessor
-	if(v5_to_coprocessor){
+	if(hardware_type_ == hardware_type_e::V5_BRAIN){
 		serial_data.push_back(packByte(std::vector<bool>{
 				is_disabled_, is_autonomous_, is_connected_, 0, 0, 0, 0, 0
 			}));
 	}
 
-	auto j1_serial_msg = primary_joystick_data_ptr_->serialize(coprocessor_to_v5);
+	auto j1_serial_msg = primary_joystick_data_ptr_->serialize(hardware_type_);
 	serial_data.insert(serial_data.end(), j1_serial_msg.begin(), j1_serial_msg.end());
 
 	if(use_secondary_joystick_){
-		auto j2_serial_msg = secondary_joystick_data_ptr_->serialize(coprocessor_to_v5);
+		auto j2_serial_msg = secondary_joystick_data_ptr_->serialize(hardware_type_);
 		serial_data.insert(serial_data.end(), j2_serial_msg.begin(), j2_serial_msg.end());
 	}
 
 	for(const auto & [key, val] : device_pair_port_map_){
-		auto device_serial_msg = val.data_ptr->serialize(coprocessor_to_v5);
+		auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
 		serial_data.insert(serial_data.end(), device_serial_msg.begin(), device_serial_msg.end());
 	}
 	return serial_data;
 }
 void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
-	bool coprocessor_to_v5 = (hardware_type_ == hardware_type_e::V5_BRAIN);
-	bool v5_to_coprocessor = !coprocessor_to_v5;
 	int byte_offset = 0;
 	// Unpack Digital IO
 	digital_io_vector_ = unpackByte(msg[byte_offset]);
 	byte_offset++;
 
-	if(v5_to_coprocessor){
+	if(hardware_type_ == hardware_type_e::COPROCESSOR){
 		// Unpack competition state
 		auto packet_start_byte = unpackByte(msg[byte_offset]);
 		is_disabled_ = packet_start_byte[0];
@@ -99,12 +95,12 @@ void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
 	// Unpack joystick data
 	if(joy_msg_len != 0){
 		auto start_itr_j1 = msg.begin() + byte_offset;
-		primary_joystick_data_ptr_->deserialize(std::vector<unsigned char>(start_itr_j1, start_itr_j1 + joy_msg_len), coprocessor_to_v5);
+		primary_joystick_data_ptr_->deserialize(std::vector<unsigned char>(start_itr_j1, start_itr_j1 + joy_msg_len), hardware_type_);
 		byte_offset += joy_msg_len;
 
 		if(use_secondary_joystick_){
 			auto start_itr_j2 = msg.begin() + byte_offset;
-			secondary_joystick_data_ptr_->deserialize(std::vector<unsigned char>(start_itr_j2, start_itr_j2 + joy_msg_len), coprocessor_to_v5);
+			secondary_joystick_data_ptr_->deserialize(std::vector<unsigned char>(start_itr_j2, start_itr_j2 + joy_msg_len), hardware_type_);
 			byte_offset += joy_msg_len;
 		}
 	}
@@ -123,7 +119,7 @@ void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
 		}
 
 		auto start_itr = msg.begin() + byte_offset;
-		val.data_ptr->deserialize(std::vector<unsigned char>(start_itr, start_itr + msg_len), coprocessor_to_v5);
+		val.data_ptr->deserialize(std::vector<unsigned char>(start_itr, start_itr + msg_len), hardware_type_);
 		byte_offset += msg_len;
 	}
 }
