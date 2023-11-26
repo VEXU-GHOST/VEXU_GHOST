@@ -99,12 +99,12 @@ void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
 	// Unpack joystick data
 	if(joy_msg_len != 0){
 		auto start_itr_j1 = msg.begin() + byte_offset;
-		primary_joystick_data_ptr_->deserialize(std::vector<unsigned char>(start_itr_j1, start_itr_j1 + joy_msg_len), v5_to_coprocessor);
+		primary_joystick_data_ptr_->deserialize(std::vector<unsigned char>(start_itr_j1, start_itr_j1 + joy_msg_len), coprocessor_to_v5);
 		byte_offset += joy_msg_len;
 
 		if(use_secondary_joystick_){
 			auto start_itr_j2 = msg.begin() + byte_offset;
-			secondary_joystick_data_ptr_->deserialize(std::vector<unsigned char>(start_itr_j2, start_itr_j2 + joy_msg_len), v5_to_coprocessor);
+			secondary_joystick_data_ptr_->deserialize(std::vector<unsigned char>(start_itr_j2, start_itr_j2 + joy_msg_len), coprocessor_to_v5);
 			byte_offset += joy_msg_len;
 		}
 	}
