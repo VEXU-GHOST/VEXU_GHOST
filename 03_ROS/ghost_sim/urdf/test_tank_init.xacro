@@ -8,8 +8,13 @@
 
             <!-- wheels -->
             <left_joint>wheel_joint_left_front</left_joint>
-            <right_joint>wheel_joint_right_front</right_joint>
+            <left_joint>wheel_joint_left_back</left_joint>
 
+            <right_joint>wheel_joint_right_front</right_joint>
+            <right_joint>wheel_joint_right_back</right_joint>
+
+            <num_wheel_pairs>2</num_wheel_pairs>
+            
             <!-- kinematics -->
             <wheel_separation>1.25</wheel_separation>
             <wheel_diameter>0.6</wheel_diameter>
