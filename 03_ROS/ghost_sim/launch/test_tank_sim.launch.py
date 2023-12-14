@@ -16,7 +16,6 @@ def launch_setup(context, *args, **kwargs):
 
     # Load URDF and process to text
     urdf_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
-    print("POOP:  ", urdf_path)
     doc = xacro.process(urdf_path)
     
     spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity ghost1 -topic robot_description").split()
@@ -115,6 +114,12 @@ def generate_launch_description():
         parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
     )
 
+    plot_juggler_node = Node(
+        package = 'plotjuggler',
+        executable = 'plotjuggler',
+        name='plot_juggler'       
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(name='use_joy', default_value='false'),
         DeclareLaunchArgument(name='channel_id', default_value='1'),
@@ -122,7 +127,8 @@ def generate_launch_description():
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ground_truth_publisher,
-        rviz_node,
+        # rviz_node,
+        plot_juggler_node,
         # estimator_node,
         state_machine_node,
         # v5_actuator_cmd_publisher,
