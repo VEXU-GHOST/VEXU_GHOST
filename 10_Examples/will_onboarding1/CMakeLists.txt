@@ -6,9 +6,33 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
+set(DEPENDENCIES
+  ament_cmake
+  ament_cmake_gtest
+  rclcpp
+  std_msgs
+)
+
+foreach(pkg ${DEPENDENCIES})
+  find_package(${pkg} REQUIRED)
+endforeach()
+
 find_package(std_msgs REQUIRED)
+
+
+# Tell any packages that depend on us what dependencies we need.
+ament_export_dependencies(${DEPENDENCIES})
+
+set(INCLUDE
+  include
+)
+
+# Tells the package where all our header files live
+include_directories(${INCLUDE})
+
+# Tells any packages that depend on us what include files we use.
+ament_export_include_directories(${INCLUDE})
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -22,11 +46,47 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(math_node src/main.cpp)
-ament_target_dependencies(math_node rclcpp std_msgs)
+#Creating a library for the class that I made
+add_library(Math_Node SHARED src/Mather.cpp)
+ament_target_dependencies(Math_Node
+${DEPENDENCIES})
+
+#exporting the library
+ament_export_targets(Math_Node HAS_LIBRARY_TARGET)
+install(
+  TARGETS Math_Node
+  EXPORT Math_Node
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+#Main Method Stuff
+add_executable(main_executable src/main.cpp)
+ament_target_dependencies(main_executable
+  ${DEPENDENCIES}
+)
+target_link_libraries(main_executable
+Math_Node)
 
 install(TARGETS
-  math_node
-  DESTINATION lib/${PROJECT_NAME})
+main_executable
+DESTINATION lib/${PROJECT}
+)
+
+#Gtest stuff
+ament_add_gtest(test_example src/wills_Test_File.cpp)
+target_link_libraries(test_example
+  Math_Node
+  gtest
+)
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+
 
 ament_package()
