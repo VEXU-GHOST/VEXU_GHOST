@@ -1,10 +1,10 @@
 #include "main.h"
 #include "pros/motors.h"
 
-#include <iostream>
-#include <vector>
 #include <algorithm>
+#include <iostream>
 #include <numeric>
+#include <vector>
 #include <unistd.h>
 
 #include "pros/apix.h"
@@ -44,11 +44,9 @@ void update_actuators(){
 	actuator_lock.unlock();
 }
 
-void actuator_timeout_loop()
-{
+void actuator_timeout_loop(){
 	uint32_t loop_time = pros::millis();
-	while (v5_globals::run)
-	{
+	while(v5_globals::run){
 		if(pros::millis() > v5_globals::last_cmd_time + v5_globals::cmd_timeout_ms){
 			zero_actuators();
 		}
@@ -58,17 +56,16 @@ void actuator_timeout_loop()
 
 void reader_loop(){
 	uint32_t loop_time = pros::millis();
-	while (v5_globals::run)
-	{
+	while(v5_globals::run){
 		// Process incoming msgs and update motor cmds
 		bool update_recieved = v5_globals::serial_node_.readV5ActuatorUpdate();
-		
+
 		// Reset actuator timeout
 		if(update_recieved){
 			v5_globals::last_cmd_time = pros::millis();
 		}
 		// Reader thread blocks waiting for data, so loop frequency must run faster than producer to avoid msg queue backup
-		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency/2);
+		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency / 2);
 	}
 }
 
@@ -88,15 +85,14 @@ void ghost_main_loop(){
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-void initialize()
-{
+void initialize(){
 	// Motor ports
-	for (const auto& [name, config] : ghost_v5_config::motor_config_map){
+	for(const auto& [name, config] : ghost_v5_config::motor_config_map){
 		v5_globals::motors[name] = std::make_shared<ghost_v5::V5MotorInterface>(config.port, config.reversed, config.config);
 	}
 
 	// Encoder Ports
-	for (const auto& [name, config] : ghost_v5_config::encoder_config_map){
+	for(const auto& [name, config] : ghost_v5_config::encoder_config_map){
 		v5_globals::encoders[name] = std::make_shared<pros::Rotation>(config.port);
 		if(config.reversed){
 			v5_globals::encoders[name]->reverse();
@@ -120,11 +116,9 @@ void initialize()
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled()
-{
+void disabled(){
 	uint32_t loop_time = pros::millis();
-	while (pros::competition::is_disabled())
-	{
+	while(pros::competition::is_disabled()){
 		ghost_main_loop();
 		update_actuators();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
@@ -140,7 +134,8 @@ void disabled()
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize() {
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -153,11 +148,9 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous()
-{
+void autonomous(){
 	uint32_t loop_time = pros::millis();
-	while (pros::competition::is_autonomous())
-	{
+	while(pros::competition::is_autonomous()){
 		ghost_main_loop();
 		update_actuators();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
@@ -179,11 +172,28 @@ void autonomous()
  */
 void opcontrol(){
 	uint32_t loop_time = pros::millis();
-	while (!pros::competition::is_autonomous() && !pros::competition::is_disabled())
-	{
+	while(!pros::competition::is_autonomous() && !pros::competition::is_disabled()){
 		ghost_main_loop();
 		update_actuators();
-
 		pros::c::task_delay_until(&loop_time, 10);
 	}
 }
+
+// void opcontrol(){
+// 	uint32_t loop_time = pros::millis();
+// 	auto m1 = pros::Motor(11, pros::motor_gearset_e_t::E_MOTOR_GEAR_600);
+// 	pros::Controller joy (pros::E_CONTROLLER_MASTER);
+
+// 	std::cout << "Voltage, Velocity, Current, Torque, Power, Efficiency, Temperature" << std::endl;
+
+// 	while(!pros::competition::is_autonomous() && !pros::competition::is_disabled()){
+// 		m1.move_voltage(joy.get_analog(ANALOG_RIGHT_Y) / 127.0 * 12000.0);
+
+// 		std::cout << m1.get_voltage() << ", " << m1.get_actual_velocity() << ", " << m1.get_current_draw()
+// 		          << ", " << m1.get_torque() << ", " << m1.get_power() << ", " << m1.get_efficiency() << ", "
+// 		          << m1.get_temperature() << std::endl;
+
+
+// 		pros::c::task_delay_until(&loop_time, 10);
+// 	}
+// }
