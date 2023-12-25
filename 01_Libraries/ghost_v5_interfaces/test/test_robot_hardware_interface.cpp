@@ -86,8 +86,9 @@ TEST_F(RobotHardwareInterfaceTestFixture, testIteratorIsOrderedByPort){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
 
 	std::vector<int> ports;
-	for(const auto & [key, val] : hw_interface){
-		ports.push_back(val.config_ptr->port);
+	for(const auto & key : hw_interface){
+		auto config_ptr = hw_interface.getDeviceConfig(key);
+		ports.push_back(config_ptr->port);
 	}
 
 	auto ports_sorted = ports;
@@ -119,14 +120,18 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineCoprocessorTo
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
 	hw_interface_copy.deserialize(serial_data);
 
-	for(const auto& [key, val] : hw_interface){
+	for(const auto& key : hw_interface){
+		auto data_ptr = hw_interface.getDeviceData(key);
 		auto copied_data_ptr = hw_interface_copy.getDeviceData(key);
 		if(copied_data_ptr->type == device_type_e::MOTOR){
-			auto expected_motor_data = val.data_ptr->as<MotorDeviceData>();
+			auto expected_motor_data = data_ptr->as<MotorDeviceData>();
 			auto received_motor_data = copied_data_ptr->as<MotorDeviceData>();
-			EXPECT_EQ(*val.data_ptr, *copied_data_ptr);
+			EXPECT_EQ(*data_ptr, *copied_data_ptr);
 		}
 	}
+
+	// Test Actuator Command Msg Length
+	EXPECT_EQ(serial_data.size(), hw_interface.getActuatorCommandMsgLength());
 }
 
 
@@ -164,14 +169,18 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	EXPECT_EQ(hw_interface.isAutonomous(), hw_interface_copy.isAutonomous());
 	EXPECT_EQ(hw_interface.isConnected(), hw_interface_copy.isConnected());
 
-	for(const auto& [key, val] : hw_interface){
+	for(const auto& key : hw_interface){
+		auto data_ptr = hw_interface.getDeviceData(key);
 		auto copied_data_ptr = hw_interface_copy.getDeviceData(key);
 		if(copied_data_ptr->type == device_type_e::MOTOR){
-			auto expected_motor_data = val.data_ptr->as<MotorDeviceData>();
+			auto expected_motor_data = data_ptr->as<MotorDeviceData>();
 			auto received_motor_data = copied_data_ptr->as<MotorDeviceData>();
-			EXPECT_EQ(*val.data_ptr, *copied_data_ptr);
+			EXPECT_EQ(*data_ptr, *copied_data_ptr);
 		}
 	}
+
+	// Test Sensor Update Msg Length
+	EXPECT_EQ(serial_data.size(), hw_interface.getSensorUpdateMsgLength());
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocessorDualJoystick){
@@ -213,12 +222,17 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	EXPECT_EQ(hw_interface.isAutonomous(), hw_interface_copy.isAutonomous());
 	EXPECT_EQ(hw_interface.isConnected(), hw_interface_copy.isConnected());
 
-	for(const auto& [key, val] : hw_interface){
+	for(const auto& key : hw_interface){
+		auto data_ptr = hw_interface.getDeviceData(key);
 		auto copied_data_ptr = hw_interface_copy.getDeviceData(key);
 		if(copied_data_ptr->type == device_type_e::MOTOR){
-			auto expected_motor_data = val.data_ptr->as<MotorDeviceData>();
+			auto expected_motor_data = data_ptr->as<MotorDeviceData>();
 			auto received_motor_data = copied_data_ptr->as<MotorDeviceData>();
-			EXPECT_EQ(*val.data_ptr, *copied_data_ptr);
+
+			EXPECT_EQ(*data_ptr, *copied_data_ptr);
 		}
 	}
+
+	// Test Sensor Update Msg Length
+	EXPECT_EQ(serial_data.size(), hw_interface.getSensorUpdateMsgLength());
 }
