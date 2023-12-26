@@ -7,8 +7,8 @@ V5_DIR="${HOME}/VEXU_GHOST/02_V5/ghost_pros"
 cd $V5_DIR/src
 
 # Clear existing directories
-rm -r ghost_serial ghost_util ghost_estimation ghost_control
-mkdir ghost_serial ghost_util ghost_estimation ghost_control
+rm -r ghost_serial ghost_util ghost_estimation ghost_control ghost_v5_interfaces
+mkdir ghost_serial ghost_util ghost_estimation ghost_control ghost_v5_interfaces
 
 ### Symlink ghost_serial ###
 cd ghost_serial
@@ -33,6 +33,9 @@ ln -s ../../../../01_Libraries/ghost_control/src/motor_controller.cpp
 mkdir models && cd models
 ln -s ../../../../../01_Libraries/ghost_control/src/models/dc_motor_model.cpp
 
+cd $V5_DIR/src/ghost_v5_interfaces
+ln -s ../../../../01_Libraries/ghost_v5_interfaces/src/robot_hardware_interface.cpp
+
 ##################
 ### V5 INCLUDE ###
 ##################
@@ -53,6 +56,7 @@ ln -s ../../../../../01_Libraries/ghost_serial/include/ghost_serial/base_interfa
 ### Symlink ghost_v5_interfaces ###
 cd $V5_DIR/include/ghost_v5_interfaces
 ln -s ../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/devices
+ln -s ../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/robot_hardware_interface.hpp
 
 ### Symlink ghost_util ###
 cd $V5_DIR/include/ghost_util
