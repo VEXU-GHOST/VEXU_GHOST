@@ -42,6 +42,7 @@ bool run = true;
 pros::Mutex actuator_update_lock;
 
 pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
+pros::Controller controller_partner(pros::E_CONTROLLER_PARTNER);
 
 std::shared_ptr<DeviceConfigMap> robot_device_config_map_ptr;
 std::shared_ptr<RobotHardwareInterface> robot_hardware_interface_ptr;
@@ -81,7 +82,6 @@ pros::ADIDigitalOut adi_ports[8] = {
 	pros::ADIDigitalOut('H', false),
 };
 
-pros::Mutex digitial_out_lock;
 std::vector<bool> digital_out_cmds(8, false);
 
 // Serial Port

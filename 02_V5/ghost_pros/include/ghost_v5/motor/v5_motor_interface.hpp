@@ -22,6 +22,10 @@ public:
 		return device_connected_;
 	}
 
+	void setCurrentLimit(int32_t current_limit_ma){
+		motor_interface_ptr_->set_current_limit(current_limit_ma);
+	}
+
 	std::shared_ptr<pros::Motor> getMotorInterfacePtr(){
 		return motor_interface_ptr_;
 	}

@@ -44,8 +44,8 @@ RobotHardwareInterface::RobotHardwareInterface(std::shared_ptr<DeviceConfigMap> 
 	secondary_joystick_data_ptr_ = std::make_shared<JoystickDeviceData>();
 	secondary_joystick_data_ptr_->name = "secondary_joystick";
 
-	// Add Digital IO, Competition State, and joysticks to sensor update msg
-	sensor_update_msg_length_ += 2;
+	// Add Competition State and joysticks to sensor update msg
+	sensor_update_msg_length_ += 1;
 	sensor_update_msg_length_ += primary_joystick_data_ptr_->getSensorPacketSize();
 	sensor_update_msg_length_ += (use_secondary_joystick_) ? secondary_joystick_data_ptr_->getSensorPacketSize() : 0;
 }
@@ -53,14 +53,16 @@ RobotHardwareInterface::RobotHardwareInterface(std::shared_ptr<DeviceConfigMap> 
 std::vector<unsigned char> RobotHardwareInterface::serialize() const {
 	std::vector<unsigned char> serial_data;
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-	// Send state of all Digital IO Ports
-	serial_data.push_back(packByte(digital_io_vector_));
 
 	// Only send competition state and joystick info from V5 Brain to Coprocessor
 	if(hardware_type_ == hardware_type_e::V5_BRAIN){
 		serial_data.push_back(packByte(std::vector<bool>{
 				is_disabled_, is_autonomous_, is_connected_, 0, 0, 0, 0, 0
 			}));
+	}
+	else if(hardware_type_ == hardware_type_e::COPROCESSOR){
+		// Send state of all Digital IO Ports
+		serial_data.push_back(packByte(digital_io_vector_));
 	}
 
 	auto j1_serial_msg = primary_joystick_data_ptr_->serialize(hardware_type_);
@@ -82,9 +84,11 @@ void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
 	int byte_offset = 0;
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 
-	// Unpack Digital IO
-	digital_io_vector_ = unpackByte(msg[byte_offset]);
-	byte_offset++;
+	if(hardware_type_ == hardware_type_e::V5_BRAIN){
+		// Unpack Digital IO
+		digital_io_vector_ = unpackByte(msg[byte_offset]);
+		byte_offset++;
+	}
 
 	if(hardware_type_ == hardware_type_e::COPROCESSOR){
 		// Unpack competition state
@@ -211,6 +215,15 @@ void RobotHardwareInterface::setSecondaryJoystickData(std::shared_ptr<JoystickDe
 	else{
 		throw std::runtime_error("[RobotHardwareInterface] Error: Robot is not configured to use secondary joystick");
 	}
+}
+
+void RobotHardwareInterface::setDigitalIOPorts(const std::vector<bool>& digital_io_vector){
+	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+	digital_io_vector_ = digital_io_vector;
+}
+
+const std::vector<bool>& RobotHardwareInterface::getDigitalIOPorts(){
+	return digital_io_vector_;
 }
 
 void RobotHardwareInterface::throwOnNonexistentDevice(const std::string& name){

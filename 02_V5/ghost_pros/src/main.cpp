@@ -88,8 +88,10 @@ void ghost_main_loop(){
  * to keep execution time for this mode under a few seconds.
  */
 void initialize(){
-	// Get Robot Device Configuration, then instantiate hardware interface and serial node
+	// Get Robot Device Configuration from compile-time generated file
 	v5_globals::robot_device_config_map_ptr.reset(getRobotConfig());
+
+	// Instantiate Hardware Interface and Serial Node
 	v5_globals::robot_hardware_interface_ptr = std::make_shared<RobotHardwareInterface>(v5_globals::robot_device_config_map_ptr, V5_BRAIN);
 	v5_globals::serial_node_ptr = std::make_shared<V5SerialNode>(v5_globals::robot_hardware_interface_ptr);
 

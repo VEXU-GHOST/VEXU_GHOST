@@ -23,7 +23,7 @@ public:
 	void writeV5StateUpdate();
 
 private:
-	void updateActuatorCommands(unsigned char buffer[]);
+	void updateActuatorCommands(std::vector<unsigned char>& buffer);
 
 	// Device Config
 	std::shared_ptr<RobotHardwareInterface> hardware_interface_ptr_;

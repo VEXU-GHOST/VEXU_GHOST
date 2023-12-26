@@ -96,7 +96,6 @@ public:
 	 */
 	std::shared_ptr<DeviceData> getDeviceData(int port);
 
-
 	/**
 	 * @brief Updates a given Device (queried by name) with new Data.
 	 * Throws if the device does not exist.
@@ -134,6 +133,20 @@ public:
 	 * @param data_ptr
 	 */
 	void setSecondaryJoystickData(std::shared_ptr<JoystickDeviceData>& data_ptr);
+
+	/**
+	 * @brief Update the digital io ports.
+	 *
+	 * @param digital_outs
+	 */
+	void setDigitalIOPorts(const std::vector<bool>& digital_io_vector);
+
+	/**
+	 * @brief Get values of digital io ports.
+	 *
+	 * @return const std::vector<bool>&
+	 */
+	const std::vector<bool>& getDigitalIOPorts();
 
 	/**
 	 * @brief Returns iterator to first device name (ordered by port number).
