@@ -13,11 +13,13 @@
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
+using ghost_v5_interfaces::hardware_type_e::V5_BRAIN;
+
 void zero_actuators(){
 	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
 
 	// Zero all motor commands
-	for(auto & m : v5_globals::motors){
+	for(auto & m : v5_globals::motor_interfaces){
 		m.second->setControlMode(false, false, false, false);
 		m.second->setMotorCommand(0.0, 0.0, 0.0, 0.0);
 	}
@@ -33,7 +35,7 @@ void update_actuators(){
 	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
 
 	// Update velocity filter and motor controller for all motors
-	for(auto & m : v5_globals::motors){
+	for(auto & m : v5_globals::motor_interfaces){
 		m.second->updateInterface();
 	}
 
@@ -58,7 +60,7 @@ void reader_loop(){
 	uint32_t loop_time = pros::millis();
 	while(v5_globals::run){
 		// Process incoming msgs and update motor cmds
-		bool update_recieved = v5_globals::serial_node_.readV5ActuatorUpdate();
+		bool update_recieved = v5_globals::serial_node_ptr->readV5ActuatorUpdate();
 
 		// Reset actuator timeout
 		if(update_recieved){
@@ -71,7 +73,7 @@ void reader_loop(){
 
 void ghost_main_loop(){
 	// Send robot state over serial to coprocessor
-	v5_globals::serial_node_.writeV5StateUpdate();
+	v5_globals::serial_node_ptr->writeV5StateUpdate();
 
 	// Zero All Motors if disableds
 	if(pros::competition::is_disabled()){
@@ -86,18 +88,44 @@ void ghost_main_loop(){
  * to keep execution time for this mode under a few seconds.
  */
 void initialize(){
-	// Motor ports
-	for(const auto& [name, config] : ghost_v5_config::motor_config_map){
-		v5_globals::motors[name] = std::make_shared<ghost_v5::V5MotorInterface>(config.port, config.reversed, config.config);
-	}
+	// Get Robot Device Configuration, then instantiate hardware interface and serial node
+	v5_globals::robot_device_config_map_ptr.reset(getRobotConfig());
+	v5_globals::robot_hardware_interface_ptr = std::make_shared<RobotHardwareInterface>(v5_globals::robot_device_config_map_ptr, V5_BRAIN);
+	v5_globals::serial_node_ptr = std::make_shared<V5SerialNode>(v5_globals::robot_hardware_interface_ptr);
 
-	// Encoder Ports
-	for(const auto& [name, config] : ghost_v5_config::encoder_config_map){
-		v5_globals::encoders[name] = std::make_shared<pros::Rotation>(config.port);
-		if(config.reversed){
-			v5_globals::encoders[name]->reverse();
+	for(const auto& [device_name, config_ptr] : *v5_globals::robot_device_config_map_ptr){
+		switch(config_ptr->type){
+			case device_type_e::MOTOR:
+			{
+				auto motor_sensor_config_ptr = config_ptr->as<const MotorDeviceConfig>();
+
+				v5_globals::motor_interfaces[device_name] = std::make_shared<ghost_v5::V5MotorInterface>(motor_sensor_config_ptr);
+			}
+			break;
+
+			case device_type_e::ROTATION_SENSOR:
+			{
+				auto rotation_sensor_config_ptr = config_ptr->as<const RotationSensorDeviceConfig>();
+				v5_globals::encoders[device_name] = std::make_shared<pros::Rotation>(rotation_sensor_config_ptr->port);
+				if(rotation_sensor_config_ptr->reversed){
+					v5_globals::encoders[device_name]->reverse();
+				}
+				v5_globals::encoders[device_name]->set_data_rate(rotation_sensor_config_ptr->data_rate);
+			}
+			break;
+
+			case device_type_e::INVALID:
+			{
+				throw std::runtime_error("ERROR: Attempted to initialize unsupported device using ghost_v5_interfaces.");
+			}
+			break;
+
+			default:
+			{
+				throw std::runtime_error("ERROR: Attempted to initialize unsupported device using ghost_v5_interfaces.");
+			}
+			break;
 		}
-		v5_globals::encoders[name]->set_data_rate(5);
 	}
 
 	zero_actuators();
@@ -106,7 +134,7 @@ void initialize(){
 	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 
 	// Perform and necessary Serial Init
-	v5_globals::serial_node_.initSerial();
+	v5_globals::serial_node_ptr->initSerial();
 	pros::Task reader_thread(reader_loop, "reader thread");
 	pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
 }

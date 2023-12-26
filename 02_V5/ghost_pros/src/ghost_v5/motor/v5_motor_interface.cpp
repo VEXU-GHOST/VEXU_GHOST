@@ -24,19 +24,20 @@ const std::unordered_map<ghost_encoder_unit, pros::motor_encoder_units_e_t> GHOS
 	{ghost_encoder_unit::ENCODER_COUNTS,    pros::E_MOTOR_ENCODER_COUNTS},
 	{ghost_encoder_unit::ENCODER_INVALID,   pros::E_MOTOR_ENCODER_INVALID}};
 
-V5MotorInterface::V5MotorInterface(const MotorDeviceConfig &config) :
-	MotorController(config.controller_config, config.filter_config, config.model_config),
+V5MotorInterface::V5MotorInterface(std::shared_ptr<const MotorDeviceConfig> config_ptr) :
+	MotorController(config_ptr_->controller_config, config_ptr_->filter_config, config_ptr_->model_config),
 	device_connected_{false}{
+	config_ptr_ = config_ptr->clone()->as<const MotorDeviceConfig>();
 	motor_interface_ptr_ = std::make_shared<pros::Motor>(
-		config.port,
+		config_ptr_->port,
 		pros::E_MOTOR_GEARSET_INVALID,
-		config.reversed,
+		config_ptr_->reversed,
 		pros::E_MOTOR_ENCODER_INVALID);
 
 	// Set Motor Config w PROS Enum values
-	motor_interface_ptr_->set_gearing(RPM_TO_GEARING_MAP.at(config.gearset));
-	motor_interface_ptr_->set_brake_mode(GHOST_BRAKE_MODE_MAP.at(config.brake_mode));
-	motor_interface_ptr_->set_encoder_units(GHOST_ENCODER_UNIT_MAP.at(config.encoder_units));
+	motor_interface_ptr_->set_gearing(RPM_TO_GEARING_MAP.at(config_ptr_->gearset));
+	motor_interface_ptr_->set_brake_mode(GHOST_BRAKE_MODE_MAP.at(config_ptr_->brake_mode));
+	motor_interface_ptr_->set_encoder_units(GHOST_ENCODER_UNIT_MAP.at(config_ptr_->encoder_units));
 }
 
 void V5MotorInterface::updateInterface(){

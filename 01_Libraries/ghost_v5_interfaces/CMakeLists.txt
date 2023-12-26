@@ -107,6 +107,17 @@ RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
+add_executable(generate_pros_header
+src/util/generate_pros_header.cpp
+)
+ament_target_dependencies(generate_pros_header
+${DEPENDENCIES}
+)
+target_link_libraries(generate_pros_header
+  ${UTIL_LIBS}
+  device_config_factory_utils
+)
+
 #################
 #### Install ####
 #################

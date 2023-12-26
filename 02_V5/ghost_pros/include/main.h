@@ -23,8 +23,14 @@
 
 #include <map>
 
-#include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_v5/globals/v5_globals.hpp"
+#include "robot_config.hpp"
+
+#include "ghost_v5/motor/v5_motor_interface.hpp"
+#include "ghost_v5_interfaces/devices/device_config_map.hpp"
+
+using ghost_v5::V5SerialNode;
+using ghost_v5_interfaces::DeviceConfigMap;
 
 // Global Variables
 namespace v5_globals {
@@ -37,10 +43,11 @@ pros::Mutex actuator_update_lock;
 
 pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 
-///// MOTOR DEFINITIONS /////
-std::map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motors;
-std::map<std::string, std::shared_ptr<pros::Rotation> > encoders;
+std::shared_ptr<DeviceConfigMap> robot_device_config_map_ptr;
+std::shared_ptr<RobotHardwareInterface> robot_hardware_interface_ptr;
 
+std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motor_interfaces;
+std::unordered_map<std::string, std::shared_ptr<pros::Rotation> > encoders;
 
 const pros::controller_analog_e_t joy_channels[4] = {
 	ANALOG_LEFT_X,
@@ -78,7 +85,7 @@ pros::Mutex digitial_out_lock;
 std::vector<bool> digital_out_cmds(8, false);
 
 // Serial Port
-ghost_v5::V5SerialNode serial_node_("msg", true); // Becomes 109 w Checksum
+std::shared_ptr<V5SerialNode> serial_node_ptr;
 
 }// namespace v5_globals
 

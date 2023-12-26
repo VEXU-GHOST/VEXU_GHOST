@@ -7,7 +7,6 @@
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 
-namespace ghost_v5_interfaces {
 
 #if GHOST_DEVICE == GHOST_JETSON
     #define CROSSPLATFORM_MUTEX_T std::mutex
@@ -18,6 +17,8 @@ namespace ghost_v5_interfaces {
 #else
     #error "Ghost Device compile flag is not set to valid value"
 #endif
+
+namespace ghost_v5_interfaces {
 
 struct DevicePair {
 	std::shared_ptr<const DeviceConfig> config_ptr;

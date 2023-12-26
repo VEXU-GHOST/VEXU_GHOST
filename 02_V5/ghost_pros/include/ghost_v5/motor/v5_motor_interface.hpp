@@ -14,7 +14,7 @@ namespace ghost_v5 {
 
 class V5MotorInterface : public MotorController {
 public:
-	V5MotorInterface(const MotorDeviceConfig &config);
+	V5MotorInterface(std::shared_ptr<const MotorDeviceConfig> config_ptr);
 
 	void updateInterface();
 
@@ -29,6 +29,7 @@ public:
 private:
 	std::shared_ptr<pros::Motor> motor_interface_ptr_;
 	bool device_connected_;
+	std::shared_ptr<const MotorDeviceConfig> config_ptr_;
 };
 
 } // namespace ghost_v5

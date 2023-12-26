@@ -17,8 +17,8 @@ extern pros::Controller controller_main;
 
 extern pros::Mutex actuator_update_lock;
 
-extern std::map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motors;
-extern std::map<std::string, std::shared_ptr<pros::Rotation> > encoders;
+extern std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motor_interfaces;
+extern std::unordered_map<std::string, std::shared_ptr<pros::Rotation> > encoders;
 
 extern const pros::controller_analog_e_t joy_channels[4];
 extern const pros::controller_digital_e_t joy_btns[12];
@@ -28,7 +28,7 @@ extern pros::Mutex digitial_out_lock;
 extern std::vector<bool> digital_out_cmds;
 
 // Serial Port
-extern ghost_v5::V5SerialNode serial_node_;
+extern std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;
 
 } // namespace v5_globals
 
