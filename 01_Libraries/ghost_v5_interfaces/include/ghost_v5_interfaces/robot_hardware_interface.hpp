@@ -97,13 +97,21 @@ public:
 	std::shared_ptr<DeviceData> getDeviceData(int port);
 
 	/**
-	 * @brief Updates a given Device (queried by name) with new Data.
+	 * @brief Updates a given Device with new Data.
+	 * Throws if the device does not exist.
+	 *
+	 * @param device_data
+	 */
+	void setDeviceData(std::shared_ptr<DeviceData> device_data);
+
+	/**
+	 * @brief Updates a given Device with new Data given device name.
 	 * Throws if the device does not exist.
 	 *
 	 * @param name
 	 * @param device_data
 	 */
-	void setDeviceData(const std::string& name, std::shared_ptr<DeviceData> device_data);
+	void setDeviceData(std::string name, std::shared_ptr<DeviceData> device_data);
 
 	/**
 	 * @brief Returns a pointer to the Data for the primary joystick.
@@ -203,7 +211,6 @@ public:
 private:
 
 	void throwOnNonexistentDevice(const std::string& name);
-
 	hardware_type_e hardware_type_;
 	bool is_disabled_ = true;
 	bool is_autonomous_ = false;

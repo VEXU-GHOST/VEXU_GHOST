@@ -41,17 +41,19 @@ public:
 	}
 
 	int getSensorPacketSize() const {
-		return 4 * 2;
+		return 4 * 3;
 	}
 
 	// Sensor Values
-	float curr_position = 0.0;      // Degrees
-	float curr_velocity_rpm = 0.0;  // RPM
+	float angle = 0.0;
+	float position = 0.0;
+	float velocity = 0.0;
 
 	virtual void update(std::shared_ptr<DeviceData> data_ptr){
 		auto rotation_sensor_data_ptr = data_ptr->as<RotationSensorDeviceData>();
-		curr_position = rotation_sensor_data_ptr->curr_position;
-		curr_velocity_rpm = rotation_sensor_data_ptr->curr_velocity_rpm;
+		angle = rotation_sensor_data_ptr->angle;
+		position = rotation_sensor_data_ptr->position;
+		velocity = rotation_sensor_data_ptr->velocity;
 	}
 
 	std::shared_ptr<DeviceBase> clone() const override {
@@ -61,7 +63,7 @@ public:
 	bool operator==(const DeviceBase &rhs) const override {
 		const RotationSensorDeviceData *d_rhs = dynamic_cast<const RotationSensorDeviceData *>(&rhs);
 		return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) &&
-		       (curr_position == d_rhs->curr_position) && (curr_velocity_rpm == d_rhs->curr_velocity_rpm);
+		       (position == d_rhs->position) && (velocity == d_rhs->velocity) && (angle == d_rhs->angle);
 	}
 
 	std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override {
@@ -70,9 +72,11 @@ public:
 			msg.resize(getSensorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			memcpy(msg_buffer + byte_offset, &curr_position, 4);
+			memcpy(msg_buffer + byte_offset, &angle, 4);
 			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &curr_velocity_rpm, 4);
+			memcpy(msg_buffer + byte_offset, &position, 4);
+			byte_offset += 4;
+			memcpy(msg_buffer + byte_offset, &velocity, 4);
 		}
 		return msg;
 	}
@@ -83,9 +87,11 @@ public:
 			checkMsgSize(msg, getSensorPacketSize());
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			memcpy(&curr_position, msg_buffer + byte_offset, 4);
+			memcpy(&angle, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
-			memcpy(&curr_velocity_rpm, msg_buffer + byte_offset, 4);
+			memcpy(&position, msg_buffer + byte_offset, 4);
+			byte_offset += 4;
+			memcpy(&velocity, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
 		}
 	}

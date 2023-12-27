@@ -185,7 +185,14 @@ std::shared_ptr<DeviceData> RobotHardwareInterface::getDeviceData(int port){
 	return device_pair_port_map_.at(port).data_ptr->clone()->as<DeviceData>();
 }
 
-void RobotHardwareInterface::setDeviceData(const std::string& name, std::shared_ptr<DeviceData> device_data){
+void RobotHardwareInterface::setDeviceData(std::shared_ptr<DeviceData> device_data){
+	throwOnNonexistentDevice(device_data->name);
+
+	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+	device_pair_name_map_.at(device_data->name).data_ptr->update(device_data);
+}
+
+void RobotHardwareInterface::setDeviceData(std::string name, std::shared_ptr<DeviceData> device_data){
 	throwOnNonexistentDevice(name);
 	device_data->name = name;
 

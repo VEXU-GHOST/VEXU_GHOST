@@ -59,7 +59,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 	motor_data_ptr->torque_control = (bool) rand();
 	motor_data_ptr->voltage_control = (bool) rand();
 	motor_data_ptr->curr_position = (float) rand();
-	motor_data_ptr->curr_velocity_rpm = (float) rand();
+	motor_data_ptr->curr_velocity = (float) rand();
 	motor_data_ptr->curr_torque_nm = (float) rand();
 	motor_data_ptr->curr_voltage_mv = (float) rand();
 	motor_data_ptr->curr_current_ma = (float) rand();
@@ -72,12 +72,23 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 	EXPECT_EQ(*motor_data_ptr, *motor_data_retrieved_ptr);
 }
 
-TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceData){
+TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataPrimary){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
-	auto j1 = getRandomJoystickData();
+	auto j1 = getRandomJoystickData(true);
 	j1->name = "primary_joystick";
 	hw_interface.setPrimaryJoystickData(j1);
 	auto j2 = hw_interface.getPrimaryJoystickData();
+
+	EXPECT_EQ(*j1, *j2);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataSecondary){
+	device_config_map_ptr_->use_secondary_joystick = true;
+	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
+	auto j1 = getRandomJoystickData(false);
+	j1->name = "secondary_joystick";
+	hw_interface.setSecondaryJoystickData(j1);
+	auto j2 = hw_interface.getSecondaryJoystickData();
 
 	EXPECT_EQ(*j1, *j2);
 }
@@ -111,10 +122,6 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineCoprocessorTo
 	hw_interface.setDeviceData("rotation_sensor_1", rotation_sensor_1);
 	auto rotation_sensor_2 = getRandomRotationSensorData();
 	hw_interface.setDeviceData("rotation_sensor_2", rotation_sensor_2);
-
-	auto joy = getRandomJoystickData();
-	joy->name = "primary_joystick";
-	hw_interface.setPrimaryJoystickData(joy);
 
 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_, hardware_type_e::V5_BRAIN);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
@@ -155,7 +162,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	hw_interface.setAutonomousStatus(getRandomBool());
 	hw_interface.setConnectedStatus(getRandomBool());
 
-	auto joy = getRandomJoystickData();
+	auto joy = getRandomJoystickData(true);
 	joy->name = "primary_joystick";
 	hw_interface.setPrimaryJoystickData(joy);
 
@@ -203,11 +210,11 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	hw_interface.setAutonomousStatus(getRandomBool());
 	hw_interface.setConnectedStatus(getRandomBool());
 
-	auto joy = getRandomJoystickData();
+	auto joy = getRandomJoystickData(true);
 	joy->name = "primary_joystick";
 	hw_interface.setPrimaryJoystickData(joy);
 
-	auto joy_2 = getRandomJoystickData();
+	auto joy_2 = getRandomJoystickData(false);
 	joy_2->name = "secondary_joystick";
 	hw_interface.setSecondaryJoystickData(joy);
 
