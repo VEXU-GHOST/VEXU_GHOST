@@ -69,6 +69,7 @@ include_directories(include)
 
 ##############################
 #### Ghost Estimator Node ####
+## Fix encoder names in ghost_v5_config file
 ##############################
 # add_executable(ghost_estimator_node
 #   src/ros_nodes/ghost_estimator_node.cpp

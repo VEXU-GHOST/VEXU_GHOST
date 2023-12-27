@@ -1,11 +1,11 @@
 /*
- * Filename: gazebo_joint_pid_plugin
+ * Filename: test_publisher_v5_actuator_cmd
  * Created Date: Sunday August 7th 2022
- * Author: Maxx Wilson
+ * Author: Melissa Cruz
  * Author Email: JesseMaxxWilson@utexas.edu
  *
  * Last Modified: Saturday September 10th 2022 10:50:34 am
- * Modified By: Maxx Wilson
+ * Modified By: Melissa Cruz
  */
 
 #include "ghost_sim/test_publisher_v5_actuator_cmd.hpp"

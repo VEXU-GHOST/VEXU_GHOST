@@ -33,7 +33,7 @@ def launch_setup(context, *args, **kwargs):
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters=[{'use_sim_time': False}, {"robot_description": doc}])
+        parameters=[{'use_sim_time': True}, {"robot_description": doc}])
 
     # Joystick (Only launched if joystick CLI arg is set to True)
     joy_launch_description = IncludeLaunchDescription(
@@ -98,12 +98,12 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
-    estimator_node = Node(
-        package='ghost_ros',
-        executable='ghost_estimator_node',
-        name='ghost_estimator_node',
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='robot_localization',
         output='screen',
-        parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
+        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
     )
 
     state_machine_node = Node(
@@ -127,10 +127,10 @@ def generate_launch_description():
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ground_truth_publisher,
-        # rviz_node,
-        plot_juggler_node,
-        # estimator_node,
-        state_machine_node,
+        rviz_node,
+        # plot_juggler_node,
+        # robot_localization_node,
+        # state_machine_node,
         # v5_actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)
     ])
