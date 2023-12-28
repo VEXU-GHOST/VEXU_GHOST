@@ -84,7 +84,7 @@ public:
 
 	bool operator==(const DeviceBase &rhs) const override {
 		const JoystickDeviceData *d_rhs = dynamic_cast<const JoystickDeviceData *>(&rhs);
-		return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) &&
+		return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) && (msg_id == d_rhs->msg_id) &&
 		       (left_x == d_rhs->left_x) && (left_y == d_rhs->left_y) && (right_x == d_rhs->right_x) &&
 		       (right_y == d_rhs->right_y) && (btn_a == d_rhs->btn_a) && (btn_b == d_rhs->btn_b) &&
 		       (btn_x == d_rhs->btn_x) && (btn_y == d_rhs->btn_y) && (btn_r1 == d_rhs->btn_r1) &&

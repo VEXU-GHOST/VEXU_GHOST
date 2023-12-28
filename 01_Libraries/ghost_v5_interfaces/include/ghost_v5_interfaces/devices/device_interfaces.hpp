@@ -32,6 +32,8 @@ class DeviceBase : public std::enable_shared_from_this<DeviceBase> {
 public:
 	std::string name = "";
 	device_type_e type = device_type_e::INVALID;
+	int32_t msg_id = 0;
+
 
 	/**
 	 * @brief Returns a pointer to a deep copy of this object

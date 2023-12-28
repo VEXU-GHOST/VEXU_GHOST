@@ -17,17 +17,6 @@ namespace ghost_v5_interfaces {
 
 namespace util {
 
-const std::unordered_map<std::string, device_type_e> DEVICE_TYPE_NAME_STRING_MAP{
-	{"MOTOR",           device_type_e::MOTOR},
-	{"ROTATION_SENSOR", device_type_e::ROTATION_SENSOR},
-	{"INERTIAL_SENSOR", device_type_e::INERTIAL_SENSOR},
-	{"DISTANCE_SENSOR", device_type_e::DISTANCE_SENSOR},
-	{"OPTICAL_SENSOR",  device_type_e::OPTICAL_SENSOR},
-	{"VISION_SENSOR",   device_type_e::VISION_SENSOR},
-	{"GPS_SENSOR",      device_type_e::GPS_SENSOR},
-	{"RADIO",           device_type_e::RADIO},
-};
-
 std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool verbose){
 	auto device_config_map_ptr = std::make_shared<DeviceConfigMap>();
 
@@ -45,7 +34,7 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 
 		std::shared_ptr<DeviceConfig> device_config_base_ptr;
 		// Custom initialization based on device type
-		switch(DEVICE_TYPE_NAME_STRING_MAP.at(device_type)){
+		switch(STRING_TO_DEVICE_TYPE_MAP.at(device_type)){
 			case device_type_e::MOTOR:
 			{
 				auto motor_config_ptr = std::make_shared<MotorDeviceConfig>();
@@ -83,7 +72,7 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 		// Set device base attributes
 		device_config_base_ptr->name = device_name;
 		loadYAMLParam(device_yaml_node, "port", device_config_base_ptr->port, verbose);
-		device_config_base_ptr->type = DEVICE_TYPE_NAME_STRING_MAP.at(device_type);
+		device_config_base_ptr->type = STRING_TO_DEVICE_TYPE_MAP.at(device_type);
 
 		device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
 	}
