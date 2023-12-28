@@ -10,6 +10,8 @@ using ghost_util::setBit;
 
 namespace ghost_v5_interfaces {
 
+namespace devices {
+
 class RotationSensorDeviceConfig : public DeviceConfig {
 public:
 
@@ -96,5 +98,7 @@ public:
 		}
 	}
 };
+
+} // namespace devices
 
 } // namespace ghost_v5_interfaces

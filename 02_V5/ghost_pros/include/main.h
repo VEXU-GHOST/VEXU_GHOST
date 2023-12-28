@@ -29,9 +29,6 @@
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 
-using ghost_v5::V5SerialNode;
-using ghost_v5_interfaces::DeviceConfigMap;
-
 // Global Variables
 namespace v5_globals {
 
@@ -44,8 +41,8 @@ pros::Mutex actuator_update_lock;
 pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 pros::Controller controller_partner(pros::E_CONTROLLER_PARTNER);
 
-std::shared_ptr<DeviceConfigMap> robot_device_config_map_ptr;
-std::shared_ptr<RobotHardwareInterface> robot_hardware_interface_ptr;
+std::shared_ptr<ghost_v5_interfaces::devices::DeviceConfigMap> robot_device_config_map_ptr;
+std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr;
 
 std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motor_interfaces;
 std::unordered_map<std::string, std::shared_ptr<pros::Rotation> > encoders;
@@ -85,7 +82,7 @@ pros::ADIDigitalOut adi_ports[8] = {
 std::vector<bool> digital_out_cmds(8, false);
 
 // Serial Port
-std::shared_ptr<V5SerialNode> serial_node_ptr;
+std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;
 
 }// namespace v5_globals
 

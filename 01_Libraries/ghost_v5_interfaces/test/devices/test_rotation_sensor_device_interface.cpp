@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
-using ghost_v5_interfaces::hardware_type_e;
-using ghost_v5_interfaces::RotationSensorDeviceData;
+using ghost_v5_interfaces::devices::hardware_type_e;
+using ghost_v5_interfaces::devices::RotationSensorDeviceData;
 using ghost_v5_interfaces::test_utils::getRandomRotationSensorData;
 
 TEST(TestRotationSensorDeviceInterface, testSerialization){

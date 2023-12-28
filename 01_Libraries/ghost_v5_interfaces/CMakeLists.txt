@@ -157,6 +157,15 @@ foreach(TEST ${UTIL_LIBS})
   )
 endforeach()
 
+# Cofiguration Factory Utility Tests
+ament_add_gtest(test_device_config_factory_utils test/util/test_device_config_factory_utils.cpp)
+ament_target_dependencies(test_device_config_factory_utils ${DEPENDENCIES})
+target_link_libraries(test_device_config_factory_utils
+  gtest_main
+  device_config_factory_utils
+  robot_hardware_interface
+)
+
 # Hardware Interface Tests
 ament_add_gtest(test_robot_hardware_interface test/test_robot_hardware_interface.cpp)
 ament_target_dependencies(test_robot_hardware_interface ${DEPENDENCIES})

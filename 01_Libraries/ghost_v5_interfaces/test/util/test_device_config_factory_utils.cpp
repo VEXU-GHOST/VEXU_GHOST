@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include "yaml-cpp/yaml.h"
 
+using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
 
@@ -82,7 +83,7 @@ protected:
 /**
  * @brief Test that we can load a DeviceConfigMap from YAML.
  */
-TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
+TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLPrimaryJoystick){
 	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
 	EXPECT_EQ(*device_config_ptr, *robot_config_ptr_);
@@ -91,7 +92,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
 /**
  * @brief Test that we can load a DeviceConfigMap from YAML with secondary joystick set to true
  */
-TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
+TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLSecondaryJoystick){
 	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["use_secondary_joystick"] = true;
 	robot_config_ptr_->use_secondary_joystick = true;
@@ -161,7 +162,7 @@ TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 	                          "ghost_util/include -I" + include_dir + "ghost_v5_interfaces/include -I" + include_dir +
 	                          "ghost_estimation/include -I" + include_dir + "ghost_control/include -shared -o" +
 	                          codegen_dir + "/test.so " + src_dir + "test.cpp ";
-	std::system(compile_cmd.c_str());
+	EXPECT_EQ(std::system(compile_cmd.c_str()), 0);
 
 	// Load library
 	std::string lib_dir = codegen_dir + "/test.so";

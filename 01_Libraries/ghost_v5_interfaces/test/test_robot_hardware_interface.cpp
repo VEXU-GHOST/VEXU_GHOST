@@ -11,6 +11,7 @@
 #include <algorithm>
 
 using ghost_v5_interfaces::util::loadRobotConfigFromYAML;
+using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::test_utils;
 using namespace ghost_v5_interfaces;
 
@@ -59,7 +60,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 	motor_data_ptr->torque_control = (bool) rand();
 	motor_data_ptr->voltage_control = (bool) rand();
 	motor_data_ptr->curr_position = (float) rand();
-	motor_data_ptr->curr_velocity = (float) rand();
+	motor_data_ptr->curr_velocity_rpm = (float) rand();
 	motor_data_ptr->curr_torque_nm = (float) rand();
 	motor_data_ptr->curr_voltage_mv = (float) rand();
 	motor_data_ptr->curr_current_ma = (float) rand();

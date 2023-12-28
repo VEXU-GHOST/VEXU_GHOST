@@ -15,35 +15,48 @@ using ghost_v5_interfaces::JoystickDeviceData;
 using ghost_v5_interfaces::MotorDeviceData;
 using ghost_v5_interfaces::RotationSensorDeviceData;
 
-using ghost_msgs::msg::V5JoystickState;
-using ghost_msgs::msg::V5MotorCommand;
-using ghost_msgs::msg::V5MotorState;
-using ghost_msgs::msg::V5RotationSensorState;
-
 namespace ghost_ros_interfaces {
 
-void toROSMsg(std::shared_ptr<JoystickDeviceData> joy_data, std::shared_ptr<V5JoystickState> joy_msg){
+/**
+ * @brief Loads JoystickDeviceData into a V5JoystickState ROS Msg
+ *
+ * @param joy_data
+ * @param joy_msg
+ */
+void toROSMsg(const JoystickDeviceData& joy_data, ghost_msgs::msg::V5JoystickState& joy_msg){
 }
 
-void toROSMsg(std::shared_ptr<MotorDeviceData> motor_data, std::shared_ptr<V5MotorState> motor_msg){
+void fromROSMsg(const ghost_msgs::msg::V5JoystickState& joy_msg, JoystickDeviceData& joy_data){
 }
 
-void toROSMsg(std::shared_ptr<MotorDeviceData> motor_data, std::shared_ptr<V5MotorCommand> motor_msg){
+void toROSMsg(const MotorDeviceData& motor_data, ghost_msgs::msg::V5MotorState& motor_msg){
 }
 
-void toROSMsg(std::shared_ptr<RotationSensorDeviceData> joy_data, std::shared_ptr<V5RotationSensorState> rotation_sensor_msg){
+void fromROSMsg(const ghost_msgs::msg::V5MotorState& motor_msg, MotorDeviceData& motor_data){
 }
 
-void fromROSMsg(std::shared_ptr<V5JoystickState> joy_msg, std::shared_ptr<JoystickDeviceData> joy_data){
+void toROSMsg(const MotorDeviceData& motor_data, ghost_msgs::msg::V5MotorCommand& motor_msg){
 }
 
-void fromROSMsg(std::shared_ptr<V5MotorState> motor_msg, std::shared_ptr<MotorDeviceData> motor_data){
+void fromROSMsg(const ghost_msgs::msg::V5MotorCommand& motor_msg, MotorDeviceData& motor_data){
 }
 
-void fromROSMsg(std::shared_ptr<V5MotorCommand> motor_msg, std::shared_ptr<MotorDeviceData> motor_data){
+void toROSMsg(const RotationSensorDeviceData& joy_data, ghost_msgs::msg::V5RotationSensorState& rotation_sensor_msg){
 }
 
-void fromROSMsg(std::shared_ptr<V5RotationSensorState> rotation_sensor_msg, std::shared_ptr<RotationSensorDeviceData> joy_data){
+void fromROSMsg(const ghost_msgs::msg::V5RotationSensorState& rotation_sensor_msg, RotationSensorDeviceData& joy_data){
+}
+
+void toROSMsg(const RobotHardwareInterface& hardware_interface, ghost_msgs::msg::V5ActuatorCommand& actuator_cmd_msg){
+}
+
+void fromROSMsg(const ghost_msgs::msg::V5ActuatorCommand& actuator_cmd_msg, RobotHardwareInterface& hardware_interface){
+}
+
+void toROSMsg(const RobotHardwareInterface& hardware_interface, ghost_msgs::msg::V5SensorUpdate& sensor_update_msg){
+}
+
+void fromROSMsg(const ghost_msgs::msg::V5SensorUpdate& sensor_update_msg, RobotHardwareInterface& hardware_interface){
 }
 
 } // namespace ghost_ros_interfaces

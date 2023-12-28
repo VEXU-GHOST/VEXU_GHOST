@@ -11,6 +11,8 @@
 #include <unordered_map>
 
 using ghost_util::loadYAMLParam;
+using namespace ghost_v5_interfaces::devices;
+
 namespace ghost_v5_interfaces {
 
 namespace util {
@@ -29,7 +31,7 @@ const std::unordered_map<std::string, device_type_e> DEVICE_TYPE_NAME_STRING_MAP
 std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool verbose){
 	auto device_config_map_ptr = std::make_shared<DeviceConfigMap>();
 
-	loadYAMLParam(node, "use_secondary_joystick", device_config_map_ptr->use_secondary_joystick, false);
+	loadYAMLParam(node["port_configuration"], "use_secondary_joystick", device_config_map_ptr->use_secondary_joystick, false);
 
 	// Iterate through each device defined in the YAML file
 	for(auto it = node["port_configuration"]["devices"].begin(); it != node["port_configuration"]["devices"].end(); it++){
@@ -89,23 +91,23 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 }
 
 const std::unordered_map<ghost_encoder_unit, std::string> MOTOR_ENCODER_UNIT_STRING_MAP{
-	{ghost_encoder_unit::ENCODER_DEGREES,   "ghost_encoder_unit::ENCODER_DEGREES"},
-	{ghost_encoder_unit::ENCODER_ROTATIONS, "ghost_encoder_unit::ENCODER_ROTATIONS"},
-	{ghost_encoder_unit::ENCODER_COUNTS,    "ghost_encoder_unit::ENCODER_COUNTS"},
-	{ghost_encoder_unit::ENCODER_INVALID,   "ghost_encoder_unit::ENCODER_INVALID"}
+	{ghost_encoder_unit::ENCODER_DEGREES,   "ghost_v5_interfaces::devices::ghost_encoder_unit::ENCODER_DEGREES"},
+	{ghost_encoder_unit::ENCODER_ROTATIONS, "ghost_v5_interfaces::devices::ghost_encoder_unit::ENCODER_ROTATIONS"},
+	{ghost_encoder_unit::ENCODER_COUNTS,    "ghost_v5_interfaces::devices::ghost_encoder_unit::ENCODER_COUNTS"},
+	{ghost_encoder_unit::ENCODER_INVALID,   "ghost_v5_interfaces::devices::ghost_encoder_unit::ENCODER_INVALID"}
 };
 
 const std::unordered_map<ghost_gearset, std::string> MOTOR_GEARSET_STRING_MAP{
-	{ghost_gearset::GEARSET_100, "ghost_gearset::GEARSET_100"},
-	{ghost_gearset::GEARSET_200, "ghost_gearset::GEARSET_200"},
-	{ghost_gearset::GEARSET_600, "ghost_gearset::GEARSET_600"}
+	{ghost_gearset::GEARSET_100, "ghost_v5_interfaces::devices::ghost_gearset::GEARSET_100"},
+	{ghost_gearset::GEARSET_200, "ghost_v5_interfaces::devices::ghost_gearset::GEARSET_200"},
+	{ghost_gearset::GEARSET_600, "ghost_v5_interfaces::devices::ghost_gearset::GEARSET_600"}
 };
 
 const std::unordered_map<ghost_brake_mode, std::string> MOTOR_BRAKE_MODE_STRING_MAP{
-	{ghost_brake_mode::BRAKE_MODE_COAST,      "ghost_brake_mode::BRAKE_MODE_COAST"},
-	{ghost_brake_mode::BRAKE_MODE_BRAKE,      "ghost_brake_mode::BRAKE_MODE_BRAKE"},
-	{ghost_brake_mode::BRAKE_MODE_HOLD,       "ghost_brake_mode::BRAKE_MODE_HOLD"},
-	{ghost_brake_mode::BRAKE_MODE_INVALID,    "ghost_brake_mode::BRAKE_MODE_INVALID"}
+	{ghost_brake_mode::BRAKE_MODE_COAST,      "ghost_v5_interfaces::devices::ghost_brake_mode::BRAKE_MODE_COAST"},
+	{ghost_brake_mode::BRAKE_MODE_BRAKE,      "ghost_v5_interfaces::devices::ghost_brake_mode::BRAKE_MODE_BRAKE"},
+	{ghost_brake_mode::BRAKE_MODE_HOLD,       "ghost_v5_interfaces::devices::ghost_brake_mode::BRAKE_MODE_HOLD"},
+	{ghost_brake_mode::BRAKE_MODE_INVALID,    "ghost_v5_interfaces::devices::ghost_brake_mode::BRAKE_MODE_INVALID"}
 };
 
 const std::unordered_map<bool, std::string> BOOL_STRING_MAP{
@@ -132,12 +134,10 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 	output_file << "#include \"ghost_v5_interfaces/devices/motor_device_interface.hpp\"\n";
 	output_file << "#include \"ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp\"\n";
 	output_file << "\n";
-	output_file << "using namespace ghost_v5_interfaces;\n";
-	output_file << "\n";
 	output_file << "// This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.\n";
 	output_file << "// It returns a raw pointer to a dynamically allocated object, so if you are poking around, please wrap in a smart pointer!\n";
-	output_file << "extern \"C\" DeviceConfigMap* getRobotConfig(void) {\n";
-	output_file << "\tDeviceConfigMap* robot_config = new DeviceConfigMap;\n";
+	output_file << "extern \"C\" ghost_v5_interfaces::devices::DeviceConfigMap* getRobotConfig(void) {\n";
+	output_file << "\tghost_v5_interfaces::devices::DeviceConfigMap* robot_config = new ghost_v5_interfaces::devices::DeviceConfigMap;\n";
 	output_file << "\trobot_config->use_secondary_joystick = " + BOOL_STRING_MAP.at(config_ptr->use_secondary_joystick) + ";\n";
 	output_file << "\n";
 
@@ -147,10 +147,10 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			auto config_ptr = val->as<const MotorDeviceConfig>();
 			std::string motor_name = config_ptr->name;
 
-			output_file << "\tstd::shared_ptr<MotorDeviceConfig> " + motor_name + " = std::make_shared<MotorDeviceConfig>();\n";
+			output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::MotorDeviceConfig> " + motor_name + " = std::make_shared<ghost_v5_interfaces::devices::MotorDeviceConfig>();\n";
 			output_file << "\t" + motor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
 			output_file << "\t" + motor_name + "->" + "name = \"" + motor_name + "\";\n";
-			output_file << "\t" + motor_name + "->" + "type = device_type_e::MOTOR;\n";
+			output_file << "\t" + motor_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::MOTOR;\n";
 			output_file << "\t" + motor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(config_ptr->reversed) + ";\n";
 			output_file << "\t" + motor_name + "->" + "encoder_units = " + MOTOR_ENCODER_UNIT_STRING_MAP.at(config_ptr->encoder_units) + ";\n";
 			output_file << "\t" + motor_name + "->" + "gearset = " + MOTOR_GEARSET_STRING_MAP.at(config_ptr->gearset) + ";\n";
@@ -175,10 +175,10 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			auto config_ptr = val->as<const RotationSensorDeviceConfig>();
 			std::string sensor_name = config_ptr->name;
 
-			output_file << "\tstd::shared_ptr<RotationSensorDeviceConfig> " + sensor_name + " = std::make_shared<RotationSensorDeviceConfig>();\n";
+			output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::RotationSensorDeviceConfig> " + sensor_name + " = std::make_shared<ghost_v5_interfaces::devices::RotationSensorDeviceConfig>();\n";
 			output_file << "\t" + sensor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
 			output_file << "\t" + sensor_name + "->" + "name = \"" + sensor_name + "\";\n";
-			output_file << "\t" + sensor_name + "->" + "type = device_type_e::ROTATION_SENSOR;\n";
+			output_file << "\t" + sensor_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::ROTATION_SENSOR;\n";
 			output_file << "\t" + sensor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(config_ptr->reversed) + ";\n";
 			output_file << "\t" + sensor_name + "->" + "data_rate = " + std::to_string(config_ptr->data_rate) + ";\n";
 			output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";

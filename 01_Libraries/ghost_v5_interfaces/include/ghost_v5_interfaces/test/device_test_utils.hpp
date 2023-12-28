@@ -18,8 +18,8 @@ float getRandomFloat(){
 	return (float) rand() + 0.0001 * rand();
 }
 
-std::shared_ptr<JoystickDeviceData> getRandomJoystickData(bool is_master){
-	auto joy_ptr = std::make_shared<JoystickDeviceData>();
+std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(bool is_master){
+	auto joy_ptr = std::make_shared<devices::JoystickDeviceData>();
 
 	joy_ptr->name = "joy_" + std::to_string(rand() % 2);
 	joy_ptr->left_x = getRandomFloat();
@@ -43,8 +43,8 @@ std::shared_ptr<JoystickDeviceData> getRandomJoystickData(bool is_master){
 	return joy_ptr;
 }
 
-std::shared_ptr<MotorDeviceData> getRandomMotorData(bool actuator_cmd){
-	auto motor_ptr = std::make_shared<MotorDeviceData>();
+std::shared_ptr<devices::MotorDeviceData> getRandomMotorData(bool actuator_cmd){
+	auto motor_ptr = std::make_shared<devices::MotorDeviceData>();
 
 	// Actuator Values
 	if(actuator_cmd){
@@ -61,7 +61,7 @@ std::shared_ptr<MotorDeviceData> getRandomMotorData(bool actuator_cmd){
 	}
 	else{
 		motor_ptr->curr_position = getRandomFloat();
-		motor_ptr->curr_velocity = getRandomFloat();
+		motor_ptr->curr_velocity_rpm = getRandomFloat();
 		motor_ptr->curr_torque_nm = getRandomFloat();
 		motor_ptr->curr_voltage_mv = getRandomFloat();
 		motor_ptr->curr_current_ma = getRandomFloat();
@@ -73,8 +73,8 @@ std::shared_ptr<MotorDeviceData> getRandomMotorData(bool actuator_cmd){
 	return motor_ptr;
 }
 
-std::shared_ptr<RotationSensorDeviceData> getRandomRotationSensorData(){
-	auto rot_sensor_ptr = std::make_shared<RotationSensorDeviceData>();
+std::shared_ptr<devices::RotationSensorDeviceData> getRandomRotationSensorData(){
+	auto rot_sensor_ptr = std::make_shared<devices::RotationSensorDeviceData>();
 
 	rot_sensor_ptr->angle = getRandomFloat();
 	rot_sensor_ptr->position = getRandomFloat();

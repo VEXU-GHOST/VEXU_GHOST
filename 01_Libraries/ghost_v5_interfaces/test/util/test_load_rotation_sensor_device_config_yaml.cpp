@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 #include "yaml-cpp/yaml.h"
 
+using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
 

@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
-using ghost_v5_interfaces::hardware_type_e;
-using ghost_v5_interfaces::MotorDeviceData;
+using ghost_v5_interfaces::devices::hardware_type_e;
+using ghost_v5_interfaces::devices::MotorDeviceData;
 using ghost_v5_interfaces::test_utils::getRandomMotorData;
 
 TEST(TestMotorDeviceInterface, testSerializationV5ToCoprocessor){

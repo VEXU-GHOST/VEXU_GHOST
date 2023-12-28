@@ -7,14 +7,11 @@
 
 #include <unordered_map>
 
-using ghost_control::MotorController;
-using ghost_v5_interfaces::MotorDeviceConfig;
-
 namespace ghost_v5 {
 
-class V5MotorInterface : public MotorController {
+class V5MotorInterface : public ghost_control::MotorController {
 public:
-	V5MotorInterface(std::shared_ptr<const MotorDeviceConfig> config_ptr);
+	V5MotorInterface(std::shared_ptr<const ghost_v5_interfaces::devices::MotorDeviceConfig> config_ptr);
 
 	void updateInterface();
 
@@ -33,7 +30,7 @@ public:
 private:
 	std::shared_ptr<pros::Motor> motor_interface_ptr_;
 	bool device_connected_;
-	std::shared_ptr<const MotorDeviceConfig> config_ptr_;
+	std::shared_ptr<const ghost_v5_interfaces::devices::MotorDeviceConfig> config_ptr_;
 };
 
 } // namespace ghost_v5

@@ -2,7 +2,7 @@
 #include <ghost_v5_interfaces/util/load_rotation_sensor_device_config_yaml.hpp>
 
 using ghost_util::loadYAMLParam;
-
+using namespace ghost_v5_interfaces::devices;
 namespace ghost_v5_interfaces {
 
 namespace util {

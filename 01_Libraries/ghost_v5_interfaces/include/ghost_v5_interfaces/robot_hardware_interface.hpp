@@ -20,21 +20,9 @@
 
 namespace ghost_v5_interfaces {
 
-struct DevicePair {
-	std::shared_ptr<const DeviceConfig> config_ptr;
-	std::shared_ptr<DeviceData> data_ptr;
-
-	DevicePair clone(){
-		DevicePair obj;
-		obj.config_ptr = config_ptr->clone()->as<const DeviceConfig>();
-		obj.data_ptr = data_ptr->clone()->as<DeviceData>();
-		return obj;
-	}
-};
-
 class RobotHardwareInterface {
 public:
-	RobotHardwareInterface(std::shared_ptr<DeviceConfigMap> robot_config_ptr, hardware_type_e hardware_type);
+	RobotHardwareInterface(std::shared_ptr<devices::DeviceConfigMap> robot_config_ptr, devices::hardware_type_e hardware_type);
 
 	bool isDisabled(){
 		return is_disabled_;
@@ -65,36 +53,36 @@ public:
 	 * This is a deep-copy, changing device data should go through the setDeviceDate interface.
 	 *
 	 * @param name
-	 * @return DevicePair
+	 * @return devices::DevicePair
 	 */
-	DevicePair getDevicePair(const std::string& name);
+	devices::DevicePair getDevicePair(const std::string& name);
 
 	/**
 	 * @brief Returns a pointer to a const Config for a given Device by name.
 	 * The config is declared const and thus read-only.
 	 *
 	 * @param name
-	 * @return std::shared_ptr<const DeviceConfig>
+	 * @return std::shared_ptr<const devices::DeviceConfig>
 	 */
-	std::shared_ptr<const DeviceConfig> getDeviceConfig(const std::string& name);
+	std::shared_ptr<const devices::DeviceConfig> getDeviceConfig(const std::string& name);
 
 	/**
 	 * @brief Returns a pointer to the Data for a given Device by name.
 	 * This is a deep-copy, changing device data should go through the setDeviceDate interface.
 	 *
 	 * @param name
-	 * @return std::shared_ptr<DeviceData>
+	 * @return std::shared_ptr<devices::DeviceData>
 	 */
-	std::shared_ptr<DeviceData> getDeviceData(const std::string& name);
+	std::shared_ptr<devices::DeviceData> getDeviceData(const std::string& name);
 
 	/**
 	 * @brief Returns a pointer to the Data for a given Device by port number.
 	 * This is a deep-copy, changing device data should go through the setDeviceDate interface.
 	 *
 	 * @param port
-	 * @return std::shared_ptr<DeviceData>
+	 * @return std::shared_ptr<devices::DeviceData>
 	 */
-	std::shared_ptr<DeviceData> getDeviceData(int port);
+	std::shared_ptr<devices::DeviceData> getDeviceData(int port);
 
 	/**
 	 * @brief Updates a given Device with new Data.
@@ -102,7 +90,7 @@ public:
 	 *
 	 * @param device_data
 	 */
-	void setDeviceData(std::shared_ptr<DeviceData> device_data);
+	void setDeviceData(std::shared_ptr<devices::DeviceData> device_data);
 
 	/**
 	 * @brief Updates a given Device with new Data given device name.
@@ -111,36 +99,36 @@ public:
 	 * @param name
 	 * @param device_data
 	 */
-	void setDeviceData(std::string name, std::shared_ptr<DeviceData> device_data);
+	void setDeviceData(std::string name, std::shared_ptr<devices::DeviceData> device_data);
 
 	/**
 	 * @brief Returns a pointer to the Data for the primary joystick.
 	 * This is a deep-copy, changing joystick data should go through the setPrimaryJoystickData interface.
 	 *
-	 * @return std::shared_ptr<JoystickDeviceData>
+	 * @return std::shared_ptr<devices::JoystickDeviceData>
 	 */
-	std::shared_ptr<JoystickDeviceData> getPrimaryJoystickData();
+	std::shared_ptr<devices::JoystickDeviceData> getPrimaryJoystickData();
 
 	/**
 	 * @brief Returns a pointer to the data for the secondary joystick.
 	 *
-	 * @return std::shared_ptr<JoystickDeviceData>
+	 * @return std::shared_ptr<devices::JoystickDeviceData>
 	 */
-	std::shared_ptr<JoystickDeviceData> getSecondaryJoystickData();
+	std::shared_ptr<devices::JoystickDeviceData> getSecondaryJoystickData();
 
 	/**
 	 * @brief Update the primary joystick data.
 	 *
 	 * @param data_ptr
 	 */
-	void setPrimaryJoystickData(std::shared_ptr<JoystickDeviceData>& data_ptr);
+	void setPrimaryJoystickData(std::shared_ptr<devices::JoystickDeviceData>& data_ptr);
 
 	/**
 	 * @brief Update the secondary joystick data.
 	 *
 	 * @param data_ptr
 	 */
-	void setSecondaryJoystickData(std::shared_ptr<JoystickDeviceData>& data_ptr);
+	void setSecondaryJoystickData(std::shared_ptr<devices::JoystickDeviceData>& data_ptr);
 
 	/**
 	 * @brief Update the digital io ports.
@@ -211,7 +199,7 @@ public:
 private:
 
 	void throwOnNonexistentDevice(const std::string& name);
-	hardware_type_e hardware_type_;
+	devices::hardware_type_e hardware_type_;
 	bool is_disabled_ = true;
 	bool is_autonomous_ = false;
 	bool is_connected_ = false;
@@ -222,13 +210,13 @@ private:
 
 	// Joystick Data
 	bool use_secondary_joystick_ = false;
-	std::shared_ptr<JoystickDeviceData> primary_joystick_data_ptr_;
-	std::shared_ptr<JoystickDeviceData> secondary_joystick_data_ptr_;
+	std::shared_ptr<devices::JoystickDeviceData> primary_joystick_data_ptr_;
+	std::shared_ptr<devices::JoystickDeviceData> secondary_joystick_data_ptr_;
 
-	std::unordered_map<std::string, DevicePair> device_pair_name_map_;
-	std::map<int, DevicePair> device_pair_port_map_;
+	std::unordered_map<std::string, devices::DevicePair> device_pair_name_map_;
+	std::map<int, devices::DevicePair> device_pair_port_map_;
 	std::vector<std::string> device_names_ordered_by_port_;
-	std::shared_ptr<DeviceConfigMap> robot_config_ptr_;
+	std::shared_ptr<devices::DeviceConfigMap> robot_config_ptr_;
 };
 
 } // namespace ghost_v5_interfaces

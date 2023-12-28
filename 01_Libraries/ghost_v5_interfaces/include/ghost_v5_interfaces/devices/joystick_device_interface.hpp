@@ -9,6 +9,8 @@ using ghost_util::unpackByte;
 
 namespace ghost_v5_interfaces {
 
+namespace devices {
+
 class JoystickDeviceConfig : public DeviceConfig {
 public:
 	std::shared_ptr<DeviceBase> clone() const override {
@@ -107,14 +109,14 @@ public:
 			byte_offset += 4;
 
 			auto byte_pack_1 = packByte(std::vector<bool>{
-					btn_a, btn_b, btn_x, btn_y, btn_u, btn_l, btn_r, btn_d
-				});
+						btn_a, btn_b, btn_x, btn_y, btn_u, btn_l, btn_r, btn_d
+					});
 			memcpy(msg_data + byte_offset, &byte_pack_1, 1);
 			byte_offset += 1;
 
 			auto byte_pack_2 = packByte(std::vector<bool>{
-					btn_r1, btn_r2, btn_l1, btn_l2, is_master, 0, 0, 0
-				});
+						btn_r1, btn_r2, btn_l1, btn_l2, is_master, 0, 0, 0
+					});
 			memcpy(msg_data + byte_offset, &byte_pack_2, 1);
 			byte_offset += 1;
 		}
@@ -162,5 +164,7 @@ public:
 		}
 	}
 };
+
+} // namespace devices
 
 } // namespace ghost_v5_interfaces

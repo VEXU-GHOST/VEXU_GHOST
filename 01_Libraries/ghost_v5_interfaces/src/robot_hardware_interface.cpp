@@ -3,6 +3,9 @@
 
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
+
+using namespace ghost_v5_interfaces::devices;
+using namespace ghost_v5_interfaces;
 namespace ghost_v5_interfaces {
 
 RobotHardwareInterface::RobotHardwareInterface(std::shared_ptr<DeviceConfigMap> robot_config_ptr,

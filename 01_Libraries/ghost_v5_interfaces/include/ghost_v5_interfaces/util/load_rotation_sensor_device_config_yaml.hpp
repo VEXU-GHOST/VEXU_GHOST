@@ -12,7 +12,7 @@ namespace util {
 
 void loadRotationSensorDeviceConfigFromYAML(YAML::Node node,
                                             std::string sensor_name,
-                                            std::shared_ptr<RotationSensorDeviceConfig> sensor_device_config_ptr,
+                                            std::shared_ptr<devices::RotationSensorDeviceConfig> sensor_device_config_ptr,
                                             bool verbose = false);
 
 } // namespace util

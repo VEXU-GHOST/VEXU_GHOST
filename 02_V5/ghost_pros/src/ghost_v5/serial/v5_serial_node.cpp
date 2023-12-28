@@ -15,10 +15,8 @@
 
 
 using ghost_util::BITMASK_ARR_32BIT;
-using ghost_v5_interfaces::device_type_e;
-using ghost_v5_interfaces::JoystickDeviceData;
-using ghost_v5_interfaces::MotorDeviceData;
-using ghost_v5_interfaces::RotationSensorDeviceData;
+using namespace ghost_v5_interfaces::devices;
+using namespace ghost_v5_interfaces;
 
 namespace ghost_v5 {
 
@@ -101,14 +99,6 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 			break;
 		}
 	}
-
-	// Encoders
-	for(const auto& [name, device] : v5_globals::encoders){
-		auto rotation_sensor_data_ptr = std::make_shared<RotationSensorDeviceData>();
-		rotation_sensor_data_ptr->curr_position = device->get_position();
-		rotation_sensor_data_ptr->curr_velocity_rpm = device->get_velocity();
-		hardware_interface_ptr_->setDeviceData(name, rotation_sensor_data_ptr);
-	}
 }
 
 void V5SerialNode::writeV5StateUpdate(){
@@ -176,8 +166,9 @@ void V5SerialNode::writeV5StateUpdate(){
 	// Encoders
 	for(const auto& [name, device] : v5_globals::encoders){
 		auto rotation_sensor_data_ptr = std::make_shared<RotationSensorDeviceData>();
-		rotation_sensor_data_ptr->curr_position = device->get_position();
-		rotation_sensor_data_ptr->curr_velocity_rpm = device->get_velocity();
+		rotation_sensor_data_ptr->angle = device->get_angle();
+		rotation_sensor_data_ptr->position = device->get_position();
+		rotation_sensor_data_ptr->velocity = device->get_velocity();
 		hardware_interface_ptr_->setDeviceData(name, rotation_sensor_data_ptr);
 	}
 

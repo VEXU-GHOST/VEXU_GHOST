@@ -15,6 +15,8 @@ using ghost_control::MotorController;
 
 namespace ghost_v5_interfaces {
 
+namespace devices {
+
 enum ghost_gearset {
 	GEARSET_100,
 	GEARSET_200,
@@ -89,7 +91,7 @@ public:
 
 	// Sensor Values
 	float curr_position = 0.0;
-	float curr_velocity = 0.0;
+	float curr_velocity_rpm = 0.0;
 	float curr_torque_nm = 0.0;     // N - m
 	float curr_voltage_mv = 0.0;    // MilliVolts
 	float curr_current_ma = 0.0;    // MilliAmps
@@ -108,7 +110,7 @@ public:
 		torque_control = motor_data_ptr->torque_control;
 		voltage_control = motor_data_ptr->voltage_control;
 		curr_position = motor_data_ptr->curr_position;
-		curr_velocity = motor_data_ptr->curr_velocity;
+		curr_velocity_rpm = motor_data_ptr->curr_velocity_rpm;
 		curr_torque_nm  = motor_data_ptr->curr_torque_nm;
 		curr_voltage_mv = motor_data_ptr->curr_voltage_mv;
 		curr_current_ma = motor_data_ptr->curr_current_ma;
@@ -128,7 +130,7 @@ public:
 		       (current_limit == d_rhs->current_limit) && (position_control == d_rhs->position_control) &&
 		       (velocity_control == d_rhs->velocity_control) && (torque_control == d_rhs->torque_control) &&
 		       (voltage_control == d_rhs->voltage_control) && (curr_position == d_rhs->curr_position) &&
-		       (curr_velocity == d_rhs->curr_velocity) && (curr_torque_nm == d_rhs->curr_torque_nm) &&
+		       (curr_velocity_rpm == d_rhs->curr_velocity_rpm) && (curr_torque_nm == d_rhs->curr_torque_nm) &&
 		       (curr_voltage_mv == d_rhs->curr_voltage_mv) && (curr_current_ma == d_rhs->curr_current_ma) &&
 		       (curr_power_w == d_rhs->curr_power_w) && (curr_temp_c == d_rhs->curr_temp_c);
 	}
@@ -152,14 +154,14 @@ public:
 
 			unsigned char ctrl_byte = packByte(
 				std::vector<bool>{
-					position_control,
-					velocity_control,
-					torque_control,
-					voltage_control,
-					0,
-					0,
-					0,
-					0});
+						position_control,
+						velocity_control,
+						torque_control,
+						voltage_control,
+						0,
+						0,
+						0,
+						0});
 
 			memcpy(msg_buffer + byte_offset, &ctrl_byte, 1);
 			byte_offset++;
@@ -170,7 +172,7 @@ public:
 			int byte_offset = 0;
 			memcpy(msg_buffer + byte_offset, &curr_position, 4);
 			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &curr_velocity, 4);
+			memcpy(msg_buffer + byte_offset, &curr_velocity_rpm, 4);
 			byte_offset += 4;
 			memcpy(msg_buffer + byte_offset, &curr_torque_nm, 4);
 			byte_offset += 4;
@@ -222,7 +224,7 @@ public:
 			int byte_offset = 0;
 			memcpy(&curr_position, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
-			memcpy(&curr_velocity, msg_buffer + byte_offset, 4);
+			memcpy(&curr_velocity_rpm, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
 			memcpy(&curr_torque_nm, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
@@ -239,5 +241,7 @@ public:
 		}
 	}
 };
+
+} // namespace devices
 
 } // namespace ghost_v5_interfaces

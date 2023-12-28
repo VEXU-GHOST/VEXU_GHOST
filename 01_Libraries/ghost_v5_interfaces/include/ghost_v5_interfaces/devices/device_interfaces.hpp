@@ -7,6 +7,8 @@
 
 namespace ghost_v5_interfaces {
 
+namespace devices {
+
 // List available V5 Devices
 enum device_type_e {
 	MOTOR,
@@ -144,5 +146,19 @@ public:
 		}
 	}
 };
+
+struct DevicePair {
+	std::shared_ptr<const DeviceConfig> config_ptr;
+	std::shared_ptr<DeviceData> data_ptr;
+
+	DevicePair clone(){
+		DevicePair obj;
+		obj.config_ptr = config_ptr->clone()->as<const DeviceConfig>();
+		obj.data_ptr = data_ptr->clone()->as<DeviceData>();
+		return obj;
+	}
+};
+
+} // namespace devices
 
 } // namespace ghost_v5_interfaces

@@ -13,7 +13,10 @@
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
-using ghost_v5_interfaces::hardware_type_e::V5_BRAIN;
+using ghost_v5_interfaces::devices::hardware_type_e::V5_BRAIN;
+using namespace ghost_v5;
+using namespace ghost_v5_interfaces::devices;
+using namespace ghost_v5_interfaces;
 
 void zero_actuators(){
 	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);

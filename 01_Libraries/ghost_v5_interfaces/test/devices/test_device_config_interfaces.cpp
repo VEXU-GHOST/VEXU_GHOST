@@ -2,10 +2,7 @@
 #include <ghost_v5_interfaces/devices/device_interfaces.hpp>
 #include <gtest/gtest.h>
 
-using ghost_v5_interfaces::device_type_e;
-using ghost_v5_interfaces::DeviceBase;
-using ghost_v5_interfaces::DeviceConfig;
-using ghost_v5_interfaces::DeviceConfigMap;
+using namespace ghost_v5_interfaces::devices;
 
 /**
  * @brief DeviceConfig is a pure virtual class, so we need a derived class to test DeviceConfigMap functionality.

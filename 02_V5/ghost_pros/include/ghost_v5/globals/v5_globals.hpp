@@ -20,7 +20,7 @@ extern pros::Controller controller_partner;
 
 extern pros::Mutex actuator_update_lock;
 
-extern std::shared_ptr<ghost_v5_interfaces::DeviceConfigMap> robot_device_config_map_ptr;
+extern std::shared_ptr<ghost_v5_interfaces::devices::DeviceConfigMap> robot_device_config_map_ptr;
 extern std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr;
 
 extern std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motor_interfaces;

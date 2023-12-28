@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
-using ghost_v5_interfaces::hardware_type_e;
-using ghost_v5_interfaces::JoystickDeviceData;
+using ghost_v5_interfaces::devices::hardware_type_e;
+using ghost_v5_interfaces::devices::JoystickDeviceData;
 using namespace ghost_v5_interfaces::test_utils;
 
 TEST(TestJoystickDeviceInterface, testEqualityOperator){

@@ -1,5 +1,4 @@
-#ifndef GHOST_V5__V5_SERIAL_NODE_HPP
-#define GHOST_V5__V5_SERIAL_NODE_HPP
+#pragma once
 
 #include <atomic>
 #include <memory>
@@ -10,12 +9,11 @@
 #include "ghost_util/byte_utils.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
-using ghost_v5_interfaces::RobotHardwareInterface;
 namespace ghost_v5 {
 
 class V5SerialNode {
 public:
-	V5SerialNode(std::shared_ptr<RobotHardwareInterface> robot_hardware_interface_ptr);
+	V5SerialNode(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr);
 	~V5SerialNode();
 
 	void initSerial();
@@ -26,7 +24,7 @@ private:
 	void updateActuatorCommands(std::vector<unsigned char>& buffer);
 
 	// Device Config
-	std::shared_ptr<RobotHardwareInterface> hardware_interface_ptr_;
+	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> hardware_interface_ptr_;
 
 	// Serial Interface
 	std::unique_ptr<ghost_serial::V5SerialBase> serial_base_interface_;
@@ -44,4 +42,3 @@ private:
 };
 
 } // namespace ghost_v5
-#endif // GHOST_V5__V5_SERIAL_NODE_HPP

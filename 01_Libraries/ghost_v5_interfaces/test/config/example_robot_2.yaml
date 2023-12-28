@@ -1,5 +1,5 @@
 port_configuration:
-    use_secondary_joystick: falses
+    use_secondary_joystick: false
     devices:
         left_drive_motor:
             port: 1

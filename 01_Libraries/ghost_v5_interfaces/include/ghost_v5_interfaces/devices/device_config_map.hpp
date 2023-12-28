@@ -6,6 +6,8 @@
 
 namespace ghost_v5_interfaces {
 
+namespace devices {
+
 class DeviceConfigMap {
 public:
 	DeviceConfigMap() = default;
@@ -74,7 +76,7 @@ public:
 				return false;
 			}
 		}
-		result &= (use_secondary_joystick && rhs.use_secondary_joystick);
+		result &= (use_secondary_joystick == rhs.use_secondary_joystick);
 		return result;
 	}
 
@@ -84,5 +86,7 @@ private:
 	std::unordered_map < std::string, std::shared_ptr<const DeviceConfig> > device_configs_;
 	std::unordered_map<int, std::string> port_to_device_name_map_;
 };
+
+} // namespace devices
 
 } // namespace ghost_v5_interfaces
