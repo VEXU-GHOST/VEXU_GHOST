@@ -8,7 +8,7 @@
 
 namespace ghost_v5_interfaces {
 
-namespace test_utils {
+namespace test_util {
 
 bool getRandomBool(){
 	return (bool) (rand() % 2);
@@ -18,7 +18,7 @@ float getRandomFloat(){
 	return (float) rand() + 0.0001 * rand();
 }
 
-std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(bool is_master){
+std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(bool is_secondary_joystick){
 	auto joy_ptr = std::make_shared<devices::JoystickDeviceData>();
 
 	joy_ptr->name = "joy_" + std::to_string(rand() % 2);
@@ -38,7 +38,7 @@ std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(bool is_maste
 	joy_ptr->btn_l = getRandomBool();
 	joy_ptr->btn_r = getRandomBool();
 	joy_ptr->btn_d = getRandomBool();
-	joy_ptr->is_master = is_master;
+	joy_ptr->is_secondary_joystick = is_secondary_joystick;
 
 	return joy_ptr;
 }

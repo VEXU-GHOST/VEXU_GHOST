@@ -6,7 +6,7 @@
 
 using ghost_v5_interfaces::devices::hardware_type_e;
 using ghost_v5_interfaces::devices::MotorDeviceData;
-using ghost_v5_interfaces::test_utils::getRandomMotorData;
+using ghost_v5_interfaces::test_util::getRandomMotorData;
 
 TEST(TestMotorDeviceInterface, testSerializationV5ToCoprocessor){
 	int NUM_TESTS = 50;

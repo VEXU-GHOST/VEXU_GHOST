@@ -1,18 +1,21 @@
 #include <gtest/gtest.h>
+#include "yaml-cpp/yaml.h"
+
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "ghost_v5_interfaces/test/device_test_utils.hpp"
+#include "ghost_v5_interfaces/util/device_config_factory_utils.hpp"
 
 #include "ghost_ros_interfaces/msg_helpers/msg_helpers.hpp"
 
-#include "yaml-cpp/yaml.h"
-
 
 using namespace ghost_ros_interfaces;
-using namespace ghost_v5_interfaces::test_utils;
+using namespace ghost_v5_interfaces::devices;
+using namespace ghost_v5_interfaces::test_util;
+using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
 
 class RobotHardwareInterfaceROSTestFixture : public ::testing::Test {
@@ -22,53 +25,135 @@ public:
 		config_yaml_ = YAML::LoadFile(config_path);
 
 		device_config_map_ptr_ = loadRobotConfigFromYAML(config_yaml_, false);
+		rhi_input_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map_ptr_, devices::hardware_type_e::COPROCESSOR);
+		rhi_output_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map_ptr_, devices::hardware_type_e::COPROCESSOR);
 	}
 
+	std::shared_ptr<RobotHardwareInterface> rhi_input_ptr_;
+	std::shared_ptr<RobotHardwareInterface> rhi_output_ptr_;
 	std::shared_ptr<DeviceConfigMap> device_config_map_ptr_;
 	YAML::Node config_yaml_;
 };
 
-TEST_F(RobotHardwareInterfaceROSTestFixture, testSensorUpdate){
-	auto robot_hardware_interface = std::make_shared<RobotHardwareInterface>(device_config_map_ptr_);
-	robot_hardware_interface->setDisabledStatus(getRandomBool());
-	robot_hardware_interface->setAutonomousStatus(getRandomBool());
-	robot_hardware_interface->setConnectedStatus(getRandomBool());
-	robot_hardware_interface->setPrimaryJoystickData(getRandomJoystickData(true));
+TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpdate){
+	rhi_input_ptr_->setDisabledStatus(getRandomBool());
+	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
+	rhi_input_ptr_->setConnectedStatus(getRandomBool());
+	auto joy_data = getRandomJoystickData(false);
+	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
 
 	auto motor_data_ptr = getRandomMotorData(false);
 	motor_data_ptr->name = "default_motor";
-	robot_hardware_interface->setDeviceData(motor_data_ptr);
+	rhi_input_ptr_->setDeviceData(motor_data_ptr);
 
 	auto rotation_sensor_data_ptr = getRandomRotationSensorData();
 	rotation_sensor_data_ptr->name = "rotation_sensor_1";
-	robot_hardware_interface->setDeviceData(rotation_sensor_data_ptr);
+	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
 
-	// Convert to msg
-	auto msg = getROSMsgFromRobotHardwareInterface(robot_hardware_interface);
+	auto msg = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
 
-	// Convert back to hardware interface
-	auto robot_hardware_interface_copy = std::make_shared<RobotHardwareInterface>(device_config_map_ptr_);
-	updateRobotHardwareInterfaceFromROSMsg(robot_hardware_interface_copy);
+	// Convert to ROS Msg
+	toROSMsg(*rhi_input_ptr_, *msg);
+	fromROSMsg(*msg, *rhi_output_ptr_);
 
-	EXPECT_EQ(*robot_hardware_interface, *robot_hardware_interface_copy);
+	EXPECT_EQ(*rhi_input_ptr_, *rhi_output_ptr_);
 }
 
-TEST_F(RobotHardwareInterfaceROSTestFixture, testActuatorUpdate){
-	auto robot_hardware_interface = std::make_shared<RobotHardwareInterface>(device_config_map_ptr_);
+TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceActuatorCommand){
 	auto motor_data_ptr = getRandomMotorData(true);
 	motor_data_ptr->name = "default_motor";
-	robot_hardware_interface->setDeviceData(motor_data_ptr);
+	rhi_input_ptr_->setDeviceData(motor_data_ptr);
+	auto msg = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
+
+	// Convert to ROS Msg
+	toROSMsg(*rhi_input_ptr_, *msg);
+	fromROSMsg(*msg, *rhi_output_ptr_);
+
+	EXPECT_EQ(*rhi_input_ptr_, *rhi_output_ptr_);
+}
+
+TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle){
+	rhi_input_ptr_->setDisabledStatus(getRandomBool());
+	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
+	rhi_input_ptr_->setConnectedStatus(getRandomBool());
+	auto joy_data = getRandomJoystickData(false);
+	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
+
+	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>();
+	motor_data_ptr->desired_position = getRandomFloat();
+	motor_data_ptr->desired_velocity = getRandomFloat();
+	motor_data_ptr->desired_torque = getRandomFloat();
+	motor_data_ptr->desired_voltage = getRandomFloat();
+	motor_data_ptr->current_limit = getRandomFloat();
+	motor_data_ptr->position_control = getRandomBool();
+	motor_data_ptr->velocity_control = getRandomBool();
+	motor_data_ptr->torque_control = getRandomBool();
+	motor_data_ptr->voltage_control = getRandomBool();
+	motor_data_ptr->curr_position = getRandomFloat();
+	motor_data_ptr->curr_velocity_rpm = getRandomFloat();
+	motor_data_ptr->curr_torque_nm = getRandomFloat();
+	motor_data_ptr->curr_voltage_mv = getRandomFloat();
+	motor_data_ptr->curr_current_ma = getRandomFloat();
+	motor_data_ptr->curr_power_w = getRandomFloat();
+	motor_data_ptr->curr_temp_c = getRandomFloat();
+	motor_data_ptr->name = "default_motor";
+	rhi_input_ptr_->setDeviceData(motor_data_ptr);
 
 	auto rotation_sensor_data_ptr = getRandomRotationSensorData();
 	rotation_sensor_data_ptr->name = "rotation_sensor_1";
-	robot_hardware_interface->setDeviceData(rotation_sensor_data_ptr);
+	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
 
-	// Convert to msg
-	auto msg = getROSMsgFromRobotHardwareInterface(robot_hardware_interface);
+	auto msg_sensor_update = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
+	auto msg_actuator_command = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
 
-	// Convert back to hardware interface
-	auto robot_hardware_interface_copy = std::make_shared<RobotHardwareInterface>(device_config_map_ptr_);
-	updateRobotHardwareInterfaceFromROSMsg(robot_hardware_interface_copy);
+	// Convert to ROS Msg
+	toROSMsg(*rhi_input_ptr_, *msg_sensor_update);
+	toROSMsg(*rhi_input_ptr_, *msg_actuator_command);
+	fromROSMsg(*msg_sensor_update, *rhi_output_ptr_);
+	fromROSMsg(*msg_actuator_command, *rhi_output_ptr_);
 
-	EXPECT_EQ(*robot_hardware_interface, *robot_hardware_interface_copy);
+	EXPECT_EQ(*rhi_input_ptr_, *rhi_output_ptr_);
+}
+
+TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycleReverse){
+	rhi_input_ptr_->setDisabledStatus(getRandomBool());
+	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
+	rhi_input_ptr_->setConnectedStatus(getRandomBool());
+	auto joy_data = getRandomJoystickData(false);
+	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
+
+	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>();
+	motor_data_ptr->desired_position = getRandomFloat();
+	motor_data_ptr->desired_velocity = getRandomFloat();
+	motor_data_ptr->desired_torque = getRandomFloat();
+	motor_data_ptr->desired_voltage = getRandomFloat();
+	motor_data_ptr->current_limit = getRandomFloat();
+	motor_data_ptr->position_control = getRandomBool();
+	motor_data_ptr->velocity_control = getRandomBool();
+	motor_data_ptr->torque_control = getRandomBool();
+	motor_data_ptr->voltage_control = getRandomBool();
+	motor_data_ptr->curr_position = getRandomFloat();
+	motor_data_ptr->curr_velocity_rpm = getRandomFloat();
+	motor_data_ptr->curr_torque_nm = getRandomFloat();
+	motor_data_ptr->curr_voltage_mv = getRandomFloat();
+	motor_data_ptr->curr_current_ma = getRandomFloat();
+	motor_data_ptr->curr_power_w = getRandomFloat();
+	motor_data_ptr->curr_temp_c = getRandomFloat();
+	motor_data_ptr->name = "default_motor";
+	rhi_input_ptr_->setDeviceData(motor_data_ptr);
+
+	auto rotation_sensor_data_ptr = getRandomRotationSensorData();
+	rotation_sensor_data_ptr->name = "rotation_sensor_1";
+	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
+
+	auto msg_sensor_update = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
+	auto msg_actuator_command = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
+
+	// Convert to ROS Msg
+	toROSMsg(*rhi_input_ptr_, *msg_actuator_command);
+	toROSMsg(*rhi_input_ptr_, *msg_sensor_update);
+	fromROSMsg(*msg_actuator_command, *rhi_output_ptr_);
+	fromROSMsg(*msg_sensor_update, *rhi_output_ptr_);
+
+	EXPECT_EQ(*rhi_input_ptr_, *rhi_output_ptr_);
 }

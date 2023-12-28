@@ -12,7 +12,7 @@
 
 using ghost_v5_interfaces::util::loadRobotConfigFromYAML;
 using namespace ghost_v5_interfaces::devices;
-using namespace ghost_v5_interfaces::test_utils;
+using namespace ghost_v5_interfaces::test_util;
 using namespace ghost_v5_interfaces;
 
 class RobotHardwareInterfaceTestFixture : public ::testing::Test {
@@ -75,7 +75,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 
 TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataPrimary){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
-	auto j1 = getRandomJoystickData(true);
+	auto j1 = getRandomJoystickData(false);
 	j1->name = "primary_joystick";
 	hw_interface.setPrimaryJoystickData(j1);
 	auto j2 = hw_interface.getPrimaryJoystickData();
@@ -86,7 +86,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataPr
 TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataSecondary){
 	device_config_map_ptr_->use_secondary_joystick = true;
 	RobotHardwareInterface hw_interface(device_config_map_ptr_, hardware_type_e::COPROCESSOR);
-	auto j1 = getRandomJoystickData(false);
+	auto j1 = getRandomJoystickData(true);
 	j1->name = "secondary_joystick";
 	hw_interface.setSecondaryJoystickData(j1);
 	auto j2 = hw_interface.getSecondaryJoystickData();
@@ -163,7 +163,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	hw_interface.setAutonomousStatus(getRandomBool());
 	hw_interface.setConnectedStatus(getRandomBool());
 
-	auto joy = getRandomJoystickData(true);
+	auto joy = getRandomJoystickData(false);
 	joy->name = "primary_joystick";
 	hw_interface.setPrimaryJoystickData(joy);
 
@@ -211,11 +211,11 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	hw_interface.setAutonomousStatus(getRandomBool());
 	hw_interface.setConnectedStatus(getRandomBool());
 
-	auto joy = getRandomJoystickData(true);
+	auto joy = getRandomJoystickData(false);
 	joy->name = "primary_joystick";
 	hw_interface.setPrimaryJoystickData(joy);
 
-	auto joy_2 = getRandomJoystickData(false);
+	auto joy_2 = getRandomJoystickData(true);
 	joy_2->name = "secondary_joystick";
 	hw_interface.setSecondaryJoystickData(joy);
 

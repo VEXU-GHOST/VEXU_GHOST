@@ -7,7 +7,7 @@
 
 using ghost_v5_interfaces::devices::hardware_type_e;
 using ghost_v5_interfaces::devices::RotationSensorDeviceData;
-using ghost_v5_interfaces::test_utils::getRandomRotationSensorData;
+using ghost_v5_interfaces::test_util::getRandomRotationSensorData;
 
 TEST(TestRotationSensorDeviceInterface, testSerialization){
 	int NUM_TESTS = 50;

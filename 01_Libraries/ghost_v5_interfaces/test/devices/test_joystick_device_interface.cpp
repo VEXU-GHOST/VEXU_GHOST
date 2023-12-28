@@ -6,16 +6,16 @@
 
 using ghost_v5_interfaces::devices::hardware_type_e;
 using ghost_v5_interfaces::devices::JoystickDeviceData;
-using namespace ghost_v5_interfaces::test_utils;
+using namespace ghost_v5_interfaces::test_util;
 
 TEST(TestJoystickDeviceInterface, testEqualityOperator){
-	auto j1 = getRandomJoystickData(true);
+	auto j1 = getRandomJoystickData(false);
 	auto j2 = std::make_shared<JoystickDeviceData>(*j1);
 	EXPECT_EQ(*j1, *j2);
 }
 
 TEST(TestJoystickDeviceInterface, testSerializationCoprocessorToV5){
-	auto j1 = getRandomJoystickData(true);
+	auto j1 = getRandomJoystickData(false);
 	auto j2 = std::make_shared<JoystickDeviceData>();
 	auto j3 = std::make_shared<JoystickDeviceData>();
 	j2->name = j1->name;
@@ -30,7 +30,7 @@ TEST(TestJoystickDeviceInterface, testSerializationCoprocessorToV5){
 }
 
 TEST(TestJoystickDeviceInterface, testSerializationV5ToCoprocessorPrimary){
-	auto j1 = getRandomJoystickData(true);
+	auto j1 = getRandomJoystickData(false);
 	auto j2 = std::make_shared<JoystickDeviceData>();
 	j2->name = j1->name;
 
@@ -42,7 +42,7 @@ TEST(TestJoystickDeviceInterface, testSerializationV5ToCoprocessorPrimary){
 }
 
 TEST(TestJoystickDeviceInterface, testSerializationV5ToCoprocessorSecondary){
-	auto j1 = getRandomJoystickData(false);
+	auto j1 = getRandomJoystickData(true);
 	auto j2 = std::make_shared<JoystickDeviceData>();
 	j2->name = j1->name;
 

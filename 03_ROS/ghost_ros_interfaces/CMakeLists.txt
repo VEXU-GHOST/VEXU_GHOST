@@ -34,7 +34,7 @@ ament_export_include_directories(${INCLUDE})
 #### Testing ####
 #################
 set(TESTS
-  # test_robot_hardware_interface_ros
+  test_robot_hardware_interface_ros
   test_device_interfaces_ros
 )
 foreach(TEST ${TESTS})

@@ -55,7 +55,7 @@ public:
 	bool btn_l = false;
 	bool btn_r = false;
 	bool btn_d = false;
-	bool is_master = true;
+	bool is_secondary_joystick = true;
 
 	void update(std::shared_ptr<DeviceData> data_ptr) override {
 		auto joy_data_ptr = data_ptr->as<JoystickDeviceData>();
@@ -75,7 +75,7 @@ public:
 		btn_r2 = joy_data_ptr->btn_r2;
 		btn_l1 = joy_data_ptr->btn_l1;
 		btn_l2 = joy_data_ptr->btn_l2;
-		is_master = joy_data_ptr->is_master;
+		is_secondary_joystick = joy_data_ptr->is_secondary_joystick;
 	}
 
 	std::shared_ptr<DeviceBase> clone() const override {
@@ -90,7 +90,7 @@ public:
 		       (btn_x == d_rhs->btn_x) && (btn_y == d_rhs->btn_y) && (btn_r1 == d_rhs->btn_r1) &&
 		       (btn_r2 == d_rhs->btn_r2) && (btn_l1 == d_rhs->btn_l1) && (btn_l2 == d_rhs->btn_l2) &&
 		       (btn_u == d_rhs->btn_u) && (btn_l == d_rhs->btn_l) && (btn_r == d_rhs->btn_r) &&
-		       (btn_d == d_rhs->btn_d) && (is_master == d_rhs->is_master);
+		       (btn_d == d_rhs->btn_d) && (is_secondary_joystick == d_rhs->is_secondary_joystick);
 	}
 
 	std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override {
@@ -115,7 +115,7 @@ public:
 			byte_offset += 1;
 
 			auto byte_pack_2 = packByte(std::vector<bool>{
-						btn_r1, btn_r2, btn_l1, btn_l2, is_master, 0, 0, 0
+						btn_r1, btn_r2, btn_l1, btn_l2, is_secondary_joystick, 0, 0, 0
 					});
 			memcpy(msg_data + byte_offset, &byte_pack_2, 1);
 			byte_offset += 1;
@@ -160,7 +160,7 @@ public:
 			btn_r2 = byte_vector_2[1];
 			btn_l1 = byte_vector_2[2];
 			btn_l2 = byte_vector_2[3];
-			is_master = byte_vector_2[4];
+			is_secondary_joystick = byte_vector_2[4];
 		}
 	}
 };
