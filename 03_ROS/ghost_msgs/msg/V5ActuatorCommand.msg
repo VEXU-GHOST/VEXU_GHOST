@@ -1,8 +1,9 @@
-# Header
 std_msgs/Header header
 
-# Motor Commands
-ghost_msgs/V5MotorCommand[21] motor_commands
+uint32 msg_id
 
-# Digital Output Ports
-ghost_msgs/LabeledFloatMap[] adi_ports
+# Motor Commands
+ghost_msgs/V5MotorCommand[] motor_commands
+
+# Digital IO
+bool[] digital_io

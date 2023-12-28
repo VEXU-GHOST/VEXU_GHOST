@@ -12,6 +12,7 @@
 #include "ghost_ros_interfaces/msg_helpers/msg_helpers.hpp"
 
 
+using namespace ghost_ros_interfaces::msg_helpers;
 using namespace ghost_ros_interfaces;
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::test_util;
@@ -25,6 +26,7 @@ public:
 		config_yaml_ = YAML::LoadFile(config_path);
 
 		device_config_map_ptr_ = loadRobotConfigFromYAML(config_yaml_, false);
+		// TODO(maxxwilson): Does this hardware type matter? should one be V5_BRAIN for full coverage?
 		rhi_input_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map_ptr_, devices::hardware_type_e::COPROCESSOR);
 		rhi_output_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map_ptr_, devices::hardware_type_e::COPROCESSOR);
 	}

@@ -39,7 +39,7 @@ RobotHardwareInterface::RobotHardwareInterface(std::shared_ptr<DeviceConfigMap> 
 
 	// Add Digital IO to actuator command msg
 	actuator_command_msg_length_ += 1;
-	digital_io_vector_.resize(8);
+	digital_io_.resize(8);
 
 	use_secondary_joystick_ = robot_config_ptr_->use_secondary_joystick;
 	primary_joystick_data_ptr_ = std::make_shared<JoystickDeviceData>();
@@ -65,7 +65,7 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const {
 	}
 	else if(hardware_type_ == hardware_type_e::COPROCESSOR){
 		// Send state of all Digital IO Ports
-		serial_data.push_back(packByte(digital_io_vector_));
+		serial_data.push_back(packByte(digital_io_));
 	}
 
 	auto j1_serial_msg = primary_joystick_data_ptr_->serialize(hardware_type_);
@@ -89,7 +89,7 @@ void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
 
 	if(hardware_type_ == hardware_type_e::V5_BRAIN){
 		// Unpack Digital IO
-		digital_io_vector_ = unpackByte(msg[byte_offset]);
+		digital_io_ = unpackByte(msg[byte_offset]);
 		byte_offset++;
 	}
 
@@ -148,6 +148,25 @@ void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
 
 bool RobotHardwareInterface::operator==(const RobotHardwareInterface& rhs) const {
 	bool eq = (hardware_type_ == rhs.hardware_type_);
+
+	// Competition State
+	eq &= (is_disabled_ == rhs.is_disabled_);
+	eq &= (is_autonomous_ == rhs.is_autonomous_);
+	eq &= (is_connected_  == rhs.is_connected_);
+
+	// Joystick Data
+	eq &= (use_secondary_joystick_  == rhs.use_secondary_joystick_);
+	eq &= (*primary_joystick_data_ptr_  == *rhs.primary_joystick_data_ptr_);
+	eq &= (*secondary_joystick_data_ptr_  == *rhs.secondary_joystick_data_ptr_);
+
+	// Serialization
+	eq &= (msg_id_ == rhs.msg_id_);
+	eq &= (actuator_command_msg_length_  == rhs.actuator_command_msg_length_);
+	eq &= (sensor_update_msg_length_ == rhs.sensor_update_msg_length_);
+
+	// ADI Ports
+	eq &= (digital_io_  == rhs.digital_io_);
+
 	for(const auto& [key, val] : device_pair_name_map_){
 		if(rhs.device_pair_name_map_.count(key) == 0){
 			return false;
@@ -166,22 +185,22 @@ bool RobotHardwareInterface::operator==(const RobotHardwareInterface& rhs) const
 	return eq;
 }
 
-DevicePair RobotHardwareInterface::getDevicePair(const std::string& name){
+DevicePair RobotHardwareInterface::getDevicePair(const std::string& name) const {
 	throwOnNonexistentDevice(name);
 	return device_pair_name_map_.at(name).clone();
 }
 
-std::shared_ptr<const DeviceConfig> RobotHardwareInterface::getDeviceConfig(const std::string& name){
+std::shared_ptr<const DeviceConfig> RobotHardwareInterface::getDeviceConfig(const std::string& name) const {
 	throwOnNonexistentDevice(name);
 	return device_pair_name_map_.at(name).config_ptr;
 }
 
-std::shared_ptr<DeviceData> RobotHardwareInterface::getDeviceData(const std::string& name){
+std::shared_ptr<DeviceData> RobotHardwareInterface::getDeviceData(const std::string& name) const {
 	throwOnNonexistentDevice(name);
 	return device_pair_name_map_.at(name).data_ptr->clone()->as<DeviceData>();
 }
 
-std::shared_ptr<DeviceData> RobotHardwareInterface::getDeviceData(int port){
+std::shared_ptr<DeviceData> RobotHardwareInterface::getDeviceData(int port) const {
 	if(device_pair_port_map_.count(port) == 0){
 		throw std::runtime_error("[RobotHardwareInterface::getDeviceConfig] Error: Device port " + std::to_string(port) + " is not in use!");
 	}
@@ -203,11 +222,11 @@ void RobotHardwareInterface::setDeviceData(std::string name, std::shared_ptr<Dev
 	device_pair_name_map_.at(name).data_ptr->update(device_data);
 }
 
-std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getPrimaryJoystickData(){
+std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getPrimaryJoystickData() const {
 	return primary_joystick_data_ptr_->clone()->as<JoystickDeviceData>();
 }
 
-std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getSecondaryJoystickData(){
+std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getSecondaryJoystickData() const {
 	return secondary_joystick_data_ptr_->clone()->as<JoystickDeviceData>();
 }
 
@@ -227,16 +246,16 @@ void RobotHardwareInterface::setSecondaryJoystickData(std::shared_ptr<JoystickDe
 	}
 }
 
-void RobotHardwareInterface::setDigitalIOPorts(const std::vector<bool>& digital_io_vector){
+void RobotHardwareInterface::setDigitalIO(const std::vector<bool>& digital_io){
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-	digital_io_vector_ = digital_io_vector;
+	digital_io_ = digital_io;
 }
 
-const std::vector<bool>& RobotHardwareInterface::getDigitalIOPorts(){
-	return digital_io_vector_;
+const std::vector<bool>& RobotHardwareInterface::getDigitalIO() const {
+	return digital_io_;
 }
 
-void RobotHardwareInterface::throwOnNonexistentDevice(const std::string& name){
+void RobotHardwareInterface::throwOnNonexistentDevice(const std::string& name) const {
 	if(device_pair_name_map_.count(name) == 0){
 		throw std::runtime_error("[RobotHardwareInterface::getDeviceConfig] Error: Device name " + name + " does not exist!");
 	}

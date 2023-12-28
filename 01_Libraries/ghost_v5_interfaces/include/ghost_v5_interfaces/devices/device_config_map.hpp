@@ -12,7 +12,7 @@ class DeviceConfigMap {
 public:
 	DeviceConfigMap() = default;
 
-	std::shared_ptr<DeviceConfigMap> clone() {
+	std::shared_ptr<DeviceConfigMap> clone() const {
 		auto cloned_config_map_ptr = std::make_shared<DeviceConfigMap>();
 		for(const auto& [key, val] : device_configs_){
 			cloned_config_map_ptr->addDeviceConfig(val->clone()->as<DeviceConfig>());

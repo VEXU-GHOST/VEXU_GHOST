@@ -32,8 +32,6 @@ class DeviceBase : public std::enable_shared_from_this<DeviceBase> {
 public:
 	std::string name = "";
 	device_type_e type = device_type_e::INVALID;
-	int32_t msg_id = 0;
-
 
 	/**
 	 * @brief Returns a pointer to a deep copy of this object
@@ -113,6 +111,7 @@ public:
 	 * @return int
 	 */
 	virtual int getSensorPacketSize() const = 0;
+
 	/**
 	 * @brief Returns a pointer to a deep copy of this object
 	 *
@@ -153,7 +152,7 @@ struct DevicePair {
 	std::shared_ptr<const DeviceConfig> config_ptr;
 	std::shared_ptr<DeviceData> data_ptr;
 
-	DevicePair clone(){
+	DevicePair clone() const {
 		DevicePair obj;
 		obj.config_ptr = config_ptr->clone()->as<const DeviceConfig>();
 		obj.data_ptr = data_ptr->clone()->as<DeviceData>();

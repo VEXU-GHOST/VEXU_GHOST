@@ -64,7 +64,7 @@ public:
 
 	bool operator==(const DeviceBase &rhs) const override {
 		const RotationSensorDeviceData *d_rhs = dynamic_cast<const RotationSensorDeviceData *>(&rhs);
-		return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) && (msg_id == d_rhs->msg_id) &&
+		return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) &&
 		       (position == d_rhs->position) && (velocity == d_rhs->velocity) && (angle == d_rhs->angle);
 	}
 

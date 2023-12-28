@@ -8,6 +8,7 @@
 
 #include "ghost_ros_interfaces/msg_helpers/msg_helpers.hpp"
 
+using namespace ghost_ros_interfaces::msg_helpers;
 using namespace ghost_ros_interfaces;
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::test_util;
