@@ -63,7 +63,7 @@ fi
 if [ "$arch" == 'x86_64' ];
 then 
     GHOST_SIM_SHARE_DIR="$PWD/install/ghost_sim/share/ghost_sim"
-    URDF_SIM_PATH="${GHOST_SIM_SHARE_DIR}/urdf/test_tank_description.urdf"
+    URDF_SIM_PATH="${GHOST_SIM_SHARE_DIR}/urdf/test_tank_sim_base.urdf"
 
     if [ ! -d $GHOST_SIM_SHARE_DIR ];
     then
@@ -71,7 +71,7 @@ then
     else
         echo
         echo "---Generating Ghost Simulation Test URDFs---"
-        xacro 03_ROS/ghost_sim/urdf/test_tank_description.xacro > $URDF_SIM_PATH
+        xacro 03_ROS/ghost_sim/urdf/test_tank_sim_base.xacro > $URDF_SIM_PATH
         echo "URDF written to" $URDF_SIM_PATH
     fi
 fi
