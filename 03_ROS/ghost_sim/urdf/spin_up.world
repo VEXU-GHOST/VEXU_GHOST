@@ -94,7 +94,7 @@
         </link>
       </model>
 
-      <model name="walls">
+      <!-- <model name="walls">
         <static>true</static>
         <pose>0 0 0.1524 0 0 0</pose>
 
@@ -173,7 +173,7 @@
             </geometry>
           </collision>
         </link>
-      </model>
+      </model> -->
 
     </world>
   </sdf>

@@ -167,5 +167,48 @@
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
+
+    <!-- Sensors -->
+    <link name="lidar_link">
+        <inertial>
+            <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
+            <mass value="0.125"/>
+            <inertia ixx="0.001"  ixy="0"  ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+            <cylinder radius="${0.06985/2}" length="0.0254"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="lidar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="lidar_link"/>
+        <origin xyz="-0.209 0 0.2145" rpy="0 0 ${67.562*d2r}"/>
+    </joint>
+
+    <link name="imu_link">
+        <inertial>
+            <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
+            <mass value="0.125"/>
+            <inertia ixx="0.001"  ixy="0"  ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+            <cylinder radius="${0.06985/2}" length="0.0254"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="imu_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="imu_link"/>
+        <origin xyz="-0.209 0 0.2145" rpy="0 0 ${67.562*d2r}"/>
+    </joint>
  
 </robot>

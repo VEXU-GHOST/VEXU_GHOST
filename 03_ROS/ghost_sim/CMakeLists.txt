@@ -125,6 +125,17 @@ ament_target_dependencies(test_publisher_v5_actuator_cmd
 install(TARGETS
   test_publisher_v5_actuator_cmd
   DESTINATION lib/${PROJECT_NAME})
+  
+# Node to test EKF with different data
+add_executable(test_robot_localization
+  test/test_robot_localization.cpp
+)
+ament_target_dependencies(test_robot_localization
+${DEPENDENCIES}
+)
+install(TARGETS
+test_robot_localization
+DESTINATION lib/${PROJECT_NAME})
 
 
 # ################

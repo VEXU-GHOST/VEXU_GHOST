@@ -84,6 +84,13 @@ def generate_launch_description():
         name='ground_truth_pose_publisher',
     )
 
+    ekf_test_data_publisher = Node(
+        package = 'ghost_sim',
+        executable = 'test_robot_localization',
+        name = 'test_robot_localization',
+        parameters=[{'use_sim_time': True}]
+    )
+
     v5_actuator_cmd_publisher = Node(
         package='ghost_sim',
         executable = 'test_publisher_v5_actuator_cmd',
@@ -101,17 +108,9 @@ def generate_launch_description():
     robot_localization_node = Node(
         package='robot_localization',
         executable='ekf_node',
-        name='robot_localization',
+        name='ekf_localization_node',
         output='screen',
         parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
-    )
-
-    state_machine_node = Node(
-        package='ghost_ros',
-        executable='robot_state_machine_node',
-        name='ghost_state_machine',
-        output='screen',
-        parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
     )
 
     plot_juggler_node = Node(
@@ -127,9 +126,10 @@ def generate_launch_description():
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ground_truth_publisher,
-        rviz_node,
-        # plot_juggler_node,
-        # robot_localization_node,
+        # rviz_node,
+        plot_juggler_node,
+        robot_localization_node,
+        ekf_test_data_publisher,
         # state_machine_node,
         # v5_actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)
