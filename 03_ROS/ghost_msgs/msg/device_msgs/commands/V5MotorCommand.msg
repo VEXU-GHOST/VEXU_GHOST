@@ -1,9 +1,9 @@
 ghost_msgs/V5DeviceHeader device_header
 
-int32 desired_position
-float32 desired_velocity
-float32 desired_torque
-float32 desired_voltage
+int32 position_command
+float32 velocity_command
+float32 torque_command
+float32 voltage_command
 int32 current_limit
 
 bool position_control

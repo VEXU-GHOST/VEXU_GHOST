@@ -42,6 +42,7 @@ const std::unordered_map<devices::device_type_e, std::string> DEVICE_TYPE_TO_STR
  * YAML files must have the following form.
  *
  * port_configuration:
+ * 		use_partner_joystick = false/true
  *      devices:
  *          my_motor_name_here:
  *              port: 1

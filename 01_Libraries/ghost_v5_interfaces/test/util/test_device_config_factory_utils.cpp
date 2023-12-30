@@ -4,19 +4,38 @@
 #include <ghost_v5_interfaces/devices/device_config_map.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/test/device_test_utils.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
 #include <gtest/gtest.h>
 #include "yaml-cpp/yaml.h"
 
 using namespace ghost_v5_interfaces::devices;
+using namespace ghost_v5_interfaces::test_util;
 using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
 
 class DeviceConfigMapTestFixture : public ::testing::Test {
 protected:
 	void SetUp() override {
-		robot_config_ptr_ = std::make_shared<DeviceConfigMap>();
+	}
+
+	std::shared_ptr<DeviceConfigMap> getExpectedRobotConfig(bool use_partner_joystick = false){
+		auto robot_config_ptr = std::make_shared<DeviceConfigMap>();
+		auto joy_master = std::make_shared<JoystickDeviceConfig>();
+		joy_master->name = "joy_master";
+		joy_master->port = -1;
+		joy_master->type = device_type_e::JOYSTICK;
+		robot_config_ptr->addDeviceConfig(joy_master);
+
+		if(use_partner_joystick){
+			auto joy_partner = std::make_shared<JoystickDeviceConfig>();
+			joy_partner->name = "joy_partner";
+			joy_partner->port = -2;
+			joy_partner->type = device_type_e::JOYSTICK;
+			joy_partner->is_partner = true;
+			robot_config_ptr->addDeviceConfig(joy_partner);
+		}
 
 		// Motor some parameters changed
 		auto left_drive_motor = std::make_shared<MotorDeviceConfig>();
@@ -27,7 +46,7 @@ protected:
 		left_drive_motor->gearset = ghost_gearset::GEARSET_600;
 		left_drive_motor->brake_mode = ghost_brake_mode::BRAKE_MODE_COAST;
 		left_drive_motor->controller_config.pos_gain = 7.5;
-		robot_config_ptr_->addDeviceConfig(left_drive_motor);
+		robot_config_ptr->addDeviceConfig(left_drive_motor);
 
 		// Motor with every parameter changed.
 		auto test_motor = std::make_shared<MotorDeviceConfig>();
@@ -51,43 +70,34 @@ protected:
 		test_motor->controller_config.vel_gain = 118.0;
 		test_motor->controller_config.ff_vel_gain = 400.0;
 		test_motor->controller_config.ff_torque_gain = 2587.0;
-		robot_config_ptr_->addDeviceConfig(test_motor);
+		robot_config_ptr->addDeviceConfig(test_motor);
 
 		// Default motor, minimally required info.
 		auto default_motor = std::make_shared<MotorDeviceConfig>();
 		default_motor->name = "default_motor";
 		default_motor->port = 3;
 		default_motor->type = device_type_e::MOTOR;
-		robot_config_ptr_->addDeviceConfig(default_motor);
+		robot_config_ptr->addDeviceConfig(default_motor);
 
 		// Changed every param
-		auto rotation_sensor_1_ = std::make_shared<RotationSensorDeviceConfig>();
-		rotation_sensor_1_->port = 4;
-		rotation_sensor_1_->name = "rotation_sensor_1";
-		rotation_sensor_1_->type = device_type_e::ROTATION_SENSOR;
-		rotation_sensor_1_->reversed = true;
-		rotation_sensor_1_->data_rate = 10;
-		robot_config_ptr_->addDeviceConfig(rotation_sensor_1_);
+		auto rotation_sensor_1 = std::make_shared<RotationSensorDeviceConfig>();
+		rotation_sensor_1->port = 4;
+		rotation_sensor_1->name = "rotation_sensor_1";
+		rotation_sensor_1->type = device_type_e::ROTATION_SENSOR;
+		rotation_sensor_1->reversed = true;
+		rotation_sensor_1->data_rate = 10;
+		robot_config_ptr->addDeviceConfig(rotation_sensor_1);
 
 		// Default (minimal required params)
-		auto rotation_sensor_2_ = std::make_shared<RotationSensorDeviceConfig>();
-		rotation_sensor_2_->port = 5;
-		rotation_sensor_2_->name = "rotation_sensor_2";
-		rotation_sensor_2_->type = device_type_e::ROTATION_SENSOR;
-		robot_config_ptr_->addDeviceConfig(rotation_sensor_2_);
+		auto rotation_sensor_2 = std::make_shared<RotationSensorDeviceConfig>();
+		rotation_sensor_2->port = 5;
+		rotation_sensor_2->name = "rotation_sensor_2";
+		rotation_sensor_2->type = device_type_e::ROTATION_SENSOR;
+		robot_config_ptr->addDeviceConfig(rotation_sensor_2);
+
+		return robot_config_ptr;
 	}
-
-	std::shared_ptr<DeviceConfigMap> robot_config_ptr_;
 };
-
-/**
- * @brief Test that we can load a DeviceConfigMap from YAML.
- */
-TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLPrimaryJoystick){
-	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
-	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
-	EXPECT_EQ(*device_config_ptr, *robot_config_ptr_);
-}
 
 /**
  * @brief Test that we can load a DeviceConfigMap from YAML.
@@ -95,7 +105,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLPrimaryJoystick){
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLFile){
 	auto example_robot_config_file = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml";
 	auto device_config_ptr = loadRobotConfigFromYAMLFile(example_robot_config_file);
-	EXPECT_EQ(*device_config_ptr, *robot_config_ptr_);
+	EXPECT_EQ(*device_config_ptr, *getExpectedRobotConfig(false));
 }
 
 /**
@@ -103,10 +113,9 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLFile){
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLSecondaryJoystick){
 	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
-	example_robot_config["port_configuration"]["use_secondary_joystick"] = true;
-	robot_config_ptr_->use_secondary_joystick = true;
+	example_robot_config["port_configuration"]["use_partner_joystick"] = true;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
-	EXPECT_EQ(*device_config_ptr, *robot_config_ptr_);
+	EXPECT_EQ(*device_config_ptr, *getExpectedRobotConfig(true));
 }
 
 /**
@@ -114,9 +123,9 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLSecondaryJoystick)
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
 	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
-	example_robot_config["port_configuration"]["use_secondary_joystick"] = true;
+	example_robot_config["port_configuration"]["use_partner_joystick"] = true;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
-	EXPECT_FALSE(*device_config_ptr == *robot_config_ptr_);
+	EXPECT_FALSE(*device_config_ptr == *getExpectedRobotConfig(false));
 }
 
 /**
@@ -126,7 +135,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig
 	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["devices"]["left_drive_motor"]["port"] = 10;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
-	EXPECT_FALSE(*device_config_ptr == *robot_config_ptr_);
+	EXPECT_FALSE(*device_config_ptr == *getExpectedRobotConfig(false));
 }
 
 /**
@@ -136,7 +145,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchMotorConfi
 	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["device_configurations"]["test_motor_config"]["filter"]["timestep"] = 0.1;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
-	EXPECT_FALSE(*device_config_ptr == *robot_config_ptr_);
+	EXPECT_FALSE(*device_config_ptr == *getExpectedRobotConfig(false));
 }
 
 /**
@@ -151,6 +160,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchMotorConfi
  * this test, it should be good to go!
  */
 TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
+	auto robot_config_ptr = getExpectedRobotConfig(getRandomBool());
 	// Create directory for code generation
 	std::string codegen_dir = "/tmp/testGenerateCodeFromRobotConfig";
 	if(!std::filesystem::exists(std::filesystem::path(codegen_dir))){
@@ -164,7 +174,7 @@ TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 	// Generate code
 	std::string include_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/install/";
 	std::string src_dir = include_dir + "ghost_v5_interfaces/include/";
-	generateCodeFromRobotConfig(robot_config_ptr_, src_dir + "test.cpp");
+	generateCodeFromRobotConfig(robot_config_ptr, src_dir + "test.cpp");
 
 	// Compile
 	std::string compile_cmd = "g++ --std=c++17 -fPIC -rdynamic -I" + include_dir +
@@ -188,5 +198,5 @@ TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 
 	// Call function, wrap new DeviceConfigMap in shared_ptr
 	std::shared_ptr<DeviceConfigMap> test_config_map(func());
-	EXPECT_EQ(*robot_config_ptr_, *test_config_map);
+	EXPECT_EQ(*robot_config_ptr, *test_config_map);
 }

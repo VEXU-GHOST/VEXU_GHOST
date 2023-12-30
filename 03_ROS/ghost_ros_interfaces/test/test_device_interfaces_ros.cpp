@@ -76,7 +76,7 @@ TEST(TestDeviceInterfaces, testRotationSensorStateMsg){
 }
 
 TEST(TestDeviceInterfaces, testJoystickStateMsg){
-	auto joy_input = getRandomJoystickData(false);
+	auto joy_input = getRandomJoystickData();
 	auto msg = std::make_shared<ghost_msgs::msg::V5JoystickState>();
 	auto joy_output = std::make_shared<JoystickDeviceData>();
 

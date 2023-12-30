@@ -109,10 +109,10 @@ void fromROSMsg(MotorDeviceData& motor_data, const V5MotorState& motor_msg){
 void toROSMsg(const MotorDeviceData& motor_data, V5MotorCommand& motor_msg){
 	toROSMsg(motor_data, motor_msg.device_header); // Set device header
 
-	motor_msg.desired_position = motor_data.desired_position;
-	motor_msg.desired_velocity = motor_data.desired_velocity;
-	motor_msg.desired_torque = motor_data.desired_torque;
-	motor_msg.desired_voltage = motor_data.desired_voltage;
+	motor_msg.position_command = motor_data.position_command;
+	motor_msg.velocity_command = motor_data.velocity_command;
+	motor_msg.torque_command = motor_data.torque_command;
+	motor_msg.voltage_command = motor_data.voltage_command;
 	motor_msg.current_limit = motor_data.current_limit;
 	motor_msg.position_control = motor_data.position_control;
 	motor_msg.velocity_control = motor_data.velocity_control;
@@ -122,10 +122,10 @@ void toROSMsg(const MotorDeviceData& motor_data, V5MotorCommand& motor_msg){
 
 void fromROSMsg(MotorDeviceData& motor_data, const V5MotorCommand& motor_msg){
 	fromROSMsg(motor_data, motor_msg.device_header); // Set base attributes
-	motor_data.desired_position = motor_msg.desired_position;
-	motor_data.desired_velocity = motor_msg.desired_velocity;
-	motor_data.desired_torque = motor_msg.desired_torque;
-	motor_data.desired_voltage = motor_msg.desired_voltage;
+	motor_data.position_command = motor_msg.position_command;
+	motor_data.velocity_command = motor_msg.velocity_command;
+	motor_data.torque_command = motor_msg.torque_commmand;
+	motor_data.voltage_command = motor_msg.voltage_commmand;
 	motor_data.current_limit = motor_msg.current_limit;
 	motor_data.position_control = motor_msg.position_control;
 	motor_data.velocity_control = motor_msg.velocity_control;

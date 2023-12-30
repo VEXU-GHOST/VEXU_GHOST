@@ -18,7 +18,7 @@ float getRandomFloat(){
 	return (float) rand() + 0.0001 * rand();
 }
 
-std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(bool is_secondary_joystick){
+std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(){
 	auto joy_ptr = std::make_shared<devices::JoystickDeviceData>();
 
 	joy_ptr->name = "joy_" + std::to_string(rand() % 2);
@@ -38,7 +38,6 @@ std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(bool is_secon
 	joy_ptr->btn_l = getRandomBool();
 	joy_ptr->btn_r = getRandomBool();
 	joy_ptr->btn_d = getRandomBool();
-	joy_ptr->is_secondary_joystick = is_secondary_joystick;
 
 	return joy_ptr;
 }
@@ -48,10 +47,10 @@ std::shared_ptr<devices::MotorDeviceData> getRandomMotorData(bool actuator_cmd){
 
 	// Actuator Values
 	if(actuator_cmd){
-		motor_ptr->desired_position = getRandomFloat();
-		motor_ptr->desired_velocity = getRandomFloat();
-		motor_ptr->desired_torque = getRandomFloat();
-		motor_ptr->desired_voltage = getRandomFloat();
+		motor_ptr->position_command = getRandomFloat();
+		motor_ptr->velocity_command = getRandomFloat();
+		motor_ptr->torque_command = getRandomFloat();
+		motor_ptr->voltage_command = getRandomFloat();
 		motor_ptr->current_limit = getRandomFloat();
 
 		motor_ptr->position_control = getRandomBool();

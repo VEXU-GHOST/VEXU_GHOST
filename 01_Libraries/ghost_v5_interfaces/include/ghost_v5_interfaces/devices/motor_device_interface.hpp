@@ -79,10 +79,10 @@ public:
 	}
 
 	// Actuator Values
-	float desired_position = 0.0;   // Degrees
-	float desired_velocity = 0.0;   // RPM
-	float desired_torque = 0.0;     // N - m
-	float desired_voltage = 0.0;    // Normalized (-1.0->1.0)
+	float position_command = 0.0;   // Degrees
+	float velocity_command = 0.0;   // RPM
+	float torque_command = 0.0;     // N - m
+	float voltage_command = 0.0;    // Normalized (-1.0->1.0)
 	float current_limit = 0.0;      // milliAmps
 	bool position_control = false;
 	bool velocity_control = false;
@@ -100,10 +100,10 @@ public:
 
 	void update(std::shared_ptr<DeviceData> data_ptr) override {
 		auto motor_data_ptr = data_ptr->as<MotorDeviceData>();
-		desired_position = motor_data_ptr->desired_position;
-		desired_velocity = motor_data_ptr->desired_velocity;
-		desired_torque = motor_data_ptr->desired_torque;
-		desired_voltage = motor_data_ptr->desired_voltage;
+		position_command = motor_data_ptr->position_command;
+		velocity_command = motor_data_ptr->velocity_command;
+		torque_command = motor_data_ptr->torque_command;
+		voltage_command = motor_data_ptr->voltage_command;
 		current_limit = motor_data_ptr->current_limit;
 		position_control = motor_data_ptr->position_control;
 		velocity_control = motor_data_ptr->velocity_control;
@@ -125,8 +125,8 @@ public:
 	bool operator==(const DeviceBase &rhs) const override {
 		const MotorDeviceData *d_rhs = dynamic_cast<const MotorDeviceData *>(&rhs);
 		return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) &&
-		       (desired_position == d_rhs->desired_position) && (desired_velocity == d_rhs->desired_velocity) &&
-		       (desired_torque == d_rhs->desired_torque) && (desired_voltage == d_rhs->desired_voltage) &&
+		       (position_command == d_rhs->position_command) && (velocity_command == d_rhs->velocity_command) &&
+		       (torque_command == d_rhs->torque_command) && (voltage_command == d_rhs->voltage_command) &&
 		       (current_limit == d_rhs->current_limit) && (position_control == d_rhs->position_control) &&
 		       (velocity_control == d_rhs->velocity_control) && (torque_control == d_rhs->torque_control) &&
 		       (voltage_control == d_rhs->voltage_control) && (curr_position == d_rhs->curr_position) &&
@@ -141,13 +141,13 @@ public:
 			msg.resize(getActuatorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			memcpy(msg_buffer + byte_offset, &desired_position, 4);
+			memcpy(msg_buffer + byte_offset, &position_command, 4);
 			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &desired_velocity, 4);
+			memcpy(msg_buffer + byte_offset, &velocity_command, 4);
 			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &desired_torque, 4);
+			memcpy(msg_buffer + byte_offset, &torque_command, 4);
 			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &desired_voltage, 4);
+			memcpy(msg_buffer + byte_offset, &voltage_command, 4);
 			byte_offset += 4;
 			memcpy(msg_buffer + byte_offset, &current_limit, 4);
 			byte_offset += 4;
@@ -197,13 +197,13 @@ public:
 			checkMsgSize(msg, getActuatorPacketSize());
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			memcpy(&desired_position, msg_buffer + byte_offset, 4);
+			memcpy(&position_command, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
-			memcpy(&desired_velocity, msg_buffer + byte_offset, 4);
+			memcpy(&velocity_command, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
-			memcpy(&desired_torque, msg_buffer + byte_offset, 4);
+			memcpy(&torque_command, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
-			memcpy(&desired_voltage, msg_buffer + byte_offset, 4);
+			memcpy(&voltage_command, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
 			memcpy(&current_limit, msg_buffer + byte_offset, 4);
 			byte_offset += 4;

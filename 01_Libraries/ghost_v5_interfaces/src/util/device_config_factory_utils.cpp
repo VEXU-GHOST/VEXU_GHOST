@@ -1,4 +1,5 @@
 #include <ghost_util/yaml_utils.hpp>
+#include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
@@ -19,8 +20,25 @@ namespace util {
 
 std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool verbose){
 	auto device_config_map_ptr = std::make_shared<DeviceConfigMap>();
+	bool use_partner_joystick = false;
+	loadYAMLParam(node["port_configuration"], "use_partner_joystick", use_partner_joystick, false);
 
-	loadYAMLParam(node["port_configuration"], "use_secondary_joystick", device_config_map_ptr->use_secondary_joystick, false);
+	// Load primary joystick
+	auto joy_master = std::make_shared<JoystickDeviceConfig>();
+	joy_master->name = "joy_master";
+	joy_master->port = -1;
+	joy_master->is_partner = false;
+	joy_master->type = device_type_e::JOYSTICK;
+	device_config_map_ptr->addDeviceConfig(joy_master);
+
+	if(use_partner_joystick){
+		auto joy_partner = std::make_shared<JoystickDeviceConfig>();
+		joy_partner->name = "joy_partner";
+		joy_partner->port = -2;
+		joy_partner->type = device_type_e::JOYSTICK;
+		joy_partner->is_partner = true;
+		device_config_map_ptr->addDeviceConfig(joy_partner);
+	}
 
 	// Iterate through each device defined in the YAML file
 	for(auto it = node["port_configuration"]["devices"].begin(); it != node["port_configuration"]["devices"].end(); it++){
@@ -134,12 +152,12 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 	output_file << "#include \"ghost_v5_interfaces/devices/device_config_map.hpp\"\n";
 	output_file << "#include \"ghost_v5_interfaces/devices/motor_device_interface.hpp\"\n";
 	output_file << "#include \"ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp\"\n";
+	output_file << "#include \"ghost_v5_interfaces/devices/joystick_device_interface.hpp\"\n";
 	output_file << "\n";
 	output_file << "// This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.\n";
 	output_file << "// It returns a raw pointer to a dynamically allocated object, so if you are poking around, please wrap in a smart pointer!\n";
 	output_file << "extern \"C\" ghost_v5_interfaces::devices::DeviceConfigMap* getRobotConfig(void) {\n";
 	output_file << "\tghost_v5_interfaces::devices::DeviceConfigMap* robot_config = new ghost_v5_interfaces::devices::DeviceConfigMap;\n";
-	output_file << "\trobot_config->use_secondary_joystick = " + BOOL_STRING_MAP.at(config_ptr->use_secondary_joystick) + ";\n";
 	output_file << "\n";
 
 	// Generate code from DeviceConfigMap
@@ -183,6 +201,18 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			output_file << "\t" + sensor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(config_ptr->reversed) + ";\n";
 			output_file << "\t" + sensor_name + "->" + "data_rate = " + std::to_string(config_ptr->data_rate) + ";\n";
 			output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
+			output_file << "\n";
+		}
+		else if(val->type == device_type_e::JOYSTICK){
+			auto config_ptr = val->as<const JoystickDeviceConfig>();
+			std::string joy_name = config_ptr->name;
+
+			output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceConfig> " + joy_name + " = std::make_shared<ghost_v5_interfaces::devices::JoystickDeviceConfig>();\n";
+			output_file << "\t" + joy_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+			output_file << "\t" + joy_name + "->" + "name = \"" + joy_name + "\";\n";
+			output_file << "\t" + joy_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::JOYSTICK;\n";
+			output_file << "\t" + joy_name + "->" + "is_partner = " + BOOL_STRING_MAP.at(config_ptr->is_partner) + ";\n";
+			output_file << "\trobot_config->addDeviceConfig(" + joy_name + ");\n";
 			output_file << "\n";
 		}
 		else if(val->type == device_type_e::INVALID){

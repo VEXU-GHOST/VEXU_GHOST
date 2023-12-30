@@ -24,123 +24,198 @@ class RobotHardwareInterface {
 public:
 	RobotHardwareInterface(std::shared_ptr<devices::DeviceConfigMap> robot_config_ptr, devices::hardware_type_e hardware_type);
 
+	/**
+	 * @brief Checks equality without evaluating hardware_type (for testing if data is reconstructed correctly after transport).
+	 */
+	bool isDataEqual(const RobotHardwareInterface& rhs) const;
+
+	/**
+	 * @brief Compares all parameters for equality
+	 */
+	bool operator==(const RobotHardwareInterface& rhs) const;
+
+	//////////////////////////////////////////////////////////////
+	///////////////////// Competition Status /////////////////////
+	//////////////////////////////////////////////////////////////
+
+	/**
+	 * @brief Returns if robot is currently disabled via field control.
+	 */
 	bool isDisabled() const {
 		return is_disabled_;
 	}
 
+	/**
+	 * @brief Returns if robot is currently in autonomous mode via field control.
+	 */
 	bool isAutonomous() const {
 		return is_autonomous_;
 	}
 
+	/**
+	 * @brief Returns if robot is currently connected to field control.
+	 */
 	bool isConnected() const {
 		return is_connected_;
 	}
 
-	int getMsgID() const {
-		return msg_id_;
-	}
-
+	/**
+	 * @brief Set disabled status from V5 Brain.
+	 * This is only used to report current status from the V5 Brain to the coprocessor,
+	 * it won't change anything on the V5 Brain.
+	 *
+	 * @param is_disabled
+	 */
 	void setDisabledStatus(bool is_disabled){
 		is_disabled_ = is_disabled;
 	}
 
+	/**
+	 * @brief Set autonomous status from V5 Brain.
+	 * This is only used to report current status from the V5 Brain to the coprocessor,
+	 * it won't change anything on the V5 Brain.
+	 *
+	 * @param is_autonomous
+	 */
 	void setAutonomousStatus(bool is_autonomous){
 		is_autonomous_ = is_autonomous;
 	}
 
+	/**
+	 * @brief Set connected status from V5 Brain.
+	 * This is only used to report current status from the V5 Brain to the coprocessor,
+	 * it won't change anything on the V5 Brain.
+	 *
+	 * @param is_connected
+	 */
 	void setConnectedStatus(bool is_connected){
 		is_connected_ = is_connected;
 	}
 
-	void setMsgID(int msg_id){
-		msg_id_ = msg_id;
-	}
-
-	bool usesSecondaryJoystick() const {
-		return use_secondary_joystick_;
-	}
+	//////////////////////////////////////////////////////////////
+	////////////////////// Motor Interfaces //////////////////////
+	//////////////////////////////////////////////////////////////
 
 	/**
-	 * @brief Returns the device pair (config and data) for a given device.
-	 * This is a deep-copy, changing device data should go through the setDeviceDate interface.
+	 * @brief Returns motor position in the configured encoder units
 	 *
-	 * @param name
-	 * @return devices::DevicePair
+	 * @param motor_name
+	 * @return float
 	 */
-	devices::DevicePair getDevicePair(const std::string& name) const;
+	float getMotorPosition(const std::string& motor_name);
 
 	/**
-	 * @brief Returns a pointer to a const Config for a given Device by name.
-	 * The config is declared const and thus read-only.
+	 * @brief Returns motor velocity in RPM
 	 *
-	 * @param name
-	 * @return std::shared_ptr<const devices::DeviceConfig>
+	 * @param motor_name
+	 * @return float
 	 */
-	std::shared_ptr<const devices::DeviceConfig> getDeviceConfig(const std::string& name) const;
+	float getMotorVelocityRPM(const std::string& motor_name);
 
 	/**
-	 * @brief Returns a pointer to the Data for a given Device by name.
-	 * This is a deep-copy, changing device data should go through the setDeviceDate interface.
+	 * @brief Sets motor position in the configured encoder units.
 	 *
-	 * @param name
-	 * @return std::shared_ptr<devices::DeviceData>
+	 * @param motor_name
+	 * @param position_cmd
 	 */
-	std::shared_ptr<devices::DeviceData> getDeviceData(const std::string& name) const;
+	void setMotorPositionCommand(const std::string& motor_name, float position_cmd);
 
 	/**
-	 * @brief Returns a pointer to the Data for a given Device by port number.
-	 * This is a deep-copy, changing device data should go through the setDeviceDate interface.
+	 * @brief Set the motor velocity in RPM.
 	 *
-	 * @param port
-	 * @return std::shared_ptr<devices::DeviceData>
+	 * @param motor_name
+	 * @param velocity_cmd
 	 */
-	std::shared_ptr<devices::DeviceData> getDeviceData(int port) const;
+	void setMotorVelocityCommandRPM(const std::string& motor_name, float velocity_cmd);
 
 	/**
-	 * @brief Updates a given Device with new Data.
-	 * Throws if the device does not exist.
+	 * @brief Set the motor voltage as a percent of the maximum voltage (i.e. -1.0 -> 1.0).
 	 *
-	 * @param device_data
+	 * @param motor_name
+	 * @param voltage_cmd
 	 */
-	void setDeviceData(std::shared_ptr<devices::DeviceData> device_data);
+	void setMotorVoltageCommandPercent(const std::string& motor_name, float voltage_cmd);
 
 	/**
-	 * @brief Updates a given Device with new Data given device name.
-	 * Throws if the device does not exist.
+	 * @brief Set the motor torque command as a percent of the maximum torque (i.e. -1.0 -> 1.0).
+	 * There is no real torque feedback/sensing in a V5 Motor, so this is based on open-loop DC Motor Models
+	 * and may be innacurate. Not recommended for competition use.
 	 *
-	 * @param name
-	 * @param device_data
+	 * @param motor_name
+	 * @param torque_cmd
 	 */
-	void setDeviceData(std::string name, std::shared_ptr<devices::DeviceData> device_data);
+	void setMotorTorqueCommandPercent(const std::string& motor_name, float torque_cmd);
 
 	/**
-	 * @brief Returns a pointer to the Data for the primary joystick.
-	 * This is a deep-copy, changing joystick data should go through the setPrimaryJoystickData interface.
+	 * @brief Updates controller setpoints. Requires SetMotorControlMode to enable different controller terms.
 	 *
-	 * @return std::shared_ptr<devices::JoystickDeviceData>
+	 * @param motor_name
+	 * @param position_cmd 	Configured encoder units
+	 * @param velocity_cmd	RPM
+	 * @param voltage_cmd 	Percent (-1.0 -> 1.0)
+	 * @param torque_cmd 	Percent (-1.0 -> 1.0)
 	 */
-	std::shared_ptr<devices::JoystickDeviceData> getPrimaryJoystickData() const;
+	void setMotorCommand(const std::string& motor_name,
+	                     float position_cmd,
+	                     float velocity_cmd,
+	                     float voltage_cmd,
+	                     float torque_cmd = 0.0);
 
 	/**
-	 * @brief Returns a pointer to the data for the secondary joystick.
+	 * @brief Updates which control terms are active. Used along with setMotorCommand.
 	 *
-	 * @return std::shared_ptr<devices::JoystickDeviceData>
+	 * @param motor_name
+	 * @param position_control
+	 * @param velocity_control
+	 * @param voltage_control
+	 * @param torque_control
 	 */
-	std::shared_ptr<devices::JoystickDeviceData> getSecondaryJoystickData() const;
+	void setMotorControlMode(const std::string& motor_name,
+	                         bool position_control,
+	                         bool velocity_control,
+	                         bool voltage_control,
+	                         bool torque_control);
 
 	/**
-	 * @brief Update the primary joystick data.
+	 * @brief Set the maximum motor current limit (clamped at 2500mA).
+	 * Current limits will default to zero to optimize power allocation. This needs to be set in order to use a motor!
 	 *
-	 * @param data_ptr
+	 * @param motor_name
+	 * @param current_limit_ma
 	 */
-	void setPrimaryJoystickData(std::shared_ptr<devices::JoystickDeviceData>& data_ptr);
+	void setMotorCurrentLimitMilliAmps(const std::string& motor_name, int32_t current_limit_ma);
+
+	//////////////////////////////////////////////////////////////
+	///////////////// Rotation Sensor Interfaces /////////////////
+	//////////////////////////////////////////////////////////////
 
 	/**
-	 * @brief Update the secondary joystick data.
+	 * @brief Returns angle of Rotation Sensor in degrees
 	 *
-	 * @param data_ptr
+	 * @param sensor_name
+	 * @return float
 	 */
-	void setSecondaryJoystickData(std::shared_ptr<devices::JoystickDeviceData>& data_ptr);
+	float getRotationSensorAngleDegrees(const std::string& sensor_name);
+
+	/**
+	 * @brief Returns position of Rotation Sensor in degrees
+	 *
+	 * @param sensor_name
+	 * @return float
+	 */
+	float getRotationSensorPositionDegrees(const std::string& sensor_name);
+
+	/**
+	 * @brief Returns velocity of Rotation Sensor in RPM
+	 *
+	 * @param sensor_name
+	 * @return float
+	 */
+	float getRotationSensorVelocityRPM(const std::string& sensor_name);
+
+	//////////////////////////////////////////////////////////////
+	///////////////////////// Digital IO /////////////////////////
+	//////////////////////////////////////////////////////////////
 
 	/**
 	 * @brief Update the digital io ports.
@@ -155,6 +230,10 @@ public:
 	 * @return const std::vector<bool>&
 	 */
 	const std::vector<bool>& getDigitalIO() const;
+
+	/////////////////////////////////////////////////////////
+	/////////////////// Device Interfaces ///////////////////
+	/////////////////////////////////////////////////////////
 
 	/**
 	 * @brief Returns iterator to first device name (ordered by port number).
@@ -172,6 +251,89 @@ public:
 	 */
 	std::vector<std::string>::const_iterator end() const {
 		return device_names_ordered_by_port_.end();
+	}
+
+	/**
+	 * @brief Returns the device pair (config and data) for a given device.
+	 * This is a deep-copy, changing device data should go through the setDeviceData interface.
+	 *
+	 * Throws a runtime error if the device is not found.
+	 *
+	 * @param device_name
+	 * @return devices::DevicePair
+	 */
+	devices::DevicePair getDevicePair(const std::string& device_name) const;
+
+	/**
+	 * @brief Updates a given Device with new Data given device name.
+	 *
+	 * Throws a runtime error if the device is not found.
+	 *
+	 * @param device_name
+	 * @param device_data
+	 */
+	void setDeviceData(const std::string& device_name, std::shared_ptr<devices::DeviceData> device_data);
+
+	/**
+	 * @brief Returns a pointer to a Device's configuration given the device name.
+	 * Device Configurations are declared const and thus are read-only.
+	 *
+	 * Throws a runtime error if the device is not found.
+	 *
+	 * Throws a runtime error if the device cannot be cast to the template type.
+	 * 		Example: getDeviceConfig<MotorDeviceConfig>("my_rotation_sensor")
+	 *
+	 * @tparam T derived class type
+	 * @param device_name
+	 * @return std::shared_ptr<const T>
+	 */
+	template <typename T>
+	std::shared_ptr<const T> getDeviceConfig(const std::string& device_name) const {
+		static_assert(std::is_base_of<devices::DeviceConfig, T>::value, "Template parameter is not derived from DeviceConfig! Did you mean getDeviceData?");
+		throwOnNonexistentDevice(device_name);
+		return device_pair_name_map_.at(device_name).config_ptr->as<T>();
+	}
+
+	/**
+	 * @brief Returns a pointer to a copy of a Device's data given the device name.
+	 * This is a deep-copy, changing device data should go through the setDeviceData interface.
+	 *
+	 * Throws a runtime error if the device is not found.
+	 *
+	 * Throws a runtime error if the device cannot be cast to the template type.
+	 * 		Example: getDeviceData<MotorDeviceData>("my_rotation_sensor")
+	 *
+	 * @tparam T derived class type
+	 * @param device_name
+	 * @return std::shared_ptr<const T>
+	 */
+	template <typename T>
+	std::shared_ptr<T> getDeviceData(const std::string& device_name) const {
+		static_assert(std::is_base_of<devices::DeviceData, T>::value, "Template parameter is not derived from DeviceData! Did you mean getDeviceConfig?");
+		throwOnNonexistentDevice(device_name);
+		return device_pair_name_map_.at(device_name).data_ptr->clone()->as<T>();
+	}
+
+	/////////////////////////////////////////////////////////////
+	/////////////////////// Serialization ///////////////////////
+	/////////////////////////////////////////////////////////////
+
+	/**
+	 * @brief returns Msg ID of most recent update
+	 *
+	 * @return int
+	 */
+	int getMsgID() const {
+		return msg_id_;
+	}
+
+	/**
+	 * @brief Set Msg ID of most recent update
+	 *
+	 * @param msg_id
+	 */
+	void setMsgID(int msg_id){
+		msg_id_ = msg_id;
 	}
 
 	/**
@@ -195,6 +357,8 @@ public:
 	/**
 	 * @brief Converts all device data into a single byte stream.
 	 *
+	 * Throws a runtime error if the msg buffer does not match the expected msg length.
+	 *
 	 * @return std::vector<unsigned char>
 	 */
 	std::vector<unsigned char> serialize() const;
@@ -202,19 +366,21 @@ public:
 	/**
 	 * @brief Updates all device date from a single byte stream.
 	 *
+	 * Throws a runtime error if the msg buffer does not match the expected msg length.
+	 *
+	 * Throws a runtime error if the hardware_type is unsupported.
+	 *
 	 * @param msg
 	 * @return int number of bytes processed
 	 */
 	int deserialize(const std::vector<unsigned char>& msg);
 
-	bool operator==(const RobotHardwareInterface& rhs) const;
-
 private:
 
-	void throwOnNonexistentDevice(const std::string& name) const;
+	void throwOnNonexistentDevice(const std::string& device_name) const;
 	devices::hardware_type_e hardware_type_;
 
-	// Competition Statues
+	// Competition Status
 	bool is_disabled_ = true;
 	bool is_autonomous_ = false;
 	bool is_connected_ = false;
@@ -230,15 +396,11 @@ private:
 	// Update Lock
 	mutable CROSSPLATFORM_MUTEX_T update_mutex_;
 
-	// Joystick Data
-	bool use_secondary_joystick_ = false;
-	std::shared_ptr<devices::JoystickDeviceData> primary_joystick_data_ptr_;
-	std::shared_ptr<devices::JoystickDeviceData> secondary_joystick_data_ptr_;
-
 	// Device Data
 	std::unordered_map<std::string, devices::DevicePair> device_pair_name_map_;
 	std::map<int, devices::DevicePair> device_pair_port_map_;
 	std::vector<std::string> device_names_ordered_by_port_;
+	std::map<int, std::string> port_to_device_name_map_;
 	std::shared_ptr<devices::DeviceConfigMap> robot_config_ptr_;
 };
 

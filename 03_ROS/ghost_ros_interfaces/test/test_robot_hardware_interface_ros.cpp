@@ -41,7 +41,7 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpd
 	rhi_input_ptr_->setDisabledStatus(getRandomBool());
 	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
 	rhi_input_ptr_->setConnectedStatus(getRandomBool());
-	auto joy_data = getRandomJoystickData(false);
+	auto joy_data = getRandomJoystickData();
 	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
 
 	auto motor_data_ptr = getRandomMotorData(false);
@@ -78,7 +78,7 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 	rhi_input_ptr_->setDisabledStatus(getRandomBool());
 	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
 	rhi_input_ptr_->setConnectedStatus(getRandomBool());
-	auto joy_data = getRandomJoystickData(false);
+	auto joy_data = getRandomJoystickData();
 	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
 
 	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>();
@@ -121,7 +121,7 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 	rhi_input_ptr_->setDisabledStatus(getRandomBool());
 	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
 	rhi_input_ptr_->setConnectedStatus(getRandomBool());
-	auto joy_data = getRandomJoystickData(false);
+	auto joy_data = getRandomJoystickData();
 	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
 
 	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>();
