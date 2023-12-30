@@ -30,6 +30,29 @@ public:
 };
 
 /**
+ * @brief DeviceConfig is a pure virtual class, so we need a derived class to test DeviceConfigMap functionality.
+ */
+class TestDeviceConfig2 : public DeviceConfig {
+public:
+	bool c = false;
+
+	std::shared_ptr<DeviceBase> clone() const override {
+		return std::make_shared<TestDeviceConfig2>(*this);
+	}
+
+	bool operator==(const DeviceBase &rhs) const override {
+		const TestDeviceConfig2 *m_rhs = dynamic_cast<const TestDeviceConfig2 *>(&rhs);
+		if(m_rhs){
+			return (port == m_rhs->port) && (name == m_rhs->name) && (type == m_rhs->type) && (c == m_rhs->c);
+		}
+		else{
+			// Failed to cast base class, thus can't be equal.
+			return false;
+		}
+	}
+};
+
+/**
  * @brief Test equality operator
  */
 TEST(TestDeviceConfigInterfaces, testDeviceEqualityOperator){
@@ -44,6 +67,14 @@ TEST(TestDeviceConfigInterfaces, testDeviceEqualityOperator){
 TEST(TestDeviceConfigInterfaces, testDeviceBaseCastToDerived){
 	std::shared_ptr<DeviceBase> device = std::make_shared<TestDeviceConfig>();
 	EXPECT_NO_THROW(auto derived_ptr = device->as<TestDeviceConfig>());
+}
+
+/**
+ * @brief Test that the downcast helper will fail as if downcasting to the wrong type
+ */
+TEST(TestDeviceConfigInterfaces, testDeviceBaseCastToDerivedIncorrectDerivedType){
+	std::shared_ptr<DeviceBase> device = std::make_shared<TestDeviceConfig>();
+	EXPECT_THROW(auto derived_ptr = device->as<TestDeviceConfig2>(), std::runtime_error);
 }
 
 /**
