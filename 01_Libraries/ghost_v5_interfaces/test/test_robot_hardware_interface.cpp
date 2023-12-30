@@ -51,6 +51,39 @@ TEST_F(RobotHardwareInterfaceTestFixture, testThrowsOnNonExistentDevice){
 	EXPECT_THROW(auto config = hw_interface.getDeviceConfig<MotorDeviceConfig>("non_existent_motor"), std::runtime_error);
 }
 
+TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveCompetitionStatus){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default values
+	EXPECT_EQ(hw_interface.isDisabled(), true);
+	EXPECT_EQ(hw_interface.isAutonomous(), false);
+	EXPECT_EQ(hw_interface.isConnected(), false);
+
+	hw_interface.setDisabledStatus(false);
+	hw_interface.setAutonomousStatus(true);
+	hw_interface.setConnectedStatus(true);
+
+	EXPECT_EQ(hw_interface.isDisabled(), false);
+	EXPECT_EQ(hw_interface.isAutonomous(), true);
+	EXPECT_EQ(hw_interface.isConnected(), true);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveDigitalIO){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default values
+	EXPECT_EQ(hw_interface.getDigitalIO(), std::vector<bool>(8, false));
+
+	auto test_io = std::vector<bool>{
+		getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(),
+		getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool()
+	};
+
+	hw_interface.setDigitalIO(test_io);
+
+	EXPECT_EQ(hw_interface.getDigitalIO(), test_io);
+}
+
 TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 	auto motor_data_ptr = std::make_shared<MotorDeviceData>();
@@ -195,4 +228,72 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	EXPECT_TRUE(hw_interface.isDataEqual(hw_interface_copy));
 }
 
-// TEST_F(RobotHardwareInterfaceTestFixture, test)
+TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateGetters){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::V5_BRAIN);
+
+	// Default
+	EXPECT_EQ(hw_interface.getMotorPosition("left_drive_motor"), 0);
+	EXPECT_EQ(hw_interface.getMotorVelocityRPM("left_drive_motor"), 0);
+
+	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	motor_data_ptr->curr_position = getRandomFloat();
+	motor_data_ptr->curr_velocity_rpm = getRandomFloat();
+	hw_interface.setDeviceData(motor_data_ptr);
+
+	EXPECT_EQ(hw_interface.getMotorPosition("left_drive_motor"), motor_data_ptr->curr_position);
+	EXPECT_EQ(hw_interface.getMotorVelocityRPM("left_drive_motor"), motor_data_ptr->curr_velocity_rpm);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testRotationSensorStateGetters){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::V5_BRAIN);
+
+	// Default
+	EXPECT_EQ(hw_interface.getRotationSensorAngleDegrees("rotation_sensor_1"), 0);
+	EXPECT_EQ(hw_interface.getRotationSensorPositionDegrees("rotation_sensor_1"), 0);
+	EXPECT_EQ(hw_interface.getRotationSensorVelocityRPM("rotation_sensor_1"), 0);
+
+	auto sensor_data_ptr = hw_interface.getDeviceData<RotationSensorDeviceData>("rotation_sensor_1");
+	sensor_data_ptr->angle = getRandomFloat();
+	sensor_data_ptr->position = getRandomFloat();
+	sensor_data_ptr->velocity = getRandomFloat();
+	hw_interface.setDeviceData(sensor_data_ptr);
+
+	EXPECT_EQ(hw_interface.getRotationSensorAngleDegrees("rotation_sensor_1"), sensor_data_ptr->angle);
+	EXPECT_EQ(hw_interface.getRotationSensorPositionDegrees("rotation_sensor_1"), sensor_data_ptr->position);
+	EXPECT_EQ(hw_interface.getRotationSensorVelocityRPM("rotation_sensor_1"), sensor_data_ptr->velocity);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateSetters){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::V5_BRAIN);
+
+	// Default
+	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr->position_command, 0);
+	EXPECT_EQ(motor_data_ptr->velocity_command, 0);
+	EXPECT_EQ(motor_data_ptr->voltage_command, 0);
+	EXPECT_EQ(motor_data_ptr->torque_command, 0);
+
+	auto pos_cmd = getRandomFloat();
+	auto vel_cmd = getRandomFloat();
+	auto vlt_cmd = getRandomFloat();
+	auto trq_cmd = getRandomFloat();
+
+	hw_interface.setMotorPositionCommand("left_drive_motor", pos_cmd);
+	hw_interface.setMotorVelocityCommandRPM("left_drive_motor", vel_cmd);
+	hw_interface.setMotorVoltageCommandPercent("left_drive_motor", vlt_cmd);
+	hw_interface.setMotorTorqueCommandPercent("left_drive_motor", trq_cmd);
+
+	// Original ptr did not change, it was copied
+	EXPECT_EQ(motor_data_ptr->position_command, 0);
+	EXPECT_EQ(motor_data_ptr->velocity_command, 0);
+	EXPECT_EQ(motor_data_ptr->voltage_command, 0);
+	EXPECT_EQ(motor_data_ptr->torque_command, 0);
+
+	// New data has been updated
+	auto motor_data_ptr_updated = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+
+	EXPECT_EQ(motor_data_ptr_updated->position_command, pos_cmd);
+	EXPECT_EQ(motor_data_ptr_updated->velocity_command, vel_cmd);
+	EXPECT_EQ(motor_data_ptr_updated->voltage_command, vlt_cmd);
+	EXPECT_EQ(motor_data_ptr_updated->torque_command, trq_cmd);
+}

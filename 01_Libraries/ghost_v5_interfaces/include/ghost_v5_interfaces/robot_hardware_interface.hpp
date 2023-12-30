@@ -389,7 +389,7 @@ public:
 	int deserialize(const std::vector<unsigned char>& msg);
 
 private:
-
+	void setDeviceDataNoLock(std::shared_ptr<devices::DeviceData> device_data);
 	void throwOnNonexistentDevice(const std::string& device_name) const;
 	devices::hardware_type_e hardware_type_;
 
