@@ -12,9 +12,11 @@ find_package(Ghost CONFIG REQUIRED)
 set(DEPENDENCIES
   ament_cmake
   ament_cmake_gtest
-  rclcpp
   ghost_v5_interfaces
   ghost_msgs
+  ghost_serial
+  ghost_util
+  rclcpp
   yaml-cpp
   )
 
@@ -31,9 +33,9 @@ set(INCLUDE
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
-###################
-#### Libraries ####
-###################
+############################
+#### Msg Helper Library ####
+############################
 add_library(msg_helpers SHARED
 src/msg_helpers/msg_helpers.cpp
 )
@@ -53,6 +55,29 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
+
+############################
+#### Jetson Serial Node ####
+############################
+add_executable(jetson_v5_serial_node
+  src/serial/jetson_v5_serial_node.cpp
+)
+ament_target_dependencies(jetson_v5_serial_node
+  ${DEPENDENCIES}
+)
+target_link_libraries(jetson_v5_serial_node
+  ghost_serial::jetson_serial_base
+  ghost_serial::cobs
+  msg_helpers
+  yaml-cpp
+)
+target_include_directories(jetson_v5_serial_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  jetson_v5_serial_node
+  DESTINATION lib/${PROJECT_NAME})
 
 #################
 #### Testing ####

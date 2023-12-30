@@ -38,7 +38,7 @@ inline bool getBit(unsigned char byte, int bit_num){
 	return byte & BITMASK_ARR_32BIT[bit_num];
 }
 
-inline std::vector<bool> unpackByte(unsigned char& val){
+inline std::vector<bool> unpackByte(unsigned char val){
 	std::vector<bool> bit_arr;
 	bit_arr.resize(8);
 	for(int i = 0; i < 8; i++){

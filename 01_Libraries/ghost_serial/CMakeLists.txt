@@ -8,33 +8,19 @@ find_package(Ghost CONFIG REQUIRED)
 ######################
 #### Dependencies ####
 ######################
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_gtest REQUIRED)
+# Set Package Dependencies
+set(DEPENDENCIES
+  ament_cmake
+  ament_cmake_gtest
+  ghost_msgs
+  )
 
-find_package(rclcpp REQUIRED)
-find_package(ghost_msgs REQUIRED)
+foreach(pkg ${DEPENDENCIES})
+  find_package(${pkg} REQUIRED)
+endforeach()
+ament_export_dependencies(${DEPENDENCIES})
 
 include_directories(include)
-
-####################
-### Serial Utils ###
-####################
-add_library(serial_utils SHARED
-  src/serial_utils/bitmasks.cpp
-)
-target_include_directories(serial_utils
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(serial_utils HAS_LIBRARY_TARGET)
-install(
-  TARGETS serial_utils
-  EXPORT serial_utils
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
 
 ####################
 ### COBS Library ###
@@ -87,7 +73,6 @@ add_library(jetson_serial_base SHARED
   src/base_interfaces/jetson_serial_base.cpp
 )
 target_link_libraries(jetson_serial_base
-  serial_utils  
   cobs
   msg_parser
 )

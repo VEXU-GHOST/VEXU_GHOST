@@ -79,6 +79,18 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 	return device_config_map_ptr;
 }
 
+std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAMLFile(std::string filepath, bool verbose){
+	YAML::Node config_yaml;
+	try{
+		config_yaml = YAML::LoadFile(filepath);
+	}
+	catch(...){
+		throw std::runtime_error("[loadRobotConfigFromYAMLFile] Error: YAML file " + filepath + " not found!");
+	}
+	return loadRobotConfigFromYAML(config_yaml, verbose);
+}
+
+
 const std::unordered_map<ghost_encoder_unit, std::string> MOTOR_ENCODER_UNIT_STRING_MAP{
 	{ghost_encoder_unit::ENCODER_DEGREES,   "ghost_v5_interfaces::devices::ghost_encoder_unit::ENCODER_DEGREES"},
 	{ghost_encoder_unit::ENCODER_ROTATIONS, "ghost_v5_interfaces::devices::ghost_encoder_unit::ENCODER_ROTATIONS"},

@@ -4,12 +4,14 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include "ghost_msgs/msg/v5_actuator_command.hpp"
-#include "ghost_msgs/msg/v5_sensor_update.hpp"
+#include <ghost_msgs/msg/v5_actuator_command.hpp>
+#include <ghost_msgs/msg/v5_sensor_update.hpp>
+#include <ghost_serial/base_interfaces/jetson_serial_base.hpp>
 
-#include "ghost_serial/base_interfaces/jetson_serial_base.hpp"
+#include <ghost_v5_interfaces/devices/device_config_map.hpp>
+#include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 
-namespace ghost_serial_ros {
+namespace ghost_ros_interfaces {
 
 class JetsonV5SerialNode : public rclcpp::Node {
 public:
@@ -21,7 +23,7 @@ public:
 private:
 	// Process incoming/outgoing msgs w/ ROS
 	void actuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
-	void publishV5SensorUpdate(unsigned char buffer[]);
+	void publishV5SensorUpdate(const std::vector<unsigned char>& buffer);
 
 	// Background thread for processing serial data and maintaining serial connection
 	void serialLoop();
@@ -39,7 +41,7 @@ private:
 
 	// ROS Topics
 	rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
-	rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr state_update_pub_;
+	rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
 
 	// Serial Interface
 	std::shared_ptr<ghost_serial::JetsonSerialBase> serial_base_interface_;
@@ -51,9 +53,12 @@ private:
 	std::mutex serial_reset_mutex_;
 	bool using_backup_port_;
 
+	// Robot Hardware Interface
+	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
+
 	// Msg Config
-	int sensor_update_msg_len_;
 	int actuator_command_msg_len_;
+	int sensor_update_msg_len_;
 };
 
-} // namespace ghost_serial_ros
+} // namespace ghost_ros_interfaces

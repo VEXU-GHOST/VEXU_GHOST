@@ -25,6 +25,11 @@ then
     colcon build --packages-skip ghost_sim --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 fi
 
+RETURN=$?
+if [ $RETURN -ne 0 ]; then
+    exit 1;
+fi
+
 source install/setup.bash
 
 # Process URDFs from Xacro and add to Share

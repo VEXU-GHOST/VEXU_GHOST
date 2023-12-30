@@ -56,7 +56,7 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpd
 
 	// Convert to ROS Msg
 	toROSMsg(*rhi_input_ptr_, *msg);
-	fromROSMsg(*msg, *rhi_output_ptr_);
+	fromROSMsg(*rhi_output_ptr_, *msg);
 
 	EXPECT_EQ(*rhi_input_ptr_, *rhi_output_ptr_);
 }
@@ -69,7 +69,7 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceActuatorC
 
 	// Convert to ROS Msg
 	toROSMsg(*rhi_input_ptr_, *msg);
-	fromROSMsg(*msg, *rhi_output_ptr_);
+	fromROSMsg(*rhi_output_ptr_, *msg);
 
 	EXPECT_EQ(*rhi_input_ptr_, *rhi_output_ptr_);
 }
@@ -111,8 +111,8 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 	// Convert to ROS Msg
 	toROSMsg(*rhi_input_ptr_, *msg_sensor_update);
 	toROSMsg(*rhi_input_ptr_, *msg_actuator_command);
-	fromROSMsg(*msg_sensor_update, *rhi_output_ptr_);
-	fromROSMsg(*msg_actuator_command, *rhi_output_ptr_);
+	fromROSMsg(*rhi_output_ptr_, *msg_sensor_update);
+	fromROSMsg(*rhi_output_ptr_, *msg_actuator_command);
 
 	EXPECT_EQ(*rhi_input_ptr_, *rhi_output_ptr_);
 }
@@ -154,8 +154,8 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 	// Convert to ROS Msg
 	toROSMsg(*rhi_input_ptr_, *msg_actuator_command);
 	toROSMsg(*rhi_input_ptr_, *msg_sensor_update);
-	fromROSMsg(*msg_actuator_command, *rhi_output_ptr_);
-	fromROSMsg(*msg_sensor_update, *rhi_output_ptr_);
+	fromROSMsg(*rhi_output_ptr_, *msg_actuator_command);
+	fromROSMsg(*rhi_output_ptr_, *msg_sensor_update);
 
 	EXPECT_EQ(*rhi_input_ptr_, *rhi_output_ptr_);
 }

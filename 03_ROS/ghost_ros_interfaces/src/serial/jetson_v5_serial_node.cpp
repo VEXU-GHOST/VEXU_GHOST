@@ -1,10 +1,16 @@
-#include "ghost_common/v5_robot_config_defs.hpp"
-#include "ghost_serial/serial_utils/byte_utils.hpp"
-#include "ghost_serial_ros/jetson_v5_serial_node.hpp"
+#include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
+#include <ghost_ros_interfaces/serial/jetson_v5_serial_node.hpp>
+#include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
+
+using ghost_ros_interfaces::msg_helpers::fromROSMsg;
+using ghost_ros_interfaces::msg_helpers::toROSMsg;
+using ghost_v5_interfaces::devices::hardware_type_e;
+using ghost_v5_interfaces::RobotHardwareInterface;
+using ghost_v5_interfaces::util::loadRobotConfigFromYAMLFile;
+using std::placeholders::_1;
 
 using namespace std::literals::chrono_literals;
-using std::placeholders::_1;
-namespace ghost_serial_ros {
+namespace ghost_ros_interfaces {
 
 JetsonV5SerialNode::JetsonV5SerialNode() :
 	Node("ghost_serial_node"),
@@ -29,12 +35,18 @@ JetsonV5SerialNode::JetsonV5SerialNode() :
 	declare_parameter("backup_port_name", "/dev/ttyACM2");
 	backup_port_name_ = get_parameter("backup_port_name").as_string();
 
+	declare_parameter("robot_config_yaml_path", "");
+	std::string robot_config_yaml_path = get_parameter("robot_config_yaml_path").as_string();
+
+	// Load Robot Configuration
+	auto device_config_map = loadRobotConfigFromYAMLFile(std::string(getenv("HOME")) + robot_config_yaml_path);
+	robot_hardware_interface_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map, hardware_type_e::COPROCESSOR);
+	actuator_command_msg_len_ = robot_hardware_interface_ptr_->getActuatorCommandMsgLength();
+	sensor_update_msg_len_ = robot_hardware_interface_ptr_->getSensorUpdateMsgLength();
+
+	// Debug Info
 	RCLCPP_DEBUG(get_logger(), "Port Name: %s", port_name_.c_str());
 	RCLCPP_DEBUG(get_logger(), "Backup Port Name: %s", backup_port_name_.c_str());
-
-	// Calculate Msg Sizes based on robot configuration
-	actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
-	sensor_update_msg_len_ = ghost_v5_config::get_sensor_update_msg_len();
 
 	int incoming_packet_len = sensor_update_msg_len_ +
 	                          use_checksum_ +
@@ -54,7 +66,7 @@ JetsonV5SerialNode::JetsonV5SerialNode() :
 		verbose_);
 
 	// Sensor Update Msg Publisher
-	state_update_pub_ = create_publisher<ghost_msgs::msg::V5SensorUpdate>("v5/state_update", 10);
+	sensor_update_pub_ = create_publisher<ghost_msgs::msg::V5SensorUpdate>("v5/sensor_update", 10);
 
 	// Actuator Command Msg Subscriber
 	actuator_command_sub_ = create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
@@ -127,7 +139,7 @@ void JetsonV5SerialNode::serialLoop(){
 				if(msg_found){
 					RCLCPP_DEBUG(get_logger(), "Received new message over serial");
 					last_msg_time_ = std::chrono::system_clock::now();
-					publishV5SensorUpdate(sensor_update_msg_.data());
+					publishV5SensorUpdate(sensor_update_msg_);
 				}
 			}
 			catch(std::exception &e){
@@ -151,176 +163,37 @@ void JetsonV5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::V5Actuat
 		return;
 	}
 
-	// Pack into single msg
-	int buffer_8bit_index = 0;
-	unsigned char msg_buffer[actuator_command_msg_len_] = {
-		0,
-	};
+	fromROSMsg(*robot_hardware_interface_ptr_, *msg);
 
-	// Assign motor commands
-	for(const auto &[motor_name, motor_config] : ghost_v5_config::motor_config_map){
-		auto motor_id = motor_config.port;
-		memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].current_limit), 4);
-		buffer_8bit_index += 4;
-		memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_position), 4);
-		buffer_8bit_index += 4;
-		memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_velocity), 4);
-		buffer_8bit_index += 4;
-		memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_voltage), 4);
-		buffer_8bit_index += 4;
-		memcpy(msg_buffer + buffer_8bit_index, &(msg->motor_commands[motor_id].desired_torque), 4);
-		buffer_8bit_index += 4;
+	auto msg_buffer = robot_hardware_interface_ptr_->serialize();
 
-		// Pack actuator flags into one byte
-		uint8_t actuator_flags_byte = 0;
-		actuator_flags_byte += msg->motor_commands[motor_id].position_control;
-		actuator_flags_byte <<= 1;
-		actuator_flags_byte += msg->motor_commands[motor_id].velocity_control;
-		actuator_flags_byte <<= 1;
-		actuator_flags_byte += msg->motor_commands[motor_id].voltage_control;
-		actuator_flags_byte <<= 1;
-		actuator_flags_byte += msg->motor_commands[motor_id].torque_control;
-
-		// Copy to msg buffer
-		memcpy(msg_buffer + buffer_8bit_index, &actuator_flags_byte, 1);
-		buffer_8bit_index++;
-	}
-
-	// Msg ID
-	memcpy(msg_buffer + buffer_8bit_index, &(msg->msg_id), 4);
-	buffer_8bit_index += 4;
-
-	// Digital Outputs
-	uint8_t digital_out_byte = 0;
-	for(int i = 0; i < 7; i++){
-		digital_out_byte += msg->digital_port_vector[i];
-		digital_out_byte <<= 1;
-	}
-	digital_out_byte += msg->digital_port_vector[7];
-	memcpy(msg_buffer + buffer_8bit_index, &digital_out_byte, 1);
-
-	serial_base_interface_->writeMsgToSerial(msg_buffer, actuator_command_msg_len_);
+	serial_base_interface_->writeMsgToSerial(msg_buffer.data(), actuator_command_msg_len_);
 }
 
-void JetsonV5SerialNode::publishV5SensorUpdate(unsigned char buffer[]){
+void JetsonV5SerialNode::publishV5SensorUpdate(const std::vector<unsigned char>& buffer){
 	RCLCPP_DEBUG(get_logger(), "Publishing Sensor Update");
 
+	// Update hardware interface
+	robot_hardware_interface_ptr_->deserialize(buffer);
+
+	// Initialize msg and set time
+	ghost_msgs::msg::V5SensorUpdate sensor_update_msg{};
 	auto curr_ros_time = get_clock()->now();
-	auto state_update_msg = ghost_msgs::msg::V5SensorUpdate{};
-	state_update_msg.header.stamp = curr_ros_time - rclcpp::Duration(7.36ms);
+	sensor_update_msg.header.stamp = curr_ros_time;
 
-	// Copy sensor device data to ros msg
-	int buffer_index = 0;
-	for(const auto & [motor_name, motor_config] : ghost_v5_config::motor_config_map){
-		auto motor_id = motor_config.port;
-		// Set Device Name from Config Enum ID
-		state_update_msg.encoders[motor_id].device_name = motor_name;
-		state_update_msg.encoders[motor_id].device_id = motor_id;
-
-		// Copy encoder angle
-		float position;
-		memcpy(&position, buffer + 4 * (buffer_index++), 4);
-		state_update_msg.encoders[motor_id].position_degrees = position;
-
-		// Copy encoder velocity
-		float velocity;
-		memcpy(&velocity, buffer + 4 * (buffer_index++), 4);
-		state_update_msg.encoders[motor_id].velocity_rpm = velocity;
-
-		// Copy motor voltage
-		float voltage;
-		memcpy(&voltage, buffer + 4 * (buffer_index++), 4);
-		state_update_msg.encoders[motor_id].voltage_mv = voltage;
-
-		// Copy motor current
-		float current;
-		memcpy(&current, buffer + 4 * (buffer_index++), 4);
-		state_update_msg.encoders[motor_id].current_ma = current;
-
-		// Copy motor temp
-		float temp;
-		memcpy(&temp, buffer + 4 * (buffer_index++), 4);
-		state_update_msg.encoders[motor_id].temp_c = temp;
-
-		// Copy motor power
-		float power;
-		memcpy(&power, buffer + 4 * (buffer_index++), 4);
-		state_update_msg.encoders[motor_id].power_w = power;
-	}
-
-	for(const auto &[sensor_name, sensor_config] : ghost_v5_config::encoder_config_map){
-		auto sensor_id = sensor_config.port;
-		// Set Device Name from Config Enum ID
-		state_update_msg.encoders[sensor_id].device_name = sensor_name;
-		state_update_msg.encoders[sensor_id].device_id = sensor_id;
-
-		// Copy encoder angle
-		float position;
-		memcpy(&position, buffer + 4 * (buffer_index++), 4);
-		state_update_msg.encoders[sensor_id].position_degrees = position;
-
-		// Copy encoder velocity
-		float velocity;
-		memcpy(&velocity, buffer + 4 * (buffer_index++), 4);
-		state_update_msg.encoders[sensor_id].velocity_rpm = velocity;
-	}
-
-	// Joystick Channels
-	memcpy(&(state_update_msg.joystick_left_x), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_left_y), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_right_x), buffer + 4 * (buffer_index++), 4);
-	memcpy(&(state_update_msg.joystick_right_y), buffer + 4 * (buffer_index++), 4);
-
-	// Buffers to store extracted V5 Msg
-	uint16_t digital_states = 0;
-	memcpy(&digital_states, buffer + 4 * buffer_index, 2);
-
-	// Joystick Buttons
-	state_update_msg.joystick_btn_a = digital_states & 0x8000;
-	state_update_msg.joystick_btn_b = digital_states & 0x4000;
-	state_update_msg.joystick_btn_x = digital_states & 0x2000;
-	state_update_msg.joystick_btn_y = digital_states & 0x1000;
-	state_update_msg.joystick_btn_up = digital_states & 0x0800;
-	state_update_msg.joystick_btn_down = digital_states & 0x0400;
-	state_update_msg.joystick_btn_left = digital_states & 0x0200;
-	state_update_msg.joystick_btn_right = digital_states & 0x0100;
-	state_update_msg.joystick_btn_l1 = digital_states & 0x0080;
-	state_update_msg.joystick_btn_l2 = digital_states & 0x0040;
-	state_update_msg.joystick_btn_r1 = digital_states & 0x0020;
-	state_update_msg.joystick_btn_r2 = digital_states & 0x0010;
-
-	// Competition state
-	state_update_msg.is_disabled = digital_states & 0x0008;
-	state_update_msg.is_autonomous = digital_states & 0x0004;
-	state_update_msg.is_connected = digital_states & 0x0002;
-
-	// Device Connected Vector
-	uint32_t device_connected_bit_vector = 0;
-	memcpy(&device_connected_bit_vector, buffer + 4 * buffer_index + 2, 4);
-
-	for(const auto &[motor_name, motor_config] : ghost_v5_config::motor_config_map){
-		state_update_msg.encoders[motor_config.port].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[motor_config.port];
-	}
-	for(const auto &[sensor_name, sensor_config] : ghost_v5_config::encoder_config_map){
-		state_update_msg.encoders[sensor_config.port].device_connected = device_connected_bit_vector & ghost_serial::BITMASK_ARR_32BIT[sensor_config.port];
-	}
-
-	// Update Msg Sequence ID
-	uint32_t msg_id;
-	memcpy(&msg_id, buffer + 4 * buffer_index + 2 + 4, 4);
-
-	state_update_msg.msg_id = msg_id;
+	// Convert updated RHI to msg
+	toROSMsg(*robot_hardware_interface_ptr_, sensor_update_msg);
 
 	// Publish update
-	state_update_pub_->publish(state_update_msg);
+	sensor_update_pub_->publish(sensor_update_msg);
 }
 
-} // namespace ghost_serial_ros
+} // namespace ghost_ros_interfaces
 
 int main(int argc, char *argv[]){
 	rclcpp::init(argc, argv);
 
-	auto serial_node = std::make_shared<ghost_serial_ros::JetsonV5SerialNode>();
+	auto serial_node = std::make_shared<ghost_ros_interfaces::JetsonV5SerialNode>();
 	rclcpp::spin(serial_node);
 	rclcpp::shutdown();
 	return 0;

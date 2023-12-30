@@ -71,6 +71,16 @@ const std::unordered_map<devices::device_type_e, std::string> DEVICE_TYPE_TO_STR
 std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool verbose = false);
 
 /**
+ * @brief Helper function which calls loadRobotConfigFromYAML after opening YAML from filepath.
+ *
+ * @param filepath
+ * @param verbose
+ * @return std::shared_ptr<devices::DeviceConfigMap>
+ */
+std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAMLFile(std::string filepath, bool verbose = false);
+
+
+/**
  * @brief Given a DeviceConfigMap, generate C++ source code which reconstructs the DeviceConfigMap at compile-time.
  * This allows for loading data on to the V5 Brain via a runtime configurable format (i.e. YAML) on the coprocessor.
  *

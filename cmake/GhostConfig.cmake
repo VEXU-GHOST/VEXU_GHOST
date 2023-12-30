@@ -22,6 +22,8 @@ if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0)
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 #################################
 ### Ghost Compilation Options ###
 #################################

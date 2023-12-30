@@ -21,7 +21,7 @@ TEST(TestDeviceInterfaces, testMotorStateMsg){
 
 	// Convert to ROS Msg
 	toROSMsg(*motor_input, *msg);
-	fromROSMsg(*msg, *motor_output);
+	fromROSMsg(*motor_output, *msg);
 
 	EXPECT_EQ(*motor_input, *motor_output);
 }
@@ -33,7 +33,7 @@ TEST(TestDeviceInterfaces, testMotorCommandMsg){
 
 	// Convert to ROS Msg
 	toROSMsg(*motor_input, *msg);
-	fromROSMsg(*msg, *motor_output);
+	fromROSMsg(*motor_output, *msg);
 
 	EXPECT_EQ(*motor_input, *motor_output);
 }
@@ -45,7 +45,7 @@ TEST(TestDeviceInterfaces, testMotorCommandDoesntSetStateData){
 
 	// Convert to ROS Msg
 	toROSMsg(*motor_input, *msg);
-	fromROSMsg(*msg, *motor_output);
+	fromROSMsg(*motor_output, *msg);
 
 	// Sensor data should not be propogated when given a command msg, thus, we expect these are not equal.
 	EXPECT_FALSE(*motor_input == *motor_output);
@@ -58,7 +58,7 @@ TEST(TestDeviceInterfaces, testMotorStateDoesntSetCommandData){
 
 	// Convert to ROS Msg
 	toROSMsg(*motor_input, *msg);
-	fromROSMsg(*msg, *motor_output);
+	fromROSMsg(*motor_output, *msg);
 
 	// Command data should not be propogated when given a state msg, thus, we expect these are not equal.
 	EXPECT_FALSE(*motor_input == *motor_output);
@@ -70,7 +70,7 @@ TEST(TestDeviceInterfaces, testRotationSensorStateMsg){
 	auto rotation_output = std::make_shared<RotationSensorDeviceData>();
 
 	toROSMsg(*rotation_input, *msg);
-	fromROSMsg(*msg, *rotation_output);
+	fromROSMsg(*rotation_output, *msg);
 
 	EXPECT_EQ(*rotation_input, *rotation_output);
 }
@@ -82,7 +82,7 @@ TEST(TestDeviceInterfaces, testJoystickStateMsg){
 
 	// Convert to ROS Msg
 	toROSMsg(*joy_input, *msg);
-	fromROSMsg(*msg, *joy_output);
+	fromROSMsg(*joy_output, *msg);
 
 	EXPECT_EQ(*joy_input, *joy_output);
 }

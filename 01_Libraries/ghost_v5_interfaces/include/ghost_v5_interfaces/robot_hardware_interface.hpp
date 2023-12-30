@@ -202,9 +202,10 @@ public:
 	/**
 	 * @brief Updates all device date from a single byte stream.
 	 *
-	 * @return std::vector<unsigned char>
+	 * @param msg
+	 * @return int number of bytes processed
 	 */
-	void deserialize(std::vector<unsigned char>& msg);
+	int deserialize(const std::vector<unsigned char>& msg);
 
 	bool operator==(const RobotHardwareInterface& rhs) const;
 

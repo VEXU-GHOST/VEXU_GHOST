@@ -80,10 +80,43 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const {
 		auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
 		serial_data.insert(serial_data.end(), device_serial_msg.begin(), device_serial_msg.end());
 	}
+
+	// Error Checking
+	int expected_size = 0;
+	if(hardware_type_ == hardware_type_e::V5_BRAIN){
+		expected_size = sensor_update_msg_length_;
+	}
+	else if(hardware_type_ == hardware_type_e::COPROCESSOR){
+		expected_size = actuator_command_msg_length_;
+	}
+
+	if(serial_data.size() != expected_size){
+		throw std::runtime_error("[RobotHardwareInterface::serialize()] Error: Serial Msg Length does not "
+		                         "match data from Robot Hardware Interface! Expected: " + std::to_string(expected_size) +
+		                         " Actual: " + std::to_string(serial_data.size()));
+	}
+
 	return serial_data;
 }
 
-void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
+int RobotHardwareInterface::deserialize(const std::vector<unsigned char>& msg){
+	// Error Checking
+	int expected_size = 0;
+
+	if(hardware_type_ == hardware_type_e::V5_BRAIN){
+		expected_size = actuator_command_msg_length_;
+	}
+	else if(hardware_type_ == hardware_type_e::COPROCESSOR){
+		expected_size = sensor_update_msg_length_;
+	}
+
+	if(msg.size() != expected_size){
+		throw std::runtime_error("[RobotHardwareInterface::deserialize] Error: Serial Msg Length does not "
+		                         "match data from Robot Hardware Interface! Expected: " + std::to_string(expected_size) +
+		                         " Actual: " + std::to_string(msg.size()));
+	}
+
+	// Deserialize
 	int byte_offset = 0;
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 
@@ -144,6 +177,7 @@ void RobotHardwareInterface::deserialize(std::vector<unsigned char>& msg){
 		val.data_ptr->deserialize(std::vector<unsigned char>(start_itr, start_itr + msg_len), hardware_type_);
 		byte_offset += msg_len;
 	}
+	return byte_offset;
 }
 
 bool RobotHardwareInterface::operator==(const RobotHardwareInterface& rhs) const {

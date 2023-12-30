@@ -90,6 +90,15 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLPrimaryJoystick){
 }
 
 /**
+ * @brief Test that we can load a DeviceConfigMap from YAML.
+ */
+TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLFile){
+	auto example_robot_config_file = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml";
+	auto device_config_ptr = loadRobotConfigFromYAMLFile(example_robot_config_file);
+	EXPECT_EQ(*device_config_ptr, *robot_config_ptr_);
+}
+
+/**
  * @brief Test that we can load a DeviceConfigMap from YAML with secondary joystick set to true
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLSecondaryJoystick){

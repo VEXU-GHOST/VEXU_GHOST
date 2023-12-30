@@ -19,7 +19,7 @@ void toROSMsg(const DeviceData& device_data, V5DeviceHeader& header_msg){
 	}
 }
 
-void fromROSMsg(const V5DeviceHeader& header_msg, DeviceData& device_data){
+void fromROSMsg(DeviceData& device_data, const V5DeviceHeader& header_msg){
 	device_data.name = header_msg.name;
 
 	try{
@@ -63,8 +63,8 @@ void toROSMsg(const JoystickDeviceData& joy_data, V5JoystickState& joy_msg){
  * @param joy_msg
  * @param joy_data
  */
-void fromROSMsg(const V5JoystickState& joy_msg, JoystickDeviceData& joy_data){
-	fromROSMsg(joy_msg.device_header, joy_data); // Set base attributes
+void fromROSMsg(JoystickDeviceData& joy_data, const V5JoystickState& joy_msg){
+	fromROSMsg(joy_data, joy_msg.device_header); // Set base attributes
 	joy_data.left_x = joy_msg.joystick_left_x;
 	joy_data.left_y = joy_msg.joystick_left_y;
 	joy_data.right_x = joy_msg.joystick_right_x;
@@ -95,8 +95,8 @@ void toROSMsg(const MotorDeviceData& motor_data, V5MotorState& motor_msg){
 	motor_msg.curr_temp_c = motor_data.curr_temp_c;
 }
 
-void fromROSMsg(const V5MotorState& motor_msg, MotorDeviceData& motor_data){
-	fromROSMsg(motor_msg.device_header, motor_data); // Set base attributes
+void fromROSMsg(MotorDeviceData& motor_data, const V5MotorState& motor_msg){
+	fromROSMsg(motor_data, motor_msg.device_header); // Set base attributes
 	motor_data.curr_position = motor_msg.curr_position;
 	motor_data.curr_velocity_rpm = motor_msg.curr_velocity;
 	motor_data.curr_torque_nm = motor_msg.curr_torque_nm;
@@ -120,8 +120,8 @@ void toROSMsg(const MotorDeviceData& motor_data, V5MotorCommand& motor_msg){
 	motor_msg.voltage_control = motor_data.voltage_control;
 }
 
-void fromROSMsg(const V5MotorCommand& motor_msg, MotorDeviceData& motor_data){
-	fromROSMsg(motor_msg.device_header, motor_data); // Set base attributes
+void fromROSMsg(MotorDeviceData& motor_data, const V5MotorCommand& motor_msg){
+	fromROSMsg(motor_data, motor_msg.device_header); // Set base attributes
 	motor_data.desired_position = motor_msg.desired_position;
 	motor_data.desired_velocity = motor_msg.desired_velocity;
 	motor_data.desired_torque = motor_msg.desired_torque;
@@ -140,8 +140,8 @@ void toROSMsg(const RotationSensorDeviceData& rotation_sensor_data, V5RotationSe
 	rotation_sensor_msg.velocity = rotation_sensor_data.velocity;
 }
 
-void fromROSMsg(const V5RotationSensorState& rotation_sensor_msg, RotationSensorDeviceData& rotation_sensor_data){
-	fromROSMsg(rotation_sensor_msg.device_header, rotation_sensor_data); // Set base attributes
+void fromROSMsg(RotationSensorDeviceData& rotation_sensor_data, const V5RotationSensorState& rotation_sensor_msg){
+	fromROSMsg(rotation_sensor_data, rotation_sensor_msg.device_header); // Set base attributes
 	rotation_sensor_data.angle = rotation_sensor_msg.angle;
 	rotation_sensor_data.position = rotation_sensor_msg.position;
 	rotation_sensor_data.velocity = rotation_sensor_msg.velocity;
@@ -178,13 +178,13 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5ActuatorComman
 	actuator_cmd_msg.digital_io = hardware_interface.getDigitalIO();
 }
 
-void fromROSMsg(const V5ActuatorCommand& actuator_cmd_msg, RobotHardwareInterface& hardware_interface){
+void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5ActuatorCommand& actuator_cmd_msg){
 	hardware_interface.setMsgID(actuator_cmd_msg.msg_id);
 
 	// Motors
 	for(const auto &motor_msg : actuator_cmd_msg.motor_commands){
 		auto motor_data_ptr = hardware_interface.getDeviceData(motor_msg.device_header.name)->as<MotorDeviceData>();
-		fromROSMsg(motor_msg, *motor_data_ptr);
+		fromROSMsg(*motor_data_ptr, motor_msg);
 		hardware_interface.setDeviceData(motor_data_ptr);
 	}
 
@@ -245,7 +245,7 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5SensorUpdate& 
 	sensor_update_msg.digital_io = hardware_interface.getDigitalIO();
 }
 
-void fromROSMsg(const V5SensorUpdate& sensor_update_msg, RobotHardwareInterface& hardware_interface){
+void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5SensorUpdate& sensor_update_msg){
 	hardware_interface.setMsgID(sensor_update_msg.msg_id);
 
 	// Competition Status
@@ -258,12 +258,12 @@ void fromROSMsg(const V5SensorUpdate& sensor_update_msg, RobotHardwareInterface&
 	for(const auto& joy_msg : sensor_update_msg.joysticks){
 		if(joy_msg.is_secondary_joystick){
 			auto joy_data = hardware_interface.getSecondaryJoystickData();
-			fromROSMsg(joy_msg, *joy_data);
+			fromROSMsg(*joy_data, joy_msg);
 			hardware_interface.setSecondaryJoystickData(joy_data);
 		}
 		else{
 			auto joy_data = hardware_interface.getPrimaryJoystickData();
-			fromROSMsg(joy_msg, *joy_data);
+			fromROSMsg(*joy_data, joy_msg);
 			hardware_interface.setPrimaryJoystickData(joy_data);
 		}
 	}
@@ -271,14 +271,14 @@ void fromROSMsg(const V5SensorUpdate& sensor_update_msg, RobotHardwareInterface&
 	// Motors
 	for(const auto &motor_msg : sensor_update_msg.motors){
 		auto motor_data_ptr = hardware_interface.getDeviceData(motor_msg.device_header.name)->as<MotorDeviceData>();
-		fromROSMsg(motor_msg, *motor_data_ptr);
+		fromROSMsg(*motor_data_ptr, motor_msg);
 		hardware_interface.setDeviceData(motor_data_ptr);
 	}
 
 	// Rotation Sensors
 	for(const auto &rotation_sensor_msg : sensor_update_msg.rotation_sensors){
 		auto rotation_sensor_data_ptr = hardware_interface.getDeviceData(rotation_sensor_msg.device_header.name)->as<RotationSensorDeviceData>();
-		fromROSMsg(rotation_sensor_msg, *rotation_sensor_data_ptr);
+		fromROSMsg(*rotation_sensor_data_ptr, rotation_sensor_msg);
 		hardware_interface.setDeviceData(rotation_sensor_data_ptr);
 	}
 
