@@ -11,6 +11,9 @@ namespace ghost_v5_interfaces {
 
 namespace devices {
 
+const std::string MAIN_JOYSTICK_NAME = "joy_master";
+const std::string PARTNER_JOYSTICK_NAME = "joy_partner";
+
 class JoystickDeviceConfig : public DeviceConfig {
 public:
 	bool is_partner = false;

@@ -253,6 +253,10 @@ public:
 		return device_names_ordered_by_port_.end();
 	}
 
+	bool contains(const std::string& device_name) const {
+		return device_pair_name_map_.count(device_name) != 0;
+	}
+
 	/**
 	 * @brief Returns the device pair (config and data) for a given device.
 	 * This is a deep-copy, changing device data should go through the setDeviceData interface.
@@ -273,6 +277,15 @@ public:
 	 * @param device_data
 	 */
 	void setDeviceData(const std::string& device_name, std::shared_ptr<devices::DeviceData> device_data);
+
+	/**
+	 * @brief Updates a given Device with new Data. Uses the name field of the data object.
+	 *
+	 * Throws a runtime error if the device is not found.
+	 *
+	 * @param device_data
+	 */
+	void setDeviceData(std::shared_ptr<devices::DeviceData> device_data);
 
 	/**
 	 * @brief Returns a pointer to a Device's configuration given the device name.

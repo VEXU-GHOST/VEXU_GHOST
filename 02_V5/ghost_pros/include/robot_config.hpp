@@ -7,12 +7,12 @@
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 
 // This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.
 // It returns a raw pointer to a dynamically allocated object, so if you are poking around, please wrap in a smart pointer!
 extern "C" ghost_v5_interfaces::devices::DeviceConfigMap* getRobotConfig(void) {
 	ghost_v5_interfaces::devices::DeviceConfigMap* robot_config = new ghost_v5_interfaces::devices::DeviceConfigMap;
-	robot_config->use_secondary_joystick = false;
 
 	std::shared_ptr<ghost_v5_interfaces::devices::RotationSensorDeviceConfig> rotation_sensor_2 = std::make_shared<ghost_v5_interfaces::devices::RotationSensorDeviceConfig>();
 	rotation_sensor_2->port = 5;
@@ -21,14 +21,6 @@ extern "C" ghost_v5_interfaces::devices::DeviceConfigMap* getRobotConfig(void) {
 	rotation_sensor_2->reversed = false;
 	rotation_sensor_2->data_rate = 5;
 	robot_config->addDeviceConfig(rotation_sensor_2);
-
-	std::shared_ptr<ghost_v5_interfaces::devices::RotationSensorDeviceConfig> rotation_sensor_1 = std::make_shared<ghost_v5_interfaces::devices::RotationSensorDeviceConfig>();
-	rotation_sensor_1->port = 4;
-	rotation_sensor_1->name = "rotation_sensor_1";
-	rotation_sensor_1->type = ghost_v5_interfaces::devices::device_type_e::ROTATION_SENSOR;
-	rotation_sensor_1->reversed = true;
-	rotation_sensor_1->data_rate = 10;
-	robot_config->addDeviceConfig(rotation_sensor_1);
 
 	std::shared_ptr<ghost_v5_interfaces::devices::MotorDeviceConfig> default_motor = std::make_shared<ghost_v5_interfaces::devices::MotorDeviceConfig>();
 	default_motor->port = 3;
@@ -53,6 +45,29 @@ extern "C" ghost_v5_interfaces::devices::DeviceConfigMap* getRobotConfig(void) {
 	default_motor->controller_config.ff_torque_gain = 0.000000;
 	robot_config->addDeviceConfig(default_motor);
 
+	std::shared_ptr<ghost_v5_interfaces::devices::MotorDeviceConfig> left_drive_motor = std::make_shared<ghost_v5_interfaces::devices::MotorDeviceConfig>();
+	left_drive_motor->port = 1;
+	left_drive_motor->name = "left_drive_motor";
+	left_drive_motor->type = ghost_v5_interfaces::devices::device_type_e::MOTOR;
+	left_drive_motor->reversed = false;
+	left_drive_motor->encoder_units = ghost_v5_interfaces::devices::ghost_encoder_unit::ENCODER_COUNTS;
+	left_drive_motor->gearset = ghost_v5_interfaces::devices::ghost_gearset::GEARSET_200;
+	left_drive_motor->brake_mode = ghost_v5_interfaces::devices::ghost_brake_mode::BRAKE_MODE_COAST;
+	left_drive_motor->filter_config.cutoff_frequency = 100.000000;
+	left_drive_motor->filter_config.damping_ratio = 0.707000;
+	left_drive_motor->filter_config.timestep = 0.010000;
+	left_drive_motor->model_config.free_speed = 120.000000;
+	left_drive_motor->model_config.stall_torque = 3.600000;
+	left_drive_motor->model_config.free_current = 0.140000;
+	left_drive_motor->model_config.stall_current = 4.250000;
+	left_drive_motor->model_config.nominal_voltage = 12.000000;
+	left_drive_motor->model_config.gear_ratio = 1.000000;
+	left_drive_motor->controller_config.pos_gain = 0.000000;
+	left_drive_motor->controller_config.vel_gain = 10.000000;
+	left_drive_motor->controller_config.ff_vel_gain = 1.000000;
+	left_drive_motor->controller_config.ff_torque_gain = 0.000000;
+	robot_config->addDeviceConfig(left_drive_motor);
+
 	std::shared_ptr<ghost_v5_interfaces::devices::MotorDeviceConfig> test_motor = std::make_shared<ghost_v5_interfaces::devices::MotorDeviceConfig>();
 	test_motor->port = 2;
 	test_motor->name = "test_motor";
@@ -76,28 +91,20 @@ extern "C" ghost_v5_interfaces::devices::DeviceConfigMap* getRobotConfig(void) {
 	test_motor->controller_config.ff_torque_gain = 0.000000;
 	robot_config->addDeviceConfig(test_motor);
 
-	std::shared_ptr<ghost_v5_interfaces::devices::MotorDeviceConfig> left_drive_motor = std::make_shared<ghost_v5_interfaces::devices::MotorDeviceConfig>();
-	left_drive_motor->port = 1;
-	left_drive_motor->name = "left_drive_motor";
-	left_drive_motor->type = ghost_v5_interfaces::devices::device_type_e::MOTOR;
-	left_drive_motor->reversed = false;
-	left_drive_motor->encoder_units = ghost_v5_interfaces::devices::ghost_encoder_unit::ENCODER_COUNTS;
-	left_drive_motor->gearset = ghost_v5_interfaces::devices::ghost_gearset::GEARSET_200;
-	left_drive_motor->brake_mode = ghost_v5_interfaces::devices::ghost_brake_mode::BRAKE_MODE_COAST;
-	left_drive_motor->filter_config.cutoff_frequency = 100.000000;
-	left_drive_motor->filter_config.damping_ratio = 0.707000;
-	left_drive_motor->filter_config.timestep = 0.010000;
-	left_drive_motor->model_config.free_speed = 120.000000;
-	left_drive_motor->model_config.stall_torque = 3.600000;
-	left_drive_motor->model_config.free_current = 0.140000;
-	left_drive_motor->model_config.stall_current = 4.250000;
-	left_drive_motor->model_config.nominal_voltage = 12.000000;
-	left_drive_motor->model_config.gear_ratio = 1.000000;
-	left_drive_motor->controller_config.pos_gain = 0.000000;
-	left_drive_motor->controller_config.vel_gain = 10.000000;
-	left_drive_motor->controller_config.ff_vel_gain = 1.000000;
-	left_drive_motor->controller_config.ff_torque_gain = 0.000000;
-	robot_config->addDeviceConfig(left_drive_motor);
+	std::shared_ptr<ghost_v5_interfaces::devices::RotationSensorDeviceConfig> rotation_sensor_1 = std::make_shared<ghost_v5_interfaces::devices::RotationSensorDeviceConfig>();
+	rotation_sensor_1->port = 4;
+	rotation_sensor_1->name = "rotation_sensor_1";
+	rotation_sensor_1->type = ghost_v5_interfaces::devices::device_type_e::ROTATION_SENSOR;
+	rotation_sensor_1->reversed = true;
+	rotation_sensor_1->data_rate = 10;
+	robot_config->addDeviceConfig(rotation_sensor_1);
+
+	std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceConfig> joy_master = std::make_shared<ghost_v5_interfaces::devices::JoystickDeviceConfig>();
+	joy_master->port = -1;
+	joy_master->name = "joy_master";
+	joy_master->type = ghost_v5_interfaces::devices::device_type_e::JOYSTICK;
+	joy_master->is_partner = false;
+	robot_config->addDeviceConfig(joy_master);
 
 	return robot_config;
 }

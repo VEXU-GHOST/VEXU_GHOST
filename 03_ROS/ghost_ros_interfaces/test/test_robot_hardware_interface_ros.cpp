@@ -24,6 +24,7 @@ public:
 	void SetUp() override {
 		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml";
 		config_yaml_ = YAML::LoadFile(config_path);
+		config_yaml_["port_configuration"]["use_partner_joystick"] = true;
 
 		device_config_map_ptr_ = loadRobotConfigFromYAML(config_yaml_, false);
 		// TODO(maxxwilson): Does this hardware type matter? should one be V5_BRAIN for full coverage?
@@ -41,8 +42,14 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpd
 	rhi_input_ptr_->setDisabledStatus(getRandomBool());
 	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
 	rhi_input_ptr_->setConnectedStatus(getRandomBool());
+
 	auto joy_data = getRandomJoystickData();
-	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
+	joy_data->name = MAIN_JOYSTICK_NAME;
+	rhi_input_ptr_->setDeviceData(joy_data);
+
+	auto joy_data_2 = getRandomJoystickData();
+	joy_data_2->name = PARTNER_JOYSTICK_NAME;
+	rhi_input_ptr_->setDeviceData(joy_data_2);
 
 	auto motor_data_ptr = getRandomMotorData(false);
 	motor_data_ptr->name = "default_motor";
@@ -78,14 +85,20 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 	rhi_input_ptr_->setDisabledStatus(getRandomBool());
 	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
 	rhi_input_ptr_->setConnectedStatus(getRandomBool());
+
 	auto joy_data = getRandomJoystickData();
-	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
+	joy_data->name = MAIN_JOYSTICK_NAME;
+	rhi_input_ptr_->setDeviceData(joy_data);
+
+	auto joy_data_2 = getRandomJoystickData();
+	joy_data_2->name = PARTNER_JOYSTICK_NAME;
+	rhi_input_ptr_->setDeviceData(joy_data_2);
 
 	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>();
-	motor_data_ptr->desired_position = getRandomFloat();
-	motor_data_ptr->desired_velocity = getRandomFloat();
-	motor_data_ptr->desired_torque = getRandomFloat();
-	motor_data_ptr->desired_voltage = getRandomFloat();
+	motor_data_ptr->position_command = getRandomFloat();
+	motor_data_ptr->velocity_command = getRandomFloat();
+	motor_data_ptr->torque_command = getRandomFloat();
+	motor_data_ptr->voltage_command = getRandomFloat();
 	motor_data_ptr->current_limit = getRandomFloat();
 	motor_data_ptr->position_control = getRandomBool();
 	motor_data_ptr->velocity_control = getRandomBool();
@@ -121,14 +134,20 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 	rhi_input_ptr_->setDisabledStatus(getRandomBool());
 	rhi_input_ptr_->setAutonomousStatus(getRandomBool());
 	rhi_input_ptr_->setConnectedStatus(getRandomBool());
+
 	auto joy_data = getRandomJoystickData();
-	rhi_input_ptr_->setPrimaryJoystickData(joy_data);
+	joy_data->name = MAIN_JOYSTICK_NAME;
+	rhi_input_ptr_->setDeviceData(joy_data);
+
+	auto joy_data_2 = getRandomJoystickData();
+	joy_data_2->name = PARTNER_JOYSTICK_NAME;
+	rhi_input_ptr_->setDeviceData(joy_data_2);
 
 	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>();
-	motor_data_ptr->desired_position = getRandomFloat();
-	motor_data_ptr->desired_velocity = getRandomFloat();
-	motor_data_ptr->desired_torque = getRandomFloat();
-	motor_data_ptr->desired_voltage = getRandomFloat();
+	motor_data_ptr->position_command = getRandomFloat();
+	motor_data_ptr->velocity_command = getRandomFloat();
+	motor_data_ptr->torque_command = getRandomFloat();
+	motor_data_ptr->voltage_command = getRandomFloat();
 	motor_data_ptr->current_limit = getRandomFloat();
 	motor_data_ptr->position_control = getRandomBool();
 	motor_data_ptr->velocity_control = getRandomBool();

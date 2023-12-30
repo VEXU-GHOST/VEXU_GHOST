@@ -54,7 +54,6 @@ void toROSMsg(const JoystickDeviceData& joy_data, V5JoystickState& joy_msg){
 	joy_msg.joystick_btn_l2 = joy_data.btn_l2;
 	joy_msg.joystick_btn_r1 = joy_data.btn_r1;
 	joy_msg.joystick_btn_r2 = joy_data.btn_r2;
-	joy_msg.is_secondary_joystick = joy_data.is_secondary_joystick;
 }
 
 /**
@@ -81,7 +80,6 @@ void fromROSMsg(JoystickDeviceData& joy_data, const V5JoystickState& joy_msg){
 	joy_data.btn_l2 = joy_msg.joystick_btn_l2;
 	joy_data.btn_r1 = joy_msg.joystick_btn_r1;
 	joy_data.btn_r2 = joy_msg.joystick_btn_r2;
-	joy_data.is_secondary_joystick = joy_msg.is_secondary_joystick;
 }
 
 void toROSMsg(const MotorDeviceData& motor_data, V5MotorState& motor_msg){
@@ -124,8 +122,8 @@ void fromROSMsg(MotorDeviceData& motor_data, const V5MotorCommand& motor_msg){
 	fromROSMsg(motor_data, motor_msg.device_header); // Set base attributes
 	motor_data.position_command = motor_msg.position_command;
 	motor_data.velocity_command = motor_msg.velocity_command;
-	motor_data.torque_command = motor_msg.torque_commmand;
-	motor_data.voltage_command = motor_msg.voltage_commmand;
+	motor_data.torque_command = motor_msg.torque_command;
+	motor_data.voltage_command = motor_msg.voltage_command;
 	motor_data.current_limit = motor_msg.current_limit;
 	motor_data.position_control = motor_msg.position_control;
 	motor_data.velocity_control = motor_msg.velocity_control;
@@ -152,7 +150,7 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5ActuatorComman
 
 	// Devices
 	for(const std::string & device_name : hardware_interface){
-		auto device_data_ptr = hardware_interface.getDeviceData(device_name);
+		auto device_data_ptr = hardware_interface.getDeviceData<DeviceData>(device_name);
 		if(device_data_ptr->type == device_type_e::MOTOR){
 			V5MotorCommand msg{};
 			auto motor_data_ptr = device_data_ptr->as<MotorDeviceData>();
@@ -160,6 +158,9 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5ActuatorComman
 			actuator_cmd_msg.motor_commands.push_back(msg);
 		}
 		else if(device_data_ptr->type == device_type_e::ROTATION_SENSOR){
+			continue;
+		}
+		else if(device_data_ptr->type == device_type_e::JOYSTICK){
 			continue;
 		}
 		else{
@@ -183,7 +184,7 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5ActuatorComm
 
 	// Motors
 	for(const auto &motor_msg : actuator_cmd_msg.motor_commands){
-		auto motor_data_ptr = hardware_interface.getDeviceData(motor_msg.device_header.name)->as<MotorDeviceData>();
+		auto motor_data_ptr = hardware_interface.getDeviceData<MotorDeviceData>(motor_msg.device_header.name);
 		fromROSMsg(*motor_data_ptr, motor_msg);
 		hardware_interface.setDeviceData(motor_data_ptr);
 	}
@@ -201,14 +202,14 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5SensorUpdate& 
 	sensor_update_msg.competition_status.is_connected = hardware_interface.isConnected();
 
 	// Primary Joystick
-	auto joy_data_1 = hardware_interface.getPrimaryJoystickData();
+	auto joy_data_1 = hardware_interface.getDeviceData<JoystickDeviceData>(MAIN_JOYSTICK_NAME);
 	V5JoystickState primary_joy_msg{};
 	toROSMsg(*joy_data_1, primary_joy_msg);
 	sensor_update_msg.joysticks.push_back(primary_joy_msg);
 
 	// Secondary Joystick
-	if(hardware_interface.usesSecondaryJoystick()){
-		auto joy_data_2 = hardware_interface.getSecondaryJoystickData();
+	if(hardware_interface.contains(PARTNER_JOYSTICK_NAME)){
+		auto joy_data_2 = hardware_interface.getDeviceData<JoystickDeviceData>(PARTNER_JOYSTICK_NAME);
 		V5JoystickState secondary_joy_msg{};
 		toROSMsg(*joy_data_2, secondary_joy_msg);
 		sensor_update_msg.joysticks.push_back(secondary_joy_msg);
@@ -216,7 +217,7 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5SensorUpdate& 
 
 	// Devices
 	for(const std::string & device_name : hardware_interface){
-		auto device_data_ptr = hardware_interface.getDeviceData(device_name);
+		auto device_data_ptr = hardware_interface.getDeviceData<DeviceData>(device_name);
 		if(device_data_ptr->type == device_type_e::MOTOR){
 			V5MotorState msg{};
 			auto motor_data_ptr = device_data_ptr->as<MotorDeviceData>();
@@ -228,6 +229,12 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5SensorUpdate& 
 			auto rotation_data_ptr = device_data_ptr->as<RotationSensorDeviceData>();
 			toROSMsg(*rotation_data_ptr, msg);
 			sensor_update_msg.rotation_sensors.push_back(msg);
+		}
+		else if(device_data_ptr->type == device_type_e::JOYSTICK){
+			V5JoystickState msg{};
+			auto joy_data_ptr = device_data_ptr->as<JoystickDeviceData>();
+			toROSMsg(*joy_data_ptr, msg);
+			sensor_update_msg.joysticks.push_back(msg);
 		}
 		else{
 			std::string dev_type_str;
@@ -254,30 +261,22 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5SensorUpdate
 	hardware_interface.setConnectedStatus(sensor_update_msg.competition_status.is_connected);
 
 	// Primary Joystick
-
 	for(const auto& joy_msg : sensor_update_msg.joysticks){
-		if(joy_msg.is_secondary_joystick){
-			auto joy_data = hardware_interface.getSecondaryJoystickData();
-			fromROSMsg(*joy_data, joy_msg);
-			hardware_interface.setSecondaryJoystickData(joy_data);
-		}
-		else{
-			auto joy_data = hardware_interface.getPrimaryJoystickData();
-			fromROSMsg(*joy_data, joy_msg);
-			hardware_interface.setPrimaryJoystickData(joy_data);
-		}
+		auto joy_data_ptr = hardware_interface.getDeviceData<JoystickDeviceData>(joy_msg.device_header.name);
+		fromROSMsg(*joy_data_ptr, joy_msg);
+		hardware_interface.setDeviceData(joy_data_ptr);
 	}
 
 	// Motors
 	for(const auto &motor_msg : sensor_update_msg.motors){
-		auto motor_data_ptr = hardware_interface.getDeviceData(motor_msg.device_header.name)->as<MotorDeviceData>();
+		auto motor_data_ptr = hardware_interface.getDeviceData<MotorDeviceData>(motor_msg.device_header.name);
 		fromROSMsg(*motor_data_ptr, motor_msg);
 		hardware_interface.setDeviceData(motor_data_ptr);
 	}
 
 	// Rotation Sensors
 	for(const auto &rotation_sensor_msg : sensor_update_msg.rotation_sensors){
-		auto rotation_sensor_data_ptr = hardware_interface.getDeviceData(rotation_sensor_msg.device_header.name)->as<RotationSensorDeviceData>();
+		auto rotation_sensor_data_ptr = hardware_interface.getDeviceData<RotationSensorDeviceData>(rotation_sensor_msg.device_header.name);
 		fromROSMsg(*rotation_sensor_data_ptr, rotation_sensor_msg);
 		hardware_interface.setDeviceData(rotation_sensor_data_ptr);
 	}

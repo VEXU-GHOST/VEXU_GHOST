@@ -1,6 +1,7 @@
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 
+#include "ghost_util/math_util.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
 
@@ -187,12 +188,16 @@ DevicePair RobotHardwareInterface::getDevicePair(const std::string& device_name)
 	return device_pair_name_map_.at(device_name).clone();
 }
 
-void RobotHardwareInterface::setDeviceData(const std::string& device_name, std::shared_ptr<DeviceData> device_data){
-	throwOnNonexistentDevice(device_name);
-	device_data->name = device_name;
+void RobotHardwareInterface::setDeviceData(std::shared_ptr<DeviceData> device_data){
+	throwOnNonexistentDevice(device_data->name);
 
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-	device_pair_name_map_.at(device_name).data_ptr->update(device_data);
+	device_pair_name_map_.at(device_data->name).data_ptr->update(device_data);
+}
+
+void RobotHardwareInterface::setDeviceData(const std::string& device_name, std::shared_ptr<DeviceData> device_data){
+	device_data->name = device_name;
+	setDeviceData(device_data);
 }
 
 float RobotHardwareInterface::getMotorPosition(const std::string& motor_name){
@@ -258,7 +263,7 @@ void RobotHardwareInterface::setMotorControlMode(const std::string& motor_name,
 void RobotHardwareInterface::setMotorCurrentLimitMilliAmps(const std::string& motor_name, int32_t current_limit_ma){
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 	auto motor_data_ptr = getDeviceData<MotorDeviceData>(motor_name);
-	motor_data_ptr->current_limit = std::clamp(current_limit_ma, 0, 2500);
+	motor_data_ptr->current_limit = ghost_util::clamp<int32_t>(current_limit_ma, 0, 2500);
 	setDeviceData(motor_name, motor_data_ptr);
 }
 

@@ -81,8 +81,8 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataSingle){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
 	auto j1 = getRandomJoystickData();
-	j1->name = "joy_master";
-	hw_interface.setDeviceData(j1->name, j1);
+	j1->name = MAIN_JOYSTICK_NAME;
+	hw_interface.setDeviceData(j1);
 	auto j2 = hw_interface.getDeviceData<JoystickDeviceData>(j1->name);
 
 	EXPECT_EQ(*j1, *j2);
@@ -91,8 +91,8 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataSi
 TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataDual){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 	auto j1 = getRandomJoystickData();
-	j1->name = "joy_partner";
-	hw_interface.setDeviceData(j1->name, j1);
+	j1->name = PARTNER_JOYSTICK_NAME;
+	hw_interface.setDeviceData(j1);
 	auto j2 = hw_interface.getDeviceData<JoystickDeviceData>(j1->name);
 
 	EXPECT_EQ(*j1, *j2);
@@ -151,8 +151,8 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	hw_interface.setConnectedStatus(getRandomBool());
 
 	auto joy = getRandomJoystickData();
-	joy->name = "joy_master";
-	hw_interface.setDeviceData(joy->name, joy);
+	joy->name = MAIN_JOYSTICK_NAME;
+	hw_interface.setDeviceData(joy);
 
 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
@@ -181,12 +181,12 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	hw_interface.setConnectedStatus(getRandomBool());
 
 	auto joy = getRandomJoystickData();
-	joy->name = "joy_master";
-	hw_interface.setDeviceData(joy->name, joy);
+	joy->name = MAIN_JOYSTICK_NAME;
+	hw_interface.setDeviceData(joy);
 
 	auto joy_2 = getRandomJoystickData();
-	joy_2->name = "joy_partner";
-	hw_interface.setDeviceData(joy_2->name, joy_2);
+	joy_2->name = PARTNER_JOYSTICK_NAME;
+	hw_interface.setDeviceData(joy_2);
 
 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
@@ -194,3 +194,5 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 
 	EXPECT_TRUE(hw_interface.isDataEqual(hw_interface_copy));
 }
+
+// TEST_F(RobotHardwareInterfaceTestFixture, test)

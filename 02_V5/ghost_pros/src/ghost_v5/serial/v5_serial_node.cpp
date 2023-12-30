@@ -61,10 +61,10 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 	std::unique_lock actuator_update_lock(v5_globals::actuator_update_lock);
 	hardware_interface_ptr_->deserialize(buffer);
 
-	v5_globals::digital_out_cmds = hardware_interface_ptr_->getDigitalIOPorts();
+	v5_globals::digital_out_cmds = hardware_interface_ptr_->getDigitalIO();
 
 	for(const auto& name : *hardware_interface_ptr_){
-		auto device_data_ptr = hardware_interface_ptr_->getDeviceData(name);
+		auto device_data_ptr = hardware_interface_ptr_->getDeviceData<DeviceData>(name);
 
 		switch(device_data_ptr->type){
 			case device_type_e::MOTOR:
@@ -73,10 +73,10 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 				v5_globals::motor_interfaces.at(name)->setCurrentLimit(motor_device_data_ptr->current_limit);
 
 				v5_globals::motor_interfaces.at(name)->setMotorCommand(
-					motor_device_data_ptr->desired_position,
-					motor_device_data_ptr->desired_velocity,
-					motor_device_data_ptr->desired_voltage,
-					motor_device_data_ptr->desired_torque);
+					motor_device_data_ptr->position_command,
+					motor_device_data_ptr->velocity_command,
+					motor_device_data_ptr->voltage_command,
+					motor_device_data_ptr->torque_command);
 
 				v5_globals::motor_interfaces.at(name)->setControlMode(
 					motor_device_data_ptr->position_control,
@@ -109,6 +109,7 @@ void V5SerialNode::writeV5StateUpdate(){
 
 	// Joysticks
 	auto joy_1_data = std::make_shared<JoystickDeviceData>();
+	joy_1_data->name = MAIN_JOYSTICK_NAME;
 	joy_1_data->left_x = v5_globals::controller_main.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 	joy_1_data->left_y = v5_globals::controller_main.get_analog(ANALOG_LEFT_Y);
 	joy_1_data->right_x = v5_globals::controller_main.get_analog(ANALOG_RIGHT_X);
@@ -125,11 +126,12 @@ void V5SerialNode::writeV5StateUpdate(){
 	joy_1_data->btn_l = v5_globals::controller_main.get_digital(DIGITAL_L2);
 	joy_1_data->btn_r = v5_globals::controller_main.get_digital(DIGITAL_R1);
 	joy_1_data->btn_d = v5_globals::controller_main.get_digital(DIGITAL_R2);
-	hardware_interface_ptr_->setPrimaryJoystickData(joy_1_data);
+	hardware_interface_ptr_->setDeviceData(joy_1_data->name, joy_1_data);
 
 
-	if(v5_globals::robot_device_config_map_ptr->use_secondary_joystick){
+	if(hardware_interface_ptr_->contains(PARTNER_JOYSTICK_NAME)){
 		auto joy_2_data = std::make_shared<JoystickDeviceData>();
+		joy_2_data->name = PARTNER_JOYSTICK_NAME;
 		joy_2_data->left_x = v5_globals::controller_partner.get_analog(ANALOG_LEFT_X);
 		joy_2_data->left_y = v5_globals::controller_partner.get_analog(ANALOG_LEFT_Y);
 		joy_2_data->right_x = v5_globals::controller_partner.get_analog(ANALOG_RIGHT_X);
@@ -146,12 +148,12 @@ void V5SerialNode::writeV5StateUpdate(){
 		joy_2_data->btn_l = v5_globals::controller_partner.get_digital(DIGITAL_L2);
 		joy_2_data->btn_r = v5_globals::controller_partner.get_digital(DIGITAL_R1);
 		joy_2_data->btn_d = v5_globals::controller_partner.get_digital(DIGITAL_R2);
-		hardware_interface_ptr_->setSecondaryJoystickData(joy_2_data);
+		hardware_interface_ptr_->setDeviceData(joy_2_data->name, joy_2_data);
 	}
 
 	// Motors
 	for(const auto& [name, device] : v5_globals::motor_interfaces){
-		auto motor_device_data_ptr = hardware_interface_ptr_->getDeviceData(name)->as<MotorDeviceData>();
+		auto motor_device_data_ptr = hardware_interface_ptr_->getDeviceData<MotorDeviceData>(name);
 		auto motor_interface_ptr = device->getMotorInterfacePtr();
 		motor_device_data_ptr->curr_position = motor_interface_ptr->get_position();
 		motor_device_data_ptr->curr_velocity_rpm = device->getVelocityFilteredRPM();

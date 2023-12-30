@@ -23,14 +23,14 @@ protected:
 	std::shared_ptr<DeviceConfigMap> getExpectedRobotConfig(bool use_partner_joystick = false){
 		auto robot_config_ptr = std::make_shared<DeviceConfigMap>();
 		auto joy_master = std::make_shared<JoystickDeviceConfig>();
-		joy_master->name = "joy_master";
+		joy_master->name = MAIN_JOYSTICK_NAME;
 		joy_master->port = -1;
 		joy_master->type = device_type_e::JOYSTICK;
 		robot_config_ptr->addDeviceConfig(joy_master);
 
 		if(use_partner_joystick){
 			auto joy_partner = std::make_shared<JoystickDeviceConfig>();
-			joy_partner->name = "joy_partner";
+			joy_partner->name = PARTNER_JOYSTICK_NAME;
 			joy_partner->port = -2;
 			joy_partner->type = device_type_e::JOYSTICK;
 			joy_partner->is_partner = true;
