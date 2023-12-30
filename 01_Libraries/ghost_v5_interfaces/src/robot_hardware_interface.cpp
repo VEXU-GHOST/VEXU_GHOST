@@ -188,20 +188,16 @@ DevicePair RobotHardwareInterface::getDevicePair(const std::string& device_name)
 	return device_pair_name_map_.at(device_name).clone();
 }
 
-void RobotHardwareInterface::setDeviceData(std::shared_ptr<DeviceData> device_data){
-	throwOnNonexistentDevice(device_data->name);
-
-	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-	setDeviceDataNoLock(device_data);
-}
-
-void RobotHardwareInterface::setDeviceDataNoLock(std::shared_ptr<DeviceData> device_data){
+void RobotHardwareInterface::setDeviceDataNoLock(const std::string& device_name, std::shared_ptr<DeviceData> device_data){
+	device_data->name = device_name;
 	device_pair_name_map_.at(device_data->name).data_ptr->update(device_data);
 }
 
 void RobotHardwareInterface::setDeviceData(const std::string& device_name, std::shared_ptr<DeviceData> device_data){
-	device_data->name = device_name;
-	setDeviceData(device_data);
+	throwOnNonexistentDevice(device_name);
+
+	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+	setDeviceDataNoLock(device_name, device_data);
 }
 
 float RobotHardwareInterface::getMotorPosition(const std::string& motor_name){
@@ -215,28 +211,28 @@ void RobotHardwareInterface::setMotorPositionCommand(const std::string& motor_na
 	auto motor_data_ptr = getDeviceData<MotorDeviceData>(motor_name);
 	motor_data_ptr->position_command = position_cmd;
 	motor_data_ptr->position_control = true;
-	setDeviceDataNoLock(motor_data_ptr);
+	setDeviceDataNoLock(motor_name, motor_data_ptr);
 }
 void RobotHardwareInterface::setMotorVelocityCommandRPM(const std::string& motor_name, float velocity_cmd){
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 	auto motor_data_ptr = getDeviceData<MotorDeviceData>(motor_name);
 	motor_data_ptr->velocity_command = velocity_cmd;
 	motor_data_ptr->velocity_control = true;
-	setDeviceDataNoLock(motor_data_ptr);
+	setDeviceDataNoLock(motor_name, motor_data_ptr);
 }
 void RobotHardwareInterface::setMotorVoltageCommandPercent(const std::string& motor_name, float voltage_cmd){
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 	auto motor_data_ptr = getDeviceData<MotorDeviceData>(motor_name);
 	motor_data_ptr->voltage_command = voltage_cmd;
 	motor_data_ptr->voltage_control = true;
-	setDeviceDataNoLock(motor_data_ptr);
+	setDeviceDataNoLock(motor_name, motor_data_ptr);
 }
 void RobotHardwareInterface::setMotorTorqueCommandPercent(const std::string& motor_name, float torque_cmd){
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 	auto motor_data_ptr = getDeviceData<MotorDeviceData>(motor_name);
 	motor_data_ptr->torque_command = torque_cmd;
 	motor_data_ptr->torque_control = true;
-	setDeviceDataNoLock(motor_data_ptr);
+	setDeviceDataNoLock(motor_name, motor_data_ptr);
 }
 void RobotHardwareInterface::setMotorCommand(const std::string& motor_name,
                                              float position_cmd,
@@ -249,7 +245,7 @@ void RobotHardwareInterface::setMotorCommand(const std::string& motor_name,
 	motor_data_ptr->velocity_command = velocity_cmd;
 	motor_data_ptr->voltage_command = voltage_cmd;
 	motor_data_ptr->torque_command = torque_cmd;
-	setDeviceDataNoLock(motor_data_ptr);
+	setDeviceDataNoLock(motor_name, motor_data_ptr);
 }
 void RobotHardwareInterface::setMotorControlMode(const std::string& motor_name,
                                                  bool position_control,
@@ -262,13 +258,13 @@ void RobotHardwareInterface::setMotorControlMode(const std::string& motor_name,
 	motor_data_ptr->velocity_control = velocity_control;
 	motor_data_ptr->voltage_control = voltage_control;
 	motor_data_ptr->torque_control = torque_control;
-	setDeviceData(motor_name, motor_data_ptr);
+	setDeviceDataNoLock(motor_name, motor_data_ptr);
 }
 void RobotHardwareInterface::setMotorCurrentLimitMilliAmps(const std::string& motor_name, int32_t current_limit_ma){
 	std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 	auto motor_data_ptr = getDeviceData<MotorDeviceData>(motor_name);
 	motor_data_ptr->current_limit = ghost_util::clamp<int32_t>(current_limit_ma, 0, 2500);
-	setDeviceData(motor_name, motor_data_ptr);
+	setDeviceDataNoLock(motor_name, motor_data_ptr);
 }
 
 float RobotHardwareInterface::getRotationSensorAngleDegrees(const std::string& sensor_name){

@@ -51,6 +51,24 @@ TEST_F(RobotHardwareInterfaceTestFixture, testThrowsOnNonExistentDevice){
 	EXPECT_THROW(auto config = hw_interface.getDeviceConfig<MotorDeviceConfig>("non_existent_motor"), std::runtime_error);
 }
 
+TEST_F(RobotHardwareInterfaceTestFixture, testSerialMsgLengths){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+	EXPECT_TRUE(hw_interface.getSensorUpdateMsgLength() != 0);
+	EXPECT_TRUE(hw_interface.getActuatorCommandMsgLength() != 0);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMsgID){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default values
+	EXPECT_EQ(hw_interface.getMsgID(), 0);
+
+	auto rand_int = getRandomInt();
+	hw_interface.setMsgID(rand_int);
+
+	EXPECT_EQ(hw_interface.getMsgID(), rand_int);
+}
+
 TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveCompetitionStatus){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 
@@ -84,6 +102,26 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveDigitalIO){
 	EXPECT_EQ(hw_interface.getDigitalIO(), test_io);
 }
 
+TEST_F(RobotHardwareInterfaceTestFixture, testGetDevicePair){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Get Config
+	auto motor_config_ptr = hw_interface.getDeviceConfig<MotorDeviceConfig>("left_drive_motor");
+
+	// Update Data
+	auto motor_data_ptr = getRandomMotorData(true);
+	motor_data_ptr->name = "left_drive_motor";
+	hw_interface.setDeviceData(motor_data_ptr->name, motor_data_ptr);
+
+	// Make Device Pair
+	DevicePair expected_pair{};
+	expected_pair.config_ptr = motor_config_ptr;
+	expected_pair.data_ptr = motor_data_ptr;
+
+	// Get Pair and Check for Equality
+	EXPECT_EQ(expected_pair, hw_interface.getDevicePair("left_drive_motor"));
+}
+
 TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 	auto motor_data_ptr = std::make_shared<MotorDeviceData>();
@@ -115,7 +153,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataSi
 	RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
 	auto j1 = getRandomJoystickData();
 	j1->name = MAIN_JOYSTICK_NAME;
-	hw_interface.setDeviceData(j1);
+	hw_interface.setDeviceData(j1->name, j1);
 	auto j2 = hw_interface.getDeviceData<JoystickDeviceData>(j1->name);
 
 	EXPECT_EQ(*j1, *j2);
@@ -125,10 +163,16 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataDu
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 	auto j1 = getRandomJoystickData();
 	j1->name = PARTNER_JOYSTICK_NAME;
-	hw_interface.setDeviceData(j1);
+	hw_interface.setDeviceData(j1->name, j1);
 	auto j2 = hw_interface.getDeviceData<JoystickDeviceData>(j1->name);
 
 	EXPECT_EQ(*j1, *j2);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSingleJoystickThrowsWhenRequestingDualJoystick){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
+
+	EXPECT_THROW(hw_interface.getDeviceData<JoystickDeviceData>(PARTNER_JOYSTICK_NAME), std::runtime_error);
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testIteratorIsOrderedByPort){
@@ -185,7 +229,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 
 	auto joy = getRandomJoystickData();
 	joy->name = MAIN_JOYSTICK_NAME;
-	hw_interface.setDeviceData(joy);
+	hw_interface.setDeviceData(joy->name, joy);
 
 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
@@ -215,11 +259,11 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 
 	auto joy = getRandomJoystickData();
 	joy->name = MAIN_JOYSTICK_NAME;
-	hw_interface.setDeviceData(joy);
+	hw_interface.setDeviceData(joy->name, joy);
 
 	auto joy_2 = getRandomJoystickData();
 	joy_2->name = PARTNER_JOYSTICK_NAME;
-	hw_interface.setDeviceData(joy_2);
+	hw_interface.setDeviceData(joy_2->name, joy_2);
 
 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
@@ -229,7 +273,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateGetters){
-	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::V5_BRAIN);
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 
 	// Default
 	EXPECT_EQ(hw_interface.getMotorPosition("left_drive_motor"), 0);
@@ -238,14 +282,14 @@ TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateGetters){
 	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
 	motor_data_ptr->curr_position = getRandomFloat();
 	motor_data_ptr->curr_velocity_rpm = getRandomFloat();
-	hw_interface.setDeviceData(motor_data_ptr);
+	hw_interface.setDeviceData(motor_data_ptr->name, motor_data_ptr);
 
 	EXPECT_EQ(hw_interface.getMotorPosition("left_drive_motor"), motor_data_ptr->curr_position);
 	EXPECT_EQ(hw_interface.getMotorVelocityRPM("left_drive_motor"), motor_data_ptr->curr_velocity_rpm);
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testRotationSensorStateGetters){
-	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::V5_BRAIN);
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 
 	// Default
 	EXPECT_EQ(hw_interface.getRotationSensorAngleDegrees("rotation_sensor_1"), 0);
@@ -256,15 +300,79 @@ TEST_F(RobotHardwareInterfaceTestFixture, testRotationSensorStateGetters){
 	sensor_data_ptr->angle = getRandomFloat();
 	sensor_data_ptr->position = getRandomFloat();
 	sensor_data_ptr->velocity = getRandomFloat();
-	hw_interface.setDeviceData(sensor_data_ptr);
+	hw_interface.setDeviceData(sensor_data_ptr->name, sensor_data_ptr);
 
 	EXPECT_EQ(hw_interface.getRotationSensorAngleDegrees("rotation_sensor_1"), sensor_data_ptr->angle);
 	EXPECT_EQ(hw_interface.getRotationSensorPositionDegrees("rotation_sensor_1"), sensor_data_ptr->position);
 	EXPECT_EQ(hw_interface.getRotationSensorVelocityRPM("rotation_sensor_1"), sensor_data_ptr->velocity);
 }
 
+TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorPositionCommand){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default
+	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr->position_command, 0);
+	EXPECT_EQ(motor_data_ptr->position_control, false);
+
+	auto pos_cmd = getRandomFloat();
+	hw_interface.setMotorPositionCommand("left_drive_motor", pos_cmd);
+
+	auto motor_data_ptr_updated = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr_updated->position_command, pos_cmd);
+	EXPECT_EQ(motor_data_ptr_updated->position_control, true);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorVelocityCommandRPM){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default
+	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr->velocity_command, 0);
+	EXPECT_EQ(motor_data_ptr->velocity_control, false);
+
+	auto vel_cmd = getRandomFloat();
+	hw_interface.setMotorVelocityCommandRPM("left_drive_motor", vel_cmd);
+
+	auto motor_data_ptr_updated = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr_updated->velocity_command, vel_cmd);
+	EXPECT_EQ(motor_data_ptr_updated->velocity_control, true);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorVoltageCommandPercent){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default
+	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr->voltage_command, 0);
+	EXPECT_EQ(motor_data_ptr->voltage_control, false);
+
+	auto vlt_cmd = getRandomFloat();
+	hw_interface.setMotorVoltageCommandPercent("left_drive_motor", vlt_cmd);
+
+	auto motor_data_ptr_updated = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr_updated->voltage_command, vlt_cmd);
+	EXPECT_EQ(motor_data_ptr_updated->voltage_control, true);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorTorqueCommandPercent){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default
+	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr->torque_command, 0);
+	EXPECT_EQ(motor_data_ptr->torque_control, false);
+
+	auto trq_cmd = getRandomFloat();
+	hw_interface.setMotorTorqueCommandPercent("left_drive_motor", trq_cmd);
+
+	auto motor_data_ptr_updated = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+	EXPECT_EQ(motor_data_ptr_updated->torque_command, trq_cmd);
+	EXPECT_EQ(motor_data_ptr_updated->torque_control, true);
+}
+
 TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateSetters){
-	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::V5_BRAIN);
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 
 	// Default
 	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
@@ -296,4 +404,90 @@ TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateSetters){
 	EXPECT_EQ(motor_data_ptr_updated->velocity_command, vel_cmd);
 	EXPECT_EQ(motor_data_ptr_updated->voltage_command, vlt_cmd);
 	EXPECT_EQ(motor_data_ptr_updated->torque_command, trq_cmd);
+
+	EXPECT_EQ(motor_data_ptr_updated->position_control, true);
+	EXPECT_EQ(motor_data_ptr_updated->velocity_control, true);
+	EXPECT_EQ(motor_data_ptr_updated->voltage_control, true);
+	EXPECT_EQ(motor_data_ptr_updated->torque_control, true);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorCommandAndControlMode){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default
+	auto pos_cmd = getRandomFloat();
+	auto vel_cmd = getRandomFloat();
+	auto vlt_cmd = getRandomFloat();
+	auto trq_cmd = getRandomFloat();
+	bool pos_ctl = getRandomBool();
+	bool vel_ctl = getRandomBool();
+	bool vlt_ctl = getRandomBool();
+	bool trq_ctl = getRandomBool();
+
+	hw_interface.setMotorCommand("left_drive_motor", pos_cmd, vel_cmd, vlt_cmd, trq_cmd);
+	hw_interface.setMotorControlMode("left_drive_motor", pos_ctl, vel_ctl, vlt_ctl, trq_ctl);
+
+	// New data has been updated
+	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
+
+	EXPECT_EQ(motor_data_ptr->position_command, pos_cmd);
+	EXPECT_EQ(motor_data_ptr->velocity_command, vel_cmd);
+	EXPECT_EQ(motor_data_ptr->voltage_command, vlt_cmd);
+	EXPECT_EQ(motor_data_ptr->torque_command, trq_cmd);
+
+	EXPECT_EQ(motor_data_ptr->position_control, pos_ctl);
+	EXPECT_EQ(motor_data_ptr->velocity_control, vel_ctl);
+	EXPECT_EQ(motor_data_ptr->voltage_control, vlt_ctl);
+	EXPECT_EQ(motor_data_ptr->torque_control, trq_ctl);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorCurrentLimitMilliAmps){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default
+	EXPECT_EQ(hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor")->current_limit, 0);
+
+	// Random value that doesn't exceed limits
+	auto rand_current = fabs(fmod(getRandomFloat(), 2500));
+	hw_interface.setMotorCurrentLimitMilliAmps("left_drive_motor", rand_current);
+	EXPECT_EQ(hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor")->current_limit, rand_current);
+
+	// Lower limit
+	hw_interface.setMotorCurrentLimitMilliAmps("left_drive_motor", -1);
+	EXPECT_EQ(hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor")->current_limit, 0.0);
+
+	// Upper limit
+	hw_interface.setMotorCurrentLimitMilliAmps("left_drive_motor", 2600);
+	EXPECT_EQ(hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor")->current_limit, 2500);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testThrowsOnMismatchedDevices){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Call Motor Methods on Rotation Sensor
+	EXPECT_THROW(hw_interface.setMotorPositionCommand("rotation_sensor_1", getRandomFloat()), std::runtime_error);
+	EXPECT_THROW(hw_interface.setMotorVelocityCommandRPM("rotation_sensor_1", getRandomFloat()), std::runtime_error);
+	EXPECT_THROW(hw_interface.setMotorVoltageCommandPercent("rotation_sensor_1", getRandomFloat()), std::runtime_error);
+	EXPECT_THROW(hw_interface.setMotorTorqueCommandPercent("rotation_sensor_1", getRandomFloat()), std::runtime_error);
+	EXPECT_THROW(hw_interface.setMotorCurrentLimitMilliAmps("rotation_sensor_1", getRandomFloat()), std::runtime_error);
+	EXPECT_THROW(hw_interface.getMotorPosition("rotation_sensor_1"), std::runtime_error);
+	EXPECT_THROW(hw_interface.setMotorCommand("rotation_sensor_1", 0.0, 0.0, 0.0, 0.0), std::runtime_error);
+	EXPECT_THROW(hw_interface.setMotorControlMode("rotation_sensor_1", false, false, false, false), std::runtime_error);
+
+	// Call Rotation Sensor Methods on Motor
+	EXPECT_THROW(hw_interface.getRotationSensorAngleDegrees("left_drive_motor"), std::runtime_error);
+	EXPECT_THROW(hw_interface.getRotationSensorPositionDegrees("left_drive_motor"), std::runtime_error);
+	EXPECT_THROW(hw_interface.getRotationSensorVelocityRPM("left_drive_motor"), std::runtime_error);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testThrowsOnBadDeviceCast){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	EXPECT_THROW(hw_interface.getDeviceConfig<JoystickDeviceConfig>("left_drive_motor"), std::runtime_error);
+	EXPECT_THROW(hw_interface.getDeviceConfig<MotorDeviceConfig>("rotation_sensor_1"), std::runtime_error);
+	EXPECT_THROW(hw_interface.getDeviceConfig<RotationSensorDeviceConfig>(MAIN_JOYSTICK_NAME), std::runtime_error);
+
+	EXPECT_THROW(hw_interface.getDeviceData<JoystickDeviceData>("left_drive_motor"), std::runtime_error);
+	EXPECT_THROW(hw_interface.getDeviceData<MotorDeviceData>("rotation_sensor_1"), std::runtime_error);
+	EXPECT_THROW(hw_interface.getDeviceData<RotationSensorDeviceData>(MAIN_JOYSTICK_NAME), std::runtime_error);
 }

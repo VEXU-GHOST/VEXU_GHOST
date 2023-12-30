@@ -18,6 +18,10 @@ float getRandomFloat(){
 	return (float) rand() + 0.0001 * rand();
 }
 
+int getRandomInt(){
+	return (int) getRandomFloat();
+}
+
 std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(){
 	auto joy_ptr = std::make_shared<devices::JoystickDeviceData>();
 

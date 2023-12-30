@@ -186,7 +186,7 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5ActuatorComm
 	for(const auto &motor_msg : actuator_cmd_msg.motor_commands){
 		auto motor_data_ptr = hardware_interface.getDeviceData<MotorDeviceData>(motor_msg.device_header.name);
 		fromROSMsg(*motor_data_ptr, motor_msg);
-		hardware_interface.setDeviceData(motor_data_ptr);
+		hardware_interface.setDeviceData(motor_data_ptr->name, motor_data_ptr);
 	}
 
 	// Digital IO
@@ -264,21 +264,21 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5SensorUpdate
 	for(const auto& joy_msg : sensor_update_msg.joysticks){
 		auto joy_data_ptr = hardware_interface.getDeviceData<JoystickDeviceData>(joy_msg.device_header.name);
 		fromROSMsg(*joy_data_ptr, joy_msg);
-		hardware_interface.setDeviceData(joy_data_ptr);
+		hardware_interface.setDeviceData(joy_data_ptr->name, joy_data_ptr);
 	}
 
 	// Motors
 	for(const auto &motor_msg : sensor_update_msg.motors){
 		auto motor_data_ptr = hardware_interface.getDeviceData<MotorDeviceData>(motor_msg.device_header.name);
 		fromROSMsg(*motor_data_ptr, motor_msg);
-		hardware_interface.setDeviceData(motor_data_ptr);
+		hardware_interface.setDeviceData(motor_data_ptr->name, motor_data_ptr);
 	}
 
 	// Rotation Sensors
 	for(const auto &rotation_sensor_msg : sensor_update_msg.rotation_sensors){
 		auto rotation_sensor_data_ptr = hardware_interface.getDeviceData<RotationSensorDeviceData>(rotation_sensor_msg.device_header.name);
 		fromROSMsg(*rotation_sensor_data_ptr, rotation_sensor_msg);
-		hardware_interface.setDeviceData(rotation_sensor_data_ptr);
+		hardware_interface.setDeviceData(rotation_sensor_data_ptr->name, rotation_sensor_data_ptr);
 	}
 
 	// Digital IO

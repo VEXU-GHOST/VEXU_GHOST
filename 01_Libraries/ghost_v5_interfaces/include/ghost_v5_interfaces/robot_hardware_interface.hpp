@@ -279,15 +279,6 @@ public:
 	void setDeviceData(const std::string& device_name, std::shared_ptr<devices::DeviceData> device_data);
 
 	/**
-	 * @brief Updates a given Device with new Data. Uses the name field of the data object.
-	 *
-	 * Throws a runtime error if the device is not found.
-	 *
-	 * @param device_data
-	 */
-	void setDeviceData(std::shared_ptr<devices::DeviceData> device_data);
-
-	/**
 	 * @brief Returns a pointer to a Device's configuration given the device name.
 	 * Device Configurations are declared const and thus are read-only.
 	 *
@@ -389,7 +380,7 @@ public:
 	int deserialize(const std::vector<unsigned char>& msg);
 
 private:
-	void setDeviceDataNoLock(std::shared_ptr<devices::DeviceData> device_data);
+	void setDeviceDataNoLock(const std::string& device_name, std::shared_ptr<devices::DeviceData> device_data);
 	void throwOnNonexistentDevice(const std::string& device_name) const;
 	devices::hardware_type_e hardware_type_;
 

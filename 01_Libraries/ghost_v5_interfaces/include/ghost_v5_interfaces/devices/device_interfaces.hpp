@@ -152,6 +152,11 @@ struct DevicePair {
 	std::shared_ptr<const DeviceConfig> config_ptr;
 	std::shared_ptr<DeviceData> data_ptr;
 
+	bool operator==(const DevicePair &rhs) const {
+		return (*config_ptr == *rhs.config_ptr) && (*data_ptr == *rhs.data_ptr);
+	};
+
+
 	DevicePair clone() const {
 		DevicePair obj;
 		obj.config_ptr = config_ptr->clone()->as<const DeviceConfig>();
