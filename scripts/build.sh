@@ -33,6 +33,12 @@ then
     colcon build --packages-skip ghost_sim --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 fi
 
+# Exit if build was unsuccessful
+if [[ $? -ne 0 ]]
+then
+    exit -1
+fi
+
 source install/setup.bash
 
 # Process URDFs from Xacro and add to Share
@@ -86,6 +92,12 @@ then
         echo 
         echo "---Building PROS Project---"
         pros make
+
+        # Exit if build was unsuccessful
+        if [[ $? -ne 0 ]]
+        then
+            exit -1
+        fi
     else
         echo "PROS not installed, skipping V5 Build"
     fi
