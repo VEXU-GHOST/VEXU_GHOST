@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Help printout
 if [ "$1" == "-h" ];
 then
     echo "Builds ROS and PROS Workspace."
@@ -7,11 +8,18 @@ then
     exit 0
 fi
 
+# Verify repo path is set
+if [ -z "${VEXU_HOME}" ]
+then
+    echo "Failure: repository path variable VEXU_HOME is unset."
+    exit -1
+fi
+
 # Get processor architecture to determine if we should build simulator or not (not on robot hardware)
 arch=$(uname -p)
 
 # Assumes repository is in base directory
-cd ~/VEXU_GHOST
+cd $VEXU_HOME
 echo "---Building Ghost ROS Packages---"
 
 # Build ignores simulator packages on embedded devices
