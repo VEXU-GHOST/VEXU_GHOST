@@ -3,7 +3,7 @@ name: VEXU_GHOST
 on:
   push:
     branches:
-      - main
+      - master
       - develop
   pull_request:
     types: [ready_for_review, synchronize]
