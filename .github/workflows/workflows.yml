@@ -29,6 +29,9 @@ jobs:
       - name: Init Submodules
         run: git submodule init
 
+      - name: Convert Submodule Links to HTTPS
+        run: sed 's/git@github\.com:/https:\/\/github\.com\//g' .gitmodules
+
       - name: Update Submodules
         run: git submodule update --recursive
 
