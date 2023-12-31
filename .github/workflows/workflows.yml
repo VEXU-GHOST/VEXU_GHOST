@@ -22,7 +22,7 @@ jobs:
           required-ros-distributions: humble
 
       - name: Checkout Branch
-        run: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Set Repo Base Directory
         run: VEXU_HOME=${{github.workspace}}
