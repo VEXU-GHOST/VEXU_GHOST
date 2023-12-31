@@ -14,7 +14,9 @@ jobs:
     name: Build and Test
     if: github.event_name == 'push' || !github.event.pull_request.draft
     runs-on: ubuntu-22.04
-
+    env:
+        VEXU_HOME: ${{github.workspace}}
+        
     steps:
       - name: Install ROS2
         uses: ros-tooling/setup-ros@v0.7
@@ -23,9 +25,6 @@ jobs:
 
       - name: Checkout Branch
         uses: actions/checkout@v4
-
-      - name: Set Repo Base Directory
-        run: VEXU_HOME=${{github.workspace}}
 
       - name: Build
         run: ./scripts/build.sh
