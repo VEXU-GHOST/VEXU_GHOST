@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
         VEXU_HOME: ${{github.workspace}}
-        
+
     steps:
       - name: Install ROS2
         uses: ros-tooling/setup-ros@v0.7
@@ -25,6 +25,18 @@ jobs:
 
       - name: Checkout Branch
         uses: actions/checkout@v4
+
+      - name: Init Submodules
+        run: git submodule init
+
+      - name: Update Submodules
+        run: git submodule update --recursive
+
+      - name: Update Dependencies
+        run: ./scripts/update_dependencies.sh
+
+      - name: Build Submodules
+        run: ./scripts/setup_submodules.sh
 
       - name: Build
         run: ./scripts/build.sh
