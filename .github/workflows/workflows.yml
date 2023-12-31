@@ -16,11 +16,13 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Setup ROS2
+      - name: Install ROS2
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: humble
 
-      - run: ./scripts/build.sh
+      - name: Build
+        run: ./scripts/build.sh
 
-      - run: ./scripts/test_full.sh
+      - name: Test
+        run: ./scripts/test_full.sh
