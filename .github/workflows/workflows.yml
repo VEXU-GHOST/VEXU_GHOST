@@ -21,6 +21,9 @@ jobs:
         with:
           required-ros-distributions: humble
 
+      - name: Set Repo Base Directory
+        run: VEXU_HOME=${{github.workspace}}
+
       - name: Build
         run: ./scripts/build.sh
 
