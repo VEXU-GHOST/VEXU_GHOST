@@ -23,7 +23,7 @@ const std::unordered_map<ghost_encoder_unit, pros::motor_encoder_units_e_t> GHOS
 	{ghost_encoder_unit::ENCODER_INVALID,   pros::E_MOTOR_ENCODER_INVALID}};
 
 V5MotorInterface::V5MotorInterface(std::shared_ptr<const MotorDeviceConfig> config_ptr) :
-	MotorController(config_ptr_->controller_config, config_ptr_->filter_config, config_ptr_->model_config),
+	MotorController(config_ptr->controller_config, config_ptr->filter_config, config_ptr->model_config),
 	device_connected_{false}{
 	config_ptr_ = config_ptr->clone()->as<const MotorDeviceConfig>();
 	motor_interface_ptr_ = std::make_shared<pros::Motor>(

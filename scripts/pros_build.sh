@@ -1,9 +1,10 @@
 #!/bin/bash
 cd ~/VEXU_GHOST
-echo "Checking for PROS"
 if [[ $(pros --version) ]] 2> /dev/null; then
-    echo "Found PROS"
-    echo "---Updating V5 Project Symbolic Links---"
+    echo
+    echo -------------------------------------------------------
+	echo ----------- Updating Project Symbolic Links -----------
+	echo -------------------------------------------------------
     bash scripts/update_symlinks.sh
     
     echo 
@@ -14,13 +15,18 @@ if [[ $(pros --version) ]] 2> /dev/null; then
         cd 02_V5/ghost_pros
 
         echo
-        echo "---Cleaning PROS Project---"
+        echo -------------------------------------------------------
+        echo ---------------- Cleaning PROS Project ----------------
+        echo -------------------------------------------------------
         make clean
 
         echo 
-        echo "---Building PROS Project---"
+        echo -------------------------------------------------------
+        echo ---------------- Building PROS Project ----------------
+        echo -------------------------------------------------------
+        echo
         pros make
     fi
 else
-    echo "PROS not installed"
+    echo "ERROR: PROS is not installed!"
 fi

@@ -12,10 +12,12 @@
 
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
+#include "ghost_v5_interfaces/util/device_type_helpers.hpp"
 
 using ghost_v5_interfaces::devices::hardware_type_e::V5_BRAIN;
 using namespace ghost_v5;
 using namespace ghost_v5_interfaces::devices;
+using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
 
 void zero_actuators(){
@@ -74,15 +76,74 @@ void reader_loop(){
 	}
 }
 
-void ghost_main_loop(){
-	// Send robot state over serial to coprocessor
-	v5_globals::serial_node_ptr->writeV5StateUpdate();
+void clear_screen(){
+	pros::screen::set_pen(COLOR_BLACK);
+	pros::screen::fill_rect(0, 0, 480, 240);
+	pros::screen::set_pen(COLOR_WHITE);
+}
 
-	// Zero All Motors if disableds
-	if(pros::competition::is_disabled()){
-		zero_actuators();
+void exit_main_loop(const std::exception& e){
+	v5_globals::error_str = e.what();
+	v5_globals::run = false;
+}
+
+void error_loop(){
+	uint32_t loop_time = pros::millis();
+	int screen_char_lim = 48;
+
+	while(true){
+		clear_screen();
+		pros::screen::print(pros::text_format_e_t::E_TEXT_LARGE_CENTER, 0, "ERROR");
+
+		std::string err_string(v5_globals::error_str);
+
+		// This linewraps error msgs so they fit on the screen.
+		int row = 2;
+		while(err_string.size() > screen_char_lim){
+			// Get first X characters of string, where X is the max characters per line on the Brain Screen.
+			auto string_screen_len = err_string.substr(0, screen_char_lim);
+
+			// End line at space instead of mid-word
+			auto split_index = string_screen_len.find_last_of(" ");
+			pros::screen::print(pros::text_format_e_t::E_TEXT_SMALL, row++, err_string.substr(0, split_index).c_str());
+
+			// Remove printed portion from error string
+			err_string = err_string.substr(split_index);
+
+			// Trim leading whitespace
+			err_string.erase(err_string.begin(), std::find_if(err_string.begin(), err_string.end(), [](int c){
+				return !std::isspace(c);
+			}));
+		}
+		pros::screen::print(pros::text_format_e_t::E_TEXT_SMALL, row, err_string.c_str());
+		pros::c::task_delay_until(&loop_time, 250);
 	}
 }
+
+void ghost_main_loop(){
+	static int screen_update_count = 0;
+	try{
+		// Send robot state over serial to coprocessor
+		v5_globals::serial_node_ptr->writeV5StateUpdate();
+
+		if((screen_update_count % 10) == 0){
+			clear_screen();
+			pros::screen::print(pros::text_format_e_t::E_TEXT_LARGE_CENTER, 0, "STATUS");
+		}
+		screen_update_count++;
+
+		// Zero All Motors if disableds
+		if(pros::competition::is_disabled()){
+			zero_actuators();
+		}
+
+		update_actuators();
+	}
+	catch(std::exception& e){
+		exit_main_loop(e);
+	}
+}
+
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -91,57 +152,74 @@ void ghost_main_loop(){
  * to keep execution time for this mode under a few seconds.
  */
 void initialize(){
-	// Get Robot Device Configuration from compile-time generated file
-	v5_globals::robot_device_config_map_ptr.reset(getRobotConfig());
+	try{
+		// Setup LCD Screen
+		pros::screen::set_eraser(COLOR_BLACK);
+		clear_screen();
 
-	// Instantiate Hardware Interface and Serial Node
-	v5_globals::robot_hardware_interface_ptr = std::make_shared<RobotHardwareInterface>(v5_globals::robot_device_config_map_ptr, V5_BRAIN);
-	v5_globals::serial_node_ptr = std::make_shared<V5SerialNode>(v5_globals::robot_hardware_interface_ptr);
+		// Get Robot Device Configuration from compile-time generated file
+		v5_globals::robot_device_config_map_ptr.reset(getRobotConfig());
 
-	for(const auto& [device_name, config_ptr] : *v5_globals::robot_device_config_map_ptr){
-		switch(config_ptr->type){
-			case device_type_e::MOTOR:
-			{
-				auto motor_sensor_config_ptr = config_ptr->as<const MotorDeviceConfig>();
+		// Instantiate Hardware Interface and Serial Node
+		v5_globals::robot_hardware_interface_ptr = std::make_shared<RobotHardwareInterface>(v5_globals::robot_device_config_map_ptr, V5_BRAIN);
+		v5_globals::serial_node_ptr = std::make_shared<V5SerialNode>(v5_globals::robot_hardware_interface_ptr);
 
-				v5_globals::motor_interfaces[device_name] = std::make_shared<ghost_v5::V5MotorInterface>(motor_sensor_config_ptr);
-			}
-			break;
-
-			case device_type_e::ROTATION_SENSOR:
-			{
-				auto rotation_sensor_config_ptr = config_ptr->as<const RotationSensorDeviceConfig>();
-				v5_globals::encoders[device_name] = std::make_shared<pros::Rotation>(rotation_sensor_config_ptr->port);
-				if(rotation_sensor_config_ptr->reversed){
-					v5_globals::encoders[device_name]->reverse();
+		for(const auto& [device_name, config_ptr] : *v5_globals::robot_device_config_map_ptr){
+			switch(config_ptr->type){
+				case device_type_e::MOTOR:
+				{
+					auto motor_config_ptr = config_ptr->as<const MotorDeviceConfig>();
+					v5_globals::motor_interfaces[device_name] = std::make_shared<ghost_v5::V5MotorInterface>(motor_config_ptr);
 				}
-				v5_globals::encoders[device_name]->set_data_rate(rotation_sensor_config_ptr->data_rate);
-			}
-			break;
+				break;
 
-			case device_type_e::INVALID:
-			{
-				throw std::runtime_error("ERROR: Attempted to initialize unsupported device using ghost_v5_interfaces.");
-			}
-			break;
+				case device_type_e::ROTATION_SENSOR:
+				{
+					auto rotation_sensor_config_ptr = config_ptr->as<const RotationSensorDeviceConfig>();
+					v5_globals::encoders[device_name] = std::make_shared<pros::Rotation>(rotation_sensor_config_ptr->port);
+					if(rotation_sensor_config_ptr->reversed){
+						v5_globals::encoders[device_name]->reverse();
+					}
+					v5_globals::encoders[device_name]->set_data_rate(rotation_sensor_config_ptr->data_rate);
+				}
+				break;
 
-			default:
-			{
-				throw std::runtime_error("ERROR: Attempted to initialize unsupported device using ghost_v5_interfaces.");
+				case device_type_e::JOYSTICK:
+					// Do nothing, these are initialized already
+				break;
+
+				case device_type_e::INVALID:
+				{
+					std::string err_string = "ERROR: Device type is listed as INVALID for device_name: ";
+					throw std::runtime_error(err_string + device_name);
+				}
+				break;
+
+				default:
+				{
+					std::string err_string = "ERROR: Attempted to initialize unsupported device using "
+					                         "ghost_v5_interfaces. Device Name: " + device_name + " Device Type: ";
+					if(DEVICE_TYPE_TO_STRING_MAP.count(config_ptr->type) != 0){
+						err_string += DEVICE_TYPE_TO_STRING_MAP.at(config_ptr->type);
+					}
+					else{
+						err_string += std::to_string(config_ptr->type);
+					}
+					throw std::runtime_error(err_string);
+				}
+				break;
 			}
-			break;
 		}
+
+		zero_actuators();
+		v5_globals::serial_node_ptr->initSerial();
+		pros::Task reader_thread(reader_loop, "reader thread");
+		pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
 	}
-
-	zero_actuators();
-
-	pros::lcd::initialize();
-	pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
-
-	// Perform and necessary Serial Init
-	v5_globals::serial_node_ptr->initSerial();
-	pros::Task reader_thread(reader_loop, "reader thread");
-	pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
+	catch(std::exception &e){
+		std::cout << e.what() << std::endl;
+		exit_main_loop(e);
+	}
 }
 
 /**
@@ -151,11 +229,13 @@ void initialize(){
  */
 void disabled(){
 	uint32_t loop_time = pros::millis();
-	while(pros::competition::is_disabled()){
+	while(pros::competition::is_disabled() && v5_globals::run){
 		ghost_main_loop();
-		update_actuators();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
+
+	// Only reached if we encounter an exception in main loop
+	error_loop();
 }
 
 /**
@@ -183,11 +263,13 @@ void competition_initialize() {
  */
 void autonomous(){
 	uint32_t loop_time = pros::millis();
-	while(pros::competition::is_autonomous()){
+	while(pros::competition::is_autonomous() && v5_globals::run){
 		ghost_main_loop();
-		update_actuators();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
+
+	// Only reached if we encounter an exception in main loop
+	error_loop();
 }
 
 /**
@@ -205,11 +287,13 @@ void autonomous(){
  */
 void opcontrol(){
 	uint32_t loop_time = pros::millis();
-	while(!pros::competition::is_autonomous() && !pros::competition::is_disabled()){
+	while(!pros::competition::is_autonomous() && !pros::competition::is_disabled() && v5_globals::run){
 		ghost_main_loop();
-		update_actuators();
 		pros::c::task_delay_until(&loop_time, 10);
 	}
+
+	// Only reached if we encounter an exception in main loop
+	error_loop();
 }
 
 // void opcontrol(){

@@ -16,16 +16,22 @@ using namespace ghost_v5_interfaces;
 int main(int argc, char* argv[]){
 	auto robots_yaml = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/robots.yaml");
 
+	std::cout << "-------------------------------------------------------" << std::endl;
 	std::cout << "--- Generating PROS Headers for Robot Configuration ---" << std::endl;
-	std::string robot_config_name;
-	if(!loadYAMLParam(robots_yaml, "robot_config_name", robot_config_name, true)){
-		throw std::runtime_error("Error: robot_config_name not found!");
+	std::cout << "-------------------------------------------------------" << std::endl;
+	std::cout << std::endl;
+
+	std::string selected_robot;
+	if(!loadYAMLParam(robots_yaml, "selected_robot", selected_robot, false)){
+		throw std::runtime_error("Error: selected_robot not found!");
 	}
 
 	std::string config_file;
-	if(!loadYAMLParam(robots_yaml[robot_config_name], "config_file", config_file, true)){
+	if(!loadYAMLParam(robots_yaml[selected_robot], "config_file", config_file, false)){
 		throw std::runtime_error("Error: config_file not found!");
 	}
+
+	std::cout << "SELECTED_ROBOT: " << selected_robot << std::endl << std::endl;
 
 	std::string input_filepath = std::string(getenv("HOME")) + "/VEXU_GHOST/" + config_file;
 	if(!std::filesystem::exists(std::filesystem::path(input_filepath))){
@@ -34,8 +40,8 @@ int main(int argc, char* argv[]){
 
 	std::string output_filepath = std::string(getenv("HOME")) + "/VEXU_GHOST/02_V5/ghost_pros/include/robot_config.hpp";
 
-	std::cout << "Input File: " << input_filepath << std::endl;
-	std::cout << "Output File: " << output_filepath << std::endl;
+	std::cout << "INPUT FILEPATH: " << input_filepath << std::endl;
+	std::cout << "OUTPUT FILEPATH: " << output_filepath << std::endl << std::endl;
 
 	// Create directory for code generation
 	if(std::filesystem::exists(std::filesystem::path(output_filepath))){

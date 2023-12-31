@@ -39,7 +39,7 @@ JetsonV5SerialNode::JetsonV5SerialNode() :
 	std::string robot_config_yaml_path = get_parameter("robot_config_yaml_path").as_string();
 
 	// Load Robot Configuration
-	auto device_config_map = loadRobotConfigFromYAMLFile(std::string(getenv("HOME")) + robot_config_yaml_path);
+	auto device_config_map = loadRobotConfigFromYAMLFile(robot_config_yaml_path);
 	robot_hardware_interface_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map, hardware_type_e::COPROCESSOR);
 	actuator_command_msg_len_ = robot_hardware_interface_ptr_->getActuatorCommandMsgLength();
 	sensor_update_msg_len_ = robot_hardware_interface_ptr_->getSensorUpdateMsgLength();

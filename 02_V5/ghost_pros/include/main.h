@@ -36,6 +36,7 @@ uint32_t last_cmd_time = 0;
 uint32_t cmd_timeout_ms = 50;
 uint32_t loop_frequency = 10;
 bool run = true;
+std::string error_str;
 pros::Mutex actuator_update_lock;
 
 pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
