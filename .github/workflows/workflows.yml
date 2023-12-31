@@ -21,13 +21,6 @@ jobs:
         with:
           required-ros-distributions: humble
 
-      - run: echo ${{github.workspace}}
-
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - run: echo ${{github.workspace}}
-      
       - run: ./scripts/build.sh
 
       - run: ./scripts/test_full.sh
