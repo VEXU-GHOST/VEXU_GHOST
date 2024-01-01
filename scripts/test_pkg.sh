@@ -3,7 +3,7 @@
 PKG_LIST="$*"
 
 echo ------ Building ------
-colcon build --packages-up-to $PKG_LIST
+colcon build --symlink-install --packages-up-to $PKG_LIST
 
 RETURN=$?
 
