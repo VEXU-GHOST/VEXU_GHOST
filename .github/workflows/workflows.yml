@@ -9,26 +9,22 @@ on:
     types: [ready_for_review, synchronize]
 
 jobs:
-
   build-and-test:
     name: Build and Test
     if: github.event_name == 'push' || !github.event.pull_request.draft
     runs-on: ubuntu-22.04
     env:
-        VEXU_HOME: ${{github.workspace}}
+      VEXU_HOME: ${{github.workspace}}
 
     steps:
-    
       - name: Update System Packages
         run: sudo apt-get update; sudo apt-get upgrade -y
 
-      - name: Install ROS2
-        uses: ros-tooling/setup-ros@v0.7
-        with:
-          required-ros-distributions: humble
-
       - name: Checkout Branch
         uses: actions/checkout@v4
+
+      - name: Install ROS2 Humble
+        uses: ./.github/actions/install-ros2-humble.yml
 
       - name: Init Submodules
         run: git submodule init
