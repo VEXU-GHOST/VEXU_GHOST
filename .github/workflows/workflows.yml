@@ -36,10 +36,14 @@ jobs:
         run: git submodule update --recursive
 
       - name: Print enabled repositories (DEBUG)
-        run: find /etc/apt/ -name *.list | xargs cat | grep  ^"deb http" | awk '{print $4}' | sort | uniq
+        run: |
+          sudo add-apt-repository universe
+          find /etc/apt/ -name *.list | xargs cat | grep  ^"deb http" | awk '{print $4}' | sort | uniq
 
       - name: Update Dependencies
-        run: ./scripts/update_dependencies.sh
+        run: |
+          sudo add-apt-repository universe
+          ./scripts/update_dependencies.sh
 
       - name: Build Submodules
         run: ./scripts/setup_submodules.sh
