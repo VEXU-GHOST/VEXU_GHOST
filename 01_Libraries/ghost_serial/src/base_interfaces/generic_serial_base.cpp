@@ -63,19 +63,17 @@ bool GenericSerialBase::writeMsgToSerial(const unsigned char buffer[], const int
 				0,
 			};
 
+			// Copy start_sequence and msg
+			memcpy(raw_msg_buffer, write_msg_start_seq.c_str(), write_msg_start_seq.length());
+			memcpy(raw_msg_buffer + write_msg_start_seq.length(), buffer, num_bytes);
+
 			// Calculate and append checksum byte (if used)
 			if(use_checksum_){
-				memcpy(raw_msg_buffer, write_msg_start_seq.c_str(), write_msg_start_seq.length());
-				memcpy(raw_msg_buffer + write_msg_start_seq.length(), buffer, num_bytes);
 				raw_msg_buffer[raw_msg_len - 1] = calculateChecksum(buffer, num_bytes);
-			}
-			else{
-				memcpy(raw_msg_buffer, write_msg_start_seq.c_str(), write_msg_start_seq.length());
-				memcpy(raw_msg_buffer + write_msg_start_seq.length(), buffer, num_bytes + use_checksum_);
 			}
 
 			// COBS Encode (Adds leading byte and null delimiter byte)
-			int write_buffer_len = write_msg_start_seq.length() + raw_msg_len + 2;
+			int write_buffer_len = raw_msg_len + 2;
 			unsigned char write_buffer[write_buffer_len] = {
 				0,
 			};
