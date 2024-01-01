@@ -33,3 +33,4 @@ runs:
 
     - name: Set up ROS2 environment variables
       run: source /opt/ros/humble/setup.sh
+      shell: bash
