@@ -30,7 +30,3 @@ runs:
         sudo apt-get upgrade
         sudo apt-get install ros-humble-desktop
       shell: bash
-
-    - name: Set up ROS2 environment variables
-      run: source /opt/ros/humble/setup.sh
-      shell: bash
