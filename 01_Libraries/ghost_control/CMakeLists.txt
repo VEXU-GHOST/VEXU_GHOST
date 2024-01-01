@@ -110,4 +110,11 @@ target_link_libraries(test_mechanical_differential
   gtest
 )
 
+ament_add_gtest(test_motor_controller test/test_motor_controller.cpp)
+target_link_libraries(test_motor_controller
+  dc_motor_model
+  motor_controller
+  gtest
+)
+
 ament_package()
