@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install ROS2 Humble
-        uses: ./.github/actions/install-ros2-humble.yml
+        uses: ./.github/actions/action.yml
 
       - name: Init Submodules
         run: git submodule init
