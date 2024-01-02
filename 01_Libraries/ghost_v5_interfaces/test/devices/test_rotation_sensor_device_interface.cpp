@@ -23,3 +23,9 @@ TEST(TestRotationSensorDeviceInterface, testSerialization){
 		EXPECT_EQ(*data_1, *data_2);
 	}
 }
+
+TEST(TestJoystickDeviceInterface, testSensorUpdateMsgLength){
+	auto r1 = getRandomRotationSensorData();
+	EXPECT_EQ(r1->serialize(hardware_type_e::V5_BRAIN).size(), r1->getSensorPacketSize());
+	EXPECT_EQ(r1->serialize(hardware_type_e::COPROCESSOR).size(), r1->getActuatorPacketSize());
+}

@@ -46,3 +46,12 @@ TEST(TestJoystickDeviceInterface, testClone){
 	auto data_2 = data_1->clone()->as<JoystickDeviceData>();
 	EXPECT_EQ(*data_1, *data_2);
 }
+
+TEST(TestJoystickDeviceInterface, testSensorUpdateMsgLength){
+	auto j1 = getRandomJoystickData();
+	auto serial_stream_1 = j1->serialize(hardware_type_e::V5_BRAIN);
+	EXPECT_EQ(serial_stream_1.size(), j1->getSensorPacketSize());
+
+	auto serial_stream_2 = j1->serialize(hardware_type_e::COPROCESSOR);
+	EXPECT_EQ(serial_stream_2.size(), j1->getActuatorPacketSize());
+}

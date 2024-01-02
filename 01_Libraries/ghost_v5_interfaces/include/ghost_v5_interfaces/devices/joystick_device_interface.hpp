@@ -123,6 +123,9 @@ public:
 			memcpy(msg_data + byte_offset, &byte_pack_2, 1);
 			byte_offset += 1;
 		}
+
+		int msg_size = (hardware_type == hardware_type_e::V5_BRAIN) ? getSensorPacketSize() : getActuatorPacketSize();
+		checkMsgSize(msg, msg_size);
 		return msg;
 	}
 

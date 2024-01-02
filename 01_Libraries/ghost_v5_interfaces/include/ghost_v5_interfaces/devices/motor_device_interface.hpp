@@ -165,6 +165,7 @@ public:
 
 			memcpy(msg_buffer + byte_offset, &ctrl_byte, 1);
 			byte_offset++;
+			checkMsgSize(msg, getActuatorPacketSize());
 		}
 		else if(hardware_type == hardware_type_e::V5_BRAIN){
 			msg.resize(getSensorPacketSize(), 0);
@@ -184,6 +185,7 @@ public:
 			byte_offset += 4;
 			memcpy(msg_buffer + byte_offset, &curr_temp_c, 4);
 			byte_offset += 4;
+			checkMsgSize(msg, getSensorPacketSize());
 		}
 		else{
 			throw std::runtime_error("[MotorDeviceData::deserialize] Error: Received unsupported hardware type " + std::to_string(hardware_type) + " on motor " + name);

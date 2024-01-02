@@ -31,3 +31,13 @@ TEST(TestMotorDeviceInterface, testSerializationCoprocessorToV5){
 		EXPECT_EQ(*data_1, *data_2);
 	}
 }
+
+TEST(TestMotorDeviceInterface, testSensorUpdateMsgLength){
+	auto m1 = getRandomMotorData(false);
+	auto m2 = getRandomMotorData(true);
+
+	EXPECT_EQ(m1->serialize(hardware_type_e::COPROCESSOR).size(), m1->getActuatorPacketSize());
+	EXPECT_EQ(m1->serialize(hardware_type_e::V5_BRAIN).size(), m1->getSensorPacketSize());
+	EXPECT_EQ(m2->serialize(hardware_type_e::COPROCESSOR).size(), m1->getActuatorPacketSize());
+	EXPECT_EQ(m2->serialize(hardware_type_e::V5_BRAIN).size(), m1->getSensorPacketSize());
+}
