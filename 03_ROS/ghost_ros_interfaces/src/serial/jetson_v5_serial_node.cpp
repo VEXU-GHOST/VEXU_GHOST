@@ -46,17 +46,17 @@ JetsonV5SerialNode::JetsonV5SerialNode() :
 	sensor_update_msg_ = std::vector<unsigned char>(sensor_update_msg_len_, 0);
 
 	// Debug Info
-	RCLCPP_DEBUG(get_logger(), "Port Name: %s", port_name_.c_str());
-	RCLCPP_DEBUG(get_logger(), "Backup Port Name: %s", backup_port_name_.c_str());
+	RCLCPP_INFO(get_logger(), "Port Name: %s", port_name_.c_str());
+	RCLCPP_INFO(get_logger(), "Backup Port Name: %s", backup_port_name_.c_str());
 
 	int incoming_packet_len = sensor_update_msg_len_ +
 	                          use_checksum_ +
 	                          read_msg_start_seq_.size() +
 	                          2; // Cobs Encoding adds two bytes
 
-	RCLCPP_DEBUG(get_logger(), "Actuator Command Msg Length: %d", actuator_command_msg_len_);
-	RCLCPP_DEBUG(get_logger(), "State Update Msg Length: %d", sensor_update_msg_len_);
-	RCLCPP_DEBUG(get_logger(), "Incoming Packet Length: %d", incoming_packet_len);
+	RCLCPP_INFO(get_logger(), "Actuator Command Msg Length: %d", actuator_command_msg_len_);
+	RCLCPP_INFO(get_logger(), "State Update Msg Length: %d", sensor_update_msg_len_);
+	RCLCPP_INFO(get_logger(), "Incoming Packet Length: %d", incoming_packet_len);
 
 	// Serial Interface
 	serial_base_interface_ = std::make_shared<ghost_serial::JetsonSerialBase>(
