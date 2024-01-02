@@ -20,6 +20,9 @@ protected:
 		rotation_sensor_1_->type = device_type_e::ROTATION_SENSOR;
 		rotation_sensor_1_->reversed = true;
 		rotation_sensor_1_->data_rate = 10;
+		rotation_sensor_1_->serial_config.get_position_data = true;
+		rotation_sensor_1_->serial_config.get_angle_data = false;
+		rotation_sensor_1_->serial_config.get_velocity_data = true;
 
 		// Default (minimal required params)
 		rotation_sensor_2_ = std::make_shared<RotationSensorDeviceConfig>();
@@ -35,6 +38,20 @@ protected:
 };
 
 /**
+ * @brief Test that a RotationSensorDeviceData::SerialConfig struct can be properly loaded from YAML
+ */
+TEST_F(TestLoadRotationSensorDeviceConfigYAML, testLoadRotationSensorSerialConfig){
+	RotationSensorDeviceData::SerialConfig test_serial_config{};
+	test_serial_config.get_angle_data = false;
+	test_serial_config.get_position_data = true;
+	test_serial_config.get_velocity_data = true;
+
+	RotationSensorDeviceData::SerialConfig loaded_serial_config;
+	EXPECT_NO_THROW(loaded_serial_config = loadRotationSensorSerialConfigFromYAML(config_yaml_["port_configuration"]["device_configurations"]["rotation_sensor_config"]["serial"]));
+	EXPECT_EQ(test_serial_config, loaded_serial_config);
+}
+
+/**
  * @brief Test that all fields are properly set when loading the RotationSensorDeviceConfig class
  */
 TEST_F(TestLoadRotationSensorDeviceConfigYAML, testLoadCustomSensorConfigFromYAML){
@@ -43,6 +60,17 @@ TEST_F(TestLoadRotationSensorDeviceConfigYAML, testLoadCustomSensorConfigFromYAM
 	auto config_ptr = std::make_shared<RotationSensorDeviceConfig>();
 	loadRotationSensorDeviceConfigFromYAML(config_node, sensor_name, config_ptr);
 	EXPECT_EQ(*config_ptr, *rotation_sensor_1_);
+}
+
+/**
+ * @brief Test that if the rotation sensor config is missing the config attribute, it loads the default.
+ */
+TEST_F(TestLoadRotationSensorDeviceConfigYAML, testMissingConfigIsDefault){
+	auto config_node = config_yaml_["port_configuration"];
+	std::string sensor_name = "rotation_sensor_2";
+	auto config_ptr = std::make_shared<RotationSensorDeviceConfig>();
+	EXPECT_NO_THROW(loadRotationSensorDeviceConfigFromYAML(config_node, sensor_name, config_ptr));
+	EXPECT_EQ(*config_ptr, *rotation_sensor_2_);
 }
 
 /**

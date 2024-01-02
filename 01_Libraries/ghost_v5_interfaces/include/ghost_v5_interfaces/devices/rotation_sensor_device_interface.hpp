@@ -12,29 +12,27 @@ namespace ghost_v5_interfaces {
 
 namespace devices {
 
-class RotationSensorDeviceConfig : public DeviceConfig {
-public:
-
-	std::shared_ptr<DeviceBase> clone() const override {
-		return std::make_shared<RotationSensorDeviceConfig>(*this);
-	}
-
-	bool operator==(const DeviceBase &rhs) const override {
-		const RotationSensorDeviceConfig *d_rhs = dynamic_cast<const RotationSensorDeviceConfig *>(&rhs);
-		return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) && (type == d_rhs->type) &&
-		       (reversed == d_rhs->reversed) && (data_rate == d_rhs->data_rate);
-	}
-
-	bool reversed = false;
-	uint32_t data_rate = 5;
-};
-
-
 class RotationSensorDeviceData : public DeviceData {
 public:
 
-	RotationSensorDeviceData(){
-		type = device_type_e::ROTATION_SENSOR;
+	struct SerialConfig {
+		SerialConfig(){
+		}
+
+		bool operator==(const SerialConfig &rhs) const {
+			return (get_angle_data == rhs.get_angle_data) &&
+			       (get_position_data == rhs.get_position_data) &&
+			       (get_velocity_data == rhs.get_velocity_data);
+		}
+
+		bool get_angle_data = true;
+		bool get_position_data = true;
+		bool get_velocity_data = true;
+	};
+
+	RotationSensorDeviceData(std::string name, SerialConfig serial_config = SerialConfig()) :
+		DeviceData(name, device_type_e::ROTATION_SENSOR),
+		serial_config_(serial_config){
 	}
 
 	// Msg Size
@@ -74,11 +72,19 @@ public:
 			msg.resize(getSensorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			memcpy(msg_buffer + byte_offset, &angle, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &position, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &velocity, 4);
+
+			if(serial_config_.get_angle_data){
+				memcpy(msg_buffer + byte_offset, &angle, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_position_data){
+				memcpy(msg_buffer + byte_offset, &position, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_velocity_data){
+				memcpy(msg_buffer + byte_offset, &velocity, 4);
+				byte_offset += 4;
+			}
 		}
 		return msg;
 	}
@@ -89,14 +95,40 @@ public:
 			checkMsgSize(msg, getSensorPacketSize());
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			memcpy(&angle, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&position, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&velocity, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
+			if(serial_config_.get_angle_data){
+				memcpy(&angle, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_position_data){
+				memcpy(&position, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_velocity_data){
+				memcpy(&velocity, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
 		}
 	}
+
+	SerialConfig serial_config_;
+};
+
+class RotationSensorDeviceConfig : public DeviceConfig {
+public:
+
+	std::shared_ptr<DeviceBase> clone() const override {
+		return std::make_shared<RotationSensorDeviceConfig>(*this);
+	}
+
+	bool operator==(const DeviceBase &rhs) const override {
+		const RotationSensorDeviceConfig *d_rhs = dynamic_cast<const RotationSensorDeviceConfig *>(&rhs);
+		return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) && (type == d_rhs->type) &&
+		       (reversed == d_rhs->reversed) && (data_rate == d_rhs->data_rate);
+	}
+
+	bool reversed = false;
+	uint32_t data_rate = 5;
+	RotationSensorDeviceData::SerialConfig serial_config;
 };
 
 } // namespace devices

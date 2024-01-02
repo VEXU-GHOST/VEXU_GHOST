@@ -45,7 +45,7 @@ GenericSerialBase::~GenericSerialBase(){
 	}
 }
 
-uint8_t GenericSerialBase::calculateChecksum(const unsigned char buffer[], const int &num_bytes) const {
+uint8_t GenericSerialBase::calculateChecksum(const unsigned char buffer[], const int &num_bytes) {
 	uint8_t checksum = 0;
 	for(int i = 0; i < num_bytes; i++){
 		checksum += buffer[i];
@@ -53,7 +53,7 @@ uint8_t GenericSerialBase::calculateChecksum(const unsigned char buffer[], const
 	return checksum;
 }
 
-void GenericSerialBase::checkReadMsgBufferLength(std::vector<unsigned char> &msg_buffer){
+void GenericSerialBase::checkReadMsgBufferLength(std::vector<unsigned char> &msg_buffer) const {
 	if(msg_buffer.size() < read_msg_max_len_){
 		throw std::runtime_error(
 			      std::string("msg_buffer size must be at least read_msg_max_len!") +

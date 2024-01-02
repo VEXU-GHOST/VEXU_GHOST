@@ -269,14 +269,13 @@ public:
 	devices::DevicePair getDevicePair(const std::string& device_name) const;
 
 	/**
-	 * @brief Updates a given Device with new Data given device name.
+	 * @brief Updates a given Device with new Data using the device name.
 	 *
 	 * Throws a runtime error if the device is not found.
 	 *
-	 * @param device_name
 	 * @param device_data
 	 */
-	void setDeviceData(const std::string& device_name, std::shared_ptr<devices::DeviceData> device_data);
+	void setDeviceData(std::shared_ptr<devices::DeviceData> device_data);
 
 	/**
 	 * @brief Returns a pointer to a Device's configuration given the device name.
@@ -380,7 +379,7 @@ public:
 	int deserialize(const std::vector<unsigned char>& msg);
 
 private:
-	void setDeviceDataNoLock(const std::string& device_name, std::shared_ptr<devices::DeviceData> device_data);
+	void setDeviceDataNoLock(std::shared_ptr<devices::DeviceData> device_data);
 	void throwOnNonexistentDevice(const std::string& device_name) const;
 	devices::hardware_type_e hardware_type_;
 

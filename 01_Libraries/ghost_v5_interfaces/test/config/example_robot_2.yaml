@@ -5,7 +5,6 @@ port_configuration:
             port: 4
             type: ROTATION_SENSOR
             reversed: true
-            data_rate: 10
         test_motor:
             port: 2
             type: MOTOR

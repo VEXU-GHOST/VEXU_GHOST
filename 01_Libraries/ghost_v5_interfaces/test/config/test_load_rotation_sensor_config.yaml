@@ -4,7 +4,7 @@ port_configuration:
             port: 1
             type: ROTATION_SENSOR
             reversed: true
-            data_rate: 10
+            config: rotation_sensor_config
         rotation_sensor_2:
             port: 2
             type: ROTATION_SENSOR
@@ -12,3 +12,11 @@ port_configuration:
             type: ROTATION_SENSOR
         rotation_sensor_no_type:
             port: 2
+
+    device_configurations:
+        rotation_sensor_config:
+            data_rate: 10
+            serial:
+                get_angle_data: false
+                get_position_data: true
+                get_velocity_data: true

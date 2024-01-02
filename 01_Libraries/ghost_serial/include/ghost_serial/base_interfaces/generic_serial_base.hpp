@@ -52,7 +52,7 @@ public:
 	 *
 	 * @param msg_buffer
 	 */
-	void checkReadMsgBufferLength(std::vector<unsigned char> &msg_buffer);
+	void checkReadMsgBufferLength(std::vector<unsigned char> &msg_buffer) const;
 
 protected:
 	// Platform specific depending on Serial IO interfaces
@@ -67,7 +67,7 @@ protected:
 	 * @param num_bytes length of msg in bytes
 	 * @return uint8_t checksum
 	 */
-	uint8_t calculateChecksum(const unsigned char buffer[], const int &num_bytes) const;
+	static uint8_t calculateChecksum(const unsigned char buffer[], const int &num_bytes);
 
 	// Msg Config
 	std::string write_msg_start_seq;

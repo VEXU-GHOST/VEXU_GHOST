@@ -17,6 +17,7 @@ bool loadBrakeModeFromYAML(YAML::Node node, devices::ghost_brake_mode& brake_mod
 DCMotorModel::Config loadMotorModelConfigFromYAML(YAML::Node node, bool verbose = false);
 MotorController::Config loadMotorControllerConfigFromYAML(YAML::Node node, bool verbose = false);
 SecondOrderLowPassFilter::Config loadLowPassFilterConfigFromYAML(YAML::Node node, bool verbose = false);
+devices::MotorDeviceData::SerialConfig loadMotorSerialConfigFromYAML(YAML::Node node, bool verbose = false);
 
 void loadMotorDeviceConfigFromYAML(YAML::Node node,
                                    std::string motor_name,

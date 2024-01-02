@@ -14,26 +14,11 @@ namespace devices {
 const std::string MAIN_JOYSTICK_NAME = "joy_master";
 const std::string PARTNER_JOYSTICK_NAME = "joy_partner";
 
-class JoystickDeviceConfig : public DeviceConfig {
-public:
-	bool is_partner = false;
-
-	std::shared_ptr<DeviceBase> clone() const override {
-		return std::make_shared<JoystickDeviceConfig>(*this);
-	}
-
-	bool operator==(const DeviceBase &rhs) const override {
-		const JoystickDeviceConfig *d_rhs = dynamic_cast<const JoystickDeviceConfig *>(&rhs);
-		return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) && (type == d_rhs->type) &&
-		       (is_partner == d_rhs->is_partner);
-	}
-};
-
 class JoystickDeviceData : public DeviceData {
 public:
 
-	JoystickDeviceData(){
-		type = device_type_e::JOYSTICK;
+	JoystickDeviceData(std::string name) :
+		DeviceData(name, device_type_e::JOYSTICK){
 	}
 
 	int getActuatorPacketSize() const override {
@@ -167,6 +152,21 @@ public:
 			btn_l1 = byte_vector_2[2];
 			btn_l2 = byte_vector_2[3];
 		}
+	}
+};
+
+class JoystickDeviceConfig : public DeviceConfig {
+public:
+	bool is_partner = false;
+
+	std::shared_ptr<DeviceBase> clone() const override {
+		return std::make_shared<JoystickDeviceConfig>(*this);
+	}
+
+	bool operator==(const DeviceBase &rhs) const override {
+		const JoystickDeviceConfig *d_rhs = dynamic_cast<const JoystickDeviceConfig *>(&rhs);
+		return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) && (type == d_rhs->type) &&
+		       (is_partner == d_rhs->is_partner);
 	}
 };
 

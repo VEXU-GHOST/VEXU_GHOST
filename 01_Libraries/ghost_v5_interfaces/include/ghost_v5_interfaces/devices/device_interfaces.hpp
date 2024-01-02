@@ -96,6 +96,11 @@ public:
 class DeviceData : public DeviceBase {
 public:
 
+	DeviceData(std::string name, device_type_e type){
+		this->type = type;
+		this->name = name;
+	}
+
 	virtual void update(std::shared_ptr<DeviceData> data_ptr) = 0;
 
 	/**
@@ -140,6 +145,12 @@ public:
 	 */
 	virtual void deserialize(const std::vector<unsigned char>& data, hardware_type_e hardware_type)  = 0;
 
+	/**
+	 * @brief Validates serial msg size
+	 *
+	 * @param data serialized data buffer
+	 * @param msg_size	expected msg size
+	 */
 	void checkMsgSize(std::vector<unsigned char> data, int msg_size) const {
 		if(data.size() != msg_size){
 			throw std::runtime_error("[DeviceData::checkMsgSize] Error: Device " + name + " received incorrect serial msg size. " +

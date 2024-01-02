@@ -22,10 +22,31 @@ int getRandomInt(){
 	return (int) getRandomFloat();
 }
 
-std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(){
-	auto joy_ptr = std::make_shared<devices::JoystickDeviceData>();
+devices::MotorDeviceData::SerialConfig getRandomMotorSerialConfig(){
+	devices::MotorDeviceData::SerialConfig config;
+	config.send_position_command = getRandomBool();
+	config.send_velocity_command = getRandomBool();
+	config.send_voltage_command = getRandomBool();
+	config.send_torque_command = getRandomBool();
+	config.get_torque_data = getRandomBool();
+	config.get_voltage_data = getRandomBool();
+	config.get_current_data = getRandomBool();
+	config.get_power_data = getRandomBool();
+	config.get_temp_data = getRandomBool();
+	return config;
+}
 
-	joy_ptr->name = "joy_" + std::to_string(rand() % 2);
+devices::RotationSensorDeviceData::SerialConfig getRandomRotationSensorSerialConfig(){
+	devices::RotationSensorDeviceData::SerialConfig config;
+	config.get_angle_data = getRandomBool();
+	config.get_position_data = getRandomBool();
+	config.get_velocity_data = getRandomBool();
+	return config;
+}
+
+std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(){
+	auto joy_ptr = std::make_shared<devices::JoystickDeviceData>("joy_" + std::to_string(rand() % 2));
+
 	joy_ptr->left_x = getRandomFloat();
 	joy_ptr->left_y = getRandomFloat();
 	joy_ptr->right_x = getRandomFloat();
@@ -46,42 +67,66 @@ std::shared_ptr<devices::JoystickDeviceData> getRandomJoystickData(){
 	return joy_ptr;
 }
 
-std::shared_ptr<devices::MotorDeviceData> getRandomMotorData(bool actuator_cmd){
-	auto motor_ptr = std::make_shared<devices::MotorDeviceData>();
+std::shared_ptr<devices::MotorDeviceData> getRandomMotorData(bool actuator_cmd,
+                                                             devices::MotorDeviceData::SerialConfig serial_config = devices::MotorDeviceData::SerialConfig()){
+	auto motor_ptr = std::make_shared<devices::MotorDeviceData>("test", serial_config);
 
 	// Actuator Values
 	if(actuator_cmd){
-		motor_ptr->position_command = getRandomFloat();
-		motor_ptr->velocity_command = getRandomFloat();
-		motor_ptr->torque_command = getRandomFloat();
-		motor_ptr->voltage_command = getRandomFloat();
+		if(serial_config.send_position_command){
+			motor_ptr->position_command = getRandomFloat();
+			motor_ptr->position_control = getRandomBool();
+		}
+		if(serial_config.send_velocity_command){
+			motor_ptr->velocity_command = getRandomFloat();
+			motor_ptr->velocity_control = getRandomBool();
+		}
+		if(serial_config.send_voltage_command){
+			motor_ptr->voltage_command = getRandomFloat();
+			motor_ptr->voltage_control = getRandomBool();
+		}
+		if(serial_config.send_torque_command){
+			motor_ptr->torque_command = getRandomFloat();
+			motor_ptr->torque_control = getRandomBool();
+		}
 		motor_ptr->current_limit = getRandomFloat();
-
-		motor_ptr->position_control = getRandomBool();
-		motor_ptr->velocity_control = getRandomBool();
-		motor_ptr->torque_control = getRandomBool();
-		motor_ptr->voltage_control = getRandomBool();
 	}
 	else{
 		motor_ptr->curr_position = getRandomFloat();
 		motor_ptr->curr_velocity_rpm = getRandomFloat();
-		motor_ptr->curr_torque_nm = getRandomFloat();
-		motor_ptr->curr_voltage_mv = getRandomFloat();
-		motor_ptr->curr_current_ma = getRandomFloat();
-		motor_ptr->curr_power_w = getRandomFloat();
-		motor_ptr->curr_temp_c = getRandomFloat();
+
+		if(serial_config.get_torque_data){
+			motor_ptr->curr_torque_nm = getRandomFloat();
+		}
+		if(serial_config.get_voltage_data){
+			motor_ptr->curr_voltage_mv = getRandomFloat();
+		}
+		if(serial_config.get_current_data){
+			motor_ptr->curr_current_ma = getRandomFloat();
+		}
+		if(serial_config.get_power_data){
+			motor_ptr->curr_power_w = getRandomFloat();
+		}
+		if(serial_config.get_temp_data){
+			motor_ptr->curr_temp_c = getRandomFloat();
+		}
 	}
 
 
 	return motor_ptr;
 }
 
-std::shared_ptr<devices::RotationSensorDeviceData> getRandomRotationSensorData(){
-	auto rot_sensor_ptr = std::make_shared<devices::RotationSensorDeviceData>();
-
-	rot_sensor_ptr->angle = getRandomFloat();
-	rot_sensor_ptr->position = getRandomFloat();
-	rot_sensor_ptr->velocity = getRandomFloat();
+std::shared_ptr<devices::RotationSensorDeviceData> getRandomRotationSensorData(devices::RotationSensorDeviceData::SerialConfig serial_config = devices::RotationSensorDeviceData::SerialConfig()) {
+	auto rot_sensor_ptr = std::make_shared<devices::RotationSensorDeviceData>("test", serial_config);
+	if(serial_config.get_angle_data){
+		rot_sensor_ptr->angle = getRandomFloat();
+	}
+	if(serial_config.get_position_data){
+		rot_sensor_ptr->position = getRandomFloat();
+	}
+	if(serial_config.get_velocity_data){
+		rot_sensor_ptr->velocity = getRandomFloat();
+	}
 
 	return rot_sensor_ptr;
 }

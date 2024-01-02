@@ -16,8 +16,8 @@ TEST(TestJoystickDeviceInterface, testEqualityOperator){
 
 TEST(TestJoystickDeviceInterface, testSerializationCoprocessorToV5){
 	auto j1 = getRandomJoystickData();
-	auto j2 = std::make_shared<JoystickDeviceData>();
-	auto j3 = std::make_shared<JoystickDeviceData>();
+	auto j2 = std::make_shared<JoystickDeviceData>("joy_test");
+	auto j3 = std::make_shared<JoystickDeviceData>("joy_test");
 	j2->name = j1->name;
 	j3->name = j1->name;
 
@@ -31,7 +31,7 @@ TEST(TestJoystickDeviceInterface, testSerializationCoprocessorToV5){
 
 TEST(TestJoystickDeviceInterface, testSerializationV5ToCoprocessor){
 	auto j1 = getRandomJoystickData();
-	auto j2 = std::make_shared<JoystickDeviceData>();
+	auto j2 = std::make_shared<JoystickDeviceData>("joy_test");
 	j2->name = j1->name;
 
 	// Test Serialization from Coprocessor -> V5
@@ -47,7 +47,7 @@ TEST(TestJoystickDeviceInterface, testClone){
 	EXPECT_EQ(*data_1, *data_2);
 }
 
-TEST(TestJoystickDeviceInterface, testSensorUpdateMsgLength){
+TEST(TestJoystickDeviceInterface, testSerialMsgLengths){
 	auto j1 = getRandomJoystickData();
 	auto serial_stream_1 = j1->serialize(hardware_type_e::V5_BRAIN);
 	EXPECT_EQ(serial_stream_1.size(), j1->getSensorPacketSize());

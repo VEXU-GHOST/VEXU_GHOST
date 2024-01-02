@@ -37,45 +37,60 @@ enum ghost_encoder_unit {
 	ENCODER_INVALID
 };
 
-class MotorDeviceConfig : public DeviceConfig {
-public:
-
-	std::shared_ptr<DeviceBase> clone() const override {
-		return std::make_shared<MotorDeviceConfig>(*this);
-	}
-
-	bool operator==(const DeviceBase &rhs) const override {
-		const MotorDeviceConfig *d_rhs = dynamic_cast<const MotorDeviceConfig *>(&rhs);
-		return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) && (type == d_rhs->type) &&
-		       (reversed == d_rhs->reversed) && (gearset == d_rhs->gearset) && (brake_mode == d_rhs->brake_mode) &&
-		       (encoder_units == d_rhs->encoder_units) && (controller_config == d_rhs->controller_config) &&
-		       (filter_config == d_rhs->filter_config) && (model_config == d_rhs->model_config);
-	}
-
-	bool reversed = false;
-	MotorController::Config controller_config;
-	SecondOrderLowPassFilter::Config filter_config;
-	DCMotorModel::Config model_config;
-
-	// These three map 1:1 to their PROS counterpart on the V5 Side.
-	ghost_encoder_unit encoder_units{ghost_encoder_unit::ENCODER_COUNTS};
-	ghost_gearset gearset{ghost_gearset::GEARSET_200};
-	ghost_brake_mode brake_mode{ghost_brake_mode::BRAKE_MODE_COAST};
-};
-
 class MotorDeviceData : public DeviceData {
 public:
-	MotorDeviceData(){
-		type = device_type_e::MOTOR;
+
+	struct SerialConfig {
+		SerialConfig(){
+		}
+
+		bool operator==(const SerialConfig &rhs) const {
+			return (send_position_command == rhs.send_position_command) && (send_velocity_command == rhs.send_velocity_command) &&
+			       (send_voltage_command == rhs.send_voltage_command) && (send_torque_command == rhs.send_torque_command) &&
+			       (get_torque_data == rhs.get_torque_data) && (get_voltage_data == rhs.get_voltage_data) &&
+			       (get_current_data == rhs.get_current_data) && (get_power_data == rhs.get_power_data) && (get_temp_data == rhs.get_temp_data);
+		}
+
+		// Actuation Msg Config
+		bool send_position_command = true;
+		bool send_velocity_command = true;
+		bool send_voltage_command = true;
+		bool send_torque_command = false;
+
+		// Sensor Update Msg Config
+		bool get_torque_data = false;
+		bool get_voltage_data = false;
+		bool get_current_data = false;
+		bool get_power_data = false;
+		bool get_temp_data = false;
+	};
+
+	MotorDeviceData(std::string name, SerialConfig serial_config = SerialConfig()) :
+		DeviceData(name, device_type_e::MOTOR),
+		serial_config_(serial_config){
 	}
 
 	// Msg Size
 	int getActuatorPacketSize() const override {
-		return 5 * 4 + 1;
+		int packet_size = 0;
+		packet_size += 1; // Control Byte
+		packet_size += 4; // Current Limit
+		packet_size += 4 * ((int) serial_config_.send_position_command);
+		packet_size += 4 * ((int) serial_config_.send_velocity_command);
+		packet_size += 4 * ((int) serial_config_.send_voltage_command);
+		packet_size += 4 * ((int) serial_config_.send_torque_command);
+		return packet_size;
 	}
 
 	int getSensorPacketSize() const override {
-		return 7 * 4;
+		int packet_size = 0;
+		packet_size += 4 + 4; // Position/Velocity
+		packet_size += 4 * ((int) serial_config_.get_torque_data);
+		packet_size += 4 * ((int) serial_config_.get_voltage_data);
+		packet_size += 4 * ((int) serial_config_.get_current_data);
+		packet_size += 4 * ((int) serial_config_.get_power_data);
+		packet_size += 4 * ((int) serial_config_.get_temp_data);
+		return packet_size;
 	}
 
 	// Actuator Values
@@ -141,23 +156,33 @@ public:
 			msg.resize(getActuatorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			memcpy(msg_buffer + byte_offset, &position_command, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &velocity_command, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &torque_command, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &voltage_command, 4);
-			byte_offset += 4;
+
 			memcpy(msg_buffer + byte_offset, &current_limit, 4);
 			byte_offset += 4;
 
+			if(serial_config_.send_position_command){
+				memcpy(msg_buffer + byte_offset, &position_command, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.send_velocity_command){
+				memcpy(msg_buffer + byte_offset, &velocity_command, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.send_voltage_command){
+				memcpy(msg_buffer + byte_offset, &voltage_command, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.send_torque_command){
+				memcpy(msg_buffer + byte_offset, &torque_command, 4);
+				byte_offset += 4;
+			}
+
 			unsigned char ctrl_byte = packByte(
 				std::vector<bool>{
-						position_control,
-						velocity_control,
-						torque_control,
-						voltage_control,
+						position_control && serial_config_.send_position_command,
+						velocity_control && serial_config_.send_velocity_command,
+						voltage_control && serial_config_.send_voltage_command,
+						torque_control && serial_config_.send_torque_command,
 						0,
 						0,
 						0,
@@ -171,20 +196,33 @@ public:
 			msg.resize(getSensorPacketSize(), 0);
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
+
 			memcpy(msg_buffer + byte_offset, &curr_position, 4);
 			byte_offset += 4;
 			memcpy(msg_buffer + byte_offset, &curr_velocity_rpm, 4);
 			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &curr_torque_nm, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &curr_voltage_mv, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &curr_current_ma, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &curr_power_w, 4);
-			byte_offset += 4;
-			memcpy(msg_buffer + byte_offset, &curr_temp_c, 4);
-			byte_offset += 4;
+
+			if(serial_config_.get_torque_data){
+				memcpy(msg_buffer + byte_offset, &curr_torque_nm, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_voltage_data){
+				memcpy(msg_buffer + byte_offset, &curr_voltage_mv, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_current_data){
+				memcpy(msg_buffer + byte_offset, &curr_current_ma, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_power_data){
+				memcpy(msg_buffer + byte_offset, &curr_power_w, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_temp_data){
+				memcpy(msg_buffer + byte_offset, &curr_temp_c, 4);
+				byte_offset += 4;
+			}
+
 			checkMsgSize(msg, getSensorPacketSize());
 		}
 		else{
@@ -199,25 +237,35 @@ public:
 			checkMsgSize(msg, getActuatorPacketSize());
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			memcpy(&position_command, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&velocity_command, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&torque_command, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&voltage_command, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
 			memcpy(&current_limit, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
+
+			if(serial_config_.send_position_command){
+				memcpy(&position_command, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.send_velocity_command){
+				memcpy(&velocity_command, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.send_voltage_command){
+				memcpy(&voltage_command, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.send_torque_command){
+				memcpy(&torque_command, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+
 			unsigned char ctrl_byte;
 			memcpy(&ctrl_byte, msg_buffer + byte_offset, 1);
 
 			auto ctrl_vec = unpackByte(ctrl_byte);
 
-			position_control = ctrl_vec[0];
-			velocity_control = ctrl_vec[1];
-			torque_control = ctrl_vec[2];
-			voltage_control = ctrl_vec[3];
+			position_control = ctrl_vec[0] && serial_config_.send_position_command;
+			velocity_control = ctrl_vec[1] && serial_config_.send_velocity_command;
+			voltage_control = ctrl_vec[2] && serial_config_.send_voltage_command;
+			torque_control = ctrl_vec[3] && serial_config_.send_torque_command;
 		}
 		else if(hardware_type == hardware_type_e::COPROCESSOR){
 			// Sensor Msg
@@ -228,20 +276,61 @@ public:
 			byte_offset += 4;
 			memcpy(&curr_velocity_rpm, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
-			memcpy(&curr_torque_nm, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&curr_voltage_mv, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&curr_current_ma, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&curr_power_w, msg_buffer + byte_offset, 4);
-			byte_offset += 4;
-			memcpy(&curr_temp_c, msg_buffer + byte_offset, 4);
+
+			if(serial_config_.get_torque_data){
+				memcpy(&curr_torque_nm, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_voltage_data){
+				memcpy(&curr_voltage_mv, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_current_data){
+				memcpy(&curr_current_ma, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_power_data){
+				memcpy(&curr_power_w, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
+			if(serial_config_.get_temp_data){
+				memcpy(&curr_temp_c, msg_buffer + byte_offset, 4);
+				byte_offset += 4;
+			}
 		}
 		else{
 			throw std::runtime_error("[MotorDeviceData::deserialize] Error: Received unsupported hardware type " + std::to_string(hardware_type) + " on motor " + name);
 		}
 	}
+
+	SerialConfig serial_config_;
+};
+
+class MotorDeviceConfig : public DeviceConfig {
+public:
+
+	std::shared_ptr<DeviceBase> clone() const override {
+		return std::make_shared<MotorDeviceConfig>(*this);
+	}
+
+	bool operator==(const DeviceBase &rhs) const override {
+		const MotorDeviceConfig *d_rhs = dynamic_cast<const MotorDeviceConfig *>(&rhs);
+		return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) && (type == d_rhs->type) &&
+		       (reversed == d_rhs->reversed) && (gearset == d_rhs->gearset) && (brake_mode == d_rhs->brake_mode) &&
+		       (encoder_units == d_rhs->encoder_units) && (controller_config == d_rhs->controller_config) &&
+		       (filter_config == d_rhs->filter_config) && (model_config == d_rhs->model_config);
+	}
+
+	bool reversed = false;
+	MotorController::Config controller_config;
+	SecondOrderLowPassFilter::Config filter_config;
+	DCMotorModel::Config model_config;
+	MotorDeviceData::SerialConfig serial_config;
+
+	// These three map 1:1 to their PROS counterpart on the V5 Side.
+	ghost_encoder_unit encoder_units{ghost_encoder_unit::ENCODER_COUNTS};
+	ghost_gearset gearset{ghost_gearset::GEARSET_200};
+	ghost_brake_mode brake_mode{ghost_brake_mode::BRAKE_MODE_COAST};
 };
 
 } // namespace devices

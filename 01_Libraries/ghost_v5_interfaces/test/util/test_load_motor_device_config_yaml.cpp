@@ -26,6 +26,8 @@ protected:
 		left_drive_motor_config_->port = 1;
 		left_drive_motor_config_->name = "left_drive_motor";
 		left_drive_motor_config_->type = device_type_e::MOTOR;
+		left_drive_motor_config_->serial_config.send_torque_command = true;
+		left_drive_motor_config_->serial_config.get_temp_data = true;
 
 		right_drive_motor_config_ = std::make_shared<MotorDeviceConfig>();
 		right_drive_motor_config_->gearset = ghost_gearset::GEARSET_600;
@@ -35,6 +37,8 @@ protected:
 		right_drive_motor_config_->name = "right_drive_motor";
 		right_drive_motor_config_->reversed = true;
 		right_drive_motor_config_->type = device_type_e::MOTOR;
+		right_drive_motor_config_->serial_config.send_torque_command = true;
+		right_drive_motor_config_->serial_config.get_temp_data = true;
 	}
 
 	std::shared_ptr<MotorDeviceConfig> motor_empty_config_;
@@ -89,6 +93,24 @@ TEST_F(TestLoadMotorDeviceConfigYAML, testLoadLowPassFilterConfig){
 	SecondOrderLowPassFilter::Config loaded_filter_config;
 	EXPECT_NO_THROW(loaded_filter_config = loadLowPassFilterConfigFromYAML(config_yaml_["port_configuration"]["device_configurations"]["test_motor_config"]["filter"]));
 	EXPECT_EQ(test_filter_config, loaded_filter_config);
+}
+
+/**
+ * @brief Test that a MotorDeviceData::SerialConfig struct can be properly loaded from YAML
+ */
+TEST_F(TestLoadMotorDeviceConfigYAML, testLoadMotorSerialConfig){
+	MotorDeviceData::SerialConfig test_serial_config{};
+	test_serial_config.send_position_command = true;
+	test_serial_config.send_velocity_command = true;
+	test_serial_config.send_voltage_command = false;
+	test_serial_config.send_torque_command = true;
+	test_serial_config.get_current_data = true;
+	test_serial_config.get_power_data = false;
+	test_serial_config.get_temp_data = true;
+
+	MotorDeviceData::SerialConfig loaded_serial_config;
+	EXPECT_NO_THROW(loaded_serial_config = loadMotorSerialConfigFromYAML(config_yaml_["port_configuration"]["device_configurations"]["test_motor_config"]["serial"]));
+	EXPECT_EQ(test_serial_config, loaded_serial_config);
 }
 
 /**

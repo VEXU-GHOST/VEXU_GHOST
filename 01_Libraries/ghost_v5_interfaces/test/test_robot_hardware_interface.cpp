@@ -45,9 +45,9 @@ TEST_F(RobotHardwareInterfaceTestFixture, testEqualityOperator){
 
 TEST_F(RobotHardwareInterfaceTestFixture, testThrowsOnNonExistentDevice){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
-	auto motor_data_ptr = std::make_shared<MotorDeviceData>();
+	auto motor_data_ptr = std::make_shared<MotorDeviceData>("non_existent_motor");
 	EXPECT_THROW(auto data = hw_interface.getDeviceData<MotorDeviceData>("non_existent_motor"), std::runtime_error);
-	EXPECT_THROW(hw_interface.setDeviceData("non_existent_motor", motor_data_ptr), std::runtime_error);
+	EXPECT_THROW(hw_interface.setDeviceData(motor_data_ptr), std::runtime_error);
 	EXPECT_THROW(auto config = hw_interface.getDeviceConfig<MotorDeviceConfig>("non_existent_motor"), std::runtime_error);
 }
 
@@ -111,7 +111,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testGetDevicePair){
 	// Update Data
 	auto motor_data_ptr = getRandomMotorData(true);
 	motor_data_ptr->name = "left_drive_motor";
-	hw_interface.setDeviceData(motor_data_ptr->name, motor_data_ptr);
+	hw_interface.setDeviceData(motor_data_ptr);
 
 	// Make Device Pair
 	DevicePair expected_pair{};
@@ -124,7 +124,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testGetDevicePair){
 
 TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
-	auto motor_data_ptr = std::make_shared<MotorDeviceData>();
+	auto motor_data_ptr = std::make_shared<MotorDeviceData>("left_drive_motor");
 
 	motor_data_ptr->position_command = (float) rand();
 	motor_data_ptr->velocity_command = (float) rand();
@@ -142,7 +142,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveMotorDeviceData){
 	motor_data_ptr->curr_current_ma = (float) rand();
 	motor_data_ptr->curr_power_w = (float) rand();
 	motor_data_ptr->curr_temp_c = (float) rand();
-	hw_interface.setDeviceData("left_drive_motor", motor_data_ptr);
+	hw_interface.setDeviceData(motor_data_ptr);
 
 	auto motor_data_retrieved_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
 
@@ -153,7 +153,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataSi
 	RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
 	auto j1 = getRandomJoystickData();
 	j1->name = MAIN_JOYSTICK_NAME;
-	hw_interface.setDeviceData(j1->name, j1);
+	hw_interface.setDeviceData(j1);
 	auto j2 = hw_interface.getDeviceData<JoystickDeviceData>(j1->name);
 
 	EXPECT_EQ(*j1, *j2);
@@ -163,7 +163,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataDu
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 	auto j1 = getRandomJoystickData();
 	j1->name = PARTNER_JOYSTICK_NAME;
-	hw_interface.setDeviceData(j1->name, j1);
+	hw_interface.setDeviceData(j1);
 	auto j2 = hw_interface.getDeviceData<JoystickDeviceData>(j1->name);
 
 	EXPECT_EQ(*j1, *j2);
@@ -194,11 +194,14 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineCoprocessorTo
 
 	// Update all motors in the default robot config
 	auto motor_data_1 = getRandomMotorData(true);
-	hw_interface.setDeviceData("left_drive_motor", motor_data_1);
+	motor_data_1->name = "left_drive_motor";
+	hw_interface.setDeviceData(motor_data_1);
 	auto motor_data_2 = getRandomMotorData(true);
-	hw_interface.setDeviceData("test_motor", motor_data_2);
+	motor_data_2->name = "test_motor";
+	hw_interface.setDeviceData(motor_data_2);
 	auto motor_data_3 = getRandomMotorData(true);
-	hw_interface.setDeviceData("default_motor", motor_data_3);
+	motor_data_3->name = "default_motor";
+	hw_interface.setDeviceData(motor_data_3);
 
 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_single_joy_, hardware_type_e::V5_BRAIN);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
@@ -213,15 +216,20 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 
 	// Update all motors in the default robot config
 	auto motor_data_1 = getRandomMotorData(false);
-	hw_interface.setDeviceData("left_drive_motor", motor_data_1);
+	motor_data_1->name = "left_drive_motor";
+	hw_interface.setDeviceData(motor_data_1);
 	auto motor_data_2 = getRandomMotorData(false);
-	hw_interface.setDeviceData("test_motor", motor_data_2);
+	motor_data_2->name = "test_motor";
+	hw_interface.setDeviceData(motor_data_2);
 	auto motor_data_3 = getRandomMotorData(false);
-	hw_interface.setDeviceData("default_motor", motor_data_3);
+	motor_data_3->name = "default_motor";
+	hw_interface.setDeviceData(motor_data_3);
 	auto rotation_sensor_1 = getRandomRotationSensorData();
-	hw_interface.setDeviceData("rotation_sensor_1", rotation_sensor_1);
+	rotation_sensor_1->name = "rotation_sensor_1";
+	hw_interface.setDeviceData(rotation_sensor_1);
 	auto rotation_sensor_2 = getRandomRotationSensorData();
-	hw_interface.setDeviceData("rotation_sensor_2", rotation_sensor_2);
+	rotation_sensor_2->name = "rotation_sensor_2";
+	hw_interface.setDeviceData(rotation_sensor_2);
 
 	hw_interface.setDisabledStatus(getRandomBool());
 	hw_interface.setAutonomousStatus(getRandomBool());
@@ -229,7 +237,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 
 	auto joy = getRandomJoystickData();
 	joy->name = MAIN_JOYSTICK_NAME;
-	hw_interface.setDeviceData(joy->name, joy);
+	hw_interface.setDeviceData(joy);
 
 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
@@ -243,15 +251,20 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 
 	// Update all motors in the default robot config
 	auto motor_data_1 = getRandomMotorData(false);
-	hw_interface.setDeviceData("left_drive_motor", motor_data_1);
+	motor_data_1->name = "left_drive_motor";
+	hw_interface.setDeviceData(motor_data_1);
 	auto motor_data_2 = getRandomMotorData(false);
-	hw_interface.setDeviceData("test_motor", motor_data_2);
+	motor_data_2->name = "test_motor";
+	hw_interface.setDeviceData(motor_data_2);
 	auto motor_data_3 = getRandomMotorData(false);
-	hw_interface.setDeviceData("default_motor", motor_data_3);
+	motor_data_3->name = "default_motor";
+	hw_interface.setDeviceData(motor_data_3);
 	auto rotation_sensor_1 = getRandomRotationSensorData();
-	hw_interface.setDeviceData("rotation_sensor_1", rotation_sensor_1);
+	rotation_sensor_1->name = "rotation_sensor_1";
+	hw_interface.setDeviceData(rotation_sensor_1);
 	auto rotation_sensor_2 = getRandomRotationSensorData();
-	hw_interface.setDeviceData("rotation_sensor_2", rotation_sensor_2);
+	rotation_sensor_2->name = "rotation_sensor_2";
+	hw_interface.setDeviceData(rotation_sensor_2);
 
 	hw_interface.setDisabledStatus(getRandomBool());
 	hw_interface.setAutonomousStatus(getRandomBool());
@@ -259,11 +272,11 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 
 	auto joy = getRandomJoystickData();
 	joy->name = MAIN_JOYSTICK_NAME;
-	hw_interface.setDeviceData(joy->name, joy);
+	hw_interface.setDeviceData(joy);
 
 	auto joy_2 = getRandomJoystickData();
 	joy_2->name = PARTNER_JOYSTICK_NAME;
-	hw_interface.setDeviceData(joy_2->name, joy_2);
+	hw_interface.setDeviceData(joy_2);
 
 	RobotHardwareInterface hw_interface_copy(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
 	std::vector<unsigned char> serial_data = hw_interface.serialize();
@@ -282,7 +295,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateGetters){
 	auto motor_data_ptr = hw_interface.getDeviceData<MotorDeviceData>("left_drive_motor");
 	motor_data_ptr->curr_position = getRandomFloat();
 	motor_data_ptr->curr_velocity_rpm = getRandomFloat();
-	hw_interface.setDeviceData(motor_data_ptr->name, motor_data_ptr);
+	hw_interface.setDeviceData(motor_data_ptr);
 
 	EXPECT_EQ(hw_interface.getMotorPosition("left_drive_motor"), motor_data_ptr->curr_position);
 	EXPECT_EQ(hw_interface.getMotorVelocityRPM("left_drive_motor"), motor_data_ptr->curr_velocity_rpm);
@@ -300,7 +313,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testRotationSensorStateGetters){
 	sensor_data_ptr->angle = getRandomFloat();
 	sensor_data_ptr->position = getRandomFloat();
 	sensor_data_ptr->velocity = getRandomFloat();
-	hw_interface.setDeviceData(sensor_data_ptr->name, sensor_data_ptr);
+	hw_interface.setDeviceData(sensor_data_ptr);
 
 	EXPECT_EQ(hw_interface.getRotationSensorAngleDegrees("rotation_sensor_1"), sensor_data_ptr->angle);
 	EXPECT_EQ(hw_interface.getRotationSensorPositionDegrees("rotation_sensor_1"), sensor_data_ptr->position);

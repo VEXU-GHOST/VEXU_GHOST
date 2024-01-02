@@ -7,6 +7,14 @@ namespace ghost_v5_interfaces {
 
 namespace util {
 
+RotationSensorDeviceData::SerialConfig loadRotationSensorSerialConfigFromYAML(YAML::Node node, bool verbose){
+	RotationSensorDeviceData::SerialConfig config;
+	loadYAMLParam(node, "get_angle_data", config.get_angle_data, verbose);
+	loadYAMLParam(node, "get_position_data", config.get_position_data, verbose);
+	loadYAMLParam(node, "get_velocity_data", config.get_velocity_data, verbose);
+	return config;
+}
+
 void loadRotationSensorDeviceConfigFromYAML(YAML::Node node,
                                             std::string sensor_name,
                                             std::shared_ptr<RotationSensorDeviceConfig> sensor_device_config_ptr,
@@ -15,6 +23,20 @@ void loadRotationSensorDeviceConfigFromYAML(YAML::Node node,
 	auto device_node = node["devices"][sensor_name];
 	if(!device_node){
 		throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Rotation Sensor " + sensor_name + " not found!");
+	}
+
+	// Get name of motor-specific config
+	if(device_node["config"]){
+		auto config_name = device_node["config"].as<std::string>();
+
+		// Retrieve motor-specific config node
+		auto config_node = node["device_configurations"][config_name];
+		if(!config_node){
+			throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Config not found for name " + config_name + "!");
+		}
+
+		loadYAMLParam(config_node, "data_rate", sensor_device_config_ptr->data_rate, verbose);
+		sensor_device_config_ptr->serial_config = loadRotationSensorSerialConfigFromYAML(config_node["serial"], verbose);
 	}
 
 	// Set base attributes
@@ -31,7 +53,6 @@ void loadRotationSensorDeviceConfigFromYAML(YAML::Node node,
 
 	// Set Sensor specific attributes
 	loadYAMLParam(device_node, "reversed", sensor_device_config_ptr->reversed, verbose);
-	loadYAMLParam(device_node, "data_rate", sensor_device_config_ptr->data_rate, verbose);
 }
 
 } // namespace util

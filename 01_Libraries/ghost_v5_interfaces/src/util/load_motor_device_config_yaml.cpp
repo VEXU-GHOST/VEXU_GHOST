@@ -36,6 +36,20 @@ SecondOrderLowPassFilter::Config loadLowPassFilterConfigFromYAML(YAML::Node node
 	return config;
 }
 
+MotorDeviceData::SerialConfig loadMotorSerialConfigFromYAML(YAML::Node node, bool verbose){
+	MotorDeviceData::SerialConfig config;
+	loadYAMLParam(node, "send_position_command", config.send_position_command, verbose);
+	loadYAMLParam(node, "send_velocity_command", config.send_velocity_command, verbose);
+	loadYAMLParam(node, "send_torque_command", config.send_torque_command, verbose);
+	loadYAMLParam(node, "send_voltage_command", config.send_voltage_command, verbose);
+	loadYAMLParam(node, "get_torque_data", config.get_torque_data, verbose);
+	loadYAMLParam(node, "get_voltage_data", config.get_voltage_data, verbose);
+	loadYAMLParam(node, "get_current_data", config.get_current_data, verbose);
+	loadYAMLParam(node, "get_power_data", config.get_power_data, verbose);
+	loadYAMLParam(node, "get_temp_data", config.get_temp_data, verbose);
+	return config;
+}
+
 bool loadEncoderUnitFromYAML(YAML::Node node, ghost_encoder_unit& encoder_unit_value){
 	if(!node["encoder_units"]){
 		return false;
@@ -151,6 +165,10 @@ void loadMotorDeviceConfigFromYAML(YAML::Node node,
 
 	if(config_node["filter"]){
 		motor_device_config_ptr->filter_config = loadLowPassFilterConfigFromYAML(config_node["filter"]);
+	}
+
+	if(config_node["serial"]){
+		motor_device_config_ptr->serial_config = loadMotorSerialConfigFromYAML(config_node["serial"]);
 	}
 
 	if(!loadEncoderUnitFromYAML(config_node, motor_device_config_ptr->encoder_units) && verbose){
