@@ -118,14 +118,14 @@ void V5SerialNode::writeV5StateUpdate(){
 	joy_1_data->btn_b = v5_globals::controller_main.get_digital(DIGITAL_B);
 	joy_1_data->btn_x = v5_globals::controller_main.get_digital(DIGITAL_X);
 	joy_1_data->btn_y = v5_globals::controller_main.get_digital(DIGITAL_Y);
-	joy_1_data->btn_r1 = v5_globals::controller_main.get_digital(DIGITAL_UP);
-	joy_1_data->btn_r2 = v5_globals::controller_main.get_digital(DIGITAL_DOWN);
-	joy_1_data->btn_l1 = v5_globals::controller_main.get_digital(DIGITAL_LEFT);
-	joy_1_data->btn_l2 = v5_globals::controller_main.get_digital(DIGITAL_RIGHT);
-	joy_1_data->btn_u = v5_globals::controller_main.get_digital(DIGITAL_L1);
-	joy_1_data->btn_l = v5_globals::controller_main.get_digital(DIGITAL_L2);
-	joy_1_data->btn_r = v5_globals::controller_main.get_digital(DIGITAL_R1);
-	joy_1_data->btn_d = v5_globals::controller_main.get_digital(DIGITAL_R2);
+	joy_1_data->btn_u = v5_globals::controller_main.get_digital(DIGITAL_UP);
+	joy_1_data->btn_d = v5_globals::controller_main.get_digital(DIGITAL_DOWN);
+	joy_1_data->btn_l = v5_globals::controller_main.get_digital(DIGITAL_LEFT);
+	joy_1_data->btn_r = v5_globals::controller_main.get_digital(DIGITAL_RIGHT);
+	joy_1_data->btn_l1 = v5_globals::controller_main.get_digital(DIGITAL_L1);
+	joy_1_data->btn_l2 = v5_globals::controller_main.get_digital(DIGITAL_L2);
+	joy_1_data->btn_r1 = v5_globals::controller_main.get_digital(DIGITAL_R1);
+	joy_1_data->btn_r2 = v5_globals::controller_main.get_digital(DIGITAL_R2);
 	hardware_interface_ptr_->setDeviceData(joy_1_data->name, joy_1_data);
 
 
@@ -140,14 +140,14 @@ void V5SerialNode::writeV5StateUpdate(){
 		joy_2_data->btn_b = v5_globals::controller_partner.get_digital(DIGITAL_B);
 		joy_2_data->btn_x = v5_globals::controller_partner.get_digital(DIGITAL_X);
 		joy_2_data->btn_y = v5_globals::controller_partner.get_digital(DIGITAL_Y);
-		joy_2_data->btn_r1 = v5_globals::controller_partner.get_digital(DIGITAL_UP);
-		joy_2_data->btn_r2 = v5_globals::controller_partner.get_digital(DIGITAL_DOWN);
-		joy_2_data->btn_l1 = v5_globals::controller_partner.get_digital(DIGITAL_LEFT);
-		joy_2_data->btn_l2 = v5_globals::controller_partner.get_digital(DIGITAL_RIGHT);
-		joy_2_data->btn_u = v5_globals::controller_partner.get_digital(DIGITAL_L1);
-		joy_2_data->btn_l = v5_globals::controller_partner.get_digital(DIGITAL_L2);
-		joy_2_data->btn_r = v5_globals::controller_partner.get_digital(DIGITAL_R1);
-		joy_2_data->btn_d = v5_globals::controller_partner.get_digital(DIGITAL_R2);
+		joy_2_data->btn_u = v5_globals::controller_partner.get_digital(DIGITAL_UP);
+		joy_2_data->btn_d = v5_globals::controller_partner.get_digital(DIGITAL_DOWN);
+		joy_2_data->btn_l = v5_globals::controller_partner.get_digital(DIGITAL_LEFT);
+		joy_2_data->btn_r = v5_globals::controller_partner.get_digital(DIGITAL_RIGHT);
+		joy_2_data->btn_l1 = v5_globals::controller_partner.get_digital(DIGITAL_L1);
+		joy_2_data->btn_l2 = v5_globals::controller_partner.get_digital(DIGITAL_L2);
+		joy_2_data->btn_r1 = v5_globals::controller_partner.get_digital(DIGITAL_R1);
+		joy_2_data->btn_r2 = v5_globals::controller_partner.get_digital(DIGITAL_R2);
 		hardware_interface_ptr_->setDeviceData(joy_2_data->name, joy_2_data);
 	}
 

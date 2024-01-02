@@ -201,20 +201,6 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5SensorUpdate& 
 	sensor_update_msg.competition_status.is_autonomous = hardware_interface.isAutonomous();
 	sensor_update_msg.competition_status.is_connected = hardware_interface.isConnected();
 
-	// Primary Joystick
-	auto joy_data_1 = hardware_interface.getDeviceData<JoystickDeviceData>(MAIN_JOYSTICK_NAME);
-	V5JoystickState primary_joy_msg{};
-	toROSMsg(*joy_data_1, primary_joy_msg);
-	sensor_update_msg.joysticks.push_back(primary_joy_msg);
-
-	// Secondary Joystick
-	if(hardware_interface.contains(PARTNER_JOYSTICK_NAME)){
-		auto joy_data_2 = hardware_interface.getDeviceData<JoystickDeviceData>(PARTNER_JOYSTICK_NAME);
-		V5JoystickState secondary_joy_msg{};
-		toROSMsg(*joy_data_2, secondary_joy_msg);
-		sensor_update_msg.joysticks.push_back(secondary_joy_msg);
-	}
-
 	// Devices
 	for(const std::string & device_name : hardware_interface){
 		auto device_data_ptr = hardware_interface.getDeviceData<DeviceData>(device_name);
@@ -260,7 +246,7 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5SensorUpdate
 	hardware_interface.setAutonomousStatus(sensor_update_msg.competition_status.is_autonomous);
 	hardware_interface.setConnectedStatus(sensor_update_msg.competition_status.is_connected);
 
-	// Primary Joystick
+	// Joysticks
 	for(const auto& joy_msg : sensor_update_msg.joysticks){
 		auto joy_data_ptr = hardware_interface.getDeviceData<JoystickDeviceData>(joy_msg.device_header.name);
 		fromROSMsg(*joy_data_ptr, joy_msg);

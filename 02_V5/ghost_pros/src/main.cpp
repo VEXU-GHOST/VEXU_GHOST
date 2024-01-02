@@ -126,7 +126,7 @@ void ghost_main_loop(){
 		// Send robot state over serial to coprocessor
 		v5_globals::serial_node_ptr->writeV5StateUpdate();
 
-		if((screen_update_count % 10) == 0){
+		if((screen_update_count == 0) || ((screen_update_count % 10) == 0) ){
 			clear_screen();
 			pros::screen::print(pros::text_format_e_t::E_TEXT_LARGE_CENTER, 0, "STATUS");
 		}

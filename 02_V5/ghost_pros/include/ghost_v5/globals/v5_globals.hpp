@@ -1,6 +1,7 @@
 #ifndef GHOST_PROS__V5_GLOBALS_HPP
 #define GHOST_PROS__V5_GLOBALS_HPP
 
+#include <atomic>
 #include <map>
 
 #include "ghost_v5/motor/v5_motor_interface.hpp"
@@ -8,12 +9,13 @@
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "pros/apix.h"
+
 namespace v5_globals {
 
 extern uint32_t last_cmd_time;
 extern uint32_t cmd_timeout_ms;
 extern uint32_t loop_frequency;
-extern bool run;
+extern std::atomic<bool> run;
 
 extern pros::Controller controller_main;
 extern pros::Controller controller_partner;

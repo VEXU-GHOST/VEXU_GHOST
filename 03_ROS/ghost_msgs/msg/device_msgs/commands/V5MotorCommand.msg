@@ -14,6 +14,5 @@ bool voltage_control
 # Currently unsupported
 bool activate_braking
 string brake_mode
-
 bool set_zero_position
 int32 zero_position

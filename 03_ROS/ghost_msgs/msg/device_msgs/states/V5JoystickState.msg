@@ -20,7 +20,5 @@ bool joystick_btn_l2
 bool joystick_btn_r1
 bool joystick_btn_r2
 
-bool is_secondary_joystick
-
 # Currently unsupported
 int32 battery_level
