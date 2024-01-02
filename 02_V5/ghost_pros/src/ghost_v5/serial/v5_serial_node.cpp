@@ -168,9 +168,9 @@ void V5SerialNode::writeV5StateUpdate(){
 	// Encoders
 	for(const auto& [name, device] : v5_globals::encoders){
 		auto rotation_sensor_data_ptr = std::make_shared<RotationSensorDeviceData>();
-		rotation_sensor_data_ptr->angle = device->get_angle();
-		rotation_sensor_data_ptr->position = device->get_position();
-		rotation_sensor_data_ptr->velocity = device->get_velocity();
+		rotation_sensor_data_ptr->angle = ((float) device->get_angle()) / 100.0;
+		rotation_sensor_data_ptr->position = ((float) device->get_position()) / 100.0;
+		rotation_sensor_data_ptr->velocity = ((float) device->get_velocity()) / 100.0;
 		hardware_interface_ptr_->setDeviceData(name, rotation_sensor_data_ptr);
 	}
 
