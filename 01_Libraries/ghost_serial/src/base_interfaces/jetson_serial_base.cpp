@@ -119,7 +119,15 @@ bool JetsonSerialBase::trySerialInit(std::string port_name){
 	}
 }
 
-bool JetsonSerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len){
+void JetsonSerialBase::printReadBufferDebugInfo(){
+	std::cout << "Read Buffer Size: " << read_buffer_.size() << std::endl;
+	for(const auto& byte : read_buffer_){
+		std::cout << "x" << std::setw(2) << std::setfill('0') << std::hex << (int) byte;
+	}
+	std::cout << std::dec << std::endl;
+}
+
+bool JetsonSerialBase::readMsgFromSerial(std::vector<unsigned char> &msg_buffer, int & parsed_msg_len){
 	if(port_open_){
 		// Block waiting for read or timeout (1s)
 		int ret = poll(&pollfd_read_, 1, 1000);
@@ -138,8 +146,11 @@ bool JetsonSerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parse
 			if(num_bytes_read > 0){
 				if(verbose_){
 					std::cout << "Read " << num_bytes_read << " bytes" << std::endl;
+					printReadBufferDebugInfo();
 				}
-				return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer, parsed_msg_len);
+
+				checkReadMsgBufferLength(msg_buffer); // Throws if msg_buffer is misconfigured
+				return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer.data(), parsed_msg_len);
 			}
 			else if(num_bytes_read == -1){
 				perror("Error");

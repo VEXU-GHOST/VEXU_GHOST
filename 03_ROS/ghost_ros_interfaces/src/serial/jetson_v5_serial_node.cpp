@@ -43,6 +43,7 @@ JetsonV5SerialNode::JetsonV5SerialNode() :
 	robot_hardware_interface_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map, hardware_type_e::COPROCESSOR);
 	actuator_command_msg_len_ = robot_hardware_interface_ptr_->getActuatorCommandMsgLength();
 	sensor_update_msg_len_ = robot_hardware_interface_ptr_->getSensorUpdateMsgLength();
+	sensor_update_msg_ = std::vector<unsigned char>(sensor_update_msg_len_, 0);
 
 	// Debug Info
 	RCLCPP_DEBUG(get_logger(), "Port Name: %s", port_name_.c_str());
@@ -134,7 +135,7 @@ void JetsonV5SerialNode::serialLoop(){
 			RCLCPP_DEBUG(get_logger(), "Serial Loop is Running");
 			try{
 				int msg_len;
-				bool msg_found = serial_base_interface_->readMsgFromSerial(sensor_update_msg_.data(), msg_len);
+				bool msg_found = serial_base_interface_->readMsgFromSerial(sensor_update_msg_, msg_len);
 
 				if(msg_found){
 					RCLCPP_DEBUG(get_logger(), "Received new message over serial");

@@ -289,7 +289,7 @@ void opcontrol(){
 	uint32_t loop_time = pros::millis();
 	while(!pros::competition::is_autonomous() && !pros::competition::is_disabled() && v5_globals::run){
 		ghost_main_loop();
-		pros::c::task_delay_until(&loop_time, 10);
+		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
 
 	// Only reached if we encounter an exception in main loop

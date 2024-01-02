@@ -108,6 +108,11 @@ target_link_libraries(test_msg_parser
 ### Install ###
 ###############
 install(
+  PROGRAMS scripts/serial_test_util.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
   DIRECTORY include/
   DESTINATION include
 )

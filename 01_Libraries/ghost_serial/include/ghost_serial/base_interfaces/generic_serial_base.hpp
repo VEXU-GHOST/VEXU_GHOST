@@ -43,7 +43,16 @@ public:
 	bool writeMsgToSerial(const unsigned char buffer[], const int num_bytes);
 
 	// Platform specific depending on Serial IO interfaces
-	virtual bool readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len) = 0;
+	virtual bool readMsgFromSerial(std::vector<unsigned char> &msg_buffer, int & parsed_msg_len) = 0;
+
+	/**
+	 * @brief Ensures the buffer passed to readMsgFromSerial is of proper size.
+	 *
+	 * Throws if msg_buffer is improperly initialized or is not atleast of size read_msg_len_.
+	 *
+	 * @param msg_buffer
+	 */
+	void checkReadMsgBufferLength(std::vector<unsigned char> &msg_buffer);
 
 protected:
 	// Platform specific depending on Serial IO interfaces

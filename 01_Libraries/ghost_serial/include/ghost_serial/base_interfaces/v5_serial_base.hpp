@@ -32,7 +32,7 @@ public:
 	 * @param msg_buffer buffer of length msg_len to store incoming serial msgs
 	 * @return bool if msg was found in serial stream
 	 */
-	bool readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len) override;
+	bool readMsgFromSerial(std::vector<unsigned char>& msg_buffer, int& parsed_msg_len) override;
 
 private:
 	/**

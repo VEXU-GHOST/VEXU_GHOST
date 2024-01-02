@@ -53,6 +53,15 @@ uint8_t GenericSerialBase::calculateChecksum(const unsigned char buffer[], const
 	return checksum;
 }
 
+void GenericSerialBase::checkReadMsgBufferLength(std::vector<unsigned char> &msg_buffer){
+	if(msg_buffer.size() < read_msg_max_len_){
+		throw std::runtime_error(
+			      std::string("msg_buffer size must be at least read_msg_max_len!") +
+			      std::string(" msg_buffer.size(): ") + std::to_string(msg_buffer.size()) +
+			      std::string(", read_msg_max_len: ") + std::to_string(read_msg_max_len_));
+	}
+}
+
 bool GenericSerialBase::writeMsgToSerial(const unsigned char buffer[], const int num_bytes){
 	bool succeeded = false;
 	if(port_open_){

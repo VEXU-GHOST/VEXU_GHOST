@@ -48,7 +48,7 @@ void V5SerialNode::initSerial(){
 
 bool V5SerialNode::readV5ActuatorUpdate(){
 	int msg_len;
-	bool msg_recieved = serial_base_interface_->readMsgFromSerial(new_msg_.data(), actuator_command_msg_len_);
+	bool msg_recieved = serial_base_interface_->readMsgFromSerial(new_msg_, actuator_command_msg_len_);
 	if(msg_recieved){
 		std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
 		updateActuatorCommands(new_msg_);

@@ -24,6 +24,7 @@ set(DEPENDENCIES
   PythonLibs
   casadi
   ghost_estimation
+  ghost_control
   )
 
 foreach(pkg ${DEPENDENCIES})
