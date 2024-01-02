@@ -9,8 +9,10 @@ endif()
 # Adds all our package dependencies to one list
 set(DEPENDENCIES
   ament_cmake
+  ament_cmake_python
   ament_cmake_gtest
   rclcpp
+  rclpy
   sensor_msgs
   geometry_msgs
   yaml-cpp
@@ -127,6 +129,18 @@ target_link_libraries(ros_subscriber_example_main
 install(TARGETS
   ros_subscriber_example_main
   DESTINATION lib/${PROJECT_NAME})
+
+
+###################
+##### Python ######
+###################
+# Install Python modules
+ament_python_install_package(${PROJECT_NAME})
+# Install Python executables
+install(PROGRAMS
+  scripts/cubic_trajectory.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 #################
 ##### Test ######
