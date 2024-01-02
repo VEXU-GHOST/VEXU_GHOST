@@ -17,7 +17,7 @@ using namespace ghost_v5_interfaces;
 TEST(TestDeviceInterfaces, testMotorStateMsg){
 	auto motor_input = getRandomMotorData(false);
 	auto msg = std::make_shared<ghost_msgs::msg::V5MotorState>();
-	auto motor_output = std::make_shared<MotorDeviceData>();
+	auto motor_output = std::make_shared<MotorDeviceData>("");
 
 	// Convert to ROS Msg
 	toROSMsg(*motor_input, *msg);
@@ -29,7 +29,7 @@ TEST(TestDeviceInterfaces, testMotorStateMsg){
 TEST(TestDeviceInterfaces, testMotorCommandMsg){
 	auto motor_input = getRandomMotorData(true);
 	auto msg = std::make_shared<ghost_msgs::msg::V5MotorCommand>();
-	auto motor_output = std::make_shared<MotorDeviceData>();
+	auto motor_output = std::make_shared<MotorDeviceData>("");
 
 	// Convert to ROS Msg
 	toROSMsg(*motor_input, *msg);
@@ -41,7 +41,7 @@ TEST(TestDeviceInterfaces, testMotorCommandMsg){
 TEST(TestDeviceInterfaces, testMotorCommandDoesntSetStateData){
 	auto motor_input = getRandomMotorData(false); // This gets state/sensor data, not command data.
 	auto msg = std::make_shared<ghost_msgs::msg::V5MotorCommand>();
-	auto motor_output = std::make_shared<MotorDeviceData>();
+	auto motor_output = std::make_shared<MotorDeviceData>("");
 
 	// Convert to ROS Msg
 	toROSMsg(*motor_input, *msg);
@@ -54,7 +54,7 @@ TEST(TestDeviceInterfaces, testMotorCommandDoesntSetStateData){
 TEST(TestDeviceInterfaces, testMotorStateDoesntSetCommandData){
 	auto motor_input = getRandomMotorData(true); // This gets command data, not sensor/state data.
 	auto msg = std::make_shared<ghost_msgs::msg::V5MotorState>();
-	auto motor_output = std::make_shared<MotorDeviceData>();
+	auto motor_output = std::make_shared<MotorDeviceData>("");
 
 	// Convert to ROS Msg
 	toROSMsg(*motor_input, *msg);
@@ -67,7 +67,7 @@ TEST(TestDeviceInterfaces, testMotorStateDoesntSetCommandData){
 TEST(TestDeviceInterfaces, testRotationSensorStateMsg){
 	auto rotation_input = getRandomRotationSensorData();
 	auto msg = std::make_shared<ghost_msgs::msg::V5RotationSensorState>();
-	auto rotation_output = std::make_shared<RotationSensorDeviceData>();
+	auto rotation_output = std::make_shared<RotationSensorDeviceData>("");
 
 	toROSMsg(*rotation_input, *msg);
 	fromROSMsg(*rotation_output, *msg);
@@ -78,7 +78,7 @@ TEST(TestDeviceInterfaces, testRotationSensorStateMsg){
 TEST(TestDeviceInterfaces, testJoystickStateMsg){
 	auto joy_input = getRandomJoystickData();
 	auto msg = std::make_shared<ghost_msgs::msg::V5JoystickState>();
-	auto joy_output = std::make_shared<JoystickDeviceData>();
+	auto joy_output = std::make_shared<JoystickDeviceData>("");
 
 	// Convert to ROS Msg
 	toROSMsg(*joy_input, *msg);

@@ -108,8 +108,7 @@ void V5SerialNode::writeV5StateUpdate(){
 	hardware_interface_ptr_->setConnectedStatus(pros::competition::is_connected());
 
 	// Joysticks
-	auto joy_1_data = std::make_shared<JoystickDeviceData>();
-	joy_1_data->name = MAIN_JOYSTICK_NAME;
+	auto joy_1_data = std::make_shared<JoystickDeviceData>(MAIN_JOYSTICK_NAME);
 	joy_1_data->left_x = v5_globals::controller_main.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
 	joy_1_data->left_y = v5_globals::controller_main.get_analog(ANALOG_LEFT_Y);
 	joy_1_data->right_x = v5_globals::controller_main.get_analog(ANALOG_RIGHT_X);
@@ -126,12 +125,11 @@ void V5SerialNode::writeV5StateUpdate(){
 	joy_1_data->btn_l2 = v5_globals::controller_main.get_digital(DIGITAL_L2);
 	joy_1_data->btn_r1 = v5_globals::controller_main.get_digital(DIGITAL_R1);
 	joy_1_data->btn_r2 = v5_globals::controller_main.get_digital(DIGITAL_R2);
-	hardware_interface_ptr_->setDeviceData(joy_1_data->name, joy_1_data);
+	hardware_interface_ptr_->setDeviceData(joy_1_data);
 
 
 	if(hardware_interface_ptr_->contains(PARTNER_JOYSTICK_NAME)){
-		auto joy_2_data = std::make_shared<JoystickDeviceData>();
-		joy_2_data->name = PARTNER_JOYSTICK_NAME;
+		auto joy_2_data = std::make_shared<JoystickDeviceData>(PARTNER_JOYSTICK_NAME);
 		joy_2_data->left_x = v5_globals::controller_partner.get_analog(ANALOG_LEFT_X);
 		joy_2_data->left_y = v5_globals::controller_partner.get_analog(ANALOG_LEFT_Y);
 		joy_2_data->right_x = v5_globals::controller_partner.get_analog(ANALOG_RIGHT_X);
@@ -148,7 +146,7 @@ void V5SerialNode::writeV5StateUpdate(){
 		joy_2_data->btn_l2 = v5_globals::controller_partner.get_digital(DIGITAL_L2);
 		joy_2_data->btn_r1 = v5_globals::controller_partner.get_digital(DIGITAL_R1);
 		joy_2_data->btn_r2 = v5_globals::controller_partner.get_digital(DIGITAL_R2);
-		hardware_interface_ptr_->setDeviceData(joy_2_data->name, joy_2_data);
+		hardware_interface_ptr_->setDeviceData(joy_2_data);
 	}
 
 	// Motors
@@ -162,16 +160,16 @@ void V5SerialNode::writeV5StateUpdate(){
 		motor_device_data_ptr->curr_current_ma = motor_interface_ptr->get_current_draw();
 		motor_device_data_ptr->curr_power_w = motor_interface_ptr->get_power();
 		motor_device_data_ptr->curr_temp_c = motor_interface_ptr->get_temperature();
-		hardware_interface_ptr_->setDeviceData(name, motor_device_data_ptr);
+		hardware_interface_ptr_->setDeviceData(motor_device_data_ptr);
 	}
 
 	// Encoders
 	for(const auto& [name, device] : v5_globals::encoders){
-		auto rotation_sensor_data_ptr = std::make_shared<RotationSensorDeviceData>();
+		auto rotation_sensor_data_ptr = hardware_interface_ptr_->getDeviceData<RotationSensorDeviceData>(name);
 		rotation_sensor_data_ptr->angle = ((float) device->get_angle()) / 100.0;
 		rotation_sensor_data_ptr->position = ((float) device->get_position()) / 100.0;
 		rotation_sensor_data_ptr->velocity = ((float) device->get_velocity()) / 100.0;
-		hardware_interface_ptr_->setDeviceData(name, rotation_sensor_data_ptr);
+		hardware_interface_ptr_->setDeviceData(rotation_sensor_data_ptr);
 	}
 
 	serial_base_interface_->writeMsgToSerial(hardware_interface_ptr_->serialize().data(), sensor_update_msg_len_);

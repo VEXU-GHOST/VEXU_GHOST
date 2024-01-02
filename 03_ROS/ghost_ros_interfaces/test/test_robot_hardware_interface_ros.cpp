@@ -45,19 +45,19 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpd
 
 	auto joy_data = getRandomJoystickData();
 	joy_data->name = MAIN_JOYSTICK_NAME;
-	rhi_input_ptr_->setDeviceData(joy_data->name, joy_data);
+	rhi_input_ptr_->setDeviceData(joy_data);
 
 	auto joy_data_2 = getRandomJoystickData();
 	joy_data_2->name = PARTNER_JOYSTICK_NAME;
-	rhi_input_ptr_->setDeviceData(joy_data_2->name, joy_data_2);
+	rhi_input_ptr_->setDeviceData(joy_data_2);
 
 	auto motor_data_ptr = getRandomMotorData(false);
 	motor_data_ptr->name = "default_motor";
-	rhi_input_ptr_->setDeviceData(motor_data_ptr->name, motor_data_ptr);
+	rhi_input_ptr_->setDeviceData(motor_data_ptr);
 
 	auto rotation_sensor_data_ptr = getRandomRotationSensorData();
 	rotation_sensor_data_ptr->name = "rotation_sensor_1";
-	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr->name, rotation_sensor_data_ptr);
+	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
 
 	auto msg = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
 
@@ -71,7 +71,7 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpd
 TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceActuatorCommand){
 	auto motor_data_ptr = getRandomMotorData(true);
 	motor_data_ptr->name = "default_motor";
-	rhi_input_ptr_->setDeviceData(motor_data_ptr->name, motor_data_ptr);
+	rhi_input_ptr_->setDeviceData(motor_data_ptr);
 	auto msg = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
 
 	// Convert to ROS Msg
@@ -88,13 +88,13 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 
 	auto joy_data = getRandomJoystickData();
 	joy_data->name = MAIN_JOYSTICK_NAME;
-	rhi_input_ptr_->setDeviceData(joy_data->name, joy_data);
+	rhi_input_ptr_->setDeviceData(joy_data);
 
 	auto joy_data_2 = getRandomJoystickData();
 	joy_data_2->name = PARTNER_JOYSTICK_NAME;
-	rhi_input_ptr_->setDeviceData(joy_data_2->name, joy_data_2);
+	rhi_input_ptr_->setDeviceData(joy_data_2);
 
-	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>();
+	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>("default_motor");
 	motor_data_ptr->position_command = getRandomFloat();
 	motor_data_ptr->velocity_command = getRandomFloat();
 	motor_data_ptr->torque_command = getRandomFloat();
@@ -111,12 +111,11 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 	motor_data_ptr->curr_current_ma = getRandomFloat();
 	motor_data_ptr->curr_power_w = getRandomFloat();
 	motor_data_ptr->curr_temp_c = getRandomFloat();
-	motor_data_ptr->name = "default_motor";
-	rhi_input_ptr_->setDeviceData(motor_data_ptr->name, motor_data_ptr);
+	rhi_input_ptr_->setDeviceData(motor_data_ptr);
 
 	auto rotation_sensor_data_ptr = getRandomRotationSensorData();
 	rotation_sensor_data_ptr->name = "rotation_sensor_1";
-	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr->name, rotation_sensor_data_ptr);
+	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
 
 	auto msg_sensor_update = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
 	auto msg_actuator_command = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
@@ -137,13 +136,13 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 
 	auto joy_data = getRandomJoystickData();
 	joy_data->name = MAIN_JOYSTICK_NAME;
-	rhi_input_ptr_->setDeviceData(joy_data->name, joy_data);
+	rhi_input_ptr_->setDeviceData(joy_data);
 
 	auto joy_data_2 = getRandomJoystickData();
 	joy_data_2->name = PARTNER_JOYSTICK_NAME;
-	rhi_input_ptr_->setDeviceData(joy_data_2->name, joy_data_2);
+	rhi_input_ptr_->setDeviceData(joy_data_2);
 
-	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>();
+	auto motor_data_ptr = std::make_shared<devices::MotorDeviceData>("default_motor");
 	motor_data_ptr->position_command = getRandomFloat();
 	motor_data_ptr->velocity_command = getRandomFloat();
 	motor_data_ptr->torque_command = getRandomFloat();
@@ -160,12 +159,11 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
 	motor_data_ptr->curr_current_ma = getRandomFloat();
 	motor_data_ptr->curr_power_w = getRandomFloat();
 	motor_data_ptr->curr_temp_c = getRandomFloat();
-	motor_data_ptr->name = "default_motor";
-	rhi_input_ptr_->setDeviceData(motor_data_ptr->name, motor_data_ptr);
+	rhi_input_ptr_->setDeviceData(motor_data_ptr);
 
 	auto rotation_sensor_data_ptr = getRandomRotationSensorData();
 	rotation_sensor_data_ptr->name = "rotation_sensor_1";
-	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr->name, rotation_sensor_data_ptr);
+	rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
 
 	auto msg_sensor_update = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
 	auto msg_actuator_command = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
