@@ -5,6 +5,7 @@ log
 *.pyc
 .cache/*
 
+# These are symlinked from 01_Libraries (and thus duplicated)
 02_V5/ghost_pros/include/ghost_v5_interfaces/**
 02_V5/ghost_pros/include/ghost_serial/**
 02_V5/ghost_pros/include/ghost_estimation/**
@@ -14,3 +15,6 @@ log
 02_V5/ghost_pros/src/ghost_serial/**
 02_V5/ghost_pros/src/ghost_estimation/**
 02_V5/ghost_pros/src/ghost_control/**
+
+# Auto-generated
+02_V5/ghost_pros/include/robot_config.hpp
