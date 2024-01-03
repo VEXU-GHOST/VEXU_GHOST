@@ -16,9 +16,11 @@ if [ ! -d "${VEXU_HOME}/09_External/matplotlib-cpp/build" ];
 then
 	cd $VEXU_HOME/09_External/matplotlib-cpp
 	mkdir build && cd build
-	cmake ..
-	make
-	sudo make install
+
+	cmake ..          || exit -1
+	make              || exit -1
+	sudo make install || exit -1
+
 	cd ../..
 else
 	echo "Build already exists"
@@ -29,12 +31,16 @@ echo
 # Build Mumps
 echo "--------------- MUMPS ---------------"
 cd $VEXU_HOME/09_External/ThirdParty-Mumps
-sudo apt install gfortran-10 liblapack-dev pkg-config --install-recommends -y
-sudo apt install swig -y
+
+sudo apt install gfortran-10 liblapack-dev pkg-config --install-recommends -y || exit -1
+sudo apt install swig -y                                                      || exit -1
+
 export FC=$(which gfortran-10)
-./configure
-make
-sudo make install
+
+./configure       || exit -1
+make              || exit -1
+sudo make install || exit -1
+
 cd ..
 
 echo
@@ -43,10 +49,11 @@ echo
 # Build IPOPT
 echo "--------------- IPOPT ---------------"
 cd Ipopt
-./configure
-make
-make test
-sudo make install
+
+./configure       || exit -1
+make              || exit -1
+make test         || exit -1
+sudo make install || exit -1
 
 echo
 echo
@@ -57,9 +64,11 @@ if [ ! -d "${VEXU_HOME}/09_External/casadi/build" ];
 then
 	cd $VEXU_HOME/09_External/casadi
 	mkdir build && cd build
-	cmake -DWITH_PYTHON=ON -DWITH_IPOPT=ON -DWITH_OPENMP=ON -DWITH_THREAD=ON ..
-	make
-	sudo make install
+
+	cmake -DWITH_PYTHON=ON -DWITH_IPOPT=ON -DWITH_OPENMP=ON -DWITH_THREAD=ON .. || exit -1
+	make                                                                        || exit -1
+	sudo make install                                                           || exit -1
+
 	cd ../..
 else
         echo "Build already exists"
@@ -75,8 +84,10 @@ then
 	cd $VEXU_HOME/09_External/Casadi-Tutorial-CPP
 	mkdir build code_gen
 	cd build
-	cmake ..
-	make
+
+	cmake .. || exit -1
+	make     || exit -1
+    
 	cd ../..
 else
         echo "Build already exists"
