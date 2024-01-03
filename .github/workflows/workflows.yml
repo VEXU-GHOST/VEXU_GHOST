@@ -47,7 +47,9 @@ jobs:
         run: sed 's/git@github\.com:/https:\/\/github\.com\//g' .gitmodules > .gitmodules
 
       - name: Update Submodules
-        run: git submodule update --recursive
+        run: |
+          git submodule update --recursive
+          for dir in $(find ./ -mindepth 1 -maxdepth 1); do [[ $(ls -A $dir 2> /dev/null) ]] || exit -1; done
       
       - name: Update Dependencies
         run: ./scripts/update_dependencies.sh
