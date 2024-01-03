@@ -41,22 +41,13 @@ jobs:
         run: git submodule update --recursive
       
       - name: Update Dependencies
-        run: |
-          source /opt/ros/humble/setup.sh
-          ./scripts/update_dependencies.sh
+        run: ./scripts/update_dependencies.sh
 
       - name: Build Submodules
-        run: |
-          source /opt/ros/humble/setup.sh
-          ./scripts/setup_submodules.sh
+        run: ./scripts/setup_submodules.sh
 
       - name: Build
-        run: |
-          source /opt/ros/humble/setup.sh
-          ./scripts/build.sh
+        run: ./scripts/build.sh
 
       - name: Test
-        run: |
-          source /opt/ros/humble/setup.sh
-          source $VEXU_HOME/install/setup.bash
-          ./scripts/test_full.sh
+        run: ./scripts/test_full.sh
