@@ -45,6 +45,8 @@ jobs:
         run: |
           sudo rm /etc/ros/rosdep/sources.list.d/20-default.list
           ./scripts/update_dependencies.sh
+        env:
+          ROS_DISTRO: humble
 
       - name: Build Submodules
         run: ./scripts/setup_submodules.sh
