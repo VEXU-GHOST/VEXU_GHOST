@@ -17,6 +17,12 @@ jobs:
       VEXU_HOME: ${{github.workspace}}
 
     steps:
+      - name: Remove Conflicting Packages
+        run: |
+          sudo apt-get remove libunwind-14
+          sudo apt-get remove libunwind-14-dev
+          sudo apt-get remove libunwind8
+
       - name: Update System Packages
         run: sudo apt-get update; sudo apt-get upgrade -y
 
@@ -34,12 +40,6 @@ jobs:
 
       - name: Update Submodules
         run: git submodule update --recursive
-
-      - name: Remove Conflicting Packages
-        run: |
-          sudo apt-get remove libunwind-14
-          sudo apt-get remove libunwind-14-dev
-          sudo apt-get remove libunwind8
       
       - name: Update Dependencies
         run: ./scripts/update_dependencies.sh
