@@ -49,14 +49,14 @@ jobs:
       - name: Update Submodules
         run: |
           git submodule update --recursive
-          for dir in $(find ./ -mindepth 1 -maxdepth 1); do [[ $(ls -A $dir 2> /dev/null) ]] || exit -1; done
+          for dir in $(find $VEXU_HOME/09_External -mindepth 2 -maxdepth 2); do [[ $(ls -A $dir 2> /dev/null) ]] || exit -1; done
       
       - name: Update Dependencies
         run: ./scripts/update_dependencies.sh
 
       - name: Build Submodules
         run: |
-          find ./09_External -mindepth 1 -maxdepth 1
+          find $VEXU_HOME/09_External -mindepth 2 -maxdepth 2
           env > ~/temp_env_1
           ./scripts/setup_submodules.sh
           env > ~/temp_env_2
