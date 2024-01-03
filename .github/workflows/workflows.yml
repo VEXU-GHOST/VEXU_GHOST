@@ -27,6 +27,8 @@ jobs:
 
       - name: Checkout Branch
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Install ROS2 Humble
         uses: ros-tooling/setup-ros@0.7.1
@@ -47,8 +49,8 @@ jobs:
         run: sed 's/git@github\.com:/https:\/\/github\.com\//g' .gitmodules > .gitmodules
 
       - name: Update Submodules
-        run: |
-          git submodule update --recursive
+        run: #|
+          # git submodule update --recursive
           for dir in $(find $VEXU_HOME/09_External -mindepth 2 -maxdepth 2); do [[ $(ls -A $dir 2> /dev/null) ]] || exit -1; done
       
       - name: Update Dependencies
