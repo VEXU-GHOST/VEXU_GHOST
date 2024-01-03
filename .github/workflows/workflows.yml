@@ -47,10 +47,17 @@ jobs:
           ROS_DISTRO: humble
 
       - name: Build Submodules
-        run: ./scripts/setup_submodules.sh
+        run: |
+          source /opt/ros/humble/setup.sh
+          ./scripts/setup_submodules.sh
 
       - name: Build
-        run: ./scripts/build.sh
+        run: |
+          source /opt/ros/humble/setup.sh
+          ./scripts/build.sh
 
       - name: Test
-        run: ./scripts/test_full.sh
+        run: |
+          source /opt/ros/humble/setup.sh
+          source $VEXU_HOME/install/setup.bash
+          ./scripts/test_full.sh
