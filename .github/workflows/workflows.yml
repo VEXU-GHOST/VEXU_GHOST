@@ -35,11 +35,11 @@ jobs:
       - name: Update Submodules
         run: git submodule update --recursive
 
-      - run: sudo apt list --installed *unwind*
-      - run: sudo apt-cache rdepends --installed libunwind-14
-      - run: sudo apt-cache rdepends --installed libunwind-14-dev
-      - run: sudo apt-cache rdepends --installed libc++-14-dev
-      - run: sudo apt-cache rdepends --installed libc++-dev
+      - name: Remove Conflicting Packages
+        run: |
+          sudo apt-get remove libunwind-14
+          sudo apt-get remove libunwind-14-dev
+          sudo apt-get remove libunwind8
       
       - name: Update Dependencies
         run: ./scripts/update_dependencies.sh
