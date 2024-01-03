@@ -47,8 +47,6 @@ jobs:
 
       - name: Build Submodules
         run: |
-          echo "checking paths"
-          find $VEXU_HOME/09_External -mindepth 2 -maxdepth 2
           env > ~/temp_env_1
           ./scripts/setup_submodules.sh
           env > ~/temp_env_2
