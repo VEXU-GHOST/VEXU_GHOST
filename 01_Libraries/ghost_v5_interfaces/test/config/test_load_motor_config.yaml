@@ -49,9 +49,9 @@ port_configuration:
                 send_velocity_command: true
                 send_voltage_command: false
                 send_torque_command: true
-                get_current_data: true
-                get_power_data: false
-                get_temp_data: true
+                send_current_data: true
+                send_power_data: false
+                send_temp_data: true
 
         default_motor_config:
 
@@ -77,5 +77,5 @@ port_configuration:
                 gear_ratio: 1.0
             serial:                
                 send_torque_command: true
-                get_temp_data: true
+                send_temp_data: true
 

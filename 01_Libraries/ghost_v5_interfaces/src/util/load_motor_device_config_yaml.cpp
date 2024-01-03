@@ -42,11 +42,11 @@ MotorDeviceData::SerialConfig loadMotorSerialConfigFromYAML(YAML::Node node, boo
 	loadYAMLParam(node, "send_velocity_command", config.send_velocity_command, verbose);
 	loadYAMLParam(node, "send_torque_command", config.send_torque_command, verbose);
 	loadYAMLParam(node, "send_voltage_command", config.send_voltage_command, verbose);
-	loadYAMLParam(node, "get_torque_data", config.get_torque_data, verbose);
-	loadYAMLParam(node, "get_voltage_data", config.get_voltage_data, verbose);
-	loadYAMLParam(node, "get_current_data", config.get_current_data, verbose);
-	loadYAMLParam(node, "get_power_data", config.get_power_data, verbose);
-	loadYAMLParam(node, "get_temp_data", config.get_temp_data, verbose);
+	loadYAMLParam(node, "send_torque_data", config.send_torque_data, verbose);
+	loadYAMLParam(node, "send_voltage_data", config.send_voltage_data, verbose);
+	loadYAMLParam(node, "send_current_data", config.send_current_data, verbose);
+	loadYAMLParam(node, "send_power_data", config.send_power_data, verbose);
+	loadYAMLParam(node, "send_temp_data", config.send_temp_data, verbose);
 	return config;
 }
 

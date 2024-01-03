@@ -20,14 +20,14 @@ public:
 		}
 
 		bool operator==(const SerialConfig &rhs) const {
-			return (get_angle_data == rhs.get_angle_data) &&
-			       (get_position_data == rhs.get_position_data) &&
-			       (get_velocity_data == rhs.get_velocity_data);
+			return (send_angle_data == rhs.send_angle_data) &&
+			       (send_position_data == rhs.send_position_data) &&
+			       (send_velocity_data == rhs.send_velocity_data);
 		}
 
-		bool get_angle_data = true;
-		bool get_position_data = true;
-		bool get_velocity_data = true;
+		bool send_angle_data = true;
+		bool send_position_data = true;
+		bool send_velocity_data = true;
 	};
 
 	RotationSensorDeviceData(std::string name, SerialConfig serial_config = SerialConfig()) :
@@ -63,7 +63,8 @@ public:
 	bool operator==(const DeviceBase &rhs) const override {
 		const RotationSensorDeviceData *d_rhs = dynamic_cast<const RotationSensorDeviceData *>(&rhs);
 		return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) &&
-		       (position == d_rhs->position) && (velocity == d_rhs->velocity) && (angle == d_rhs->angle);
+		       (position == d_rhs->position) && (velocity == d_rhs->velocity) && (angle == d_rhs->angle) &&
+		       (serial_config_ == d_rhs->serial_config_);
 	}
 
 	std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override {
@@ -73,15 +74,15 @@ public:
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
 
-			if(serial_config_.get_angle_data){
+			if(serial_config_.send_angle_data){
 				memcpy(msg_buffer + byte_offset, &angle, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_position_data){
+			if(serial_config_.send_position_data){
 				memcpy(msg_buffer + byte_offset, &position, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_velocity_data){
+			if(serial_config_.send_velocity_data){
 				memcpy(msg_buffer + byte_offset, &velocity, 4);
 				byte_offset += 4;
 			}
@@ -95,15 +96,15 @@ public:
 			checkMsgSize(msg, getSensorPacketSize());
 			auto msg_buffer = msg.data();
 			int byte_offset = 0;
-			if(serial_config_.get_angle_data){
+			if(serial_config_.send_angle_data){
 				memcpy(&angle, msg_buffer + byte_offset, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_position_data){
+			if(serial_config_.send_position_data){
 				memcpy(&position, msg_buffer + byte_offset, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_velocity_data){
+			if(serial_config_.send_velocity_data){
 				memcpy(&velocity, msg_buffer + byte_offset, 4);
 				byte_offset += 4;
 			}
@@ -123,7 +124,8 @@ public:
 	bool operator==(const DeviceBase &rhs) const override {
 		const RotationSensorDeviceConfig *d_rhs = dynamic_cast<const RotationSensorDeviceConfig *>(&rhs);
 		return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) && (type == d_rhs->type) &&
-		       (reversed == d_rhs->reversed) && (data_rate == d_rhs->data_rate);
+		       (reversed == d_rhs->reversed) && (data_rate == d_rhs->data_rate) &&
+		       (serial_config == d_rhs->serial_config);
 	}
 
 	bool reversed = false;

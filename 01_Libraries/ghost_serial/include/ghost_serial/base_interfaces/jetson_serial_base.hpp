@@ -87,11 +87,16 @@ private:
 	 */
 	bool setSerialPortConfig() override;
 
+	// Error Handling for mismatched messages / invalid data
+	// After first N bytes, we start complaining if we don't get valid messages
+	const int startup_junk_byte_count_ = 1500;
+	int bytes_received_;
+
 	// Config params
 	std::string port_name_;
 	bool verbose_;
 
-	// Poll Config Strictire
+	// Poll Config Structure
 	struct pollfd pollfd_read_;
 };
 

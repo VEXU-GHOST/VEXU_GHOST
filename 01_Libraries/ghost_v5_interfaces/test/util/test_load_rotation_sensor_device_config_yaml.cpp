@@ -20,9 +20,9 @@ protected:
 		rotation_sensor_1_->type = device_type_e::ROTATION_SENSOR;
 		rotation_sensor_1_->reversed = true;
 		rotation_sensor_1_->data_rate = 10;
-		rotation_sensor_1_->serial_config.get_position_data = true;
-		rotation_sensor_1_->serial_config.get_angle_data = false;
-		rotation_sensor_1_->serial_config.get_velocity_data = true;
+		rotation_sensor_1_->serial_config.send_position_data = true;
+		rotation_sensor_1_->serial_config.send_angle_data = false;
+		rotation_sensor_1_->serial_config.send_velocity_data = true;
 
 		// Default (minimal required params)
 		rotation_sensor_2_ = std::make_shared<RotationSensorDeviceConfig>();
@@ -42,9 +42,9 @@ protected:
  */
 TEST_F(TestLoadRotationSensorDeviceConfigYAML, testLoadRotationSensorSerialConfig){
 	RotationSensorDeviceData::SerialConfig test_serial_config{};
-	test_serial_config.get_angle_data = false;
-	test_serial_config.get_position_data = true;
-	test_serial_config.get_velocity_data = true;
+	test_serial_config.send_angle_data = false;
+	test_serial_config.send_position_data = true;
+	test_serial_config.send_velocity_data = true;
 
 	RotationSensorDeviceData::SerialConfig loaded_serial_config;
 	EXPECT_NO_THROW(loaded_serial_config = loadRotationSensorSerialConfigFromYAML(config_yaml_["port_configuration"]["device_configurations"]["rotation_sensor_config"]["serial"]));

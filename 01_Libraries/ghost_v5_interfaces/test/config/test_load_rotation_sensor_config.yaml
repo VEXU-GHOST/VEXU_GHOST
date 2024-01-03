@@ -17,6 +17,6 @@ port_configuration:
         rotation_sensor_config:
             data_rate: 10
             serial:
-                get_angle_data: false
-                get_position_data: true
-                get_velocity_data: true
+                send_angle_data: false
+                send_position_data: true
+                send_velocity_data: true

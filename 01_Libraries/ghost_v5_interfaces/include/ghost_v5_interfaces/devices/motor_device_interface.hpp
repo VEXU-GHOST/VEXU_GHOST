@@ -47,8 +47,9 @@ public:
 		bool operator==(const SerialConfig &rhs) const {
 			return (send_position_command == rhs.send_position_command) && (send_velocity_command == rhs.send_velocity_command) &&
 			       (send_voltage_command == rhs.send_voltage_command) && (send_torque_command == rhs.send_torque_command) &&
-			       (get_torque_data == rhs.get_torque_data) && (get_voltage_data == rhs.get_voltage_data) &&
-			       (get_current_data == rhs.get_current_data) && (get_power_data == rhs.get_power_data) && (get_temp_data == rhs.get_temp_data);
+			       (send_torque_data == rhs.send_torque_data) && (send_voltage_data == rhs.send_voltage_data) &&
+			       (send_current_data == rhs.send_current_data) && (send_power_data == rhs.send_power_data) &&
+			       (send_temp_data == rhs.send_temp_data);
 		}
 
 		// Actuation Msg Config
@@ -58,11 +59,11 @@ public:
 		bool send_torque_command = false;
 
 		// Sensor Update Msg Config
-		bool get_torque_data = false;
-		bool get_voltage_data = false;
-		bool get_current_data = false;
-		bool get_power_data = false;
-		bool get_temp_data = false;
+		bool send_torque_data = false;
+		bool send_voltage_data = false;
+		bool send_current_data = false;
+		bool send_power_data = false;
+		bool send_temp_data = false;
 	};
 
 	MotorDeviceData(std::string name, SerialConfig serial_config = SerialConfig()) :
@@ -85,11 +86,11 @@ public:
 	int getSensorPacketSize() const override {
 		int packet_size = 0;
 		packet_size += 4 + 4; // Position/Velocity
-		packet_size += 4 * ((int) serial_config_.get_torque_data);
-		packet_size += 4 * ((int) serial_config_.get_voltage_data);
-		packet_size += 4 * ((int) serial_config_.get_current_data);
-		packet_size += 4 * ((int) serial_config_.get_power_data);
-		packet_size += 4 * ((int) serial_config_.get_temp_data);
+		packet_size += 4 * ((int) serial_config_.send_torque_data);
+		packet_size += 4 * ((int) serial_config_.send_voltage_data);
+		packet_size += 4 * ((int) serial_config_.send_current_data);
+		packet_size += 4 * ((int) serial_config_.send_power_data);
+		packet_size += 4 * ((int) serial_config_.send_temp_data);
 		return packet_size;
 	}
 
@@ -147,7 +148,8 @@ public:
 		       (voltage_control == d_rhs->voltage_control) && (curr_position == d_rhs->curr_position) &&
 		       (curr_velocity_rpm == d_rhs->curr_velocity_rpm) && (curr_torque_nm == d_rhs->curr_torque_nm) &&
 		       (curr_voltage_mv == d_rhs->curr_voltage_mv) && (curr_current_ma == d_rhs->curr_current_ma) &&
-		       (curr_power_w == d_rhs->curr_power_w) && (curr_temp_c == d_rhs->curr_temp_c);
+		       (curr_power_w == d_rhs->curr_power_w) && (curr_temp_c == d_rhs->curr_temp_c) &&
+		       (serial_config_ == d_rhs->serial_config_);
 	}
 
 	std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override {
@@ -202,23 +204,23 @@ public:
 			memcpy(msg_buffer + byte_offset, &curr_velocity_rpm, 4);
 			byte_offset += 4;
 
-			if(serial_config_.get_torque_data){
+			if(serial_config_.send_torque_data){
 				memcpy(msg_buffer + byte_offset, &curr_torque_nm, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_voltage_data){
+			if(serial_config_.send_voltage_data){
 				memcpy(msg_buffer + byte_offset, &curr_voltage_mv, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_current_data){
+			if(serial_config_.send_current_data){
 				memcpy(msg_buffer + byte_offset, &curr_current_ma, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_power_data){
+			if(serial_config_.send_power_data){
 				memcpy(msg_buffer + byte_offset, &curr_power_w, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_temp_data){
+			if(serial_config_.send_temp_data){
 				memcpy(msg_buffer + byte_offset, &curr_temp_c, 4);
 				byte_offset += 4;
 			}
@@ -277,23 +279,23 @@ public:
 			memcpy(&curr_velocity_rpm, msg_buffer + byte_offset, 4);
 			byte_offset += 4;
 
-			if(serial_config_.get_torque_data){
+			if(serial_config_.send_torque_data){
 				memcpy(&curr_torque_nm, msg_buffer + byte_offset, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_voltage_data){
+			if(serial_config_.send_voltage_data){
 				memcpy(&curr_voltage_mv, msg_buffer + byte_offset, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_current_data){
+			if(serial_config_.send_current_data){
 				memcpy(&curr_current_ma, msg_buffer + byte_offset, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_power_data){
+			if(serial_config_.send_power_data){
 				memcpy(&curr_power_w, msg_buffer + byte_offset, 4);
 				byte_offset += 4;
 			}
-			if(serial_config_.get_temp_data){
+			if(serial_config_.send_temp_data){
 				memcpy(&curr_temp_c, msg_buffer + byte_offset, 4);
 				byte_offset += 4;
 			}
@@ -318,7 +320,8 @@ public:
 		return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) && (type == d_rhs->type) &&
 		       (reversed == d_rhs->reversed) && (gearset == d_rhs->gearset) && (brake_mode == d_rhs->brake_mode) &&
 		       (encoder_units == d_rhs->encoder_units) && (controller_config == d_rhs->controller_config) &&
-		       (filter_config == d_rhs->filter_config) && (model_config == d_rhs->model_config);
+		       (filter_config == d_rhs->filter_config) && (model_config == d_rhs->model_config) &&
+		       (serial_config == d_rhs->serial_config);
 	}
 
 	bool reversed = false;

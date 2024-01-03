@@ -70,6 +70,9 @@ protected:
 		test_motor->controller_config.vel_gain = 118.0;
 		test_motor->controller_config.ff_vel_gain = 400.0;
 		test_motor->controller_config.ff_torque_gain = 2587.0;
+		test_motor->serial_config.send_voltage_command = false;
+		test_motor->serial_config.send_torque_data = true;
+		test_motor->serial_config.send_power_data = true;
 		robot_config_ptr->addDeviceConfig(test_motor);
 
 		// Default motor, minimally required info.
@@ -86,6 +89,9 @@ protected:
 		rotation_sensor_1->type = device_type_e::ROTATION_SENSOR;
 		rotation_sensor_1->reversed = true;
 		rotation_sensor_1->data_rate = 10;
+		rotation_sensor_1->serial_config.send_position_data = true;
+		rotation_sensor_1->serial_config.send_angle_data = false;
+		rotation_sensor_1->serial_config.send_velocity_data = true;
 		robot_config_ptr->addDeviceConfig(rotation_sensor_1);
 
 		// Default (minimal required params)

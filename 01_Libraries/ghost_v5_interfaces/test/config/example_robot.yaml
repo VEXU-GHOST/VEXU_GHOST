@@ -27,9 +27,9 @@ port_configuration:
         rotation_sensor_drive_config:
             data_rate: 10
             serial:
-                get_position_data: true
-                get_angle_data: false
-                get_velocity_data: true
+                send_position_data: true
+                send_angle_data: false
+                send_velocity_data: true
         test_motor_config:
             gearset: 100
             brake_mode: BRAKE
@@ -50,6 +50,10 @@ port_configuration:
                 stall_current: 21.58
                 nominal_voltage: 1200.0
                 gear_ratio: 2915.0
+            serial:
+                send_voltage_command: false
+                send_torque_data: true
+                send_power_data: true
 
         default_motor_config:
             filter:

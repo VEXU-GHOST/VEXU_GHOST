@@ -29,7 +29,8 @@ def generate_launch_description():
         executable='jetson_v5_serial_node',
         name='ghost_serial_node',
         output='screen',
-        parameters=[ros_config_file, {"robot_config_yaml_path": robot_config_yaml_path}]
+        parameters=[ros_config_file, {"robot_config_yaml_path": robot_config_yaml_path}],
+        # arguments=["--ros-args", "--log-level", "debug"]
     )
 
     return LaunchDescription([

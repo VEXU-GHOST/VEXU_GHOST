@@ -22,7 +22,8 @@ JetsonSerialBase::JetsonSerialBase(std::string write_msg_start_seq,
 		read_msg_start_seq,
 		read_msg_max_len,
 		use_checksum),
-	verbose_{verbose}{
+	verbose_{verbose},
+	bytes_received_{0}{
 }
 
 JetsonSerialBase::~JetsonSerialBase(){
@@ -140,6 +141,7 @@ bool JetsonSerialBase::readMsgFromSerial(std::vector<unsigned char> &msg_buffer,
 			// Read available bytes, up to size of raw_serial_buffer (two msgs - one byte)
 			int bytes_to_read = std::min(getNumBytesAvailable(), (int)read_buffer_.size());
 			int num_bytes_read = read(serial_read_fd_, read_buffer_.data(), bytes_to_read);
+			bytes_received_ += num_bytes_read;
 			read_lock.unlock();
 
 			// Extract any msgs from serial stream and return if msg is found
@@ -150,7 +152,11 @@ bool JetsonSerialBase::readMsgFromSerial(std::vector<unsigned char> &msg_buffer,
 				}
 
 				checkReadMsgBufferLength(msg_buffer); // Throws if msg_buffer is misconfigured
-				return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer.data(), parsed_msg_len);
+				bool msg_found = msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer.data(), parsed_msg_len);
+				if(!msg_found && (bytes_received_ > startup_junk_byte_count_)){
+					std::cout << "WARNING: Received " << num_bytes_read << " bytes but found no compatible message. Are both devices using the same robot config?" << std::endl;
+				}
+				return msg_found;
 			}
 			else if(num_bytes_read == -1){
 				perror("Error");

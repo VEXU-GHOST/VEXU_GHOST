@@ -187,6 +187,15 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			output_file << "\t" + motor_name + "->" + "controller_config.vel_gain = " +         std::to_string(config_ptr->controller_config.vel_gain) + ";\n";
 			output_file << "\t" + motor_name + "->" + "controller_config.ff_vel_gain = " +      std::to_string(config_ptr->controller_config.ff_vel_gain) + ";\n";
 			output_file << "\t" + motor_name + "->" + "controller_config.ff_torque_gain = " +   std::to_string(config_ptr->controller_config.ff_torque_gain) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_position_command = " +   std::to_string(config_ptr->serial_config.send_position_command) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_velocity_command = " +   std::to_string(config_ptr->serial_config.send_velocity_command) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_voltage_command = " +   std::to_string(config_ptr->serial_config.send_voltage_command) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_torque_command = " +   std::to_string(config_ptr->serial_config.send_torque_command) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_torque_data = " +   std::to_string(config_ptr->serial_config.send_torque_data) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_voltage_data = " +   std::to_string(config_ptr->serial_config.send_voltage_data) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_current_data = " +   std::to_string(config_ptr->serial_config.send_current_data) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_power_data = " +   std::to_string(config_ptr->serial_config.send_power_data) + ";\n";
+			output_file << "\t" + motor_name + "->" + "serial_config.send_temp_data = " +   std::to_string(config_ptr->serial_config.send_temp_data) + ";\n";
 			output_file << "\trobot_config->addDeviceConfig(" + motor_name + ");\n";
 			output_file << "\n";
 		}
@@ -200,6 +209,9 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			output_file << "\t" + sensor_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::ROTATION_SENSOR;\n";
 			output_file << "\t" + sensor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(config_ptr->reversed) + ";\n";
 			output_file << "\t" + sensor_name + "->" + "data_rate = " + std::to_string(config_ptr->data_rate) + ";\n";
+			output_file << "\t" + sensor_name + "->" + "serial_config.send_angle_data = " + std::to_string(config_ptr->serial_config.send_angle_data) + ";\n";
+			output_file << "\t" + sensor_name + "->" + "serial_config.send_position_data = " + std::to_string(config_ptr->serial_config.send_position_data) + ";\n";
+			output_file << "\t" + sensor_name + "->" + "serial_config.send_velocity_data = " + std::to_string(config_ptr->serial_config.send_velocity_data) + ";\n";
 			output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
 			output_file << "\n";
 		}

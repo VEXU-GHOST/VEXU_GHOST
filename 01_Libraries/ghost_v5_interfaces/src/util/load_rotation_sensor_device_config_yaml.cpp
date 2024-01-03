@@ -9,9 +9,9 @@ namespace util {
 
 RotationSensorDeviceData::SerialConfig loadRotationSensorSerialConfigFromYAML(YAML::Node node, bool verbose){
 	RotationSensorDeviceData::SerialConfig config;
-	loadYAMLParam(node, "get_angle_data", config.get_angle_data, verbose);
-	loadYAMLParam(node, "get_position_data", config.get_position_data, verbose);
-	loadYAMLParam(node, "get_velocity_data", config.get_velocity_data, verbose);
+	loadYAMLParam(node, "send_angle_data", config.send_angle_data, verbose);
+	loadYAMLParam(node, "send_position_data", config.send_position_data, verbose);
+	loadYAMLParam(node, "send_velocity_data", config.send_velocity_data, verbose);
 	return config;
 }
 

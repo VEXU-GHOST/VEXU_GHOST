@@ -50,6 +50,12 @@ port_configuration:
             reversed: true
 
     device_configurations:
+        steering_sensor_config:
+            data_rate: 5
+            serial:
+                send_angle_data: true
+                send_position_data: false
+                send_velocity_data: true                
         drive_motor_config:
             gearset: 600
             brake_mode: COAST
@@ -66,3 +72,13 @@ port_configuration:
                 stall_current: 4.25
                 nominal_voltage: 12.0
                 gear_ratio: 6.0
+            serial:
+                send_position_command: true
+                send_velocity_command: true
+                send_voltage_command: true
+                send_torque_command: true
+                send_torque_data: true
+                send_power_data: true    
+                send_current_data: true    
+                send_voltage_data: true    
+                send_temperature_data: true    
