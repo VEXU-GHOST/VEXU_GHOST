@@ -35,6 +35,8 @@ jobs:
       - name: Update Submodules
         run: git submodule update --recursive
 
+      - run: sudo apt list --installed *unwind*
+      
       - name: Update Dependencies
         run: ./scripts/update_dependencies.sh
 
