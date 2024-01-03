@@ -1,5 +1,13 @@
 #!/bin/bash
-V5_DIR="${HOME}/VEXU_GHOST/02_V5/ghost_pros"
+
+# Verify repo path is set
+if [ -z "${VEXU_HOME}" ]
+then
+    echo "Failure: repository path variable VEXU_HOME is unset."
+    exit -1
+fi
+
+V5_DIR="${VEXU_HOME}/02_V5/ghost_pros"
 
 ##############
 ### V5 SRC ###

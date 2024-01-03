@@ -1,0 +1,68 @@
+name: VEXU_GHOST
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    types: [ready_for_review, synchronize]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    if: github.event_name == 'push' || !github.event.pull_request.draft
+    runs-on: ubuntu-22.04
+    env:
+      VEXU_HOME: ${{github.workspace}}
+
+    steps:
+      - name: Remove Conflicting Packages
+        run: sudo apt-get remove libunwind-14 libunwind-14-dev
+
+      - name: Update System Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get upgrade -y
+
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install ROS2 Humble
+        uses: ros-tooling/setup-ros@0.7.1
+        with:
+          required-ros-distributions: humble
+
+      - name: Set ROS2 Environment Variables
+        run: |
+          env > ~/temp_env_1
+          source /opt/ros/humble/setup.sh
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+      
+      - name: Update Dependencies
+        run: ./scripts/update_dependencies.sh
+
+      - name: Build Submodules
+        run: |
+          env > ~/temp_env_1
+          ./scripts/setup_submodules.sh
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+
+      - name: Build
+        run: |
+          env > ~/temp_env_1
+          ./scripts/build.sh
+          source $VEXU_HOME/install/setup.bash
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+
+      - name: Test
+        run: |
+          env > ~/temp_env_1
+          ./scripts/test_full.sh
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
