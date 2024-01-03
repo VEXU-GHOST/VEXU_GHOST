@@ -25,7 +25,8 @@ def launch_setup(context, *args, **kwargs):
         package = "gazebo_ros",
         executable = "spawn_entity.py",
         output='screen',
-        arguments=spawn_entity_args)
+        arguments=spawn_entity_args,
+        parameters=[{'use_sim_time': True}])
 
     # Node to publish robot joint transforms
     robot_state_publisher = Node(
@@ -125,11 +126,11 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        # ground_truth_publisher,
+        ground_truth_publisher,
         # rviz_node,
         plot_juggler_node,
         robot_localization_node,
-        ekf_test_data_publisher,
+        # ekf_test_data_publisher,
         # state_machine_node,
         # v5_actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)

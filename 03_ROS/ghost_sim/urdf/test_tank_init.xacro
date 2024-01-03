@@ -10,16 +10,12 @@
     <gazebo>
         <plugin name="gazebo_ros_diff_drive" filename="libgazebo_ros_diff_drive.so">
             <!-- Update rate in Hz -->
-            <update_rate>1</update_rate>
+            <update_rate>30.0</update_rate>
 
             <!-- wheels -->
-            <left_joint>wheel_joint_left_front</left_joint>
-            <left_joint>wheel_joint_left_back</left_joint>
+            <left_joint>left_wheel_hinge</left_joint>
 
-            <right_joint>wheel_joint_right_front</right_joint>
-            <right_joint>wheel_joint_right_back</right_joint>
-
-            <num_wheel_pairs>2</num_wheel_pairs>
+            <right_joint>right_wheel_hinge</right_joint>
             
             <!-- kinematics -->
             <wheel_separation>1.25</wheel_separation>
@@ -33,7 +29,7 @@
             <command_topic>cmd_vel</command_topic>
 
             <!-- output: odometrySource 0 for ENCODER 1 for WORLD -->
-            <odometrySource>0</odometrySource>
+            <odometrySource>1</odometrySource>
             <publish_odom>true</publish_odom>
             <publish_odom_tf>true</publish_odom_tf>
             <publish_wheel_tf>true</publish_wheel_tf>

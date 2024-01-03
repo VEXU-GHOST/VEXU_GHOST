@@ -3,7 +3,7 @@ ekf_localization_node:
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
     # computation until it receives at least one message from one of the inputs. It will then run continuously at the
     # frequency specified here, regardless of whether it receives more measurements. Defaults to 30 if unspecified.
-    frequency: 100.0
+    frequency: 30.0
 
     # The period, in seconds, after which we consider a sensor to have timed out. In this event, we carry out a predict
     # cycle on the EKF without correcting it. This parameter can be thought of as the minimum frequency with which the
@@ -56,10 +56,10 @@ ekf_localization_node:
     #     3a. Set your "world_frame" to your map_frame value
     #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
     #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
-    map_frame: map              # Defaults to "map" if unspecified
+    # map_frame: map              # Defaults to "map" if unspecified
     odom_frame: odom            # Defaults to "odom" if unspecified
     base_link_frame: base_link  # Defaults to "base_link" if unspecified
-    world_frame: map           # Defaults to the value of odom_frame if unspecified
+    world_frame: odom          # Defaults to the value of odom_frame if unspecified
 
     # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
     # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
@@ -75,7 +75,7 @@ ekf_localization_node:
     # do not provide some of the state variables estimated by the filter. For example, a TwistWithCovarianceStamped message
     # has no pose information, so the first six values would be meaningless in that case. Each vector defaults to all false
     # if unspecified, effectively making this parameter required for each sensor.
-    odom0_config: [true,  true,  false,
+    odom0_config: [true, true,  false,
                   false, false, true,
                   false, false, false,
                   false, false, false,
@@ -98,13 +98,13 @@ ekf_localization_node:
     # data is converted to velocity data by differentiating the absolute pose measurements. These velocities are then
     # integrated as usual. NOTE: this only applies to sensors that provide pose measurements; setting differential to true
     # for twist measurements has no effect.
-    odom0_differential: false
+    odom0_differential: true
 
     # [ADVANCED] When the node starts, if this parameter is true, then the first measurement is treated as a "zero point"
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key
     # difference is that the relative parameter doesn't cause the measurement to be converted to a velocity before
     # integrating it. If you simply want your measurements to start at 0 for a given sensor, set this to true.
-    odom0_relative: true
+    odom0_relative: false
 
     # [ADVANCED] If your data is subject to outliers, use these threshold settings, expressed as Mahalanobis distances, to
     # control how far away from the current vehicle state a sensor measurement is permitted to be. Each defaults to
@@ -133,18 +133,18 @@ ekf_localization_node:
     imu0_remove_gravitational_acceleration: true
 
     # Incorporating simulator data to test performance of EKF
-    twist0: /gz/model_pose # This topic only does pose
-    twist0_config: [true, true, false,
+    odom1: /gz/model_pose # This topic only does pose
+    odom1_config: [true, true, false,
                    false, false, true,
                    false, false, false,
                    false, false, false,
                    false, false, false,]
-    twist0_differential: false
-    twist0_relative: true
-    twist0_queue_size: 5
-    twist0_pose_rejection_threshold: 0.8                 # Note the difference in parameter names
-    twist0_twist_rejection_threshold: 0.8                #
-    twist0_linear_acceleration_rejection_threshold: 0.8  #
+    odom1_differential: false
+    odom1_relative: true
+    odom1_queue_size: 5
+    odom1_pose_rejection_threshold: 0.8                 # Note the difference in parameter names
+    odom1_twist_rejection_threshold: 0.8                #
+    odom1_linear_acceleration_rejection_threshold: 0.8  #
 
     # [ADVANCED]  The EKF and UKF models follow a standard predict/correct cycle. During prediction, if there is no
     # acceleration reference, the velocity at time t+1 is simply predicted to be the same as the velocity at time t. During
@@ -185,7 +185,7 @@ ekf_localization_node:
     # to be larger, which will cause the filter to trust the incoming measurement more during correction. The values are
     # ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below if
     # unspecified.
-    process_noise_covariance: [0.05,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    process_noise_covariance: [0.5,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.05,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.06,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.03,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
@@ -222,13 +222,4 @@ ekf_localization_node:
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
 
-    # [ADVANCED, UKF ONLY] The alpha and kappa variables control the spread of the sigma points. Unless you are familiar
-    # with UKFs, it's probably a good idea to leave these alone.
-    # Defaults to 0.001 if unspecified.
-    alpha: 0.001
-    # Defaults to 0 if unspecified.
-    kappa: 0
-
-    # [ADVANCED, UKF ONLY] The beta variable relates to the distribution of the state vector. Again, it's probably best to
-    # leave this alone if you're uncertain. Defaults to 2 if unspecified.
-    beta: 2
+      # use_dynamic_process_noise_covariance: true
