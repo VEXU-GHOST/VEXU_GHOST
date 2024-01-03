@@ -43,7 +43,7 @@ jobs:
       
       - name: Update Dependencies
         run: |
-          sudo rm /etc/ros/rosdep/sources.list.d/20-default.list
+          sudo rm -f /etc/ros/rosdep/sources.list.d/20-default.list
           ./scripts/update_dependencies.sh
         env:
           ROS_DISTRO: humble
