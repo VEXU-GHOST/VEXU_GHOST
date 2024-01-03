@@ -42,17 +42,6 @@ jobs:
           env > ~/temp_env_2
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
       
-      - name: Init Submodules
-        run: git submodule init
-
-      - name: Convert Submodule Links to HTTPS
-        run: sed 's/git@github\.com:/https:\/\/github\.com\//g' .gitmodules > .gitmodules
-
-      - name: Update Submodules
-        run: #|
-          # git submodule update --recursive
-          for dir in $(find $VEXU_HOME/09_External -mindepth 2 -maxdepth 2); do [[ $(ls -A $dir 2> /dev/null) ]] || exit -1; done
-      
       - name: Update Dependencies
         run: ./scripts/update_dependencies.sh
 
