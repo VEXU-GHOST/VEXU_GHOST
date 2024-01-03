@@ -69,7 +69,10 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 			{
 				// Load motor config (or default if not specified)
 				auto rotation_sensor_config_ptr = std::make_shared<RotationSensorDeviceConfig>();
-				loadRotationSensorDeviceConfigFromYAML(node["port_configuration"], device_name, rotation_sensor_config_ptr);
+				std::string device_config_name;
+				if(loadYAMLParam(device_yaml_node, "config", device_config_name, verbose)){
+					loadRotationSensorDeviceConfigFromYAML(node["port_configuration"], device_name, rotation_sensor_config_ptr);
+				}
 				device_config_base_ptr = rotation_sensor_config_ptr;
 			}
 			break;

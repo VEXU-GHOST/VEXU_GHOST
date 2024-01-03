@@ -63,14 +63,24 @@ TEST_F(TestLoadRotationSensorDeviceConfigYAML, testLoadCustomSensorConfigFromYAM
 }
 
 /**
- * @brief Test that if the rotation sensor config is missing the config attribute, it loads the default.
+ * @brief Test that if the rotation sensor config is empty, it loads the default.
  */
-TEST_F(TestLoadRotationSensorDeviceConfigYAML, testMissingConfigIsDefault){
+TEST_F(TestLoadRotationSensorDeviceConfigYAML, testEmptyConfigIsDefault){
 	auto config_node = config_yaml_["port_configuration"];
 	std::string sensor_name = "rotation_sensor_2";
 	auto config_ptr = std::make_shared<RotationSensorDeviceConfig>();
 	EXPECT_NO_THROW(loadRotationSensorDeviceConfigFromYAML(config_node, sensor_name, config_ptr));
 	EXPECT_EQ(*config_ptr, *rotation_sensor_2_);
+}
+
+/**
+ * @brief Test that if the device config is missing the port attribute, it throws.
+ */
+TEST_F(TestLoadRotationSensorDeviceConfigYAML, testMissingConfigThrowsError){
+	auto config_node = config_yaml_["port_configuration"];
+	std::string sensor_name = "rotation_sensor_no_config";
+	auto config_ptr = std::make_shared<RotationSensorDeviceConfig>();
+	EXPECT_THROW(loadRotationSensorDeviceConfigFromYAML(config_node, sensor_name, config_ptr), std::runtime_error);
 }
 
 /**

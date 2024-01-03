@@ -25,17 +25,20 @@ void loadRotationSensorDeviceConfigFromYAML(YAML::Node node,
 		throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Rotation Sensor " + sensor_name + " not found!");
 	}
 
-	// Get name of motor-specific config
-	if(device_node["config"]){
-		auto config_name = device_node["config"].as<std::string>();
+	// Get name of sensor-specific config
+	if(!device_node["config"]){
+		throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Rotation Sensor Config not found for sensor " + sensor_name + "!");
+	}
+	auto config_name = device_node["config"].as<std::string>();
 
-		// Retrieve motor-specific config node
-		auto config_node = node["device_configurations"][config_name];
-		if(!config_node){
-			throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Config not found for name " + config_name + "!");
-		}
+	// Retrieve sensor-specific config node
+	auto config_node = node["device_configurations"][config_name];
+	if(!config_node){
+		throw std::runtime_error("[loadRotationSensorDeviceConfigFromYAML] Error: Config not found for name " + config_name + "!");
+	}
 
-		loadYAMLParam(config_node, "data_rate", sensor_device_config_ptr->data_rate, verbose);
+	loadYAMLParam(config_node, "data_rate", sensor_device_config_ptr->data_rate, verbose);
+	if(config_node["serial"]){
 		sensor_device_config_ptr->serial_config = loadRotationSensorSerialConfigFromYAML(config_node["serial"], verbose);
 	}
 

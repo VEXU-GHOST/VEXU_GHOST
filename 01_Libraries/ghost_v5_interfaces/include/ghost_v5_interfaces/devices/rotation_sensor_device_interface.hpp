@@ -41,7 +41,11 @@ public:
 	}
 
 	int getSensorPacketSize() const {
-		return 4 * 3;
+		int packet_size = 0;
+		packet_size += 4 * ((int) serial_config_.send_angle_data);
+		packet_size += 4 * ((int) serial_config_.send_position_data);
+		packet_size += 4 * ((int) serial_config_.send_velocity_data);
+		return packet_size;
 	}
 
 	// Sensor Values
@@ -86,6 +90,7 @@ public:
 				memcpy(msg_buffer + byte_offset, &velocity, 4);
 				byte_offset += 4;
 			}
+			checkMsgSize(byte_offset, getSensorPacketSize());
 		}
 		return msg;
 	}

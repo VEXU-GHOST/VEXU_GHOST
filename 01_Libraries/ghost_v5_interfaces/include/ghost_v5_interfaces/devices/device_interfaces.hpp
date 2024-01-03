@@ -157,6 +157,13 @@ public:
 			                         "Expecting " + std::to_string(msg_size) + " bytes, received " + std::to_string(data.size()) + " bytes.");
 		}
 	}
+
+	void checkMsgSize(int true_size, int expected_size) const {
+		if(true_size != expected_size){
+			throw std::runtime_error("[DeviceData::checkMsgSize] Error: Device " + name + " received incorrect serial msg size. " +
+			                         "Expecting " + std::to_string(expected_size) + " bytes, received " + std::to_string(true_size) + " bytes.");
+		}
+	}
 };
 
 struct DevicePair {

@@ -8,12 +8,18 @@ port_configuration:
         rotation_sensor_2:
             port: 2
             type: ROTATION_SENSOR
+            config: default_rotation_sensor_config
+        rotation_sensor_no_config:
+            port: 2
+            type: ROTATION_SENSOR
         rotation_sensor_no_port:
             type: ROTATION_SENSOR
         rotation_sensor_no_type:
             port: 2
 
     device_configurations:
+        default_rotation_sensor_config:
+
         rotation_sensor_config:
             data_rate: 10
             serial:

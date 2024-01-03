@@ -4,6 +4,7 @@ port_configuration:
             port: 1
             type: ROTATION_SENSOR
             reversed: true
+            config: steering_sensor_config
         drive_flr:
             port: 3
             type: MOTOR
@@ -24,10 +25,12 @@ port_configuration:
             port: 10
             type: ROTATION_SENSOR
             reversed: true
+            config: steering_sensor_config
         steering_back_left:
             port: 11
             type: ROTATION_SENSOR
             reversed: true
+            config: steering_sensor_config
         drive_blr:
             port: 13
             type: MOTOR
@@ -48,6 +51,7 @@ port_configuration:
             port: 20
             type: ROTATION_SENSOR
             reversed: true
+            config: steering_sensor_config
 
     device_configurations:
         steering_sensor_config:
@@ -76,9 +80,9 @@ port_configuration:
                 send_position_command: true
                 send_velocity_command: true
                 send_voltage_command: true
-                send_torque_command: true
-                send_torque_data: true
-                send_power_data: true    
-                send_current_data: true    
-                send_voltage_data: true    
-                send_temperature_data: true    
+                send_torque_command: false
+                send_torque_data: false
+                send_voltage_data: false
+                send_current_data: false
+                send_power_data: false
+                send_temperature_data: false
