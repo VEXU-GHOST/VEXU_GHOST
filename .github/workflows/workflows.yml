@@ -42,7 +42,9 @@ jobs:
         run: git submodule update --recursive
       
       - name: Update Dependencies
-        run: ./scripts/update_dependencies.sh
+        run: |
+          sudo rm /etc/ros/rosdep/sources.list.d/20-default.list
+          ./scripts/update_dependencies.sh
 
       - name: Build Submodules
         run: ./scripts/setup_submodules.sh
