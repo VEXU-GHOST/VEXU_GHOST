@@ -41,9 +41,9 @@ jobs:
         run: git submodule update --recursive
       
       - name: Update Dependencies
-        run: ./scripts/update_dependencies.sh
-        env:
-          ROS_DISTRO: humble
+        run: |
+          source /opt/ros/humble/setup.sh
+          ./scripts/update_dependencies.sh
 
       - name: Build Submodules
         run: |
