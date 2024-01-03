@@ -35,10 +35,10 @@ jobs:
 
       - name: Set ROS2 Environment Variables
         run: |
-          env > ${{github.workspace}}/../temp_env_1
+          env > ~/temp_env_1
           source /opt/ros/humble/setup.sh
-          env > ${{github.workspace}}/../temp_env_2
-          diff temp_env_1 temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
       
       - name: Init Submodules
         run: git submodule init
@@ -54,22 +54,22 @@ jobs:
 
       - name: Build Submodules
         run: |
-          env > ${{github.workspace}}/../temp_env_1
+          env > ~/temp_env_1
           ./scripts/setup_submodules.sh
-          env > ${{github.workspace}}/../temp_env_2
-          diff temp_env_1 temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
 
       - name: Build
         run: |
-          env > ${{github.workspace}}/../temp_env_1
+          env > ~/temp_env_1
           ./scripts/build.sh
           source $VEXU_HOME/install/setup.bash
-          env > ${{github.workspace}}/../temp_env_2
-          diff temp_env_1 temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
 
       - name: Test
         run: |
-          env > ${{github.workspace}}/../temp_env_1
+          env > ~/temp_env_1
           ./scripts/test_full.sh
-          env > ${{github.workspace}}/../temp_env_2
-          diff temp_env_1 temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
