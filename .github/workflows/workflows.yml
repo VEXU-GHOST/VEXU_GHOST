@@ -30,6 +30,8 @@ jobs:
 
       - name: Install ROS2 Humble
         uses: ros-tooling/setup-ros@0.7.1
+        with:
+          required-ros-distributions: humble
 
       - name: Init Submodules
         run: git submodule init
