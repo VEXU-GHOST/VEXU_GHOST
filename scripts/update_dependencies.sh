@@ -38,11 +38,6 @@ echo
 echo "--------------- ROSDEP Init ---------------"
 sudo rosdep init
 
-# Exit if step failed
-if [[ $? -ne 0 ]]; then
-    exit -1
-fi
-
 echo
 echo "--------------- ROSDEP Update ---------------"
 rosdep update
