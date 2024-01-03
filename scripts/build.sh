@@ -25,18 +25,12 @@ echo "---Building Ghost ROS Packages---"
 # Build ignores simulator packages on embedded devices
 if [ "$arch" == 'x86_64' ];
 then 
-    colcon build --packages-skip --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    colcon build --packages-skip --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON           || exit -1
 fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --packages-skip ghost_sim --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-fi
-
-# Exit if build was unsuccessful
-if [[ $? -ne 0 ]]
-then
-    exit -1
+    colcon build --packages-skip ghost_sim --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
 fi
 
 source install/setup.bash
@@ -81,23 +75,17 @@ then
     if [[ $(pros --version) ]] 2> /dev/null; then
         echo "Found PROS"
         echo "---Updating V5 Project Symbolic Links---"
-        bash scripts/update_symlinks.sh
+        bash scripts/update_symlinks.sh || exit -1
 
         cd 02_V5/ghost_pros
 
         echo
         echo "---Cleaning PROS Project---"
-        make clean
+        make clean || exit -1
 
         echo 
         echo "---Building PROS Project---"
-        pros make
-
-        # Exit if build was unsuccessful
-        if [[ $? -ne 0 ]]
-        then
-            exit -1
-        fi
+        pros make || exit -1
     else
         echo "PROS not installed, skipping V5 Build"
     fi
