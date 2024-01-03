@@ -18,12 +18,12 @@ jobs:
 
     steps:
       - name: Remove Conflicting Packages
-        run: |
-          sudo apt-get remove libunwind-14
-          sudo apt-get remove libunwind-14-dev
+        run: sudo apt-get remove libunwind-14 libunwind-14-dev
 
       - name: Update System Packages
-        run: sudo apt-get update; sudo apt-get upgrade -y
+        run: |
+          sudo apt-get update
+          sudo apt-get upgrade -y
 
       - name: Checkout Branch
         uses: actions/checkout@v4
