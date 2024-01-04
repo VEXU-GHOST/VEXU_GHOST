@@ -5,7 +5,7 @@ class MyTest : public ::testing::Test {
 protected:
 
 	MyTest(){
-		node_ = std::make_shared<Math_Space::Mather>(5,2);
+		node_ = std::make_shared<math_space::Mather>(5,2);
 	}
 
 	void SetUp() override {
@@ -13,7 +13,7 @@ protected:
 
 	void TearDown() override {
 	}
-	std::shared_ptr< Math_Space::Mather> node_;
+	std::shared_ptr<math_space::Mather> node_;
 };
 
 TEST_F(MyTest, addTest){

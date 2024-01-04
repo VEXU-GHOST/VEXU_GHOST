@@ -47,15 +47,15 @@ if(BUILD_TESTING)
 endif()
 
 #Creating a library for the class that I made
-add_library(Math_Node SHARED src/Mather.cpp)
-ament_target_dependencies(Math_Node
+add_library(math_node SHARED src/Mather.cpp)
+ament_target_dependencies(math_node
 ${DEPENDENCIES})
 
 #exporting the library
-ament_export_targets(Math_Node HAS_LIBRARY_TARGET)
+ament_export_targets(math_node HAS_LIBRARY_TARGET)
 install(
-  TARGETS Math_Node
-  EXPORT Math_Node
+  TARGETS math_node
+  EXPORT math_node
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
@@ -63,22 +63,22 @@ install(
 )
 
 #Main Method Stuff
-add_executable(main_executable src/main.cpp)
-ament_target_dependencies(main_executable
+add_executable(math_main_executable src/main.cpp)
+ament_target_dependencies(math_main_executable
   ${DEPENDENCIES}
 )
-target_link_libraries(main_executable
-Math_Node)
+target_link_libraries(math_main_executable
+math_node)
 
 install(TARGETS
-main_executable
+math_main_executable
 DESTINATION lib/${PROJECT}
 )
 
 #Gtest stuff
-ament_add_gtest(test_example src/wills_Test_File.cpp)
+ament_add_gtest(test_example src/wills_test_file.cpp)
 target_link_libraries(test_example
-  Math_Node
+  math_node
   gtest
 )
 
