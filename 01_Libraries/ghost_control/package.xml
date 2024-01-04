@@ -11,11 +11,16 @@
 
   <build_depend>ament_cmake_gtest</build_depend>
   <build_depend>eigen3_cmake_module</build_depend>
+  <build_depend>ament_index_cpp</build_depend>
+
+  <build_depend>urdf</build_depend>
   <build_depend>ghost_common</build_depend>
   <build_depend>ghost_estimation</build_depend>
   <build_depend>urdfdom</build_depend>
 
   <build_export_depend>ament_cmake</build_export_depend>
+  <build_export_depend>ament_index_cpp</build_export_depend>
+  <build_export_depend>urdf</build_export_depend>
   <build_export_depend>ament_cmake_gtest</build_export_depend>
   <build_export_depend>eigen3_cmake_module</build_export_depend>
   <build_export_depend>ghost_common</build_export_depend>

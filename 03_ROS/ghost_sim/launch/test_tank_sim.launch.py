@@ -85,19 +85,6 @@ def generate_launch_description():
         name='ground_truth_pose_publisher',
     )
 
-    ekf_test_data_publisher = Node(
-        package = 'ghost_sim',
-        executable = 'test_robot_localization',
-        name = 'test_robot_localization',
-        parameters=[{'use_sim_time': True}]
-    )
-
-    v5_actuator_cmd_publisher = Node(
-        package='ghost_sim',
-        executable = 'test_publisher_v5_actuator_cmd',
-        name = 'test_publisher_v5_actuator_cmd',
-    )
-
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -130,8 +117,6 @@ def generate_launch_description():
         # rviz_node,
         plot_juggler_node,
         robot_localization_node,
-        # ekf_test_data_publisher,
         # state_machine_node,
-        # v5_actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)
     ])
