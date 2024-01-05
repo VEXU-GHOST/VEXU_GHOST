@@ -87,6 +87,19 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 			}
 			break;
 
+			case device_type_e::ROTATION_SENSOR:
+			{
+				continue;
+			}
+			break;
+
+			case device_type_e::JOYSTICK:
+			{
+				continue;
+			}
+
+			break;
+
 			case device_type_e::INVALID:
 			{
 				throw std::runtime_error("ERROR: Attempted to initialize unsupported device using ghost_v5_interfaces.");

@@ -40,8 +40,8 @@ private:
 	// V5 Screen Params
 	const int MAX_ROWS = 11;
 	const int LINE_PIX_HEIGHT = 20;
-	const int SCREEN_PIX_WIDTH = 240;
-	const int SCREEN_PIX_HEIGHT = 480;
+	const int SCREEN_PIX_WIDTH = 480;
+	const int SCREEN_PIX_HEIGHT = 240;
 	const int SCREEN_WIDTH_CHAR_LIM = 48;
 	const int REFRESH_RATE_MS = 10;
 };
