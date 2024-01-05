@@ -9,7 +9,7 @@
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 
-namespace ghost_competition_ros {
+namespace ghost_ros_interfaces {
 
 enum class robot_state_e {
 	DISABLED = 0,
@@ -28,8 +28,8 @@ public:
 	/**
 	 * @brief Called directly after instantiation, when the robot is configured.
 	 *
-	 * Member variables for the ROS node and YAML config allow for adding new ros interfaces
-	 * and for loading parameters at runtime.
+	 * Member variables provide access to ROS Node for adding ROS Interfaces (topics, services, etc.) and for loading
+	 * ROS Params at runtime.
 	 *
 	 * This will block any other competition functionality until it completes.
 	 * This method will not update actuator commands.
@@ -62,13 +62,13 @@ public:
 	//////////////////////////////
 	///// Base Class Methods /////
 	//////////////////////////////
+
 	/**
 	 * @brief Called for all V5 Robot Classes after construction. Calls user-defined intialize method internally.
 	 *
-	 * @param node_ptr      pointer to ros node
-	 * @param config_yaml   YAML configuration node
+	 * @param robot_name this will be the name of the ROS node (with _node appended to it). Use snakecase!
 	 */
-	void configure(const std::string& robot_name, const YAML::Node& config_yaml);
+	void configure(const std::string& robot_name);
 
 	/**
 	 * @brief Returns a shared pointer to the ROS node for this robot instance
@@ -76,16 +76,10 @@ public:
 	 * @return std::shared_ptr<rclcpp::Node>
 	 */
 	std::shared_ptr<rclcpp::Node> getROSNodePtr() const {
+		if(!configured_){
+			throw std::runtime_error("[V5RobotBase::getROSNodePtr] Error: This plugin has not been configured yet!");
+		}
 		return node_ptr_;
-	}
-
-	/**
-	 * @brief Returns a constant reference to the configuration yaml node
-	 *
-	 * @return const YAML::Node&
-	 */
-	const YAML::Node& getConfigYAML() const {
-		return config_yaml_;
 	}
 
 private:
@@ -94,7 +88,6 @@ private:
 	double getTimeFromStart() const;
 
 	std::shared_ptr<rclcpp::Node> node_ptr_;
-	YAML::Node config_yaml_;
 	bool configured_ = false;
 	robot_state_e last_comp_state_ = robot_state_e::TELEOP;
 	robot_state_e curr_comp_state_ = robot_state_e::TELEOP;
@@ -104,4 +97,4 @@ private:
 	std::chrono::time_point<std::chrono::system_clock> start_time_;
 };
 
-} // namespace ghost_competition_ros
+} // namespace ghost_ros_interfaces

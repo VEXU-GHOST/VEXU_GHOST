@@ -16,6 +16,7 @@ set(DEPENDENCIES
   ghost_msgs
   ghost_serial
   ghost_util
+  pluginlib
   rclcpp
   yaml-cpp
   )
@@ -56,9 +57,10 @@ install(
   INCLUDES DESTINATION include
 )
 
-############################
-#### Jetson Serial Node ####
-############################
+#####################
+#### Executables ####
+#####################
+# Jetson Serial Node
 add_executable(jetson_v5_serial_node
   src/serial/jetson_v5_serial_node.cpp
 )
@@ -78,6 +80,52 @@ target_include_directories(jetson_v5_serial_node
 install(TARGETS
   jetson_v5_serial_node
   DESTINATION lib/${PROJECT_NAME})
+
+# V5 Robot Base Library
+add_library(v5_robot_base SHARED src/competition/v5_robot_base.cpp)
+target_include_directories(v5_robot_base
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(v5_robot_base
+  ${DEPENDENCIES}
+)
+ament_export_targets(v5_robot_base HAS_LIBRARY_TARGET)
+install(
+  TARGETS v5_robot_base
+  EXPORT v5_robot_base
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+# Competition State Machine Node
+add_executable(competition_state_machine_node
+  src/competition/competition_state_machine_node.cpp
+)
+ament_target_dependencies(competition_state_machine_node
+  ${DEPENDENCIES}
+)
+target_link_libraries(competition_state_machine_node
+  v5_robot_base
+  yaml-cpp
+)
+target_include_directories(competition_state_machine_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  competition_state_machine_node
+  DESTINATION lib/${PROJECT_NAME})
+  
+#################
+#### Install ####
+#################
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
 
 #################
 #### Testing ####

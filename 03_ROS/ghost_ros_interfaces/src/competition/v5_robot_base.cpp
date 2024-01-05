@@ -1,11 +1,11 @@
-#include "ghost_competition_ros/v5_robot_base.hpp"
+#include "ghost_ros_interfaces/competition/v5_robot_base.hpp"
 
 using std::placeholders::_1;
 
-namespace ghost_competition_ros {
+namespace ghost_ros_interfaces {
 
-void V5RobotBase::configure(const std::string& robot_name, const YAML::Node& config_yaml){
-	config_yaml_ = config_yaml;
+void V5RobotBase::configure(const std::string& robot_name){
+	std::cout << "Configuring V5 Robot Base!" << std::endl;
 	node_ptr_ = std::make_shared<rclcpp::Node>(robot_name + "_node");
 
 	sensor_update_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::V5SensorUpdate>(
@@ -25,20 +25,20 @@ void V5RobotBase::configure(const std::string& robot_name, const YAML::Node& con
 }
 
 void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
-	updateCompetitionState(msg->is_disabled, msg->is_autonomous);
+	updateCompetitionState(msg->competition_status.is_disabled, msg->competition_status.is_autonomous);
 
 	// Competition State Machine
 	switch(curr_comp_state_){
-	case robot_state_e::DISABLED:
-		disabled();
+		case robot_state_e::DISABLED:
+			disabled();
 		break;
 
-	case robot_state_e::AUTONOMOUS:
-		autonomous(getTimeFromStart());
+		case robot_state_e::AUTONOMOUS:
+			autonomous(getTimeFromStart());
 		break;
 
-	case robot_state_e::TELEOP:
-		teleop(getTimeFromStart());
+		case robot_state_e::TELEOP:
+			teleop(getTimeFromStart());
 		break;
 	}
 }
@@ -73,4 +73,4 @@ double V5RobotBase::getTimeFromStart() const {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(curr_time - start_time_).count() / 1000.0;
 }
 
-} // namespace ghost_competition_ros
+} // namespace ghost_ros_interfaces

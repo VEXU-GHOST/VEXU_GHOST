@@ -87,6 +87,7 @@ JetsonV5SerialNode::~JetsonV5SerialNode(){
 
 bool JetsonV5SerialNode::initSerial(){
 	// Wait for serial to become available
+	static int err_count = 0;
 	try{
 		if(!using_backup_port_){
 			RCLCPP_DEBUG(get_logger(), "Attempting to open %s", port_name_.c_str());
@@ -98,10 +99,19 @@ bool JetsonV5SerialNode::initSerial(){
 		}
 	}
 	catch(const std::exception &e){
-		RCLCPP_ERROR(get_logger(), e.what());
+		// Throttle error output
+		if(((err_count % 50) == 0) || (err_count == 0)){
+			RCLCPP_ERROR(get_logger(), e.what());
+		}
+		err_count++;
 	}
 
-	if(!serial_open_){
+	if(serial_open_){
+		err_count = 0; // Reset error output if we succeed
+		auto opened_port_name = (using_backup_port_) ? backup_port_name_.c_str() : port_name_.c_str();
+		RCLCPP_DEBUG(get_logger(), "Succesfully opened serial on port: %s", opened_port_name);
+	}
+	else{
 		using_backup_port_ = !using_backup_port_;
 	}
 	return serial_open_;
