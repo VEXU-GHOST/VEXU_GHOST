@@ -65,10 +65,8 @@ public:
 
 	/**
 	 * @brief Called for all V5 Robot Classes after construction. Calls user-defined intialize method internally.
-	 *
-	 * @param robot_name this will be the name of the ROS node (with _node appended to it). Use snakecase!
 	 */
-	void configure(const std::string& robot_name);
+	void configure();
 
 	/**
 	 * @brief Returns a shared pointer to the ROS node for this robot instance
@@ -82,12 +80,14 @@ public:
 		return node_ptr_;
 	}
 
+protected:
+	std::shared_ptr<rclcpp::Node> node_ptr_;
+
 private:
 	void sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
 	void updateCompetitionState(bool is_disabled, bool is_autonomous);
 	double getTimeFromStart() const;
 
-	std::shared_ptr<rclcpp::Node> node_ptr_;
 	bool configured_ = false;
 	robot_state_e last_comp_state_ = robot_state_e::TELEOP;
 	robot_state_e curr_comp_state_ = robot_state_e::TELEOP;

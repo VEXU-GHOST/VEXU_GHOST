@@ -4,9 +4,9 @@ using std::placeholders::_1;
 
 namespace ghost_ros_interfaces {
 
-void V5RobotBase::configure(const std::string& robot_name){
+void V5RobotBase::configure(){
 	std::cout << "Configuring V5 Robot Base!" << std::endl;
-	node_ptr_ = std::make_shared<rclcpp::Node>(robot_name + "_node");
+	node_ptr_ = std::make_shared<rclcpp::Node>("competition_state_machine_node");
 
 	sensor_update_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::V5SensorUpdate>(
 		"/v5/sensor_update",
