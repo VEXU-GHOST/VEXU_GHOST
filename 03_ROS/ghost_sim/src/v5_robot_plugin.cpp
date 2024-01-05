@@ -19,7 +19,9 @@
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 
+#include "ghost_common/util/angle_util.hpp"
 #include "ghost_common/util/parsing_util.hpp"
+
 #include "ghost_common/v5_robot_config_defs.hpp"
 
 #include "ghost_control/models/dc_motor_model.hpp"
@@ -98,8 +100,8 @@ public:
 	ghost_msgs::msg::V5Joystick joystick_msg_;
 
 	// Constants
-	float DEG_TO_RAD = M_PI / 180;
-	float RAD_TO_DEG = 180 / M_PI;
+	// float DEG_TO_RAD = M_PI / 180;
+	// float RAD_TO_DEG = 180 / M_PI;
 	float RADS_TO_RPM = (0.5 * 60) / (M_PI);
 };
 
@@ -285,7 +287,7 @@ void V5RobotPlugin::jointToEncoderTransform(){
 	impl_->encoder_velocities_ = impl_->sensor_jacobian_.completeOrthogonalDecomposition().pseudoInverse() * impl_->joint_velocities_;
 }
 
-Eigen::VectorXd V5RobotPlugin::motorToJointTransform(Eigen::VectorXd motor_data){
+Eigen::VectorXd V5RobotPlugin::motorToJointTransform(const Eigen::VectorXd& motor_data){
 	// Actuator Jacobian 6X8 rad/s
 	// Motor Data 6X1 RPM
 	auto joint_data = impl_->actuator_jacobian_.transpose() * motor_data * impl_->RADS_TO_RPM;
@@ -293,14 +295,13 @@ Eigen::VectorXd V5RobotPlugin::motorToJointTransform(Eigen::VectorXd motor_data)
 	return joint_data;
 }
 
-Eigen::VectorXd V5RobotPlugin::jointToMotorTransform(Eigen::VectorXd joint_data){
+Eigen::VectorXd V5RobotPlugin::jointToMotorTransform(const Eigen::VectorXd& joint_data){
 	// Actuator Jacobian 6X8
 	// Joint Data 6X1
 	auto motor_data = impl_->actuator_jacobian_.inverse() * joint_data;
 	return motor_data;
 }
 
-// Wraps encoder matrix into V5Encoder state msg[21]
 void V5RobotPlugin::wrapEncoderMsg(){
 	int col_index = 0;
 
@@ -335,12 +336,12 @@ void V5RobotPlugin::populateSensorMsg(){
 }
 
 // Preserves order of joints listed in xacro
-void V5RobotPlugin::getJointStates(){
+void V5RobotPlugin::updateJointStates(){
 	int index = 0;
 	// Lamda for-each expression to get encoder values for every joint
 	for_each(begin(impl_->joint_names_), end(impl_->joint_names_), [&](const std::string &joint_name){
 			try{
-				impl_->joint_angles_(index) = fmod(impl_->model_->GetJoint(joint_name)->Position(2) * impl_->RAD_TO_DEG, 360);
+				impl_->joint_angles_(index) = fmod(impl_->model_->GetJoint(joint_name)->Position(2) * ghost_common::RAD_TO_DEG, 360);
 				impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
 				index++;
 			}
@@ -355,9 +356,9 @@ void V5RobotPlugin::updateMotorController(){
 	int motor_index = 0;
 	// Defined to avoid out of bounds indexing
 	Eigen::VectorXd motor_torques = Eigen::VectorXd::Zero(impl_->motor_names_.size());
-	Eigen::VectorXd motor_angles = this->motorToJointTransform(impl_->joint_angles_);
+	Eigen::VectorXd motor_angles = this->jointToMotorTransform(impl_->joint_angles_);
 
-	Eigen::VectorXd motor_velocities = impl_->RADS_TO_RPM * this->motorToJointTransform(impl_->joint_velocities_);
+	Eigen::VectorXd motor_velocities = impl_->RADS_TO_RPM * this->jointToMotorTransform(impl_->joint_velocities_);
 	for(const std::string &name : impl_->motor_names_){
 		// Get V5 Motor Motor Model, and Motor Controller for each motor
 		auto motor_model_ptr = impl_->motor_model_map_.at(name);
@@ -382,7 +383,7 @@ void V5RobotPlugin::updateMotorController(){
 		motor_torques(motor_index) = motor_model_ptr->getTorqueOutput();
 		motor_index++;
 	}
-	impl_->joint_cmd_torques_ = this->jointToMotorTransform(motor_torques);
+	impl_->joint_cmd_torques_ = this->motorToJointTransform(motor_torques);
 	// TODO: is interface to publish current joint torque the same as gz joint pid plugin?
 	// Nothing is publishing the output joint torques
 }
@@ -423,13 +424,11 @@ void V5RobotPlugin::OnUpdate(){
 	this->getJointStates();
 
 	this->updateMotorController();
+
 	this->applySimJointTorques();
 
-
-	// Converts joint data from Gazebo to encoder data using sensor jacobian matrix
 	this->jointToEncoderTransform();
 
-	// sensor update pub publishes a sensor msg: wrap encoder_msg again to a sensor msg
 	this->wrapEncoderMsg();
 
 	this->populateSensorMsg();
@@ -440,4 +439,4 @@ void V5RobotPlugin::OnUpdate(){
 // Register this plugin with the simulator
 GZ_REGISTER_MODEL_PLUGIN(V5RobotPlugin)
 
-}       // namespace v5_robot_plugin
+}// namespace v5_robot_plugin

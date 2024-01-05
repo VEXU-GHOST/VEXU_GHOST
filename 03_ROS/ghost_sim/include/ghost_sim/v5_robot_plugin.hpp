@@ -35,16 +35,49 @@ public:
 	void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
 
 protected:
+	/**
+	 * 	Converts joint data from Gazebo to encoder data using sensor jacobian matrix
+	 */
 	void jointToEncoderTransform();
-	Eigen::VectorXd motorToJointTransform(Eigen::VectorXd motor_data);
-	Eigen::VectorXd jointToMotorTransform(Eigen::VectorXd joint_data);
+
+	/**
+	 * Transforms motor data (motor pos, or vel, or accel), to the location of the corresponding joint in swerve model
+	 */
+	Eigen::VectorXd motorToJointTransform(const Eigen::VectorXd& motor_data);
+
+	/**
+	 * Transforms joint data (joint pos, or vel, or accel), to the location of the corresponding motor in swerve model
+	 */
+	Eigen::VectorXd jointToMotorTransform(const Eigen::VectorXd& joint_data);
+
+	/**
+	 * Updates joint commands given motor actuator input command
+	 */
 	void updateMotorController();
+
+	/**
+	 * Wraps encoder matrix into V5Encoder state msg[]
+	 */
 	void wrapEncoderMsg();
+
+	/**
+	 * Populates sensor msg using current encoder msg
+	 */
 	void populateSensorMsg();
-	void getJointStates();
+
+	/**
+	 * Updates joint angles and velocities from gazebo
+	 */
+	void updateJointStates();
+
+	/**
+	 * Applies command joint torques to gazebo links
+	 */
 	void applySimJointTorques();
 
-	/// Optional callback to be called at every simulation iteration.
+	/**
+	 * Optional callback to be called by Gazebo at every simulation iteration.
+	 */
 	void OnUpdate();
 
 private:
