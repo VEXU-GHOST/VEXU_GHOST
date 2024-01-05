@@ -1,9 +1,10 @@
 #pragma once
 
+#include <ghost_ros_interfaces/competition/v5_robot_base.hpp>
+
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
-#include <ghost_ros_interfaces/competition/v5_robot_base.hpp>
 
 namespace ghost_swerve {
 

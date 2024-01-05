@@ -9,6 +9,8 @@
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 
+#include <ghost_v5_interfaces/robot_hardware_interface.hpp>
+
 namespace ghost_ros_interfaces {
 
 enum class robot_state_e {
@@ -82,8 +84,10 @@ public:
 
 protected:
 	std::shared_ptr<rclcpp::Node> node_ptr_;
+	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
 
 private:
+	void loadRobotHardwareInterface();
 	void sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
 	void updateCompetitionState(bool is_disabled, bool is_autonomous);
 	double getTimeFromStart() const;

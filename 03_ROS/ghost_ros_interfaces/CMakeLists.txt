@@ -90,6 +90,9 @@ target_include_directories(v5_robot_base
 ament_target_dependencies(v5_robot_base
   ${DEPENDENCIES}
 )
+target_link_libraries(v5_robot_base
+  msg_helpers
+  )
 ament_export_targets(v5_robot_base HAS_LIBRARY_TARGET)
 install(
   TARGETS v5_robot_base

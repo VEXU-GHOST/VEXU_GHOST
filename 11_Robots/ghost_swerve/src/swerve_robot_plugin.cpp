@@ -13,14 +13,20 @@ SwerveRobotPlugin::SwerveRobotPlugin(){
 void SwerveRobotPlugin::initialize(){
 	std::cout << "Swerve Robot Initialization!" << std::endl;
 
+	node_ptr_->declare_parameter("pose_topic", "/estimation/pose");
+	std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
+
+	node_ptr_->declare_parameter("odom_topic", "/sensors/odom");
+	std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
+
 	robot_pose_sub_ = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		"/estimation/pose",
+		pose_topic,
 		10,
 		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
 		);
 
 	odom_pub_ = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
-		"/sensing/odom",
+		odom_topic,
 		10);
 }
 void SwerveRobotPlugin::disabled(){

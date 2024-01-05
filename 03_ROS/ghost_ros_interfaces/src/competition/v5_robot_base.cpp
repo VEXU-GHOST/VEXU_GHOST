@@ -1,12 +1,21 @@
 #include "ghost_ros_interfaces/competition/v5_robot_base.hpp"
 
-using std::placeholders::_1;
+#include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
+#include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
+using ghost_ros_interfaces::msg_helpers::fromROSMsg;
+using ghost_ros_interfaces::msg_helpers::toROSMsg;
+using ghost_v5_interfaces::devices::hardware_type_e;
+using ghost_v5_interfaces::RobotHardwareInterface;
+using ghost_v5_interfaces::util::loadRobotConfigFromYAMLFile;
+using std::placeholders::_1;
 namespace ghost_ros_interfaces {
 
 void V5RobotBase::configure(){
 	std::cout << "Configuring V5 Robot Base!" << std::endl;
 	node_ptr_ = std::make_shared<rclcpp::Node>("competition_state_machine_node");
+
+	loadRobotHardwareInterface();
 
 	sensor_update_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::V5SensorUpdate>(
 		"/v5/sensor_update",
@@ -24,8 +33,19 @@ void V5RobotBase::configure(){
 	configured_ = true;
 }
 
+void V5RobotBase::loadRobotHardwareInterface(){
+	// Get YAML path from ROS Param
+	node_ptr_->declare_parameter("robot_config_yaml_path", "");
+	std::string robot_config_yaml_path = node_ptr_->get_parameter("robot_config_yaml_path").as_string();
+
+	// Load RobotHardwareInterface from YAML
+	auto device_config_map = loadRobotConfigFromYAMLFile(robot_config_yaml_path);
+	robot_hardware_interface_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map, hardware_type_e::COPROCESSOR);
+}
+
 void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
 	updateCompetitionState(msg->competition_status.is_disabled, msg->competition_status.is_autonomous);
+	fromROSMsg(*robot_hardware_interface_ptr_, *msg);
 
 	// Competition State Machine
 	switch(curr_comp_state_){
@@ -41,6 +61,12 @@ void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::Sh
 			teleop(getTimeFromStart());
 		break;
 	}
+
+	// Get Actuator Msg from RobotHardwareInterface and publish
+	ghost_msgs::msg::V5ActuatorCommand cmd_msg{};
+	cmd_msg.header.stamp = node_ptr_->get_clock()->now();
+	toROSMsg(*robot_hardware_interface_ptr_, cmd_msg);
+	actuator_command_pub_->publish(cmd_msg);
 }
 
 void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous){

@@ -6,4 +6,5 @@ ghost_serial_node:
 
 competition_state_machine_node:
   ros__parameters:
-    test: 2
+    odom_topic: "/sensors/wheel_odom"
+    pose_topic: "/estimation/robot_pose"

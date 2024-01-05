@@ -13,6 +13,7 @@
   <test_depend>ament_lint_common</test_depend>
 
   <exec_depend>ghost_ros_interfaces</exec_depend>
+  <exec_depend>ghost_swerve</exec_depend>
   <exec_depend>rviz</exec_depend>
 
   <export>
