@@ -169,6 +169,26 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveJoystickDeviceDataDu
 	EXPECT_EQ(*j1, *j2);
 }
 
+TEST_F(RobotHardwareInterfaceTestFixture, testGetMainJoystickData){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
+	auto j1 = getRandomJoystickData();
+	j1->name = MAIN_JOYSTICK_NAME;
+	hw_interface.setDeviceData(j1);
+	auto j2 = hw_interface.getMainJoystickData();
+
+	EXPECT_EQ(*j1, *j2);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testGetPartnerJoystickData){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+	auto j1 = getRandomJoystickData();
+	j1->name = PARTNER_JOYSTICK_NAME;
+	hw_interface.setDeviceData(j1);
+	auto j2 = hw_interface.getPartnerJoystickData();
+
+	EXPECT_EQ(*j1, *j2);
+}
+
 TEST_F(RobotHardwareInterfaceTestFixture, testSingleJoystickThrowsWhenRequestingDualJoystick){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_, hardware_type_e::COPROCESSOR);
 

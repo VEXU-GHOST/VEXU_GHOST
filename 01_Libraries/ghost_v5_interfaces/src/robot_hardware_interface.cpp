@@ -292,6 +292,14 @@ const std::vector<bool>& RobotHardwareInterface::getDigitalIO() const {
 	return digital_io_;
 }
 
+std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getMainJoystickData(){
+	return getDeviceData<JoystickDeviceData>(MAIN_JOYSTICK_NAME);
+}
+
+std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getPartnerJoystickData(){
+	return getDeviceData<JoystickDeviceData>(PARTNER_JOYSTICK_NAME);
+}
+
 void RobotHardwareInterface::throwOnNonexistentDevice(const std::string& device_name) const {
 	if(device_pair_name_map_.count(device_name) == 0){
 		throw std::runtime_error("[RobotHardwareInterface::getDeviceConfig] Error: Device name " + device_name + " does not exist!");

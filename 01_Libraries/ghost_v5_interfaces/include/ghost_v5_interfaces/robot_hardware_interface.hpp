@@ -317,6 +317,20 @@ public:
 		return device_pair_name_map_.at(device_name).data_ptr->clone()->as<T>();
 	}
 
+	/**
+	 * @brief Returns Device Data for Primary Joystick
+	 *
+	 * @return std::shared_ptr<devices::JoystickDeviceData>
+	 */
+	std::shared_ptr<devices::JoystickDeviceData> getMainJoystickData();
+
+	/**
+	 * @brief Returns Device Data for Secondary Joystick.
+	 *
+	 * @return std::shared_ptr<devices::JoystickDeviceData>
+	 */
+	std::shared_ptr<devices::JoystickDeviceData> getPartnerJoystickData();
+
 	/////////////////////////////////////////////////////////////
 	/////////////////////// Serialization ///////////////////////
 	/////////////////////////////////////////////////////////////

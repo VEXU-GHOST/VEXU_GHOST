@@ -36,6 +36,12 @@ void SwerveRobotPlugin::autonomous(double current_time){
 }
 void SwerveRobotPlugin::teleop(double current_time){
 	std::cout << "Teleop: " << current_time << std::endl;
+	auto joy_data = robot_hardware_interface_ptr_->getMainJoystickData();
+
+	std::cout << joy_data->right_y << std::endl;
+
+	robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frr", 2500);
+	robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frr", joy_data->right_y / 127.0);
 }
 
 void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
