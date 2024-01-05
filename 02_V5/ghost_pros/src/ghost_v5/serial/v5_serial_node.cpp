@@ -59,8 +59,6 @@ bool V5SerialNode::readV5ActuatorUpdate(){
 
 void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 	hardware_interface_ptr_->deserialize(buffer);
-	auto db_msg = std::string("[") + std::to_string(pros::millis()) + std::string("]") + std::string(" I got a serial msg, but I didn't know what to do with it :(");
-	v5_globals::screen_interface_ptr->addToPrintQueue(db_msg);
 
 	v5_globals::digital_out_cmds = hardware_interface_ptr_->getDigitalIO();
 

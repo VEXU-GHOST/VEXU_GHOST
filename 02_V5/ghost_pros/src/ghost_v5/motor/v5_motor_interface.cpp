@@ -43,9 +43,12 @@ void V5MotorInterface::updateInterface(){
 	float velocity = motor_interface_ptr_->get_actual_velocity();
 	device_connected_ = (velocity != PROS_ERR_F);
 
+	bool controller_active = controllerActive();
+
+	// This will reset controller to inactive after calculating the voltage command
 	float cmd_voltage = updateMotor(position, velocity);
 
-	if(controllerActive()){
+	if(controller_active){
 		motor_interface_ptr_->move_voltage(cmd_voltage);
 	}
 	else{
