@@ -112,7 +112,7 @@ void ghost_main_loop(){
 	static int count = 0;
 	try{
 		// Send robot state over serial to coprocessor
-		// v5_globals::serial_node_ptr->writeV5StateUpdate();
+		v5_globals::serial_node_ptr->writeV5StateUpdate();
 
 		// Zero All Motors if disableds
 		if(pros::competition::is_disabled()){
@@ -193,9 +193,9 @@ void initialize(){
 		}
 
 		zero_actuators();
-		// v5_globals::serial_node_ptr->initSerial();
-		// pros::Task reader_thread(reader_loop, "reader thread");
-		// pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
+		v5_globals::serial_node_ptr->initSerial();
+		pros::Task reader_thread(reader_loop, "reader thread");
+		pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
 	}
 	catch(std::exception &e){
 		exit_main_loop(e);

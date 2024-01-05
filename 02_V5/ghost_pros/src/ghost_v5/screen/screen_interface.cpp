@@ -35,6 +35,8 @@ void ScreenInterface::reset(){
 void ScreenInterface::updateScreen(){
 	static int count = 0;
 	static bool heartbeat_toggle = true;
+
+	// Only update at refresh frequency
 	if(((pros::millis() - last_update_time_) < REFRESH_RATE_MS)){
 		return;
 	}
@@ -54,10 +56,12 @@ void ScreenInterface::updateScreen(){
 	count++;
 
 
+	// Return early if we have nothing to process
 	if(print_queue_.empty()){
 		return;
 	}
 
+	// Process the batch of msgs in the queue, printing until its empty
 	std::unique_lock lock(print_queue_lock_);
 	while(!print_queue_.empty()){
 		auto new_str_lines = wrapStringToLineLength(print_queue_.front(), SCREEN_WIDTH_CHAR_LIM);
