@@ -87,7 +87,7 @@ SpinUpRobotStateMachineNode::SpinUpRobotStateMachineNode() :
 	last_xy_vel_cmd_ = Eigen::Vector2f(0.0, 0.0);
 
 	actuator_command_pub_ = create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
-		"v5/actuator_commands",
+		"v5/actuator_command",
 		10);
 	debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
 		"controller_debug",
@@ -155,15 +155,15 @@ void SpinUpRobotStateMachineNode::updateController(){
 
 		// Calculate robot actuator command dependent on competition state
 		switch(curr_robot_state_){
-		case robot_state_e::AUTONOMOUS:
+			case robot_state_e::AUTONOMOUS:
 
 			break;
 
-		case robot_state_e::TELEOP:
-			teleop();
+			case robot_state_e::TELEOP:
+				teleop();
 			break;
 
-		case robot_state_e::DISABLED:
+			case robot_state_e::DISABLED:
 
 			break;
 		}
@@ -302,25 +302,25 @@ void SpinUpRobotStateMachineNode::teleop(){
 	}
 
 	switch(teleop_mode){
-	case SHOOTER_MODE:
-		actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
-		actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
+		case SHOOTER_MODE:
+			actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].desired_velocity = 2800;
+			actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].desired_velocity = 1200;
 
-		actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2500;
-		actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2500;
+			actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].current_limit = 2500;
+			actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].current_limit = 2500;
 
-		// actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
-		// actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
+			// actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_LEFT_MOTOR].active = true;
+			// actuator_cmd_msg_.motor_commands[ghost_v5_config::SHOOTER_RIGHT_MOTOR].active = true;
 
-		if(curr_joystick_msg_->joystick_btn_l2){
-			actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = 1.0;
-			actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2500;
-			// actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
-		}
+			if(curr_joystick_msg_->joystick_btn_l2){
+				actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].desired_voltage = 1.0;
+				actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].current_limit = 2500;
+				// actuator_cmd_msg_.motor_commands[ghost_v5_config::INDEXER_MOTOR].active = true;
+			}
 
 		break;
 
-	case INTAKE_MODE:
+		case INTAKE_MODE:
 		break;
 	}
 }

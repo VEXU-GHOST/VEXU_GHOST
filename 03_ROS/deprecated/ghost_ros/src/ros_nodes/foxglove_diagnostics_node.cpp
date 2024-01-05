@@ -17,7 +17,7 @@ FoxgloveDiagnosticsNode::FoxgloveDiagnosticsNode() :
 		std::bind(&FoxgloveDiagnosticsNode::V5SensorUpdateCallback, this, _1));
 
 	v5_actuator_command_sub_ = create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
-		"v5/actuator_commands",
+		"v5/actuator_command",
 		10,
 		std::bind(&FoxgloveDiagnosticsNode::V5ActuatorCommandCallback, this, _1));
 

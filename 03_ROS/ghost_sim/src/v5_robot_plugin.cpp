@@ -88,7 +88,7 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 
 	// Initialize ROS Subscriptions
 	impl_->actuator_command_sub_ = impl_->ros_node_->create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
-		"v5/actuator_commands",
+		"v5/actuator_command",
 		10,
 		[this](const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg){
 			std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
