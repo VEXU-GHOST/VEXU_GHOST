@@ -87,6 +87,9 @@ std::vector<bool> digital_out_cmds(8, false);
 // Serial Port
 std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;
 
+// Screen Interface
+std::shared_ptr<ghost_v5::ScreenInterface> screen_interface_ptr;
+
 }// namespace v5_globals
 
 /**

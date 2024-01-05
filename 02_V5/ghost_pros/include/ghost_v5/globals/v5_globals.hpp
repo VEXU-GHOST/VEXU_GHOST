@@ -2,12 +2,17 @@
 #define GHOST_PROS__V5_GLOBALS_HPP
 
 #include <atomic>
+#include <deque>
 #include <map>
+#include <string>
 
-#include "ghost_v5/motor/v5_motor_interface.hpp"
-#include "ghost_v5/serial/v5_serial_node.hpp"
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+
+#include "ghost_v5/motor/v5_motor_interface.hpp"
+#include "ghost_v5/screen/screen_interface.hpp"
+#include "ghost_v5/serial/v5_serial_node.hpp"
+
 #include "pros/apix.h"
 
 namespace v5_globals {
@@ -36,6 +41,9 @@ extern std::vector<bool> digital_out_cmds;
 
 // Serial Port
 extern std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;
+
+// Screen Interface
+extern std::shared_ptr<ghost_v5::ScreenInterface> screen_interface_ptr;
 
 } // namespace v5_globals
 

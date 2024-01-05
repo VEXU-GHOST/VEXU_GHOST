@@ -10,15 +10,28 @@
 #include "pros/apix.h"
 #include "pros/rtos.h"
 
-#include "ghost_v5/motor/v5_motor_interface.hpp"
-#include "ghost_v5/serial/v5_serial_node.hpp"
 #include "ghost_v5_interfaces/util/device_type_helpers.hpp"
+
+#include "ghost_v5/motor/v5_motor_interface.hpp"
+#include "ghost_v5/screen/screen_interface.hpp"
+#include "ghost_v5/serial/v5_serial_node.hpp"
 
 using ghost_v5_interfaces::devices::hardware_type_e::V5_BRAIN;
 using namespace ghost_v5;
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
+
+void exit_main_loop(const std::exception& e){
+	v5_globals::run = false;
+
+	// Clear current screen data
+	v5_globals::screen_interface_ptr->reset();
+
+	// Update screen with error data
+	v5_globals::screen_interface_ptr->setTitle("ERROR");
+	v5_globals::screen_interface_ptr->addToPrintQueue(e.what());
+}
 
 void zero_actuators(){
 	std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
@@ -51,86 +64,55 @@ void update_actuators(){
 	actuator_lock.unlock();
 }
 
+void screen_update_loop(){
+	uint32_t loop_time = pros::millis();
+	auto refresh_rate = v5_globals::screen_interface_ptr->getRefreshRateMilliseconds();
+	while(true){
+		v5_globals::screen_interface_ptr->updateScreen();
+		pros::c::task_delay_until(&loop_time, refresh_rate);
+	}
+}
+
 void actuator_timeout_loop(){
 	uint32_t loop_time = pros::millis();
 	while(v5_globals::run){
-		if(pros::millis() > v5_globals::last_cmd_time + v5_globals::cmd_timeout_ms){
-			zero_actuators();
+		try{
+			if(pros::millis() > v5_globals::last_cmd_time + v5_globals::cmd_timeout_ms){
+				zero_actuators();
+			}
+			pros::c::task_delay_until(&loop_time, v5_globals::cmd_timeout_ms);
 		}
-		pros::c::task_delay_until(&loop_time, v5_globals::cmd_timeout_ms);
+		catch(std::exception& e){
+			exit_main_loop(e);
+		}
 	}
 }
 
 void reader_loop(){
 	uint32_t loop_time = pros::millis();
 	while(v5_globals::run){
-		// Process incoming msgs and update motor cmds
-		bool update_recieved = v5_globals::serial_node_ptr->readV5ActuatorUpdate();
+		try{
+			// Process incoming msgs and update motor cmds
+			bool update_recieved = v5_globals::serial_node_ptr->readV5ActuatorUpdate();
 
-		// Reset actuator timeout
-		if(update_recieved){
-			v5_globals::last_cmd_time = pros::millis();
+			// Reset actuator timeout
+			if(update_recieved){
+				v5_globals::last_cmd_time = pros::millis();
+			}
+			// Reader thread blocks waiting for data, so loop frequency must run faster than producer to avoid msg queue backup
+			pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency / 2);
 		}
-		// Reader thread blocks waiting for data, so loop frequency must run faster than producer to avoid msg queue backup
-		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency / 2);
-	}
-}
-
-void clear_screen(){
-	pros::screen::set_pen(COLOR_BLACK);
-	pros::screen::fill_rect(0, 0, 480, 240);
-	pros::screen::set_pen(COLOR_WHITE);
-}
-
-void exit_main_loop(const std::exception& e){
-	v5_globals::error_str = e.what();
-	v5_globals::run = false;
-}
-
-void error_loop(){
-	uint32_t loop_time = pros::millis();
-	int screen_char_lim = 48;
-
-	while(true){
-		clear_screen();
-		pros::screen::print(pros::text_format_e_t::E_TEXT_LARGE_CENTER, 0, "ERROR");
-
-		std::string err_string(v5_globals::error_str);
-
-		// This linewraps error msgs so they fit on the screen.
-		int row = 2;
-		while(err_string.size() > screen_char_lim){
-			// Get first X characters of string, where X is the max characters per line on the Brain Screen.
-			auto string_screen_len = err_string.substr(0, screen_char_lim);
-
-			// End line at space instead of mid-word
-			auto split_index = string_screen_len.find_last_of(" ");
-			pros::screen::print(pros::text_format_e_t::E_TEXT_SMALL, row++, err_string.substr(0, split_index).c_str());
-
-			// Remove printed portion from error string
-			err_string = err_string.substr(split_index);
-
-			// Trim leading whitespace
-			err_string.erase(err_string.begin(), std::find_if(err_string.begin(), err_string.end(), [](int c){
-				return !std::isspace(c);
-			}));
+		catch(std::exception& e){
+			exit_main_loop(e);
 		}
-		pros::screen::print(pros::text_format_e_t::E_TEXT_SMALL, row, err_string.c_str());
-		pros::c::task_delay_until(&loop_time, 250);
 	}
 }
 
 void ghost_main_loop(){
-	static int screen_update_count = 0;
+	static int count = 0;
 	try{
 		// Send robot state over serial to coprocessor
-		v5_globals::serial_node_ptr->writeV5StateUpdate();
-
-		if((screen_update_count == 0) || ((screen_update_count % 10) == 0) ){
-			clear_screen();
-			pros::screen::print(pros::text_format_e_t::E_TEXT_LARGE_CENTER, 0, "STATUS");
-		}
-		screen_update_count++;
+		// v5_globals::serial_node_ptr->writeV5StateUpdate();
 
 		// Zero All Motors if disableds
 		if(pros::competition::is_disabled()){
@@ -144,7 +126,6 @@ void ghost_main_loop(){
 	}
 }
 
-
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -154,8 +135,8 @@ void ghost_main_loop(){
 void initialize(){
 	try{
 		// Setup LCD Screen
-		pros::screen::set_eraser(COLOR_BLACK);
-		clear_screen();
+		v5_globals::screen_interface_ptr = std::make_shared<ghost_v5::ScreenInterface>();
+		pros::Task screen_output_thread(screen_update_loop, "screen_update_thread");
 
 		// Get Robot Device Configuration from compile-time generated file
 		v5_globals::robot_device_config_map_ptr.reset(getRobotConfig());
@@ -212,12 +193,11 @@ void initialize(){
 		}
 
 		zero_actuators();
-		v5_globals::serial_node_ptr->initSerial();
-		pros::Task reader_thread(reader_loop, "reader thread");
-		pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
+		// v5_globals::serial_node_ptr->initSerial();
+		// pros::Task reader_thread(reader_loop, "reader thread");
+		// pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
 	}
 	catch(std::exception &e){
-		std::cout << e.what() << std::endl;
 		exit_main_loop(e);
 	}
 }
@@ -233,9 +213,6 @@ void disabled(){
 		ghost_main_loop();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
-
-	// Only reached if we encounter an exception in main loop
-	error_loop();
 }
 
 /**
@@ -267,9 +244,6 @@ void autonomous(){
 		ghost_main_loop();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
-
-	// Only reached if we encounter an exception in main loop
-	error_loop();
 }
 
 /**
@@ -291,9 +265,6 @@ void opcontrol(){
 		ghost_main_loop();
 		pros::c::task_delay_until(&loop_time, v5_globals::loop_frequency);
 	}
-
-	// Only reached if we encounter an exception in main loop
-	error_loop();
 }
 
 // void opcontrol(){
