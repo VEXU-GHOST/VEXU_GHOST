@@ -58,7 +58,6 @@ bool V5SerialNode::readV5ActuatorUpdate(){
 }
 
 void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
-	std::unique_lock actuator_update_lock(v5_globals::actuator_update_lock);
 	hardware_interface_ptr_->deserialize(buffer);
 
 	v5_globals::digital_out_cmds = hardware_interface_ptr_->getDigitalIO();
