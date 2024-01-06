@@ -69,5 +69,5 @@ if [ "$1" != "-r" ];
 then
   cd ~/VEXU_GHOST
   echo
-  bash scripts/build_pros.sh
+  bash scripts/pros_build.sh
 fi
