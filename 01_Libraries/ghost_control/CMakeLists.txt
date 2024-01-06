@@ -68,25 +68,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-# Mechanical Differential Model
-add_library(mechanical_differential SHARED src/models/mechanical_differential.cpp)
-target_include_directories(mechanical_differential
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(mechanical_differential HAS_LIBRARY_TARGET)
-ament_target_dependencies(mechanical_differential
-  ${DEPENDENCIES}
-)
-install(
-  TARGETS mechanical_differential
-  EXPORT mechanical_differential
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
 #################
 #### Install ####
 #################
@@ -101,12 +82,6 @@ install(
 ament_add_gtest(test_dc_motor_model test/test_dc_motor_model.cpp)
 target_link_libraries(test_dc_motor_model
   dc_motor_model
-  gtest
-)
-
-ament_add_gtest(test_mechanical_differential test/test_mechanical_differential.cpp)
-target_link_libraries(test_mechanical_differential
-  mechanical_differential
   gtest
 )
 
