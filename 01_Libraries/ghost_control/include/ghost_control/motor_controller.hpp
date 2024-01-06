@@ -17,7 +17,7 @@ public:
 		// Ideally this is 1.0. If your motor runs faster than nominal, increase this a bit.
 		// If you zero the other gains, you can tune this by sending a velocity and tweaking until true velocity matches.
 		// ff_torque_gain does the same as above but for torque. Controlling torque with voltage is not very accurate, fyi.
-		float pos_gain{0.0};
+		float pos_gain{0.0}; // Start default around 10.0, and increase until acceptable
 		float vel_gain{10.0};
 		float ff_vel_gain{1.0};
 		float ff_torque_gain{0.0};
