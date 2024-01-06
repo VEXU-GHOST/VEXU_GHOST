@@ -44,10 +44,16 @@ void V5RobotBase::loadRobotHardwareInterface(){
 }
 
 void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
+	// Update Competition State Machine
 	updateCompetitionState(msg->competition_status.is_disabled, msg->competition_status.is_autonomous);
+
+	// Update Sensor Data in the Robot Hardware Interface
 	fromROSMsg(*robot_hardware_interface_ptr_, *msg);
 
-	// Competition State Machine
+	// Perform any operations that should happen on every loop
+	onNewSensorData();
+
+	// Execute Competition State Machine
 	switch(curr_comp_state_){
 		case robot_state_e::DISABLED:
 			disabled();
