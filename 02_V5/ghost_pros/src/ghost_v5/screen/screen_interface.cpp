@@ -84,16 +84,6 @@ void ScreenInterface::setTitle(const std::string& title){
 	title_string_ = title;
 }
 
-void ScreenInterface::addToPrintQueue(std::string msg){
-	std::unique_lock lock(print_queue_lock_);
-	print_queue_.emplace_back(msg);
-
-	// Ensure queue keeps only latest screen worth of data
-	while(print_queue_.size() > MAX_ROWS - 1){
-		print_queue_.pop_front();
-	}
-}
-
 std::vector<std::string> ScreenInterface::wrapStringToLineLength(std::string str, int line_len){
 	std::vector<std::string> output;
 	while(str.size() > line_len){

@@ -1,5 +1,7 @@
 #include "ghost_control/motor_controller.hpp"
 
+#include "ghost_util/math_util.hpp"
+
 namespace ghost_control {
 
 MotorController::MotorController(const MotorController::Config &controller_config,
@@ -32,7 +34,7 @@ float MotorController::updateMotor(float position, float velocity){
 	cmd_voltage_mv_ = voltage_feedforward + torque_feedforward + velocity_feedforward + velocity_feedback + position_feedback;
 
 	// Clamp actuator limits
-	cmd_voltage_mv_ = std::max(max_voltage_mv, std::min(-max_voltage_mv, cmd_voltage_mv_));
+	cmd_voltage_mv_ = ghost_util::clamp(cmd_voltage_mv_, -max_voltage_mv, max_voltage_mv);
 
 	// Motor control mode must be constantly refreshed
 	position_active_ = false;

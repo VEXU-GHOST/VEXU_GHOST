@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -13,7 +14,24 @@ class ScreenInterface {
 public:
 	ScreenInterface();
 
-	void addToPrintQueue(std::string msg);
+	/**
+	 * @brief Concatenates arbitrary arguments into single string and adds to queue
+	 * e.x. addToPrintQueue("1", 2, std::string("3"), 4.00)
+	 */
+	template< typename ... Args >
+	void addToPrintQueue(Args&& ... args){
+		std::ostringstream oss;
+		(oss << ... << std::forward<Args>(args));
+
+		// Acquire queue lock and add string
+		std::unique_lock lock(print_queue_lock_);
+		print_queue_.emplace_back(oss.str());
+
+		// Ensure queue keeps only latest screen worth of data
+		while(print_queue_.size() > MAX_ROWS - 1){
+			print_queue_.pop_front();
+		}
+	}
 
 	void reset();
 
