@@ -421,7 +421,7 @@ void V5RobotPlugin::OnUpdate(){
 	//  3.7) Transform actuator torques to joint torques using  using Jacobian transpose
 	//  3.8) Update each joint in gazebo
 
-	this->getJointStates();
+	this->updateJointStates();
 
 	this->updateMotorController();
 

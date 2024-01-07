@@ -7,6 +7,7 @@
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
   <license>GPLv3.0</license>
 
+  <build_depend>ament_cmake_gtest</build_depend>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_export_depend>ament_cmake</build_export_depend>
 
