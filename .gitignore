@@ -15,3 +15,4 @@ log
 02_V5/ghost_pros/src/ghost_estimation/**
 02_V5/ghost_pros/src/ghost_serial/**
 02_V5/ghost_pros/src/ghost_ros/**
+uncrustify.cfg
