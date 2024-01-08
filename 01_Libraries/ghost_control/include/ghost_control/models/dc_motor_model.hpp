@@ -8,9 +8,7 @@
  * Modified By: Maxx Wilson
  */
 
-#ifndef DC_MOTOR_MODEL_HPP
-#define DC_MOTOR_MODEL_HPP
-
+#pragma once
 #include <algorithm>
 #include <limits>
 
@@ -19,17 +17,21 @@ namespace ghost_control {
 class DCMotorModel {
 public:
 
-	/**
-	 * @brief Default Constructor for DC Motor Model
-	 */
-	DCMotorModel() :
-		DCMotorModel(
-			0.0,
-			0.0,
-			0.0,
-			0.0,
-			0.0) {
-	}
+	struct Config {
+		// This configures an 11W V5 Motor.
+		float free_speed{120};
+		float stall_torque{3.6};
+		float free_current{0.14};
+		float stall_current{4.25};
+		float nominal_voltage{12};
+		float gear_ratio{1.0};
+
+		bool operator==(const Config& rhs) const {
+			return (free_speed == rhs.free_speed) && (stall_torque == rhs.stall_torque) && (free_current == rhs.free_current) &&
+			       (stall_current == rhs.stall_current) && (nominal_voltage == rhs.nominal_voltage) &&
+			       (gear_ratio == rhs.gear_ratio);
+		}
+	};
 
 	/**
 	 * @brief Constructs DC Motor Model with motor params
@@ -46,6 +48,8 @@ public:
 	             double stall_current,
 	             double nominal_voltage,
 	             double gear_ratio = 1.0);
+
+	DCMotorModel(Config config);
 
 	void setGearRatio(double ratio){
 		gear_ratio_ = ratio;
@@ -171,5 +175,3 @@ private:
 };
 
 } // namespace ghost_control
-
-#endif

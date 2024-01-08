@@ -1,0 +1,86 @@
+port_configuration:
+    use_partner_joystick: false
+    devices:
+        rotation_sensor_1:
+            port: 4
+            type: ROTATION_SENSOR
+            reversed: true
+            config: rotation_sensor_drive_config
+        test_motor:
+            port: 2
+            type: MOTOR
+            reversed: true
+            config: test_motor_config
+        left_drive_motor:
+            port: 1
+            type: MOTOR
+            config: drive_motor_config
+        default_motor:
+            port: 3
+            type: MOTOR
+            config: default_motor_config
+        rotation_sensor_2:
+            port: 5
+            type: ROTATION_SENSOR
+
+    device_configurations:
+        rotation_sensor_drive_config:
+            data_rate: 10
+            serial:
+                send_position_data: true
+                send_angle_data: false
+                send_velocity_data: true
+        test_motor_config:
+            gearset: 100
+            brake_mode: BRAKE
+            encoder_units: ROTATIONS
+            filter:
+                cutoff_frequency: 62.0
+                damping_ratio: 0.10
+                timestep: 0.21
+            controller:
+                pos_gain: 8000.0
+                vel_gain: 118.0
+                ff_vel_gain: 400.0
+                ff_torque_gain: 2587.0
+            model:
+                free_speed: 1104.0
+                stall_torque: 52.25
+                free_current: 0.9090
+                stall_current: 21.58
+                nominal_voltage: 1200.0
+                gear_ratio: 2915.0
+            serial:
+                send_voltage_command: false
+                send_torque_data: true
+                send_power_data: true
+
+        default_motor_config:
+            filter:
+                cutoff_frequency: 100.0
+            controller:
+                pos_gain: 0.0
+            model:
+                gear_ratio: 1.0
+
+        drive_motor_config:
+            gearset: 600
+            brake_mode: COAST
+            encoder_units: DEGREES
+            filter:
+                cutoff_frequency: 100.0
+                damping_ratio: 0.707
+                timestep: 0.01
+            controller:
+                pos_gain: 7.5
+                vel_gain: 10.0
+                ff_vel_gain: 1.0
+                ff_torque_gain: 0.0
+            model:
+                free_speed: 120.0
+                stall_torque: 3.6
+                free_current: 0.14
+                stall_current: 4.25
+                nominal_voltage: 12.0
+                gear_ratio: 1.0
+
