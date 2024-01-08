@@ -29,13 +29,15 @@ set(INCLUDE
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
-
-add_executable(run_tree src/run_tree.cpp)
-ament_target_dependencies(run_tree
+set(NODES
+  run_tree
+)
+add_executable(${NODES} src/${NODES}.cpp)
+ament_target_dependencies(${NODES}
   ${DEPENDENCIES}
 )
 install(TARGETS
-  run_tree
+  ${NODES}
   DESTINATION lib/${PROJECT_NAME})
 
 # install(FILES

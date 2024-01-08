@@ -1,5 +1,4 @@
 #include "behaviortree_cpp/bt_factory.h"
-// #include <filesystem>
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "test.cpp"
@@ -12,7 +11,7 @@ class RunTreeNode : public rclcpp::Node {
 public:
 		RunTreeNode() :
 				rclcpp::Node("run_tree_node"){
-        declare_parameter<std::string>("bt_path");
+				declare_parameter<std::string>("bt_path");
 				bt_path_ = get_parameter("bt_path").as_string();
 
 				start_sub_ = create_subscription<std_msgs::msg::Bool>(
@@ -23,7 +22,7 @@ public:
 								run_tree();
 						}
 				});
-        run_tree();//remove
+				run_tree();// find other solution
 		}
 
 private:
@@ -32,12 +31,14 @@ private:
 		rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr start_sub_;
 
 		void run_tree(){
-        // todo: add ros node to blackboard
-        // todo: move this to another class an import
+				// todo: add ros node to blackboard
+					// maybe not, seems like not necessary
+				// todo: move this to another class an import
 				BT::BehaviorTreeFactory factory;
+
+				// add all nodes here
 				factory.registerNodeType<SaySomething>("SaySomething");
-				//   factory.registerNodeType<ThinkWhatToSay>("ThinkWhatToSay");
-				// std::cout << std::filesystem::current_path();
+
 				auto tree = factory.createTreeFromFile(bt_path_);
 				tree.tickWhileRunning();
 		}
