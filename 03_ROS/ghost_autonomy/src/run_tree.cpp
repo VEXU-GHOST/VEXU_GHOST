@@ -1,66 +1,31 @@
-#include "behaviortree_cpp/bt_factory.h"
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/bool.hpp"
-#include "test.cpp"
+#include "ghost_autonomy/run_tree.hpp"
 
 // file that contains the custom nodes definitions
 // #include "dummy_nodes.h"
 // using namespace DummyNodes;
 
-class RunTreeNode : public rclcpp::Node {
-public:
-		RunTreeNode() :
-				rclcpp::Node("run_tree_node"){
-				declare_parameter<std::string>("bt_path");
-				bt_path_ = get_parameter("bt_path").as_string();
+RunTreeNode::RunTreeNode(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr) :
+		rclcpp::Node("run_tree_node"),
+		robot_hardware_interface_ptr_(robot_hardware_interface_ptr){
+		declare_parameter<std::string>("bt_path");
+		bt_path_ = get_parameter("bt_path").as_string();
+}
 
-				start_sub_ = create_subscription<std_msgs::msg::Bool>(
-						"run_tree",
-						10,
-						[this](const std_msgs::msg::Bool::SharedPtr msg){
-						if(msg->data){
-								run_tree();
-						}
-				});
-				run_tree();// find other solution
-		}
+void RunTreeNode::run_tree(){
+		// todo: add ros node to blackboard possibly
+		// 		maybe not, seems unnecessary
+		// todo: move this to another class an import
+		BT::BehaviorTreeFactory factory;
 
-private:
-		std::string bt_path_;
+		// add all nodes here
+		factory.registerNodeType<SaySomething>("SaySomething");
+		factory.registerNodeType<DriveForward>("DriveForward");
 
-		rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr start_sub_;
+		auto tree = factory.createTreeFromFile(bt_path_);
+		tree.rootBlackboard().get()->set<std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> >("robot_hardware_interface_ptr", robot_hardware_interface_ptr_);
+		tree.tickWhileRunning();
+}
 
-		void run_tree(){
-				// todo: add ros node to blackboard
-					// maybe not, seems like not necessary
-				// todo: move this to another class an import
-				BT::BehaviorTreeFactory factory;
-
-				// add all nodes here
-				factory.registerNodeType<SaySomething>("SaySomething");
-
-				auto tree = factory.createTreeFromFile(bt_path_);
-				tree.tickWhileRunning();
-		}
-};
-
-// class RunTreePublisher : public rclcpp::Node {
-// public:
-// 		RunTreePublisher() :
-// 				Node("run_tree_publisher"){
-// 				// rclcpp::TimerBase::SharedPtr timer_;
-
-// 				// Initialize Publisher
-// 				output_pub_ = this->create_publisher<std_msgs::msg::Bool>("run_tree", 10);
-// 		}
-// 		void startTree(){
-// 				std_msgs::msg::Bool msg;
-// 				msg.data = true;
-// 				output_pub_->publish(msg);
-// 		}
-// private:
-// 		rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr output_pub_;
-// };
 
 int main(int argc, char *argv[]){
 		rclcpp::init(argc, argv);

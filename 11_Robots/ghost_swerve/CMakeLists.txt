@@ -12,6 +12,7 @@ set(DEPENDENCIES
   geometry_msgs
   nav_msgs
   pluginlib
+  ghost_autonomy
   )
 
 # Iterates through the list and finds the packages!

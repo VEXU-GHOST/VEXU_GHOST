@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
 project(ghost_autonomy)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+# if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#   add_compile_options(-Wall -Wextra -Wpedantic)
+# endif()
+# Add Global CMake Config for Ghost Packages
+set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+find_package(Ghost CONFIG REQUIRED)
 
 # find dependencies
 set(DEPENDENCIES
@@ -14,6 +17,7 @@ set(DEPENDENCIES
   pluginlib
   std_msgs
   ghost_msgs
+  ghost_v5_interfaces
 )
 
 foreach(pkg ${DEPENDENCIES})
@@ -23,32 +27,55 @@ ament_export_dependencies(${DEPENDENCIES})
 
 # Set Include Directories
 set(INCLUDE
-  include
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
 set(NODES
-  run_tree
+  driveForward
+  loggingNode
 )
-add_executable(${NODES} src/${NODES}.cpp)
-ament_target_dependencies(${NODES}
+
+foreach(NODE ${NODES})
+  add_library(${NODE} SHARED
+    src/bt_nodes/${NODE}.cpp
+  )
+  target_include_directories(${NODE}
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  ament_target_dependencies(${NODE}
+    ${DEPENDENCIES}
+  )
+  ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
+  install(
+    TARGETS ${NODE}
+    EXPORT ${NODE}
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+  )
+endforeach()
+
+add_executable(run_tree #SHARED
+  src/run_tree.cpp
+)
+ament_target_dependencies(run_tree
   ${DEPENDENCIES}
 )
-install(TARGETS
+target_link_libraries(run_tree
   ${NODES}
-  DESTINATION lib/${PROJECT_NAME})
+)
 
-# install(FILES
-#   bt.xml
-#   DESTINATION share/${PROJECT_NAME})
-
-# add_executable(run_tree src/run_tree.cpp)
-#   ament_target_dependencies(run_tree
-#     ${DEPENDENCIES}
-#   )
-
+#################
+#### Install ####
+#################
+install(DIRECTORY include/
+  DESTINATION include
+)
 install(DIRECTORY
   launch
   config

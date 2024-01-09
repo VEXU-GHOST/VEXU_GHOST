@@ -1,6 +1,4 @@
-#include "behaviortree_cpp/behavior_tree.h"
-#include "rclcpp/rclcpp.hpp"
-#include <string>
+#include "ghost_autonomy/bt_nodes/loggingNode.hpp"
 
 // SyncActionNode (synchronous action) with an input port.
 class SaySomething : public BT::SyncActionNode,
@@ -24,9 +22,9 @@ public:
 		BT::NodeStatus tick() override {
 				BT::Expected<std::string> msg = getInput<std::string>("message");
 				// Check if expected is valid. If not, throw its error
-				if (!msg) {
-          throw BT::RuntimeError("missing required input [message]: ",
-          msg.error() );
+				if(!msg){
+						throw BT::RuntimeError("missing required input [message]: ",
+						                       msg.error() );
 				}
 				// use the method value() to extract the valid message.
 				RCLCPP_INFO(this->get_logger(), msg.value().c_str());

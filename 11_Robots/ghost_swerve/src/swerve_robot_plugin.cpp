@@ -1,5 +1,6 @@
 #include <ghost_swerve/swerve_robot_plugin.hpp>
 #include <pluginlib/class_list_macros.hpp>
+#include "ghost_autonomy/run_tree.hpp"
 
 #include <iostream>
 
@@ -33,6 +34,8 @@ void SwerveRobotPlugin::disabled(){
 }
 void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
+	std::shared_ptr<RunTreeNode> tree_node = std::make_shared(RunTreeNode(robot_hardware_interface_ptr_));
+	tree_node->run_tree();
 }
 void SwerveRobotPlugin::teleop(double current_time){
 	std::cout << "Teleop: " << current_time << std::endl;
