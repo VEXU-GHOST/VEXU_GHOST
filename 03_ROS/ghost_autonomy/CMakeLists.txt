@@ -60,14 +60,24 @@ foreach(NODE ${NODES})
   )
 endforeach()
 
-add_executable(run_tree #SHARED
+add_library(run_tree SHARED
   src/run_tree.cpp
 )
+target_include_directories(run_tree
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 ament_target_dependencies(run_tree
   ${DEPENDENCIES}
 )
-target_link_libraries(run_tree
-  ${NODES}
+ament_export_targets(run_tree HAS_LIBRARY_TARGET)
+install(
+  TARGETS run_tree
+  EXPORT run_tree
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
 #################

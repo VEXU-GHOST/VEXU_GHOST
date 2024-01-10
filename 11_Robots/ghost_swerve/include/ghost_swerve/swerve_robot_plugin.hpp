@@ -5,6 +5,7 @@
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include "ghost_autonomy/run_tree.hpp"
 
 namespace ghost_swerve {
 
@@ -22,7 +23,9 @@ protected:
 
 	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr robot_pose_sub_;
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
-	rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bt_auton_pub_;
+	// rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bt_auton_pub_;
+	std::string bt_path_;
+	std::shared_ptr<RunTree> bt_; 
 };
 
 } // namespace ghost_swerve
