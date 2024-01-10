@@ -9,7 +9,7 @@ DriveForward::DriveForward(const std::string& name, const BT::NodeConfig& config
 }
 
 // It is mandatory to define this STATIC method.
-static BT::PortsList DriveForward::providedPorts(){
+BT::PortsList DriveForward::providedPorts(){
 		return {
 		        BT::InputPort<double>("distance"),
 		        BT::InputPort<std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> >("robot_hardware_interface_ptr")
@@ -17,7 +17,7 @@ static BT::PortsList DriveForward::providedPorts(){
 }
 
 // Override the virtual function tick()
-BT::NodeStatus DriveForward::tick() override {
+BT::NodeStatus DriveForward::tick() {
 		BT::Expected<double> dist = getInput<double>("distance");
 		// Check if expected is valid. If not, throw its error
 		if(!dist){

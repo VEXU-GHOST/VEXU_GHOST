@@ -20,9 +20,9 @@ public:
 protected:
 	void poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
-
 	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr robot_pose_sub_;
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+	rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr bt_auton_pub_;
 };
 
 } // namespace ghost_swerve
