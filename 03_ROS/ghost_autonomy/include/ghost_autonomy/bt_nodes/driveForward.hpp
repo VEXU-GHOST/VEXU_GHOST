@@ -11,10 +11,11 @@ using std::placeholders::_1;
 class DriveForward : public BT::SyncActionNode,
 		             public rclcpp::Node {
 private:
-		
+	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
 public:
 		// If your Node has ports, you must use this constructor signature
-		DriveForward(const std::string& name, const BT::NodeConfig& config);
+		DriveForward(const std::string& name, const BT::NodeConfig& config,
+		             std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr);
 
 		// It is mandatory to define this STATIC method.
 		static BT::PortsList providedPorts();

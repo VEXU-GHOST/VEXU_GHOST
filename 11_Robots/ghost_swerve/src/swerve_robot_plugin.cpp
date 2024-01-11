@@ -35,10 +35,6 @@ void SwerveRobotPlugin::initialize(){
 		10);
 
 	bt_ = std::make_shared<RunTree>(bt_path_, robot_hardware_interface_ptr_);
-
-	// bt_auton_pub_ = node_ptr_->create_publisher<std_msgs::msg::Bool>(
-	// 	bt_topic,
-	// 	10);
 }
 void SwerveRobotPlugin::disabled(){
 }
@@ -48,13 +44,15 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	bt_->tick_tree();
 }
 void SwerveRobotPlugin::teleop(double current_time){
-	std::cout << "Teleop: " << current_time << std::endl;
-	auto joy_data = robot_hardware_interface_ptr_->getMainJoystickData();
+	// std::cout << "Teleop: " << current_time << std::endl;
 
-	std::cout << joy_data->right_y << std::endl;
+	autonomous(current_time);
+	// auto joy_data = robot_hardware_interface_ptr_->getMainJoystickData();
 
-	robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frr", 2500);
-	robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frr", joy_data->right_y / 127.0);
+	// std::cout << joy_data->right_y << std::endl;
+
+	// robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frr", 2500);
+	// robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frr", joy_data->right_y / 127.0);
 }
 
 void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){

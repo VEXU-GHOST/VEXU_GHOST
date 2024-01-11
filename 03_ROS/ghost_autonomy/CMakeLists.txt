@@ -33,6 +33,7 @@ set(INCLUDE
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
+# bt node libraries
 set(NODES
   driveForward
   loggingNode
@@ -60,6 +61,7 @@ foreach(NODE ${NODES})
   )
 endforeach()
 
+# run tree library
 add_library(run_tree SHARED
   src/run_tree.cpp
 )
@@ -70,6 +72,9 @@ target_include_directories(run_tree
 ament_target_dependencies(run_tree
   ${DEPENDENCIES}
 )
+target_link_libraries(run_tree
+  ${NODES}
+)
 ament_export_targets(run_tree HAS_LIBRARY_TARGET)
 install(
   TARGETS run_tree
@@ -79,6 +84,21 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
+
+# test robot config publisher
+add_executable(publish_test
+  src/publish_test.cpp
+)
+ament_target_dependencies(publish_test
+  ${DEPENDENCIES}
+)
+target_include_directories(publish_test
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+publish_test
+  DESTINATION lib/${PROJECT_NAME})
 
 #################
 #### Install ####
