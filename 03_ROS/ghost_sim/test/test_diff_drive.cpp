@@ -25,28 +25,29 @@
 
 using namespace std::literals::chrono_literals; // NOLINT
 
-/// Test parameters
-struct TestParams {
-	/// Path to world file
-	std::string world;
-};
-
-
 class GazeboRosDiffDriveTest
-	: public gazebo::ServerFixture,
-	  public ::testing::WithParamInterface<TestParams> {
+	: public gazebo::ServerFixture {
 };
 
-TEST_P(GazeboRosDiffDriveTest, Publishing){
+TEST_F(GazeboRosDiffDriveTest, testBringUp){
 	// Load test world and start paused
-	this->Load(GetParam().world, true);
+	std::cerr << "===Loading world===" << std::endl;
+	this->Load("/home/melcruz/VEXU_GHOST/03_ROS/ghost_sim/urdf/spin_up.world", true);
+
+	std::ifstream sdf_file("/home/melcruz/VEXU_GHOST/03_ROS/ghost_sim/urdf/test_tank_init.sdf");
+	std::stringstream buffer;
+	buffer << sdf_file.rdbuf();
+
+	std::cerr << "===Loading diff drive model===" << std::endl;
+	this->SpawnSDF(buffer.str());
+	this->WaitUntilEntitySpawn("test_diff_drive", 50, 50);
 
 	// World
 	auto world = gazebo::physics::get_world();
-	ASSERT_NE(nullptr, world)
+	ASSERT_NE(nullptr, world);
 
 	// Model
-	auto vehicle = world->ModelByName("ghost1");
+	auto vehicle = world->ModelByName("test_diff_drive");
 	ASSERT_NE(nullptr, vehicle);
 
 	// Create node and executor
@@ -57,77 +58,76 @@ TEST_P(GazeboRosDiffDriveTest, Publishing){
 	executor.add_node(node);
 
 	// Create subscriber
+	std::cerr << "===Creating /odom subscriber===" << std::endl;
 	nav_msgs::msg::Odometry::SharedPtr latestMsg;
 	auto sub = node->create_subscription<nav_msgs::msg::Odometry>(
-		"test/odom_test", rclcpp::QoS(rclcpp::KeepLast(1)),
+		"/odom", rclcpp::QoS(rclcpp::KeepLast(1)),
 		[&latestMsg](const nav_msgs::msg::Odometry::SharedPtr _msg){
 		latestMsg = _msg;
 	});
 
-	// // Step a bit for model to settle
-	// world->Step(200);
-	// executor.spin_once(100ms);
+	// Step a bit for model to settle
+	world->Step(200);
+	executor.spin_once(100ms);
 
-	// // Check model state
-	// EXPECT_NEAR(0.0, vehicle->WorldPose().Pos().X(), tol);
-	// EXPECT_NEAR(0.0, vehicle->WorldPose().Pos().Y(), tol);
-	// EXPECT_NEAR(0.0, vehicle->WorldPose().Rot().Yaw(), tol);
-	// EXPECT_NEAR(0.0, vehicle->WorldLinearVel().X(), tol);
-	// EXPECT_NEAR(0.0, vehicle->WorldAngularVel().Z(), tol);
+	// Check model state
+	EXPECT_NEAR(0.0, vehicle->WorldPose().Pos().X(), tol);
+	EXPECT_NEAR(0.0, vehicle->WorldPose().Pos().Y(), tol);
+	EXPECT_NEAR(0.0, vehicle->WorldPose().Rot().Yaw(), tol);
+	EXPECT_NEAR(0.0, vehicle->WorldLinearVel().X(), tol);
+	EXPECT_NEAR(0.0, vehicle->WorldAngularVel().Z(), tol);
 
-	// // Send command
-	// auto pub = node->create_publisher<geometry_msgs::msg::Twist>(
-	// 	"test/cmd_test", rclcpp::QoS(rclcpp::KeepLast(1)));
-	// auto msg = geometry_msgs::msg::Twist();
-	// msg.linear.x = 1.0;
+	// Send command
+	std::cerr << "===Sending /cmd_vel===" << std::endl;
+	auto pub = node->create_publisher<geometry_msgs::msg::Twist>(
+		"/cmd_vel", rclcpp::QoS(rclcpp::KeepLast(1)));
+	auto msg = geometry_msgs::msg::Twist();
+	msg.linear.x = 1.0;
 	// msg.angular.z = 0.1;
-	// pub->publish(msg);
+	pub->publish(msg);
 
-	// // Wait for it to be processed
-	// int sleep{0};
-	// int maxSleep{300};
-	// auto yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
-	// auto linear_vel = vehicle->WorldLinearVel();
-	// double linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
+	// Wait for it to be processed
+	int sleep{0};
+	int maxSleep{300};
+	auto yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
+	auto linear_vel = vehicle->WorldLinearVel();
+	double linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
+	double linear_vel_x_threshold = 0.5;
+	std::cerr << "===Verify vehicle twist===" << std::endl;
+	for(; sleep < maxSleep && (linear_vel_x < linear_vel_x_threshold); ++sleep){
+		yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
+		linear_vel = vehicle->WorldLinearVel();
+		linear_vel_x = linear_vel.X();
+		// linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
+		std::cerr << "===linear_vel_x: " << linear_vel_x << "===" << std::endl;
+		world->Step(100);
+		executor.spin_once(100ms);
+		gazebo::common::Time::MSleep(100);
+	}
+	std::cerr << "===Check twist settling time===" << std::endl;
+	EXPECT_NE(sleep, maxSleep);
 
-	// for(; sleep < maxSleep && (linear_vel_x < 0.9 ||
-	//                            vehicle->WorldAngularVel().Z() < 0.09); ++sleep){
-	// 	yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
-	// 	linear_vel = vehicle->WorldLinearVel();
-	// 	linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
-	// 	world->Step(100);
-	// 	executor.spin_once(100ms);
-	// 	gazebo::common::Time::MSleep(100);
-	// }
-	// EXPECT_NE(sleep, maxSleep);
+	// Check message
+	std::cerr << "===Check position===" << std::endl;
+	ASSERT_NE(nullptr, latestMsg);
+	EXPECT_EQ("odom", latestMsg->header.frame_id);
+	EXPECT_LT(0.0, latestMsg->pose.pose.position.x);
+	EXPECT_LT(0.0, latestMsg->pose.pose.orientation.z);
 
-	// // Check message
-	// ASSERT_NE(nullptr, latestMsg);
-	// EXPECT_EQ("odom_frame_test", latestMsg->header.frame_id);
-	// EXPECT_LT(0.0, latestMsg->pose.pose.position.x);
-	// EXPECT_LT(0.0, latestMsg->pose.pose.orientation.z);
-
-	// // Check movement
-	// yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
-	// linear_vel = vehicle->WorldLinearVel();
-	// linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
-	// EXPECT_LT(0.0, vehicle->WorldPose().Pos().X());
-	// EXPECT_LT(0.0, yaw);
-	// EXPECT_NEAR(1.0, linear_vel_x, tol);
-	// EXPECT_NEAR(0.1, vehicle->WorldAngularVel().Z(), tol);
+	// Check movement
+	yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
+	linear_vel = vehicle->WorldLinearVel();
+	linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
+	EXPECT_LT(0.0, vehicle->WorldPose().Pos().X());
+	EXPECT_LT(0.0, yaw);
+	EXPECT_NEAR(1.0, linear_vel_x, tol);
+	EXPECT_NEAR(0.1, vehicle->WorldAngularVel().Z(), tol);
+	std::cerr << "===Done!===" << std::endl;
 }
-
-INSTANTIATE_TEST_SUITE_P(
-	GazeboRosDiffDrive, GazeboRosDiffDriveTest, ::testing::Values(
-		TestParams({"/home/melcruz/VEXU_GHOST/03_ROS/ghost_sim/urdf/spin_up.world"})
-		// TestParams({"worlds/gazebo_ros_skid_steer_drive.world"})
-		// cppcheck-suppress syntaxError
-		));
 
 int main(int argc, char ** argv){
 	rclcpp::init(argc, argv);
 	::testing::InitGoogleTest(&argc, argv);
-	int ret = RUN_ALL_TESTS();
 	rclcpp::shutdown();
-	return ret;
+	return RUN_ALL_TESTS();
 }

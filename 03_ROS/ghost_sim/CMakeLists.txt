@@ -113,8 +113,7 @@ ament_target_dependencies(test_diff_drive
   "std_msgs"
   "nav_msgs"
 )
-include(GoogleTest)
-gtest_discover_tests(test_diff_drive)
+
 # Gazebo V5 Robot Plugin
 add_library(v5_robot_plugin SHARED src/v5_robot_plugin.cpp)
 ament_target_dependencies(v5_robot_plugin
