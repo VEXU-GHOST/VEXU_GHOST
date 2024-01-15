@@ -6,6 +6,14 @@
         <Action ID="DriveForward" editable="true">
             <input_port name="distance"/>
         </Action>
+        <Action ID="MoveToPose" editable="true">
+            <input_port name="posX"/>
+            <input_port name="posY"/>
+            <input_port name="quatX"/>
+            <input_port name="quatY"/>
+            <input_port name="quatZ"/>
+            <input_port name="quatW"/>
+        </Action>
         <Action ID="SaySomething" editable="true">
             <input_port name="message"/>
         </Action>

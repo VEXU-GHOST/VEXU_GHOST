@@ -13,6 +13,7 @@ RunTree::RunTree(std::string bt_path, std::shared_ptr<ghost_v5_interfaces::Robot
 		// add all nodes here
 		factory.registerNodeType<SaySomething>("SaySomething");
 		factory.registerNodeType<DriveForward>("DriveForward", robot_hardware_interface_ptr);
+		factory.registerNodeType<MoveToPose>("MoveToPose", robot_hardware_interface_ptr);
 
 		tree_ = factory.createTreeFromFile(bt_path_);
 }

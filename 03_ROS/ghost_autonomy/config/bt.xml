@@ -4,6 +4,12 @@
     <Sequence>
       <SaySomething message="testing"/>
       <DriveForward distance="10"/>
+      <MoveToPose posX="1"
+                  posY="2"
+                  quatX=".1"
+                  quatY=".2"
+                  quatZ=".3"
+                  quatW=".4"/>
     </Sequence>
   </BehaviorTree>
 
@@ -12,6 +18,15 @@
     <Action ID="DriveForward"
             editable="true">
       <input_port name="distance"/>
+    </Action>
+    <Action ID="MoveToPose"
+            editable="true">
+      <input_port name="posX"/>
+      <input_port name="posY"/>
+      <input_port name="quatX"/>
+      <input_port name="quatY"/>
+      <input_port name="quatZ"/>
+      <input_port name="quatW"/>
     </Action>
     <Action ID="SaySomething"
             editable="true">

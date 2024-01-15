@@ -37,6 +37,7 @@ ament_export_include_directories(${INCLUDE})
 set(NODES
   driveForward
   loggingNode
+  moveToPose
 )
 
 foreach(NODE ${NODES})
