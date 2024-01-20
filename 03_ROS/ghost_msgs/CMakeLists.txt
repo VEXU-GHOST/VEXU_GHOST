@@ -16,6 +16,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/util/LabeledFloatMap.msg"
   "msg/util/LabeledVector.msg"
   "msg/util/LabeledVectorMap.msg"
+  "msg/util/Pose2D.msg"
+  "msg/util/Twist2D.msg"
   "msg/device_msgs/V5DeviceHeader.msg"
   "msg/device_msgs/commands/V5MotorCommand.msg"
   "msg/device_msgs/states/V5CompetitionStatus.msg"
@@ -24,6 +26,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/device_msgs/states/V5RotationSensorState.msg"
   "msg/V5ActuatorCommand.msg"
   "msg/V5SensorUpdate.msg"
+  "msg/DrivetrainCommand.msg"
+  "msg/MotorTrajectory.msg"
+  "msg/RobotTrajectory.msg"
   "srv/BroadcastJacobian.srv"
   DEPENDENCIES std_msgs
  )
