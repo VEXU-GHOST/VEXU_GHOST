@@ -11,6 +11,7 @@ set(DEPENDENCIES
   ghost_ros_interfaces
   geometry_msgs
   nav_msgs
+  ghost_msgs
   pluginlib
   ghost_autonomy
   )

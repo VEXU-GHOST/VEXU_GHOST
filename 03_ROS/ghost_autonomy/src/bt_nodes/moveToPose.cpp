@@ -8,7 +8,7 @@ MoveToPose::MoveToPose(const std::string& name, const BT::NodeConfig& config,
 		BT::SyncActionNode(name, config),
 		rclcpp::Node("move_to_pose_node"),
 		robot_hardware_interface_ptr_(robot_hardware_interface_ptr){
-		pose_pub_ = create_publisher<geometry_msgs::msg::PoseStamped>("motionPlanning/pose", 10);
+		command_pub_ = create_publisher<ghost_msgs::msg::DrivetrainCommand>("motionPlanning/command", 10);
 }
 
 // It is mandatory to define this STATIC method.
@@ -16,15 +16,15 @@ BT::PortsList MoveToPose::providedPorts(){
 		return {
 		        BT::InputPort<double>("posX"),
 		        BT::InputPort<double>("posY"),
-		        BT::InputPort<double>("quatX"),
-		        BT::InputPort<double>("quatY"),
-		        BT::InputPort<double>("quatZ"),
-		        BT::InputPort<double>("quatW")
+		        BT::InputPort<double>("angle"),
+		        BT::InputPort<double>("velX"),
+		        BT::InputPort<double>("velY"),
+		        BT::InputPort<double>("omega"),
 		};
 }
-
-double MoveToPose::get_input(std::string key){
-		BT::Expected<double> input = getInput<double>(key);
+template <typename T>
+T MoveToPose::get_input(std::string key){
+		BT::Expected<T> input = getInput<T>(key);
 		// Check if expected is valid. If not, throw its error
 		if(!input){
 				throw BT::RuntimeError("missing required input [" + key + "]: ",
@@ -35,28 +35,37 @@ double MoveToPose::get_input(std::string key){
 
 // Override the virtual function tick()
 BT::NodeStatus MoveToPose::tick() {
-		double posX = get_input("posX");
-		double posY = get_input("posY");
-		double quatX = get_input("quatX");
-		double quatY = get_input("quatY");
-		double quatZ = get_input("quatZ");
-		double quatW = get_input("quatW");
+		double posX = get_input<double>("posX");
+		double posY = get_input<double>("posY");
+		double angle = get_input<double>("angle");
+		double velX = get_input<double>("velX");
+		double velY = get_input<double>("velY");
+		double omega = get_input<double>("omega");
 
-		geometry_msgs::msg::PoseStamped msg{};
-		msg.pose.position.x = posX;
-		msg.pose.position.y = posY;
-		msg.pose.orientation.x = quatX;
-		msg.pose.orientation.y = quatY;
-		msg.pose.orientation.z = quatZ;
-		msg.pose.orientation.w = quatW;
-		pose_pub_->publish(msg);
+		tf2::Quaternion quat;
+		quat.setEuler(angle, 0, 0);
+
+		ghost_msgs::msg::DrivetrainCommand msg{};
+		msg.pose.pose.position.x = posX;
+		msg.pose.pose.position.y = posY;
+		msg.pose.pose.orientation.x = quat.getX();
+		msg.pose.pose.orientation.y = quat.getY();
+		msg.pose.pose.orientation.z = quat.getZ();
+		msg.pose.pose.orientation.w = quat.getW();
+
+		geometry_msgs::msg::TwistStamped twist{};
+		msg.twist.twist.linear.x = velX;
+		msg.twist.twist.linear.y = velY;
+		msg.twist.twist.angular.x = omega;
+
+		command_pub_->publish(msg);
 
 		RCLCPP_INFO(this->get_logger(), "posX: %f", posX);
 		RCLCPP_INFO(this->get_logger(), "posY: %f", posX);
-		RCLCPP_INFO(this->get_logger(), "quatX: %f", quatX);
-		RCLCPP_INFO(this->get_logger(), "quatY: %f", quatY);
-		RCLCPP_INFO(this->get_logger(), "quatZ: %f", quatZ);
-		RCLCPP_INFO(this->get_logger(), "quatW: %f", quatW);
+		RCLCPP_INFO(this->get_logger(), "angle: %f", angle);
+		RCLCPP_INFO(this->get_logger(), "velX: %f", velX);
+		RCLCPP_INFO(this->get_logger(), "velY: %f", velY);
+		RCLCPP_INFO(this->get_logger(), "omega: %f", omega);
 
 		return BT::NodeStatus::SUCCESS;
 }
