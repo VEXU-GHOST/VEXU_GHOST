@@ -1,2 +1,4 @@
+std_msgs/Header header
+
 string[] motor_names
-MotorTrajectory[] trajectories
+ghost_msgs/MotorTrajectory[] trajectories

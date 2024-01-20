@@ -9,6 +9,7 @@ find_package(Ghost CONFIG REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 # Custom Msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -16,8 +17,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/util/LabeledFloatMap.msg"
   "msg/util/LabeledVector.msg"
   "msg/util/LabeledVectorMap.msg"
-  "msg/util/Pose2D.msg"
-  "msg/util/Twist2D.msg"
   "msg/device_msgs/V5DeviceHeader.msg"
   "msg/device_msgs/commands/V5MotorCommand.msg"
   "msg/device_msgs/states/V5CompetitionStatus.msg"
@@ -30,7 +29,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MotorTrajectory.msg"
   "msg/RobotTrajectory.msg"
   "srv/BroadcastJacobian.srv"
-  DEPENDENCIES std_msgs
+  DEPENDENCIES std_msgs geometry_msgs
  )
 ament_export_dependencies(rosidl_default_runtime)
 

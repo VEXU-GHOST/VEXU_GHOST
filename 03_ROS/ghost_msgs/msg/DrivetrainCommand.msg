@@ -1,5 +1,7 @@
-Pose2D pose
-Twist2D twist
+std_msgs/Header header
+
+geometry_msgs/PoseStamped pose
+geometry_msgs/TwistStamped twist
 
 bool use_pose
 bool use_twist
