@@ -89,7 +89,7 @@ TEST_F(TestMotorModel, testMotorHalfPower){
 	motor_393_ptr->setMotorSpeedRPM(free_speed / 2);
 	EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getVoltage());
 	EXPECT_FLOAT_EQ(free_current / 2, motor_393_ptr->getMotorCurrent());
-	EXPECT_FLOAT_EQ(0, motor_393_ptr->getTorqueOutput());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 
 	motor_393_ptr->setMotorEffort(0.5);
 	motor_393_ptr->setMotorSpeedRPM(free_speed);
@@ -143,24 +143,87 @@ TEST_F(TestMotorModel, testMotorZeroPower){
 	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 }
 
-// TEST_F(TestMotorModel, testMotorGearRatio){
-//     motor_393_ptr->setGearRatio(0.5);
-//     motor_393_ptr->setMotorEffort(1.0);
-//     motor_393_ptr->setMotorSpeedRPM(50);
-//     EXPECT_FLOAT_EQ(nominal_voltage, motor_393_ptr->getVoltage());
-//     EXPECT_FLOAT_EQ(50, motor_393_ptr->getSpeedRPM());
-//     EXPECT_FLOAT_EQ(free_current, motor_393_ptr->getMotorCurrent());
-//     EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
+TEST_F(TestMotorModel, testBalancedMotorGearRatio){
+	motor_393_ptr->setGearRatio(0.5);
 
-//     motor_393_ptr->setMotorEffort(1.0);
-//     motor_393_ptr->setMotorSpeedRPM(25);
-//     EXPECT_FLOAT_EQ(25, motor_393_ptr->getSpeedRPM());
-//     EXPECT_FLOAT_EQ(1.85, motor_393_ptr->getMotorCurrent());
-//     EXPECT_FLOAT_EQ(stall_torque, motor_393_ptr->getTorqueOutput());
+	motor_393_ptr->setMotorEffort(1.0);
+	motor_393_ptr->setMotorSpeedRPM(50);
+	EXPECT_FLOAT_EQ(nominal_voltage, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(50, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ(free_current, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 
-//     motor_393_ptr->setMotorEffort(1.0);
-//     motor_393_ptr->setMotorSpeedRPM(0);
-//     EXPECT_FLOAT_EQ(0, motor_393_ptr->getSpeedRPM());
-//     EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getMotorCurrent());
-//     EXPECT_FLOAT_EQ(2*stall_torque, motor_393_ptr->getTorqueOutput());
+	motor_393_ptr->setMotorEffort(1.0);
+	motor_393_ptr->setMotorSpeedRPM(25);
+	EXPECT_FLOAT_EQ(25, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ(1.85, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(stall_torque, motor_393_ptr->getTorqueOutput());
+
+	motor_393_ptr->setMotorEffort(1.0);
+	motor_393_ptr->setMotorSpeedRPM(0);
+	EXPECT_FLOAT_EQ(0, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(2 * stall_torque, motor_393_ptr->getTorqueOutput());
+}
+
+// Continue with this
+// Just make sure the torque and speed are proportional
+// the connection between the current isn't really possible?
+// worry about everything later
+// Basically you want to know ____ and the motor provides
+
+TEST_F(TestMotorModel, testLowerMotorGearRatio){
+	motor_393_ptr->setGearRatio(0.25);
+
+	motor_393_ptr->setMotorEffort(1.0);
+	motor_393_ptr->setMotorSpeedRPM(50);
+	EXPECT_FLOAT_EQ(nominal_voltage, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(50, motor_393_ptr->getSpeedRPM());
+	// EXPECT_FLOAT_EQ(nominal_voltage, motor_393_ptr->getMotorCurrent());
+	// EXPECT_FLOAT_EQ(2.1, motor_393_ptr->getTorqueOutput());
+
+	// motor_393_ptr->setMotorEffort(1.0);
+	// motor_393_ptr->setMotorSpeedRPM(25);
+	// EXPECT_FLOAT_EQ(25, motor_393_ptr->getSpeedRPM());
+	// EXPECT_FLOAT_EQ(1.85, motor_393_ptr->getMotorCurrent());
+	// EXPECT_FLOAT_EQ(stall_torque, motor_393_ptr->getTorqueOutput());
+
+	// motor_393_ptr->setMotorEffort(1.0);
+	// motor_393_ptr->setMotorSpeedRPM(0);
+	// EXPECT_FLOAT_EQ(0, motor_393_ptr->getSpeedRPM());
+	// EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getMotorCurrent());
+	// EXPECT_FLOAT_EQ(2 * stall_torque, motor_393_ptr->getTorqueOutput());
+}
+
+
+// TEST_F(TestMotorModel, testHigherMotorGearRatio){
+// 	motor_393_ptr->setGearRatio(0.75);
+
+// 	motor_393_ptr->setMotorEffort(1.0);
+// 	motor_393_ptr->setMotorSpeedRPM(50);
+// 	EXPECT_FLOAT_EQ(nominal_voltage, motor_393_ptr->getVoltage());
+// 	EXPECT_FLOAT_EQ(50, motor_393_ptr->getSpeedRPM());
+// 	EXPECT_FLOAT_EQ(free_current, motor_393_ptr->getMotorCurrent());
+// 	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
+
+// 	motor_393_ptr->setMotorEffort(1.0);
+// 	motor_393_ptr->setMotorSpeedRPM(25);
+// 	EXPECT_FLOAT_EQ(25, motor_393_ptr->getSpeedRPM());
+// 	EXPECT_FLOAT_EQ(1.85, motor_393_ptr->getMotorCurrent());
+// 	EXPECT_FLOAT_EQ(stall_torque, motor_393_ptr->getTorqueOutput());
+
+// 	motor_393_ptr->setMotorEffort(1.0);
+// 	motor_393_ptr->setMotorSpeedRPM(0);
+// 	EXPECT_FLOAT_EQ(0, motor_393_ptr->getSpeedRPM());
+// 	EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getMotorCurrent());
+// 	EXPECT_FLOAT_EQ(2 * stall_torque, motor_393_ptr->getTorqueOutput());
+// }
+
+
+// TEST_F(TestMotorModel, testMotorCurrentLimits){
+// 	motor_393_ptr->setMaxCurrent(2.0);
+// 	motor_393_ptr->setMotorEffort(1.0);
+// 	motor_393_ptr->setMotorSpeedRPM(free_speed);
+
+// 	// Todo, continue writing this test
 // }

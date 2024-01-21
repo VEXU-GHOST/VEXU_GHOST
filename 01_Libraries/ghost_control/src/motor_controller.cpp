@@ -11,7 +11,7 @@ MotorController::MotorController(const MotorController::Config &controller_confi
 	filter_config_(filter_config),
 	model_config_(model_config),
 	velocity_filter_(filter_config),
-	motor_model_(model_config_){
+	motor_model_(model_config){
 }
 
 float MotorController::updateMotor(float position, float velocity){

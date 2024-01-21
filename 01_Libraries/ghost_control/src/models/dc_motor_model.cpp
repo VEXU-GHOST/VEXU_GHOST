@@ -70,8 +70,8 @@ void DCMotorModel::updateMotor(){
 	// Calculate ideal current draw (no limit)
 	curr_current_ = (stall_current_) * curr_voltage_percent_ - ((stall_current_ - free_current_) / free_speed_) * curr_speed_;
 
-	// // Clamp if true current exceeds max current
-	// curr_current_ = (curr_current_ > max_current_) ? max_current_ : curr_current_;
+	// Clamp if true current exceeds max current
+	curr_current_ = (curr_current_ > max_current_) ? max_current_ : curr_current_;
 }
 
 } // namespace ghost_control

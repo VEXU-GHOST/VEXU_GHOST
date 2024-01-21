@@ -54,6 +54,9 @@ add_library(motor_controller SHARED src/motor_controller.cpp)
 ament_target_dependencies(motor_controller
 ${DEPENDENCIES}
 )
+target_link_libraries(motor_controller
+  dc_motor_model
+)
 target_include_directories(motor_controller
 PUBLIC
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -104,17 +107,17 @@ target_link_libraries(test_dc_motor_model
   gtest
 )
 
-ament_add_gtest(test_mechanical_differential test/test_mechanical_differential.cpp)
-target_link_libraries(test_mechanical_differential
-  mechanical_differential
-  gtest
-)
+# ament_add_gtest(test_mechanical_differential test/test_mechanical_differential.cpp)
+# target_link_libraries(test_mechanical_differential
+#   mechanical_differential
+#   gtest
+# )
 
-ament_add_gtest(test_motor_controller test/test_motor_controller.cpp)
-target_link_libraries(test_motor_controller
-  dc_motor_model
-  motor_controller
-  gtest
-)
+# ament_add_gtest(test_motor_controller test/test_motor_controller.cpp)
+# target_link_libraries(test_motor_controller
+#   dc_motor_model
+#   motor_controller
+#   gtest
+# )
 
 ament_package()

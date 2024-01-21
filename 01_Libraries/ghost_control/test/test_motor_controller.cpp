@@ -31,7 +31,7 @@ TEST_F(TestMotorController, testControllerActive){
 
 // Velocity Filtering
 // Position is currently fixed as in delta d is not manually changed (?) << probably adjust this later
-TEST_F(TestMotorController, testNoMotion){
+TEST_F(TestMotorController, testNoMovement){
 	for(int i = 0; i < 5; i++){
 		motor_controller->setControlMode(true, true, true, false);
 
@@ -47,6 +47,9 @@ TEST_F(TestMotorController, testConstantPositiveAcceleration){
 
 		velocity += 1.0;
 		motor_controller->updateMotor(0.0, velocity);
+
+		for(int i = 0; i < 1000; i++){
+		}
 		EXPECT_FLOAT_EQ(velocity, motor_controller->getVelocityFilteredRPM());
 	}
 }
