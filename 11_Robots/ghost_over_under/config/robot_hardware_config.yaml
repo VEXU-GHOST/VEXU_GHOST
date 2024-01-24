@@ -1,53 +1,65 @@
 port_configuration:
     devices:
-        steering_front_left:
+        steering_back_right:
             port: 1
             type: ROTATION_SENSOR
             reversed: true
             config: steering_sensor_config
-        drive_flr:
+        drive_brf:
             port: 3
             type: MOTOR
+            reversed: true
             config: drive_motor_config
-        drive_fll:
+        drive_brb:
             port: 5
             type: MOTOR
+            reversed: true
             config: drive_motor_config
-        drive_frr:
+        steering_back_left:
+            port: 6
+            type: ROTATION_SENSOR
+            reversed: true
+            config: steering_sensor_config
+        stick_motor:
+            port: 11
+            type: MOTOR
+            config: stick_motor_config
+        drive_blb:
             port: 7
             type: MOTOR
+            reversed: true
             config: drive_motor_config
-        drive_frl:
+        drive_blf:
             port: 9
             type: MOTOR
+            reversed: true
             config: drive_motor_config
         steering_front_right:
             port: 10
             type: ROTATION_SENSOR
             reversed: true
             config: steering_sensor_config
-        steering_back_left:
-            port: 11
-            type: ROTATION_SENSOR
-            reversed: true
-            config: steering_sensor_config
-        drive_blr:
+        drive_frl:
             port: 13
             type: MOTOR
+            reversed: true
             config: drive_motor_config
-        drive_bll:
+        drive_frr:
             port: 15
             type: MOTOR
+            reversed: true
             config: drive_motor_config
-        drive_brl:
+        drive_flr:
             port: 17
             type: MOTOR
+            reversed: true
             config: drive_motor_config
-        drive_brr:
+        drive_fll:
             port: 19
             type: MOTOR
+            reversed: true
             config: drive_motor_config
-        steering_back_right:
+        steering_front_left:
             port: 20
             type: ROTATION_SENSOR
             reversed: true
@@ -86,3 +98,16 @@ port_configuration:
                 send_current_data: false
                 send_power_data: false
                 send_temperature_data: false
+        stick_motor_config:
+            gearset: 100
+            brake_mode: COAST
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 10.0
+                ff_vel_gain: 1.0
+                ff_torque_gain: 0.0
+            serial:
+                send_position_command: false
+                send_velocity_command: true
+                send_voltage_command: true

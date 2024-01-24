@@ -38,10 +38,41 @@ void SwerveRobotPlugin::teleop(double current_time){
 	std::cout << "Teleop: " << current_time << std::endl;
 	auto joy_data = robot_hardware_interface_ptr_->getMainJoystickData();
 
-	std::cout << joy_data->right_y << std::endl;
+	robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("stick_motor", 2500);
+	robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("stick_motor", joy_data->right_x / 127.0);
 
-	robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frr", 2500);
-	robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frr", joy_data->right_y / 127.0);
+	if(joy_data->btn_a){
+		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_flr", 2500);
+		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_flr", joy_data->right_y / 127.0);
+	}
+	if(joy_data->btn_b){
+		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_fll", 2500);
+		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_fll", joy_data->right_y / 127.0);
+	}
+	if(joy_data->btn_x){
+		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frr", 2500);
+		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frr", joy_data->right_y / 127.0);
+	}
+	if(joy_data->btn_y){
+		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frl", 2500);
+		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frl", joy_data->right_y / 127.0);
+	}
+	if(joy_data->btn_u){
+		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_blf", 2500);
+		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_blf", joy_data->right_y / 127.0);
+	}
+	if(joy_data->btn_l){
+		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_blb", 2500);
+		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_blb", joy_data->right_y / 127.0);
+	}
+	if(joy_data->btn_r){
+		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_brb", 2500);
+		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_brb", joy_data->right_y / 127.0);
+	}
+	if(joy_data->btn_d){
+		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_brf", 2500);
+		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_brf", joy_data->right_y / 127.0);
+	}
 }
 
 void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
