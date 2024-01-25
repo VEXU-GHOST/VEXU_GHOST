@@ -5,13 +5,18 @@ log
 *.pyc
 .cache/*
 
-02_V5/ghost_pros/include/ghost_common/**
-02_V5/ghost_pros/include/ghost_control/**
-02_V5/ghost_pros/include/ghost_estimation/**
+# These are symlinked from 01_Libraries (and thus duplicated)
+02_V5/ghost_pros/include/ghost_v5_interfaces/**
 02_V5/ghost_pros/include/ghost_serial/**
-02_V5/ghost_pros/include/ghost_ros/**
-02_V5/ghost_pros/src/ghost_common/**
-02_V5/ghost_pros/src/ghost_control/**
-02_V5/ghost_pros/src/ghost_estimation/**
+02_V5/ghost_pros/include/ghost_estimation/**
+02_V5/ghost_pros/include/ghost_control/**
+02_V5/ghost_pros/include/ghost_util/**
+
+02_V5/ghost_pros/src/ghost_v5_interfaces/**
 02_V5/ghost_pros/src/ghost_serial/**
-02_V5/ghost_pros/src/ghost_ros/**
+02_V5/ghost_pros/src/ghost_estimation/**
+02_V5/ghost_pros/src/ghost_control/**
+02_V5/ghost_pros/src/ghost_util/**
+
+# Auto-generated
+02_V5/ghost_pros/include/robot_config.hpp

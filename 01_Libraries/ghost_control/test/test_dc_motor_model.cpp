@@ -24,7 +24,7 @@ protected:
 		stall_current = 3.6;
 		nominal_voltage = 7.2;
 
-		motor_393 = DCMotorModel(
+		motor_393_ptr = std::make_shared<DCMotorModel>(
 			free_speed,
 			stall_torque,
 			free_current,
@@ -32,7 +32,7 @@ protected:
 			nominal_voltage);
 	}
 
-	DCMotorModel motor_393;
+	std::shared_ptr<DCMotorModel> motor_393_ptr;
 	float stall_torque;
 	float free_speed;
 	float stall_current;
@@ -41,131 +41,126 @@ protected:
 };
 
 TEST_F(TestMotorModel, testMotorInit){
-	EXPECT_FLOAT_EQ(0.0, motor_393.getSpeedRPM());
-	EXPECT_FLOAT_EQ(0.0, motor_393.getVoltage());
-	EXPECT_FLOAT_EQ(0.0, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(0.0, motor_393.getTorqueOutput());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 }
 
 TEST_F(TestMotorModel, testMotorNominal){
-	motor_393.setMotorEffort(1.0);
-	motor_393.setMotorSpeedRPM(free_speed);
+	motor_393_ptr->setMotorEffort(1.0);
+	motor_393_ptr->setMotorSpeedRPM(free_speed);
 
-	EXPECT_FLOAT_EQ(nominal_voltage, motor_393.getVoltage());
-	EXPECT_FLOAT_EQ(free_speed, motor_393.getSpeedRPM());
-	EXPECT_FLOAT_EQ(free_current, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(0.0, motor_393.getTorqueOutput());
+	EXPECT_FLOAT_EQ(nominal_voltage, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(free_speed, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ(free_current, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(1.0);
-	motor_393.setMotorSpeedRPM(free_speed / 2);
-	EXPECT_FLOAT_EQ(free_speed / 2, motor_393.getSpeedRPM());
-	EXPECT_FLOAT_EQ((stall_current + free_current) / 2, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(stall_torque / 2, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(1.0);
+	motor_393_ptr->setMotorSpeedRPM(free_speed / 2);
+	EXPECT_FLOAT_EQ(free_speed / 2, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ((stall_current + free_current) / 2, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(stall_torque / 2, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(1.0);
-	motor_393.setMotorSpeedRPM(0);
-	EXPECT_FLOAT_EQ(0, motor_393.getSpeedRPM());
-	EXPECT_FLOAT_EQ(stall_current, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(stall_torque, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(1.0);
+	motor_393_ptr->setMotorSpeedRPM(0);
+	EXPECT_FLOAT_EQ(0, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(stall_torque, motor_393_ptr->getTorqueOutput());
 }
 
 TEST_F(TestMotorModel, testMotorNominalNegativeSpeed){
-	motor_393.setMotorEffort(-1.0);
-	motor_393.setMotorSpeedRPM(-free_speed);
-	EXPECT_FLOAT_EQ(-nominal_voltage, motor_393.getVoltage());
-	EXPECT_FLOAT_EQ(-free_speed, motor_393.getSpeedRPM());
-	EXPECT_FLOAT_EQ(-free_current, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(0.0, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(-1.0);
+	motor_393_ptr->setMotorSpeedRPM(-free_speed);
+	EXPECT_FLOAT_EQ(-nominal_voltage, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(-free_speed, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ(-free_current, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(1.0);
-	motor_393.setMotorSpeedRPM(-free_speed);
-	EXPECT_FLOAT_EQ(nominal_voltage, motor_393.getVoltage());
-	EXPECT_FLOAT_EQ(-free_speed, motor_393.getSpeedRPM());
-	EXPECT_FLOAT_EQ(stall_torque * 2, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(1.0);
+	motor_393_ptr->setMotorSpeedRPM(-free_speed);
+	EXPECT_FLOAT_EQ(nominal_voltage, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(-free_speed, motor_393_ptr->getSpeedRPM());
+	EXPECT_FLOAT_EQ(stall_torque * 2, motor_393_ptr->getTorqueOutput());
 }
 
 TEST_F(TestMotorModel, testMotorHalfPower){
-	motor_393.setMotorEffort(0.5);
-	motor_393.setMotorSpeedRPM(free_speed / 2);
-	EXPECT_FLOAT_EQ(stall_current, motor_393.getVoltage());
-	EXPECT_FLOAT_EQ(free_current / 2, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(0, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(0.5);
+	motor_393_ptr->setMotorSpeedRPM(free_speed / 2);
+	EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(free_current / 2, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(0, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(0.5);
-	motor_393.setMotorSpeedRPM(free_speed);
-	EXPECT_FLOAT_EQ(free_current - stall_current / 2, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(-stall_torque / 2, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(0.5);
+	motor_393_ptr->setMotorSpeedRPM(free_speed);
+	EXPECT_FLOAT_EQ(free_current - stall_current / 2, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(-stall_torque / 2, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(0.5);
-	motor_393.setMotorSpeedRPM(0);
-	EXPECT_FLOAT_EQ(stall_current / 2, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(stall_torque / 2, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(0.5);
+	motor_393_ptr->setMotorSpeedRPM(0);
+	EXPECT_FLOAT_EQ(stall_current / 2, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(stall_torque / 2, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(0.5);
-	motor_393.setMotorSpeedRPM(-free_speed / 2);
-	EXPECT_FLOAT_EQ(free_current / 2 + (stall_current - free_current), motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(stall_torque, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(0.5);
+	motor_393_ptr->setMotorSpeedRPM(-free_speed / 2);
+	EXPECT_FLOAT_EQ(free_current / 2 + (stall_current - free_current), motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(stall_torque, motor_393_ptr->getTorqueOutput());
 }
 
 TEST_F(TestMotorModel, testMotorHalfPowerNegative){
-	motor_393.setMotorEffort(-0.5);
-	motor_393.setMotorSpeedRPM(-free_speed);
-	EXPECT_FLOAT_EQ(-nominal_voltage / 2, motor_393.getVoltage());
-	EXPECT_FLOAT_EQ(-free_current / 2 + (stall_current - free_current) / 2, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(stall_torque / 2, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(-0.5);
+	motor_393_ptr->setMotorSpeedRPM(-free_speed);
+	EXPECT_FLOAT_EQ(-nominal_voltage / 2, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(-free_current / 2 + (stall_current - free_current) / 2, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(stall_torque / 2, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(-0.5);
-	motor_393.setMotorSpeedRPM(-50);
-	EXPECT_FLOAT_EQ(-free_current / 2, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(0.0, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(-0.5);
+	motor_393_ptr->setMotorSpeedRPM(-50);
+	EXPECT_FLOAT_EQ(-free_current / 2, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(-0.5);
-	motor_393.setMotorSpeedRPM(0);
-	EXPECT_FLOAT_EQ(-stall_current / 2, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(-stall_torque / 2, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(-0.5);
+	motor_393_ptr->setMotorSpeedRPM(0);
+	EXPECT_FLOAT_EQ(-stall_current / 2, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(-stall_torque / 2, motor_393_ptr->getTorqueOutput());
 }
 
 TEST_F(TestMotorModel, testMotorZeroPower){
-	motor_393.setMotorEffort(0.0);
-	motor_393.setMotorSpeedRPM(free_speed);
-	EXPECT_FLOAT_EQ(0, motor_393.getVoltage());
-	EXPECT_FLOAT_EQ(free_current - stall_current, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(-stall_torque, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(0.0);
+	motor_393_ptr->setMotorSpeedRPM(free_speed);
+	EXPECT_FLOAT_EQ(0, motor_393_ptr->getVoltage());
+	EXPECT_FLOAT_EQ(free_current - stall_current, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(-stall_torque, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(0.0);
-	motor_393.setMotorSpeedRPM(50);
-	EXPECT_FLOAT_EQ((free_current - stall_current) / 2, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(-stall_torque / 2, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(0.0);
+	motor_393_ptr->setMotorSpeedRPM(50);
+	EXPECT_FLOAT_EQ((free_current - stall_current) / 2, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(-stall_torque / 2, motor_393_ptr->getTorqueOutput());
 
-	motor_393.setMotorEffort(0.0);
-	motor_393.setMotorSpeedRPM(0);
-	EXPECT_FLOAT_EQ(0.0, motor_393.getMotorCurrent());
-	EXPECT_FLOAT_EQ(0.0, motor_393.getTorqueOutput());
+	motor_393_ptr->setMotorEffort(0.0);
+	motor_393_ptr->setMotorSpeedRPM(0);
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getMotorCurrent());
+	EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 }
 
 // TEST_F(TestMotorModel, testMotorGearRatio){
-//     motor_393.setGearRatio(0.5);
-//     motor_393.setMotorEffort(1.0);
-//     motor_393.setMotorSpeedRPM(50);
-//     EXPECT_FLOAT_EQ(nominal_voltage, motor_393.getVoltage());
-//     EXPECT_FLOAT_EQ(50, motor_393.getSpeedRPM());
-//     EXPECT_FLOAT_EQ(free_current, motor_393.getMotorCurrent());
-//     EXPECT_FLOAT_EQ(0.0, motor_393.getTorqueOutput());
+//     motor_393_ptr->setGearRatio(0.5);
+//     motor_393_ptr->setMotorEffort(1.0);
+//     motor_393_ptr->setMotorSpeedRPM(50);
+//     EXPECT_FLOAT_EQ(nominal_voltage, motor_393_ptr->getVoltage());
+//     EXPECT_FLOAT_EQ(50, motor_393_ptr->getSpeedRPM());
+//     EXPECT_FLOAT_EQ(free_current, motor_393_ptr->getMotorCurrent());
+//     EXPECT_FLOAT_EQ(0.0, motor_393_ptr->getTorqueOutput());
 
-//     motor_393.setMotorEffort(1.0);
-//     motor_393.setMotorSpeedRPM(25);
-//     EXPECT_FLOAT_EQ(25, motor_393.getSpeedRPM());
-//     EXPECT_FLOAT_EQ(1.85, motor_393.getMotorCurrent());
-//     EXPECT_FLOAT_EQ(stall_torque, motor_393.getTorqueOutput());
+//     motor_393_ptr->setMotorEffort(1.0);
+//     motor_393_ptr->setMotorSpeedRPM(25);
+//     EXPECT_FLOAT_EQ(25, motor_393_ptr->getSpeedRPM());
+//     EXPECT_FLOAT_EQ(1.85, motor_393_ptr->getMotorCurrent());
+//     EXPECT_FLOAT_EQ(stall_torque, motor_393_ptr->getTorqueOutput());
 
-//     motor_393.setMotorEffort(1.0);
-//     motor_393.setMotorSpeedRPM(0);
-//     EXPECT_FLOAT_EQ(0, motor_393.getSpeedRPM());
-//     EXPECT_FLOAT_EQ(stall_current, motor_393.getMotorCurrent());
-//     EXPECT_FLOAT_EQ(2*stall_torque, motor_393.getTorqueOutput());
+//     motor_393_ptr->setMotorEffort(1.0);
+//     motor_393_ptr->setMotorSpeedRPM(0);
+//     EXPECT_FLOAT_EQ(0, motor_393_ptr->getSpeedRPM());
+//     EXPECT_FLOAT_EQ(stall_current, motor_393_ptr->getMotorCurrent());
+//     EXPECT_FLOAT_EQ(2*stall_torque, motor_393_ptr->getTorqueOutput());
 // }
-
-int main(int argc, char **argv) {
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
-}

@@ -1,0 +1,5 @@
+<library path="swerve_robot_plugin">
+  <class type="ghost_swerve::SwerveRobotPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
+    <description>Swerve Robot</description>
+  </class>
+</library>

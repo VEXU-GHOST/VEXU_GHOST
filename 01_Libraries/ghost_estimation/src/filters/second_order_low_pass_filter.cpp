@@ -34,6 +34,10 @@ SecondOrderLowPassFilter::SecondOrderLowPassFilter(float w0, float zeta, float t
 	y2_coeff_ = -d0_coeff_;
 }
 
+SecondOrderLowPassFilter::SecondOrderLowPassFilter(Config config) :
+	SecondOrderLowPassFilter(config.cutoff_frequency, config.damping_ratio, config.timestep) {
+}
+
 float SecondOrderLowPassFilter::updateFilter(float u0){
 	// Update filter states
 	u2_ = u1_;
