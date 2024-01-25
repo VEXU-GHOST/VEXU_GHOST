@@ -38,9 +38,6 @@ void SwerveRobotPlugin::teleop(double current_time){
 	std::cout << "Teleop: " << current_time << std::endl;
 	auto joy_data = robot_hardware_interface_ptr_->getMainJoystickData();
 
-	robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("stick_motor", 2500);
-	robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("stick_motor", joy_data->right_x / 127.0);
-
 	if(joy_data->btn_a){
 		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_flr", 2500);
 		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_flr", joy_data->right_y / 127.0);
