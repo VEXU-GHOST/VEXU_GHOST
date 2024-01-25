@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <gazebo/common/Time.hh>
 #include <gazebo/test/ServerFixture.hh>
 #include <geometry_msgs/msg/twist.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <iostream>
 #include <memory>
 #include <string>
 
-#define tol 10e-2
+#define tol 2e-2
 
 using namespace std::literals::chrono_literals; // NOLINT
+
 
 class GazeboRosDiffDriveTest
 	: public gazebo::ServerFixture {
@@ -31,12 +34,14 @@ class GazeboRosDiffDriveTest
 
 TEST_F(GazeboRosDiffDriveTest, testBringUp){
 	// Load test world and start paused
-	std::cerr << "===Loading world===" << std::endl;
-	this->Load("/home/melcruz/VEXU_GHOST/03_ROS/ghost_sim/urdf/spin_up.world", true);
+	auto sim_pkg_share = ament_index_cpp::get_package_share_directory("ghost_sim");
+	this->Load(sim_pkg_share + "/urdf/spin_up.world", true);
 
-	std::ifstream sdf_file("/home/melcruz/VEXU_GHOST/03_ROS/ghost_sim/urdf/test_tank_init.sdf");
+	auto sdf_path = "/home/melcruz/VEXU_GHOST/03_ROS/ghost_sim/urdf/test_tank_init.sdf";
+	std::ifstream sdf_file(sdf_path);
 	std::stringstream buffer;
 	buffer << sdf_file.rdbuf();
+	std::cerr << sim_pkg_share << std::endl;
 
 	std::cerr << "===Loading diff drive model===" << std::endl;
 	this->SpawnSDF(buffer.str());
@@ -58,7 +63,6 @@ TEST_F(GazeboRosDiffDriveTest, testBringUp){
 	executor.add_node(node);
 
 	// Create subscriber
-	std::cerr << "===Creating /odom subscriber===" << std::endl;
 	nav_msgs::msg::Odometry::SharedPtr latestMsg;
 	auto sub = node->create_subscription<nav_msgs::msg::Odometry>(
 		"/odom", rclcpp::QoS(rclcpp::KeepLast(1)),
@@ -78,56 +82,44 @@ TEST_F(GazeboRosDiffDriveTest, testBringUp){
 	EXPECT_NEAR(0.0, vehicle->WorldAngularVel().Z(), tol);
 
 	// Send command
-	std::cerr << "===Sending /cmd_vel===" << std::endl;
 	auto pub = node->create_publisher<geometry_msgs::msg::Twist>(
 		"/cmd_vel", rclcpp::QoS(rclcpp::KeepLast(1)));
 	auto msg = geometry_msgs::msg::Twist();
 	msg.linear.x = 1.0;
-	// msg.angular.z = 0.1;
 	pub->publish(msg);
 
 	// Wait for it to be processed
 	int sleep{0};
-	int maxSleep{300};
-	auto yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
+	int maxSleep{1000};
 	auto linear_vel = vehicle->WorldLinearVel();
-	double linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
-	double linear_vel_x_threshold = 0.5;
-	std::cerr << "===Verify vehicle twist===" << std::endl;
+	double linear_vel_x = linear_vel.X();
+	double linear_vel_x_threshold = msg.linear.x - tol;
 	for(; sleep < maxSleep && (linear_vel_x < linear_vel_x_threshold); ++sleep){
-		yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
 		linear_vel = vehicle->WorldLinearVel();
 		linear_vel_x = linear_vel.X();
-		// linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
-		std::cerr << "===linear_vel_x: " << linear_vel_x << "===" << std::endl;
+
 		world->Step(100);
 		executor.spin_once(100ms);
 		gazebo::common::Time::MSleep(100);
 	}
-	std::cerr << "===Check twist settling time===" << std::endl;
+
 	EXPECT_NE(sleep, maxSleep);
 
 	// Check message
-	std::cerr << "===Check position===" << std::endl;
 	ASSERT_NE(nullptr, latestMsg);
 	EXPECT_EQ("odom", latestMsg->header.frame_id);
 	EXPECT_LT(0.0, latestMsg->pose.pose.position.x);
 	EXPECT_LT(0.0, latestMsg->pose.pose.orientation.z);
 
 	// Check movement
-	yaw = static_cast<float>(vehicle->WorldPose().Rot().Yaw());
-	linear_vel = vehicle->WorldLinearVel();
-	linear_vel_x = cosf(yaw) * linear_vel.X() + sinf(yaw) * linear_vel.Y();
 	EXPECT_LT(0.0, vehicle->WorldPose().Pos().X());
-	EXPECT_LT(0.0, yaw);
-	EXPECT_NEAR(1.0, linear_vel_x, tol);
-	EXPECT_NEAR(0.1, vehicle->WorldAngularVel().Z(), tol);
-	std::cerr << "===Done!===" << std::endl;
+	EXPECT_NEAR(msg.linear.x, linear_vel_x, tol);
 }
 
 int main(int argc, char ** argv){
 	rclcpp::init(argc, argv);
 	::testing::InitGoogleTest(&argc, argv);
+	int ret = RUN_ALL_TESTS();
 	rclcpp::shutdown();
-	return RUN_ALL_TESTS();
+	return ret;
 }
