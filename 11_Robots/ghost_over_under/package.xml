@@ -14,7 +14,7 @@
 
   <exec_depend>ghost_ros_interfaces</exec_depend>
   <exec_depend>ghost_swerve</exec_depend>
-  <exec_depend>rviz</exec_depend>
+  <exec_depend>rviz2</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

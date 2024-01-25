@@ -55,9 +55,16 @@ INCLUDES DESTINATION include
 ####################
 ##### Install ######
 ####################
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+install(DIRECTORY
+  urdf
+  DESTINATION share/${PROJECT_NAME})
+
 pluginlib_export_plugin_description_file(ghost_ros_interfaces plugins.xml)
-
-
 
 ament_export_include_directories(${INCLUDE})
 ament_package()
