@@ -18,11 +18,11 @@ endforeach()
 # Tell any packages that depend on us what dependencies we need.
 ament_export_dependencies(${DEPENDENCIES})
 
-
-
 install(DIRECTORY
   config
   launch
+  urdf
+  rviz
   DESTINATION share/${PROJECT_NAME})
 
 # This generates the ROS2 package and should always be the last line.
