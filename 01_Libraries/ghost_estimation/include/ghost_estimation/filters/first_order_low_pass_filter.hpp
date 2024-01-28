@@ -1,5 +1,4 @@
-#ifndef GHOST_ESTIMATION__FIRST_ORDER_LOW_PASS_FILTER_HPP
-#define GHOST_ESTIMATION__FIRST_ORDER_LOW_PASS_FILTER_HPP
+#pragma once
 
 #include <math.h>
 
@@ -67,5 +66,3 @@ private:
 };
 
 } // namespace ghost_estimation
-
-#endif // GHOST_ESTIMATION__SECOND_ORDER_LOW_PASS_FILTER_HPP

@@ -1,14 +1,19 @@
 std_msgs/Header header
+
 uint32 msg_id
 
-# Encoder Data (Both motors and rotation sensors)
-# Typically we won't use all ports or may send a subset of them.
-ghost_msgs/V5EncoderState[21] encoders
+# Competition Status
+ghost_msgs/V5CompetitionStatus competition_status
 
-# Digital Ports
-bool[8] digital_port_vector
+# Joystick States
+ghost_msgs/V5JoystickState[] joysticks
 
-# Competition state
-ghost_msgs/V5CompetitionState competition_state_msg
+# Rotation Sensor States
+ghost_msgs/V5RotationSensorState[] rotation_sensors
 
-ghost_msgs/V5Joystick joystick_msg
+# Motor States
+ghost_msgs/V5MotorState[] motors
+
+# Digital Inputs
+bool[] digital_io
+

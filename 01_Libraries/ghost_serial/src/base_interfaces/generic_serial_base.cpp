@@ -45,12 +45,21 @@ GenericSerialBase::~GenericSerialBase(){
 	}
 }
 
-uint8_t GenericSerialBase::calculateChecksum(const unsigned char buffer[], const int &num_bytes) const {
+uint8_t GenericSerialBase::calculateChecksum(const unsigned char buffer[], const int &num_bytes) {
 	uint8_t checksum = 0;
 	for(int i = 0; i < num_bytes; i++){
 		checksum += buffer[i];
 	}
 	return checksum;
+}
+
+void GenericSerialBase::checkReadMsgBufferLength(std::vector<unsigned char> &msg_buffer) const {
+	if(msg_buffer.size() < read_msg_max_len_){
+		throw std::runtime_error(
+			      std::string("msg_buffer size must be at least read_msg_max_len!") +
+			      std::string(" msg_buffer.size(): ") + std::to_string(msg_buffer.size()) +
+			      std::string(", read_msg_max_len: ") + std::to_string(read_msg_max_len_));
+	}
 }
 
 bool GenericSerialBase::writeMsgToSerial(const unsigned char buffer[], const int num_bytes){
@@ -63,19 +72,17 @@ bool GenericSerialBase::writeMsgToSerial(const unsigned char buffer[], const int
 				0,
 			};
 
+			// Copy start_sequence and msg
+			memcpy(raw_msg_buffer, write_msg_start_seq.c_str(), write_msg_start_seq.length());
+			memcpy(raw_msg_buffer + write_msg_start_seq.length(), buffer, num_bytes);
+
 			// Calculate and append checksum byte (if used)
 			if(use_checksum_){
-				memcpy(raw_msg_buffer, write_msg_start_seq.c_str(), write_msg_start_seq.length());
-				memcpy(raw_msg_buffer + write_msg_start_seq.length(), buffer, num_bytes);
 				raw_msg_buffer[raw_msg_len - 1] = calculateChecksum(buffer, num_bytes);
-			}
-			else{
-				memcpy(raw_msg_buffer, write_msg_start_seq.c_str(), write_msg_start_seq.length());
-				memcpy(raw_msg_buffer + write_msg_start_seq.length(), buffer, num_bytes + use_checksum_);
 			}
 
 			// COBS Encode (Adds leading byte and null delimiter byte)
-			int write_buffer_len = write_msg_start_seq.length() + raw_msg_len + 2;
+			int write_buffer_len = raw_msg_len + 2;
 			unsigned char write_buffer[write_buffer_len] = {
 				0,
 			};

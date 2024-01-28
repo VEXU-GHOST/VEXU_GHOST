@@ -1,15 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(ghost_msgs)
 
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
+# Add Global CMake Config for Ghost Packages
+set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+find_package(Ghost CONFIG REQUIRED)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -22,14 +16,14 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/util/LabeledFloatMap.msg"
   "msg/util/LabeledVector.msg"
   "msg/util/LabeledVectorMap.msg"
-  "msg/v5_msgs/V5MotorCommand.msg"
-  "msg/v5_msgs/V5EncoderState.msg"
-  "msg/v5_msgs/V5Joystick.msg"
-  "msg/v5_msgs/V5CompetitionState.msg"
-  "msg/GhostRobotState.msg"
+  "msg/device_msgs/V5DeviceHeader.msg"
+  "msg/device_msgs/commands/V5MotorCommand.msg"
+  "msg/device_msgs/states/V5CompetitionStatus.msg"
+  "msg/device_msgs/states/V5JoystickState.msg"
+  "msg/device_msgs/states/V5MotorState.msg"
+  "msg/device_msgs/states/V5RotationSensorState.msg"
   "msg/V5ActuatorCommand.msg"
   "msg/V5SensorUpdate.msg"
-  "msg/CVDisc.msg"
   "srv/BroadcastJacobian.srv"
   DEPENDENCIES std_msgs
  )

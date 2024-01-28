@@ -31,6 +31,16 @@ DCMotorModel::DCMotorModel(double free_speed,
 	curr_torque_ = 0;
 }
 
+DCMotorModel::DCMotorModel(Config config) :
+	DCMotorModel(config.free_speed,
+	             config.stall_torque,
+	             config.free_current,
+	             config.stall_current,
+	             config.nominal_voltage,
+	             config.gear_ratio){
+}
+
+
 void DCMotorModel::setMotorEffort(double voltage_percent){
 	// Clip inputs to bounds
 	curr_voltage_percent_ = std::clamp(voltage_percent, -1.0, 1.0);

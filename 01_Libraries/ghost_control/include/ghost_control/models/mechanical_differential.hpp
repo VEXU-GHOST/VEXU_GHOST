@@ -8,8 +8,7 @@
  * Modified By: Maxx Wilson
  */
 
-#ifndef GHOST_CONTROL__MECHANICAL_DIFFERENTIAL_HPP
-#define GHOST_CONTROL__MECHANICAL_DIFFERENTIAL_HPP
+#pragma once
 
 #include "eigen3/Eigen/Geometry"
 
@@ -53,4 +52,3 @@ private:
 };
 
 } // namespace ghost_control
-#endif
