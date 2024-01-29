@@ -85,12 +85,12 @@ public:
 protected:
 	std::shared_ptr<rclcpp::Node> node_ptr_;
 	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
+	double getTimeFromStart() const;
 
 private:
 	void loadRobotHardwareInterface();
 	void sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
 	void updateCompetitionState(bool is_disabled, bool is_autonomous);
-	double getTimeFromStart() const;
 
 	bool configured_ = false;
 	robot_state_e last_comp_state_ = robot_state_e::TELEOP;
