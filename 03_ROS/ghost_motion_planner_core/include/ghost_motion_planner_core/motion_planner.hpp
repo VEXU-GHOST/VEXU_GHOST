@@ -7,6 +7,7 @@
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
+#include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
 namespace ghost_motion_planner {
 
@@ -37,7 +38,13 @@ public:
 	
 	// Blocking, ignore sensor updates while making new plan
 	// overload for teleop and auton?
-	virtual bool generateMotionPlan() = 0; 
+	/**
+	 * @brief Called when a DrivetrainCommand msg is recieved 
+	 * 
+	 * Generates and publishes a RobotTrajectory msg when completed
+	 * 
+	 */
+	virtual bool generateMotionPlan(ghost_msgs::msg::DrivetrainCommand command) = 0; 
 
 
 
@@ -61,13 +68,11 @@ protected:
 	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
 
 private:
-	// void loadRobotHardwareInterface();
-	// void sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
 	void sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
+	void loadRobotHardwareInterface();
 
 	// bool configured_ = false;
-	// robot_state_e last_comp_state_ = robot_state_e::TELEOP;
-	// robot_state_e curr_comp_state_ = robot_state_e::TELEOP;
+	std::atomic_bool planning_ = false;
 	rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_sub_;
 	rclcpp::Publisher<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_pub_;
 

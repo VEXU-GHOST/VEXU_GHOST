@@ -14,6 +14,7 @@ set(DEPENDENCIES
   ament_cmake_gtest
   ghost_v5_interfaces
   ghost_msgs
+  ghost_ros_interfaces
   # ghost_serial
   ghost_util
   # pluginlib
