@@ -15,6 +15,7 @@
 
   <depend>ghost_estimation</depend>
   <depend>ghost_control</depend>
+  <depend>ghost_v5_interfaces</depend>
 
   <build_export_depend>ament_cmake</build_export_depend>
   <build_export_depend>ament_cmake_gtest</build_export_depend>
