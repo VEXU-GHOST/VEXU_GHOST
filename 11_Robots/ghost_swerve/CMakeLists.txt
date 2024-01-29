@@ -14,6 +14,7 @@ set(DEPENDENCIES
   ghost_msgs
   pluginlib
   ghost_autonomy
+  ghost_planners
   )
 
 # Iterates through the list and finds the packages!

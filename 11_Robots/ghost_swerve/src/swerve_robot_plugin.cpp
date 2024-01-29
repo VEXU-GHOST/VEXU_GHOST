@@ -3,6 +3,8 @@
 #include <iostream>
 
 using std::placeholders::_1;
+using ghost_planners::RobotTrajectory;
+using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 
 namespace ghost_swerve {
 
@@ -18,9 +20,6 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("odom_topic", "/sensors/odom");
 	std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
 
-	// node_ptr_->declare_parameter("bt_topic", "/behavior_tree/auton");
-	// std::string bt_topic = node_ptr_->get_parameter("bt_topic").as_string();
-
 	node_ptr_->declare_parameter<std::string>("bt_path");
 	bt_path_ = node_ptr_->get_parameter("bt_path").as_string();
 
@@ -30,9 +29,9 @@ void SwerveRobotPlugin::initialize(){
 		std::bind(&SwerveRobotPlugin::trajectoryCallback, this, _1)
 		);
 
-	odom_pub_ = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
-		odom_topic,
-		10);
+	// odom_pub_ = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
+	// 	odom_topic,
+	// 	10);
 
 	bt_ = std::make_shared<RunTree>(bt_path_, robot_hardware_interface_ptr_);
 }
@@ -42,6 +41,10 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
 
 	bt_->tick_tree();
+
+	update_motor_commands(current_time - trajectory_start_time_);
+
+	// update motor values from trajectory
 }
 void SwerveRobotPlugin::teleop(double current_time){
 	// std::cout << "Teleop: " << current_time << std::endl;
@@ -53,19 +56,43 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 	// std::cout << joy_data->right_y << std::endl;
 
+	// should send to motion planner and recieve trajectory msg
+	// update motor values
+
 	// robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frr", 2500);
 	// robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frr", joy_data->right_y / 127.0);
 }
 
 // does this need to be a part of the base class?
 void SwerveRobotPlugin::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg){
-	// call interpolator?
-	// set trajectory to follow
-	// auton/teleop can use trajectory as a time function
+	trajectory_start_time_ = getTimeFromStart();
+	for (int i = 0; i < msg->motor_names.size(); i++){
+		RobotTrajectory::MotorTrajectory motor_trajectory;
+		fromROSMsg(motor_trajectory, msg->trajectories[i]);
+		trajectory_motor_map_[msg->motor_names[i]] = motor_trajectory;
+	}
 }
 
-// void interpolator()
-
+void SwerveRobotPlugin::update_motor_commands(double time){
+	for (auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
+		const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
+		if (is_pos_command){
+			robot_hardware_interface_ptr_->setMotorPositionCommand(motor_name, position);
+		}
+		const auto [is_torque_command, torque] = motor_trajectory.getTorque(time);
+		if (is_torque_command){
+			robot_hardware_interface_ptr_->setMotorTorqueCommandPercent(motor_name, torque);
+		}
+		const auto [is_velocity_command, velocity] = motor_trajectory.getVelocity(time);
+		if (is_velocity_command){
+			robot_hardware_interface_ptr_->setMotorVelocityCommandRPM(motor_name, velocity);
+		}
+		const auto [is_voltage_command, voltage] = motor_trajectory.getVoltage(time);
+		if (is_voltage_command){
+			robot_hardware_interface_ptr_->setMotorVoltageCommandPercent(motor_name, voltage);
+		}
+	}
+}
 
 } // namespace ghost_swerve
 
