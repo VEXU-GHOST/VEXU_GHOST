@@ -54,7 +54,6 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 link_directories(${gazebo_dev_LIBRARY_DIRS})
 
-
 ###################
 ##### TARGETS #####
 ###################
@@ -136,22 +135,16 @@ ament_target_dependencies(test_diff_drive
 #   ground_truth_pose_publisher
 #   DESTINATION lib/${PROJECT_NAME})
 
-# Node to test new V5ActuactorCommand communication
-# add_executable(test_publisher_v5_actuator_cmd
-#   test/test_publisher_v5_actuator_cmd.cpp
+################
+### Install ####
+################
+# install(
+#   PROGRAMS launch/test_tank_sim.launch.py
+#   DESTINATION lib/${PROJECT_NAME}
 # )
-# ament_target_dependencies(test_publisher_v5_actuator_cmd
-#   ${DEPENDENCIES}
-# )
-# install(TARGETS
-#   test_publisher_v5_actuator_cmd
-#   DESTINATION lib/${PROJECT_NAME})
 
-# ################
-# ### Install ####
-# ################
 install(
-  DIRECTORY include/
+  DIRECTORY include
   DESTINATION include
 )
 
@@ -160,5 +153,6 @@ install(DIRECTORY
   urdf
   config
   DESTINATION share/${PROJECT_NAME})
+
 
 ament_package()

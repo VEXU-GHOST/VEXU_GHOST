@@ -63,11 +63,11 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     # Load relevant filepaths
     gazebo_ros_share_dir = get_package_share_directory('gazebo_ros')
-    ghost_ros_share_dir = get_package_share_directory('ghost_ros')
+    ghost_ros_share_dir = get_package_share_directory('ghost_ros_interfaces')
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
 
     home_dir = os.path.expanduser('~')
-    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "ghost_ros")
+    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "ghost_ros_interfaces")
 
     world_file = os.path.join(ghost_sim_share_dir, "urdf", "spin_up.world")
     rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')

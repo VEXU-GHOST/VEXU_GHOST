@@ -12,11 +12,12 @@ from launch_ros.actions import Node
 # Opaque Function hack to allow for better CLI arg parsing
 def launch_setup(context, *args, **kwargs):
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
-    filename = "test_tank_init.urdf"
+    filename = "test_tank_init.xacro"
 
-    # Load URDF and process to text
-    urdf_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
-    doc = xacro.process(urdf_path)
+    # Load XACRO and process to urdf then to text
+    xacro_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
+    xml = xacro.process_file(xacro_path)
+    doc = xml.toprettyxml(indent='  ')
     
     spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity ghost1 -topic robot_description").split()
 
@@ -57,11 +58,11 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     # Load relevant filepaths
     gazebo_ros_share_dir = get_package_share_directory('gazebo_ros')
-    ghost_ros_share_dir = get_package_share_directory('ghost_ros')
+    ghost_ros_share_dir = get_package_share_directory('ghost_ros_interfaces')
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
 
     home_dir = os.path.expanduser('~')
-    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros")
+    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces")
 
     world_file = os.path.join(ghost_sim_share_dir, "urdf", "spin_up.world")
     rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')
@@ -78,13 +79,6 @@ def generate_launch_description():
             'verbose': LaunchConfiguration('verbose'),
             }.items()
     )
-
-    ground_truth_publisher = Node(
-        package='ghost_sim',
-        executable='ground_truth_pose_publisher',
-        name='ground_truth_pose_publisher',
-    )
-
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -113,7 +107,6 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        ground_truth_publisher,
         # rviz_node,
         plot_juggler_node,
         robot_localization_node,

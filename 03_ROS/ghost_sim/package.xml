@@ -34,7 +34,7 @@
   <exec_depend>rviz2</exec_depend>
   <exec_depend>plotjuggler</exec_depend>
   <exec_depend>robot_localization</exec_depend>
-  <exec_depend>ghost_ros</exec_depend>
+  <exec_depend>ghost_ros_interfaces</exec_depend>
   <exec_depend>teleop_twist_joy</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>joy_linux</exec_depend>
