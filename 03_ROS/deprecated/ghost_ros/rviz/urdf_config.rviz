@@ -127,7 +127,7 @@ Visualization Manager:
     - Class: rviz_default_plugins/FocusCamera
     - Class: rviz_default_plugins/Measure
     - Class: rviz_default_plugins/SetInitialPose
-      Topic: /set_pose
+      Topic: /initial_pose
     - Class: rviz_default_plugins/SetGoal
       Line color: 128; 128; 0
   Transformation:
