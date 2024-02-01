@@ -30,41 +30,6 @@ if [ $RETURN -ne 0 ]; then
     exit 1;
 fi
 
-source install/setup.bash
-
-# Process URDFs from Xacro and add to Share
-GHOST_DESCRIPTION_SHARE_DIR="$PWD/install/ghost_description/share/ghost_description"
-URDF_PATH="${GHOST_DESCRIPTION_SHARE_DIR}/urdf/ghost1.urdf"
-
-if [ ! -d $GHOST_DESCRIPTION_SHARE_DIR ];
-then
-    touch $URDF_PATH
-else
-    echo
-    echo "---Generating Ghost Description URDF---"
-    xacro 03_ROS/ghost_description/urdf/ghost1.xacro > $URDF_PATH
-    echo "URDF written to" $URDF_PATH
-fi
-
-# Processes URDFs for simulation
-if [ "$arch" == 'x86_64' ];
-then 
-    GHOST_SIM_SHARE_DIR="$PWD/install/ghost_sim/share/ghost_sim"
-    URDF_SIM_PATH="${GHOST_SIM_SHARE_DIR}/urdf/ghost1_sim_base.urdf"
-
-    if [ ! -d $GHOST_SIM_SHARE_DIR ];
-    then
-        touch $URDF_SIM_PATH
-    else
-        echo
-        echo "---Generating Ghost Simulation URDFs---"
-        xacro 03_ROS/ghost_sim/urdf/ghost1_sim_base.xacro > $URDF_SIM_PATH
-        echo "URDF written to" $URDF_SIM_PATH
-    fi
-fi
-
-source ~/.bashrc
-
 if [ "$1" != "-r" ];
 then
   cd ~/VEXU_GHOST

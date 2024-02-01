@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="ghost1" xmlns:xacro="http://ros.org/wiki/xacro">
 
-    <xacro:include filename="$(find ghost_description)/urdf/swerve_macros.xacro"/>
+    <xacro:include filename="$(find ghost_swerve)/urdf/swerve_macros.xacro"/>
 
     <xacro:property name="dist_to_wheel" value="0.2286"/> <!-- 9" center to wheel modules-->
     <xacro:property name="r_wheel" value="0.034925"/> <!-- 1.375" wheel radius-->
