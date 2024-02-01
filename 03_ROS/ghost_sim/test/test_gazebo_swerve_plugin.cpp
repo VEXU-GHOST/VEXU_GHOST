@@ -50,7 +50,7 @@ public:
 		});
 
 		auto pkg_share = ament_index_cpp::get_package_share_directory("ghost_ros_interfaces");
-		auto world_file_path = pkg_share + "/world/default.world";
+		auto world_file_path = pkg_share + "/worlds/default.world";
 		auto sdf_file_path = pkg_share + "/urdf/swerve.sdf";
 
 		this->Load(world_file_path, true);
