@@ -50,10 +50,6 @@ void DCMotorModel::setMotorEffort(double voltage_percent){
 	updateMotor();
 }
 
-void DCMotorModel::setMotorEffortMillivolts(double voltage_mv){
-	setMotorEffort(voltage_mv / nominal_voltage_);
-}
-
 void DCMotorModel::setMotorSpeedRPM(double current_speed){
 	curr_speed_ = current_speed / gear_ratio_;
 	updateMotor();
