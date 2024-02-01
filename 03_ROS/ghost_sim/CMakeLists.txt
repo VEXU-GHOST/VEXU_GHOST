@@ -13,6 +13,7 @@ if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
 add_compile_options(-Wno-dev)
+
 ########################
 ##### DEPENDENCIES #####
 ########################
@@ -151,6 +152,7 @@ install(
 install(DIRECTORY
   launch
   urdf
+  worlds
   config
   DESTINATION share/${PROJECT_NAME})
 

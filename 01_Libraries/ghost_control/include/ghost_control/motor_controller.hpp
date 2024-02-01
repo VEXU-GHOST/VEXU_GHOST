@@ -54,24 +54,6 @@ public:
 	}
 
 	/**
-	 * @brief Returns last velocity command in revolutions per minute
-	 *
-	 * @return float des_vel_rpm_
-	 */
-	float getVelocityCommand(){
-		return des_vel_rpm_;
-	}
-
-	/**
-	 * @brief Returns last position command in encoder units
-	 *
-	 * @return float des_pos_encoder_;
-	 */
-	float getPositionCommand(){
-		return des_pos_encoder_;
-	}
-
-	/**
 	 * @brief Returns filtered velocity in RPM
 	 *
 	 * @return float
