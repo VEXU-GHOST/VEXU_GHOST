@@ -12,11 +12,12 @@ from launch_ros.actions import Node
 # Opaque Function hack to allow for better CLI arg parsing
 def launch_setup(context, *args, **kwargs):
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
-    filename = "ghost1_sim_base.urdf"
+    filename = "test_tank_init.xacro"
 
-    # Load URDF and process to text
-    urdf_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
-    doc = xacro.process(urdf_path)
+    # Load XACRO and process to urdf then to text
+    xacro_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
+    xml = xacro.process_file(xacro_path)
+    doc = xml.toprettyxml(indent='  ')
     
     spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity ghost1 -topic robot_description").split()
 
@@ -25,7 +26,8 @@ def launch_setup(context, *args, **kwargs):
         package = "gazebo_ros",
         executable = "spawn_entity.py",
         output='screen',
-        arguments=spawn_entity_args)
+        arguments=spawn_entity_args,
+        parameters=[{'use_sim_time': True}])
 
     # Node to publish robot joint transforms
     robot_state_publisher = Node(
@@ -33,7 +35,7 @@ def launch_setup(context, *args, **kwargs):
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters=[{'use_sim_time': False}, {"robot_description": doc}])
+        parameters=[{'use_sim_time': True}, {"robot_description": doc}])
 
     # Joystick (Only launched if joystick CLI arg is set to True)
     joy_launch_description = IncludeLaunchDescription(
@@ -56,13 +58,13 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     # Load relevant filepaths
     gazebo_ros_share_dir = get_package_share_directory('gazebo_ros')
-    ghost_ros_share_dir = get_package_share_directory('ghost_ros')
+    ghost_ros_share_dir = get_package_share_directory('ghost_ros_interfaces')
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
 
     home_dir = os.path.expanduser('~')
-    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros")
+    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces")
 
-    world_file = os.path.join(ghost_sim_share_dir, "world", "default.world")
+    world_file = os.path.join(ghost_sim_share_dir, "worlds", "default.world")
     rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')
 
     # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
@@ -77,19 +79,6 @@ def generate_launch_description():
             'verbose': LaunchConfiguration('verbose'),
             }.items()
     )
-
-    ground_truth_publisher = Node(
-        package='ghost_sim',
-        executable='ground_truth_pose_publisher',
-        name='ground_truth_pose_publisher',
-    )
-
-    v5_actuator_cmd_publisher = Node(
-        package='ghost_sim',
-        executable = 'test_publisher_v5_actuator_cmd',
-        name = 'test_publisher_v5_actuator_cmd',
-    )
-
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -98,32 +87,29 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
-    estimator_node = Node(
-        package='ghost_ros',
-        executable='ghost_estimator_node',
-        name='ghost_estimator_node',
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_localization_node',
         output='screen',
-        parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
+        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
     )
 
-    state_machine_node = Node(
-        package='ghost_ros',
-        executable='robot_state_machine_node',
-        name='ghost_state_machine',
-        output='screen',
-        parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
+    plot_juggler_node = Node(
+        package = 'plotjuggler',
+        executable = 'plotjuggler',
+        name='plot_juggler'       
     )
 
     return LaunchDescription([
-        DeclareLaunchArgument(name='use_joy', default_value='true'),
+        DeclareLaunchArgument(name='use_joy', default_value='false'),
         DeclareLaunchArgument(name='channel_id', default_value='1'),
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        # ground_truth_publisher,
-        rviz_node,
-        # estimator_node,
-        state_machine_node,
-        # v5_actuator_cmd_publisher,
+        # rviz_node,
+        plot_juggler_node,
+        robot_localization_node,
+        # state_machine_node,
         OpaqueFunction(function = launch_setup)
     ])

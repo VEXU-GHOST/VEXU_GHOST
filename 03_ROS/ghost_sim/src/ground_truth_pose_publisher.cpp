@@ -36,7 +36,7 @@ public:
 			);
 
 		robot_pose_pub_ = this->create_publisher<ghost_msgs::msg::GhostRobotState>(
-			"/estimation/robot_state",
+			"/gz/model_pose",
 			10
 			);
 
@@ -55,7 +55,7 @@ public:
 	void publishRobotPose(const float x, const float y, const float theta){
 		auto ghost_robot_state_msg = ghost_msgs::msg::GhostRobotState{};
 		ghost_robot_state_msg.header.stamp = get_clock()->now();
-		ghost_robot_state_msg.header.frame_id = "world";
+		ghost_robot_state_msg.header.frame_id = "odom";
 
 		ghost_robot_state_msg.x = x;
 		ghost_robot_state_msg.y = y;
@@ -75,7 +75,7 @@ public:
 		auto transform_msg = geometry_msgs::msg::TransformStamped{};
 
 		transform_msg.header.stamp = this->get_clock()->now();
-		transform_msg.header.frame_id = "world";
+		transform_msg.header.frame_id = "odom";
 		transform_msg.child_frame_id = "base_link";
 
 		transform_msg.transform.translation.x = x;

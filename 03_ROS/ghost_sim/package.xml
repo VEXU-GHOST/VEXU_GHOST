@@ -7,6 +7,7 @@
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
   <license>GPLv3.0</license>
 
+  <build_depend>ament_cmake_gtest</build_depend>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_export_depend>ament_cmake</build_export_depend>
 
@@ -31,6 +32,9 @@
   <test_depend>ament_lint_common</test_depend>
 
   <exec_depend>rviz2</exec_depend>
+  <exec_depend>plotjuggler</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
+  <exec_depend>ghost_ros_interfaces</exec_depend>
   <exec_depend>teleop_twist_joy</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>joy_linux</exec_depend>

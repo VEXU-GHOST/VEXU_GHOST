@@ -49,8 +49,8 @@ public:
 			steering_torque_msg_ = msg;
 		});
 
-		auto pkg_share = ament_index_cpp::get_package_share_directory("ghost_ros");
-		auto world_file_path = pkg_share + "/urdf/spin_up.world";
+		auto pkg_share = ament_index_cpp::get_package_share_directory("ghost_ros_interfaces");
+		auto world_file_path = pkg_share + "/worlds/default.world";
 		auto sdf_file_path = pkg_share + "/urdf/swerve.sdf";
 
 		this->Load(world_file_path, true);
