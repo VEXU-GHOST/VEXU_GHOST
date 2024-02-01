@@ -69,7 +69,6 @@ install(TARGETS
 
 ##############################
 #### Ghost Estimator Node ####
-## Fix encoder names in ghost_v5_config file
 ##############################
 # add_executable(ghost_estimator_node
 #   src/ros_nodes/ghost_estimator_node.cpp
@@ -116,9 +115,9 @@ install(TARGETS
 # )
 # target_link_libraries(robot_state_machine_node
 #   ghost_estimation::amrl_shared_lib
-#   ghost_common::angle_util
-#   ghost_common::v5_robot_config
+#   ghost_common::angle_common
 #   yaml-cpp
+#   v5_serial_msg_config
 # )
 # target_include_directories(robot_state_machine_node
 #   PUBLIC
