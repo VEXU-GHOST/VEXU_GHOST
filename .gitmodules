@@ -24,9 +24,3 @@
 	path = 09_External/ThirdParty-Mumps
 	url = git@github.com:MaxxWilson/ThirdParty-Mumps.git
 	branch = with-src
-[submodule "09_External/PlotJuggler"]
-	path = 09_External/PlotJuggler
-	url = https://github.com/facontidavide/PlotJuggler.git
-[submodule "09_External/plot_juggler_ros"]
-	path = 09_External/plot_juggler_ros
-	url = https://github.com/PlotJuggler/plotjuggler-ros-plugins/tree/humble
