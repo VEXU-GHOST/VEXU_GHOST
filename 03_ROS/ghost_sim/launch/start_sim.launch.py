@@ -62,7 +62,7 @@ def generate_launch_description():
     home_dir = os.path.expanduser('~')
     ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros")
 
-    world_file = os.path.join(ghost_sim_share_dir, "urdf", "spin_up.world")
+    world_file = os.path.join(ghost_sim_share_dir, "world", "default.world")
     rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')
 
     # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
