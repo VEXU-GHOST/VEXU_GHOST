@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <filesystem>
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <gazebo/common/Time.hh>
@@ -35,15 +36,36 @@ class GazeboRosDiffDriveTest
 TEST_F(GazeboRosDiffDriveTest, testBringUp){
 	// Load test world and start paused
 	auto sim_pkg_share = ament_index_cpp::get_package_share_directory("ghost_sim");
-	this->Load(sim_pkg_share + "/urdf/spin_up.world", true);
+	this->Load(sim_pkg_share + "/worlds/default.world", true);
 
-	auto sdf_path = "/home/melcruz/VEXU_GHOST/03_ROS/ghost_sim/urdf/test_tank_init.sdf";
+	// Make directory for testing
+	std::string test_dir = "/tmp/testDiffDrive";
+	if(!std::filesystem::exists(std::filesystem::path(test_dir))){
+		std::filesystem::create_directory(test_dir);
+	}
+	else{
+		std::filesystem::remove_all(std::filesystem::path(test_dir));
+		std::filesystem::create_directory(test_dir);
+	}
+
+	// Process xacro -> URDF -> SDF
+	std::string xacro_path = sim_pkg_share + "/urdf/test_tank_init.xacro";
+	std::string urdf_path = test_dir + "/test_tank_init.urdf";
+	std::string sdf_path = test_dir + "/test_tank_init.sdf";
+
+	std::string urdf_gen_cmd = std::string("xacro ") + xacro_path + " > " + urdf_path;
+	EXPECT_EQ(std::system(urdf_gen_cmd.c_str()), 0) << "[testBringUp] Error: Failed to generate URDF.";
+
+	std::string sdf_gen_cmd = std::string("gz sdf -p ") + urdf_path + " > " + sdf_path;
+	EXPECT_EQ(std::system(sdf_gen_cmd.c_str()), 0) << "[testBringUp] Error: Failed to generate SDF.";
+
+	// Error Check SDF
 	std::ifstream sdf_file(sdf_path);
 	std::stringstream buffer;
 	buffer << sdf_file.rdbuf();
 	std::cerr << sim_pkg_share << std::endl;
 
-	std::cerr << "===Loading diff drive model===" << std::endl;
+	std::cerr << " --- Loading diff drive model --- " << std::endl;
 	this->SpawnSDF(buffer.str());
 	this->WaitUntilEntitySpawn("test_diff_drive", 50, 50);
 
@@ -85,7 +107,7 @@ TEST_F(GazeboRosDiffDriveTest, testBringUp){
 	auto pub = node->create_publisher<geometry_msgs::msg::Twist>(
 		"/cmd_vel", rclcpp::QoS(rclcpp::KeepLast(1)));
 	auto msg = geometry_msgs::msg::Twist();
-	msg.linear.x = 1.0;
+	msg.linear.x = 5.0;
 	pub->publish(msg);
 
 	// Wait for it to be processed
@@ -103,17 +125,22 @@ TEST_F(GazeboRosDiffDriveTest, testBringUp){
 		gazebo::common::Time::MSleep(100);
 	}
 
+	// Robot should move atleast commanded_vel*0.5*time
+	auto position_lower_bound = linear_vel_x_threshold * 0.1 * sleep * 0.5;
+
+	// Loop didn't time out
 	EXPECT_NE(sleep, maxSleep);
 
-	// Check message
+	// Check movement
+	EXPECT_LT(position_lower_bound, vehicle->WorldPose().Pos().X());
+
+	// Robot should reach commanded speed
+	EXPECT_NEAR(msg.linear.x, linear_vel_x, tol);
+
+	// Check odometry msg
 	ASSERT_NE(nullptr, latestMsg);
 	EXPECT_EQ("odom", latestMsg->header.frame_id);
-	EXPECT_LT(0.0, latestMsg->pose.pose.position.x);
-	EXPECT_LT(0.0, latestMsg->pose.pose.orientation.z);
-
-	// Check movement
-	EXPECT_LT(0.0, vehicle->WorldPose().Pos().X());
-	EXPECT_NEAR(msg.linear.x, linear_vel_x, tol);
+	EXPECT_LT(position_lower_bound, latestMsg->pose.pose.position.x);
 }
 
 int main(int argc, char ** argv){
