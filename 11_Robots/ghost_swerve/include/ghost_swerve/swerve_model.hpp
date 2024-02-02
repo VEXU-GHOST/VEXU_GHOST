@@ -91,14 +91,15 @@ protected:
 	Eigen::Matrix2d m_module_jacobian_transpose;
 	Eigen::Matrix2d m_module_jacobian_inv_transpose;
 
-	// Centroidal states in World Frame
-	Eigen::Vector3d m_base_pos_curr;
-	Eigen::Vector3d m_base_vel_curr;
-	Eigen::Vector3d m_base_accel_curr;
+	// Odometry
+	Eigen::Vector3d m_odom_pose;
+
+	// Current centroidal states
+	double m_curr_angle;
+	Eigen::Vector3d m_vel_base;
 
 	// Command Setpoints
-	double m_base_angle_cmd;
-	Eigen::Vector3d m_base_vel_cmd;
+	Eigen::Vector3d m_vel_cmd_base;
 
 	// Module States
 	std::unordered_map <std::string, ModuleState> m_last_module_states;

@@ -97,9 +97,6 @@ void SwerveModel::updateRobotStates(const std::unordered_map<std::string, Eigen:
 	}
 }
 
-void SwerveModel::calculateHSpaceICR(){
-}
-
 void SwerveModel::calculateOdometry(){
 }
 
