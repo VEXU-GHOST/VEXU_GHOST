@@ -1,5 +1,5 @@
 #include <ghost_swerve/swerve_model.hpp>
-
+#include <ghost_util/angle_util.hpp>
 
 namespace ghost_swerve {
 
@@ -111,7 +111,7 @@ void SwerveModel::updateRobotStates(const std::unordered_map<std::string, Eigen:
 			throw std::runtime_error(std::string("[SwerveModel::updateRobotStates] Error: ") + name + " is not in the steering_velocities map!");
 		}
 
-		m_current_module_states[name].steering_position = steering_positions.at(name);
+		m_current_module_states[name].steering_position = ghost_util::WrapAngle360(steering_positions.at(name));
 		m_current_module_states[name].steering_velocity = steering_velocities.at(name);
 	}
 }

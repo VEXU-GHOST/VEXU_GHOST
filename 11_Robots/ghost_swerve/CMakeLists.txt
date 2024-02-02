@@ -9,6 +9,7 @@ find_package(Ghost CONFIG REQUIRED)
 set(DEPENDENCIES
   ament_cmake
   ghost_ros_interfaces
+  ghost_util
   geometry_msgs
   nav_msgs
   pluginlib

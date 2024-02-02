@@ -1,5 +1,6 @@
 #include "eigen3/Eigen/Geometry"
 #include <ghost_swerve/swerve_model.hpp>
+#include <ghost_util/angle_util.hpp>
 #include <ghost_util/test_util.hpp>
 #include <gtest/gtest.h>
 
@@ -254,7 +255,7 @@ TEST_F(SwerveModelTestFixture, testStateSettersAndGettersDifferentialWithSteerin
 			auto vel = joint_velocities[name];
 			module_positions[name] = Eigen::Vector2d(
 				(pos[0] - pos[1]) * m_config.wheel_ratio / 2.0,
-				steering_positions[name]);
+				ghost_util::WrapAngle360(steering_positions[name]));
 			module_velocities[name] = Eigen::Vector2d(
 				(vel[0] - vel[1]) * m_config.wheel_ratio / 2.0,
 				steering_velocities[name]);
@@ -264,16 +265,16 @@ TEST_F(SwerveModelTestFixture, testStateSettersAndGettersDifferentialWithSteerin
 
 		for(const auto& [name, _] : m_config.module_positions){
 			EXPECT_NEAR(diff_model.getModuleState(name).wheel_position, module_positions.at(name)[0], m_eps);
-			EXPECT_NEAR(diff_model.getModuleState(name).steering_position, steering_positions.at(name), m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).steering_position, module_positions.at(name)[1], m_eps);
 			EXPECT_NEAR(diff_model.getModuleState(name).wheel_velocity, module_velocities.at(name)[0], m_eps);
-			EXPECT_NEAR(diff_model.getModuleState(name).steering_velocity, steering_velocities.at(name), m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).steering_velocity, module_velocities.at(name)[1], m_eps);
 		}
 	}
 }
 
 TEST_F(SwerveModelTestFixture, testStateSettersAndGettersCoaxialWithSteeringEncoder){
 	m_config.module_type = swerve_type_e::COAXIAL;
-	SwerveModel diff_model(m_config);
+	SwerveModel coax_model(m_config);
 
 	for(int i = 0; i < 10; i++){
 		std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
@@ -294,20 +295,20 @@ TEST_F(SwerveModelTestFixture, testStateSettersAndGettersCoaxialWithSteeringEnco
 			auto vel = joint_velocities[name];
 			module_positions[name] = Eigen::Vector2d(
 				pos[0] * m_config.wheel_ratio,
-				steering_positions[name]);
+				ghost_util::WrapAngle360(steering_positions[name]));
 
 			module_velocities[name] = Eigen::Vector2d(
 				vel[0] * m_config.wheel_ratio,
 				steering_velocities[name]);
 		}
 
-		diff_model.updateRobotStates(joint_positions, joint_velocities, steering_positions, steering_velocities);
+		coax_model.updateRobotStates(joint_positions, joint_velocities, steering_positions, steering_velocities);
 
 		for(const auto& [name, _] : m_config.module_positions){
-			EXPECT_NEAR(diff_model.getModuleState(name).wheel_position, module_positions.at(name)[0], m_eps);
-			EXPECT_NEAR(diff_model.getModuleState(name).steering_position, steering_positions.at(name), m_eps);
-			EXPECT_NEAR(diff_model.getModuleState(name).wheel_velocity, module_velocities.at(name)[0], m_eps);
-			EXPECT_NEAR(diff_model.getModuleState(name).steering_velocity, steering_velocities.at(name), m_eps);
+			EXPECT_NEAR(coax_model.getModuleState(name).wheel_position, module_positions.at(name)[0], m_eps);
+			EXPECT_NEAR(coax_model.getModuleState(name).steering_position, module_positions.at(name)[1], m_eps);
+			EXPECT_NEAR(coax_model.getModuleState(name).wheel_velocity, module_velocities.at(name)[0], m_eps);
+			EXPECT_NEAR(coax_model.getModuleState(name).steering_velocity, module_velocities.at(name)[1], m_eps);
 		}
 	}
 }
@@ -417,4 +418,61 @@ TEST_F(SwerveModelTestFixture, testUpdateModuleStatesWithIncorrectNamesWithSteer
 	steering_velocities["wrong_name"] = getRandomDouble(600);
 
 	EXPECT_THROW(diff_model.updateRobotStates(joint_positions, joint_velocities, steering_positions, steering_velocities), std::runtime_error);
+}
+
+TEST_F(SwerveModelTestFixture, testICRZeroCase){
+	m_config.module_type = swerve_type_e::COAXIAL;
+	SwerveModel coax_model(m_config);
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+	joint_positions["front_right"] = Eigen::Vector2d(0, 45);
+	joint_positions["front_left"] = Eigen::Vector2d(0, -45);
+	joint_positions["back_right"] = Eigen::Vector2d(0, -45);
+	joint_positions["back_left"] = Eigen::Vector2d(0, 45);
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+	joint_velocities["front_right"] = Eigen::Vector2d(600, 0);
+	joint_velocities["front_left"] = Eigen::Vector2d(600, 0);
+	joint_velocities["back_right"] = Eigen::Vector2d(600, 0);
+	joint_velocities["back_left"] = Eigen::Vector2d(600, 0);
+
+	coax_model.updateRobotStates(joint_positions, joint_velocities);
+}
+
+TEST_F(SwerveModelTestFixture, testICRAtBackLeft){
+	m_config.module_type = swerve_type_e::COAXIAL;
+	SwerveModel coax_model(m_config);
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+	joint_positions["front_right"] = Eigen::Vector2d(0, 45);
+	joint_positions["front_left"] = Eigen::Vector2d(0, -45);
+	joint_positions["back_right"] = Eigen::Vector2d(0, -45);
+	joint_positions["back_left"] = Eigen::Vector2d(0, 45);
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+	joint_velocities["front_right"] = Eigen::Vector2d(0, 0);
+	joint_velocities["front_left"] = Eigen::Vector2d(0, 0);
+	joint_velocities["back_right"] = Eigen::Vector2d(0, 0);
+	joint_velocities["back_left"] = Eigen::Vector2d(0, 0);
+
+	coax_model.updateRobotStates(joint_positions, joint_velocities);
+}
+
+TEST_F(SwerveModelTestFixture, testICRInfinity){
+	m_config.module_type = swerve_type_e::COAXIAL;
+	SwerveModel coax_model(m_config);
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+	joint_positions["front_right"] = Eigen::Vector2d(0, 0);
+	joint_positions["front_left"] = Eigen::Vector2d(0, 0);
+	joint_positions["back_right"] = Eigen::Vector2d(0, 0);
+	joint_positions["back_left"] = Eigen::Vector2d(0, 0);
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+	joint_velocities["front_right"] = Eigen::Vector2d(600, 0);
+	joint_velocities["front_left"] = Eigen::Vector2d(600, 0);
+	joint_velocities["back_right"] = Eigen::Vector2d(600, 0);
+	joint_velocities["back_left"] = Eigen::Vector2d(600, 0);
+
+	coax_model.updateRobotStates(joint_positions, joint_velocities);
 }
