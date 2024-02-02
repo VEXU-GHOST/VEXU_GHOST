@@ -356,3 +356,65 @@ TEST_F(SwerveModelTestFixture, testUpdateModuleStatesWithIncorrectNames){
 
 	EXPECT_THROW(diff_model.updateRobotStates(joint_positions, joint_velocities), std::runtime_error);
 }
+
+TEST_F(SwerveModelTestFixture, testUpdateModuleStatesWithMismatchedVelocityMapSizeWithSteering){
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+	joint_positions["front_right"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_positions["front_left"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_positions["back_right"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_positions["back_left"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+	joint_velocities["front_right"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_velocities["front_left"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_velocities["back_right"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_velocities["back_left"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+
+	std::unordered_map<std::string, double> steering_positions;
+	steering_positions["front_right"] = getRandomDouble(600);
+	steering_positions["front_left"] = getRandomDouble(600);
+	steering_positions["back_right"] = getRandomDouble(600);
+	steering_positions["back_left"] = getRandomDouble(600);
+
+	std::unordered_map<std::string, double> steering_velocities;
+	steering_velocities["front_right"] = getRandomDouble(600);
+	steering_velocities["front_left"] = getRandomDouble(600);
+	steering_velocities["back_right"] = getRandomDouble(600);
+
+
+	EXPECT_THROW(diff_model.updateRobotStates(joint_positions, joint_velocities, steering_positions, steering_velocities), std::runtime_error);
+}
+
+TEST_F(SwerveModelTestFixture, testUpdateModuleStatesWithIncorrectNamesWithSteering){
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+	joint_positions["front_right"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_positions["front_left"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_positions["back_right"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_positions["back_left"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+
+	std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+	joint_velocities["front_right"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_velocities["front_left"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_velocities["back_right"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+	joint_velocities["back_left"] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+
+	std::unordered_map<std::string, double> steering_positions;
+	steering_positions["front_right"] = getRandomDouble(600);
+	steering_positions["front_left"] = getRandomDouble(600);
+	steering_positions["back_right"] = getRandomDouble(600);
+	steering_positions["back_left"] = getRandomDouble(600);
+
+	std::unordered_map<std::string, double> steering_velocities;
+	steering_velocities["front_right"] = getRandomDouble(600);
+	steering_velocities["front_left"] = getRandomDouble(600);
+	steering_velocities["back_right"] = getRandomDouble(600);
+	steering_velocities["wrong_name"] = getRandomDouble(600);
+
+	EXPECT_THROW(diff_model.updateRobotStates(joint_positions, joint_velocities, steering_positions, steering_velocities), std::runtime_error);
+}
