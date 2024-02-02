@@ -96,10 +96,10 @@ protected:
 
 	// Current centroidal states
 	double m_curr_angle;
-	Eigen::Vector3d m_vel_base;
+	Eigen::Vector3d m_base_vel_curr;
 
 	// Command Setpoints
-	Eigen::Vector3d m_vel_cmd_base;
+	Eigen::Vector3d m_base_vel_cmd;
 
 	// Module States
 	std::unordered_map <std::string, ModuleState> m_last_module_states;
