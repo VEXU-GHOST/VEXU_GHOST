@@ -51,6 +51,7 @@ EkfPfNode::EkfPfNode() :
 }
 
 void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
+	this->last_filtered_odom_msg_ = *msg;
 }
 
 } // namespace ghost_localization

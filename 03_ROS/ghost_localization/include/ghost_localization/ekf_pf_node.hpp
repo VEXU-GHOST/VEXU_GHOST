@@ -47,6 +47,9 @@ private:
 	// Particle Filter
 	particle_filter::ParticleFilter particle_filter_;
 	sensor_msgs::msg::LaserScan::SharedPtr last_laser_msg_;
+
+	// EKF
+	nav_msgs::msg::Odometry last_filtered_odom_msg_;
 };
 
 } // namespace ghost_localization
