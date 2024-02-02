@@ -58,6 +58,9 @@ target_include_directories(swerve_robot_plugin
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+  target_link_libraries(swerve_robot_plugin
+    swerve_model
+  )
 ament_target_dependencies(swerve_robot_plugin
   ${DEPENDENCIES}
 )

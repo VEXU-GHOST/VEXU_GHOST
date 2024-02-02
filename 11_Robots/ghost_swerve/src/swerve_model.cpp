@@ -4,21 +4,26 @@
 namespace ghost_swerve {
 
 SwerveModel::SwerveModel(SwerveConfig config){
-	config_ = config;
+	m_config = config;
 
 	validateConfig();
 	calculateJacobians();
 	calculateMaxBaseTwist();
+
+	// Add each module to module_states map
+	for(const auto & [name, _] : m_config.module_positions){
+		m_current_module_states[name] = ModuleState();
+	}
 }
 
 void SwerveModel::validateConfig(){
-	std::unordered_map<std::string, float> float_params{
-		{"max_wheel_lin_vel", config_.max_wheel_lin_vel},
-		{"steering_ratio", config_.steering_ratio},
-		{"wheel_ratio", config_.wheel_ratio},
+	std::unordered_map<std::string, double> double_params{
+		{"max_wheel_lin_vel", m_config.max_wheel_lin_vel},
+		{"steering_ratio", m_config.steering_ratio},
+		{"wheel_ratio", m_config.wheel_ratio},
 	};
 
-	for(const auto& [key, val] : float_params){
+	for(const auto& [key, val] : double_params){
 		if(val <= 0){
 			std::string err_string =
 				std::string("[SwerveModel::validateConfig] Error: ") + key + " must be non-zero and positive!";
@@ -26,42 +31,70 @@ void SwerveModel::validateConfig(){
 		}
 	}
 
-	if(config_.module_positions.size() != 4){
+	if(m_config.module_positions.size() != 4){
 		throw std::runtime_error(
 			      "[SwerveModel::validateConfig] Error: module_positions must be of size four (one for each module).");
 	}
 }
 
 void SwerveModel::calculateJacobians(){
-	switch(config_.module_type){
+	switch(m_config.module_type){
 		case swerve_type_e::COAXIAL:
 		{
-			module_jacobian_ << config_.wheel_ratio, 0.0, 0.0, config_.steering_ratio;
-			module_jacobian_inv_ << 1 / config_.wheel_ratio, 0.0, 0.0, 1 / config_.steering_ratio;
+			m_module_jacobian << m_config.wheel_ratio, 0.0, 0.0, m_config.steering_ratio;
+			m_module_jacobian_inv << 1 / m_config.wheel_ratio, 0.0, 0.0, 1 / m_config.steering_ratio;
 		}
 		break;
 
 		case swerve_type_e::DIFFERENTIAL:
 		{
-			module_jacobian_ << config_.wheel_ratio / 2.0, -config_.wheel_ratio / 2.0, config_.steering_ratio / 2.0, config_.steering_ratio / 2.0;
-			module_jacobian_inv_ << 1 / config_.wheel_ratio, 1 / config_.steering_ratio, -1 / config_.wheel_ratio, 1 / config_.steering_ratio;
+			m_module_jacobian << m_config.wheel_ratio / 2.0, -m_config.wheel_ratio / 2.0, m_config.steering_ratio / 2.0, m_config.steering_ratio / 2.0;
+			m_module_jacobian_inv << 1 / m_config.wheel_ratio, 1 / m_config.steering_ratio, -1 / m_config.wheel_ratio, 1 / m_config.steering_ratio;
 		}
 		break;
 	}
 
-	module_jacobian_transpose_ = module_jacobian_.transpose();
-	module_jacobian_inv_transpose_ = module_jacobian_inv_.transpose();
+	m_module_jacobian_transpose = m_module_jacobian.transpose();
+	m_module_jacobian_inv_transpose = m_module_jacobian_inv.transpose();
 }
 
 void SwerveModel::calculateMaxBaseTwist(){
 	// Get Max Base Speeds
 	double max_wheel_dist = 0.0;
-	for(const auto& [key, val] : config_.module_positions){
+	for(const auto& [key, val] : m_config.module_positions){
 		max_wheel_dist = std::max(max_wheel_dist, (double) val.norm());
 	}
 
-	max_base_lin_vel_ = config_.max_wheel_lin_vel;
-	max_base_ang_vel_ = max_base_lin_vel_ / max_wheel_dist;
+	m_max_base_lin_vel = m_config.max_wheel_lin_vel;
+	m_max_base_ang_vel = m_max_base_lin_vel / max_wheel_dist;
+}
+
+const ModuleState& SwerveModel::getModuleState(const std::string& name){
+	throwOnUnknownSwerveModule(name, "getModuleState");
+	return m_current_module_states.at(name);
+}
+
+void SwerveModel::updateRobotStates(const std::unordered_map<std::string, Eigen::Vector2d>& joint_positions,
+                                    const std::unordered_map<std::string, Eigen::Vector2d>& joint_velocities){
+	if(joint_positions.size() != joint_velocities.size()){
+		throw std::runtime_error("[SwerveModel::updateRobotStates] Error: Position and Velocity maps must be the same size!");
+	}
+
+	for(const auto& [name, _] : joint_positions){
+		throwOnUnknownSwerveModule(name, "updateRobotStates");
+		if(joint_velocities.count(name) == 0){
+			throw std::runtime_error(std::string("[SwerveModel::updateRobotStates] Error: ") + name + " is not in the joint_velocities map!");
+		}
+
+		Eigen::Vector2d module_pos = m_module_jacobian * joint_positions.at(name);
+		Eigen::Vector2d module_vel = m_module_jacobian * joint_velocities.at(name);
+		ModuleState module_state;
+		module_state.wheel_position = module_pos[0];
+		module_state.wheel_velocity = module_vel[0];
+		module_state.steering_position = module_pos[1];
+		module_state.steering_velocity = module_vel[1];
+		m_current_module_states[name] = module_state;
+	}
 }
 
 void SwerveModel::calculateHSpaceICR(){
@@ -70,7 +103,13 @@ void SwerveModel::calculateHSpaceICR(){
 void SwerveModel::calculateOdometry(){
 }
 
-void SwerveModel::updateSwerveCommandsFromTwist(Eigen::Vector3f twist_cmd){
+void SwerveModel::updateSwerveCommandsFromTwist(Eigen::Vector3d twist_cmd){
+}
+
+void SwerveModel::throwOnUnknownSwerveModule(const std::string& name, const std::string& method_name) const {
+	if(m_current_module_states.count(name) == 0){
+		throw std::runtime_error (std::string("[SwerveModel::" + method_name +  "] Error:") + name + " is not a known swerve module !");
+	}
 }
 
 } // namespace ghost_swerve

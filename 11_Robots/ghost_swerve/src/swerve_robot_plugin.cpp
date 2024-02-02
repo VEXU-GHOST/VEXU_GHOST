@@ -1,7 +1,7 @@
+#include <iostream>
+#include <ghost_swerve/swerve_model.hpp>
 #include <ghost_swerve/swerve_robot_plugin.hpp>
 #include <pluginlib/class_list_macros.hpp>
-
-#include <iostream>
 
 using std::placeholders::_1;
 
@@ -19,57 +19,45 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("odom_topic", "/sensors/odom");
 	std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
 
-	robot_pose_sub_ = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
 		pose_topic,
 		10,
 		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
 		);
 
-	odom_pub_ = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
+	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
 		10);
+
+	// Setup Swerve Model
+	SwerveConfig swerve_model_config;
+	swerve_model_config.max_wheel_lin_vel = 2.75 * M_PI * 650 / 60;
+	swerve_model_config.module_type = swerve_type_e::DIFFERENTIAL;
+	swerve_model_config.steering_ratio = 13.0 / 44.0;
+	swerve_model_config.wheel_ratio = swerve_model_config.steering_ratio * 30.0 / 14.0;
+
+	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
+	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);
+	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.1143, 0.1143);
+	swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.1143, -0.1143);
+
+	m_swerve_model = std::make_shared<SwerveModel>(swerve_model_config);
 }
+
+void SwerveRobotPlugin::onNewSensorData(){
+	m_swerve_model->calculateHSpaceICR();
+	m_swerve_model->calculateOdometry();
+}
+
 void SwerveRobotPlugin::disabled(){
 }
+
 void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
 }
 void SwerveRobotPlugin::teleop(double current_time){
 	std::cout << "Teleop: " << current_time << std::endl;
 	auto joy_data = robot_hardware_interface_ptr_->getMainJoystickData();
-
-	if(joy_data->btn_a){
-		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frr", 2500);
-		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frr", joy_data->right_y / 127.0);
-	}
-	if(joy_data->btn_b){
-		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_frl", 2500);
-		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_frl", joy_data->right_y / 127.0);
-	}
-	if(joy_data->btn_x){
-		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_fll", 2500);
-		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_fll", joy_data->right_y / 127.0);
-	}
-	if(joy_data->btn_y){
-		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_flr", 2500);
-		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_flr", joy_data->right_y / 127.0);
-	}
-	if(joy_data->btn_u){
-		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_brb", 2500);
-		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_brb", joy_data->right_y / 127.0);
-	}
-	if(joy_data->btn_l){
-		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_brf", 2500);
-		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_brf", joy_data->right_y / 127.0);
-	}
-	if(joy_data->btn_r){
-		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_blf", 2500);
-		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_blf", joy_data->right_y / 127.0);
-	}
-	if(joy_data->btn_d){
-		robot_hardware_interface_ptr_->setMotorCurrentLimitMilliAmps("drive_blb", 2500);
-		robot_hardware_interface_ptr_->setMotorVoltageCommandPercent("drive_blb", joy_data->right_y / 127.0);
-	}
 }
 
 void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){

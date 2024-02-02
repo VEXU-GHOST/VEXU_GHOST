@@ -10,19 +10,19 @@ using namespace ghost_util;
 class SwerveModelTestFixture : public ::testing::Test {
 public:
 	void SetUp() override {
-		config_.max_wheel_lin_vel = 2.0;
-		config_.steering_ratio = 13.0 / 44.0;
-		config_.wheel_ratio = 13.0 / 44.0 * 30.0 / 14.0;
+		m_config.max_wheel_lin_vel = 2.0;
+		m_config.steering_ratio = 13.0 / 44.0;
+		m_config.wheel_ratio = 13.0 / 44.0 * 30.0 / 14.0;
 
 		// Mobile robots use forward as X, left as Y, and up as Z so that travelling forward is zero degree heading.
 		// No, I don't like it either.
-		config_.module_positions["front_right"] = Eigen::Vector2f(5.5, -5.5);
-		config_.module_positions["front_left"] = Eigen::Vector2f(5.5, 5.5);
-		config_.module_positions["back_right"] = Eigen::Vector2f(-5.5, -5.5);
-		config_.module_positions["back_left"] = Eigen::Vector2f(-5.5, 5.5);
+		m_config.module_positions["front_right"] = Eigen::Vector2d(5.5, -5.5);
+		m_config.module_positions["front_left"] = Eigen::Vector2d(5.5, 5.5);
+		m_config.module_positions["back_right"] = Eigen::Vector2d(-5.5, -5.5);
+		m_config.module_positions["back_left"] = Eigen::Vector2d(-5.5, 5.5);
 	}
 
-	static void checkInverse(Eigen::MatrixXf m, Eigen::MatrixXf m_inv){
+	static void checkInverse(Eigen::MatrixXd m, Eigen::MatrixXd m_inv){
 		// Matrices are square and equal size
 		EXPECT_EQ(m.rows(), m.cols());
 		EXPECT_EQ(m_inv.rows(), m_inv.cols());
@@ -35,49 +35,64 @@ public:
 		for(int row = 0; row < m.rows(); row++){
 			for(int col = 0; col < m.cols(); col++){
 				auto val = (row == col) ? 1.0 : 0.0;
-				EXPECT_NEAR(I1(row, col), val, 1e-6);
-				EXPECT_NEAR(I2(row, col), val, 1e-6);
+				EXPECT_NEAR(I1(row, col), val, m_eps);
+				EXPECT_NEAR(I2(row, col), val, m_eps);
 			}
 		}
 	}
 
-	SwerveConfig config_;
+	SwerveConfig m_config;
+	static constexpr double m_eps = 1e-6;
 };
 
 TEST_F(SwerveModelTestFixture, testConstructors){
 	// Coaxial constructor
-	config_.module_type = swerve_type_e::COAXIAL;
-	EXPECT_NO_THROW(auto model = SwerveModel(config_));
+	m_config.module_type = swerve_type_e::COAXIAL;
+	EXPECT_NO_THROW(auto model = SwerveModel(m_config));
 
 	// Differential constructor
-	config_.module_type = swerve_type_e::DIFFERENTIAL;
-	EXPECT_NO_THROW(auto model = SwerveModel(config_));
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	EXPECT_NO_THROW(auto model = SwerveModel(m_config));
+}
+
+TEST_F(SwerveModelTestFixture, testDefaultModuleStatesArePopulated){
+	m_config.module_type = swerve_type_e::COAXIAL;
+	SwerveModel coax_model(m_config);
+
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
+	for(const auto& [name, val] : m_config.module_positions){
+		EXPECT_NO_THROW(coax_model.getModuleState(name));
+		EXPECT_NO_THROW(diff_model.getModuleState(name));
+		EXPECT_EQ(coax_model.getModuleState(name), ModuleState());
+		EXPECT_EQ(diff_model.getModuleState(name), ModuleState());
+	}
 }
 
 TEST_F(SwerveModelTestFixture, testMaxBaseVelocities){
-	config_.module_type = swerve_type_e::COAXIAL;
-	SwerveModel coax_model(config_);
+	m_config.module_type = swerve_type_e::COAXIAL;
+	SwerveModel coax_model(m_config);
 
-	config_.module_type = swerve_type_e::DIFFERENTIAL;
-	SwerveModel diff_model(config_);
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
 
 	std::vector<SwerveModel> models{coax_model, diff_model};
 
 	for(const auto& model : models){
-		EXPECT_EQ(model.getMaxBaseLinearVelocity(), config_.max_wheel_lin_vel);
-		EXPECT_EQ(model.getMaxBaseAngularVelocity(), config_.max_wheel_lin_vel / (double) Eigen::Vector2f(5.5, 5.5).norm());
+		EXPECT_EQ(model.getMaxBaseLinearVelocity(), m_config.max_wheel_lin_vel);
+		EXPECT_EQ(model.getMaxBaseAngularVelocity(), m_config.max_wheel_lin_vel / (double) Eigen::Vector2d(5.5, 5.5).norm());
 	}
 }
 
 TEST_F(SwerveModelTestFixture, testCoaxialSwerveJacobians){
-	config_.module_type = swerve_type_e::COAXIAL;
-	SwerveModel coax_model(config_);
+	m_config.module_type = swerve_type_e::COAXIAL;
+	SwerveModel coax_model(m_config);
 
 	// Get random velocity inputs
-	auto joint_vels = Eigen::Vector2f(getRandomFloat(), getRandomFloat());
-	auto expected_output = Eigen::Vector2f(
-		joint_vels[0] * config_.wheel_ratio,
-		joint_vels[1] * config_.steering_ratio);
+	auto joint_vels = Eigen::Vector2d(getRandomFloat(), getRandomFloat());
+	auto expected_output = Eigen::Vector2d(
+		joint_vels[0] * m_config.wheel_ratio,
+		joint_vels[1] * m_config.steering_ratio);
 
 	EXPECT_TRUE(expected_output.isApprox(coax_model.getModuleJacobian() * joint_vels)) <<
 	        "[testCoaxialSwerveJacobians] Error: Calculation did not match expected output." <<
@@ -88,15 +103,15 @@ TEST_F(SwerveModelTestFixture, testCoaxialSwerveJacobians){
 }
 
 TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianPureSteering){
-	config_.module_type = swerve_type_e::DIFFERENTIAL;
-	SwerveModel diff_model(config_);
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
 
 	// Get random velocity inputs
 	auto motor_vel = getRandomFloat();
-	auto joint_vels = Eigen::Vector2f(motor_vel, motor_vel);
-	auto expected_output = Eigen::Vector2f(
+	auto joint_vels = Eigen::Vector2d(motor_vel, motor_vel);
+	auto expected_output = Eigen::Vector2d(
 		0.0,
-		motor_vel * config_.steering_ratio);
+		motor_vel * m_config.steering_ratio);
 
 	EXPECT_TRUE(expected_output.isApprox(diff_model.getModuleJacobian() * joint_vels)) <<
 	        "[testDifferentialSwerveJacobianPureSteering] Error: Calculation did not match expected output." <<
@@ -107,14 +122,14 @@ TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianPureSteering){
 }
 
 TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianPureWheelActuation){
-	config_.module_type = swerve_type_e::DIFFERENTIAL;
-	SwerveModel diff_model(config_);
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
 
 	// Get random velocity inputs
 	auto motor_vel = getRandomFloat();
-	auto joint_vels = Eigen::Vector2f(motor_vel, -motor_vel);
-	auto expected_output = Eigen::Vector2f(
-		motor_vel * config_.wheel_ratio,
+	auto joint_vels = Eigen::Vector2d(motor_vel, -motor_vel);
+	auto expected_output = Eigen::Vector2d(
+		motor_vel * m_config.wheel_ratio,
 		0.0);
 
 	EXPECT_TRUE(expected_output.isApprox(diff_model.getModuleJacobian() * joint_vels)) <<
@@ -126,16 +141,16 @@ TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianPureWheelActuation)
 }
 
 TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianCombinedMotion){
-	config_.module_type = swerve_type_e::DIFFERENTIAL;
-	SwerveModel diff_model(config_);
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
 
 	// Get random velocity inputs
-	auto joint_vels = Eigen::Vector2f(getRandomFloat(), getRandomFloat());
+	auto joint_vels = Eigen::Vector2d(getRandomFloat(), getRandomFloat());
 	auto vel_avg = (joint_vels[0] + joint_vels[1]) / 2;
 	auto vel_diff = joint_vels[0] - joint_vels[1];
-	auto expected_output = Eigen::Vector2f(
-		vel_diff * config_.wheel_ratio / 2.0,
-		vel_avg * config_.steering_ratio);
+	auto expected_output = Eigen::Vector2d(
+		vel_diff * m_config.wheel_ratio / 2.0,
+		vel_avg * m_config.steering_ratio);
 
 	EXPECT_TRUE(expected_output.isApprox(diff_model.getModuleJacobian() * joint_vels)) <<
 	        "[testDifferentialSwerveJacobianCombinedMotion] Error: Calculation did not match expected output." <<
@@ -143,4 +158,81 @@ TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianCombinedMotion){
 	        diff_model.getModuleJacobian() * joint_vels << std::endl;
 
 	checkInverse(diff_model.getModuleJacobian(), diff_model.getModuleJacobianInverse());
+}
+
+TEST_F(SwerveModelTestFixture, testStateSettersAndGettersDifferential){
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
+
+
+	for(int i = 0; i < 10; i++){
+		std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+		std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+		std::unordered_map<std::string, Eigen::Vector2d> module_positions;
+		std::unordered_map<std::string, Eigen::Vector2d> module_velocities;
+		for(const auto& [name, _] : m_config.module_positions){
+			// Get random velocity inputs
+			joint_positions[name] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+			joint_velocities[name] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+
+			auto pos = joint_positions[name];
+			auto vel = joint_velocities[name];
+			module_positions[name] = Eigen::Vector2d(
+				(pos[0] - pos[1]) * m_config.wheel_ratio / 2.0,
+				(pos[0] + pos[1]) / 2 * m_config.steering_ratio);
+			module_velocities[name] = Eigen::Vector2d(
+				(vel[0] - vel[1]) * m_config.wheel_ratio / 2.0,
+				(vel[0] + vel[1]) / 2 * m_config.steering_ratio);
+		}
+
+		diff_model.updateRobotStates(joint_positions, joint_velocities);
+
+		for(const auto& [name, _] : m_config.module_positions){
+			EXPECT_NEAR(diff_model.getModuleState(name).wheel_position, module_positions.at(name)[0], m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).steering_position, module_positions.at(name)[1], m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).wheel_velocity, module_velocities.at(name)[0], m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).steering_velocity, module_velocities.at(name)[1], m_eps);
+		}
+	}
+}
+
+TEST_F(SwerveModelTestFixture, testStateSettersAndGettersCoaxial){
+	m_config.module_type = swerve_type_e::COAXIAL;
+	SwerveModel coax_model(m_config);
+
+
+	for(int i = 0; i < 10; i++){
+		std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+		std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+		std::unordered_map<std::string, Eigen::Vector2d> module_positions;
+		std::unordered_map<std::string, Eigen::Vector2d> module_velocities;
+		for(const auto& [name, _] : m_config.module_positions){
+			// Get random velocity inputs
+			joint_positions[name] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+			joint_velocities[name] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+
+			auto pos = joint_positions[name];
+			auto vel = joint_velocities[name];
+			module_positions[name] = Eigen::Vector2d(
+				(pos[0] - pos[1]) * m_config.wheel_ratio / 2.0,
+				(pos[0] + pos[1]) / 2 * m_config.steering_ratio);
+
+			module_positions[name] = Eigen::Vector2d(
+				pos[0] * m_config.wheel_ratio,
+				pos[1] * m_config.steering_ratio);
+
+			module_velocities[name] = Eigen::Vector2d(
+				vel[0] * m_config.wheel_ratio,
+				vel[1] * m_config.steering_ratio);
+		}
+
+		coax_model.updateRobotStates(joint_positions, joint_velocities);
+
+		for(const auto& [name, _] : m_config.module_positions){
+			EXPECT_NEAR(coax_model.getModuleState(name).wheel_position, module_positions.at(name)[0], m_eps);
+			EXPECT_NEAR(coax_model.getModuleState(name).steering_position, module_positions.at(name)[1], m_eps);
+			EXPECT_NEAR(coax_model.getModuleState(name).wheel_velocity, module_velocities.at(name)[0], m_eps);
+			EXPECT_NEAR(coax_model.getModuleState(name).steering_velocity, module_velocities.at(name)[1], m_eps);
+		}
+	}
 }

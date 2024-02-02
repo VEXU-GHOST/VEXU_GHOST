@@ -16,13 +16,15 @@ public:
 	void disabled() override;
 	void autonomous(double current_time) override;
 	void teleop(double current_time) override;
+	void onNewSensorData() override;
 
 protected:
 	void poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
+	std::shared_ptr<SwerveModel> m_swerve_model;
 
-	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr robot_pose_sub_;
-	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_robot_pose_sub;
+	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
 };
 
 } // namespace ghost_swerve
