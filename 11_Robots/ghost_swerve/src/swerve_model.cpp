@@ -88,12 +88,31 @@ void SwerveModel::updateRobotStates(const std::unordered_map<std::string, Eigen:
 
 		Eigen::Vector2d module_pos = m_module_jacobian * joint_positions.at(name);
 		Eigen::Vector2d module_vel = m_module_jacobian * joint_velocities.at(name);
-		ModuleState module_state;
-		module_state.wheel_position = module_pos[0];
-		module_state.wheel_velocity = module_vel[0];
-		module_state.steering_position = module_pos[1];
-		module_state.steering_velocity = module_vel[1];
-		m_current_module_states[name] = module_state;
+		m_current_module_states[name].wheel_position = module_pos[0];
+		m_current_module_states[name].wheel_velocity = module_vel[0];
+		m_current_module_states[name].steering_position = module_pos[1];
+		m_current_module_states[name].steering_velocity = module_vel[1];
+	}
+}
+
+void SwerveModel::updateRobotStates(const std::unordered_map<std::string, Eigen::Vector2d>& joint_positions,
+                                    const std::unordered_map<std::string, Eigen::Vector2d>& joint_velocities,
+                                    const std::unordered_map<std::string, double>& steering_positions,
+                                    const std::unordered_map<std::string, double>& steering_velocities){
+	updateRobotStates(joint_positions, joint_velocities);
+
+	if(steering_positions.size() != steering_velocities.size()){
+		throw std::runtime_error("[SwerveModel::updateSteeringStates] Error: Position and Velocity maps must be the same size!");
+	}
+
+	for(const auto& [name, _] : steering_positions){
+		throwOnUnknownSwerveModule(name, "updateSteeringStates");
+		if(steering_velocities.count(name) == 0){
+			throw std::runtime_error(std::string("[SwerveModel::updateSteeringStates] Error: ") + name + " is not in the steering_velocities map!");
+		}
+
+		m_current_module_states[name].steering_position = steering_positions.at(name);
+		m_current_module_states[name].steering_velocity = steering_velocities.at(name);
 	}
 }
 

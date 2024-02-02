@@ -44,8 +44,12 @@ public:
 	SwerveModel(SwerveConfig config);
 	void updateRobotStates(const std::unordered_map<std::string, Eigen::Vector2d>& joint_positions,
 	                       const std::unordered_map<std::string, Eigen::Vector2d>& joint_velocities);
-	void calculateHSpaceICR();
-	void calculateOdometry();
+
+	void updateRobotStates(const std::unordered_map<std::string, Eigen::Vector2d>& joint_positions,
+	                       const std::unordered_map<std::string, Eigen::Vector2d>& joint_velocities,
+	                       const std::unordered_map<std::string, double>& steering_positions,
+	                       const std::unordered_map<std::string, double>& steering_velocities);
+
 	void updateSwerveCommandsFromTwist(Eigen::Vector3d twist_cmd);
 	const ModuleState& getModuleState(const std::string& name);
 
@@ -78,7 +82,8 @@ protected:
 	void calculateJacobians();
 	void calculateMaxBaseTwist();
 	void throwOnUnknownSwerveModule(const std::string& name, const std::string& method_name) const;
-
+	void calculateHSpaceICR();
+	void calculateOdometry();
 
 	// Configuration
 	SwerveConfig m_config;

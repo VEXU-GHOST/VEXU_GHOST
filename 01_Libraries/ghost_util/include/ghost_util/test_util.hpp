@@ -9,19 +9,23 @@ bool getRandomBool(){
 }
 
 float getRandomFloat(){
-	return (float) rand() + 0.0001 * rand();
+	float sign = (getRandomBool()) ? 1 : -1;
+	return ((float) rand() + 0.0001 * rand()) * sign;
 }
 
 float getRandomFloat(float max){
-	return std::fmod((float) rand() + 0.0001 * rand(), max);
+	float sign = (getRandomBool()) ? 1 : -1;
+	return sign * std::fmod((float) rand() + 0.0001 * rand(), max);
 }
 
 float getRandomDouble(){
-	return (double) rand() + 0.0001 * rand();
+	float sign = (getRandomBool()) ? 1 : -1;
+	return sign * ((double) rand() + 0.0001 * rand());
 }
 
 float getRandomDouble(float max){
-	return std::fmod((double) rand() + 0.0001 * rand(), max);
+	float sign = (getRandomBool()) ? 1 : -1;
+	return sign * std::fmod((double) rand() + 0.0001 * rand(), max);
 }
 
 int getRandomInt(){

@@ -45,8 +45,7 @@ void SwerveRobotPlugin::initialize(){
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
-	m_swerve_model->calculateHSpaceICR();
-	m_swerve_model->calculateOdometry();
+	// updateRobotStates()
 }
 
 void SwerveRobotPlugin::disabled(){

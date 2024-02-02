@@ -212,10 +212,6 @@ TEST_F(SwerveModelTestFixture, testStateSettersAndGettersCoaxial){
 			auto pos = joint_positions[name];
 			auto vel = joint_velocities[name];
 			module_positions[name] = Eigen::Vector2d(
-				(pos[0] - pos[1]) * m_config.wheel_ratio / 2.0,
-				(pos[0] + pos[1]) / 2 * m_config.steering_ratio);
-
-			module_positions[name] = Eigen::Vector2d(
 				pos[0] * m_config.wheel_ratio,
 				pos[1] * m_config.steering_ratio);
 
@@ -231,6 +227,87 @@ TEST_F(SwerveModelTestFixture, testStateSettersAndGettersCoaxial){
 			EXPECT_NEAR(coax_model.getModuleState(name).steering_position, module_positions.at(name)[1], m_eps);
 			EXPECT_NEAR(coax_model.getModuleState(name).wheel_velocity, module_velocities.at(name)[0], m_eps);
 			EXPECT_NEAR(coax_model.getModuleState(name).steering_velocity, module_velocities.at(name)[1], m_eps);
+		}
+	}
+}
+
+TEST_F(SwerveModelTestFixture, testStateSettersAndGettersDifferentialWithSteeringEncoder){
+	m_config.module_type = swerve_type_e::DIFFERENTIAL;
+	SwerveModel diff_model(m_config);
+
+	for(int i = 0; i < 10; i++){
+		std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+		std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+		std::unordered_map<std::string, double> steering_positions;
+		std::unordered_map<std::string, double> steering_velocities;
+		std::unordered_map<std::string, Eigen::Vector2d> module_positions;
+		std::unordered_map<std::string, Eigen::Vector2d> module_velocities;
+
+		for(const auto& [name, _] : m_config.module_positions){
+			// Get random velocity inputs
+			joint_positions[name] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+			joint_velocities[name] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+			steering_positions[name] = getRandomDouble(600);
+			steering_velocities[name] = getRandomDouble(600);
+
+			auto pos = joint_positions[name];
+			auto vel = joint_velocities[name];
+			module_positions[name] = Eigen::Vector2d(
+				(pos[0] - pos[1]) * m_config.wheel_ratio / 2.0,
+				steering_positions[name]);
+			module_velocities[name] = Eigen::Vector2d(
+				(vel[0] - vel[1]) * m_config.wheel_ratio / 2.0,
+				steering_velocities[name]);
+		}
+
+		diff_model.updateRobotStates(joint_positions, joint_velocities, steering_positions, steering_velocities);
+
+		for(const auto& [name, _] : m_config.module_positions){
+			EXPECT_NEAR(diff_model.getModuleState(name).wheel_position, module_positions.at(name)[0], m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).steering_position, steering_positions.at(name), m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).wheel_velocity, module_velocities.at(name)[0], m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).steering_velocity, steering_velocities.at(name), m_eps);
+		}
+	}
+}
+
+TEST_F(SwerveModelTestFixture, testStateSettersAndGettersCoaxialWithSteeringEncoder){
+	m_config.module_type = swerve_type_e::COAXIAL;
+	SwerveModel diff_model(m_config);
+
+	for(int i = 0; i < 10; i++){
+		std::unordered_map<std::string, Eigen::Vector2d> joint_positions;
+		std::unordered_map<std::string, Eigen::Vector2d> joint_velocities;
+		std::unordered_map<std::string, double> steering_positions;
+		std::unordered_map<std::string, double> steering_velocities;
+		std::unordered_map<std::string, Eigen::Vector2d> module_positions;
+		std::unordered_map<std::string, Eigen::Vector2d> module_velocities;
+
+		for(const auto& [name, _] : m_config.module_positions){
+			// Get random velocity inputs
+			joint_positions[name] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+			joint_velocities[name] = Eigen::Vector2d(getRandomDouble(600), getRandomDouble(600));
+			steering_positions[name] = getRandomDouble(600);
+			steering_velocities[name] = getRandomDouble(600);
+
+			auto pos = joint_positions[name];
+			auto vel = joint_velocities[name];
+			module_positions[name] = Eigen::Vector2d(
+				pos[0] * m_config.wheel_ratio,
+				steering_positions[name]);
+
+			module_velocities[name] = Eigen::Vector2d(
+				vel[0] * m_config.wheel_ratio,
+				steering_velocities[name]);
+		}
+
+		diff_model.updateRobotStates(joint_positions, joint_velocities, steering_positions, steering_velocities);
+
+		for(const auto& [name, _] : m_config.module_positions){
+			EXPECT_NEAR(diff_model.getModuleState(name).wheel_position, module_positions.at(name)[0], m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).steering_position, steering_positions.at(name), m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).wheel_velocity, module_velocities.at(name)[0], m_eps);
+			EXPECT_NEAR(diff_model.getModuleState(name).steering_velocity, steering_velocities.at(name), m_eps);
 		}
 	}
 }
