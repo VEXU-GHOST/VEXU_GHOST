@@ -42,13 +42,12 @@ struct ModuleState {
 class SwerveModel {
 public:
 	SwerveModel(SwerveConfig config);
-	void updateRobotStates(const std::unordered_map<std::string, Eigen::Vector2d>& joint_positions,
+
+	void updateWheelStates(const std::unordered_map<std::string, Eigen::Vector2d>& joint_positions,
 	                       const std::unordered_map<std::string, Eigen::Vector2d>& joint_velocities);
 
-	void updateRobotStates(const std::unordered_map<std::string, Eigen::Vector2d>& joint_positions,
-	                       const std::unordered_map<std::string, Eigen::Vector2d>& joint_velocities,
-	                       const std::unordered_map<std::string, double>& steering_positions,
-	                       const std::unordered_map<std::string, double>& steering_velocities);
+	void updateSteeringStates(const std::unordered_map<std::string, double>& steering_positions,
+	                          const std::unordered_map<std::string, double>& steering_velocities);
 
 	void updateSwerveCommandsFromTwist(Eigen::Vector3d twist_cmd);
 	const ModuleState& getModuleState(const std::string& name);
