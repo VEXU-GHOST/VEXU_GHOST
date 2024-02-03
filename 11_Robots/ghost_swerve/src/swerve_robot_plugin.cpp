@@ -55,10 +55,10 @@ void SwerveRobotPlugin::onNewSensorData(){
 	auto module_jacobian = m_swerve_model_ptr->getModuleJacobian();
 
 	std::unordered_map<std::string, std::tuple<std::string, std::string, std::string> > module_motor_mapping{
-		{"left_front", std::tuple<std::string, std::string, std::string>("drive_fll", "drive_flr", "steering_front_left")},
-		{"right_front", std::tuple<std::string, std::string, std::string>("drive_frl", "drive_frr", "steering_front_right")},
-		{"left_back", std::tuple<std::string, std::string, std::string>("drive_blb", "drive_blf", "steering_back_left")},
-		{"right_back", std::tuple<std::string, std::string, std::string>("drive_brb", "drive_brf", "steering_back_right")}
+		{"left_front", std::tuple<std::string, std::string, std::string>("drive_flr", "drive_fll", "steering_front_left")},
+		{"right_front", std::tuple<std::string, std::string, std::string>("drive_frr", "drive_frl", "steering_front_right")},
+		{"left_back", std::tuple<std::string, std::string, std::string>("drive_blf", "drive_blb", "steering_back_left")},
+		{"right_back", std::tuple<std::string, std::string, std::string>("drive_brf", "drive_brb", "steering_back_right")}
 	};
 
 	// Update each swerve module from new device data
@@ -80,7 +80,7 @@ void SwerveRobotPlugin::onNewSensorData(){
 		auto m2_velocity = rhi_ptr_->getMotorVelocityRPM(m2_name);
 		new_state.wheel_velocity = (module_jacobian * Eigen::Vector2d(m1_velocity, m2_velocity))[0];
 
-		new_state.steering_position = rhi_ptr_->getRotationSensorPositionDegrees(steering_name);
+		new_state.steering_position = rhi_ptr_->getRotationSensorAngleDegrees(steering_name);
 		new_state.steering_velocity = rhi_ptr_->getRotationSensorVelocityRPM(steering_name);
 
 		m_swerve_model_ptr->setModuleState(module_name, new_state);
