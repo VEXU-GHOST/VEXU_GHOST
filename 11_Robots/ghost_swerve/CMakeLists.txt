@@ -10,6 +10,7 @@ set(DEPENDENCIES
   ament_cmake
   ghost_ros_interfaces
   ghost_util
+  ghost_estimation
   geometry_msgs
   nav_msgs
   pluginlib
@@ -81,12 +82,26 @@ INCLUDES DESTINATION include
 ###################
 ###### Tests ######
 ###################
-ament_add_gtest(test_swerve_model test/test_swerve_model.cpp)
-ament_target_dependencies(test_swerve_model ${DEPENDENCIES})
-target_link_libraries(test_swerve_model
-  swerve_model
-  gtest_main
+set(TEST_FILES
+  test_base_swerve_model
+  test_coaxial_swerve_model
+  test_differential_swerve_model
+  # test_swerve_icr
 )
+
+foreach(TEST ${TEST_FILES})
+  ament_add_gtest(${TEST} test/${TEST}.cpp)
+  ament_target_dependencies(${TEST} ${DEPENDENCIES})
+  target_link_libraries(${TEST}
+    swerve_model
+    gtest_main
+  )
+  target_include_directories(${TEST} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
+  $<INSTALL_INTERFACE:include>)
+endforeach()
+
 
 ###################
 ##### Install #####

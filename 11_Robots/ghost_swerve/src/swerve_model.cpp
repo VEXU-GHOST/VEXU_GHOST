@@ -1,6 +1,9 @@
 #include <ghost_swerve/swerve_model.hpp>
 #include <ghost_util/angle_util.hpp>
 
+using geometry::Line;
+using geometry::Line2f;
+
 namespace ghost_swerve {
 
 SwerveModel::SwerveModel(SwerveConfig config){
@@ -13,6 +16,7 @@ SwerveModel::SwerveModel(SwerveConfig config){
 	// Add each module to module_states map
 	for(const auto & [name, _] : m_config.module_positions){
 		m_current_module_states[name] = ModuleState();
+		m_previous_module_states[name] = ModuleState();
 	}
 }
 
@@ -69,45 +73,109 @@ void SwerveModel::calculateMaxBaseTwist(){
 	m_max_base_ang_vel = m_max_base_lin_vel / max_wheel_dist;
 }
 
-const ModuleState& SwerveModel::getModuleState(const std::string& name){
-	throwOnUnknownSwerveModule(name, "getModuleState");
+const ModuleState& SwerveModel::getCurrentModuleState(const std::string& name){
+	throwOnUnknownSwerveModule(name, "getCurrentModuleState");
 	return m_current_module_states.at(name);
 }
 
-void SwerveModel::updateWheelStates(const std::unordered_map<std::string, Eigen::Vector2d>& joint_positions,
-                                    const std::unordered_map<std::string, Eigen::Vector2d>& joint_velocities){
-	if(joint_positions.size() != joint_velocities.size()){
-		throw std::runtime_error("[SwerveModel::updateWheelStates] Error: Position and Velocity maps must be the same size!");
-	}
-
-	for(const auto& [name, _] : joint_positions){
-		throwOnUnknownSwerveModule(name, "updateWheelStates");
-		if(joint_velocities.count(name) == 0){
-			throw std::runtime_error(std::string("[SwerveModel::updateWheelStates] Error: ") + name + " is not in the joint_velocities map!");
-		}
-
-		Eigen::Vector2d module_pos = m_module_jacobian * joint_positions.at(name);
-		Eigen::Vector2d module_vel = m_module_jacobian * joint_velocities.at(name);
-		m_current_module_states[name].wheel_position = module_pos[0];
-		m_current_module_states[name].wheel_velocity = module_vel[0];
-	}
+const ModuleState& SwerveModel::getPreviousModuleState(const std::string& name){
+	throwOnUnknownSwerveModule(name, "getPreviousModuleState");
+	return m_previous_module_states.at(name);
 }
 
-void SwerveModel::updateSteeringStates(const std::unordered_map<std::string, double>& steering_positions,
-                                       const std::unordered_map<std::string, double>& steering_velocities){
-	if(steering_positions.size() != steering_velocities.size()){
-		throw std::runtime_error("[SwerveModel::updateSteeringStates] Error: Position and Velocity maps must be the same size!");
-	}
-
-	for(const auto& [name, _] : steering_positions){
-		throwOnUnknownSwerveModule(name, "updateSteeringStates");
-		if(steering_velocities.count(name) == 0){
-			throw std::runtime_error(std::string("[SwerveModel::updateSteeringStates] Error: ") + name + " is not in the joint_velocities map!");
-		}
-		m_current_module_states[name].steering_position = ghost_util::WrapAngle360(steering_positions.at(name));
-		m_current_module_states[name].steering_velocity = steering_velocities.at(name);
-	}
+void SwerveModel::setModuleState(const std::string& name, ModuleState state){
+	throwOnUnknownSwerveModule(name, "setModuleState");
+	state.steering_position = ghost_util::WrapAngle360(state.steering_position);
+	m_previous_module_states[name] = m_current_module_states[name];
+	m_current_module_states[name] = state;
 }
+
+void SwerveModel::updateSwerveModel(){
+}
+
+/*
+   void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg){
+        // Calculate Odometry
+        auto left_encoder = encoder_msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER];
+        auto right_encoder = encoder_msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER];
+        auto back_encoder = encoder_msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER];
+
+        // Calculate ICR
+        std::vector<Eigen::Vector3f> h_space_icr_points{0};
+
+        // Calculate Wheel Axis Unit Direction Vectors
+        Eigen::Vector2f left_encoder_dir(
+                sin(ghost_common::WrapAngle360(left_encoder.position_degrees) * M_PI / 180.0),
+                -cos(ghost_common::WrapAngle360(left_encoder.position_degrees) * M_PI / 180.0));
+        Eigen::Vector2f right_encoder_dir(
+                sin(ghost_common::WrapAngle360(right_encoder.position_degrees) * M_PI / 180.0),
+                -cos(ghost_common::WrapAngle360(right_encoder.position_degrees) * M_PI / 180.0));
+        Eigen::Vector2f back_encoder_dir(
+                sin(ghost_common::WrapAngle360(back_encoder.position_degrees) * M_PI / 180.0),
+                -cos(ghost_common::WrapAngle360(back_encoder.position_degrees) * M_PI / 180.0));
+
+        // Calculate Wheel Axis Vectors
+        geometry::Line2f left_encoder_vector(left_wheel_link_, left_encoder_dir + left_wheel_link_);
+        geometry::Line2f right_encoder_vector(right_wheel_link_, right_encoder_dir + right_wheel_link_);
+        geometry::Line2f back_encoder_vector(back_wheel_link_, back_encoder_dir + back_wheel_link_);
+
+        // Iterate through each pair of lines and calculate ICR
+        auto line_pairs = std::vector<std::pair<geometry::Line2f, geometry::Line2f> >{
+                std::pair<geometry::Line2f, geometry::Line2f>(left_encoder_vector, right_encoder_vector),
+                std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, left_encoder_vector),
+                std::pair<geometry::Line2f, geometry::Line2f>(back_encoder_vector, right_encoder_vector)
+        };
+
+        for(auto &pair : line_pairs){
+                auto l1 = pair.first;
+                auto l2 = pair.second;
+                if(fabs(geometry::Cross(l1.Dir(), l2.Dir())) < 1e-5){
+                        h_space_icr_points.push_back(Eigen::Vector3f(l1.Dir().x(), l1.Dir().y(), 0.0));
+                }
+                else{
+                        Eigen::Hyperplane<float, 2> hp1 = Eigen::Hyperplane<float, 2>::Through(l1.p0, l1.p1);
+                        Eigen::Hyperplane<float, 2> hp2 = Eigen::Hyperplane<float, 2>::Through(l2.p0, l2.p1);
+                        auto intersection = hp1.intersection(hp2);
+                        auto intersection_3d = Eigen::Vector3f(intersection.x(), intersection.y(), 1);
+                        h_space_icr_points.push_back(intersection_3d / intersection_3d.norm());
+                }
+        }
+
+        // Calculate distance from first point and subsequent points and their antipoles
+        // Select closer of the two (point / antipole) for calculating average
+        if((h_space_icr_points[0] - h_space_icr_points[1]).norm() > (h_space_icr_points[0] + h_space_icr_points[1]).norm()){
+                h_space_icr_points[1] *= -1;
+        }
+
+        if((h_space_icr_points[0] - h_space_icr_points[2]).norm() > (h_space_icr_points[0] + h_space_icr_points[2]).norm()){
+                h_space_icr_points[2] *= -1;
+        }
+
+        // Average ICR points in H-Space as our estimated center of rotation
+        h_space_icr_avg_ = (h_space_icr_points[0] + h_space_icr_points[1] + h_space_icr_points[2]) / 3;
+
+        // Handle parallel case
+        if(fabs(h_space_icr_avg_[2]) < 1e-9){
+                icr_flat_estimation_ = Eigen::Vector3f(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0);
+        }
+        else{
+                icr_flat_estimation_ = Eigen::Vector3f(h_space_icr_avg_[0] / h_space_icr_avg_[2], h_space_icr_avg_[1] / h_space_icr_avg_[2], 0);
+        }
+
+        // Initialize Visualization msg, and add debug visualization
+        std::vector<geometry::Line2f> lines{left_encoder_vector, right_encoder_vector, back_encoder_vector};
+        DrawWheelAxisVectors(lines);
+
+        std::vector<Eigen::Vector3f> points{
+                h_space_icr_points[0],
+                h_space_icr_points[1],
+                h_space_icr_points[2],
+                h_space_icr_avg_,
+                icr_flat_estimation_
+        };
+        DrawICRPoints(points);
+   }
+ */
 
 void SwerveModel::calculateOdometry(){
 }
