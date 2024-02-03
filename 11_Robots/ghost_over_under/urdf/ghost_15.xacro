@@ -158,7 +158,7 @@
     <joint name="wheel_joint_back_left" type="continuous">
         <parent link="steering_link_back_left"/>
         <child link="wheel_link_back_left"/>
-        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/> 
+        <origin xyz="0 0 -0.09886" rpy="${-90*d2r} 0 0"/> 
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
@@ -166,7 +166,7 @@
     <joint name="wheel_joint_back_right" type="continuous">
         <parent link="steering_link_back_right"/>
         <child link="wheel_link_back_right"/>
-        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <origin xyz="0 0 -0.09886" rpy="${-90*d2r} 0 0"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
@@ -174,7 +174,7 @@
     <joint name="wheel_joint_front_left" type="continuous">
         <parent link="steering_link_front_left"/>
         <child link="wheel_link_front_left"/>
-        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <origin xyz="0 0 -0.09886" rpy="${-90*d2r} 0 0"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
@@ -182,7 +182,7 @@
     <joint name="wheel_joint_front_right" type="continuous">
         <parent link="steering_link_front_right"/>
         <child link="wheel_link_front_right"/>
-        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+        <origin xyz="0 0 -0.09886" rpy="${-90*d2r} 0 0"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
