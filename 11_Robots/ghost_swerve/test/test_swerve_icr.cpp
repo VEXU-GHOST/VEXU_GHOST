@@ -6,58 +6,40 @@ using namespace ghost_util;
 
 
 TEST_F(SwerveModelTestFixture, testICRZeroCase){
-	m_config.module_type = swerve_type_e::DIFFERENTIAL;
-	SwerveModel diff_model(m_config);
+	m_diff_model_ptr->setModuleState("front_right", ModuleState(0.0, 0.0, 45, 0.0));
+	m_diff_model_ptr->setModuleState("front_left", ModuleState(0.0, 0.0, -45, 0.0));
+	m_diff_model_ptr->setModuleState("back_right", ModuleState(0.0, 0.0, -45, 0.0));
+	m_diff_model_ptr->setModuleState("back_left", ModuleState(0.0, 0.0, 45, 0.0));
 
-	std::unordered_map<std::string, double> steering_positions;
-	steering_positions["front_right"] = 45.0;
-	steering_positions["front_left"] = -45.0;
-	steering_positions["back_right"] = -45.0;
-	steering_positions["back_left"] = 45.0;
+	m_diff_model_ptr->updateSwerveModel();
 
-	std::unordered_map<std::string, double> steering_velocities;
-	steering_velocities["front_right"] = 0.0;
-	steering_velocities["front_left"] = 0.0;
-	steering_velocities["back_right"] = 0.0;
-	steering_velocities["back_left"] = 0.0;
-
-	diff_model.updateSteeringStates(steering_positions, steering_velocities);
+	Eigen::Vector2d icr_point;
+	EXPECT_FALSE(m_diff_model_ptr->getICR(icr_point));
+	EXPECT_TRUE(icr_point.isApprox(Eigen::Vector2d(0.0, 0.0)));
 }
 
 TEST_F(SwerveModelTestFixture, testICRAtBackLeft){
-	m_config.module_type = swerve_type_e::DIFFERENTIAL;
-	SwerveModel diff_model(m_config);
+	m_diff_model_ptr->setModuleState("front_right", ModuleState(0.0, 0.0, 45, 0.0));
+	m_diff_model_ptr->setModuleState("front_left", ModuleState(0.0, 0.0, 90.0, 0.0));
+	m_diff_model_ptr->setModuleState("back_right", ModuleState(0.0, 0.0, 0.0, 0.0));
+	m_diff_model_ptr->setModuleState("back_left", ModuleState(0.0, 0.0, getRandomDouble(), 0.0));
 
-	std::unordered_map<std::string, double> steering_positions;
-	steering_positions["front_right"] = 45.0;
-	steering_positions["front_left"] = 90.0;
-	steering_positions["back_right"] = 0.0;
-	steering_positions["back_left"] = getRandomDouble(600);
+	m_diff_model_ptr->updateSwerveModel();
 
-	std::unordered_map<std::string, double> steering_velocities;
-	steering_velocities["front_right"] = 0.0;
-	steering_velocities["front_left"] = 0.0;
-	steering_velocities["back_right"] = 0.0;
-	steering_velocities["back_left"] = 0.0;
-
-	diff_model.updateSteeringStates(steering_positions, steering_velocities);
+	Eigen::Vector2d icr_point;
+	EXPECT_FALSE(m_diff_model_ptr->getICR(icr_point));
+	EXPECT_TRUE(icr_point.isApprox(m_diff_model_ptr->getConfig().module_positions.at("back_left")));
 }
 
 TEST_F(SwerveModelTestFixture, testICRInfinity){
-	m_config.module_type = swerve_type_e::DIFFERENTIAL;
-	SwerveModel diff_model(m_config);
+	m_diff_model_ptr->setModuleState("front_right", ModuleState());
+	m_diff_model_ptr->setModuleState("front_left", ModuleState());
+	m_diff_model_ptr->setModuleState("back_right", ModuleState());
+	m_diff_model_ptr->setModuleState("back_left", ModuleState());
 
-	std::unordered_map<std::string, double> steering_positions;
-	steering_positions["front_right"] = 0.0;
-	steering_positions["front_left"] = 0.0;
-	steering_positions["back_right"] = 0.0;
-	steering_positions["back_left"] = 0.0;
+	m_diff_model_ptr->updateSwerveModel();
 
-	std::unordered_map<std::string, double> steering_velocities;
-	steering_velocities["front_right"] = 0.0;
-	steering_velocities["front_left"] = 0.0;
-	steering_velocities["back_right"] = 0.0;
-	steering_velocities["back_left"] = 0.0;
-
-	diff_model.updateSteeringStates(steering_positions, steering_velocities);
+	Eigen::Vector2d icr_point;
+	EXPECT_TRUE(m_diff_model_ptr->getICR(icr_point));
+	EXPECT_TRUE(icr_point.isApprox(Eigen::Vector2d(0.0, 1.0)));
 }

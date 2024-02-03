@@ -4,8 +4,8 @@
 #include <unordered_map>
 
 #include "eigen3/Eigen/Geometry"
+#include <ghost_util/angle_util.hpp>
 #include "math/line2d.h"
-
 
 namespace ghost_swerve {
 
@@ -33,6 +33,15 @@ struct ModuleState {
 	double steering_position;
 	double steering_velocity;
 
+	ModuleState() = default;
+
+	ModuleState(double wheel_pos, double wheel_vel, double steering_pos, double steering_vel){
+		wheel_position = wheel_pos;
+		wheel_velocity = wheel_vel;
+		steering_position = ghost_util::WrapAngle360(steering_pos);
+		steering_velocity = steering_vel;
+	}
+
 	bool operator==(const ModuleState& rhs) const {
 		return (std::fabs(wheel_position - rhs.wheel_position) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(wheel_velocity - rhs.wheel_velocity) < std::numeric_limits<double>::epsilon()) &&
@@ -44,6 +53,15 @@ struct ModuleState {
 class SwerveModel {
 public:
 	SwerveModel(SwerveConfig config);
+
+	/**
+	 * @brief Get the Swerve Model Configration
+	 *
+	 * @return const SwerveConfig&
+	 */
+	const SwerveConfig& getConfig(){
+		return m_config;
+	}
 
 	/**
 	 * @brief Updates a swerve module state by module name.

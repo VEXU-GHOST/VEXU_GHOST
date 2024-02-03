@@ -12,6 +12,7 @@ set(DEPENDENCIES
   ghost_util
   ghost_estimation
   geometry_msgs
+  sensor_msgs
   nav_msgs
   pluginlib
   Eigen3

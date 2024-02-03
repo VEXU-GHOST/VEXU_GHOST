@@ -15,6 +15,7 @@
   <depend>ghost_util</depend>
   <depend>ghost_estimation</depend>
   <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>pluginlib</depend>
 

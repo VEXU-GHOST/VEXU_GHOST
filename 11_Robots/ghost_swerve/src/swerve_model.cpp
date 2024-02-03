@@ -180,9 +180,6 @@ void SwerveModel::updateSwerveModel(){
 void SwerveModel::calculateOdometry(){
 }
 
-void SwerveModel::updateSwerveCommandsFromTwist(Eigen::Vector3d twist_cmd){
-}
-
 void SwerveModel::throwOnUnknownSwerveModule(const std::string& name, const std::string& method_name) const {
 	if(m_current_module_states.count(name) == 0){
 		throw std::runtime_error (std::string("[SwerveModel::" + method_name +  "] Error:") + name + " is not a known swerve module !");
