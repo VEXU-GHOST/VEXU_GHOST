@@ -61,6 +61,19 @@ TEST_F(SwerveModelTestFixture, testStateGetterSetters){
 	}
 }
 
+TEST_F(SwerveModelTestFixture, testCommandGetterSetters){
+	for(const auto& model : m_models){
+		for(const auto& [name, _] : m_config.module_positions){
+			auto cmd = getRandomModuleCommand();
+			EXPECT_NO_THROW(model->setModuleCommand(name, cmd));
+
+			cmd.steering_angle_command = ghost_util::WrapAngle360(cmd.steering_angle_command);
+			EXPECT_NO_THROW(auto s = model->getModuleCommand(name));
+			EXPECT_EQ(cmd, model->getModuleCommand(name));
+		}
+	}
+}
+
 TEST_F(SwerveModelTestFixture, testLastModuleStatesAreSaved){
 	for(const auto& model : m_models){
 		for(const auto& [name, _] : m_config.module_positions){

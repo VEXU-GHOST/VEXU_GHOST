@@ -26,7 +26,8 @@ void SwerveModel::validateConfig(){
 		{"max_wheel_lin_vel", m_config.max_wheel_lin_vel},
 		{"steering_ratio", m_config.steering_ratio},
 		{"wheel_ratio", m_config.wheel_ratio},
-		{"wheel_radius", m_config.wheel_radius}
+		{"wheel_radius", m_config.wheel_radius},
+		{"steering_kp", m_config.steering_kp}
 	};
 
 	for(const auto& [key, val] : double_params){
@@ -126,35 +127,19 @@ void SwerveModel::calculateKinematicSwerveController(double right_vel, double fo
 
 		ModuleState module_state = m_current_module_states.at(module_name);
 		double steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, module_state.steering_angle);
+
+		if(fabs(steering_error) > 90.0){
+			// Flip commands
+			module_command.wheel_velocity_command *= -1.0;
+			module_command.steering_angle_command = ghost_util::FlipAngle180(module_command.steering_angle_command);
+
+			// Recalculate error
+			double steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, module_state.steering_angle);
+		}
+
+		// Set steering voltage using position control law
+		module_command.steering_voltage_command = steering_error * m_config.steering_kp;
 	}
-
-	// for(int wheel_id = 0; wheel_id < 3; wheel_id++){
-	// 	// Calculate linear velocity vector at wheel
-	// 	Eigen::Vector2f vel_vec(-wheel_positions[wheel_id].y(), wheel_positions[wheel_id].x());
-	// 	vel_vec *= angular_vel_cmd;
-	// 	vel_vec += linear_vel_cmd * linear_vel_dir;
-	// 	wheel_vel_vectors[wheel_id] = vel_vec;
-
-	// 	// Calculate naive steering angle and wheel velocity setpoints
-	// 	steering_angle_cmd_[wheel_id] = ghost_common::WrapAngle360(atan2(vel_vec.y(), vel_vec.x()) * 180.0 / M_PI);   // Converts rad/s to degrees
-	// 	wheel_velocity_cmd_[wheel_id] = vel_vec.norm() * 100 / 2.54 / (2.75 * M_PI) * 60; // Convert m/s to RPM
-
-	// 	// Calculate angle error and then use direction of smallest error
-	// 	float steering_error  = ghost_common::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
-
-	// 	// It is faster to reverse wheel direction and steer to opposite angle
-	// 	if(fabs(steering_error) > 90.0){
-	// 		// Flip commands
-	// 		wheel_velocity_cmd_[wheel_id] *= -1.0;
-	// 		steering_angle_cmd_[wheel_id] = ghost_common::FlipAngle180(steering_angle_cmd_[wheel_id]);
-
-	// 		// Recalculate error
-	// 		steering_error = ghost_common::SmallestAngleDistDeg(steering_angle_cmd_[wheel_id], steering_angles[wheel_id]);
-	// 	}
-
-	// 	// Set steering voltage using position control law
-	// 	steering_voltage_cmd_[wheel_id] = steering_error * steering_kp_;
-	// }
 }
 
 std::vector<Line2d> SwerveModel::calculateWheelAxisVectors() const {
@@ -270,6 +255,18 @@ void SwerveModel::throwOnUnknownSwerveModule(const std::string& name, const std:
 	if(m_current_module_states.count(name) == 0){
 		throw std::runtime_error (std::string("[SwerveModel::" + method_name +  "] Error:") + name + " is not a known swerve module !");
 	}
+}
+
+void SwerveModel::setModuleCommand(const std::string& name, ModuleCommand command){
+	throwOnUnknownSwerveModule(name, "setModuleCommand");
+	command.steering_angle_command = ghost_util::WrapAngle360(command.steering_angle_command);
+	m_previous_module_states[name] = m_current_module_states[name];
+	m_module_commands[name] = command;
+}
+
+const ModuleCommand& SwerveModel::getModuleCommand(const std::string& name){
+	throwOnUnknownSwerveModule(name, "getModuleCommand");
+	return m_module_commands.at(name);
 }
 
 } // namespace ghost_swerve

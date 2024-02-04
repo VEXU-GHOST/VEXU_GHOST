@@ -24,6 +24,9 @@ struct SwerveConfig {
 	double wheel_ratio;
 	double wheel_radius;
 
+	// Kinematic Controller
+	double steering_kp;
+
 	// XY Position of each module relative to robot base
 	std::unordered_map<std::string, Eigen::Vector2d> module_positions;
 };
@@ -126,8 +129,24 @@ public:
 	 */
 	const ModuleState& getPreviousModuleState(const std::string& name);
 
-	/// Module Jacobians ///
 
+	/**
+	 * @brief Updates a swerve module command by module name.
+	 *
+	 * @param name
+	 * @param command
+	 */
+	void setModuleCommand(const std::string& name, ModuleCommand command);
+
+	/**
+	 * @brief Gets a swerve module command by name.
+	 *
+	 * @param name
+	 * @param state
+	 */
+	const ModuleCommand& getModuleCommand(const std::string& name);
+
+	/// Module Jacobians ///
 	/**
 	 * @brief Return the 2x2 Jacobian Matrix which maps from actuator to joint velocities.
 	 * This will convert motor states to wheel/steering states.

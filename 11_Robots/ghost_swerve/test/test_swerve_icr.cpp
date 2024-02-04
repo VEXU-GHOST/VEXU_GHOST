@@ -224,7 +224,6 @@ TEST_F(SwerveModelTestFixture, testICRAtBackLeft){
 
 	Eigen::Vector2d icr_point;
 	EXPECT_FALSE(m_diff_model_ptr->getICR(icr_point));
-	std::cout << icr_point << std::endl;
 	EXPECT_TRUE(icr_point.isApprox(m_diff_model_ptr->getConfig().module_positions.at("back_left")));
 }
 
@@ -238,7 +237,6 @@ TEST_F(SwerveModelTestFixture, testICRAtBackRight){
 
 	Eigen::Vector2d icr_point;
 	EXPECT_FALSE(m_diff_model_ptr->getICR(icr_point));
-	std::cout << icr_point << std::endl;
 	EXPECT_TRUE(icr_point.isApprox(m_diff_model_ptr->getConfig().module_positions.at("back_right")));
 }
 
@@ -252,7 +250,6 @@ TEST_F(SwerveModelTestFixture, testICRAtFrontRight){
 
 	Eigen::Vector2d icr_point;
 	EXPECT_FALSE(m_diff_model_ptr->getICR(icr_point));
-	std::cout << icr_point << std::endl;
 	EXPECT_TRUE(icr_point.isApprox(m_diff_model_ptr->getConfig().module_positions.at("front_right")));
 }
 
@@ -266,7 +263,6 @@ TEST_F(SwerveModelTestFixture, testICRAtFrontLeft){
 
 	Eigen::Vector2d icr_point;
 	EXPECT_FALSE(m_diff_model_ptr->getICR(icr_point));
-	std::cout << icr_point << std::endl;
 	EXPECT_TRUE(icr_point.isApprox(m_diff_model_ptr->getConfig().module_positions.at("front_left")));
 }
 
@@ -280,7 +276,6 @@ TEST_F(SwerveModelTestFixture, testICRInfinityLeft){
 
 	Eigen::Vector2d icr_point;
 	EXPECT_TRUE(m_diff_model_ptr->getICR(icr_point));
-	std::cout << icr_point << std::endl;
 	EXPECT_TRUE(icr_point.isApprox(Eigen::Vector2d(0.0, 1.0)));
 }
 
