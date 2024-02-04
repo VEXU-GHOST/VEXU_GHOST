@@ -54,7 +54,7 @@ TEST_F(SwerveModelTestFixture, testStateGetterSetters){
 			auto state = getRandomModuleState();
 			EXPECT_NO_THROW(model->setModuleState(name, state));
 
-			state.steering_position = ghost_util::WrapAngle360(state.steering_position);
+			state.steering_angle = ghost_util::WrapAngle360(state.steering_angle);
 			EXPECT_NO_THROW(auto s = model->getCurrentModuleState(name));
 			EXPECT_EQ(state, model->getCurrentModuleState(name));
 		}
@@ -69,8 +69,8 @@ TEST_F(SwerveModelTestFixture, testLastModuleStatesAreSaved){
 			model->setModuleState(name, last_state);
 			model->setModuleState(name, curr_state);
 
-			last_state.steering_position = ghost_util::WrapAngle360(last_state.steering_position);
-			curr_state.steering_position = ghost_util::WrapAngle360(curr_state.steering_position);
+			last_state.steering_angle = ghost_util::WrapAngle360(last_state.steering_angle);
+			curr_state.steering_angle = ghost_util::WrapAngle360(curr_state.steering_angle);
 
 			EXPECT_EQ(last_state, model->getPreviousModuleState(name));
 			EXPECT_EQ(curr_state, model->getCurrentModuleState(name));

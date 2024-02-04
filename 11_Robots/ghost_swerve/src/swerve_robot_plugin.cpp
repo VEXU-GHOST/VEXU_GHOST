@@ -42,6 +42,7 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.module_type = swerve_type_e::DIFFERENTIAL;
 	swerve_model_config.steering_ratio = 13.0 / 44.0;
 	swerve_model_config.wheel_ratio = swerve_model_config.steering_ratio * 30.0 / 14.0;
+	swerve_model_config.wheel_radius = 2.75 / 2.0;
 
 	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
 	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);
@@ -80,7 +81,7 @@ void SwerveRobotPlugin::onNewSensorData(){
 		auto m2_velocity = rhi_ptr_->getMotorVelocityRPM(m2_name);
 		new_state.wheel_velocity = (module_jacobian * Eigen::Vector2d(m1_velocity, m2_velocity))[0];
 
-		new_state.steering_position = rhi_ptr_->getRotationSensorAngleDegrees(steering_name);
+		new_state.steering_angle = rhi_ptr_->getRotationSensorAngleDegrees(steering_name);
 		new_state.steering_velocity = rhi_ptr_->getRotationSensorVelocityRPM(steering_name);
 
 		m_swerve_model_ptr->setModuleState(module_name, new_state);
@@ -127,7 +128,7 @@ void SwerveRobotPlugin::publishSwerveVisualization(){
 		msg.velocity.push_back(module_state.wheel_velocity * M_PI / 30.0);
 
 		msg.name.push_back(steering_joint_name);
-		msg.position.push_back(module_state.steering_position * M_PI / 180.0);
+		msg.position.push_back(module_state.steering_angle * M_PI / 180.0);
 		msg.velocity.push_back(module_state.steering_velocity * M_PI / 30.0);
 	}
 

@@ -16,6 +16,7 @@ public:
 		m_config.max_wheel_lin_vel = 2.0;
 		m_config.steering_ratio = 13.0 / 44.0;
 		m_config.wheel_ratio = 13.0 / 44.0 * 30.0 / 14.0;
+		m_config.wheel_radius = 2.75 / 2.0;
 
 		// Mobile robots use forward as X, left as Y, and up as Z so that travelling forward is zero degree heading.
 		// No, I don't like it either.
@@ -59,7 +60,7 @@ public:
 		s.wheel_velocity = ghost_util::getRandomDouble();
 		s.wheel_acceleration = ghost_util::getRandomDouble();
 
-		s.steering_position = ghost_util::getRandomDouble();
+		s.steering_angle = ghost_util::getRandomDouble();
 		s.steering_velocity = ghost_util::getRandomDouble();
 		s.steering_acceleration = ghost_util::getRandomDouble();
 		return s;

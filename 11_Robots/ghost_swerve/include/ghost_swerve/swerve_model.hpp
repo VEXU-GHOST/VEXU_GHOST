@@ -22,6 +22,7 @@ struct SwerveConfig {
 	swerve_type_e module_type;
 	double steering_ratio;
 	double wheel_ratio;
+	double wheel_radius;
 
 	// XY Position of each module relative to robot base
 	std::unordered_map<std::string, Eigen::Vector2d> module_positions;
@@ -31,15 +32,15 @@ struct ModuleState {
 	double wheel_position;
 	double wheel_velocity;
 	double wheel_acceleration;
-	double steering_position;
+	double steering_angle;
 	double steering_velocity;
 	double steering_acceleration;
 
 	ModuleState() = default;
 
-	ModuleState(double wheel_pos, double steering_pos, double wheel_vel, double steering_vel, double wheel_accel = 0.0, double steering_accel = 0.0){
+	ModuleState(double wheel_pos, double steering_ang, double wheel_vel, double steering_vel, double wheel_accel = 0.0, double steering_accel = 0.0){
 		wheel_position = wheel_pos;
-		steering_position = ghost_util::WrapAngle360(steering_pos);
+		steering_angle = ghost_util::WrapAngle360(steering_ang);
 		wheel_velocity = wheel_vel;
 		steering_velocity = steering_vel;
 		wheel_acceleration = wheel_accel;
@@ -50,9 +51,35 @@ struct ModuleState {
 		return (std::fabs(wheel_position - rhs.wheel_position) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(wheel_velocity - rhs.wheel_velocity) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(wheel_acceleration - rhs.wheel_acceleration) < std::numeric_limits<double>::epsilon()) &&
-		       (std::fabs(steering_position - rhs.steering_position) < std::numeric_limits<double>::epsilon()) &&
+		       (std::fabs(steering_angle - rhs.steering_angle) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(steering_velocity - rhs.steering_velocity) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(steering_acceleration - rhs.steering_acceleration) < std::numeric_limits<double>::epsilon());
+	}
+};
+
+struct ModuleCommand {
+	double wheel_velocity_command;
+	double wheel_voltage_command;
+	double steering_angle_command;
+	double steering_velocity_command;
+	double steering_voltage_command;
+
+	ModuleCommand() = default;
+
+	ModuleCommand(double wheel_vel_cmd, double wheel_vlt_cmd, double steering_pos_cmd, double steering_vel_cmd, double steering_vlt_cmd){
+		wheel_velocity_command = wheel_vel_cmd;
+		wheel_voltage_command = wheel_vlt_cmd;
+		steering_angle_command = ghost_util::WrapAngle360(steering_pos_cmd);
+		steering_velocity_command = steering_vel_cmd;
+		steering_voltage_command = steering_vlt_cmd;
+	}
+
+	bool operator==(const ModuleCommand& rhs) const {
+		return (std::fabs(wheel_velocity_command - rhs.wheel_velocity_command) < std::numeric_limits<double>::epsilon()) &&
+		       (std::fabs(wheel_voltage_command - rhs.wheel_voltage_command) < std::numeric_limits<double>::epsilon()) &&
+		       (std::fabs(steering_angle_command - rhs.steering_angle_command) < std::numeric_limits<double>::epsilon()) &&
+		       (std::fabs(steering_velocity_command - rhs.steering_velocity_command) < std::numeric_limits<double>::epsilon()) &&
+		       (std::fabs(steering_voltage_command - rhs.steering_voltage_command) < std::numeric_limits<double>::epsilon());
 	}
 };
 
@@ -188,9 +215,11 @@ public:
 	 * @brief Updates module wheel and steering setpoints given a normalized base twist (each dimension is -1.0 -> 1.0).
 	 * This is internally scaled by the maximum linear/angular velocities of the robot.
 	 *
-	 * @param twist [forward_velocity, left_velocity, ccw_velocity]
+	 * @param right_vel
+	 * @param forward_vel
+	 * @param clockwise_vel
 	 */
-	void updateSwerveCommandFromNormalizedTwist(Eigen::Vector3d twist_norm);
+	void calculateKinematicSwerveController(double right_vel, double forward_vel, double clockwise_vel);
 
 	std::vector<geometry::Line2d> calculateWheelAxisVectors() const;
 	static std::vector<Eigen::Vector3d> calculateSphericalProjectionAxisIntersections(std::vector<geometry::Line2d> axes);
@@ -231,6 +260,7 @@ protected:
 	// Module States
 	std::unordered_map <std::string, ModuleState> m_previous_module_states;
 	std::unordered_map <std::string, ModuleState> m_current_module_states;
+	std::unordered_map <std::string, ModuleCommand> m_module_commands;
 
 	// Control Style
 	bool m_is_angle_control = false;

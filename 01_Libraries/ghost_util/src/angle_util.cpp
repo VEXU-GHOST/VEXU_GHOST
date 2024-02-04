@@ -1,4 +1,5 @@
 #include "ghost_util/angle_util.hpp"
+#include "ghost_util/unit_conversion_utils.hpp"
 
 namespace ghost_util {
 
