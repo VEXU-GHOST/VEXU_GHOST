@@ -30,23 +30,29 @@ struct SwerveConfig {
 struct ModuleState {
 	double wheel_position;
 	double wheel_velocity;
+	double wheel_acceleration;
 	double steering_position;
 	double steering_velocity;
+	double steering_acceleration;
 
 	ModuleState() = default;
 
-	ModuleState(double wheel_pos, double wheel_vel, double steering_pos, double steering_vel){
+	ModuleState(double wheel_pos, double steering_pos, double wheel_vel, double steering_vel, double wheel_accel = 0.0, double steering_accel = 0.0){
 		wheel_position = wheel_pos;
-		wheel_velocity = wheel_vel;
 		steering_position = ghost_util::WrapAngle360(steering_pos);
+		wheel_velocity = wheel_vel;
 		steering_velocity = steering_vel;
+		wheel_acceleration = wheel_accel;
+		steering_acceleration = steering_accel;
 	}
 
 	bool operator==(const ModuleState& rhs) const {
 		return (std::fabs(wheel_position - rhs.wheel_position) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(wheel_velocity - rhs.wheel_velocity) < std::numeric_limits<double>::epsilon()) &&
+		       (std::fabs(wheel_acceleration - rhs.wheel_acceleration) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(steering_position - rhs.steering_position) < std::numeric_limits<double>::epsilon()) &&
-		       (std::fabs(steering_velocity - rhs.steering_velocity) < std::numeric_limits<double>::epsilon());
+		       (std::fabs(steering_velocity - rhs.steering_velocity) < std::numeric_limits<double>::epsilon()) &&
+		       (std::fabs(steering_acceleration - rhs.steering_acceleration) < std::numeric_limits<double>::epsilon());
 	}
 };
 
@@ -164,7 +170,7 @@ public:
 	 */
 	bool getICR(Eigen::Vector2d& icr_point){
 		icr_point = m_icr_point;
-		return m_icr_is_inf;
+		return m_straight_line_translation;
 	}
 
 	/**
@@ -178,6 +184,19 @@ public:
 		return m_h_space_projection;
 	}
 
+	/**
+	 * @brief Updates module wheel and steering setpoints given a normalized base twist (each dimension is -1.0 -> 1.0).
+	 * This is internally scaled by the maximum linear/angular velocities of the robot.
+	 *
+	 * @param twist [forward_velocity, left_velocity, ccw_velocity]
+	 */
+	void updateSwerveCommandFromNormalizedTwist(Eigen::Vector3d twist_norm);
+
+	std::vector<geometry::Line2d> calculateWheelAxisVectors() const;
+	static std::vector<Eigen::Vector3d> calculateSphericalProjectionAxisIntersections(std::vector<geometry::Line2d> axes);
+	static Eigen::Vector3d averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors);
+	void filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, int num_modules);
+	void calculateHSpaceICR();
 
 protected:
 	// Initialization
@@ -187,9 +206,6 @@ protected:
 
 	void throwOnUnknownSwerveModule(const std::string& name, const std::string& method_name) const;
 	void calculateOdometry();
-
-	void calculateHSpaceICR(std::vector<geometry::Line2d> wheel_axes, Eigen::Vector2d& icr);
-
 
 	// Configuration
 	SwerveConfig m_config;
@@ -223,7 +239,7 @@ protected:
 	// ICR States
 	Eigen::Vector3d m_h_space_projection;
 	Eigen::Vector2d m_icr_point;
-	bool m_icr_is_inf;
+	bool m_straight_line_translation;
 };
 
 } // namespace ghost_swerve

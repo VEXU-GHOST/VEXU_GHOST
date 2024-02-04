@@ -1,8 +1,7 @@
 #include <ghost_swerve/swerve_model.hpp>
 #include <ghost_util/angle_util.hpp>
 
-using geometry::Line;
-using geometry::Line2f;
+using geometry::Line2d;
 
 namespace ghost_swerve {
 
@@ -91,7 +90,12 @@ void SwerveModel::setModuleState(const std::string& name, ModuleState state){
 }
 
 void SwerveModel::updateSwerveModel(){
+	calculateHSpaceICR();
 }
+
+void SwerveModel::updateSwerveCommandFromNormalizedTwist(Eigen::Vector3d twist_norm){
+}
+
 
 /*
    void GhostEstimatorNode::CalculateHSpaceICR(ghost_msgs::msg::V5SensorUpdate::SharedPtr encoder_msg){
@@ -176,6 +180,111 @@ void SwerveModel::updateSwerveModel(){
         DrawICRPoints(points);
    }
  */
+
+std::vector<Line2d> SwerveModel::calculateWheelAxisVectors() const {
+	std::vector<Line2d> axis_vectors;
+
+	// Convert each wheel module to Line2d
+	for(const auto & [name, start_point] : m_config.module_positions){
+		// Get angle of module in radians
+		double angle_rad = (m_current_module_states.at(name).steering_position) * M_PI / 180.0;
+
+		// Calculate end point of unit vector, rotating vector by 90 to align with driveshaft
+		auto end_point = start_point + Eigen::Vector2d(-sin(angle_rad), cos(angle_rad));
+		axis_vectors.push_back(Line2d(start_point, end_point));
+	}
+
+	return axis_vectors;
+}
+
+std::vector<Eigen::Vector3d> SwerveModel::calculateSphericalProjectionAxisIntersections(std::vector<Line2d> axes){
+	if(axes.size() < 2){
+		throw std::runtime_error("[SwerveModel::calculateSphericalProjectionAxisIntersections] Error: Requires atleast two axes to find intersections!");
+	}
+
+	std::vector<Eigen::Vector3d> intersection_points;
+	for(int i = 0; i < axes.size(); i++){
+		auto l1 = axes[i];
+		for(int j = i + 1; j < axes.size(); j++){
+			auto l2 = axes[j];
+			if(fabs(geometry::Cross(l1.Dir(), l2.Dir())) < 1e-9){
+				intersection_points.push_back(Eigen::Vector3d(l1.Dir().x(), l1.Dir().y(), 0.0));
+			}
+			else{
+				Eigen::Hyperplane<double, 2> hp1 = Eigen::Hyperplane<double, 2>::Through(l1.p0, l1.p1);
+				Eigen::Hyperplane<double, 2> hp2 = Eigen::Hyperplane<double, 2>::Through(l2.p0, l2.p1);
+				auto intersection = hp1.intersection(hp2);
+				auto intersection_3d = Eigen::Vector3d(intersection.x(), intersection.y(), 1);
+				intersection_points.push_back(intersection_3d / intersection_3d.norm());
+			}
+		}
+	}
+
+	return intersection_points;
+}
+
+Eigen::Vector3d SwerveModel::averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors){
+	if(vectors.size() == 0){
+		throw std::runtime_error("[SwerveModel::averageVectorAntipoles] Error: vector list is empty!");
+	}
+
+	// Find fusion candidates
+	auto first_vector = vectors[0].normalized();
+	std::vector<Eigen::Vector3d> candidates{first_vector};
+	for(int i = 1; i < vectors.size(); i++){
+		auto p = vectors[i].normalized();
+		auto d1 = (first_vector - p).norm();
+		auto d2 = (first_vector - (-p)).norm();
+		if(d1 < d2){
+			candidates.push_back(p);
+		}
+		else{
+			candidates.push_back(-p);
+		}
+	}
+
+	Eigen::Vector3d avg(0, 0, 0);
+	for(const auto &p : candidates){
+		avg += p;
+	}
+	return (avg / candidates.size()).normalized();
+}
+
+void SwerveModel::calculateHSpaceICR(){
+	std::vector<Line2d>  axis_vectors = calculateWheelAxisVectors();
+	std::vector<Eigen::Vector3d> h_space_unit_vectors = calculateSphericalProjectionAxisIntersections(axis_vectors);
+	filterCollinearVectors(h_space_unit_vectors, axis_vectors.size());
+	m_h_space_projection = averageVectorAntipoles(h_space_unit_vectors);
+
+	// Update 2D ICR
+	if(fabs(m_h_space_projection[2]) < 1e-9){
+		// Handle Parallel Case (Straight line translation)
+		m_icr_point = Eigen::Vector2d(m_h_space_projection[0], m_h_space_projection[1]).normalized();
+		m_straight_line_translation = true;
+	}
+	else{
+		m_icr_point = Eigen::Vector2d(m_h_space_projection[0] / m_h_space_projection[2], m_h_space_projection[1] / m_h_space_projection[2]);
+		m_straight_line_translation = false;
+	}
+}
+
+void SwerveModel::filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, int num_modules){
+	// If two axes are collinear but the robot isn't moving straight, it throws off the ICR average.
+	// Thus, if there is only one collinear point, remove it.
+	// Do it in reverse so we can erase later
+	std::vector<int> collinear_point_indices;
+	for(int i = vectors.size() - 1; i >= 0; i--){
+		if(vectors[i][2] < 1e-9){
+			collinear_point_indices.push_back(i);
+		}
+	}
+
+	if(collinear_point_indices.size() <= num_modules / 2){
+		for(const auto & index : collinear_point_indices){
+			vectors.erase(vectors.begin() + index);
+		}
+	}
+}
 
 void SwerveModel::calculateOdometry(){
 }

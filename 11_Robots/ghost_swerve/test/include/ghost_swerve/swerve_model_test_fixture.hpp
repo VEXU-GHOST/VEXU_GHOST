@@ -57,11 +57,23 @@ public:
 		ModuleState s;
 		s.wheel_position = ghost_util::getRandomDouble();
 		s.wheel_velocity = ghost_util::getRandomDouble();
+		s.wheel_acceleration = ghost_util::getRandomDouble();
 
 		s.steering_position = ghost_util::getRandomDouble();
 		s.steering_velocity = ghost_util::getRandomDouble();
+		s.steering_acceleration = ghost_util::getRandomDouble();
 		return s;
 	}
+
+	template <typename T>
+	static bool listContainsEigenVector(const std::vector<T>& list, const T& expected){
+		bool result = false;
+		for(const auto & vec : list){
+			result |= expected.isApprox(vec);
+		}
+		return result;
+	}
+
 	std::vector<std::shared_ptr<SwerveModel> > m_models;
 	std::shared_ptr<SwerveModel> m_coax_model_ptr;
 	std::shared_ptr<SwerveModel> m_diff_model_ptr;

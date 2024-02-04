@@ -23,13 +23,17 @@ float getRandomDouble(){
 	return sign * ((double) rand() + 0.0001 * rand());
 }
 
-float getRandomDouble(float max){
+float getRandomDouble(double max){
 	float sign = (getRandomBool()) ? 1 : -1;
 	return sign * std::fmod((double) rand() + 0.0001 * rand(), max);
 }
 
 int getRandomInt(){
 	return (int) getRandomFloat();
+}
+
+int getRandomInt(int max){
+	return (int) getRandomFloat(max);
 }
 
 }
