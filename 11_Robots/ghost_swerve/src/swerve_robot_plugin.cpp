@@ -44,6 +44,7 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.wheel_ratio = swerve_model_config.steering_ratio * 30.0 / 14.0;
 	swerve_model_config.wheel_radius = 2.75 / 2.0;
 	swerve_model_config.steering_kp = 0.18;
+	swerve_model_config.max_wheel_actuator_vel = 650.0;
 
 	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
 	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);

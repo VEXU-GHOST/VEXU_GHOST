@@ -23,6 +23,7 @@ struct SwerveConfig {
 	double steering_ratio;
 	double wheel_ratio;
 	double wheel_radius;
+	double max_wheel_actuator_vel;
 
 	// Kinematic Controller
 	double steering_kp;
@@ -67,22 +68,19 @@ struct ModuleCommand {
 	double steering_velocity_command;
 	double steering_voltage_command;
 
-	ModuleCommand() = default;
+	Eigen::Vector2d actuator_velocity_commands = Eigen::Vector2d(0.0, 0.0);
+	Eigen::Vector2d actuator_voltage_commands = Eigen::Vector2d(0.0, 0.0);
 
-	ModuleCommand(double wheel_vel_cmd, double wheel_vlt_cmd, double steering_pos_cmd, double steering_vel_cmd, double steering_vlt_cmd){
-		wheel_velocity_command = wheel_vel_cmd;
-		wheel_voltage_command = wheel_vlt_cmd;
-		steering_angle_command = ghost_util::WrapAngle360(steering_pos_cmd);
-		steering_velocity_command = steering_vel_cmd;
-		steering_voltage_command = steering_vlt_cmd;
-	}
+	ModuleCommand() = default;
 
 	bool operator==(const ModuleCommand& rhs) const {
 		return (std::fabs(wheel_velocity_command - rhs.wheel_velocity_command) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(wheel_voltage_command - rhs.wheel_voltage_command) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(steering_angle_command - rhs.steering_angle_command) < std::numeric_limits<double>::epsilon()) &&
 		       (std::fabs(steering_velocity_command - rhs.steering_velocity_command) < std::numeric_limits<double>::epsilon()) &&
-		       (std::fabs(steering_voltage_command - rhs.steering_voltage_command) < std::numeric_limits<double>::epsilon());
+		       (std::fabs(steering_voltage_command - rhs.steering_voltage_command) < std::numeric_limits<double>::epsilon()) &&
+		       (actuator_velocity_commands.isApprox(rhs.actuator_velocity_commands)) &&
+		       (actuator_voltage_commands.isApprox(rhs.actuator_voltage_commands));
 	}
 };
 

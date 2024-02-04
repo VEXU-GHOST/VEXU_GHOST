@@ -27,7 +27,8 @@ void SwerveModel::validateConfig(){
 		{"steering_ratio", m_config.steering_ratio},
 		{"wheel_ratio", m_config.wheel_ratio},
 		{"wheel_radius", m_config.wheel_radius},
-		{"steering_kp", m_config.steering_kp}
+		{"steering_kp", m_config.steering_kp},
+		{"max_wheel_actuator_vel", m_config.max_wheel_actuator_vel}
 	};
 
 	for(const auto& [key, val] : double_params){
@@ -125,8 +126,8 @@ void SwerveModel::calculateKinematicSwerveController(double right_vel, double fo
 		module_command.steering_angle_command = ghost_util::WrapAngle360(atan2(velocity_vector.y(), velocity_vector.x()) * ghost_util::RAD_TO_DEG);
 		module_command.wheel_velocity_command = velocity_vector.norm() * LIN_VEL_TO_RPM;
 
-		ModuleState module_state = m_current_module_states.at(module_name);
-		double steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, module_state.steering_angle);
+		double steering_angle = m_current_module_states.at(module_name).steering_angle;
+		double steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, steering_angle);
 
 		if(fabs(steering_error) > 90.0){
 			// Flip commands
@@ -134,11 +135,61 @@ void SwerveModel::calculateKinematicSwerveController(double right_vel, double fo
 			module_command.steering_angle_command = ghost_util::FlipAngle180(module_command.steering_angle_command);
 
 			// Recalculate error
-			double steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, module_state.steering_angle);
+			double steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, steering_angle);
 		}
 
 		// Set steering voltage using position control law
 		module_command.steering_voltage_command = steering_error * m_config.steering_kp;
+
+		// Update module command
+		m_module_commands[module_name] = module_command;
+	}
+
+	for(auto& [name, command] : m_module_commands){
+		// Calculate commands in Actuator space
+		auto module_vel_cmd = Eigen::Vector2d(command.wheel_velocity_command, command.steering_velocity_command);
+		command.actuator_velocity_commands = m_module_jacobian_inv * module_vel_cmd;
+
+		auto module_voltage_cmd = Eigen::Vector2d(command.wheel_voltage_command, command.steering_voltage_command);
+		command.actuator_voltage_commands = m_module_jacobian_transpose * module_voltage_cmd;
+	}
+
+	if(m_config.module_type == swerve_type_e::DIFFERENTIAL){
+		// Get largest velocity magnitude
+		double max_velocity = 0.0;
+		for(auto& [name, command] : m_module_commands){
+			max_velocity = std::max(fabs(command.actuator_velocity_commands[0]), max_velocity);
+			max_velocity = std::max(fabs(command.actuator_velocity_commands[1]), max_velocity);
+		}
+
+		// Normalize if any motor exceeds maximum possible speed
+		if(max_velocity > m_config.max_wheel_actuator_vel){
+			for(auto& [name, command] : m_module_commands){
+				command.actuator_velocity_commands *= (m_config.max_wheel_actuator_vel / max_velocity);
+			}
+		}
+	}
+	else if(m_config.module_type == swerve_type_e::COAXIAL){
+		// Get largest velocity magnitude
+		double max_velocity = 0.0;
+		for(auto& [name, command] : m_module_commands){
+			max_velocity = std::max(fabs(command.actuator_velocity_commands[0]), max_velocity);
+		}
+
+		// Normalize if any motor exceeds maximum possible speed
+		if(max_velocity > m_config.max_wheel_actuator_vel){
+			for(auto& [name, command] : m_module_commands){
+				command.actuator_velocity_commands[0] *= (m_config.max_wheel_actuator_vel / max_velocity);
+			}
+		}
+	}
+
+	// If we don't receive non-zero user input, zero everything
+	if((fabs(lin_vel_cmd) < 1e-5) && (fabs(ang_vel_cmd) < 1e-5)){
+		for(auto& [name, command] : m_module_commands){
+			command.actuator_velocity_commands = Eigen::Vector2d(0.0, 0.0);
+			command.actuator_voltage_commands = Eigen::Vector2d(0.0, 0.0);
+		}
 	}
 }
 
