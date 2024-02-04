@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# put the path to this script in `gnome-session-properties` (likely /home/ghost2/VEXU_GHOST/scripts/hardware/jetson_startup.sh)
+
 source ~/.bashrc
 
 # https://askubuntu.com/questions/581922/export-display-value-in-shell-script
