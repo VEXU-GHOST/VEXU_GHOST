@@ -96,6 +96,8 @@ void SwerveModel::setModuleState(const std::string& name, ModuleState state){
 
 void SwerveModel::updateSwerveModel(){
 	calculateHSpaceICR();
+	calculateCurrentBaseVelocity();
+	calculateOdometry();
 }
 
 void SwerveModel::calculateKinematicSwerveController(double right_vel, double forward_vel, double clockwise_vel){
@@ -301,6 +303,10 @@ void SwerveModel::filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, 
 
 void SwerveModel::calculateOdometry(){
 }
+
+void SwerveModel::calculateCurrentBaseVelocity(){
+}
+
 
 void SwerveModel::throwOnUnknownSwerveModule(const std::string& name, const std::string& method_name) const {
 	if(m_current_module_states.count(name) == 0){

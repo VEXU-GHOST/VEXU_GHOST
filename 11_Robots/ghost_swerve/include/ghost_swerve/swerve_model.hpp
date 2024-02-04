@@ -250,8 +250,12 @@ protected:
 	void calculateJacobians();
 	void calculateMaxBaseTwist();
 
+	// Error Catching
 	void throwOnUnknownSwerveModule(const std::string& name, const std::string& method_name) const;
+
+	// Model updates
 	void calculateOdometry();
+	void calculateCurrentBaseVelocity();
 
 	// Configuration
 	SwerveConfig m_config;

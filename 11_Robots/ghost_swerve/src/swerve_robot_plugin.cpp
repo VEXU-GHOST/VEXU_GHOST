@@ -103,8 +103,29 @@ void SwerveRobotPlugin::autonomous(double current_time){
 void SwerveRobotPlugin::teleop(double current_time){
 	std::cout << "Teleop: " << current_time << std::endl;
 	auto joy_data = rhi_ptr_->getMainJoystickData();
-	rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_brb", 2500);
-	rhi_ptr_->setMotorVoltageCommandPercent("drive_brb", joy_data->left_y / 127.0);
+
+	m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->right_x, joy_data->right_y, -joy_data->left_x);
+
+
+	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
+		{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
+		{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
+		{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
+		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
+	};
+
+	for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
+		std::string m1_name = motor_name_pair.first;
+		std::string m2_name = motor_name_pair.second;
+		auto command = m_swerve_model_ptr->getModuleCommand(module_name);
+		rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
+		rhi_ptr_->setMotorVelocityCommandRPM(m1_name, command.actuator_velocity_commands[0]);
+		rhi_ptr_->setMotorVoltageCommandPercent(m1_name, command.actuator_voltage_commands[0]);
+
+		rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
+		rhi_ptr_->setMotorVelocityCommandRPM(m2_name, command.actuator_velocity_commands[1]);
+		rhi_ptr_->setMotorVoltageCommandPercent(m2_name, command.actuator_voltage_commands[1]);
+	}
 }
 
 void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
