@@ -1,11 +1,16 @@
 #!/bin/bash
+logger "RUNNING launch_hardware.sh"
+cd ~/VEXU_GHOST
+source ~/.bashrc
+
+# idk if we need to double it given it's already in bashrc but it works so don't touch it
 source /opt/ros/humble/setup.bash
-source ~/rplidar_ros/install/setup.bash
 source ~/VEXU_GHOST/install/setup.bash
+export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
+export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_PATH
 
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/${LD_LIBRARY_PATH:+:$LD_LIBRAR>
-export DISPLAY=:0.0
+# log to stdout AND /var/log/syslog
+ros2 launch ghost_over_under hardware.launch.py 2>&1 | tee /dev/tty |& logger
 
-
-#ros2 launch ghost_ros hardware.launch.py
-sleep 10
+logger "RUNNING ros2 launch ghost_over_under DONE"
+logger ${PIPESTATUS}
