@@ -269,18 +269,19 @@ void SwerveModel::calculateHSpaceICR(){
 }
 
 void SwerveModel::filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, int num_modules){
-	// If two axes are collinear but the robot isn't moving straight, it throws off the ICR average.
-	// Thus, if there is only one collinear point, remove it.
-	// Do it in reverse so we can erase later
-	std::vector<int> collinear_point_indices;
+	// If axes are collinear but the robot isn't moving straight, it throws off the ICR average (and thus all
+	// related calculations). Store the indices of collinear vectors (in reverse, if we need to erase them later).
+	std::vector<int> collinear_vector_indices;
 	for(int i = vectors.size() - 1; i >= 0; i--){
 		if(vectors[i][2] < 1e-9){
-			collinear_point_indices.push_back(i);
+			collinear_vector_indices.push_back(i);
 		}
 	}
 
-	if(collinear_point_indices.size() <= num_modules / 2){
-		for(const auto & index : collinear_point_indices){
+	// If we aren't driving straight, the maximum number of collinear vectors is num_modules / 2,
+	// where the ICR is in center of the robot, and each pair of opposite modules intersects.
+	if(collinear_vector_indices.size() <= num_modules / 2){
+		for(const auto & index : collinear_vector_indices){
 			vectors.erase(vectors.begin() + index);
 		}
 	}
