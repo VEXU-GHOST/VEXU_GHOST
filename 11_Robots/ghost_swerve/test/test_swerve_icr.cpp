@@ -73,13 +73,16 @@ TEST_F(SwerveModelTestFixture, testFourAxesIntersections){
 }
 
 TEST_F(SwerveModelTestFixture, testClusterAntipolesThrowsOnEmpty){
-	EXPECT_THROW(m_diff_model_ptr->averageVectorAntipoles(std::vector<Eigen::Vector3d>()), std::runtime_error);
+	Eigen::Vector3d output;
+	EXPECT_THROW(m_diff_model_ptr->averageVectorAntipoles(std::vector<Eigen::Vector3d>(), output), std::runtime_error);
 }
 TEST_F(SwerveModelTestFixture, testClusterAntipolesSingle){
 	std::vector<Eigen::Vector3d> antipole_vectors{
 		Eigen::Vector3d(getRandomDouble(), getRandomDouble(), getRandomDouble())
 	};
-	auto avg_point = m_diff_model_ptr->averageVectorAntipoles(antipole_vectors);
+
+	Eigen::Vector3d avg_point;
+	EXPECT_EQ(m_diff_model_ptr->averageVectorAntipoles(antipole_vectors, avg_point), 0.0);
 	EXPECT_TRUE(avg_point.isApprox(antipole_vectors[0].normalized()));
 	EXPECT_TRUE(avg_point.isApprox(avg_point.normalized()));
 }
@@ -92,7 +95,9 @@ TEST_F(SwerveModelTestFixture, testClusterAntipolesXAxis){
 		Eigen::Vector3d(1.0, 0.5, -0.5),
 		Eigen::Vector3d(1.0, -0.5, -0.5)
 	};
-	auto avg_point = m_diff_model_ptr->averageVectorAntipoles(antipole_vectors);
+
+	Eigen::Vector3d avg_point;
+	EXPECT_TRUE(m_diff_model_ptr->averageVectorAntipoles(antipole_vectors, avg_point) > 0.0);
 	EXPECT_TRUE(avg_point.isApprox(Eigen::Vector3d(1.0, 0.0, 0.0).normalized()));
 	EXPECT_TRUE(avg_point.isApprox(avg_point.normalized()));
 }
@@ -105,7 +110,9 @@ TEST_F(SwerveModelTestFixture, testClusterAntipolesYAxis){
 		Eigen::Vector3d(0.5, 1.0, -0.5),
 		Eigen::Vector3d(-0.5, 1.0, -0.5)
 	};
-	auto avg_point = m_diff_model_ptr->averageVectorAntipoles(antipole_vectors);
+
+	Eigen::Vector3d avg_point;
+	EXPECT_TRUE(m_diff_model_ptr->averageVectorAntipoles(antipole_vectors, avg_point) > 0.0);
 	EXPECT_TRUE(avg_point.isApprox(Eigen::Vector3d(0.0, 1.0, 0.0).normalized()));
 	EXPECT_TRUE(avg_point.isApprox(avg_point.normalized()));
 }
@@ -118,7 +125,8 @@ TEST_F(SwerveModelTestFixture, testClusterAntipolesZAxis){
 		Eigen::Vector3d(-0.5, 0.5, 1.0),
 		Eigen::Vector3d(-0.5, -0.5, 1.0)
 	};
-	auto avg_point = m_diff_model_ptr->averageVectorAntipoles(antipole_vectors);
+	Eigen::Vector3d avg_point;
+	EXPECT_TRUE(m_diff_model_ptr->averageVectorAntipoles(antipole_vectors, avg_point) > 0.0);
 	EXPECT_TRUE(avg_point.isApprox(Eigen::Vector3d(0.0, 0.0, 1.0).normalized()));
 	EXPECT_TRUE(avg_point.isApprox(avg_point.normalized()));
 }
@@ -131,7 +139,8 @@ TEST_F(SwerveModelTestFixture, testClusterAntipolesRandomInverted){
 		-Eigen::Vector3d(1.0, 0.5, -0.5),
 		Eigen::Vector3d(1.0, -0.5, -0.5)
 	};
-	auto avg_point = m_diff_model_ptr->averageVectorAntipoles(antipole_vectors);
+	Eigen::Vector3d avg_point;
+	EXPECT_TRUE(m_diff_model_ptr->averageVectorAntipoles(antipole_vectors, avg_point) > 0.0);
 	EXPECT_TRUE(avg_point.isApprox(Eigen::Vector3d(1.0, 0.0, 0.0).normalized()));
 	EXPECT_TRUE(avg_point.isApprox(avg_point.normalized()));
 }

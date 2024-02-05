@@ -68,6 +68,7 @@ struct ModuleCommand {
 	double steering_velocity_command;
 	double steering_voltage_command;
 
+	Eigen::Vector2d wheel_velocity_vector = Eigen::Vector2d(0.0, 0.0);
 	Eigen::Vector2d actuator_velocity_commands = Eigen::Vector2d(0.0, 0.0);
 	Eigen::Vector2d actuator_voltage_commands = Eigen::Vector2d(0.0, 0.0);
 
@@ -238,9 +239,14 @@ public:
 	 */
 	void calculateKinematicSwerveController(double right_vel, double forward_vel, double clockwise_vel);
 
+	const Eigen::Vector3d& getBaseVelocityCommand(){
+		return m_base_vel_cmd;
+	}
+
 	std::vector<geometry::Line2d> calculateWheelAxisVectors() const;
 	static std::vector<Eigen::Vector3d> calculateSphericalProjectionAxisIntersections(std::vector<geometry::Line2d> axes);
-	static Eigen::Vector3d averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors);
+	double averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors, Eigen::Vector3d& avg_point);
+
 	void filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, int num_modules);
 	void calculateHSpaceICR();
 
@@ -255,7 +261,6 @@ protected:
 
 	// Model updates
 	void calculateOdometry();
-	void calculateCurrentBaseVelocity();
 
 	// Configuration
 	SwerveConfig m_config;
@@ -291,6 +296,7 @@ protected:
 	Eigen::Vector3d m_h_space_projection;
 	Eigen::Vector2d m_icr_point;
 	bool m_straight_line_translation;
+	double m_icr_sse = 0;
 };
 
 } // namespace ghost_swerve

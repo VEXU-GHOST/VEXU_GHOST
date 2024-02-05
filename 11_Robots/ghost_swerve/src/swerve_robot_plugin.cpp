@@ -3,6 +3,8 @@
 #include <ghost_swerve/swerve_robot_plugin.hpp>
 #include <pluginlib/class_list_macros.hpp>
 
+#include <ghost_util/unit_conversion_utils.hpp>
+
 using std::placeholders::_1;
 
 namespace ghost_swerve {
@@ -22,6 +24,9 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
 	std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
 
+	node_ptr_->declare_parameter("marker_array_topic", "/swerve_markers");
+	std::string marker_array_topic = node_ptr_->get_parameter("marker_array_topic").as_string();
+
 	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
 		pose_topic,
 		10,
@@ -36,15 +41,20 @@ void SwerveRobotPlugin::initialize(){
 		joint_state_topic,
 		10);
 
+	m_viz_pub = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>(
+		marker_array_topic,
+		10);
+
 	// Setup Swerve Model
 	SwerveConfig swerve_model_config;
-	swerve_model_config.max_wheel_lin_vel = 2.75 * M_PI * 650 / 60;
 	swerve_model_config.module_type = swerve_type_e::DIFFERENTIAL;
 	swerve_model_config.steering_ratio = 13.0 / 44.0;
 	swerve_model_config.wheel_ratio = swerve_model_config.steering_ratio * 30.0 / 14.0;
 	swerve_model_config.wheel_radius = 2.75 / 2.0;
-	swerve_model_config.steering_kp = 0.18;
+	swerve_model_config.steering_kp = 0.1;
 	swerve_model_config.max_wheel_actuator_vel = 650.0;
+	auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
+	swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius * ghost_util::INCHES_TO_METERS;
 
 	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
 	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);
@@ -101,11 +111,10 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
 }
 void SwerveRobotPlugin::teleop(double current_time){
-	std::cout << "Teleop: " << current_time << std::endl;
 	auto joy_data = rhi_ptr_->getMainJoystickData();
+	std::cout << "Teleop: " << current_time << std::endl;
 
-	m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->right_x, joy_data->right_y, -joy_data->left_x);
-
+	m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
 
 	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
 		{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
@@ -156,6 +165,45 @@ void SwerveRobotPlugin::publishSwerveVisualization(){
 	}
 
 	m_joint_state_pub->publish(msg);
+
+	std::vector<std::string> module_names{
+		"left_front",
+		"right_front",
+		"left_back",
+		"right_back"
+	};
+
+	visualization_msgs::msg::MarkerArray viz_msg;
+	int j = 0;
+	for(const auto& name : module_names){
+		auto module_command = m_swerve_model_ptr->getModuleCommand(name);
+		auto module_position = m_swerve_model_ptr->getConfig().module_positions.at(name);
+		auto marker_msg = visualization_msgs::msg::Marker{};
+
+		marker_msg.header.frame_id = "base_link";
+		marker_msg.header.stamp = node_ptr_->get_clock()->now();
+		marker_msg.id = j++;
+		marker_msg.action = 0;
+		marker_msg.type = 0;
+		marker_msg.scale.x = 0.01;
+		marker_msg.scale.y = 0.01;
+		marker_msg.scale.z = 0.01;
+		marker_msg.color.a = 1;
+
+		geometry_msgs::msg::Point p0{};
+		p0.x = module_position.x();
+		p0.y = module_position.y();
+		p0.z = 0.0;
+		marker_msg.points.push_back(p0);
+		geometry_msgs::msg::Point p1{};
+		p1.x = module_position.x() + module_command.wheel_velocity_vector.x();
+		p1.y = module_position.y() + module_command.wheel_velocity_vector.y();
+		p1.z = 0.0;
+		marker_msg.points.push_back(p1);
+
+		viz_msg.markers.push_back(marker_msg);
+	}
+	m_viz_pub->publish(viz_msg);
 }
 
 } // namespace ghost_swerve
