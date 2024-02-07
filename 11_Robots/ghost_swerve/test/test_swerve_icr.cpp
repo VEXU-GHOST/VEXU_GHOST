@@ -145,6 +145,37 @@ TEST_F(SwerveModelTestFixture, testClusterAntipolesRandomInverted){
 	EXPECT_TRUE(avg_point.isApprox(avg_point.normalized()));
 }
 
+// TEST_F(SwerveModelTestFixture, testClusterAntipolesRejectPoints){
+// 	std::vector<Eigen::Vector3d> antipole_vectors{
+// 		Eigen::Vector3d(1.0, 0.0, 0.0),
+// 		Eigen::Vector3d(1.0, 0.5, 0.5),
+// 		Eigen::Vector3d(1.0, -0.5, 0.5),
+// 		Eigen::Vector3d(1.0, 0.5, -0.5),
+// 		Eigen::Vector3d(1.0, -0.5, -0.5),
+// 		Eigen::Vector3d(0.0, 0.0, 1.0)
+// 	};
+// 	Eigen::Vector3d avg_point;
+// 	EXPECT_TRUE(m_diff_model_ptr->averageVectorAntipoles(antipole_vectors, avg_point, 1) > 0.0);
+// 	EXPECT_TRUE(avg_point.isApprox(Eigen::Vector3d(1.0, 0.0, 0.0).normalized()));
+// 	EXPECT_TRUE(avg_point.isApprox(avg_point.normalized()));
+// }
+
+// TEST_F(SwerveModelTestFixture, testClusterAntipolesRejectTwoPoints){
+// 	std::vector<Eigen::Vector3d> antipole_vectors{
+// 		Eigen::Vector3d(1.0, 0.0, 0.0),
+// 		Eigen::Vector3d(1.0, 0.5, 0.5),
+// 		Eigen::Vector3d(1.0, -0.5, 0.5),
+// 		Eigen::Vector3d(1.0, 0.5, -0.5),
+// 		Eigen::Vector3d(1.0, -0.5, -0.5),
+// 		Eigen::Vector3d(0.0, 0.0, 1.0),
+// 		Eigen::Vector3d(0.0, 0.0, -1.0)
+// 	};
+// 	Eigen::Vector3d avg_point;
+// 	EXPECT_TRUE(m_diff_model_ptr->averageVectorAntipoles(antipole_vectors, avg_point, 2) > 0.0);
+// 	EXPECT_TRUE(avg_point.isApprox(Eigen::Vector3d(1.0, 0.0, 0.0).normalized()));
+// 	EXPECT_TRUE(avg_point.isApprox(avg_point.normalized()));
+// }
+
 TEST_F(SwerveModelTestFixture, testICRZeroCase){
 	m_diff_model_ptr->setModuleState("front_right", ModuleState(0.0, 45, 0.0, 0.0));
 	m_diff_model_ptr->setModuleState("front_left", ModuleState(0.0, -45, 0.0, 0.0));
@@ -207,6 +238,7 @@ TEST_F(SwerveModelTestFixture, testICRRearCenter){
 
 	Eigen::Vector2d icr_point;
 	EXPECT_FALSE(m_diff_model_ptr->getICR(icr_point));
+	std::cout << icr_point << std::endl;
 	EXPECT_TRUE((icr_point - Eigen::Vector2d(-5.5, 0.0)).norm() < 1e-5);
 }
 
@@ -286,6 +318,7 @@ TEST_F(SwerveModelTestFixture, testICRInfinityLeft){
 	Eigen::Vector2d icr_point;
 	EXPECT_TRUE(m_diff_model_ptr->getICR(icr_point));
 	EXPECT_TRUE(icr_point.isApprox(Eigen::Vector2d(0.0, 1.0)));
+	EXPECT_NEAR(m_diff_model_ptr->getICRSSE(), 0.0, 1e-3);
 }
 
 TEST_F(SwerveModelTestFixture, testICRInfinityForward){
@@ -299,6 +332,7 @@ TEST_F(SwerveModelTestFixture, testICRInfinityForward){
 	Eigen::Vector2d icr_point;
 	EXPECT_TRUE(m_diff_model_ptr->getICR(icr_point));
 	EXPECT_TRUE(icr_point.isApprox(Eigen::Vector2d(1.0, 0.0)));
+	EXPECT_NEAR(m_diff_model_ptr->getICRSSE(), 0.0, 1e-3);
 }
 
 TEST_F(SwerveModelTestFixture, testICRInfinityForwardRight){
@@ -312,6 +346,7 @@ TEST_F(SwerveModelTestFixture, testICRInfinityForwardRight){
 	Eigen::Vector2d icr_point;
 	EXPECT_TRUE(m_diff_model_ptr->getICR(icr_point));
 	EXPECT_TRUE(icr_point.isApprox(Eigen::Vector2d(1.0, -1.0).normalized()));
+	EXPECT_NEAR(m_diff_model_ptr->getICRSSE(), 0.0, 1e-3);
 }
 
 TEST_F(SwerveModelTestFixture, testICRInfinityDownRight){
@@ -325,6 +360,7 @@ TEST_F(SwerveModelTestFixture, testICRInfinityDownRight){
 	Eigen::Vector2d icr_point;
 	EXPECT_TRUE(m_diff_model_ptr->getICR(icr_point));
 	EXPECT_TRUE(icr_point.isApprox(Eigen::Vector2d(-1.0, -1.0).normalized()));
+	EXPECT_NEAR(m_diff_model_ptr->getICRSSE(), 0.0, 1e-3);
 }
 
 TEST_F(SwerveModelTestFixture, testICRInfinityDown){
@@ -338,4 +374,29 @@ TEST_F(SwerveModelTestFixture, testICRInfinityDown){
 	Eigen::Vector2d icr_point;
 	EXPECT_TRUE(m_diff_model_ptr->getICR(icr_point));
 	EXPECT_TRUE(icr_point.isApprox(Eigen::Vector2d(-1.0, 0.0).normalized()));
+	EXPECT_NEAR(m_diff_model_ptr->getICRSSE(), 0.0, 1e-3);
+}
+
+TEST_F(SwerveModelTestFixture, testICRInfinityNoisy){
+	m_diff_model_ptr->setModuleState("front_right", ModuleState(0.0, 90.0 + getRandomDouble(0.05), 0.0, 0.0));
+	m_diff_model_ptr->setModuleState("front_left", ModuleState(0.0, 90.0 + getRandomDouble(0.05), 0.0, 0.0));
+	m_diff_model_ptr->setModuleState("back_right", ModuleState(0.0, 90.0 + getRandomDouble(0.05), 0.0, 0.0));
+	m_diff_model_ptr->setModuleState("back_left", ModuleState(0.0, 90.0 + getRandomDouble(0.05), 0.0, 0.0));
+
+	m_diff_model_ptr->updateSwerveModel();
+
+	Eigen::Vector2d icr_point;
+	EXPECT_NEAR(m_diff_model_ptr->getICRSSE(), 0.0, 1e-3);
+}
+
+TEST_F(SwerveModelTestFixture, testICRInfinityCollinearEvaluatesToInsideRobot){
+	m_diff_model_ptr->setModuleState("front_right", ModuleState(0.0, 1.0, 0.0, 0.0));
+	m_diff_model_ptr->setModuleState("front_left", ModuleState(0.0, -1.0, 0.0, 0.0));
+	m_diff_model_ptr->setModuleState("back_right", ModuleState(0.0, 0.0, 0.0, 0.0));
+	m_diff_model_ptr->setModuleState("back_left", ModuleState(0.0, 0.0, 0.0, 0.0));
+
+	m_diff_model_ptr->updateSwerveModel();
+
+	Eigen::Vector2d icr_point;
+	EXPECT_NEAR(m_diff_model_ptr->getICRSSE(), 0.0, 1e-3);
 }

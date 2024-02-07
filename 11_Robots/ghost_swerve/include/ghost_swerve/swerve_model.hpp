@@ -245,7 +245,11 @@ public:
 
 	std::vector<geometry::Line2d> calculateWheelAxisVectors() const;
 	static std::vector<Eigen::Vector3d> calculateSphericalProjectionAxisIntersections(std::vector<geometry::Line2d> axes);
-	double averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors, Eigen::Vector3d& avg_point);
+	double averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors, Eigen::Vector3d& avg_point, int num_rejected_points = 0);
+
+	double getICRSSE() const {
+		return m_icr_sse;
+	}
 
 	void filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, int num_modules);
 	void calculateHSpaceICR();

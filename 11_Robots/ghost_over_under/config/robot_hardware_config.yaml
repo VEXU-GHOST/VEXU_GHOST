@@ -85,7 +85,7 @@ port_configuration:
                 nominal_voltage: 12.0
                 gear_ratio: 6.0
             serial:
-                send_position_command: true
+                send_position_command: false
                 send_velocity_command: true
                 send_voltage_command: true
                 send_torque_command: false

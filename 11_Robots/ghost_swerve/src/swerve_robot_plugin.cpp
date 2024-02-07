@@ -51,7 +51,7 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.steering_ratio = 13.0 / 44.0;
 	swerve_model_config.wheel_ratio = swerve_model_config.steering_ratio * 30.0 / 14.0;
 	swerve_model_config.wheel_radius = 2.75 / 2.0;
-	swerve_model_config.steering_kp = 0.1;
+	swerve_model_config.steering_kp = 2.0;
 	swerve_model_config.max_wheel_actuator_vel = 650.0;
 	auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
 	swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius * ghost_util::INCHES_TO_METERS;
@@ -68,7 +68,7 @@ void SwerveRobotPlugin::onNewSensorData(){
 	auto module_jacobian = m_swerve_model_ptr->getModuleJacobian();
 
 	std::unordered_map<std::string, std::tuple<std::string, std::string, std::string> > module_motor_mapping{
-		{"left_front", std::tuple<std::string, std::string, std::string>("drive_flr", "drive_fll", "steering_front_left")},
+		{"left_front", std::tuple<std::string, std::string, std::string>("drive_fll", "drive_flr", "steering_front_left")},
 		{"right_front", std::tuple<std::string, std::string, std::string>("drive_frr", "drive_frl", "steering_front_right")},
 		{"left_back", std::tuple<std::string, std::string, std::string>("drive_blf", "drive_blb", "steering_back_left")},
 		{"right_back", std::tuple<std::string, std::string, std::string>("drive_brf", "drive_brb", "steering_back_right")}

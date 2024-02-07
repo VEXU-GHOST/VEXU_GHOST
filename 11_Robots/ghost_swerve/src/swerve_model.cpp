@@ -144,17 +144,24 @@ void SwerveModel::calculateKinematicSwerveController(double right_vel, double fo
 			steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, steering_angle);
 		}
 		max_steering_error = std::max(max_steering_error, std::fabs(steering_error));
+
 		// Set steering voltage using position control law
-		module_command.steering_voltage_command = steering_error * m_config.steering_kp;
+		module_command.steering_velocity_command = steering_error * m_config.steering_kp;
 
 		// Update module command
 		m_module_commands[module_name] = module_command;
 	}
 
+	const double x1 = 20.0;
 	// Transient Misalignment Heuristic
-	if(max_steering_error > 5.0){
-		// Linear Interpolation between 95% multiplier at 5 deg and 0% at 15 deg.
-		double attentuation_percent = std::max(-0.095 * max_steering_error + 1.425, 0.0);
+	if(max_steering_error > x1){
+		// Linear Interpolation past certain angle
+		const double x2 = 45.0;
+		const double y1 = 1.0;
+		const double y2 = 0.0;
+		const double slope = (y2 - y1) / (x2 - x1);
+		const double intercept = y1 - slope * x1;
+		double attentuation_percent = std::max(slope * max_steering_error + intercept, 0.0);
 		for(auto& [name, command] : m_module_commands){
 			auto module_state = m_current_module_states.at(name);
 			m_module_commands[name].wheel_velocity_command *= attentuation_percent;
@@ -199,7 +206,8 @@ void SwerveModel::calculateKinematicSwerveController(double right_vel, double fo
 			}
 		}
 	}
-
+	for(auto& [name, command] : m_module_commands){
+	}
 	// If we don't receive non-zero user input, zero everything
 	if((fabs(lin_vel_cmd) < 1e-5) && (fabs(ang_vel_cmd) < 1e-5)){
 		for(auto& [name, command] : m_module_commands){
@@ -251,7 +259,7 @@ std::vector<Eigen::Vector3d> SwerveModel::calculateSphericalProjectionAxisInters
 	return intersection_points;
 }
 
-double SwerveModel::averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors, Eigen::Vector3d& avg_point){
+double SwerveModel::averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors, Eigen::Vector3d& avg_point, int num_rejected_points){
 	if(vectors.size() == 0){
 		throw std::runtime_error("[SwerveModel::averageVectorAntipoles] Error: vector list is empty!");
 	}
@@ -278,9 +286,36 @@ double SwerveModel::averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors,
 	}
 	avg_point = (avg / candidates.size()).normalized();
 
+	// // Reject points with largest distance
+	// for(int i = 0; i < num_rejected_points; i++){
+	// 	double max_err = 0.0;
+	// 	int max_err_index = -1;
+	// 	for(int j = 0; j < candidates.size() - i; j++){
+	// 		auto err = (candidates[j] - avg_point).squaredNorm();
+	// 		if(err > max_err){
+	// 			max_err = err;
+	// 			max_err_index = j;
+	// 		}
+	// 	}
+	// 	candidates.erase(candidates.begin() + max_err_index);
+	// }
+
+	// // Re-average
+	// std::cout << "Reaverage" << std::endl;
+	// avg = Eigen::Vector3d(0, 0, 0);
+	// for(const auto &p : candidates){
+	// 	std::cout << p << std::endl;
+	// 	avg += p;
+	// }
+	// avg_point = (avg / candidates.size()).normalized();
+
 	// Calculate sum squared error
 	double sse = 0.0;
+	// std::cout << "avg point" << std::endl;
+	// std::cout << avg_point << std::endl;
 	for(const auto &p : candidates){
+		// std::cout << "p" << std::endl;
+		// std::cout << p << std::endl;
 		sse += (avg_point - p).squaredNorm();
 	}
 
@@ -291,7 +326,7 @@ void SwerveModel::calculateHSpaceICR(){
 	std::vector<Line2d>  axis_vectors = calculateWheelAxisVectors();
 	std::vector<Eigen::Vector3d> h_space_unit_vectors = calculateSphericalProjectionAxisIntersections(axis_vectors);
 	filterCollinearVectors(h_space_unit_vectors, axis_vectors.size());
-	m_icr_sse = averageVectorAntipoles(h_space_unit_vectors, m_h_space_projection);
+	m_icr_sse = averageVectorAntipoles(h_space_unit_vectors, m_h_space_projection, axis_vectors.size() / 2);
 
 	// Update 2D ICR
 	if(fabs(m_h_space_projection[2]) < 1e-9){
@@ -309,16 +344,31 @@ void SwerveModel::filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, 
 	// If axes are collinear but the robot isn't moving straight, it throws off the ICR average (and thus all
 	// related calculations). Store the indices of collinear vectors (in reverse, if we need to erase them later).
 	std::vector<int> collinear_vector_indices;
+	std::vector<int> non_collinear_vector_indices;
 	for(int i = vectors.size() - 1; i >= 0; i--){
-		if(vectors[i][2] < 1e-9){
+		if(vectors[i][2] < 1e-3){
 			collinear_vector_indices.push_back(i);
+		}
+		else{
+			non_collinear_vector_indices.push_back(i);
 		}
 	}
 
 	// If we aren't driving straight, the maximum number of collinear vectors is num_modules / 2,
 	// where the ICR is in center of the robot, and each pair of opposite modules intersects.
-	if(collinear_vector_indices.size() <= num_modules / 2){
+	if((collinear_vector_indices.size() != 0) && (collinear_vector_indices.size() <= num_modules / 2)){
+		std::cout << "collinear filtered: " << collinear_vector_indices.size() << std::endl;
 		for(const auto & index : collinear_vector_indices){
+			vectors.erase(vectors.begin() + index);
+		}
+	}
+
+	// If we are driving straight (within threshold), then there can be up to two modules which roughly line up but don't evaluate
+	// to collinear due to small errors. I.e. ICR points to the left, both right module axes point at their respective left module axes.
+	// There are two intersection points inside the robot chassis. From small misalignments.
+	if((non_collinear_vector_indices.size() != 0) && (non_collinear_vector_indices.size() <= num_modules / 2)){
+		std::cout << "non collinear filtered: " << non_collinear_vector_indices.size() << std::endl;
+		for(const auto & index : non_collinear_vector_indices){
 			vectors.erase(vectors.begin() + index);
 		}
 	}
