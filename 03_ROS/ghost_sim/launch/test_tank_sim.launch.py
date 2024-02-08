@@ -60,12 +60,14 @@ def generate_launch_description():
     gazebo_ros_share_dir = get_package_share_directory('gazebo_ros')
     ghost_ros_share_dir = get_package_share_directory('ghost_ros_interfaces')
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
+    ghost_localization_share_dir = get_package_share_directory('ghost_localization')
 
     home_dir = os.path.expanduser('~')
     ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces")
 
-    world_file = os.path.join(ghost_sim_share_dir, "worlds", "default.world")
-    rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')
+    world_file = os.path.join(ghost_sim_share_dir, "worlds", "spin_up.world")
+    rviz_config_path = os.path.join(ghost_localization_share_dir, 'rviz/ekf_pf.rviz')
+    print(rviz_config_path)
 
     # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
     simulation = IncludeLaunchDescription(
@@ -79,6 +81,13 @@ def generate_launch_description():
             'verbose': LaunchConfiguration('verbose'),
             }.items()
     )
+
+    ekf_pf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(ghost_localization_share_dir,
+                         'launch', 'ekf_pf.launch.py')
+        ))
+    
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -107,9 +116,10 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        # rviz_node,
-        plot_juggler_node,
+        ekf_pf_launch,
+        rviz_node,
+        # plot_juggler_node,
         robot_localization_node,
         # state_machine_node,
-        OpaqueFunction(function = launch_setup)
+        OpaqueFunction(function = launch_setup),
     ])

@@ -51,6 +51,7 @@ struct Particle {
 };
 
 struct ParticleFilterConfig {
+	std::string world_frame;
 	std::string map;
 	float init_x;
 	float init_y;

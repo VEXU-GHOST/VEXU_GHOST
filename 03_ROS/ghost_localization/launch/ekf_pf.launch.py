@@ -12,15 +12,11 @@ from launch_ros.actions import Node
 # Does not launch physics simulator (Gazebo), but launches RVIZ
 # Must be launched in tandem with a robot launch file (like the test diff drive in ghost_sim and, hopefully, the hardware)
 # Opaque Function hack to allow for better CLI arg parsing
-# def launch_setup(context, *args, **kwargs):
-#     ghost_sim_share_dir = get_package_share_directory('ghost_localization')
-
 
 def generate_launch_description():
     # Load relevant filepaths
-    ghost_ros_share_dir = get_package_share_directory('ghost_ros_interfaces')
     ghost_localization_share_dir = get_package_share_directory('ghost_localization')
-    rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')
+    rviz_config_path = os.path.join(ghost_localization_share_dir, 'rviz/ekf_pf.rviz')
 
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
@@ -34,20 +30,14 @@ def generate_launch_description():
         package='ghost_localization',
         executable='ekf_pf_node',
         name='ekf_pf_node',
-        output='screen'
-        # parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
-    )
-
-    plot_juggler_node = Node(
-        package = 'plotjuggler',
-        executable = 'plotjuggler',
-        name='plot_juggler'       
+        output='screen',
+        parameters=[ghost_localization_share_dir + "/config/ekf_pf_node.yaml"],
     )
 
     return LaunchDescription([
         DeclareLaunchArgument(name='channel_id', default_value='1'),
         DeclareLaunchArgument('verbose', default_value='true'),
-        rviz_node,
+        # rviz_node,
         ekf_pf_node
         # plot_juggler_node,
     ])

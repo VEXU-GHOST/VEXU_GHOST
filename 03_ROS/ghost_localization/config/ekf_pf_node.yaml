@@ -1,7 +1,8 @@
-ghost_estimator_node:
+ekf_pf_node:
   ros__parameters:
     particle_filter:
-      map: "/home/ghost/VEXU_GHOST/ghost_ros/maps/VEXField.txt"
+      world_frame: "odom"
+      map: "/home/melcruz/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0
@@ -78,3 +79,5 @@ ghost_estimator_node:
       use_skip_range: true
       skip_index_min: 1
       skip_index_max: 2
+
+      # use_sim_time: true
