@@ -4,18 +4,15 @@
 
 namespace ghost_util {
 
-const float DEG_TO_RAD = M_PI / 180.0;
-const float RAD_TO_DEG = 180.0 / M_PI;
+double WrapAngle360(double angle);
+double WrapAngle180(double angle);
+double FlipAngle180(double angle);
 
-float WrapAngle360(float angle);
-float WrapAngle180(float angle);
-float FlipAngle180(float angle);
+double WrapAngle2PI(double angle);
+double WrapAnglePI(double angle);
+double FlipAnglePI(double angle);
 
-float WrapAngle2PI(float angle);
-float WrapAnglePI(float angle);
-float FlipAnglePI(float angle);
-
-float SmallestAngleDistDeg(float a2, float a1);
-float SmallestAngleDistRad(float a2, float a1);
+double SmallestAngleDistDeg(double a2, double a1);
+double SmallestAngleDistRad(double a2, double a1);
 
 } // namespace ghost_util

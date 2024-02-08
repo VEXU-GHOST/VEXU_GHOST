@@ -112,77 +112,77 @@
     </joint>
 
     <!-- Steering Modules -->
-    <xacro:steering_macro id="frontleft"></xacro:steering_macro>
-    <xacro:steering_macro id="frontright"></xacro:steering_macro>
-    <xacro:steering_macro id="backleft"></xacro:steering_macro>
-    <xacro:steering_macro id="backright"></xacro:steering_macro>
+    <xacro:steering_macro id="front_left"></xacro:steering_macro>
+    <xacro:steering_macro id="front_right"></xacro:steering_macro>
+    <xacro:steering_macro id="back_left"></xacro:steering_macro>
+    <xacro:steering_macro id="back_right"></xacro:steering_macro>
 
     <!-- Wheel Modules -->
-    <xacro:wheel_macro id="frontleft" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="frontright" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="backleft" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="backright" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="front_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="front_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}" collision_factor="8"></xacro:wheel_macro>
     <!-- Joints -->
-    <joint name="steering_joint_backleft" type="continuous">
+    <joint name="steering_joint_back_left" type="continuous">
         <parent link="base_link"/>
-        <child link="steering_link_backleft"/>
+        <child link="steering_link_back_left"/>
         <origin xyz="-0.1143 0.1143 0.0762" rpy="0 0 0"/> 
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="steering_joint_backright" type="continuous">
+    <joint name="steering_joint_back_right" type="continuous">
         <parent link="base_link"/>
-        <child link="steering_link_backright"/>
-        <origin xyz="0.1143 0.1143 0.0762" rpy="0 0 0"/>
-        <dynamics damping="0.0" friction="0.0"/>
-        <axis xyz="0 0 1"/>
-    </joint>
-
-    <joint name="steering_joint_frontleft" type="continuous">
-        <parent link="base_link"/>
-        <child link="steering_link_frontleft"/>
+        <child link="steering_link_back_right"/>
         <origin xyz="-0.1143 -0.1143 0.0762" rpy="0 0 0"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="steering_joint_frontright" type="continuous">
+    <joint name="steering_joint_front_left" type="continuous">
         <parent link="base_link"/>
-        <child link="steering_link_frontright"/>
+        <child link="steering_link_front_left"/>
+        <origin xyz="0.1143 0.1143 0.0762" rpy="0 0 0"/>
+        <dynamics damping="0.0" friction="0.0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="steering_joint_front_right" type="continuous">
+        <parent link="base_link"/>
+        <child link="steering_link_front_right"/>
         <origin xyz="0.1143 -0.1143 0.0762 " rpy="0 0 0"/> 
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="wheel_joint_backleft" type="continuous">
-        <parent link="steering_link_backleft"/>
-        <child link="wheel_link_backleft"/>
-        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/> 
+    <joint name="wheel_joint_back_left" type="continuous">
+        <parent link="steering_link_back_left"/>
+        <child link="wheel_link_back_left"/>
+        <origin xyz="0 0 -0.09886" rpy="${-90*d2r} 0 0"/> 
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="wheel_joint_backright" type="continuous">
-        <parent link="steering_link_backright"/>
-        <child link="wheel_link_backright"/>
-        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+    <joint name="wheel_joint_back_right" type="continuous">
+        <parent link="steering_link_back_right"/>
+        <child link="wheel_link_back_right"/>
+        <origin xyz="0 0 -0.09886" rpy="${-90*d2r} 0 0"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="wheel_joint_frontleft" type="continuous">
-        <parent link="steering_link_frontleft"/>
-        <child link="wheel_link_frontleft"/>
-        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+    <joint name="wheel_joint_front_left" type="continuous">
+        <parent link="steering_link_front_left"/>
+        <child link="wheel_link_front_left"/>
+        <origin xyz="0 0 -0.09886" rpy="${-90*d2r} 0 0"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="wheel_joint_frontright" type="continuous">
-        <parent link="steering_link_frontright"/>
-        <child link="wheel_link_frontright"/>
-        <origin xyz="0 0 -0.09886" rpy="${90*d2r} 0 0"/>
+    <joint name="wheel_joint_front_right" type="continuous">
+        <parent link="steering_link_front_right"/>
+        <child link="wheel_link_front_right"/>
+        <origin xyz="0 0 -0.09886" rpy="${-90*d2r} 0 0"/>
         <dynamics damping="0.0" friction="0.0"/>
         <axis xyz="0 0 1"/>
     </joint>

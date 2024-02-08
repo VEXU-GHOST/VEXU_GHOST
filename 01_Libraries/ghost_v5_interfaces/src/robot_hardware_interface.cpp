@@ -272,15 +272,30 @@ void RobotHardwareInterface::setMotorCurrentLimitMilliAmps(const std::string& mo
 }
 
 float RobotHardwareInterface::getRotationSensorAngleDegrees(const std::string& sensor_name){
-	return getDeviceData<RotationSensorDeviceData>(sensor_name)->angle;
+	if(getDeviceConfig<RotationSensorDeviceConfig>(sensor_name)->serial_config.send_angle_data){
+		return getDeviceData<RotationSensorDeviceData>(sensor_name)->angle;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getRotationSensorAngleDegrees] Error: ") + sensor_name + " is not configured to send angle data!");
+	}
 }
 
 float RobotHardwareInterface::getRotationSensorPositionDegrees(const std::string& sensor_name){
-	return getDeviceData<RotationSensorDeviceData>(sensor_name)->position;
+	if(getDeviceConfig<RotationSensorDeviceConfig>(sensor_name)->serial_config.send_position_data){
+		return getDeviceData<RotationSensorDeviceData>(sensor_name)->position;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getRotationSensorAngleDegrees] Error: ") + sensor_name + " is not configured to send position data!");
+	}
 }
 
 float RobotHardwareInterface::getRotationSensorVelocityRPM(const std::string& sensor_name){
-	return getDeviceData<RotationSensorDeviceData>(sensor_name)->velocity;
+	if(getDeviceConfig<RotationSensorDeviceConfig>(sensor_name)->serial_config.send_velocity_data){
+		return getDeviceData<RotationSensorDeviceData>(sensor_name)->velocity;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getRotationSensorAngleDegrees] Error: ") + sensor_name + " is not configured to send velocity data!");
+	}
 }
 
 void RobotHardwareInterface::setDigitalIO(const std::vector<bool>& digital_io){

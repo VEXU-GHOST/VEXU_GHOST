@@ -9,4 +9,6 @@ T clamp(T val, T min, T max){
 	return std::max(min, std::min(val, max));
 }
 
+double
+
 }

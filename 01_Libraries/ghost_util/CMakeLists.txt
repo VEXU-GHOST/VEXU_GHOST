@@ -81,6 +81,11 @@ target_link_libraries(test_angle_util
   gtest
 )
 
+ament_add_gtest(test_vector_list test/test_vector_util.cpp)
+target_link_libraries(test_vector_list
+  gtest
+)
+
 ament_add_gtest(test_parsing_util test/test_parsing_util.cpp)
 target_link_libraries(test_parsing_util
   gtest

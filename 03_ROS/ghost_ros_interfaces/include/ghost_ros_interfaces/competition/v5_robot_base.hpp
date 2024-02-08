@@ -41,7 +41,7 @@ public:
 	virtual void initialize() = 0;
 
 	/**
-	 * @brief Called while robot is disabled.
+	 * @brief Called while robot is disabled. Function is called at roughly 100Hz and should not block.
 	 *
 	 * This method will not update actuator commands.
 	 */
@@ -63,14 +63,25 @@ public:
 	 */
 	virtual void teleop(double current_time) = 0;
 
+	/**
+	 * @brief This is an optional method to override which is called when new sensor data is recieved, regardless of
+	 * competition state. It is called before the teleop/autonomous/disabled methods in the main loop.
+	 *
+	 * This is intended for any operations that should always be performed when we have new data (e.g. logging or
+	 * LCD updates, calculating robot odometry, etc).
+	 */
+	virtual void onNewSensorData(){
+	}
+
 	//////////////////////////////
 	///// Base Class Methods /////
 	//////////////////////////////
 
 	/**
 	 * @brief Called for all V5 Robot Classes after construction. Calls user-defined intialize method internally.
+	 * Marked as final to throw an error if a derived class attempts to define a configure method.
 	 */
-	void configure();
+	virtual void configure() final;
 
 	/**
 	 * @brief Returns a shared pointer to the ROS node for this robot instance
@@ -86,7 +97,7 @@ public:
 
 protected:
 	std::shared_ptr<rclcpp::Node> node_ptr_;
-	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
+	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 	std::unordered_map<std::string, ghost_planners::RobotTrajectory::MotorTrajectory> trajectory_motor_map_;
 	double trajectory_start_time_;
 	
