@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<robot name="test_diff_drive" xmlns:xacro="http://ros.org/wiki/xacro">
+    
+    <xacro:include filename="$(find ghost_sim)/urdf/test_tank_sim_base.xacro"/>
+    <xacro:include filename="$(find ghost_sim)/urdf/macros/sensor_macros.xacro"/>
+
+    <!-- <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro> -->
+    <xacro:imu_macro parent_link="base_link" topic_name="imu"></xacro:imu_macro>
+
+    <gazebo>
+        <plugin name="gazebo_ros_diff_drive" filename="libgazebo_ros_diff_drive.so">
+            <!-- Update rate in Hz -->
+            <update_rate>30.0</update_rate>
+
+            <!-- wheels -->
+            <left_joint>left_wheel_hinge</left_joint>
+
+            <right_joint>right_wheel_hinge</right_joint>
+            
+            <!-- kinematics -->
+            <wheel_separation>0.3</wheel_separation>
+            <wheel_diameter>0.2</wheel_diameter>
+
+            <!-- limits -->
+            <max_wheel_torque>20</max_wheel_torque>
+            <max_wheel_acceleration>1.0</max_wheel_acceleration>
+
+            <!-- input -->
+            <command_topic>cmd_vel</command_topic>
+
+            <!-- output: odometrySource 0 for ENCODER 1 for WORLD -->
+            <odometrySource>1</odometrySource>
+            <publish_odom>true</publish_odom>
+            <publish_odom_tf>true</publish_odom_tf>
+            <publish_wheel_tf>true</publish_wheel_tf>
+
+            <odometry_topic>odom</odometry_topic>
+            <odometry_frame>odom</odometry_frame>
+            <robot_base_frame>base_link</robot_base_frame>
+        </plugin>
+    </gazebo>
+</robot>

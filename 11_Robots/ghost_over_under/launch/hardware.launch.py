@@ -20,6 +20,10 @@ def generate_launch_description():
     plugin_type = "ghost_swerve::SwerveRobotPlugin"
     robot_name = "ghost_15"
 
+    ghost_autonomy_share_dir = get_package_share_directory('ghost_autonomy')
+    bt_path = os.path.join(ghost_autonomy_share_dir, "config", "bt.xml")
+    
+
     ########################
     ### Node Definitions ###
     ########################
@@ -36,7 +40,11 @@ def generate_launch_description():
         package='ghost_ros_interfaces',
         executable='competition_state_machine_node',
         output='screen',
-        parameters=[ros_config_file, {"robot_config_yaml_path": robot_config_yaml_path}],
+        parameters=[ros_config_file, 
+                    {
+                        "robot_config_yaml_path": robot_config_yaml_path,
+                        "bt_path": bt_path
+                    }],
         arguments=[plugin_type, robot_name]
         # arguments=["--ros-args", "--log-level", "debug"]
     )

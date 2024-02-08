@@ -8,6 +8,7 @@ using ghost_ros_interfaces::msg_helpers::toROSMsg;
 using ghost_v5_interfaces::devices::hardware_type_e;
 using ghost_v5_interfaces::RobotHardwareInterface;
 using ghost_v5_interfaces::util::loadRobotConfigFromYAMLFile;
+using ghost_planners::RobotTrajectory;
 using std::placeholders::_1;
 namespace ghost_ros_interfaces {
 
@@ -26,6 +27,12 @@ void V5RobotBase::configure(){
 	actuator_command_pub_ = node_ptr_->create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
 		"/v5/actuator_command",
 		10);
+
+	trajectory_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::RobotTrajectory>(
+		"/motion_planning/trajectory",
+		10,
+		std::bind(&V5RobotBase::trajectoryCallback, this, _1)
+		);
 
 	start_time_ = std::chrono::system_clock::now();
 
@@ -98,5 +105,36 @@ double V5RobotBase::getTimeFromStart() const {
 	auto curr_time = std::chrono::system_clock::now();
 	return std::chrono::duration_cast<std::chrono::milliseconds>(curr_time - start_time_).count() / 1000.0;
 }
+
+void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg){
+	trajectory_start_time_ = getTimeFromStart();
+	for (int i = 0; i < msg->motor_names.size(); i++){
+		RobotTrajectory::MotorTrajectory motor_trajectory;
+		fromROSMsg(motor_trajectory, msg->trajectories[i]);
+		trajectory_motor_map_[msg->motor_names[i]] = motor_trajectory;
+	}
+}
+
+void V5RobotBase::update_motor_commands(double time){
+	for (auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
+		const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
+		if (is_pos_command){
+			robot_hardware_interface_ptr_->setMotorPositionCommand(motor_name, position);
+		}
+		const auto [is_torque_command, torque] = motor_trajectory.getTorque(time);
+		if (is_torque_command){
+			robot_hardware_interface_ptr_->setMotorTorqueCommandPercent(motor_name, torque);
+		}
+		const auto [is_velocity_command, velocity] = motor_trajectory.getVelocity(time);
+		if (is_velocity_command){
+			robot_hardware_interface_ptr_->setMotorVelocityCommandRPM(motor_name, velocity);
+		}
+		const auto [is_voltage_command, voltage] = motor_trajectory.getVoltage(time);
+		if (is_voltage_command){
+			robot_hardware_interface_ptr_->setMotorVoltageCommandPercent(motor_name, voltage);
+		}
+	}
+}
+
 
 } // namespace ghost_ros_interfaces

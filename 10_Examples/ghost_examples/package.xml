@@ -19,6 +19,8 @@
     the same workspace, so that we can build them in the right order.
   -->
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <depend>rclpy</depend>
 
   <depend>ament_cmake_gtest</depend>
   <depend>rclcpp</depend>
