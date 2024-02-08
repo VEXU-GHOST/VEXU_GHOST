@@ -23,15 +23,9 @@ public:
 	void teleop(double current_time) override;
 
 protected:
-	void trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg);
-	void update_motor_commands(double time);
-
-	rclcpp::Subscription<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_sub_;
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
 	std::string bt_path_;
 	std::shared_ptr<RunTree> bt_; 
-	double trajectory_start_time_;
-	std::unordered_map<std::string, ghost_planners::RobotTrajectory::MotorTrajectory> trajectory_motor_map_;
 	
 };
 
