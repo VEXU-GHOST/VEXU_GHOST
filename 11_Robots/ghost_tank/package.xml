@@ -1,20 +1,16 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ghost_over_under</name>
+  <name>ghost_tank</name>
   <version>0.0.0</version>
-  <description>Config files for GHOST 2023-2024 Competition Season</description>
-  <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
-  <license>GPLv3</license>
+  <description>Ghost tank</description>
+  <maintainer email="zbilal6135@gmail.com">zaara</maintainer>
+  <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-
-  <exec_depend>ghost_ros_interfaces</exec_depend>
-  <exec_depend>ghost_swerve</exec_depend>
-  <exec_depend>rviz2</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
