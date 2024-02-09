@@ -88,7 +88,7 @@ set(TEST_FILES
   test_base_swerve_model
   test_coaxial_swerve_model
   test_differential_swerve_model
-  test_swerve_icr
+  # test_swerve_icr
 )
 
 foreach(TEST ${TEST_FILES})

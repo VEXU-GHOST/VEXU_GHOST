@@ -245,6 +245,7 @@ public:
 
 	std::vector<geometry::Line2d> calculateWheelAxisVectors() const;
 	static std::vector<Eigen::Vector3d> calculateSphericalProjectionAxisIntersections(std::vector<geometry::Line2d> axes);
+	static std::vector<std::vector<Eigen::Vector3d> > getUniqueAntipoleSets(std::vector<Eigen::Vector3d> vectors);
 	double averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors, Eigen::Vector3d& avg_point, int num_rejected_points = 0);
 
 	double getICRSSE() const {

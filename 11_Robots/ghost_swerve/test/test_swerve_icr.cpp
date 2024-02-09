@@ -400,3 +400,108 @@ TEST_F(SwerveModelTestFixture, testICRInfinityCollinearEvaluatesToInsideRobot){
 	Eigen::Vector2d icr_point;
 	EXPECT_NEAR(m_diff_model_ptr->getICRSSE(), 0.0, 1e-3);
 }
+
+TEST_F(SwerveModelTestFixture, testUniqueAntipoleSetsOneAntipole){
+	std::vector<int> antipoles{
+		1
+	};
+	auto unique_antipole_sets = getUniqueAntipoleSets<int>(antipoles);
+
+	std::vector<std::vector<int> > solution{
+		std::vector<int>{1}
+	}
+
+	EXPECT_EQ(unique_antipole_sets.size(), 1);
+	EXPECT_EQ(unique_antipole_sets, solution);
+}
+
+TEST_F(SwerveModelTestFixture, testUniqueAntipoleSetsTwoAntipoles){
+	std::vector<int> antipoles{
+		1,
+		2
+	};
+	auto unique_antipole_sets = getUniqueAntipoleSets<int>(antipoles);
+
+	std::vector<std::vector<int> > solution{
+		std::vector<int>{1, 2},
+		std::vector<int>{1, -2}
+	}
+
+	EXPECT_EQ(unique_antipole_sets.size(), 2);
+	EXPECT_EQ(unique_antipole_sets, solution);
+}
+
+TEST_F(SwerveModelTestFixture, testUniqueAntipoleSetsThreeAntipoles){
+	std::vector<int> antipoles{
+		1,
+		2,
+		3
+	};
+	auto unique_antipole_sets = getUniqueAntipoleSets<int>(antipoles);
+
+	std::vector<std::vector<int> > solution{
+		std::vector<int>{1, 2, 3},
+		std::vector<int>{1, -2, 3},
+		std::vector<int>{1, 2, -3},
+		std::vector<int>{1, -2, -3},
+	}
+
+	EXPECT_EQ(unique_antipole_sets.size(), 4);
+	EXPECT_EQ(unique_antipole_sets, solution);
+}
+
+TEST_F(SwerveModelTestFixture, testUniqueAntipoleSetsFourAntipoles){
+	std::vector<int> antipoles{
+		1,
+		2,
+		3,
+		4
+	};
+	auto unique_antipole_sets = getUniqueAntipoleSets<int>(antipoles);
+
+	std::vector<std::vector<int> > solution{
+		std::vector<int>{1, 2, 3, 4},
+		std::vector<int>{1, -2, 3, 4},
+		std::vector<int>{1, 2, -3, 4},
+		std::vector<int>{1, -2, -3, 4},
+		std::vector<int>{1, 2, 3, -4},
+		std::vector<int>{1, -2, 3, -4},
+		std::vector<int>{1, 2, -3, -4},
+		std::vector<int>{1, -2, -3, -4},
+	}
+
+	EXPECT_EQ(unique_antipole_sets.size(), 8);
+	EXPECT_EQ(unique_antipole_sets, solution);
+}
+
+TEST_F(SwerveModelTestFixture, testUniqueAntipoleSetsFiveAntipoles){
+	std::vector<int> antipoles{
+		1,
+		2,
+		3,
+		4
+	};
+	auto unique_antipole_sets = getUniqueAntipoleSets<int>(antipoles);
+
+	std::vector<std::vector<int> > solution{
+		std::vector<int>{1, 2, 3, 4, 5},
+		std::vector<int>{1, -2, 3, 4, 5},
+		std::vector<int>{1, 2, -3, 4, 5},
+		std::vector<int>{1, -2, -3, 4, 5},
+		std::vector<int>{1, 2, 3, -4, 5},
+		std::vector<int>{1, -2, 3, -4, 5},
+		std::vector<int>{1, 2, -3, -4, 5},
+		std::vector<int>{1, -2, -3, -4, 5},
+		std::vector<int>{1, 2, 3, 4, -5},
+		std::vector<int>{1, -2, 3, 4, -5},
+		std::vector<int>{1, 2, -3, 4, -5},
+		std::vector<int>{1, -2, -3, 4, -5},
+		std::vector<int>{1, 2, 3, -4, -5},
+		std::vector<int>{1, -2, 3, -4, -5},
+		std::vector<int>{1, 2, -3, -4, -5},
+		std::vector<int>{1, -2, -3, -4, -5},
+	}
+
+	EXPECT_EQ(unique_antipole_sets.size(), 16);
+	EXPECT_EQ(unique_antipole_sets, solution);
+}

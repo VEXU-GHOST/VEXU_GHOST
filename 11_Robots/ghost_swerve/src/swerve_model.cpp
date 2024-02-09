@@ -1,5 +1,6 @@
 #include <ghost_swerve/swerve_model.hpp>
 #include <ghost_util/angle_util.hpp>
+#include <ghost_util/vector_util.hpp>
 #include "ghost_util/unit_conversion_utils.hpp"
 
 using geometry::Line2d;
@@ -269,8 +270,8 @@ double SwerveModel::averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors,
 	std::vector<Eigen::Vector3d> candidates{first_vector};
 	for(int i = 1; i < vectors.size(); i++){
 		auto p = vectors[i].normalized();
-		auto d1 = (first_vector - p).norm();
-		auto d2 = (first_vector - (-p)).norm();
+		auto d1 = ghost_util::angleBetweenVectorsRadians<Eigen::Vector3d>(first_vector, p);
+		auto d2 = ghost_util::angleBetweenVectorsRadians<Eigen::Vector3d>(first_vector,-p);
 		if(d1 < d2){
 			candidates.push_back(p);
 		}
@@ -373,6 +374,24 @@ void SwerveModel::filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, 
 		}
 	}
 }
+
+template <typename T>
+std::vector<std::vector<T> > getUniqueAntipoleSets(std::vector<T> vectors){
+	std::vector<std::vector<T> > unique_sets;
+	for(auto & v : vectors){
+		unique_sets.push_back(std::vector<T>{v});
+	}
+	for(int i = 1; i < vectors.size(); i++){
+		unique_sets[0].push_back(vectors[i]);
+	}
+
+	for(int i = 1; i < vectors.size(); i++){
+		unique_sets[i].push_back(vectors[i]);
+		for(int j = i; j < vectors.size(); j++){
+		}
+	}
+}
+
 
 void SwerveModel::calculateOdometry(){
 }

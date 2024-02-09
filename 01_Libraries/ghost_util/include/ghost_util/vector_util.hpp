@@ -8,7 +8,7 @@ namespace ghost_util {
 
 template <typename VECTOR_T>
 double angleBetweenVectorsRadians(const VECTOR_T& v1, const VECTOR_T& v2){
-	return acos((v1.dot(v2)) / (v1.norm() * v2.norm()));
+	return std::fabs(acos((v1.dot(v2)) / (v1.norm() * v2.norm())));
 }
 
 template <typename VECTOR_T>
