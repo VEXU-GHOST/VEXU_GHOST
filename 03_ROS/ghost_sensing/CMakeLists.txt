@@ -12,13 +12,15 @@ find_package(Ghost CONFIG REQUIRED)
 set(DEPENDENCIES
   ament_cmake
   ament_cmake_gtest
+  rclcpp
   visualization_msgs
-  tf2
-  tf2_msgs
+  ghost_util
+  std_msgs
   sensor_msgs
   geometry_msgs
-  rclcpp
   yaml-cpp
+  Eigen3
+  builtin_interfaces
   )
 
 foreach(pkg ${DEPENDENCIES})

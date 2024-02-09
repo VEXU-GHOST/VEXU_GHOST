@@ -11,12 +11,14 @@
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <depend>rclcpp</depend>
   <depend>visualization_msgs</depend>
-  <depend>tf2</depend>
-  <depend>tf2_msgs</depend>
+  <depend>builtin_interfaces</depend>
+  <depend>ghost_util</depend>
+  <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
-  <depend>rclcpp</depend>
+  <depend>Eigen3</depend>
   <depend>yaml-cpp</depend>
 
   <exec_depend>realsense_camera</exec_depend>

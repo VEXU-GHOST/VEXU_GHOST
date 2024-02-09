@@ -1,3 +1,22 @@
-imu_filtering_node:
+imu_filter_node:
   ros__parameters:
-  
+    calculate_bias: true
+    calibration_time: 20.0
+    sensor_frequency: 200.0
+
+    accel_bias_x: 0.0
+    accel_bias_y: 0.0
+    accel_bias_z: 0.0
+
+    gyro_bias_x: 0.0
+    gyro_bias_y: 0.0
+    gyro_bias_z: 0.0
+
+
+    camera_roll: 0.0
+    camera_pitch: 15.0
+    camera_yaw: 0.0
+
+    camera_x: 0.1651 # 6.5"
+    camera_y: 0.0
+    

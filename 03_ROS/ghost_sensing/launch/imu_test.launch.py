@@ -9,14 +9,14 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     sensing_share = launch_ros.substitutions.FindPackageShare(package='ghost_sensing').find('ghost_sensing')
     imu_filter_config_path = os.path.join(sensing_share, 'config/imu_filter_node.yaml')
-    rviz_config_path = os.path.join(sensing_share, 'rviz/imu_filter_node.rviz')
+    rviz_config_path = os.path.join(sensing_share, 'rviz/imu.rviz')
 
     imu_filter_node = launch_ros.actions.Node(
         package='ghost_sensing',
         executable='imu_filter_node',
         name='imu_filter_node',
         output='screen',
-        arguments=['-d', imu_filter_config_path],
+        parameters=[imu_filter_config_path],
     )
 
     rviz_node = launch_ros.actions.Node(
@@ -24,7 +24,7 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        # arguments=['-d', rviz_config_path],
+        arguments=['-d', rviz_config_path],
     )
 
     realsense_share = launch_ros.substitutions.FindPackageShare(package='realsense2_camera').find('realsense2_camera')
@@ -47,6 +47,6 @@ def generate_launch_description():
 
     return launch.LaunchDescription([
         realsense,
-        # imu_filter_node,
+        imu_filter_node,
         rviz_node
     ])
