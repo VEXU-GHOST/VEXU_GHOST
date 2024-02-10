@@ -16,6 +16,9 @@ IMUFilterNode::IMUFilterNode() :
 	declare_parameter("calculate_bias", false);
 	m_calculate_bias = get_parameter("calculate_bias").as_bool();
 
+	declare_parameter("calculate_covariance", false);
+	m_calculate_covariance = get_parameter("calculate_covariance").as_bool();
+
 	declare_parameter("sensor_frequency", 200.0);
 	m_sensor_freq = get_parameter("sensor_frequency").as_double();
 
@@ -39,17 +42,25 @@ IMUFilterNode::IMUFilterNode() :
 	declare_parameter("camera_y", 0.0);
 	auto camera_y = get_parameter("camera_y").as_double();
 
-	m_base_link_to_camera_translation = Eigen::Vector2d(camera_x, camera_y);
+	m_base_link_to_camera_translation = Eigen::Vector3d(camera_x, camera_y, 0.0);
 
 	// Handle Bias Calibration
-	if(m_calculate_bias){
+	if(m_calculate_bias || m_calculate_covariance){
 		m_num_msgs_init = (int) m_calibration_time * m_sensor_freq;
 		m_imu_accel_samples.reserve(m_num_msgs_init);
 		m_imu_gyro_samples.reserve(m_num_msgs_init);
 		m_imu_accel_bias = Eigen::Vector3d(0.0, 0.0, 0.0);
 		m_imu_gyro_bias = Eigen::Vector3d(0.0, 0.0, 0.0);
+		m_imu_accel_bias_covariance <<
+		        0.0, 0.0, 0.0,
+		        0.0, 0.0, 0.0,
+		        0.0, 0.0, 0.0;
+		m_imu_gyro_bias_covariance <<
+		        0.0, 0.0, 0.0,
+		        0.0, 0.0, 0.0,
+		        0.0, 0.0, 0.0;
 	}
-	else{
+	if(!m_calculate_bias){
 		declare_parameter("accel_bias_x", 0.0);
 		auto accel_bias_x = get_parameter("accel_bias_x").as_double();
 
@@ -70,6 +81,45 @@ IMUFilterNode::IMUFilterNode() :
 
 		m_imu_accel_bias = Eigen::Vector3d(accel_bias_x, accel_bias_y, accel_bias_z);
 		m_imu_gyro_bias = Eigen::Vector3d(gyro_bias_x, gyro_bias_y, gyro_bias_z);
+	}
+	if(!m_calculate_covariance){
+		auto load_covariance =
+			[&](const std::string & parameter, Eigen::Matrix3d & covariance){
+				covariance.setZero();
+				std::vector<double> covar_flat;
+
+				declare_parameter(parameter, rclcpp::PARAMETER_DOUBLE_ARRAY);
+				if(get_parameter(parameter, covar_flat)){
+					if(covar_flat.size() == 3){
+						RCLCPP_INFO_STREAM(
+							get_logger(), "Detected a " << parameter << " parameter with "
+							                                            "length " << 3 << ". Assuming diagonal values specified.");
+						covariance.diagonal() = Eigen::VectorXd::Map(covar_flat.data(), 3);
+					}
+					else if(covariance.size() == 3 * 3){
+						covariance = Eigen::MatrixXd::Map(covar_flat.data(), 3, 3);
+					}
+					else{
+						std::string error = "Invalid " + parameter + " specified. Expected a length of " +
+						                    std::to_string(3) + " or " + std::to_string(3 * 3) +
+						                    ", received length " + std::to_string(covar_flat.size());
+						RCLCPP_FATAL_STREAM(get_logger(), error);
+						throw std::invalid_argument(error);
+					}
+					return true;
+				}
+				return false;
+			};
+
+		if(!load_covariance("accel_covariance", m_imu_accel_bias_covariance)){
+			throw std::runtime_error("[IMUFilterNode::IMUFilterNode] Error: Failed to load covariance matrix for acceleration!");
+		}
+		if(!load_covariance("gyro_covariance", m_imu_gyro_bias_covariance)){
+			throw std::runtime_error("[IMUFilterNode::IMUFilterNode] Error: Failed to load covariance matrix for gyroscope!");
+		}
+
+		m_imu_accel_bias_covariance_base_link = m_base_link_to_camera_rotation * m_imu_accel_bias_covariance * m_base_link_to_camera_rotation.transpose();
+		m_imu_gyro_bias_covariance_base_link = m_base_link_to_camera_rotation * m_imu_gyro_bias_covariance * m_base_link_to_camera_rotation.transpose();
 	}
 
 	// ROS Topics
@@ -96,16 +146,32 @@ IMUFilterNode::IMUFilterNode() :
 		10);
 }
 
+void IMUFilterNode::printBiasEstimates(){
+	std::cout << "Acceleration Bias Vector in Camera Frame:" << std::endl;
+	std::cout << m_imu_accel_bias << std::endl;
+	std::cout << "Gyro Bias Vector in Camera Frame:" << std::endl;
+	std::cout << m_imu_gyro_bias << std::endl;
+
+	std::cout << "Acceleration Covariance in Camera Frame:" << std::endl;
+	std::cout << m_imu_accel_bias_covariance << std::endl;
+	std::cout << "Gyro Bias Covariance in Camera Frame:" << std::endl;
+	std::cout << m_imu_gyro_bias_covariance << std::endl;
+
+	std::cout << "Acceleration Covariance in Base Frame:" << std::endl;
+	std::cout << m_imu_accel_bias_covariance_base_link << std::endl;
+	std::cout << "Gyro Bias Covariance in Base Frame:" << std::endl;
+	std::cout << m_imu_gyro_bias_covariance_base_link << std::endl;
+}
 
 void IMUFilterNode::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
 	auto raw_gyro_vector = Eigen::Vector3d(msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z);
 	auto raw_accel_vector = Eigen::Vector3d(msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z);
 
 	// Estimate IMU Bias at initialization
-	if(m_calculate_bias){
+	if(m_calculate_bias || m_calculate_covariance){
 		if(m_msg_count < m_num_msgs_init){
 			if(m_msg_count % 100 == 0){
-				std::cout << "Initializing: " << m_msg_count / m_sensor_freq  << "s" << std::endl;
+				std::cout << "Initializing: " << 100.0 * m_msg_count / m_num_msgs_init  << "%" << std::endl;
 			}
 			m_imu_accel_samples.push_back(raw_accel_vector);
 			m_imu_gyro_samples.push_back(raw_gyro_vector);
@@ -113,44 +179,89 @@ void IMUFilterNode::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
 		}
 		else if(!m_calibration_complete){
 			std::cout << "Calibrating ... " << std::endl;
-			// After we complete initialization, IMU gyro bias
 
 			auto calculateBiasVector =
 				[&](const std::vector<Eigen::Vector3d>& samples, Eigen::Vector3d& bias){
-					for(const auto & v : samples){
-						bias += v;
+					for(const auto & s : samples){
+						bias += s;
 					}
 					bias /= samples.size();
 				};
 			auto calculateCovarianceMatrix =
-				[&](const std::vector<Eigen::Vector3d>& samples, Eigen::Matrix3d& covariance){
+				[&](const std::vector<Eigen::Vector3d>& samples, const Eigen::Vector3d& avg, Eigen::Matrix3d& covariance){
+					for(const auto & s : samples){
+						auto sample_error = avg - s;
+						covariance = covariance + sample_error * sample_error.transpose() / (samples.size() - 1);
+					}
 				};
 
-			calculateBiasVector(m_imu_accel_samples, m_imu_accel_bias);
-			calculateBiasVector(m_imu_gyro_samples, m_imu_gyro_bias);
+			if(m_calculate_bias){
+				calculateBiasVector(m_imu_accel_samples, m_imu_accel_bias);
+				calculateBiasVector(m_imu_gyro_samples, m_imu_gyro_bias);
+			}
+			if(m_calculate_covariance){
+				calculateCovarianceMatrix(m_imu_accel_samples, m_imu_accel_bias, m_imu_accel_bias_covariance);
+				calculateCovarianceMatrix(m_imu_gyro_samples, m_imu_gyro_bias, m_imu_gyro_bias_covariance);
+			}
 
+			m_imu_accel_bias_covariance_base_link = m_base_link_to_camera_rotation * m_imu_accel_bias_covariance * m_base_link_to_camera_rotation.transpose();
+			m_imu_gyro_bias_covariance_base_link = m_base_link_to_camera_rotation * m_imu_gyro_bias_covariance * m_base_link_to_camera_rotation.transpose();
+
+			printBiasEstimates();
 			m_calibration_complete = true;
 		}
 	}
 	else if(!m_calibration_complete){
-		std::cout << "Acceleration Bias Vector in Camera Frame:" << std::endl;
-		std::cout << m_imu_accel_bias << std::endl;
-		std::cout << "Gyro Bias Vector in Camera Frame:" << std::endl;
-		std::cout << m_imu_gyro_bias << std::endl;
+		printBiasEstimates();
 		m_calibration_complete = true;
 	}
 
 	// Remove Bias Terms
-	auto filtered_accel_vector_base_link = m_base_link_to_camera_rotation * (raw_accel_vector - m_imu_accel_bias);
-	auto filtered_gyro_vector_base_link = m_base_link_to_camera_rotation * (raw_gyro_vector - m_imu_gyro_bias);
+	m_filtered_accel_vector_base_link = m_base_link_to_camera_rotation * (raw_accel_vector - m_imu_accel_bias);
+	m_filtered_gyro_vector_base_link = m_base_link_to_camera_rotation * (raw_gyro_vector - m_imu_gyro_bias);
+
+	// Remove Centripetal Acceleration
+	// Experimental, leaving out for now because we mainly want gyro data
+	// m_filtered_accel_vector_base_link -= m_filtered_gyro_vector_base_link.cross(m_filtered_gyro_vector_base_link.cross(m_base_link_to_camera_translation));
+
+	publishFilteredIMU();
 
 	// Visualize
 	const double gyro_scale = 1.0;
 	const double accel_scale = 1.0;
 	m_vel_viz_pub->publish(getMarkerArrayVector3(raw_gyro_vector, gyro_scale));
-	m_vel_filtered_viz_pub->publish(getMarkerArrayVector3(filtered_gyro_vector_base_link, gyro_scale));
+	m_vel_filtered_viz_pub->publish(getMarkerArrayVector3(m_filtered_gyro_vector_base_link, gyro_scale));
 	m_accel_viz_pub->publish(getMarkerArrayVector3(raw_accel_vector, accel_scale));
-	m_accel_filtered_viz_pub->publish(getMarkerArrayVector3(filtered_accel_vector_base_link, accel_scale));
+	m_accel_filtered_viz_pub->publish(getMarkerArrayVector3(m_filtered_accel_vector_base_link, accel_scale));
+}
+
+void IMUFilterNode::publishFilteredIMU(){
+	sensor_msgs::msg::Imu msg{};
+	msg.angular_velocity.x = m_filtered_gyro_vector_base_link.x();
+	msg.angular_velocity.y = m_filtered_gyro_vector_base_link.y();
+	msg.angular_velocity.z = m_filtered_gyro_vector_base_link.z();
+	msg.angular_velocity_covariance[0] = m_imu_gyro_bias_covariance_base_link(0);
+	msg.angular_velocity_covariance[1] = m_imu_gyro_bias_covariance_base_link(1);
+	msg.angular_velocity_covariance[2] = m_imu_gyro_bias_covariance_base_link(2);
+	msg.angular_velocity_covariance[3] = m_imu_gyro_bias_covariance_base_link(3);
+	msg.angular_velocity_covariance[4] = m_imu_gyro_bias_covariance_base_link(4);
+	msg.angular_velocity_covariance[5] = m_imu_gyro_bias_covariance_base_link(5);
+	msg.angular_velocity_covariance[6] = m_imu_gyro_bias_covariance_base_link(6);
+	msg.angular_velocity_covariance[7] = m_imu_gyro_bias_covariance_base_link(7);
+	msg.angular_velocity_covariance[8] = m_imu_gyro_bias_covariance_base_link(8);
+	msg.linear_acceleration.x = m_filtered_accel_vector_base_link.x();
+	msg.linear_acceleration.y = m_filtered_accel_vector_base_link.y();
+	msg.linear_acceleration.z = m_filtered_accel_vector_base_link.z();
+	msg.linear_acceleration_covariance[0] = m_imu_accel_bias_covariance_base_link(0);
+	msg.linear_acceleration_covariance[1] = m_imu_accel_bias_covariance_base_link(1);
+	msg.linear_acceleration_covariance[2] = m_imu_accel_bias_covariance_base_link(2);
+	msg.linear_acceleration_covariance[3] = m_imu_accel_bias_covariance_base_link(3);
+	msg.linear_acceleration_covariance[4] = m_imu_accel_bias_covariance_base_link(4);
+	msg.linear_acceleration_covariance[5] = m_imu_accel_bias_covariance_base_link(5);
+	msg.linear_acceleration_covariance[6] = m_imu_accel_bias_covariance_base_link(6);
+	msg.linear_acceleration_covariance[7] = m_imu_accel_bias_covariance_base_link(7);
+	msg.linear_acceleration_covariance[8] = m_imu_accel_bias_covariance_base_link(8);
+	m_filtered_imu_pub->publish(msg);
 }
 
 visualization_msgs::msg::Marker IMUFilterNode::getDefaultArrowMsg(int id, builtin_interfaces::msg::Time stamp){
