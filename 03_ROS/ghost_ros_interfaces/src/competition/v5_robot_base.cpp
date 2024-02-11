@@ -125,19 +125,19 @@ void V5RobotBase::update_motor_commands(double time){
 	for (auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
 		const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
 		if (is_pos_command){
-			robot_hardware_interface_ptr_->setMotorPositionCommand(motor_name, position);
+			rhi_ptr_->setMotorPositionCommand(motor_name, position);
 		}
 		const auto [is_torque_command, torque] = motor_trajectory.getTorque(time);
 		if (is_torque_command){
-			robot_hardware_interface_ptr_->setMotorTorqueCommandPercent(motor_name, torque);
+			rhi_ptr_->setMotorTorqueCommandPercent(motor_name, torque);
 		}
 		const auto [is_velocity_command, velocity] = motor_trajectory.getVelocity(time);
 		if (is_velocity_command){
-			robot_hardware_interface_ptr_->setMotorVelocityCommandRPM(motor_name, velocity);
+			rhi_ptr_->setMotorVelocityCommandRPM(motor_name, velocity);
 		}
 		const auto [is_voltage_command, voltage] = motor_trajectory.getVoltage(time);
 		if (is_voltage_command){
-			robot_hardware_interface_ptr_->setMotorVoltageCommandPercent(motor_name, voltage);
+			rhi_ptr_->setMotorVoltageCommandPercent(motor_name, voltage);
 		}
 	}
 }

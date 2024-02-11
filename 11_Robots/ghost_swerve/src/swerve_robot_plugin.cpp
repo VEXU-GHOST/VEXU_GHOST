@@ -28,11 +28,14 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("marker_array_topic", "/swerve_markers");
 	std::string marker_array_topic = node_ptr_->get_parameter("marker_array_topic").as_string();
 
-	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		pose_topic,
-		10,
-		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
-		);
+	node_ptr_->declare_parameter<std::string>("bt_path");
+	std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
+
+	// m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+	// 	pose_topic,
+	// 	10,
+	// 	std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
+	// 	);
 
 	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
@@ -45,6 +48,9 @@ void SwerveRobotPlugin::initialize(){
 	m_viz_pub = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>(
 		marker_array_topic,
 		10);
+
+	
+	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
 
 	// Setup Swerve Model
 	SwerveConfig swerve_model_config;
@@ -105,15 +111,6 @@ void SwerveRobotPlugin::onNewSensorData(){
 	publishSwerveVisualization();
 }
 
-	node_ptr_->declare_parameter<std::string>("bt_path");
-	bt_path_ = node_ptr_->get_parameter("bt_path").as_string();
-
-	// odom_pub_ = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
-	// 	odom_topic,
-	// 	10);
-
-	bt_ = std::make_shared<RunTree>(bt_path_, robot_hardware_interface_ptr_);
-}
 void SwerveRobotPlugin::disabled(){
 }
 
