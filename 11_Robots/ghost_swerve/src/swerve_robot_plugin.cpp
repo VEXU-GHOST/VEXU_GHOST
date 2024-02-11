@@ -118,7 +118,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 	m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
 
 	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
-		{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
+		{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
 		{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
 		{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
 		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
@@ -146,6 +146,9 @@ void SwerveRobotPlugin::publishOdometry(){
 	double odom_angle = m_swerve_model_ptr->getOdometryAngle();
 
 	nav_msgs::msg::Odometry msg{};
+	msg.header.frame_id = "odom";
+	msg.header.stamp = node_ptr_->get_clock()->now();
+	msg.child_frame_id = "base_link";
 
 	msg.pose.pose.position.x = odom_loc.x();
 	msg.pose.pose.position.y = odom_loc.y();
@@ -154,6 +157,13 @@ void SwerveRobotPlugin::publishOdometry(){
 	msg.pose.pose.orientation.y = 0.0;
 	msg.pose.pose.orientation.z = sin(odom_angle * 0.5);
 	msg.pose.pose.orientation.w = cos(odom_angle * 0.5);
+
+	// msg.twist.twist.linear.x =
+	// msg.twist.twist.linear.y
+	// msg.twist.twist.linear.z = 0.0;
+	// msg.twist.twist.angular.x = 0.0;
+	// msg.twist.twist.angular.y = 0.0;
+	// msg.twist.twist.angular.z
 
 	m_odom_pub->publish(msg);
 }

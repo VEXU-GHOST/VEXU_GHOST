@@ -190,6 +190,9 @@ void SwerveModel::updateBaseTwist(){
 	}
 
 	m_base_vel_curr = m_task_space_jacobian * module_velocity_vector;
+	m_base_vel_curr[0] = (std::fabs(m_base_vel_curr[0]) > 0.01) ? m_base_vel_curr[0] : 0.0;
+	m_base_vel_curr[1] = (std::fabs(m_base_vel_curr[1]) > 0.01) ? m_base_vel_curr[1] : 0.0;
+	m_base_vel_curr[2] = (std::fabs(m_base_vel_curr[2]) > 0.02) ? m_base_vel_curr[2] : 0.0;
 }
 
 void SwerveModel::calculateKinematicSwerveController(double right_vel, double forward_vel, double clockwise_vel){
@@ -315,7 +318,6 @@ void SwerveModel::calculateOdometry(){
 	m_odom_angle += m_base_vel_curr.z() * 0.01;
 	m_odom_angle = ghost_util::WrapAngle2PI(m_odom_angle);
 }
-
 
 void SwerveModel::throwOnUnknownSwerveModule(const std::string& name, const std::string& method_name) const {
 	if(m_current_module_states.count(name) == 0){
