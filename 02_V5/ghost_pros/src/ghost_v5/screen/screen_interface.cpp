@@ -41,16 +41,16 @@ void ScreenInterface::updateScreen(){
 		return;
 	}
 
-	// This pulses the title on and off at regular rate so we know the program is alive.
+	// This pulses the title on and off at regular rate so we know the program is connected to ROS.
 	if((count % (1000 / REFRESH_RATE_MS)) == 0){
-		if(heartbeat_toggle){
-			auto title_str = std::string("- ") + title_string_ + std::string(" -");
-			pros::screen::print(pros::text_format_e_t::E_TEXT_LARGE_CENTER, 0, title_str.c_str());
-		}
-		else{
-			auto title_str = std::string("  ") + title_string_ + std::string("  ");
-			pros::screen::print(pros::text_format_e_t::E_TEXT_LARGE_CENTER, 0, title_str.c_str());
-		}
+		std::string title_str;
+		// enables or disables based on time AND blinks based on heartbeat toggle
+		if (last_connection_time_ + 1000 > pros::millis() && heartbeat_toggle)
+			title_str = std::string("======= ") + title_string_ + std::string(" =======");
+		else
+			title_str = std::string("        ") + title_string_ + std::string("        ");
+
+		pros::screen::print(pros::text_format_e_t::E_TEXT_LARGE_CENTER, 0, title_str.c_str());
 		heartbeat_toggle = !heartbeat_toggle;
 	}
 	count++;
@@ -82,6 +82,11 @@ void ScreenInterface::updateScreen(){
 
 void ScreenInterface::setTitle(const std::string& title){
 	title_string_ = title;
+}
+
+
+void ScreenInterface::updateLastConnectionTime(){
+	last_connection_time_ = pros::millis();
 }
 
 std::vector<std::string> ScreenInterface::wrapStringToLineLength(std::string str, int line_len){
