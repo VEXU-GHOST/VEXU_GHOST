@@ -50,6 +50,7 @@ private:
 	rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr cloud_viz_pub_;
 	rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr map_viz_pub_;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
+	rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr world_tf_pub_;
 
 	// Callback functions
 	void EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
@@ -60,6 +61,7 @@ private:
 	// Visualizations
 	void DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg);
 	void PublishVisualization();
+	void PublishWorldTransform();
 	void DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg);
 	void PublishMapViz();
 

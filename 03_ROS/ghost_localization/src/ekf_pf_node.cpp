@@ -65,6 +65,7 @@ EkfPfNode::EkfPfNode() :
 	debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("estimation_debug", 10);
 	cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
 	map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", map_qos);
+	world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
 
 	// Use simulated time in ROS TODO:!!!!
 	rclcpp::Parameter use_sim_time_param("use_sim_time", true);
@@ -174,10 +175,7 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 		laser_msg_received_ = true;
 	}
 	try{
-		RCLCPP_INFO(
-			this->get_logger(),
-			"Laser Scan Update: % f\n ",
-			msg->range_max);
+		std::cout << "Callback ObserveLaser" << std::endl;
 		last_laser_msg_ = msg;
 		particle_filter_.ObserveLaser(
 			msg->ranges,
@@ -186,7 +184,7 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 			msg->angle_min + config_params.laser_angle_offset,
 			msg->angle_max + config_params.laser_angle_offset);
 
-		// PublishWorldTransform();
+		PublishWorldTransform();
 		PublishVisualization();
 	}
 	catch(std::exception e){
@@ -211,7 +209,7 @@ void EkfPfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 
 		particle_filter_.Initialize(config_params.map, init_loc, init_angle);
 
-		// PublishWorldTransform();
+		PublishWorldTransform();
 		PublishVisualization();
 		PublishMapViz();
 	}
@@ -225,6 +223,19 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	this->last_filtered_odom_msg_ = *msg;
 	odom_loc_(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
 	odom_angle_ += 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
+	try{
+		particle_filter_.Predict(odom_loc_, odom_angle_);
+		// Publish newest robot state
+		// PublishGhostRobotState(msg);
+
+		// Publish Visualization
+		// PublishJointStateMsg(msg);
+		PublishWorldTransform();
+		PublishVisualization();
+	}
+	catch(std::exception e){
+		RCLCPP_ERROR(this->get_logger(), "Odom: %s", e.what());
+	}
 }
 
 void EkfPfNode::PublishMapViz(){
@@ -260,6 +271,33 @@ void EkfPfNode::PublishMapViz(){
 	map_viz_pub_->publish(map_msg);
 }
 
+void EkfPfNode::PublishWorldTransform(){
+	auto tf_msg = tf2_msgs::msg::TFMessage{};
+	auto world_to_base_tf = geometry_msgs::msg::TransformStamped{};
+	world_to_base_tf.header.stamp = this->get_clock()->now();
+	world_to_base_tf.header.frame_id = config_params.world_frame;
+	world_to_base_tf.child_frame_id = "base_link";
+
+	Vector2f robot_loc(0, 0);
+	float robot_angle(0);
+	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+
+	world_to_base_tf.transform.translation.x = robot_loc.x();
+	world_to_base_tf.transform.translation.y = robot_loc.y();
+	// world_to_base_tf.transform.translation.x = odom_loc_.x();
+	// world_to_base_tf.transform.translation.y = odom_loc_.y();
+	world_to_base_tf.transform.translation.z = 0.0;
+	world_to_base_tf.transform.rotation.x = 0.0;
+	world_to_base_tf.transform.rotation.y = 0.0;
+	world_to_base_tf.transform.rotation.z = sin(robot_angle * 0.5);
+	world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
+	// world_to_base_tf.transform.rotation.z = sin(odom_angle_ * 0.5);
+	// world_to_base_tf.transform.rotation.w = cos(odom_angle_ * 0.5);
+
+	tf_msg.transforms.push_back(world_to_base_tf);
+	world_tf_pub_->publish(tf_msg);
+}
+
 void EkfPfNode::PublishVisualization(){
 	// static double t_last = 0;
 
@@ -290,7 +328,9 @@ void EkfPfNode::PublishVisualization(){
 void EkfPfNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg){
 	vector<particle_filter::Particle> particles;
 	particle_filter_.GetParticles(&particles);
-
+	RCLCPP_INFO(
+		this->get_logger(),
+		"DrawParticles");
 	for(const particle_filter::Particle &p : particles){
 		auto pose_msg = geometry_msgs::msg::Pose{};
 		pose_msg.position.x = p.loc.x();
@@ -309,10 +349,6 @@ void EkfPfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg)
 	float robot_angle(0);
 	particle_filter_.GetLocation(&robot_loc, &robot_angle);
 	vector<Vector2f> predicted_scan;
-	// RCLCPP_INFO(
-	// 	this->get_logger(),
-	// 	"Ranges : % s (% f,% f) % f\u00b0 \n ",
-	// 	last_laser_msg_->ranges);
 
 	particle_filter_.GetPredictedPointCloud(
 		robot_loc,
