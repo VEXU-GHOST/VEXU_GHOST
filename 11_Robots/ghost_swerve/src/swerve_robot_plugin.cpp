@@ -101,7 +101,8 @@ void SwerveRobotPlugin::onNewSensorData(){
 
 	m_swerve_model_ptr->updateSwerveModel();
 
-	publishSwerveVisualization();
+	publishOdometry();
+	publishVisualization();
 }
 
 void SwerveRobotPlugin::disabled(){
@@ -140,7 +141,24 @@ void SwerveRobotPlugin::teleop(double current_time){
 void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
 }
 
-void SwerveRobotPlugin::publishSwerveVisualization(){
+void SwerveRobotPlugin::publishOdometry(){
+	Eigen::Vector2d odom_loc = m_swerve_model_ptr->getOdometryLocation();
+	double odom_angle = m_swerve_model_ptr->getOdometryAngle();
+
+	nav_msgs::msg::Odometry msg{};
+
+	msg.pose.pose.position.x = odom_loc.x();
+	msg.pose.pose.position.y = odom_loc.y();
+	msg.pose.pose.position.z = 0.0;
+	msg.pose.pose.orientation.x = 0.0;
+	msg.pose.pose.orientation.y = 0.0;
+	msg.pose.pose.orientation.z = sin(odom_angle * 0.5);
+	msg.pose.pose.orientation.w = cos(odom_angle * 0.5);
+
+	m_odom_pub->publish(msg);
+}
+
+void SwerveRobotPlugin::publishVisualization(){
 	std::unordered_map<std::string, std::pair<std::string, std::string> > joint_name_map{
 		{"left_front", std::pair<std::string, std::string>("wheel_joint_front_left", "steering_joint_front_left")},
 		{"right_front", std::pair<std::string, std::string>("wheel_joint_front_right", "steering_joint_front_right")},

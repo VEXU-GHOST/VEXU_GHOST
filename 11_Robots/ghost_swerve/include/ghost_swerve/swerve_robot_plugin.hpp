@@ -23,7 +23,8 @@ public:
 
 
 protected:
-	void publishSwerveVisualization();
+	void publishVisualization();
+	void publishOdometry();
 	void poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
 	std::shared_ptr<SwerveModel> m_swerve_model_ptr;

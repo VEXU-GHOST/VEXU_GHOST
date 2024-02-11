@@ -13,6 +13,8 @@ set(DEPENDENCIES
   ghost_estimation
   geometry_msgs
   sensor_msgs
+  matplotlib_cpp
+  PythonLibs
   visualization_msgs
   nav_msgs
   pluginlib
@@ -29,6 +31,7 @@ ament_export_dependencies(${DEPENDENCIES})
 
 set(INCLUDE
   include
+  ${PYTHON_INCLUDE_DIRS}
 )
 
 include_directories(${INCLUDE})
@@ -88,7 +91,7 @@ set(TEST_FILES
   test_base_swerve_model
   test_coaxial_swerve_model
   test_differential_swerve_model
-  # test_swerve_icr
+  test_swerve_icr
 )
 
 foreach(TEST ${TEST_FILES})

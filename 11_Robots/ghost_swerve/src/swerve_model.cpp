@@ -4,7 +4,7 @@
 #include "ghost_util/unit_conversion_utils.hpp"
 
 using geometry::Line2d;
-
+using ghost_util::angleBetweenVectorsRadians;
 namespace ghost_swerve {
 
 SwerveModel::SwerveModel(SwerveConfig config){
@@ -44,6 +44,13 @@ void SwerveModel::validateConfig(){
 		throw std::runtime_error(
 			      "[SwerveModel::validateConfig] Error: module_positions must be of size four (one for each module).");
 	}
+
+	m_num_modules = m_config.module_positions.size();
+	LIN_VEL_TO_RPM = ghost_util::METERS_TO_INCHES / m_config.wheel_radius * ghost_util::RAD_PER_SEC_TO_RPM;
+
+	// Initialize Odometry
+	m_odom_loc = Eigen::Vector2d::Zero();
+	m_odom_angle = 0.0;
 }
 
 void SwerveModel::calculateJacobians(){
@@ -65,6 +72,36 @@ void SwerveModel::calculateJacobians(){
 
 	m_module_jacobian_transpose = m_module_jacobian.transpose();
 	m_module_jacobian_inv_transpose = m_module_jacobian_inv.transpose();
+
+	// Task Space Jacobians (Transforms module velocity to and from base velocity)
+	m_task_space_jacobian = Eigen::MatrixXd::Zero(3, 2 * m_num_modules);
+	m_task_space_jacobian_inverse = Eigen::MatrixXd::Zero(2 * m_num_modules, 3);
+
+	int n = 0;
+	for(const auto& [name, position] : m_config.module_positions){
+		m_task_space_jacobian_inverse(2 * n, 0) = 1.0;
+		m_task_space_jacobian_inverse(2 * n, 2) = -position.y();
+		m_task_space_jacobian_inverse(2 * n + 1, 1)  = 1.0;
+		m_task_space_jacobian_inverse(2 * n + 1, 2) = position.x();
+		n++;
+	}
+
+	m_task_space_jacobian = m_task_space_jacobian_inverse.completeOrthogonalDecomposition().pseudoInverse();
+
+	// Ax=b
+	// b = [l1*m1_x, l1*m1_y, ..., li*mi_x, li*mi_y]
+	// x = [icr_x, icr_y, p1, ..., pi]
+	m_least_square_icr_A = Eigen::MatrixXd::Zero(2 * m_num_modules, 2 + m_num_modules);
+	m_least_squares_icr_B = Eigen::VectorXd::Zero(2 * m_num_modules);
+
+	n = 0;
+	for(const auto& [name, position] : m_config.module_positions){
+		m_least_square_icr_A(2 * n, 0) = 1.0;
+		m_least_square_icr_A(2 * n + 1, 1) = 1.0;
+		m_least_squares_icr_B[2 * n] = position.x();
+		m_least_squares_icr_B[2 * n + 1] = position.y();
+		n++;
+	}
 }
 
 void SwerveModel::calculateMaxBaseTwist(){
@@ -78,16 +115,6 @@ void SwerveModel::calculateMaxBaseTwist(){
 	m_max_base_ang_vel = m_max_base_lin_vel / max_wheel_dist;
 }
 
-const ModuleState& SwerveModel::getCurrentModuleState(const std::string& name){
-	throwOnUnknownSwerveModule(name, "getCurrentModuleState");
-	return m_current_module_states.at(name);
-}
-
-const ModuleState& SwerveModel::getPreviousModuleState(const std::string& name){
-	throwOnUnknownSwerveModule(name, "getPreviousModuleState");
-	return m_previous_module_states.at(name);
-}
-
 void SwerveModel::setModuleState(const std::string& name, ModuleState state){
 	throwOnUnknownSwerveModule(name, "setModuleState");
 	state.steering_angle = ghost_util::WrapAngle360(state.steering_angle);
@@ -95,9 +122,74 @@ void SwerveModel::setModuleState(const std::string& name, ModuleState state){
 	m_current_module_states[name] = state;
 }
 
+// Assumes all module states have been updated prior to update
 void SwerveModel::updateSwerveModel(){
-	calculateHSpaceICR();
+	updateBaseTwist();
+	calculateLeastSquaresICREstimate();
 	calculateOdometry();
+}
+
+void SwerveModel::calculateLeastSquaresICREstimate(){
+	// Update ICR Jacobian
+	int n = 0;
+	for(const auto& [name, state] : m_current_module_states){
+		m_least_square_icr_A(2 * n, 2 + n) = -cos((state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD);
+		m_least_square_icr_A(2 * n + 1, 2 + n) = -sin((state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD);
+		n++;
+	}
+	Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(m_least_square_icr_A);
+	auto rank = lu_decomp.rank();
+	bool full_rank = (rank == (2 + m_num_modules));
+
+	if(full_rank){
+		auto A_decomposition = m_least_square_icr_A.completeOrthogonalDecomposition();
+		auto x = A_decomposition.solve(m_least_squares_icr_B);
+		m_icr_point = Eigen::Vector2d(x[0], x[1]);
+
+		m_icr_sse = (m_least_square_icr_A * x - m_least_squares_icr_B).norm();
+	}
+
+	// Handle pure translation
+	m_straight_line_translation = (m_icr_point.norm() > 500.0 || !full_rank);
+	if(m_straight_line_translation){
+		auto module_state = m_current_module_states.begin()->second;
+		double angle = (module_state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD;
+		m_icr_point = Eigen::Vector2d(cos(angle), sin(angle));
+		m_icr_sse = 0.0;
+	}
+
+	double m = 0.0;
+	for(const auto& [name, state] : m_current_module_states){
+		auto current_steering_axis = Eigen::Vector2d(
+			cos((state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD),
+			sin((state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD)
+			);
+		Eigen::Vector2d ideal_steering_axis;
+
+		if(m_straight_line_translation){
+			ideal_steering_axis = m_icr_point;
+		}
+		else{
+			ideal_steering_axis = (m_icr_point - m_config.module_positions.at(name)).normalized();
+		}
+
+		double angle = angleBetweenVectorsRadians(current_steering_axis, ideal_steering_axis);
+		m += angle * angle / (n * M_PI * M_PI);
+	}
+	double f = 1.0;
+	m_icr_quality = 1 - log(f * m + 1) / log(f + 1);
+}
+
+void SwerveModel::updateBaseTwist(){
+	Eigen::VectorXd module_velocity_vector(2 * m_num_modules);
+	int n = 0;
+	for(const auto& [name, state] : m_current_module_states){
+		module_velocity_vector[2 * n] = state.wheel_velocity / LIN_VEL_TO_RPM * cos(state.steering_angle * ghost_util::DEG_TO_RAD);
+		module_velocity_vector[2 * n + 1] = state.wheel_velocity / LIN_VEL_TO_RPM * sin(state.steering_angle * ghost_util::DEG_TO_RAD);
+		n++;
+	}
+
+	m_base_vel_curr = m_task_space_jacobian * module_velocity_vector;
 }
 
 void SwerveModel::calculateKinematicSwerveController(double right_vel, double forward_vel, double clockwise_vel){
@@ -119,7 +211,6 @@ void SwerveModel::calculateKinematicSwerveController(double right_vel, double fo
 	// Update base twist vector
 	m_base_vel_cmd = Eigen::Vector3d(xy_vel_cmd_base_link.x(), xy_vel_cmd_base_link.y(), ang_vel_cmd);
 
-	const double LIN_VEL_TO_RPM = ghost_util::METERS_TO_INCHES / m_config.wheel_radius * ghost_util::RAD_PER_SEC_TO_RPM;
 	double max_steering_error = 0.0;
 	for(const auto& [module_name, module_position] : m_config.module_positions){
 		// Calculate linear velocity vector at wheel
@@ -218,182 +309,11 @@ void SwerveModel::calculateKinematicSwerveController(double right_vel, double fo
 	}
 }
 
-std::vector<Line2d> SwerveModel::calculateWheelAxisVectors() const {
-	std::vector<Line2d> axis_vectors;
-
-	// Convert each wheel module to Line2d
-	for(const auto & [name, start_point] : m_config.module_positions){
-		// Get angle of module in radians
-		double angle_rad = (m_current_module_states.at(name).steering_angle) * M_PI / 180.0;
-
-		// Calculate end point of unit vector, rotating vector by 90 to align with driveshaft
-		auto end_point = start_point + Eigen::Vector2d(-sin(angle_rad), cos(angle_rad));
-		axis_vectors.push_back(Line2d(start_point, end_point));
-	}
-
-	return axis_vectors;
-}
-
-std::vector<Eigen::Vector3d> SwerveModel::calculateSphericalProjectionAxisIntersections(std::vector<Line2d> axes){
-	if(axes.size() < 2){
-		throw std::runtime_error("[SwerveModel::calculateSphericalProjectionAxisIntersections] Error: Requires atleast two axes to find intersections!");
-	}
-
-	std::vector<Eigen::Vector3d> intersection_points;
-	for(int i = 0; i < axes.size(); i++){
-		auto l1 = axes[i];
-		for(int j = i + 1; j < axes.size(); j++){
-			auto l2 = axes[j];
-			if(fabs(geometry::Cross(l1.Dir(), l2.Dir())) < 1e-9){
-				intersection_points.push_back(Eigen::Vector3d(l1.Dir().x(), l1.Dir().y(), 0.0));
-			}
-			else{
-				Eigen::Hyperplane<double, 2> hp1 = Eigen::Hyperplane<double, 2>::Through(l1.p0, l1.p1);
-				Eigen::Hyperplane<double, 2> hp2 = Eigen::Hyperplane<double, 2>::Through(l2.p0, l2.p1);
-				auto intersection = hp1.intersection(hp2);
-				auto intersection_3d = Eigen::Vector3d(intersection.x(), intersection.y(), 1);
-				intersection_points.push_back(intersection_3d / intersection_3d.norm());
-			}
-		}
-	}
-
-	return intersection_points;
-}
-
-double SwerveModel::averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors, Eigen::Vector3d& avg_point, int num_rejected_points){
-	if(vectors.size() == 0){
-		throw std::runtime_error("[SwerveModel::averageVectorAntipoles] Error: vector list is empty!");
-	}
-
-	// Find fusion candidates
-	auto first_vector = vectors[0].normalized();
-	std::vector<Eigen::Vector3d> candidates{first_vector};
-	for(int i = 1; i < vectors.size(); i++){
-		auto p = vectors[i].normalized();
-		auto d1 = ghost_util::angleBetweenVectorsRadians<Eigen::Vector3d>(first_vector, p);
-		auto d2 = ghost_util::angleBetweenVectorsRadians<Eigen::Vector3d>(first_vector,-p);
-		if(d1 < d2){
-			candidates.push_back(p);
-		}
-		else{
-			candidates.push_back(-p);
-		}
-	}
-
-	// Calculate average
-	Eigen::Vector3d avg(0, 0, 0);
-	for(const auto &p : candidates){
-		avg += p;
-	}
-	avg_point = (avg / candidates.size()).normalized();
-
-	// // Reject points with largest distance
-	// for(int i = 0; i < num_rejected_points; i++){
-	// 	double max_err = 0.0;
-	// 	int max_err_index = -1;
-	// 	for(int j = 0; j < candidates.size() - i; j++){
-	// 		auto err = (candidates[j] - avg_point).squaredNorm();
-	// 		if(err > max_err){
-	// 			max_err = err;
-	// 			max_err_index = j;
-	// 		}
-	// 	}
-	// 	candidates.erase(candidates.begin() + max_err_index);
-	// }
-
-	// // Re-average
-	// std::cout << "Reaverage" << std::endl;
-	// avg = Eigen::Vector3d(0, 0, 0);
-	// for(const auto &p : candidates){
-	// 	std::cout << p << std::endl;
-	// 	avg += p;
-	// }
-	// avg_point = (avg / candidates.size()).normalized();
-
-	// Calculate sum squared error
-	double sse = 0.0;
-	// std::cout << "avg point" << std::endl;
-	// std::cout << avg_point << std::endl;
-	for(const auto &p : candidates){
-		// std::cout << "p" << std::endl;
-		// std::cout << p << std::endl;
-		sse += (avg_point - p).squaredNorm();
-	}
-
-	return sse;
-}
-
-void SwerveModel::calculateHSpaceICR(){
-	std::vector<Line2d>  axis_vectors = calculateWheelAxisVectors();
-	std::vector<Eigen::Vector3d> h_space_unit_vectors = calculateSphericalProjectionAxisIntersections(axis_vectors);
-	filterCollinearVectors(h_space_unit_vectors, axis_vectors.size());
-	m_icr_sse = averageVectorAntipoles(h_space_unit_vectors, m_h_space_projection, axis_vectors.size() / 2);
-
-	// Update 2D ICR
-	if(fabs(m_h_space_projection[2]) < 1e-9){
-		// Handle Parallel Case (Straight line translation)
-		m_icr_point = Eigen::Vector2d(m_h_space_projection[0], m_h_space_projection[1]).normalized();
-		m_straight_line_translation = true;
-	}
-	else{
-		m_icr_point = Eigen::Vector2d(m_h_space_projection[0] / m_h_space_projection[2], m_h_space_projection[1] / m_h_space_projection[2]);
-		m_straight_line_translation = false;
-	}
-}
-
-void SwerveModel::filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, int num_modules){
-	// If axes are collinear but the robot isn't moving straight, it throws off the ICR average (and thus all
-	// related calculations). Store the indices of collinear vectors (in reverse, if we need to erase them later).
-	std::vector<int> collinear_vector_indices;
-	std::vector<int> non_collinear_vector_indices;
-	for(int i = vectors.size() - 1; i >= 0; i--){
-		if(vectors[i][2] < 1e-3){
-			collinear_vector_indices.push_back(i);
-		}
-		else{
-			non_collinear_vector_indices.push_back(i);
-		}
-	}
-
-	// If we aren't driving straight, the maximum number of collinear vectors is num_modules / 2,
-	// where the ICR is in center of the robot, and each pair of opposite modules intersects.
-	if((collinear_vector_indices.size() != 0) && (collinear_vector_indices.size() <= num_modules / 2)){
-		std::cout << "collinear filtered: " << collinear_vector_indices.size() << std::endl;
-		for(const auto & index : collinear_vector_indices){
-			vectors.erase(vectors.begin() + index);
-		}
-	}
-
-	// If we are driving straight (within threshold), then there can be up to two modules which roughly line up but don't evaluate
-	// to collinear due to small errors. I.e. ICR points to the left, both right module axes point at their respective left module axes.
-	// There are two intersection points inside the robot chassis. From small misalignments.
-	if((non_collinear_vector_indices.size() != 0) && (non_collinear_vector_indices.size() <= num_modules / 2)){
-		std::cout << "non collinear filtered: " << non_collinear_vector_indices.size() << std::endl;
-		for(const auto & index : non_collinear_vector_indices){
-			vectors.erase(vectors.begin() + index);
-		}
-	}
-}
-
-template <typename T>
-std::vector<std::vector<T> > getUniqueAntipoleSets(std::vector<T> vectors){
-	std::vector<std::vector<T> > unique_sets;
-	for(auto & v : vectors){
-		unique_sets.push_back(std::vector<T>{v});
-	}
-	for(int i = 1; i < vectors.size(); i++){
-		unique_sets[0].push_back(vectors[i]);
-	}
-
-	for(int i = 1; i < vectors.size(); i++){
-		unique_sets[i].push_back(vectors[i]);
-		for(int j = i; j < vectors.size(); j++){
-		}
-	}
-}
-
-
 void SwerveModel::calculateOdometry(){
+	auto rotate_base_to_odom = Eigen::Rotation2D<double>(m_odom_angle).toRotationMatrix();
+	m_odom_loc += rotate_base_to_odom * Eigen::Vector2d(m_base_vel_curr.x(), m_base_vel_curr.y()) * 0.01;
+	m_odom_angle += m_base_vel_curr.z() * 0.01;
+	m_odom_angle = ghost_util::WrapAngle2PI(m_odom_angle);
 }
 
 

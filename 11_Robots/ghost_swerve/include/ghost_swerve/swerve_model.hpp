@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <unordered_map>
 
@@ -29,7 +30,7 @@ struct SwerveConfig {
 	double steering_kp;
 
 	// XY Position of each module relative to robot base
-	std::unordered_map<std::string, Eigen::Vector2d> module_positions;
+	std::map<std::string, Eigen::Vector2d> module_positions;
 };
 
 struct ModuleState {
@@ -118,7 +119,10 @@ public:
 	 * @param name
 	 * @return const ModuleState&
 	 */
-	const ModuleState& getCurrentModuleState(const std::string& name);
+	const ModuleState& getCurrentModuleState(const std::string& name){
+		throwOnUnknownSwerveModule(name, "getCurrentModuleState");
+		return m_current_module_states.at(name);
+	}
 
 	/**
 	 * @brief Return the previous state of a given Swerve Module.
@@ -126,8 +130,10 @@ public:
 	 * @param name
 	 * @return const ModuleState&
 	 */
-	const ModuleState& getPreviousModuleState(const std::string& name);
-
+	const ModuleState& getPreviousModuleState(const std::string& name){
+		throwOnUnknownSwerveModule(name, "getPreviousModuleState");
+		return m_previous_module_states.at(name);
+	}
 
 	/**
 	 * @brief Updates a swerve module command by module name.
@@ -243,17 +249,21 @@ public:
 		return m_base_vel_cmd;
 	}
 
-	std::vector<geometry::Line2d> calculateWheelAxisVectors() const;
-	static std::vector<Eigen::Vector3d> calculateSphericalProjectionAxisIntersections(std::vector<geometry::Line2d> axes);
-	static std::vector<std::vector<Eigen::Vector3d> > getUniqueAntipoleSets(std::vector<Eigen::Vector3d> vectors);
-	double averageVectorAntipoles(std::vector<Eigen::Vector3d> vectors, Eigen::Vector3d& avg_point, int num_rejected_points = 0);
-
 	double getICRSSE() const {
 		return m_icr_sse;
 	}
 
-	void filterCollinearVectors(std::vector<Eigen::Vector3d>& vectors, int num_modules);
-	void calculateHSpaceICR();
+	double getICRQuality() const {
+		return m_icr_quality;
+	}
+
+	const Eigen::Vector2d& getOdometryLocation(){
+		return m_odom_loc;
+	}
+
+	double getOdometryAngle() const {
+		return m_odom_angle;
+	}
 
 protected:
 	// Initialization
@@ -264,22 +274,34 @@ protected:
 	// Error Catching
 	void throwOnUnknownSwerveModule(const std::string& name, const std::string& method_name) const;
 
-	// Model updates
+	// Model Updates
+	void calculateLeastSquaresICREstimate();
 	void calculateOdometry();
+	void updateBaseTwist();
+	void updateICREstimate();
 
 	// Configuration
 	SwerveConfig m_config;
 	double m_max_base_lin_vel;
 	double m_max_base_ang_vel;
+	int m_num_modules;
+	double LIN_VEL_TO_RPM;
 
 	// Jacobians
-	Eigen::Matrix2d m_module_jacobian;
-	Eigen::Matrix2d m_module_jacobian_inv;
-	Eigen::Matrix2d m_module_jacobian_transpose;
-	Eigen::Matrix2d m_module_jacobian_inv_transpose;
+	Eigen::Matrix2d m_module_jacobian;                      // Maps actuator velocities to joint velocities
+	Eigen::Matrix2d m_module_jacobian_inv;                  // Maps joint velocities to actuator velocities
+	Eigen::Matrix2d m_module_jacobian_transpose;            // Maps actuator efforts to joint efforts
+	Eigen::Matrix2d m_module_jacobian_inv_transpose;        // Maps joint efforts to actuator efforts
+
+	Eigen::MatrixXd m_task_space_jacobian;                  // Maps Joint Velocities to Base Velocities
+	Eigen::MatrixXd m_task_space_jacobian_inverse;          // Maps Base Velocities to Joint Velocities
+
+	Eigen::MatrixXd m_least_square_icr_A;
+	Eigen::VectorXd m_least_squares_icr_B;
 
 	// Odometry
-	Eigen::Vector3d m_odom_pose;
+	Eigen::Vector2d m_odom_loc;
+	double m_odom_angle;
 
 	// Current centroidal states
 	double m_curr_angle;
@@ -289,9 +311,9 @@ protected:
 	Eigen::Vector3d m_base_vel_cmd;
 
 	// Module States
-	std::unordered_map <std::string, ModuleState> m_previous_module_states;
-	std::unordered_map <std::string, ModuleState> m_current_module_states;
-	std::unordered_map <std::string, ModuleCommand> m_module_commands;
+	std::map <std::string, ModuleState> m_previous_module_states;
+	std::map <std::string, ModuleState> m_current_module_states;
+	std::map <std::string, ModuleCommand> m_module_commands;
 
 	// Control Style
 	bool m_is_angle_control = false;
@@ -301,6 +323,7 @@ protected:
 	Eigen::Vector3d m_h_space_projection;
 	Eigen::Vector2d m_icr_point;
 	bool m_straight_line_translation;
+	double m_icr_quality = 0;
 	double m_icr_sse = 0;
 };
 
