@@ -49,6 +49,17 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
+    swerve_motion_planner_node = Node(
+        package='ghost_swerve',
+        executable='swerve_motion_planner',
+        output='screen',
+        parameters=[ros_config_file, 
+                    {
+                    }],
+        arguments=[plugin_type, robot_name]
+        # arguments=["--ros-args", "--log-level", "debug"]
+    )
+
     # rplidar_node = Node(
     #     package='rplidar_ros',
     #     executable='rplidar_scan_publisher',
@@ -67,6 +78,7 @@ def generate_launch_description():
     return LaunchDescription([
         serial_node,
         competition_state_machine_node,
+        swerve_motion_planner_node
         # rplidar_node,
         # realsense_launch
     ])

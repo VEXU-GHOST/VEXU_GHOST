@@ -288,6 +288,23 @@ void fromROSMsg(ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajecto
 	motor_trajectory.torque_vector = std::vector<double>(std::begin(motor_trajectory_msg.torque), std::end(motor_trajectory_msg.torque));
 }
 
+void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg){
+	robot_trajectory_msg.motor_names = robot_trajectory.motor_names;
+	for(const auto& motor_trajectory : robot_trajectory.motor_trajectories){
+		auto motor_trajectory_msg = ghost_msgs::msg::MotorTrajectory::SharedPtr();
+		toROSMsg(motor_trajectory, *motor_trajectory_msg);
+		robot_trajectory_msg.trajectories.push_back(*motor_trajectory_msg);
+	}
+}
+
+void toROSMsg(const ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg){
+	motor_trajectory_msg.position = motor_trajectory.position_vector;
+	motor_trajectory_msg.time = motor_trajectory.time_vector;
+	motor_trajectory_msg.torque = motor_trajectory.torque_vector;
+	motor_trajectory_msg.velocity = motor_trajectory.velocity_vector;
+	motor_trajectory_msg.voltage = motor_trajectory.voltage_vector;
+}
+
 } // namespace msg_helpers
 
 } // namespace ghost_ros_interfaces

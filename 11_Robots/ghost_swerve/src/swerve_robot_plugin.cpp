@@ -119,6 +119,20 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	bt_->tick_tree();
 
+	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
+		{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
+		{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
+		{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
+		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
+	};
+
+	for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
+		std::string m1_name = motor_name_pair.first;
+		std::string m2_name = motor_name_pair.second;
+		rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
+		rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
+	}
+
 	update_motor_commands(current_time - trajectory_start_time_);
 
 	// update motor values from trajectory

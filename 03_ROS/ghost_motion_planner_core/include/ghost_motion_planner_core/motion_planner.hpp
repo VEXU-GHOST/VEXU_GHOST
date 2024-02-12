@@ -11,15 +11,12 @@
 
 namespace ghost_motion_planner {
 
-// enum class robot_state_e {
-// 	DISABLED = 0,
-// 	TELEOP = 1,
-// 	AUTONOMOUS = 2,
-// };
-
-class MotionPlanner {
+class MotionPlanner : public rclcpp::Node {
 public:
-	MotionPlanner() = default;
+	MotionPlanner():
+	rclcpp::Node("motion_planner"){
+		configure();
+	};
 	virtual ~MotionPlanner() = default;
 
 	///////////////////////////
@@ -44,8 +41,7 @@ public:
 	 * Generates and publishes a RobotTrajectory msg when completed
 	 * 
 	 */
-	virtual bool generateMotionPlan(ghost_msgs::msg::DrivetrainCommand command) = 0; 
-
+    virtual void generateMotionPlan(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd) = 0;
 
 
 	//////////////////////////////
@@ -56,16 +52,12 @@ public:
 	 * @brief Called for all motion planner classes after construction. Calls user-defined intialize method internally.
 	 */
 	void configure();
-	
-	void setNewCommand(ghost_msgs::msg::DrivetrainCommand command);
 
-	// returns trajectory after generateMotionPlan has completed
-	// should just publish instead?
-	// void getRobotTrajectory();
+	void setNewCommand(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd);
 
 protected:
-	std::shared_ptr<rclcpp::Node> node_ptr_;
 	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
+	rclcpp::Publisher<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_pub_;
 
 private:
 	void sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
@@ -74,7 +66,7 @@ private:
 	// bool configured_ = false;
 	std::atomic_bool planning_ = false;
 	rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_sub_;
-	rclcpp::Publisher<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_pub_;
+	rclcpp::Subscription<ghost_msgs::msg::DrivetrainCommand>::SharedPtr pose_command_sub_;
 
 	// std::chrono::time_point<std::chrono::system_clock> start_time_;
 };

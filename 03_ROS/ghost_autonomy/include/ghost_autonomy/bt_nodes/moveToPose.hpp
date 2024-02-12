@@ -9,20 +9,20 @@ using std::placeholders::_1;
 
 // SyncActionNode (synchronous action) with an input port.
 class MoveToPose : public BT::SyncActionNode,
-		           public rclcpp::Node {
+	               public rclcpp::Node {
 private:
-		std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
-        rclcpp::Publisher<ghost_msgs::msg::DrivetrainCommand>::SharedPtr command_pub_; 
+	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
+	rclcpp::Publisher<ghost_msgs::msg::DrivetrainCommand>::SharedPtr command_pub_;
 public:
-		// If your Node has ports, you must use this constructor signature
-		MoveToPose(const std::string& name, const BT::NodeConfig& config,
-		           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr);
+	// If your Node has ports, you must use this constructor signature
+	MoveToPose(const std::string& name, const BT::NodeConfig& config,
+	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr);
 
-		// It is mandatory to define this STATIC method.
-		static BT::PortsList providedPorts();
-		template <typename T>
-        T get_input(std::string key);
+	// It is mandatory to define this STATIC method.
+	static BT::PortsList providedPorts();
+	template <typename T>
+	T get_input(std::string key);
 
-		// Override the virtual function tick()
-		BT::NodeStatus tick() override;
+	// Override the virtual function tick()
+	BT::NodeStatus tick() override;
 };

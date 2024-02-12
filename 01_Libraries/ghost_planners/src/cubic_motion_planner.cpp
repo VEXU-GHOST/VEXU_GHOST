@@ -5,6 +5,8 @@
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
 
+namespace ghost_planners {
+
 MatrixXf CubicMotionPlanner::computeCubicCoeff(double t0, double tf, std::vector<double> vec_q0, std::vector<double> vec_qf){
 	// vec_q0 = {position, velocity}
 	// Ax = B
@@ -43,9 +45,12 @@ MatrixXf CubicMotionPlanner::computeCubicCoeff(double t0, double tf, std::vector
 	return A.inverse() * B;
 }
 
-std::tuple<std::vector<double>, std::vector<double>, std::vector<double>> CubicMotionPlanner::computeCubicTraj(MatrixXf A, double t0, double tf, int n){
+std::tuple<std::vector<double>, std::vector<double>, std::vector<double> > CubicMotionPlanner::computeCubicTraj(std::vector<double> vec_q0,
+                                                                                                                std::vector<double> vec_qf, double t0, double tf, int n){
 	// A = coefficients
 	// n = number of timesteps
+	auto A = computeCubicCoeff(t0, tf, vec_q0, vec_qf);
+
 	std::vector<double> a = {A(0, 0), A(1, 0), A(2, 0), A(3, 0)};
 
 	std::vector<double> qd;
@@ -64,3 +69,5 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>> CubicM
 
 	return std::make_tuple(time, qd, d_qd);
 }
+
+} // namespace ghost_planners

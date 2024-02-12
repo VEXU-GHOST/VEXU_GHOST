@@ -3,12 +3,12 @@
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
+using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using ghost_ros_interfaces::msg_helpers::toROSMsg;
 using ghost_v5_interfaces::devices::hardware_type_e;
 using ghost_v5_interfaces::RobotHardwareInterface;
 using ghost_v5_interfaces::util::loadRobotConfigFromYAMLFile;
-using ghost_planners::RobotTrajectory;
 using std::placeholders::_1;
 namespace ghost_ros_interfaces {
 
@@ -114,7 +114,7 @@ double V5RobotBase::getTimeFromStart() const {
 
 void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg){
 	trajectory_start_time_ = getTimeFromStart();
-	for (int i = 0; i < msg->motor_names.size(); i++){
+	for(int i = 0; i < msg->motor_names.size(); i++){
 		RobotTrajectory::MotorTrajectory motor_trajectory;
 		fromROSMsg(motor_trajectory, msg->trajectories[i]);
 		trajectory_motor_map_[msg->motor_names[i]] = motor_trajectory;
@@ -122,25 +122,24 @@ void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::Sha
 }
 
 void V5RobotBase::update_motor_commands(double time){
-	for (auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
+	for(auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
 		const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
-		if (is_pos_command){
+		if(is_pos_command){
 			rhi_ptr_->setMotorPositionCommand(motor_name, position);
 		}
 		const auto [is_torque_command, torque] = motor_trajectory.getTorque(time);
-		if (is_torque_command){
+		if(is_torque_command){
 			rhi_ptr_->setMotorTorqueCommandPercent(motor_name, torque);
 		}
 		const auto [is_velocity_command, velocity] = motor_trajectory.getVelocity(time);
-		if (is_velocity_command){
+		if(is_velocity_command){
 			rhi_ptr_->setMotorVelocityCommandRPM(motor_name, velocity);
 		}
 		const auto [is_voltage_command, voltage] = motor_trajectory.getVoltage(time);
-		if (is_voltage_command){
+		if(is_voltage_command){
 			rhi_ptr_->setMotorVoltageCommandPercent(motor_name, voltage);
 		}
 	}
 }
-
 
 } // namespace ghost_ros_interfaces

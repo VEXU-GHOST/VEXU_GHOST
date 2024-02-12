@@ -1,7 +1,7 @@
 std_msgs/Header header
 
-float32[] position
-float32[] velocity
-float32[] torque
-float32[] voltage
-float32[] time
+float64[] position
+float64[] velocity
+float64[] torque
+float64[] voltage
+float64[] time

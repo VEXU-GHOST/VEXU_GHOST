@@ -37,7 +37,6 @@ protected:
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
 	rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_viz_pub;
-	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
 	std::string bt_path_;
 	std::shared_ptr<RunTree> bt_; 
 	
