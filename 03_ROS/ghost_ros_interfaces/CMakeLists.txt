@@ -121,6 +121,35 @@ target_include_directories(competition_state_machine_node
 install(TARGETS
   competition_state_machine_node
   DESTINATION lib/${PROJECT_NAME})
+
+# Bag Recorder Nodes
+add_executable(bag_recorder_service
+  src/bag_recorder/bag_recorder_service.cpp
+)
+ament_target_dependencies(bag_recorder_service
+  ${DEPENDENCIES}
+)
+target_include_directories(bag_recorder_service
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  bag_recorder_service
+  DESTINATION lib/${PROJECT_NAME})
+  
+add_executable(bag_recorder_client
+  src/bag_recorder/bag_recorder_client.cpp
+)
+ament_target_dependencies(bag_recorder_client
+  ${DEPENDENCIES}
+)
+target_include_directories(bag_recorder_client
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  bag_recorder_client
+  DESTINATION lib/${PROJECT_NAME})
   
 #################
 #### Install ####
