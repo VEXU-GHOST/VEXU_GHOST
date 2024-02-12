@@ -32,14 +32,15 @@ void BagRecorderNode::ToggleRecorder(const std::shared_ptr<ToggleBagRecorder::Re
 
 		recorderPID = fork();
 		if(recorderPID == 0){
-			execl("/bin/sh", "sh", "-c", "ros2 bag record -a", NULL);
+			execl("/bin/sh", "sh", "-c", "exec ros2 bag record -a", NULL);
 		}
 	}
 
 	else{
 		recording = false;
 		RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Stopping recorder.");
-		std::system("kill -s INT $(ps -aux | grep '/bin/ros2 bag record -a' | grep -v grep | awk '{print $2;}')");
+		std::string cmd_string = "kill -s INT " + std::to_string(recorderPID);
+		std::system(cmd_string.c_str());
 	}
 }
 
