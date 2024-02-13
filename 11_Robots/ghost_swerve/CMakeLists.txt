@@ -9,9 +9,16 @@ find_package(Ghost CONFIG REQUIRED)
 set(DEPENDENCIES
   ament_cmake
   ghost_ros_interfaces
+  ghost_util
+  ghost_estimation
   geometry_msgs
+  sensor_msgs
+  matplotlib_cpp
+  PythonLibs
+  visualization_msgs
   nav_msgs
   pluginlib
+  Eigen3
   )
 
 # Iterates through the list and finds the packages!
@@ -24,18 +31,43 @@ ament_export_dependencies(${DEPENDENCIES})
 
 set(INCLUDE
   include
+  ${PYTHON_INCLUDE_DIRS}
 )
 
 include_directories(${INCLUDE})
 
-####################
-##### Targets ######
-####################
+###################
+##### Targets #####
+###################
+add_library(swerve_model SHARED src/swerve_model.cpp)
+target_include_directories(swerve_model
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(swerve_model
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  swerve_model
+)
+ament_export_targets(swerve_model HAS_LIBRARY_TARGET)
+install(
+  TARGETS swerve_model
+  EXPORT swerve_model
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 add_library(swerve_robot_plugin SHARED src/swerve_robot_plugin.cpp)
 target_include_directories(swerve_robot_plugin
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+  target_link_libraries(swerve_robot_plugin
+    swerve_model
+  )
 ament_target_dependencies(swerve_robot_plugin
   ${DEPENDENCIES}
 )
@@ -52,9 +84,33 @@ RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
-####################
-##### Install ######
-####################
+###################
+###### Tests ######
+###################
+set(TEST_FILES
+  test_base_swerve_model
+  test_coaxial_swerve_model
+  test_differential_swerve_model
+  test_swerve_icr
+)
+
+foreach(TEST ${TEST_FILES})
+  ament_add_gtest(${TEST} test/${TEST}.cpp)
+  ament_target_dependencies(${TEST} ${DEPENDENCIES})
+  target_link_libraries(${TEST}
+    swerve_model
+    gtest_main
+  )
+  target_include_directories(${TEST} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
+  $<INSTALL_INTERFACE:include>)
+endforeach()
+
+
+###################
+##### Install #####
+###################
 install(
   DIRECTORY include/
   DESTINATION include

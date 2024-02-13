@@ -54,7 +54,7 @@ private:
 	bool using_backup_port_;
 
 	// Robot Hardware Interface
-	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
+	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 
 	// Msg Config
 	int actuator_command_msg_len_;

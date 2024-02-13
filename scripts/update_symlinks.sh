@@ -62,6 +62,7 @@ ln -s ../../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interface
 
 ### Symlink ghost_util ###
 cd $V5_DIR/include/ghost_util
+ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/unit_conversion_utils.hpp
 ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/byte_utils.hpp
 ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/angle_util.hpp
 ln -s ../../../../01_Libraries/ghost_util/include/ghost_util/math_util.hpp

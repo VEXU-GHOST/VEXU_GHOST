@@ -1,23 +1,27 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ghost_swerve</name>
+  <name>ghost_sensing</name>
   <version>0.0.0</version>
-  <description>Contains swerve drive robot implementation</description>
+  <description>TODO: Package description</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
-  <license>GPLv3</license>
+  <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-
-  <depend>ghost_ros_interfaces</depend>
+  <depend>rclcpp</depend>
+  <depend>visualization_msgs</depend>
+  <depend>builtin_interfaces</depend>
   <depend>ghost_util</depend>
-  <depend>ghost_estimation</depend>
-  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
-  <depend>nav_msgs</depend>
-  <depend>pluginlib</depend>
+  <depend>geometry_msgs</depend>
+  <depend>Eigen3</depend>
+  <depend>yaml-cpp</depend>
+
+  <exec_depend>realsense_camera</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
