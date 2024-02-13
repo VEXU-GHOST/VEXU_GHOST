@@ -11,9 +11,10 @@ class BagRecorderNode : public rclcpp::Node {
 public:
 	BagRecorderNode() :
 		rclcpp::Node("toggle_bag_recorder_service") {
-		declare_parameter<int64_t>("required_free_space_kb", 250 * 1024);
-		required_free_space_ = get_parameter("required_free_space_kb").as_int();
+		declare_parameter<int64_t>("disk_space_required_kb", 250 * 1024);
 		declare_parameter<int>("disk_check_period_s", 10);
+
+		disk_space_required_ = get_parameter("disk_space_required_kb").as_int();
 		disk_check_period_ = std::chrono::seconds(get_parameter("disk_check_period_s").as_int());
 
 		this->service_ = this->create_service<ToggleBagRecorder>("toggle_bag_recorder",
@@ -31,20 +32,15 @@ private:
 	rclcpp::Service<ToggleBagRecorder>::SharedPtr service_;
 	bool recording_ = false;
 	pid_t recorderPID_ = -1;
-	FILE* space_check_output_;
-	unsigned long required_free_space_;
+	unsigned long disk_space_required_;
+	FILE* disk_check_output_;
 	std::chrono::seconds disk_check_period_;
 	rclcpp::TimerBase::SharedPtr disk_check_timer;
 };
 
 void BagRecorderNode::ToggleRecording(const std::shared_ptr<ToggleBagRecorder::Request> req,
                                       std::shared_ptr<ToggleBagRecorder::Response>      res) {
-	if(!recording_){
-		SpawnRecorderProcess();
-	}
-	else{
-		KillRecorderProcess();
-	}
+	(!recording_) ? SpawnRecorderProcess() : KillRecorderProcess();
 }
 
 void BagRecorderNode::SpawnRecorderProcess() {
@@ -76,12 +72,12 @@ void BagRecorderNode::EnforceFreeDiskSpace() {
 	}
 
 	RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Checking disk space.");
-	space_check_output_ = popen("df / -k --output=avail | grep -v \"Avail\"", "r");
+	disk_check_output_ = popen("df / -k --output=avail | grep -v \"Avail\"", "r");
 	unsigned long free_space;
-	fscanf(space_check_output_, "%lu", &free_space);
-	fclose(space_check_output_);
+	fscanf(disk_check_output_, "%lu", &free_space);
+	fclose(disk_check_output_);
 
-	if(free_space < required_free_space_){
+	if(free_space < disk_space_required_){
 		RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Not enough disk space to safely continue recording.");
 		KillRecorderProcess();
 	}
