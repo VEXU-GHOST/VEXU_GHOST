@@ -33,16 +33,16 @@
 
 namespace ghost_localization {
 
-class EkfPfNode : public rclcpp::Node {
+class PfEkfNode : public rclcpp::Node {
 public:
-	EkfPfNode();
+	PfEkfNode();
 
 private:
 
 	void LoadROSParams();
 
 	// Subscribers
-	rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ekf_odom_sub_;
+	rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 	rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
 	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr set_pose_sub_;
 
@@ -51,10 +51,11 @@ private:
 	rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr map_viz_pub_;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
 	rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr world_tf_pub_;
-	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr robot_pose_pub_;
+	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr robot_state_pub_;
+	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr ekf_odom_pub_;
 
 	// Callback functions
-	void EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+	void OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
 	void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
 	void InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
@@ -65,6 +66,7 @@ private:
 	void DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg);
 	void PublishMapViz();
 	void PublishRobotPose(rclcpp::Time stamp);
+
 
 	// Particle Filter
 	particle_filter::ParticleFilter particle_filter_;
@@ -81,7 +83,6 @@ private:
 
 	Eigen::Vector2f odom_loc_;
 	float odom_angle_;
-	geometry_msgs::msg::PoseWithCovarianceStamped robot_pose_;
 	visualization_msgs::msg::MarkerArray viz_msg_;
 };
 

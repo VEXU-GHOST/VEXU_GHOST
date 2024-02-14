@@ -249,6 +249,10 @@ public:
 		return m_base_vel_cmd;
 	}
 
+	const Eigen::Vector3d& getBaseVelocityCurrent(){
+		return m_base_vel_curr;
+	}
+
 	double getICRSSE() const {
 		return m_icr_sse;
 	}

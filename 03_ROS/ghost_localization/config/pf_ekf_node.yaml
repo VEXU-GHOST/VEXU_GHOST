@@ -1,7 +1,4 @@
-# If you are using the sweve model and you are tuning the k1-9 parameters,
-# the swerve model plugin has its own duplicate (11_Robots/ghost_over_under/config/ros_config.yaml) of the k1-9 parameters that must
-# be changed as well as this file. TODO: make a class for this
-ekf_pf_node:
+pf_ekf_node:
   ros__parameters:
     particle_filter:
       world_frame: "odom"

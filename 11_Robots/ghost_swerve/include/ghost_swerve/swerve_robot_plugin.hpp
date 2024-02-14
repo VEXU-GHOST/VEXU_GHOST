@@ -33,6 +33,15 @@ protected:
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
 	rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_viz_pub;
+	double m_k1;
+	double m_k2;
+	double m_k3;
+	double m_k4;
+	double m_k5;
+	double m_k6;
+	double m_k7;
+	double m_k8;
+	double m_k9;
 };
 
 } // namespace ghost_swerve

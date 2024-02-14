@@ -27,6 +27,25 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("marker_array_topic", "/swerve_markers");
 	std::string marker_array_topic = node_ptr_->get_parameter("marker_array_topic").as_string();
 
+	node_ptr_->declare_parameter("swerve_robot_plugin.k1", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k2", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k3", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k4", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k5", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k6", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k7", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k8", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k9", 0.0);
+	m_k1 = node_ptr_->get_parameter("swerve_robot_plugin.k1").as_double();
+	m_k2 = node_ptr_->get_parameter("swerve_robot_plugin.k2").as_double();
+	m_k3 = node_ptr_->get_parameter("swerve_robot_plugin.k3").as_double();
+	m_k4 = node_ptr_->get_parameter("swerve_robot_plugin.k4").as_double();
+	m_k5 = node_ptr_->get_parameter("swerve_robot_plugin.k5").as_double();
+	m_k6 = node_ptr_->get_parameter("swerve_robot_plugin.k6").as_double();
+	m_k7 = node_ptr_->get_parameter("swerve_robot_plugin.k7").as_double();
+	m_k8 = node_ptr_->get_parameter("swerve_robot_plugin.k8").as_double();
+	m_k9 = node_ptr_->get_parameter("swerve_robot_plugin.k9").as_double();
+
 	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
 		pose_topic,
 		10,
@@ -158,6 +177,11 @@ void SwerveRobotPlugin::publishOdometry(){
 	msg.pose.pose.orientation.z = sin(odom_angle * 0.5);
 	msg.pose.pose.orientation.w = cos(odom_angle * 0.5);
 
+	// covariance is row major form
+	std::array<double, 36> covariance = {m_k1, m_k4, 0.0, m_k7, 0.0, 0.0,
+		                             m_k2, m_k5, 0.0, m_k8, 0.0, 0.0,
+		                             m_k3, m_k6, 0.0, m_k9, 0.0, 0.0};
+	msg.pose.covariance = covariance;
 	// msg.twist.twist.linear.x =
 	// msg.twist.twist.linear.y
 	// msg.twist.twist.linear.z = 0.0;

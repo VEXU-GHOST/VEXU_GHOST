@@ -21,7 +21,7 @@
 // ========================================================================
 
 #include "eigen3/Eigen/Geometry"
-#include "ghost_localization/ekf_pf_node.hpp"
+#include "ghost_localization/pf_ekf_node.hpp"
 #include "ghost_util/angle_util.hpp"
 #include "math/line2d.h"
 #include "math/math_util.h"
@@ -40,34 +40,35 @@ using std::vector;
 
 namespace ghost_localization {
 
-EkfPfNode::EkfPfNode() :
-	Node("ekf_pf_node"){
+PfEkfNode::PfEkfNode() :
+	Node("pf_ekf_node"){
 	// Subscribers
-	ekf_odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-		"/odometry/filtered",
+	odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+		"/odom",
 		10,
-		std::bind(&EkfPfNode::EkfCallback, this, _1));
+		std::bind(&PfEkfNode::OdomCallback, this, _1));
 
 	laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
 		"/scan",
 		rclcpp::SensorDataQoS(),
-		std::bind(&EkfPfNode::LaserCallback, this, _1));
+		std::bind(&PfEkfNode::LaserCallback, this, _1));
+
+	auto map_qos = rclcpp::QoS(10);
+	map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
 
 	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
 		"/initial_pose",
 		10,
-		std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
+		std::bind(&PfEkfNode::InitialPoseCallback, this, _1)
 		);
-
-	auto map_qos = rclcpp::QoS(10);
-	map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
 
 	// Publishers
 	debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("estimation_debug", 10);
 	cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
 	map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", map_qos);
 	world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
-	robot_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("estimation/pose", 10);
+	robot_state_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pf_robot_state", 10);
+	ekf_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pf_odometry", 10);
 
 	// Use simulated time in ROS TODO:!!!!
 	rclcpp::Parameter use_sim_time_param("use_sim_time", true);
@@ -88,7 +89,7 @@ EkfPfNode::EkfPfNode() :
 	particle_filter_.Initialize(config_params.map, init_loc, config_params.init_r);
 }
 
-void EkfPfNode::LoadROSParams(){
+void PfEkfNode::LoadROSParams(){
 	config_params = ParticleFilterConfig();
 
 	declare_parameter("particle_filter.world_frame", "");
@@ -172,11 +173,12 @@ void EkfPfNode::LoadROSParams(){
 	config_params.skip_index_max = get_parameter("particle_filter.skip_index_max").as_int();
 }
 
-void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
+void PfEkfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 	if(!laser_msg_received_){
 		laser_msg_received_ = true;
 	}
 	try{
+		std::cout << "Callback ObserveLaser" << std::endl;
 		last_laser_msg_ = msg;
 		particle_filter_.ObserveLaser(
 			msg->ranges,
@@ -195,7 +197,7 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 }
 
 
-void EkfPfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
+void PfEkfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
 	try{
 		// Set new initial pose
 		const Vector2f init_loc(msg->pose.pose.position.x, msg->pose.pose.position.y);
@@ -221,15 +223,16 @@ void EkfPfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 }
 
 // Odometry
-void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
+void PfEkfNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	this->last_filtered_odom_msg_ = *msg;
 	odom_loc_(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
 	odom_angle_ += 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
 	try{
+		Vector2f robot_loc(0, 0);
+		float robot_angle(0);
 		particle_filter_.Predict(odom_loc_, odom_angle_);
-		// PublishGhostRobotState(msg);
+		particle_filter_.GetLocation(&robot_loc, &robot_angle);
 
-		// PublishJointStateMsg(msg);
 		PublishRobotPose(last_filtered_odom_msg_.header.stamp);
 		PublishWorldTransform();
 		PublishVisualization();
@@ -239,12 +242,12 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	}
 }
 
-void EkfPfNode::PublishRobotPose(rclcpp::Time stamp){
+void PfEkfNode::PublishRobotPose(rclcpp::Time stamp){
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
 	particle_filter_.GetLocation(&robot_loc, &robot_angle);
 
-	robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
+	auto robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
 	// covariance is row major form
 	std::array<double, 36> covariance = {config_params.k1, config_params.k4, 0.0, config_params.k7, 0.0, 0.0,
 		                             config_params.k2, config_params.k5, 0.0, config_params.k8, 0.0, 0.0,
@@ -257,10 +260,10 @@ void EkfPfNode::PublishRobotPose(rclcpp::Time stamp){
 	robot_pose_.pose.pose.position.y = robot_loc.y();
 	robot_pose_.pose.pose.position.z = 0.0; // TODO ??
 	robot_pose_.pose.covariance = covariance;
-	robot_pose_pub_->publish(robot_pose_);
+	robot_state_pub_->publish(robot_pose_);
 }
 
-void EkfPfNode::PublishMapViz(){
+void PfEkfNode::PublishMapViz(){
 	auto map_msg = visualization_msgs::msg::Marker{};
 	auto map = particle_filter_.GetMap();
 
@@ -293,7 +296,7 @@ void EkfPfNode::PublishMapViz(){
 	map_viz_pub_->publish(map_msg);
 }
 
-void EkfPfNode::PublishWorldTransform(){
+void PfEkfNode::PublishWorldTransform(){
 	auto tf_msg = tf2_msgs::msg::TFMessage{};
 	auto world_to_base_tf = geometry_msgs::msg::TransformStamped{};
 	world_to_base_tf.header.stamp = this->get_clock()->now();
@@ -320,7 +323,7 @@ void EkfPfNode::PublishWorldTransform(){
 	world_tf_pub_->publish(tf_msg);
 }
 
-void EkfPfNode::PublishVisualization(){
+void PfEkfNode::PublishVisualization(){
 	// static double t_last = 0;
 
 	// // if (GetMonotonicTime() - t_last < 1/30.0)
@@ -347,7 +350,7 @@ void EkfPfNode::PublishVisualization(){
 	debug_viz_pub_->publish(viz_msg_);
 }
 
-void EkfPfNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg){
+void PfEkfNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg){
 	vector<particle_filter::Particle> particles;
 	particle_filter_.GetParticles(&particles);
 	RCLCPP_INFO(
@@ -363,7 +366,7 @@ void EkfPfNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg){
 	}
 }
 
-void EkfPfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg) {
+void PfEkfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg) {
 	if(!laser_msg_received_){
 		return;
 	}
@@ -439,7 +442,7 @@ void EkfPfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg)
 
 int main(int argc, char *argv[]){
 	rclcpp::init(argc, argv);
-	rclcpp::spin(std::make_shared<ghost_localization::EkfPfNode>());
+	rclcpp::spin(std::make_shared<ghost_localization::PfEkfNode>());
 	rclcpp::shutdown();
 	return 0;
 }
