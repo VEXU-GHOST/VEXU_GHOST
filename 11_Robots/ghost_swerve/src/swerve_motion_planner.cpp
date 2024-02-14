@@ -54,12 +54,12 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	// put into cubic for x,y,angle as joystick left_x, left_y, right_x
 
 	// find position/velocities
-	std::vector<double> pos0({0, 0});
-	std::vector<double> posf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
+	std::vector<double> xpos0({current_x, current_x_vel});
+	std::vector<double> xposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
+	std::vector<double> ypos0({current_x, current_x_vel});
+	std::vector<double> yposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
 	std::vector<double> ang0({0, current_omega});
 	std::vector<double> angf({ghost_util::SmallestAngleDistRad(current_angle, orientation_f.getAngle()), cmd->twist.twist.angular.x});
-
-	RCLCPP_INFO(get_logger(), "Found Position/Velocity");
 
 	// find final time
 	double v_max = 0.5;
@@ -67,34 +67,44 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	double dist = Eigen::Vector2d(posf[0], posf[1]).norm();
 	double t0 = 0;
 	double tf = dist / v_max;
-	auto pos_traj = CubicMotionPlanner::computeCubicTraj(pos0, posf, t0, tf, 100);
-	auto ang_traj = CubicMotionPlanner::computeCubicTraj(ang0, angf, t0, tf, 100);
-	auto time = std::get<0>(pos_traj);
-	auto pos_vel = std::get<2>(pos_traj);
-	auto ang_vel = std::get<2>(ang_traj);
-	RCLCPP_INFO(get_logger(), "Found Joystick Trajectory");
+	int n = tf*100;
+	auto xpos_traj = CubicMotionPlanner::computeCubicTraj(xpos0, xposf, t0, tf, n);
+	auto ypos_traj = CubicMotionPlanner::computeCubicTraj(xpos0, xposf, t0, tf, n);
+	auto ang_traj = CubicMotionPlanner::computeCubicTraj(ang0, angf, t0, tf, n);
+	// auto time = std::get<0>(xpos_traj);
+	// auto xpos_vel = std::get<2>(xpos_traj);
+	// auto ypos_vel = std::get<2>(ypos_traj);
+	// auto ang_vel = std::get<2>(ang_traj);
 
-	std::vector<double> x_velocity;
-	std::vector<double> y_velocity;
-	for(double v : pos_vel){
-		x_velocity.push_back(v * cos(current_angle));
-		y_velocity.push_back(v * sin(current_angle));
-	}
+	// if not field control
+	// std::vector<double> x_velocity;
+	// std::vector<double> y_velocity;
+	// for(double v : pos_vel){
+	// 	x_velocity.push_back(v * cos(current_angle));
+	// 	y_velocity.push_back(v * sin(current_angle));
+	// }
 
-	RCLCPP_INFO(get_logger(), "Before joystick to motor commands");
+	// auto swerve_trajectory = motor_commands_from_joystick(x_velocity, y_velocity, ang_vel);
+	// ghost_msgs::msg::RobotTrajectory trajectory_msg;
+	// toROSMsg(swerve_trajectory, trajectory_msg);
 
-	auto swerve_trajectory = motor_commands_from_joystick(x_velocity, y_velocity, ang_vel);
 	ghost_msgs::msg::RobotTrajectory trajectory_msg;
-	toROSMsg(swerve_trajectory, trajectory_msg);
-	RCLCPP_INFO(get_logger(), "after joystick to motor commands");
+	ghost_msgs::msg::MotorTrajectory x_mt;
+	ghost_msgs::msg::MotorTrajectory y_mt;
+	ghost_msgs::msg::MotorTrajectory angle_mt;
+	x_mt.time = std::get<0>(xpos_traj);
+	x_mt.position = std::get<1>(xpos_traj);
+	x_mt.velocity = std::get<2>(xpos_traj);
+	y_mt.time = std::get<0>(ypos_traj);
+	y_mt.position = std::get<1>(ypos_traj);
+	y_mt.velocity = std::get<2>(ypos_traj);
+	angle_mt.time = std::get<0>(ang_traj);
+	angle_mt.position = std::get<1>(ang_traj);
+	angle_mt.velocity = std::get<2>(ang_traj);
+	trajectory_msg.motor_names = std::vector<std::string>({"x","y","angle"});
 
-	
-	// RCLCPP_INFO(get_logger(), "motor name: %s", trajectory_msg.motor_names[0]);
-
-
+	trajectory_msg.trajectories = std::vector<ghost_msgs::msg::MotorTrajectoy>({x_mt, y_mt, angle_mt});
 	trajectory_pub_->publish(trajectory_msg);
-	RCLCPP_INFO(get_logger(), "published motor commands");
-
 	// boom
 }
 

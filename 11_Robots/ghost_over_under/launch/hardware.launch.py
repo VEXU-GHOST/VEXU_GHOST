@@ -69,18 +69,37 @@ def generate_launch_description():
     #     parameters=[{"frame_id": "lidar_link", 'angle_compensate': True}]
     # )
 
-    # realsense_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(get_package_share_directory("realsense2_camera"), 'launch', 'rs_launch.py')
-    #     ),
-    #     # launch_arguments={
-    #     #     }.items()
-    # )
+    imu_filter_node = Node(
+        package='ghost_sensing',
+        executable='imu_filter_node',
+        name='imu_filter_node',
+        output='screen',
+        parameters=[ros_config_file],
+    )
+
+    realsense_share = get_package_share_directory('realsense2_camera')
+    realsense_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(realsense_share,
+                         'launch', 'rs_launch.py')
+        ),
+        launch_arguments={
+            'unite_imu_method': '2',
+            'enable_depth': 'false',
+            'enable_color': 'false',
+            'enable_sync': 'true',
+            'enable_gyro': 'true',
+            'enable_accel': 'true',
+            'gyro_fps': '200', # 200 or 400
+            'accel_fps': '63', # 63 or 250
+            }.items()
+    )
 
     return LaunchDescription([
         serial_node,
         competition_state_machine_node,
+        realsense_node,
+        imu_filter_node
         # swerve_motion_planner_node
         # rplidar_node,
-        # realsense_launch
     ])

@@ -102,7 +102,8 @@ protected:
 	double trajectory_start_time_;
 	
 	double getTimeFromStart() const;
-	void update_motor_commands(double time);
+	// void update_motor_commands(double time);
+	// void get_commands(double time);
 
 private:
 	void loadRobotHardwareInterface();

@@ -273,8 +273,10 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5SensorUpdate
 
 void fromROSMsg(ghost_planners::RobotTrajectory& robot_trajectory, const ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg){
 	robot_trajectory.motor_names = robot_trajectory_msg.motor_names;
+	robot_trajectory.motor_trajectories.clear();
+	robot_trajectory.motor_trajectories.reserve(robot_trajectory_msg.trajectories.size());
 	for(const auto& motor_trajectory_msg : robot_trajectory_msg.trajectories){
-		auto motor_trajectory_ptr = std::shared_ptr<ghost_planners::RobotTrajectory::MotorTrajectory>();
+		auto motor_trajectory_ptr = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
 		fromROSMsg(*motor_trajectory_ptr, motor_trajectory_msg);
 		robot_trajectory.add_trajectory(motor_trajectory_ptr);
 	}
@@ -284,29 +286,29 @@ void fromROSMsg(ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajecto
 	motor_trajectory.time_vector = std::vector<double>(std::begin(motor_trajectory_msg.time), std::end(motor_trajectory_msg.time));
 	motor_trajectory.velocity_vector = std::vector<double>(std::begin(motor_trajectory_msg.velocity), std::end(motor_trajectory_msg.velocity));
 	motor_trajectory.voltage_vector = std::vector<double>(std::begin(motor_trajectory_msg.voltage), std::end(motor_trajectory_msg.voltage));
-	motor_trajectory.position_vector= std::vector<double>(std::begin(motor_trajectory_msg.position), std::end(motor_trajectory_msg.position));
+	motor_trajectory.position_vector = std::vector<double>(std::begin(motor_trajectory_msg.position), std::end(motor_trajectory_msg.position));
 	motor_trajectory.torque_vector = std::vector<double>(std::begin(motor_trajectory_msg.torque), std::end(motor_trajectory_msg.torque));
 }
 
 void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg){
-	std::cout << "toROSMsg robot trajectory\n";
+	std::cerr << "toROSMsg robot trajectory\n";
 	robot_trajectory_msg.motor_names = robot_trajectory.motor_names;
 	for(const auto& motor_trajectory : robot_trajectory.motor_trajectories){
-		std::cout << "getting motor trajectory msg\n";
-		auto motor_trajectory_msg = ghost_msgs::msg::MotorTrajectory::SharedPtr();
+		std::cerr << "getting motor trajectory msg\n";
+		auto motor_trajectory_msg = std::make_shared<ghost_msgs::msg::MotorTrajectory>();
 		toROSMsg(motor_trajectory, *motor_trajectory_msg);
 		robot_trajectory_msg.trajectories.push_back(*motor_trajectory_msg);
 	}
 }
 
 void toROSMsg(const ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg){
-	std::cout << "toROSMsg motor trajectory\n";
-	motor_trajectory_msg.position = std::vector<double>(std::begin(motor_trajectory.position_vector), std::end(motor_trajectory.position_vector));
-	motor_trajectory_msg.time = std::vector<double>(std::begin(motor_trajectory.time_vector), std::end(motor_trajectory.time_vector));
-	motor_trajectory_msg.torque = std::vector<double>(std::begin(motor_trajectory.torque_vector), std::end(motor_trajectory.torque_vector));
-	motor_trajectory_msg.velocity = std::vector<double>(std::begin(motor_trajectory.velocity_vector), std::end(motor_trajectory.velocity_vector));
-	motor_trajectory_msg.voltage = std::vector<double>(std::begin(motor_trajectory.voltage_vector), std::end(motor_trajectory.voltage_vector));
-	std::cout << "toROSMsg motor trajectory done\n";
+	std::cerr << "toROSMsg motor trajectory\n";
+	motor_trajectory_msg.position = motor_trajectory.position_vector;
+	motor_trajectory_msg.time = motor_trajectory.time_vector;
+	motor_trajectory_msg.torque = motor_trajectory.torque_vector;
+	motor_trajectory_msg.velocity = motor_trajectory.velocity_vector;
+	motor_trajectory_msg.voltage = motor_trajectory.voltage_vector;
+	std::cerr << "toROSMsg motor trajectory done\n";
 }
 
 } // namespace msg_helpers

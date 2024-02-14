@@ -14,6 +14,11 @@ public:
 
     struct MotorTrajectory {
         MotorTrajectory(){
+            time_vector = std::vector<double>();
+            position_vector = std::vector<double>();
+            velocity_vector = std::vector<double>();
+            voltage_vector = std::vector<double>();
+            torque_vector = std::vector<double>();
         }
 
         // command type
@@ -43,6 +48,12 @@ public:
         std::vector<double> velocity_vector;
         std::vector<double> voltage_vector;
         std::vector<double> torque_vector;
+
+        bool operator==(const RobotTrajectory::MotorTrajectory &rhs) const {
+		return (time_vector == rhs.time_vector) && (position_vector == rhs.position_vector) &&
+		       (velocity_vector == rhs.velocity_vector) && (voltage_vector == rhs.voltage_vector) && 
+               (torque_vector == rhs.torque_vector);
+	    }
     };
 
     RobotTrajectory();
@@ -54,6 +65,12 @@ public:
     std::unordered_map<std::string, MotorTrajectory> trajectory_map;
     std::vector<std::string> motor_names;
     std::vector<MotorTrajectory> motor_trajectories;
+
+    bool operator==(const RobotTrajectory &rhs) const {
+		return (motor_names == rhs.motor_names) &&
+		    //    (trajectory_map == rhs.trajectory_map) && 
+               (motor_trajectories == rhs.motor_trajectories);
+	}
 };
 
 } // namespace ghost_planners

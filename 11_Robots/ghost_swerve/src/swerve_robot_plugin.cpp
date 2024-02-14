@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ghost_swerve/swerve_model.hpp>
 #include <ghost_swerve/swerve_robot_plugin.hpp>
+#include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
 
@@ -22,6 +23,9 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("odom_topic", "/sensors/odom");
 	std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
 
+	node_ptr_->declare_parameter("pose_topic", "/estimation/pose");
+	std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
+
 	node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
 	std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
 
@@ -31,11 +35,6 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter<std::string>("bt_path");
 	std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
-	// m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-	// 	pose_topic,
-	// 	10,
-	// 	std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
-	// 	);
 	node_ptr_->declare_parameter("swerve_robot_plugin.k1", 0.0);
 	node_ptr_->declare_parameter("swerve_robot_plugin.k2", 0.0);
 	node_ptr_->declare_parameter("swerve_robot_plugin.k3", 0.0);
@@ -144,21 +143,27 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	bt_->tick_tree();
 
-	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
-		{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
-		{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
-		{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
-		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
-	};
+	auto command_map = get_commands(current_time);
+	command_map["x_pos"];
+	command_map["x_vel"];// copy for 'x' and 'angle'
 
-	for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
-		std::string m1_name = motor_name_pair.first;
-		std::string m2_name = motor_name_pair.second;
-		rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
-	}
+	m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
 
-	update_motor_commands(current_time - trajectory_start_time_);
+	// std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
+	// 	{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
+	// 	{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
+	// 	{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
+	// 	{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
+	// };
+
+	// for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
+	// 	std::string m1_name = motor_name_pair.first;
+	// 	std::string m2_name = motor_name_pair.second;
+	// 	rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
+	// 	rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
+	// }
+
+	// update_motor_commands(current_time - trajectory_start_time_);
 
 	// update motor values from trajectory
 }
@@ -170,6 +175,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 		autonomous(current_time);
 	}
 	else{
+		// vel_cmd = des_vel + (des_pos - curr_pos)*kp;
 		m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
 
 		std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
@@ -209,22 +215,73 @@ void SwerveRobotPlugin::publishOdometry(){
 	msg.pose.pose.position.x = odom_loc.x();
 	msg.pose.pose.position.y = odom_loc.y();
 	msg.pose.pose.position.z = 0.0;
-	msg.pose.pose.orientation.x = 0.0;
-	msg.pose.pose.orientation.y = 0.0;
-	msg.pose.pose.orientation.z = sin(odom_angle * 0.5);
-	msg.pose.pose.orientation.w = cos(odom_angle * 0.5);
+	ghost_util::yawToQuaternionRad(
+		odom_angle,
+		msg.pose.pose.orientation.w,
+		msg.pose.pose.orientation.x,
+		msg.pose.pose.orientation.y,
+		msg.pose.pose.orientation.z);
+
+	// Holonomic Motion Model
+	double sigma_x =
+		m_k1 * odom_loc.x() +
+		m_k2 * odom_loc.y() +
+		m_k3 * abs(odom_angle);
+	double sigma_y =
+		m_k4 * odom_loc.x() +
+		m_k5 * odom_loc.y() +
+		m_k6 * abs(odom_angle);
+	// Get noisy angle
+	double sigma_tht =
+		m_k7 * odom_loc.x() +
+		m_k8 * odom_loc.y() +
+		m_k9 * abs(odom_angle);
 
 	// covariance is row major form
-	std::array<double, 36> covariance = {m_k1, m_k4, 0.0, m_k7, 0.0, 0.0,
-		                             m_k2, m_k5, 0.0, m_k8, 0.0, 0.0,
-		                             m_k3, m_k6, 0.0, m_k9, 0.0, 0.0};
-	msg.pose.covariance = covariance;
-	// msg.twist.twist.linear.x =
-	// msg.twist.twist.linear.y
-	// msg.twist.twist.linear.z = 0.0;
-	// msg.twist.twist.angular.x = 0.0;
-	// msg.twist.twist.angular.y = 0.0;
-	// msg.twist.twist.angular.z
+	std::array<double, 36> pose_covariance{
+		sigma_x, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, sigma_y, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht
+	};
+
+	msg.pose.covariance = pose_covariance;
+
+	auto current_velocity = m_swerve_model_ptr->getBaseVelocityCurrent();
+
+	msg.twist.twist.linear.x = current_velocity.x();
+	msg.twist.twist.linear.y = current_velocity.y();
+	msg.twist.twist.linear.z = 0.0;
+	msg.twist.twist.angular.x = 0.0;
+	msg.twist.twist.angular.y = 0.0;
+	msg.twist.twist.angular.z = current_velocity.z();
+
+	double sigma_x_vel =
+		m_k1 * current_velocity.x() +
+		m_k2 * current_velocity.y() +
+		m_k3 * abs(current_velocity.z());
+	double sigma_y_vel =
+		m_k4 * current_velocity.x() +
+		m_k5 * current_velocity.y() +
+		m_k6 * abs(current_velocity.z());
+	// Get noisy angle
+	double sigma_tht_vel =
+		m_k7 * current_velocity.x() +
+		m_k8 * current_velocity.y() +
+		m_k9 * abs(current_velocity.z());
+
+	std::array<double, 36> vel_covariance{
+		sigma_x_vel, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, sigma_y_vel, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht_vel
+	};
+
+	msg.twist.covariance = vel_covariance;
 
 	m_odom_pub->publish(msg);
 }

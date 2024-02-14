@@ -87,14 +87,40 @@ TEST(TestDeviceInterfaces, testJoystickStateMsg){
 	EXPECT_EQ(*joy_input, *joy_output);
 }
 
-TEST(TestDeviceInterfaces, test){
-	auto joy_input = getRandomJoystickData();
-	auto msg = std::make_shared<ghost_msgs::msg::V5JoystickState>();
-	auto joy_output = std::make_shared<JoystickDeviceData>("");
+
+TEST(TestDeviceInterfaces, testMotorTrajectoryMsg){
+	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
+	mt_input->position_vector.push_back(0);
+
+	auto mt_output = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
+	mt_output->position_vector.push_back(0);
+	std::cerr << "about to rosmsg\n";
+
+	auto msg = std::make_shared<ghost_msgs::msg::MotorTrajectory>();
 
 	// Convert to ROS Msg
-	toROSMsg(*joy_input, *msg);
-	fromROSMsg(*joy_output, *msg);
+	toROSMsg(*mt_input, *msg);
+	std::cerr << "between rosmsg\n";
+	fromROSMsg(*mt_output, *msg);
 
-	EXPECT_EQ(*joy_input, *joy_output);
+	EXPECT_EQ(*mt_input, *mt_output);
+}
+
+TEST(TestDeviceInterfaces, testRobotTrajectoryMsg){
+	auto rt_input = std::make_shared<ghost_planners::RobotTrajectory>();
+	rt_input->motor_names.push_back("motor");
+	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
+	mt_input->position_vector.push_back(0);
+	rt_input->motor_trajectories.push_back(*mt_input);
+
+
+	auto msg = std::make_shared<ghost_msgs::msg::RobotTrajectory>();
+	auto rt_output = std::make_shared<ghost_planners::RobotTrajectory>();
+
+	// Convert to ROS Msg
+	toROSMsg(*rt_input, *msg);
+	std::cerr << "between rosmsg\n";
+	fromROSMsg(*rt_output, *msg);
+
+	EXPECT_EQ(*rt_input, *rt_output);
 }

@@ -26,7 +26,8 @@ std::tuple<bool, double>  RobotTrajectory::MotorTrajectory::interpolate(std::vec
 }
 
 RobotTrajectory::RobotTrajectory(){
-    
+    motor_names = std::vector<std::string>();
+    motor_trajectories = std::vector<MotorTrajectory>();
 }
 
 void RobotTrajectory::add_trajectory(std::shared_ptr<RobotTrajectory::MotorTrajectory> motor_trajectory_ptr){
