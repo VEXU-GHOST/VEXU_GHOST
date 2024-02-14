@@ -89,6 +89,28 @@ public:
 		return result;
 	}
 
+	template <typename T>
+	static bool listContainsElement(const std::vector<T>& list, const T& expected){
+		bool result = false;
+		for(const auto & vec : list){
+			result |= (expected == vec);
+		}
+		return result;
+	}
+
+	template <typename T>
+	static bool eigenVectorListsAreIdentical(const std::vector<T>& list, const std::vector<T>& expected){
+		if(list.size() != expected.size()){
+			return false;
+		}
+
+		bool result = false;
+		for(int i = 0; i < list.size(); i++){
+			result |= (list[i].isApprox(expected[i]));
+		}
+		return result;
+	}
+
 	std::vector<std::shared_ptr<SwerveModel> > m_models;
 	std::shared_ptr<SwerveModel> m_coax_model_ptr;
 	std::shared_ptr<SwerveModel> m_diff_model_ptr;

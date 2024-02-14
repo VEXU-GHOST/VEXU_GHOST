@@ -4,7 +4,7 @@
     <xacro:include filename="$(find ghost_sim)/urdf/test_tank_sim_base.xacro"/>
     <xacro:include filename="$(find ghost_sim)/urdf/macros/sensor_macros.xacro"/>
 
-    <!-- <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro> -->
+    <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro>
     <xacro:imu_macro parent_link="base_link" topic_name="imu"></xacro:imu_macro>
 
     <gazebo>

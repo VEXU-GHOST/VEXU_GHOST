@@ -36,6 +36,30 @@ void SwerveRobotPlugin::initialize(){
 	// 	10,
 	// 	std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
 	// 	);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k1", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k2", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k3", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k4", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k5", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k6", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k7", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k8", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.k9", 0.0);
+	m_k1 = node_ptr_->get_parameter("swerve_robot_plugin.k1").as_double();
+	m_k2 = node_ptr_->get_parameter("swerve_robot_plugin.k2").as_double();
+	m_k3 = node_ptr_->get_parameter("swerve_robot_plugin.k3").as_double();
+	m_k4 = node_ptr_->get_parameter("swerve_robot_plugin.k4").as_double();
+	m_k5 = node_ptr_->get_parameter("swerve_robot_plugin.k5").as_double();
+	m_k6 = node_ptr_->get_parameter("swerve_robot_plugin.k6").as_double();
+	m_k7 = node_ptr_->get_parameter("swerve_robot_plugin.k7").as_double();
+	m_k8 = node_ptr_->get_parameter("swerve_robot_plugin.k8").as_double();
+	m_k9 = node_ptr_->get_parameter("swerve_robot_plugin.k9").as_double();
+
+	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+		pose_topic,
+		10,
+		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
+		);
 
 	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
@@ -108,7 +132,8 @@ void SwerveRobotPlugin::onNewSensorData(){
 
 	m_swerve_model_ptr->updateSwerveModel();
 
-	publishSwerveVisualization();
+	publishOdometry();
+	publishVisualization();
 }
 
 void SwerveRobotPlugin::disabled(){
@@ -120,7 +145,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	bt_->tick_tree();
 
 	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
-		{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
+		{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
 		{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
 		{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
 		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
@@ -172,7 +197,39 @@ void SwerveRobotPlugin::teleop(double current_time){
 void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
 }
 
-void SwerveRobotPlugin::publishSwerveVisualization(){
+void SwerveRobotPlugin::publishOdometry(){
+	Eigen::Vector2d odom_loc = m_swerve_model_ptr->getOdometryLocation();
+	double odom_angle = m_swerve_model_ptr->getOdometryAngle();
+
+	nav_msgs::msg::Odometry msg{};
+	msg.header.frame_id = "odom";
+	msg.header.stamp = node_ptr_->get_clock()->now();
+	msg.child_frame_id = "base_link";
+
+	msg.pose.pose.position.x = odom_loc.x();
+	msg.pose.pose.position.y = odom_loc.y();
+	msg.pose.pose.position.z = 0.0;
+	msg.pose.pose.orientation.x = 0.0;
+	msg.pose.pose.orientation.y = 0.0;
+	msg.pose.pose.orientation.z = sin(odom_angle * 0.5);
+	msg.pose.pose.orientation.w = cos(odom_angle * 0.5);
+
+	// covariance is row major form
+	std::array<double, 36> covariance = {m_k1, m_k4, 0.0, m_k7, 0.0, 0.0,
+		                             m_k2, m_k5, 0.0, m_k8, 0.0, 0.0,
+		                             m_k3, m_k6, 0.0, m_k9, 0.0, 0.0};
+	msg.pose.covariance = covariance;
+	// msg.twist.twist.linear.x =
+	// msg.twist.twist.linear.y
+	// msg.twist.twist.linear.z = 0.0;
+	// msg.twist.twist.angular.x = 0.0;
+	// msg.twist.twist.angular.y = 0.0;
+	// msg.twist.twist.angular.z
+
+	m_odom_pub->publish(msg);
+}
+
+void SwerveRobotPlugin::publishVisualization(){
 	std::unordered_map<std::string, std::pair<std::string, std::string> > joint_name_map{
 		{"left_front", std::pair<std::string, std::string>("wheel_joint_front_left", "steering_joint_front_left")},
 		{"right_front", std::pair<std::string, std::string>("wheel_joint_front_right", "steering_joint_front_right")},

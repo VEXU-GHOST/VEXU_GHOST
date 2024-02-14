@@ -1,16 +1,16 @@
 #pragma once
 
+#include <ghost_planners/robot_trajectory.hpp>
 #include <ghost_ros_interfaces/competition/v5_robot_base.hpp>
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
-#include <ghost_planners/robot_trajectory.hpp>
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <ghost_msgs/msg/drivetrain_command.hpp>
+#include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
-#include <ghost_msgs/msg/drivetrain_command.hpp>
-#include <ghost_msgs/msg/robot_trajectory.hpp>
 
 #include <ghost_autonomy/run_tree.hpp>
 
@@ -28,7 +28,8 @@ public:
 
 
 protected:
-	void publishSwerveVisualization();
+	void publishVisualization();
+	void publishOdometry();
 	void poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
 	std::shared_ptr<SwerveModel> m_swerve_model_ptr;
@@ -38,8 +39,16 @@ protected:
 	rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_viz_pub;
 	std::string bt_path_;
-	std::shared_ptr<RunTree> bt_; 
-	
+	std::shared_ptr<RunTree> bt_;
+	double m_k1;
+	double m_k2;
+	double m_k3;
+	double m_k4;
+	double m_k5;
+	double m_k6;
+	double m_k7;
+	double m_k8;
+	double m_k9;
 };
 
 } // namespace ghost_swerve

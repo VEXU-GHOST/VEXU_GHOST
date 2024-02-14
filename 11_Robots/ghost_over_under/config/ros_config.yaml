@@ -8,3 +8,29 @@ competition_state_machine_node:
   ros__parameters:
     odom_topic: "/sensors/wheel_odom"
     pose_topic: "/estimation/robot_pose"
+
+    swerve_robot_plugin:
+      # If you are using the localization stack and you are tuning the k1-9 parameters,
+      # the localization stack has its own duplicate (03_ROS/ghost_localization/config/ekf_pf_node.yaml) of the k1-9 parameters that must
+      # be changed as well as this file. TODO: make a class for this
+      # Motion Model Params
+      # These calculate odometry standard deviations. X is forward, Y is left on robot.
+      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
+      
+      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
+      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
+
+      # Remember that LIDAR will correct periodically, so these can be a bit generous.
+      # Too generous though, and you are either losing resolution or wasting computation.
+
+      k1: 0.5   # x error from x motion         # 50% error in primary direction
+      k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
+      k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+
+      k4: 0.05   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
+      k5: 0.5   # y error from y motion         # 50% error in primary direction           
+      k6: 0.1 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      
+      k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
+      k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
+      k9: 1.5   # theta error from rotation     # 50% error in primary direction  

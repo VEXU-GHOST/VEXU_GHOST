@@ -13,6 +13,8 @@ set(DEPENDENCIES
   ghost_estimation
   geometry_msgs
   sensor_msgs
+  matplotlib_cpp
+  PythonLibs
   visualization_msgs
   nav_msgs
   ghost_msgs
@@ -33,6 +35,7 @@ ament_export_dependencies(${DEPENDENCIES})
 
 set(INCLUDE
   include
+  ${PYTHON_INCLUDE_DIRS}
 )
 
 include_directories(${INCLUDE})

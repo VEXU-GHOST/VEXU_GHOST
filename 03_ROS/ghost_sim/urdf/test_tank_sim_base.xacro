@@ -146,7 +146,7 @@
   </joint>
 
   <!-- Sensors -->
-    <!-- <link name="lidar_link">
+    <link name="lidar_link">
         <inertial>
             <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
             <mass value="0.125"/>
@@ -164,8 +164,8 @@
     <joint name="lidar_joint" type="fixed">
         <parent link="base_link"/>
         <child link="lidar_link"/>
-        <origin xyz="-0.209 0 0.2145" rpy="0 0 ${67.562*d2r}"/>
-    </joint> -->
+        <origin xyz="-0.209 0 0.180" rpy="0 0 ${67.562*d2r}"/>
+    </joint>
 
     <link name="imu_link">
         <inertial>
