@@ -1,32 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-  <BehaviorTree ID="Untitled">
+  <BehaviorTree ID="main">
     <Sequence>
-      <SaySomething message="testing"/>
-      <DriveForward distance="10"/>
-      <MoveToPose posX="1"
-                  posY="2"
-                  quatX=".1"
-                  quatY=".2"
-                  quatZ=".3"
-                  quatW=".4"/>
+      <MoveToPose posX="0.25"
+                  posY="0.25"
+                  angle="3.14"
+                  velX="0"
+                  velY="0"
+                  omega="0"/>
+      <KeepRunningUntilFailure>
+        <SaySomething message="doing stuff"/>
+      </KeepRunningUntilFailure>
     </Sequence>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
-    <Action ID="DriveForward"
-            editable="true">
-      <input_port name="distance"/>
-    </Action>
     <Action ID="MoveToPose"
             editable="true">
       <input_port name="posX"/>
       <input_port name="posY"/>
-      <input_port name="quatX"/>
-      <input_port name="quatY"/>
-      <input_port name="quatZ"/>
-      <input_port name="quatW"/>
+      <input_port name="angle"/>
+      <input_port name="velX"/>
+      <input_port name="velY"/>
+      <input_port name="omega"/>
     </Action>
     <Action ID="SaySomething"
             editable="true">

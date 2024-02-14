@@ -18,7 +18,7 @@ namespace ghost_swerve {
 
 class SwerveMotionPlanner : public ghost_motion_planner::MotionPlanner {
 private:
-	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+	// std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 	std::shared_ptr<SwerveModel> m_swerve_model_ptr;
 	double current_x;
 	double current_y;
@@ -27,15 +27,14 @@ private:
 	double current_angle;
 	double current_omega;
 
-	std::shared_ptr<rclcpp::Subscription<nav_msgs::msg::Odometry>> odom_sub_;
-
-	void initialize() override;
+	std::shared_ptr<rclcpp::Subscription<nav_msgs::msg::Odometry> > odom_sub_;
 
 	void odomCallback(nav_msgs::msg::Odometry::SharedPtr msg);
 
 	ghost_planners::RobotTrajectory motor_commands_from_joystick(std::vector<double> x_vel,std::vector<double> y_vel,std::vector<double> omega);
 
-public:	
+public:
+	void initialize() override;
 	void generateMotionPlan(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd) override;
 };
 

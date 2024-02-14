@@ -53,7 +53,7 @@ BT::NodeStatus MoveToPose::tick() {
 	msg.pose.pose.orientation.z = quat.getZ();
 	msg.pose.pose.orientation.w = quat.getW();
 
-	geometry_msgs::msg::TwistStamped twist{};
+	// geometry_msgs::msg::TwistStamped twist{};
 	msg.twist.twist.linear.x = velX;
 	msg.twist.twist.linear.y = velY;
 	msg.twist.twist.angular.x = omega;

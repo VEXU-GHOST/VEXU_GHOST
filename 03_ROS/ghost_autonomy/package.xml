@@ -12,7 +12,7 @@
   <depend>behaviortree_cpp</depend>
   <depend>behaviortree_ros2</depend>
   <depend>ghost_v5_interfaces</depend>
-  <!-- <depend>ghost_pros</depend> -->
+  <depend>ghost_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

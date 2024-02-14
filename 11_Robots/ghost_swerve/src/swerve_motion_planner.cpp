@@ -7,11 +7,11 @@ using ghost_ros_interfaces::msg_helpers::toROSMsg;
 using std::placeholders::_1;
 
 void SwerveMotionPlanner::initialize(){
-    odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-		"/odom",
+	odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
+		"/odometry/filtered",
 		10,
 		std::bind(&SwerveMotionPlanner::odomCallback, this, _1)
-        );  
+		);
 
 	SwerveConfig swerve_model_config;
 	swerve_model_config.module_type = swerve_type_e::DIFFERENTIAL;
@@ -44,6 +44,8 @@ void SwerveMotionPlanner::odomCallback(nav_msgs::msg::Odometry::SharedPtr msg){
 
 
 void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd){
+	RCLCPP_INFO(get_logger(), "Generating Swerve Motion Plan");
+
 	tf2::Quaternion orientation_f(cmd->pose.pose.orientation.x,
 	                              cmd->pose.pose.orientation.y,
 	                              cmd->pose.pose.orientation.z,
@@ -57,6 +59,8 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	std::vector<double> ang0({0, current_omega});
 	std::vector<double> angf({ghost_util::SmallestAngleDistRad(current_angle, orientation_f.getAngle()), cmd->twist.twist.angular.x});
 
+	RCLCPP_INFO(get_logger(), "Found Position/Velocity");
+
 	// find final time
 	double v_max = 0.5;
 	// double a_max = 0.5;
@@ -68,6 +72,7 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	auto time = std::get<0>(pos_traj);
 	auto pos_vel = std::get<2>(pos_traj);
 	auto ang_vel = std::get<2>(ang_traj);
+	RCLCPP_INFO(get_logger(), "Found Joystick Trajectory");
 
 	std::vector<double> x_velocity;
 	std::vector<double> y_velocity;
@@ -76,11 +81,20 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 		y_velocity.push_back(v * sin(current_angle));
 	}
 
+	RCLCPP_INFO(get_logger(), "Before joystick to motor commands");
+
 	auto swerve_trajectory = motor_commands_from_joystick(x_velocity, y_velocity, ang_vel);
 	ghost_msgs::msg::RobotTrajectory trajectory_msg;
 	toROSMsg(swerve_trajectory, trajectory_msg);
+	RCLCPP_INFO(get_logger(), "after joystick to motor commands");
+
+	
+	// RCLCPP_INFO(get_logger(), "motor name: %s", trajectory_msg.motor_names[0]);
+
 
 	trajectory_pub_->publish(trajectory_msg);
+	RCLCPP_INFO(get_logger(), "published motor commands");
+
 	// boom
 }
 
@@ -90,6 +104,7 @@ ghost_planners::RobotTrajectory SwerveMotionPlanner::motor_commands_from_joystic
 		                            "drive_blf", "drive_blb", "drive_brf", "drive_brb"};
 	ghost_planners::RobotTrajectory::MotorTrajectory flr_trajectory, fll_trajectory, frr_trajectory, frl_trajectory,
 	                                                 blf_trajectory, blb_trajectory, brf_trajectory, brb_trajectory;
+	RCLCPP_INFO(get_logger(), "motor trajectory initialized");
 
 	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
 		{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
@@ -98,7 +113,7 @@ ghost_planners::RobotTrajectory SwerveMotionPlanner::motor_commands_from_joystic
 		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
 	};
 
-	std::unordered_map<std::string, std::shared_ptr<ghost_planners::RobotTrajectory::MotorTrajectory>> trajectory_motor_mapping{
+	std::unordered_map<std::string, std::shared_ptr<ghost_planners::RobotTrajectory::MotorTrajectory> > trajectory_motor_mapping{
 		{"drive_flr", std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>(flr_trajectory)},
 		{"drive_fll", std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>(fll_trajectory)},
 		{"drive_frr", std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>(frr_trajectory)},
@@ -108,22 +123,25 @@ ghost_planners::RobotTrajectory SwerveMotionPlanner::motor_commands_from_joystic
 		{"drive_brf", std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>(brf_trajectory)},
 		{"drive_brb", std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>(brb_trajectory)}
 	};
+	RCLCPP_INFO(get_logger(), "maps initialized");
 
-    for(int i = 0; i < x_vel.size(); i++){
-        m_swerve_model_ptr->calculateKinematicSwerveController(x_vel[i], y_vel[i], omega[i]);
+	for(int i = 0; i < x_vel.size(); i++){
+		m_swerve_model_ptr->calculateKinematicSwerveController(x_vel[i], y_vel[i], omega[i]);
 
-        for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
-            std::string m1_name = motor_name_pair.first;
-            std::string m2_name = motor_name_pair.second;
-            auto command = m_swerve_model_ptr->getModuleCommand(module_name);
+		for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
+			std::string m1_name = motor_name_pair.first;
+			std::string m2_name = motor_name_pair.second;
+			auto command = m_swerve_model_ptr->getModuleCommand(module_name);
 
-            trajectory_motor_mapping[m1_name]->velocity_vector.push_back(command.actuator_velocity_commands[0]);
-            trajectory_motor_mapping[m1_name]->voltage_vector.push_back(command.actuator_voltage_commands[0]);
+			trajectory_motor_mapping[m1_name]->velocity_vector.push_back(command.actuator_velocity_commands[0]);
+			trajectory_motor_mapping[m1_name]->voltage_vector.push_back(command.actuator_voltage_commands[0]);
 
-            trajectory_motor_mapping[m2_name]->velocity_vector.push_back(command.actuator_velocity_commands[1]);
-            trajectory_motor_mapping[m2_name]->voltage_vector.push_back(command.actuator_voltage_commands[1]);
-        }
-    }
+			trajectory_motor_mapping[m2_name]->velocity_vector.push_back(command.actuator_velocity_commands[1]);
+			trajectory_motor_mapping[m2_name]->voltage_vector.push_back(command.actuator_voltage_commands[1]);
+		}
+	}
+
+	RCLCPP_INFO(get_logger(), "motor trajectory done");
 
 	robot_trajectory.motor_trajectories = {flr_trajectory, fll_trajectory, frr_trajectory, frl_trajectory,
 		                                   blf_trajectory, blb_trajectory, brf_trajectory, brb_trajectory};
@@ -136,6 +154,7 @@ int main(int argc, char *argv[]){
 	rclcpp::init(argc, argv);
 
 	auto swerve_motion_planner_node = std::make_shared<ghost_swerve::SwerveMotionPlanner>();
+	swerve_motion_planner_node->configure();
 	rclcpp::spin(swerve_motion_planner_node);
 	rclcpp::shutdown();
 	return 0;

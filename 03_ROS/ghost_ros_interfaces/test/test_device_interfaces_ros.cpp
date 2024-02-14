@@ -86,3 +86,15 @@ TEST(TestDeviceInterfaces, testJoystickStateMsg){
 
 	EXPECT_EQ(*joy_input, *joy_output);
 }
+
+TEST(TestDeviceInterfaces, test){
+	auto joy_input = getRandomJoystickData();
+	auto msg = std::make_shared<ghost_msgs::msg::V5JoystickState>();
+	auto joy_output = std::make_shared<JoystickDeviceData>("");
+
+	// Convert to ROS Msg
+	toROSMsg(*joy_input, *msg);
+	fromROSMsg(*joy_output, *msg);
+
+	EXPECT_EQ(*joy_input, *joy_output);
+}

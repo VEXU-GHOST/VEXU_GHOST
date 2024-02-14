@@ -42,6 +42,10 @@ void MotionPlanner::loadRobotHardwareInterface(){
 	declare_parameter("robot_config_yaml_path", "");
 	std::string robot_config_yaml_path = get_parameter("robot_config_yaml_path").as_string();
 
+	if(robot_config_yaml_path == ""){
+		throw std::runtime_error("[MotionPlanner::loadRobotHardwareInterface] Error: Robot Configuration required! Cannot proceed!");
+	}
+
 	// Load RobotHardwareInterface from YAML
 	auto device_config_map = loadRobotConfigFromYAMLFile(robot_config_yaml_path);
 	robot_hardware_interface_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map, hardware_type_e::COPROCESSOR);

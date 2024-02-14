@@ -32,10 +32,10 @@ ekf_localization_node:
     # Debug settings. Not for the faint of heart. Outputs a ludicrous amount of information to the file specified by
     # debug_out_file. I hope you like matrices! Please note that setting this to true will have strongly deleterious
     # effects on the performance of the node. Defaults to false if unspecified.
-    debug: true
+    debug: false
 
     # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
-    debug_out_file: /home/melcruz/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
+    debug_out_file: ~/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
 
     # REP-105 (http://www.ros.org/reps/rep-0105.html) specifies four principal coordinate frames: base_link, odom, map, and
     # earth. base_link is the coordinate frame that is affixed to the robot. Both odom and map are world-fixed frames.

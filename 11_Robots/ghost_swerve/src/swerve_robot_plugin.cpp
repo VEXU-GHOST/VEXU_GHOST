@@ -1,12 +1,12 @@
 #include <iostream>
 #include <ghost_swerve/swerve_model.hpp>
 #include <ghost_swerve/swerve_robot_plugin.hpp>
-#include <pluginlib/class_list_macros.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
+#include <pluginlib/class_list_macros.hpp>
 
-using std::placeholders::_1;
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
+using std::placeholders::_1;
 
 namespace ghost_swerve {
 
@@ -49,7 +49,7 @@ void SwerveRobotPlugin::initialize(){
 		marker_array_topic,
 		10);
 
-	
+
 	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
 
 	// Setup Swerve Model
@@ -141,26 +141,31 @@ void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	std::cout << "Teleop: " << current_time << std::endl;
 
-	m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
+	if(joy_data->btn_a){
+		autonomous(current_time);
+	}
+	else{
+		m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
 
-	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
-		{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
-		{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
-		{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
-		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
-	};
+		std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
+			{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
+			{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
+			{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
+			{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
+		};
 
-	for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
-		std::string m1_name = motor_name_pair.first;
-		std::string m2_name = motor_name_pair.second;
-		auto command = m_swerve_model_ptr->getModuleCommand(module_name);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
-		rhi_ptr_->setMotorVelocityCommandRPM(m1_name, command.actuator_velocity_commands[0]);
-		rhi_ptr_->setMotorVoltageCommandPercent(m1_name, command.actuator_voltage_commands[0]);
+		for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
+			std::string m1_name = motor_name_pair.first;
+			std::string m2_name = motor_name_pair.second;
+			auto command = m_swerve_model_ptr->getModuleCommand(module_name);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
+			rhi_ptr_->setMotorVelocityCommandRPM(m1_name, command.actuator_velocity_commands[0]);
+			rhi_ptr_->setMotorVoltageCommandPercent(m1_name, command.actuator_voltage_commands[0]);
 
-		rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
-		rhi_ptr_->setMotorVelocityCommandRPM(m2_name, command.actuator_velocity_commands[1]);
-		rhi_ptr_->setMotorVoltageCommandPercent(m2_name, command.actuator_voltage_commands[1]);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
+			rhi_ptr_->setMotorVelocityCommandRPM(m2_name, command.actuator_velocity_commands[1]);
+			rhi_ptr_->setMotorVoltageCommandPercent(m2_name, command.actuator_voltage_commands[1]);
+		}
 	}
 }
 

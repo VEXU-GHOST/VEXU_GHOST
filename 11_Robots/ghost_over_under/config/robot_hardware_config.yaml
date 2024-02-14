@@ -15,41 +15,36 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        steering_back_right:
-            port: 10
-            type: ROTATION_SENSOR
-            reversed: true
-            config: steering_sensor_config
-        drive_brb:
-            port: 9
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
         drive_brf:
             port: 8
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_fll:
-            port: 16
+        drive_brb:
+            port: 9
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_flr:
-            port: 17
-            type: MOTOR
+        steering_back_right:
+            port: 10
+            type: ROTATION_SENSOR
             reversed: true
-            config: drive_motor_config
+            config: steering_sensor_config
         steering_front_left:
             port: 15
             type: ROTATION_SENSOR
             reversed: true
             config: steering_sensor_config
-        steering_back_left:
-            port: 20
-            type: ROTATION_SENSOR
+        drive_flr:
+            port: 16
+            type: MOTOR
             reversed: true
-            config: steering_sensor_config
+            config: drive_motor_config
+        drive_fll:
+            port: 17
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
         drive_blb:
             port: 18
             type: MOTOR
@@ -60,6 +55,11 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
+        steering_back_left:
+            port: 20
+            type: ROTATION_SENSOR
+            reversed: true
+            config: steering_sensor_config
 
     device_configurations:
         steering_sensor_config:

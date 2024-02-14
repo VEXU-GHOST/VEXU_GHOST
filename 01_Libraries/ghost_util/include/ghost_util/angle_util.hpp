@@ -15,4 +15,7 @@ double FlipAnglePI(double angle);
 double SmallestAngleDistDeg(double a2, double a1);
 double SmallestAngleDistRad(double a2, double a1);
 
+double quaternionToYaw(double w, double x, double y, double z);
+void yawToQuaternion(double yaw, double& w, double& x, double& y, double& z);
+
 } // namespace ghost_util

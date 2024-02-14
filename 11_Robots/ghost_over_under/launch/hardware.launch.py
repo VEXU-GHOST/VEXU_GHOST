@@ -52,9 +52,11 @@ def generate_launch_description():
     swerve_motion_planner_node = Node(
         package='ghost_swerve',
         executable='swerve_motion_planner',
+        name='motion_planner',
         output='screen',
         parameters=[ros_config_file, 
                     {
+                        "robot_config_yaml_path": robot_config_yaml_path
                     }],
         arguments=[plugin_type, robot_name]
         # arguments=["--ros-args", "--log-level", "debug"]
@@ -78,7 +80,7 @@ def generate_launch_description():
     return LaunchDescription([
         serial_node,
         competition_state_machine_node,
-        swerve_motion_planner_node
+        # swerve_motion_planner_node
         # rplidar_node,
         # realsense_launch
     ])
