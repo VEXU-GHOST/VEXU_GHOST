@@ -118,7 +118,7 @@ def generate_launch_description():
         simulation,
         ekf_pf_launch,
         rviz_node,
-        # plot_juggler_node,
+        plot_juggler_node,
         robot_localization_node,
         # state_machine_node,
         OpaqueFunction(function = launch_setup),

@@ -177,10 +177,13 @@ void SwerveRobotPlugin::publishOdometry(){
 	msg.pose.pose.orientation.z = sin(odom_angle * 0.5);
 	msg.pose.pose.orientation.w = cos(odom_angle * 0.5);
 
-	// covariance is row major form
-	std::array<double, 36> covariance = {m_k1, m_k4, 0.0, m_k7, 0.0, 0.0,
-		                             m_k2, m_k5, 0.0, m_k8, 0.0, 0.0,
-		                             m_k3, m_k6, 0.0, m_k9, 0.0, 0.0};
+
+	std::array<double, 36> covariance = {m_k1, m_k4, 0.0, 0.0, 0.0, m_k7,
+		                             m_k2, m_k5, 0.0, 0.0, 0.0, m_k8,
+		                             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		                             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		                             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		                             m_k3, m_k6, 0.0, 0.0, 0.0, m_k9};
 	msg.pose.covariance = covariance;
 	// msg.twist.twist.linear.x =
 	// msg.twist.twist.linear.y

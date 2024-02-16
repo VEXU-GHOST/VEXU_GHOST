@@ -242,14 +242,10 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 void EkfPfNode::PublishRobotPose(rclcpp::Time stamp){
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 	robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
-	// covariance is row major form
-	std::array<double, 36> covariance = {config_params.k1, config_params.k4, 0.0, config_params.k7, 0.0, 0.0,
-		                             config_params.k2, config_params.k5, 0.0, config_params.k8, 0.0, 0.0,
-		                             config_params.k3, config_params.k6, 0.0, config_params.k9, 0.0, 0.0};
-
 	robot_pose_.header.stamp = stamp;
 	robot_pose_.header.frame_id = "base_link";
 
@@ -302,7 +298,8 @@ void EkfPfNode::PublishWorldTransform(){
 
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 	world_to_base_tf.transform.translation.x = robot_loc.x();
 	world_to_base_tf.transform.translation.y = robot_loc.y();
@@ -350,9 +347,6 @@ void EkfPfNode::PublishVisualization(){
 void EkfPfNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg){
 	vector<particle_filter::Particle> particles;
 	particle_filter_.GetParticles(&particles);
-	RCLCPP_INFO(
-		this->get_logger(),
-		"DrawParticles");
 	for(const particle_filter::Particle &p : particles){
 		auto pose_msg = geometry_msgs::msg::Pose{};
 		pose_msg.position.x = p.loc.x();
@@ -369,7 +363,8 @@ void EkfPfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg)
 	}
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 	vector<Vector2f> predicted_scan;
 
 	particle_filter_.GetPredictedPointCloud(

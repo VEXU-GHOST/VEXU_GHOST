@@ -39,5 +39,4 @@ def generate_launch_description():
         DeclareLaunchArgument('verbose', default_value='true'),
         # rviz_node,
         ekf_pf_node
-        # plot_juggler_node,
     ])

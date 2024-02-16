@@ -66,7 +66,6 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
 	// loc, angle, with the sensor characteristics defined by the provided
 	// parameters.
 	scan.resize((int)(num_ranges / config_params_.resize_factor));
-	std::cout << "GetPredictedPointCloud" << std::endl;
 
 	Vector2f sensor_loc = BaseLinkToSensorFrame(loc, angle);
 	int v_start_index = std::lower_bound(horizontal_lines_.begin(), horizontal_lines_.end(), Line2f(sensor_loc, sensor_loc), horizontal_line_compare) - horizontal_lines_.begin();
@@ -175,7 +174,6 @@ void ParticleFilter::Update(const vector<float>& ranges,
 	// Get predicted point cloud
 	Particle &particle = *p_ptr;
 	vector<Vector2f> predicted_cloud; // map frame
-	std::cout << "Update PF" << std::endl;
 	GetPredictedPointCloud(particle.loc,
 	                       particle.angle,
 	                       ranges.size(),
@@ -404,11 +402,14 @@ void ParticleFilter::SortMap(){
 }
 
 void ParticleFilter::GetLocation(Eigen::Vector2f* loc_ptr,
-                                 float* angle_ptr) const {
+                                 float* angle_ptr,
+                                 std::array<double, 36>* cov_ptr) const {
 	Vector2f& loc = *loc_ptr;
 	float& angle = *angle_ptr;
+	std::array<double, 36>& cov = *cov_ptr;
 	// Compute the best estimate of the robot's location based on the current set
 	// of particles.
+
 
 	Eigen::Vector2f angle_point = Eigen::Vector2f(0, 0);
 	for(Particle particle : particles_){
@@ -416,6 +417,24 @@ void ParticleFilter::GetLocation(Eigen::Vector2f* loc_ptr,
 		angle_point += Eigen::Vector2f(cos(particle.angle), sin(particle.angle)) * particle.weight;
 	}
 
+	Eigen::Vector3f sum_diff = Eigen::Vector3f(0.0, 0.0, 0.0);
+	Eigen::Vector3f cov_vector = Eigen::Vector3f(0.0, 0.0, 0.0);
+	for(Particle particle : particles_){
+		Eigen::VectorXf weighted_particle = particle.loc * particle.weight;
+		double sum_diff_x = math_util::Pow(weighted_particle(0) - loc(0), 2);
+		double sum_diff_y = math_util::Pow(weighted_particle(1) - loc(1), 2);
+		double sum_diff_tht = math_util::Pow(weighted_particle(2) - loc(2), 2);
+		Eigen::Vector3f sum_data(sum_diff_x, sum_diff_y, sum_diff_tht);
+		sum_diff += sum_data;
+	}
+
+	cov_vector = sum_diff / particles_.size();
+	cov = {cov_vector(0), 0.0, 0.0, 0.0, 0.0, 0.0,
+	       0.0, cov_vector(1), 0.0, 0.0, 0.0, 0.0,
+	       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+	       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+	       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+	       0.0, 0.0, 0.0, 0.0, 0.0, cov_vector(2)};
 	loc /= weight_sum_;
 	angle_point /= weight_sum_;
 	angle = atan2(angle_point[1], angle_point[0]);

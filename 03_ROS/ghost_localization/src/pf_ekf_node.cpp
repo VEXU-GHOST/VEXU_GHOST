@@ -245,13 +245,10 @@ void PfEkfNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 void PfEkfNode::PublishRobotPose(rclcpp::Time stamp){
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	Eigen::MatrixXf covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 	auto robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
-	// covariance is row major form
-	std::array<double, 36> covariance = {config_params.k1, config_params.k4, 0.0, config_params.k7, 0.0, 0.0,
-		                             config_params.k2, config_params.k5, 0.0, config_params.k8, 0.0, 0.0,
-		                             config_params.k3, config_params.k6, 0.0, config_params.k9, 0.0, 0.0};
 
 	robot_pose_.header.stamp = stamp;
 	robot_pose_.header.frame_id = "base_link";
