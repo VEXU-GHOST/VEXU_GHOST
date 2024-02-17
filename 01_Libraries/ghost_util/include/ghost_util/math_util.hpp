@@ -10,8 +10,7 @@ T clamp(T val, T min, T max){
 }
 
 double sign(double val){
-	double sign = (val >= 0.0) ? 1.0 : -1.0;
-	return sign;
+	return (val >= 0.0) ? 1.0 : -1.0;
 }
 
 }
