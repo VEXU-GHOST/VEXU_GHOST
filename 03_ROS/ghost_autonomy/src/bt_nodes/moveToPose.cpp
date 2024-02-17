@@ -60,7 +60,7 @@ BT::NodeStatus MoveToPose::tick() {
 	command_pub_->publish(msg);
 
 	RCLCPP_INFO(this->get_logger(), "posX: %f", posX);
-	RCLCPP_INFO(this->get_logger(), "posY: %f", posX);
+	RCLCPP_INFO(this->get_logger(), "posY: %f", posY);
 	RCLCPP_INFO(this->get_logger(), "angle: %f", angle);
 	RCLCPP_INFO(this->get_logger(), "velX: %f", velX);
 	RCLCPP_INFO(this->get_logger(), "velY: %f", velY);

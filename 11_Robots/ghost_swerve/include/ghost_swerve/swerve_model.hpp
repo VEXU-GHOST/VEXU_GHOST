@@ -242,9 +242,9 @@ public:
 	 * @param forward
 	 * @param clockwise
 	 */
-	void calculateKinematicSwerveControllerVelocity(double right, double forward, double clockwise);
-	void calculateKinematicSwerveControllerNormalized(double right, double forward, double clockwise);
-	void calculateKinematicSwerveControllerJoystick(double right, double forward, double clockwise);
+	void calculateKinematicSwerveControllerNormalized(double right_cmd, double forward_cmd, double clockwise_cmd);
+	void calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd);
+	void calculateKinematicSwerveControllerVelocity(double right_cmd, double forward_cmd, double clockwise_cmd);
 
 	const Eigen::Vector3d& getBaseVelocityCommand(){
 		return m_base_vel_cmd;
@@ -267,6 +267,16 @@ public:
 	}
 
 	double getOdometryAngle() const {
+		return m_odom_angle;
+	}
+
+	const Eigen::Vector2d& getWorldLocation(){
+		// TODO(maxxwilson) UPDATE THIS from sub
+		return m_odom_loc;
+	}
+
+	double getWorldAngle() const {
+		// TODO(maxxwilson) UPDATE THIS from sub
 		return m_odom_angle;
 	}
 

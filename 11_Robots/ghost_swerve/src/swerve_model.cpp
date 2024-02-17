@@ -1,5 +1,6 @@
 #include <ghost_swerve/swerve_model.hpp>
 #include <ghost_util/angle_util.hpp>
+#include <ghost_util/math_util.hpp>
 #include <ghost_util/vector_util.hpp>
 #include "ghost_util/unit_conversion_utils.hpp"
 
@@ -195,16 +196,19 @@ void SwerveModel::updateBaseTwist(){
 	m_base_vel_curr[2] = (std::fabs(m_base_vel_curr[2]) > 0.02) ? m_base_vel_curr[2] : 0.0;
 }
 
-void calculateKinematicSwerveControllerNormalized(double right, double forward, double clockwise){
-}
-void calculateKinematicSwerveControllerJoystick(double right, double forward, double clockwise){
+void SwerveModel::calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd){
+	calculateKinematicSwerveControllerNormalized(right_cmd / 127.0, forward_cmd / 127.0, clockwise_cmd / 127.0);
 }
 
-void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_vel, double forward_vel, double clockwise_vel){
+void SwerveModel::calculateKinematicSwerveControllerNormalized(double right_cmd, double forward_cmd, double clockwise_cmd){
+	calculateKinematicSwerveControllerVelocity(right_cmd * m_max_base_lin_vel, forward_cmd * m_max_base_lin_vel, clockwise_cmd * m_max_base_ang_vel);
+}
+
+void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, double forward_cmd, double clockwise_cmd){
 	// Convert joystick to robot twist command
-	Eigen::Vector2d xy_vel_cmd_base_link(forward_vel, -right_vel);
-	double lin_vel_cmd = std::clamp<double>(xy_vel_cmd_base_link.norm(), -1.0, 1.0) * m_max_base_lin_vel;
-	double ang_vel_cmd = std::clamp<double>(clockwise_vel, -1.0, 1.0) * m_max_base_ang_vel;
+	Eigen::Vector2d xy_vel_cmd_base_link(forward_cmd, -right_cmd);
+	double lin_vel_cmd = std::clamp<double>(xy_vel_cmd_base_link.norm(), -m_max_base_lin_vel, m_max_base_lin_vel);
+	double ang_vel_cmd = std::clamp<double>(-clockwise_cmd, -m_max_base_ang_vel, m_max_base_ang_vel);
 
 	// Zero commands under 1%
 	lin_vel_cmd = (fabs(lin_vel_cmd) > m_max_base_lin_vel * 0.01) ? lin_vel_cmd : 0.0;

@@ -70,6 +70,11 @@ competition_state_machine_node:
       k8: 0.0   #0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
       k9: 0.15   # theta error from rotation     # 50% error in primary direction  
 
+      # motion planning
+      move_to_pose_kp_x: 0.1
+      move_to_pose_kp_y: 0.1
+      move_to_pose_kp_theta: 0.1
+
 ekf_localization_node:
   ros__parameters:
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin

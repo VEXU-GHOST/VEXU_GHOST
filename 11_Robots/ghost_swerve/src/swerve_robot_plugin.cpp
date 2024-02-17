@@ -20,6 +20,15 @@ void SwerveRobotPlugin::initialize(){
 	// node_ptr_->declare_parameter("trajectory_topic", "/motion_planning/trajectory");
 	// std::string trajectory_topic = node_ptr_->get_parameter("trajectory_topic").as_string();
 
+	node_ptr_->declare_parameter("move_to_pose_kp_x", 0.0);
+	m_move_to_pose_kp_x = node_ptr_->get_parameter("move_to_pose_kp_x").as_double();
+
+	node_ptr_->declare_parameter("move_to_pose_kp_y", 0.0);
+	m_move_to_pose_kp_y = node_ptr_->get_parameter("move_to_pose_kp_y").as_double();
+
+	node_ptr_->declare_parameter("move_to_pose_kp_theta", 0.0);
+	m_move_to_pose_kp_theta = node_ptr_->get_parameter("move_to_pose_kp_theta").as_double();
+
 	node_ptr_->declare_parameter("odom_topic", "/sensors/wheel_odom");
 	std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
 
@@ -153,38 +162,28 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	auto command_map = get_commands(current_time);
 	double des_pos_x = command_map["x_pos"];
 	double des_vel_x = command_map["x_vel"];
-	double des_pos_y = command_map["x_pos"];
-	double des_vel_y = command_map["x_vel"];
-	double des_pos_ang = command_map["angle_pos"];
-	double des_vel_ang = command_map["angle_vel"];
+	double des_pos_y = command_map["y_pos"];
+	double des_vel_y = command_map["y_vel"];
+	double des_theta = command_map["angle_pos"];
+	double des_theta_vel = command_map["angle_vel"];
 
-	double kp = 0.1;
-	double vel_cmd_x = des_vel_x + (des_pos_x - curr_pos_x)*kp;
-	double vel_cmd_y = des_vel_y + (des_pos_y - curr_pos_y)*kp;
-	double vel_cmd_ang = des_vel_ang + (des_pos_ang - curr_pos_ang)*kp;
+	// Get best state estimate
+	auto curr_location = m_swerve_model_ptr->getWorldLocation();
+	double curr_theta = m_swerve_model_ptr->getWorldAngle();
+
+	// Calculate velocity command from motion plan
+	double vel_cmd_x = des_vel_x + (des_pos_x - curr_location.x()) * m_move_to_pose_kp_x;
+	double vel_cmd_y = des_vel_y + (des_pos_y - curr_location.y()) * m_move_to_pose_kp_y;
+	double vel_cmd_theta = des_theta_vel + ghost_util::SmallestAngleDistRad(des_theta, curr_theta) * m_move_to_pose_kp_theta;
+
+	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd x: %f", vel_cmd_x);
+	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd y: %f", vel_cmd_y);
+	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd theta: %f", vel_cmd_theta);
 
 
-	m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
+	// m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, -vel_cmd_y, -vel_cmd_theta);
 
-	updateDrivetrainMotors();
-
-	// std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
-	// 	{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
-	// 	{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
-	// 	{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
-	// 	{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
-	// };
-
-	// for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
-	// 	std::string m1_name = motor_name_pair.first;
-	// 	std::string m2_name = motor_name_pair.second;
-	// 	rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
-	// 	rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
-	// }
-
-	// update_motor_commands(current_time - trajectory_start_time_);
-
-	// update motor values from trajectory
+	// updateDrivetrainMotors();
 }
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
@@ -194,7 +193,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 		autonomous(current_time);
 	}
 	else{
-		m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
+		m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, joy_data->right_x);
 		updateDrivetrainMotors();
 	}
 }
@@ -396,7 +395,7 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 	auto ang_vel = trajectory_motor_map_["angle"].velocity_vector;
 	int j = 30;
 
-	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i+=25){
+	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i += 25){
 		auto marker_msg = visualization_msgs::msg::Marker{};
 
 		marker_msg.header.frame_id = "odom";
@@ -418,9 +417,9 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 		marker_msg.pose.orientation.y = y;
 		marker_msg.pose.orientation.z = z;
 		marker_msg.color.a = 1;
-		marker_msg.color.r = 1 - time[i]/time[time.size()-1];
+		marker_msg.color.r = 1 - time[i] / time[time.size() - 1];
 		marker_msg.color.g = 0;
-		marker_msg.color.b = time[i]/time[time.size()-1];
+		marker_msg.color.b = time[i] / time[time.size() - 1];
 
 		viz_msg.markers.push_back(marker_msg);
 	}

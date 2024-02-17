@@ -44,7 +44,7 @@ def generate_launch_description():
         parameters=[ros_config_file, 
                     {
                         "robot_config_yaml_path": robot_config_yaml_path,
-                        "bt_path": bt_path
+                        "bt_path": bt_path,
                     }],
         arguments=[plugin_type, robot_name]
         # arguments=["--ros-args", "--log-level", "debug"]
