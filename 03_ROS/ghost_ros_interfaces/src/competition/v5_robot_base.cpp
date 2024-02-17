@@ -29,7 +29,7 @@ void V5RobotBase::configure(){
 		10);
 
 	trajectory_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::RobotTrajectory>(
-		"/motion_planning/trajectory",
+		"/motion_planner/trajectory",
 		10,
 		std::bind(&V5RobotBase::trajectoryCallback, this, _1)
 		);
@@ -114,6 +114,9 @@ double V5RobotBase::getTimeFromStart() const {
 }
 
 void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg){
+	RCLCPP_INFO(node_ptr_->get_logger(), "Received Trajectory");
+	RCLCPP_INFO(node_ptr_->get_logger(), "Received Trajectory");
+	RCLCPP_INFO(node_ptr_->get_logger(), "Received Trajectory");
 	trajectory_start_time_ = getTimeFromStart();
 	for(int i = 0; i < msg->motor_names.size(); i++){
 		auto motor_trajectory = std::make_shared<RobotTrajectory::MotorTrajectory>();

@@ -61,6 +61,7 @@ void MotionPlanner::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::
 
 void MotionPlanner::setNewCommand(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd){
 	planning_ = true;
+	RCLCPP_INFO(this->get_logger(), "Received Pose");
 	generateMotionPlan(cmd);
 	planning_ = false;
 }

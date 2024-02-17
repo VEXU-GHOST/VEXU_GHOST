@@ -42,7 +42,7 @@ void SwerveModel::validateConfig(){
 
 	if(m_config.module_positions.size() != 4){
 		throw std::runtime_error(
-			      "[SwerveModel::validateConfig] Error: module_positions must be of size four (one for each module).");
+				  "[SwerveModel::validateConfig] Error: module_positions must be of size four (one for each module).");
 	}
 
 	m_num_modules = m_config.module_positions.size();
@@ -195,7 +195,12 @@ void SwerveModel::updateBaseTwist(){
 	m_base_vel_curr[2] = (std::fabs(m_base_vel_curr[2]) > 0.02) ? m_base_vel_curr[2] : 0.0;
 }
 
-void SwerveModel::calculateKinematicSwerveController(double right_vel, double forward_vel, double clockwise_vel){
+void calculateKinematicSwerveControllerNormalized(double right, double forward, double clockwise){
+}
+void calculateKinematicSwerveControllerJoystick(double right, double forward, double clockwise){
+}
+
+void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_vel, double forward_vel, double clockwise_vel){
 	// Convert joystick to robot twist command
 	Eigen::Vector2d xy_vel_cmd_base_link(forward_vel, -right_vel);
 	double lin_vel_cmd = std::clamp<double>(xy_vel_cmd_base_link.norm(), -1.0, 1.0) * m_max_base_lin_vel;

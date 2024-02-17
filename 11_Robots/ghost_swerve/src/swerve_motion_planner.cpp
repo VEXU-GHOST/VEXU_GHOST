@@ -8,7 +8,7 @@ using std::placeholders::_1;
 
 void SwerveMotionPlanner::initialize(){
 	odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-		"/odometry/filtered",
+		"/sensors/wheel_odom",
 		10,
 		std::bind(&SwerveMotionPlanner::odomCallback, this, _1)
 		);
@@ -38,7 +38,7 @@ void SwerveMotionPlanner::odomCallback(nav_msgs::msg::Odometry::SharedPtr msg){
 	current_y_vel = msg->twist.twist.linear.x;
 
 	current_angle = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
-	current_omega = ghost_util::unit_conversion_utils::DEG_TO_RAD * msg->twist.twist.angular.x;
+	current_omega = ghost_util::DEG_TO_RAD * msg->twist.twist.angular.x;
 }
 
 
@@ -55,20 +55,20 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	// find position/velocities
 	std::vector<double> xpos0({current_x, current_x_vel});
 	std::vector<double> xposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
-	std::vector<double> ypos0({current_x, current_x_vel});
-	std::vector<double> yposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
+	std::vector<double> ypos0({current_y, current_y_vel});
+	std::vector<double> yposf({cmd->pose.pose.position.y, cmd->twist.twist.linear.y});
 	std::vector<double> ang0({current_angle, current_omega});
 	std::vector<double> angf({current_angle + ghost_util::SmallestAngleDistRad(current_angle, angle_f), cmd->twist.twist.angular.x});
 
 	// find final time
-	double v_max = 0.5;
+	double v_max = 1.0;
 	// double a_max = 0.5;
-	double dist = Eigen::Vector2d(posf[0], posf[1]).norm();
+	double dist = Eigen::Vector2d(xposf[0]-xpos0[0], yposf[0]-ypos0[0]).norm();
 	double t0 = 0;
 	double tf = dist / v_max;
 	int n = tf * 100;
 	auto xpos_traj = CubicMotionPlanner::computeCubicTraj(xpos0, xposf, t0, tf, n);
-	auto ypos_traj = CubicMotionPlanner::computeCubicTraj(xpos0, xposf, t0, tf, n);
+	auto ypos_traj = CubicMotionPlanner::computeCubicTraj(ypos0, yposf, t0, tf, n);
 	auto ang_traj = CubicMotionPlanner::computeCubicTraj(ang0, angf, t0, tf, n);
 	// auto time = std::get<0>(xpos_traj);
 	// auto xpos_vel = std::get<2>(xpos_traj);
@@ -102,7 +102,8 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	angle_mt.velocity = std::get<2>(ang_traj);
 	trajectory_msg.motor_names = std::vector<std::string>({"x","y","angle"});
 
-	trajectory_msg.trajectories = std::vector<ghost_msgs::msg::MotorTrajectoy>({x_mt, y_mt, angle_mt});
+	trajectory_msg.trajectories = std::vector<ghost_msgs::msg::MotorTrajectory>({x_mt, y_mt, angle_mt});
+	RCLCPP_INFO(get_logger(), "Generated Swerve Motion Plan");
 	trajectory_pub_->publish(trajectory_msg);
 	// boom
 }

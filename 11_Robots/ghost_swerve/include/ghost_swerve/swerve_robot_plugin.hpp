@@ -32,13 +32,15 @@ protected:
 	void publishOdometry();
 	void publishTrajectoryVisualization();
 	void poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+	void updateDrivetrainMotors();
 
 	std::shared_ptr<SwerveModel> m_swerve_model_ptr;
 
 	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_robot_pose_sub;
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
 	rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
-	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_viz_pub;
+	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_swerve_viz_pub;
+	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
 	std::string bt_path_;
 	std::shared_ptr<RunTree> bt_;
 

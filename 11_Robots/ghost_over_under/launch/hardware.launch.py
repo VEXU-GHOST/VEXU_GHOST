@@ -102,7 +102,8 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_localization_node',
         output='screen',
-        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
+        parameters=[ros_config_file],
+
     )
 
     return LaunchDescription([
@@ -110,7 +111,7 @@ def generate_launch_description():
         competition_state_machine_node,
         realsense_node,
         imu_filter_node,
-        robot_localization_node
-        # swerve_motion_planner_node
+        robot_localization_node,
+        swerve_motion_planner_node
         # rplidar_node,
     ])

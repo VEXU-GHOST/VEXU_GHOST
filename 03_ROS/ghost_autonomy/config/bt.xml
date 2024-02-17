@@ -2,11 +2,11 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="main">
     <Sequence>
-      <MoveToPose posX="0.25"
-                  posY="0.25"
-                  angle="3.14"
-                  velX="0"
-                  velY="0"
+      <MoveToPose posX="1.5"
+                  posY="-3"
+                  angle="135"
+                  velX="0.5"
+                  velY="-0.5"
                   omega="0"/>
       <KeepRunningUntilFailure>
         <SaySomething message="doing stuff"/>
