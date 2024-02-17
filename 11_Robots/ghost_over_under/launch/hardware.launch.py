@@ -10,6 +10,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     home_dir = os.path.expanduser('~')
     ghost_over_under_base_dir = os.path.join(home_dir, "VEXU_GHOST", "11_Robots", "ghost_over_under")
+    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces")
 
     # This contains all the parameters for our ROS nodes
     ros_config_file = os.path.join(ghost_over_under_base_dir, "config/ros_config.yaml")
@@ -95,11 +96,21 @@ def generate_launch_description():
             }.items()
     )
 
+    robot_localization_node = Node(
+        package='robot_localization',
+        
+        executable='ekf_node',
+        name='ekf_localization_node',
+        output='screen',
+        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
+    )
+
     return LaunchDescription([
         serial_node,
         competition_state_machine_node,
         realsense_node,
-        imu_filter_node
+        imu_filter_node,
+        robot_localization_node
         # swerve_motion_planner_node
         # rplidar_node,
     ])

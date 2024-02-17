@@ -35,12 +35,12 @@ port_configuration:
             type: ROTATION_SENSOR
             reversed: true
             config: steering_sensor_config
-        drive_flr:
+        drive_fll:
             port: 16
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_fll:
+        drive_flr:
             port: 17
             type: MOTOR
             reversed: true

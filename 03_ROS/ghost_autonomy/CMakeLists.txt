@@ -19,6 +19,7 @@ set(DEPENDENCIES
   ghost_msgs
   ghost_v5_interfaces
   tf2
+  ghost_util
 )
 
 foreach(pkg ${DEPENDENCIES})

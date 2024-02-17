@@ -5,6 +5,7 @@
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "tf2/LinearMath/Quaternion.h"
+#include "ghost_util/angle_util.hpp"
 
 using std::placeholders::_1;
 

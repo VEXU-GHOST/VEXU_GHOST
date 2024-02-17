@@ -103,7 +103,7 @@ protected:
 	
 	double getTimeFromStart() const;
 	// void update_motor_commands(double time);
-	// void get_commands(double time);
+	std::unordered_map<std::string, double> get_commands(double time);
 
 private:
 	void loadRobotHardwareInterface();

@@ -37,19 +37,18 @@ void SwerveMotionPlanner::odomCallback(nav_msgs::msg::Odometry::SharedPtr msg){
 	current_x_vel = msg->twist.twist.linear.x;
 	current_y_vel = msg->twist.twist.linear.x;
 
-	tf2::Quaternion quat(msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z,msg->pose.pose.orientation.w);
-	current_angle = quat.getAngle();
-	current_omega = msg->twist.twist.angular.x;
+	current_angle = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+	current_omega = ghost_util::unit_conversion_utils::DEG_TO_RAD * msg->twist.twist.angular.x;
 }
 
 
 void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd){
 	RCLCPP_INFO(get_logger(), "Generating Swerve Motion Plan");
 
-	tf2::Quaternion orientation_f(cmd->pose.pose.orientation.x,
-	                              cmd->pose.pose.orientation.y,
-	                              cmd->pose.pose.orientation.z,
-	                              cmd->pose.pose.orientation.w);
+	double angle_f = ghost_util::quaternionToYawRad(cmd->pose.pose.orientation.w,
+	                                                cmd->pose.pose.orientation.x,
+	                                                cmd->pose.pose.orientation.y,
+	                                                cmd->pose.pose.orientation.z);
 
 	// put into cubic for x,y,angle as joystick left_x, left_y, right_x
 
@@ -58,8 +57,8 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	std::vector<double> xposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
 	std::vector<double> ypos0({current_x, current_x_vel});
 	std::vector<double> yposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
-	std::vector<double> ang0({0, current_omega});
-	std::vector<double> angf({ghost_util::SmallestAngleDistRad(current_angle, orientation_f.getAngle()), cmd->twist.twist.angular.x});
+	std::vector<double> ang0({current_angle, current_omega});
+	std::vector<double> angf({current_angle + ghost_util::SmallestAngleDistRad(current_angle, angle_f), cmd->twist.twist.angular.x});
 
 	// find final time
 	double v_max = 0.5;
@@ -67,7 +66,7 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	double dist = Eigen::Vector2d(posf[0], posf[1]).norm();
 	double t0 = 0;
 	double tf = dist / v_max;
-	int n = tf*100;
+	int n = tf * 100;
 	auto xpos_traj = CubicMotionPlanner::computeCubicTraj(xpos0, xposf, t0, tf, n);
 	auto ypos_traj = CubicMotionPlanner::computeCubicTraj(xpos0, xposf, t0, tf, n);
 	auto ang_traj = CubicMotionPlanner::computeCubicTraj(ang0, angf, t0, tf, n);
@@ -99,7 +98,7 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	y_mt.position = std::get<1>(ypos_traj);
 	y_mt.velocity = std::get<2>(ypos_traj);
 	angle_mt.time = std::get<0>(ang_traj);
-	angle_mt.position = std::get<1>(ang_traj);
+	angle_mt.position = std::get<1>(ang_traj);// + current_angle;
 	angle_mt.velocity = std::get<2>(ang_traj);
 	trajectory_msg.motor_names = std::vector<std::string>({"x","y","angle"});
 

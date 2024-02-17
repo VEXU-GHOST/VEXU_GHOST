@@ -52,13 +52,13 @@ IMUFilterNode::IMUFilterNode() :
 		m_imu_accel_bias = Eigen::Vector3d(0.0, 0.0, 0.0);
 		m_imu_gyro_bias = Eigen::Vector3d(0.0, 0.0, 0.0);
 		m_imu_accel_bias_covariance <<
-		        0.0, 0.0, 0.0,
-		        0.0, 0.0, 0.0,
-		        0.0, 0.0, 0.0;
+		    0.0, 0.0, 0.0,
+		    0.0, 0.0, 0.0,
+		    0.0, 0.0, 0.0;
 		m_imu_gyro_bias_covariance <<
-		        0.0, 0.0, 0.0,
-		        0.0, 0.0, 0.0,
-		        0.0, 0.0, 0.0;
+		    0.0, 0.0, 0.0,
+		    0.0, 0.0, 0.0,
+		    0.0, 0.0, 0.0;
 	}
 	if(!m_calculate_bias){
 		declare_parameter("accel_bias_x", 0.0);
@@ -127,7 +127,7 @@ IMUFilterNode::IMUFilterNode() :
 		"/camera/imu", 10, std::bind(&IMUFilterNode::imu_callback, this, _1));
 
 	m_filtered_imu_pub = this->create_publisher<sensor_msgs::msg::Imu>(
-		"sensing/imu/filtered", 10);
+		"estimation/imu/filtered", 10);
 
 	m_vel_viz_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>(
 		"viz/imu_gyro",

@@ -42,16 +42,15 @@ BT::NodeStatus MoveToPose::tick() {
 	double velY = get_input<double>("velY");
 	double omega = get_input<double>("omega");
 
-	tf2::Quaternion quat;
-	quat.setEuler(angle, 0, 0);
-
+	double w,x,y,z;
+	ghost_util::yawToQuaternionDeg(angle, w, x, y, z);
 	ghost_msgs::msg::DrivetrainCommand msg{};
 	msg.pose.pose.position.x = posX;
 	msg.pose.pose.position.y = posY;
-	msg.pose.pose.orientation.x = quat.getX();
-	msg.pose.pose.orientation.y = quat.getY();
-	msg.pose.pose.orientation.z = quat.getZ();
-	msg.pose.pose.orientation.w = quat.getW();
+	msg.pose.pose.orientation.x = x;
+	msg.pose.pose.orientation.y = y;
+	msg.pose.pose.orientation.z = z;
+	msg.pose.pose.orientation.w = w;
 
 	// geometry_msgs::msg::TwistStamped twist{};
 	msg.twist.twist.linear.x = velX;

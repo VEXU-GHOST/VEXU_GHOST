@@ -2,31 +2,31 @@ imu_filter_node:
   ros__parameters:
     calculate_bias: false
     calculate_covariance: false
-    calibration_time: 5.0
+    calibration_time: 30.0
     sensor_frequency: 200.0
 
-    accel_bias_x: -0.0623951
-    accel_bias_y: -9.59332
-    accel_bias_z: -2.17185
+    accel_bias_x: -0.136218
+    accel_bias_y: -9.42483
+    accel_bias_z: -2.90318
 
-    gyro_bias_x: -0.00521851
-    gyro_bias_y: 0.0019712
-    gyro_bias_z: -0.000595768
+    gyro_bias_x: -0.0050632
+    gyro_bias_y: 0.00207869
+    gyro_bias_z: -0.000868592
 
     accel_covariance: [
-       9.35244e-05, -9.52529e-07, -2.56578e-06,
-      -9.52529e-07,  8.45894e-05, -9.63334e-07,
-      -2.56578e-06, -9.63334e-07,  0.000119996]
+      9.92618e-05, 1.36598e-06,  2.8624e-07,
+      1.36598e-06, 0.000103017, 1.27159e-06,
+      2.8624e-07, 1.27159e-06, 0.000110698]
     
     gyro_covariance: [
-      4.06615e-06,  1.26211e-06, -1.72035e-08,
-      1.26211e-06,  6.11825e-06, -1.98724e-08,
-      -1.72035e-08, -1.98724e-08,  2.22475e-06]
+      4.09332e-06,  1.38296e-06, -2.18034e-07,
+      1.38296e-06,  1.59246e-05, -4.90858e-07,
+      -2.18034e-07, -4.90858e-07,  2.57037e-06]
 
-    camera_roll: -105.0
+    camera_roll: -110.0
     camera_pitch: 0.0
     camera_yaw: -90.0
 
-    camera_x: 0.1651 # 6.5"
-    camera_y: 0.0
+    camera_x: 5.5
+    camera_y: 4.75
     

@@ -30,6 +30,7 @@ public:
 protected:
 	void publishVisualization();
 	void publishOdometry();
+	void publishTrajectoryVisualization();
 	void poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
 	std::shared_ptr<SwerveModel> m_swerve_model_ptr;
@@ -40,6 +41,16 @@ protected:
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_viz_pub;
 	std::string bt_path_;
 	std::shared_ptr<RunTree> bt_;
+
+	// Odometry
+	Eigen::Vector2d m_last_odom_loc = Eigen::Vector2d::Zero();
+	double m_last_odom_angle  = 0.0;
+
+	Eigen::Vector2d m_curr_odom_loc = Eigen::Vector2d::Zero();
+	double m_curr_odom_angle = 0.0;
+
+	Eigen::Vector3d m_curr_odom_std = Eigen::Vector3d::Zero();
+	Eigen::Vector3d m_curr_odom_cov = Eigen::Vector3d::Zero();
 	double m_k1;
 	double m_k2;
 	double m_k3;

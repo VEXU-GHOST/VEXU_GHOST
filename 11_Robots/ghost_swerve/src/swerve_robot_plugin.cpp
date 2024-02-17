@@ -20,10 +20,10 @@ void SwerveRobotPlugin::initialize(){
 	// node_ptr_->declare_parameter("trajectory_topic", "/motion_planning/trajectory");
 	// std::string trajectory_topic = node_ptr_->get_parameter("trajectory_topic").as_string();
 
-	node_ptr_->declare_parameter("odom_topic", "/sensors/odom");
+	node_ptr_->declare_parameter("odom_topic", "/sensors/wheel_odom");
 	std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
 
-	node_ptr_->declare_parameter("pose_topic", "/estimation/pose");
+	node_ptr_->declare_parameter("pose_topic", "/estimation/robot_pose");
 	std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
 
 	node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
@@ -142,12 +142,11 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
 
 	bt_->tick_tree();
+	publishTrajectoryVisualization();
 
 	auto command_map = get_commands(current_time);
-	command_map["x_pos"];
-	command_map["x_vel"];// copy for 'x' and 'angle'
-
-	m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
+	// command_map["x_pos"];
+	// command_map["x_vel"];// copy for 'x' and 'angle'
 
 	// std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
 	// 	{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
@@ -179,7 +178,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 		m_swerve_model_ptr->calculateKinematicSwerveController(joy_data->left_x / 127.0, joy_data->left_y / 127.0, -joy_data->right_x / 127.0);
 
 		std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
-			{"left_front", std::pair<std::string, std::string>("drive_flr", "drive_fll")},
+			{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
 			{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
 			{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
 			{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
@@ -204,47 +203,46 @@ void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCov
 }
 
 void SwerveRobotPlugin::publishOdometry(){
-	Eigen::Vector2d odom_loc = m_swerve_model_ptr->getOdometryLocation();
-	double odom_angle = m_swerve_model_ptr->getOdometryAngle();
+	m_curr_odom_loc = m_swerve_model_ptr->getOdometryLocation();
+	m_curr_odom_angle = m_swerve_model_ptr->getOdometryAngle();
 
 	nav_msgs::msg::Odometry msg{};
 	msg.header.frame_id = "odom";
 	msg.header.stamp = node_ptr_->get_clock()->now();
 	msg.child_frame_id = "base_link";
 
-	msg.pose.pose.position.x = odom_loc.x();
-	msg.pose.pose.position.y = odom_loc.y();
+	msg.pose.pose.position.x = m_curr_odom_loc.x();
+	msg.pose.pose.position.y = m_curr_odom_loc.y();
 	msg.pose.pose.position.z = 0.0;
 	ghost_util::yawToQuaternionRad(
-		odom_angle,
+		m_curr_odom_angle,
 		msg.pose.pose.orientation.w,
 		msg.pose.pose.orientation.x,
 		msg.pose.pose.orientation.y,
 		msg.pose.pose.orientation.z);
 
+	// Calculate differences for odometry
+	auto odom_diff_x = std::fabs(m_curr_odom_loc.x() - m_last_odom_loc.x());
+	auto odom_diff_y = std::fabs(m_curr_odom_loc.y() - m_last_odom_loc.y());
+	auto odom_diff_theta = std::fabs(ghost_util::SmallestAngleDistRad(m_curr_odom_angle, m_last_odom_angle));
+
 	// Holonomic Motion Model
-	double sigma_x =
-		m_k1 * odom_loc.x() +
-		m_k2 * odom_loc.y() +
-		m_k3 * abs(odom_angle);
-	double sigma_y =
-		m_k4 * odom_loc.x() +
-		m_k5 * odom_loc.y() +
-		m_k6 * abs(odom_angle);
-	// Get noisy angle
-	double sigma_tht =
-		m_k7 * odom_loc.x() +
-		m_k8 * odom_loc.y() +
-		m_k9 * abs(odom_angle);
+	Eigen::Vector3d diff_std = Eigen::Vector3d(
+		m_k1 * odom_diff_x + m_k2 * odom_diff_y + m_k3 * odom_diff_theta,
+		m_k4 * odom_diff_x + m_k5 * odom_diff_y + m_k6 * odom_diff_theta,
+		m_k7 * odom_diff_x + m_k8 * odom_diff_y + m_k9 * odom_diff_theta);
+
+	m_curr_odom_std += diff_std;
+	m_curr_odom_cov = m_curr_odom_std.array().square();
 
 	// covariance is row major form
 	std::array<double, 36> pose_covariance{
-		sigma_x, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, sigma_y, 0.0, 0.0, 0.0, 0.0,
+		m_curr_odom_cov.x(), 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, m_curr_odom_cov.y(), 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht
+		0.0, 0.0, 0.0, 0.0, 0.0, m_curr_odom_cov.z()
 	};
 
 	msg.pose.covariance = pose_covariance;
@@ -273,17 +271,20 @@ void SwerveRobotPlugin::publishOdometry(){
 		m_k9 * abs(current_velocity.z());
 
 	std::array<double, 36> vel_covariance{
-		sigma_x_vel, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, sigma_y_vel, 0.0, 0.0, 0.0, 0.0,
+		sigma_x_vel*sigma_x_vel, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, sigma_y_vel*sigma_y_vel, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht_vel
+		0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht_vel*sigma_tht_vel
 	};
 
 	msg.twist.covariance = vel_covariance;
 
 	m_odom_pub->publish(msg);
+
+	m_last_odom_loc = m_curr_odom_loc;
+	m_last_odom_angle = m_curr_odom_angle;
 }
 
 void SwerveRobotPlugin::publishVisualization(){
@@ -346,6 +347,49 @@ void SwerveRobotPlugin::publishVisualization(){
 		p1.y = module_position.y() + module_command.wheel_velocity_vector.y();
 		p1.z = 0.0;
 		marker_msg.points.push_back(p1);
+
+		viz_msg.markers.push_back(marker_msg);
+	}
+	m_viz_pub->publish(viz_msg);
+}
+
+void SwerveRobotPlugin::publishTrajectoryVisualization(){
+	visualization_msgs::msg::MarkerArray viz_msg;
+	auto time = trajectory_motor_map_["x"].time_vector;
+
+	if(time.size() == 0){
+		return;
+	}
+	auto x = trajectory_motor_map_["x"].position_vector;
+	auto x_vel = trajectory_motor_map_["x"].velocity_vector;
+	auto y = trajectory_motor_map_["y"].position_vector;
+	auto y_vel = trajectory_motor_map_["y"].velocity_vector;
+	auto ang = trajectory_motor_map_["angle"].position_vector;
+	auto ang_vel = trajectory_motor_map_["angle"].velocity_vector;
+	int j = 30;
+
+	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i++){
+		auto marker_msg = visualization_msgs::msg::Marker{};
+
+		marker_msg.header.frame_id = "odom";
+		marker_msg.header.stamp = node_ptr_->get_clock()->now();
+		marker_msg.id = j++;
+		marker_msg.action = 0;
+		marker_msg.type = 0;
+		double vel = sqrt(x_vel[i] * x_vel[i] + y_vel[i] * y_vel[i]);
+		marker_msg.scale.x = vel;
+		marker_msg.scale.y = 0.01;
+		marker_msg.scale.z = 0.01;
+		marker_msg.pose.position.x = x[i];
+		marker_msg.pose.position.y = y[i];
+		marker_msg.pose.position.z = 0;
+		double w,x,y,z;
+		ghost_util::yawToQuaternionRad(atan2(y_vel[i], x_vel[i]), w, x, y, z);
+		marker_msg.pose.orientation.w = w;
+		marker_msg.pose.orientation.x = x;
+		marker_msg.pose.orientation.y = y;
+		marker_msg.pose.orientation.z = z;
+		marker_msg.color.a = 1;
 
 		viz_msg.markers.push_back(marker_msg);
 	}
