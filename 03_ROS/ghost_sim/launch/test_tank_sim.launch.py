@@ -88,6 +88,12 @@ def generate_launch_description():
                          'launch', 'ekf_pf.launch.py')
         ))
     
+    pf_ekf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(ghost_localization_share_dir,
+                         'launch', 'pf_ekf.launch.py')
+        ))
+
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -116,7 +122,8 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        ekf_pf_launch,
+        # ekf_pf_launch,
+        pf_ekf_launch,
         rviz_node,
         plot_juggler_node,
         robot_localization_node,
