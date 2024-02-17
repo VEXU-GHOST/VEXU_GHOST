@@ -12,6 +12,13 @@ using std::placeholders::_1;
 namespace ghost_swerve {
 
 SwerveRobotPlugin::SwerveRobotPlugin(){
+	m_digital_io = std::vector<bool>(8, false);
+	m_digital_io_name_map = std::unordered_map<std::string, size_t>{
+		{"claw", 0},
+		{"right_wing", 1},
+		{"left_wing", 2},
+		{"tail", 3}
+	};
 }
 
 void SwerveRobotPlugin::initialize(){
@@ -193,8 +200,37 @@ void SwerveRobotPlugin::teleop(double current_time){
 		autonomous(current_time);
 	}
 	else{
+		// Set Wings
+		m_digital_io[m_digital_io_name_map.at("right_wing")] = joy_data->btn_r2;
+		m_digital_io[m_digital_io_name_map.at("left_wing")] = joy_data->btn_l2;
+
+		// Toggle Claw
+		if(joy_data->btn_r1 && !m_claw_btn_pressed){
+			m_claw_open = !m_claw_open;
+			m_claw_btn_pressed = true;
+		}
+		else if(!joy_data->btn_r1){
+			m_claw_btn_pressed = false;
+		}
+		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
+
+		// Toggle Tail
+		if(joy_data->btn_l1 && !m_tail_btn_pressed){
+			m_tail_down = !m_tail_down;
+			m_tail_btn_pressed = true;
+		}
+		else if(!joy_data->btn_l1){
+			m_tail_btn_pressed = false;
+		}
+		m_digital_io[m_digital_io_name_map.at("tail")] = m_tail_down;
+
+
+		// Update Swerve Command
 		m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, joy_data->right_x);
 		updateDrivetrainMotors();
+
+
+		rhi_ptr_->setDigitalIO(m_digital_io);
 	}
 }
 
