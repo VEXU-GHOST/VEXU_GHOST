@@ -10,7 +10,7 @@ std::tuple<bool, double>  RobotTrajectory::MotorTrajectory::interpolate(std::vec
 		return {true, data[0]};
 	}
 	if(time >= time_vector[data.size() - 1]){
-		return {true, time_vector[data.size() - 1]};
+		return {true, data.back()};
 	}
 	int index = 0;
 	while(time < time_vector[index]){
