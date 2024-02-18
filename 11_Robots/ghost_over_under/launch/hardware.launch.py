@@ -41,6 +41,14 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
+    bag_recorder_node = Node(
+        package='ghost_ros_interfaces',
+        executable='bag_recorder_service',
+        output='screen',
+        parameters=[ros_config_file],
+        # arguments=["--ros-args", "--log-level", "debug"]
+    )
+
     # rplidar_node = Node(
     #     package='rplidar_ros',
     #     executable='rplidar_scan_publisher',
@@ -59,6 +67,7 @@ def generate_launch_description():
     return LaunchDescription([
         serial_node,
         competition_state_machine_node,
+        bag_recorder_node,
         # rplidar_node,
         # realsense_launch
     ])

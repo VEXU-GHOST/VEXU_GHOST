@@ -8,3 +8,8 @@ competition_state_machine_node:
   ros__parameters:
     odom_topic: "/sensors/wheel_odom"
     pose_topic: "/estimation/robot_pose"
+
+bag_recorder_node:
+  ros__parameters:
+    disk_space_required_kb: 256000
+    disk_check_period_s: 10
