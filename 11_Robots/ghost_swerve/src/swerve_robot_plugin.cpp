@@ -173,7 +173,14 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double des_vel_y = command_map["y_vel"];
 	double des_theta = command_map["angle_pos"];
 	double des_theta_vel = command_map["angle_vel"];
-
+	// for (auto& [name, value]: command_map){
+	// 	RCLCPP_INFO(node_ptr_->get_logger(), "%s: %f", name.c_str(), value);
+	// }
+	// for (auto& [name, value]: trajectory_motor_map_){
+	// 	for (auto& v: value.velocity_vector){
+	// 		RCLCPP_INFO(node_ptr_->get_logger(), "%s: %f", name.c_str(), v);
+	// 	}
+	// }
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngle();
@@ -188,9 +195,9 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd theta: %f", vel_cmd_theta);
 
 
-	// m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, -vel_cmd_y, -vel_cmd_theta);
+	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, vel_cmd_y, -vel_cmd_theta);
 
-	// updateDrivetrainMotors();
+	updateDrivetrainMotors();
 }
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
@@ -476,7 +483,7 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 	auto ang_vel = trajectory_motor_map_["angle"].velocity_vector;
 	int j = 30;
 
-	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i += 25){
+	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i += 50){
 		auto marker_msg = visualization_msgs::msg::Marker{};
 
 		marker_msg.header.frame_id = "odom";

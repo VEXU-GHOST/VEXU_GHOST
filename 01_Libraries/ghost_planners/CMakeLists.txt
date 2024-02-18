@@ -174,6 +174,23 @@ install(
 #   DESTINATION lib/${PROJECT_NAME})
 
 ###############
+### Testing ###
+###############
+
+# Robot Trajectory Tests
+set(DEVICE_TESTS
+  test_robot_trajectory
+)
+foreach(TEST ${DEVICE_TESTS})
+  ament_add_gtest(${TEST} test/${TEST}.cpp)
+  ament_target_dependencies(${TEST} ${DEPENDENCIES})
+  target_link_libraries(${TEST}
+    gtest_main
+    robot_trajectory
+  )
+endforeach()
+
+###############
 ### Install ###
 ###############
 install(
