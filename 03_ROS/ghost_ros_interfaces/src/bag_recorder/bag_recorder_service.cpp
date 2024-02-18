@@ -20,6 +20,13 @@ public:
 		this->service_ = this->create_service<ToggleBagRecorder>("toggle_bag_recorder",
 		                                                         std::bind(&BagRecorderNode::ToggleRecording, this, _1, _2));
 		disk_check_timer = this->create_wall_timer(disk_check_period_, std::bind(&BagRecorderNode::EnforceFreeDiskSpace, this));
+
+
+		std::string startup_string = "Service Created.\n";
+		startup_string += "\tDisk Space Required (KB):    " + disk_space_required_       + "\n";
+		startup_string += "\tDisk Check Period (Seconds): " + disk_check_period_.count() + "\n";
+
+		RCLCPP_INFO(rclcpp::get_logger("rclcpp"), startup_string.c_str());
 	};
 
 	void ToggleRecording(const std::shared_ptr<ToggleBagRecorder::Request> req,
