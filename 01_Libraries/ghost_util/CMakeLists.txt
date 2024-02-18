@@ -91,4 +91,9 @@ target_link_libraries(test_parsing_util
   gtest
 )
 
+ament_add_gtest(test_math_util test/test_math_util.cpp)
+target_link_libraries(test_parsing_util
+  gtest
+)
+
 ament_package()
