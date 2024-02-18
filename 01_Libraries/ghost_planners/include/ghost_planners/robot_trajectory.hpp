@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "ghost_util/math_util.hpp"
 
 namespace ghost_planners {
 
@@ -19,20 +20,18 @@ public:
 			torque_vector = std::vector<double>();
 		}
 
-		std::tuple<bool, double> getPosition(double time){
-			return interpolate(position_vector, time);
+		double getPosition(double time){
+			return ghost_util::clampedLinearInterpolate(position_vector, time_vector, time);
 		}
-		std::tuple<bool, double> getVelocity(double time){
-			return interpolate(velocity_vector, time);
+		double getVelocity(double time){
+			return ghost_util::clampedLinearInterpolate(velocity_vector, time_vector, time);
 		}
-		std::tuple<bool, double> getVoltage(double time){
-			return interpolate(voltage_vector, time);
+		double getVoltage(double time){
+			return ghost_util::clampedLinearInterpolate(voltage_vector,  time_vector, time);
 		}
-		std::tuple<bool, double> getTorque(double time){
-			return interpolate(torque_vector, time);
+		double getTorque(double time){
+			return ghost_util::clampedLinearInterpolate(torque_vector,   time_vector, time);
 		}
-
-		std::tuple<bool, double> interpolate(std::vector<double>& data, double time) const;
 
 		// values
 		std::vector<double> time_vector;
