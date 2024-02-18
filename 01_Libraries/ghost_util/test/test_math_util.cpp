@@ -10,25 +10,33 @@ public:
 };
 
 TEST_F(TestMathUtil, testInterpolate){
-	std::vector<double> x_data = {2.0, 3.0, 4.0};
+	using ghost_util::linearInterpolate;
+
+	std::vector<double> x_data = {1.0, 2.0};
 	std::vector<double> y_data = {0.0};
 
-	EXPECT_THROW(ghost_util::linearInterpolate(x_data, y_data, 2.0), std::runtime_error);
+	EXPECT_THROW(linearInterpolate(x_data, y_data, 2.0), std::runtime_error);
 
-	y_data = {4.0, 6.0, 8.0};
+	x_data = {1.0, 2.0, 3.0, 4.0};
+	y_data = {2.0, 0.0, 1.0, 6.0};
 
-	EXPECT_EQ(ghost_util::linearInterpolate(x_data, y_data, 1.0),  2.0); // < range
-	EXPECT_EQ(ghost_util::linearInterpolate(x_data, y_data, 3.0),  6.0); // exact
-	EXPECT_EQ(ghost_util::linearInterpolate(x_data, y_data, 5.0), 10.0); // > range
-	EXPECT_EQ(ghost_util::linearInterpolate(x_data, y_data, 2.5),  5.0); // interpolate
+	EXPECT_EQ(linearInterpolate(x_data, y_data, 2.0),   0.0); // exact match
+
+	EXPECT_EQ(linearInterpolate(x_data, y_data, 0.75),  2.5); // (-inf,1]
+	EXPECT_EQ(linearInterpolate(x_data, y_data, 1.25),  1.5); // [1,2]
+	EXPECT_EQ(linearInterpolate(x_data, y_data, 2.5),   0.5); // [2,3]
+	EXPECT_EQ(linearInterpolate(x_data, y_data, 3.25), 2.25); // [3,4]
+	EXPECT_EQ(linearInterpolate(x_data, y_data, 4.75), 9.75); // [4,+inf]
 }
 
 TEST_F(TestMathUtil, testClampedInterpolate){
-	std::vector<double> x_data = {2.0, 3.0, 4.0};
-	std::vector<double> y_data = {4.0, 6.0, 8.0};
+	using ghost_util::clampedLinearInterpolate;
 
-	EXPECT_EQ(ghost_util::clampedLinearInterpolate(x_data, y_data, 1.0), 4.0); // <= range
-	EXPECT_EQ(ghost_util::clampedLinearInterpolate(x_data, y_data, 5.0), 8.0); // >= range
+	std::vector<double> x_data = {1.0, 2.0, 3.0, 4.0};
+	std::vector<double> y_data = {2.0, 0.0, 1.0, 6.0};
+
+	EXPECT_EQ(clampedLinearInterpolate(x_data, y_data, 0.0), 2.0); // (-inf,1]
+	EXPECT_EQ(clampedLinearInterpolate(x_data, y_data, 5.0), 6.0); // [4,+inf)
 }
 
 int main(int argc, char **argv) {
