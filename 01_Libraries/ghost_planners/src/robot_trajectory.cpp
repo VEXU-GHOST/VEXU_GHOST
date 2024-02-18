@@ -13,8 +13,13 @@ std::tuple<bool, double>  RobotTrajectory::MotorTrajectory::interpolate(std::vec
 		return {true, data.back()};
 	}
 	int index = 0;
-	while(time < time_vector[index]){
-		index++;
+	auto iter = std::lower_bound(time_vector.begin(), time_vector.end(), time);
+	if(iter == time_vector.end()){
+		// not found in time
+		return {true, data[data.size() - 1]};
+	}
+	else{
+		index = iter - time_vector.begin();
 	}
 
 	double lowTime = time_vector[index];

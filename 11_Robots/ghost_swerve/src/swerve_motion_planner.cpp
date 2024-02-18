@@ -61,11 +61,11 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	std::vector<double> angf({current_angle + ghost_util::SmallestAngleDistRad(current_angle, angle_f), cmd->twist.twist.angular.x});
 
 	// find final time
-	double v_max = 1.0;
+	double v_max = 0.5;
 	// double a_max = 0.5;
 	double dist = Eigen::Vector2d(xposf[0] - xpos0[0], yposf[0] - ypos0[0]).norm();
 	double t0 = 0;
-	double tf = dist / v_max;
+	double tf = dist * 3 / v_max;
 	int n = tf * 100;
 	auto xpos_traj = CubicMotionPlanner::computeCubicTraj(xpos0, xposf, t0, tf, n);
 	auto ypos_traj = CubicMotionPlanner::computeCubicTraj(ypos0, yposf, t0, tf, n);

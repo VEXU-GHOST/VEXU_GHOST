@@ -283,11 +283,11 @@ void fromROSMsg(ghost_planners::RobotTrajectory& robot_trajectory, const ghost_m
 }
 
 void fromROSMsg(ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, const ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg){
-	motor_trajectory.time_vector = std::vector<double>(std::begin(motor_trajectory_msg.time), std::end(motor_trajectory_msg.time));
-	motor_trajectory.velocity_vector = std::vector<double>(std::begin(motor_trajectory_msg.velocity), std::end(motor_trajectory_msg.velocity));
-	motor_trajectory.voltage_vector = std::vector<double>(std::begin(motor_trajectory_msg.voltage), std::end(motor_trajectory_msg.voltage));
-	motor_trajectory.position_vector = std::vector<double>(std::begin(motor_trajectory_msg.position), std::end(motor_trajectory_msg.position));
-	motor_trajectory.torque_vector = std::vector<double>(std::begin(motor_trajectory_msg.torque), std::end(motor_trajectory_msg.torque));
+	motor_trajectory.time_vector = motor_trajectory_msg.time;
+	motor_trajectory.velocity_vector = motor_trajectory_msg.velocity;
+	motor_trajectory.voltage_vector = motor_trajectory_msg.voltage;
+	motor_trajectory.position_vector = motor_trajectory_msg.position;
+	motor_trajectory.torque_vector = motor_trajectory_msg.torque;
 }
 
 void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg){
