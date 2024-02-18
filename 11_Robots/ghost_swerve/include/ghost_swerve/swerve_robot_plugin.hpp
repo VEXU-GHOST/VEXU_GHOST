@@ -85,6 +85,14 @@ protected:
 	// Tail
 	bool m_tail_btn_pressed = false;
 	bool m_tail_down = false;
+
+	// Climb Mode
+	bool m_climb_mode_btn_pressed = false;
+	bool m_climb_mode = false;
+
+	// Stick Mode
+	bool m_tail_mode_btn_pressed = false;
+	bool m_tail_mode = false;
 };
 
 } // namespace ghost_swerve

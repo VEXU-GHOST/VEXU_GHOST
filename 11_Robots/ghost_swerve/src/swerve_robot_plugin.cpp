@@ -196,10 +196,61 @@ void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	std::cout << "Teleop: " << current_time << std::endl;
 
-	if(joy_data->btn_a){
+	if(joy_data->btn_l && joy_data->btn_u){
 		autonomous(current_time);
 	}
 	else{
+		// Toggle Climb Mode
+		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
+			m_climb_mode = !m_climb_mode;
+			m_climb_mode_btn_pressed = true;
+		}
+		else if(!joy_data->btn_a){
+			m_climb_mode_btn_pressed = false;
+		}
+
+		// Toggle Tail Mode
+		if(joy_data->btn_b && !m_tail_mode_btn_pressed){
+			m_tail_mode = !m_tail_mode;
+			m_tail_mode_btn_pressed = true;
+		}
+		else if(!joy_data->btn_b){
+			m_tail_mode_btn_pressed = false;
+		}
+
+		if(m_tail_mode){
+			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, 0.0);
+
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("tail_motor", joy_data->right_x / 127.0);
+
+			m_climb_mode = false;
+		}
+		else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 0);
+		}
+
+		if(m_climb_mode){
+			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, 0.0);
+
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
+
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_right", joy_data->right_y / 127.0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_left", joy_data->right_y / 127.0);
+
+			m_tail_mode = false;
+		}
+		else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
+		}
+		if(!m_tail_mode && !m_climb_mode){
+			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, joy_data->right_x);
+		}
+		updateDrivetrainMotors();
 		// Set Wings
 		m_digital_io[m_digital_io_name_map.at("right_wing")] = joy_data->btn_r2;
 		m_digital_io[m_digital_io_name_map.at("left_wing")] = joy_data->btn_l2;
@@ -223,12 +274,6 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_tail_btn_pressed = false;
 		}
 		m_digital_io[m_digital_io_name_map.at("tail")] = m_tail_down;
-
-
-		// Update Swerve Command
-		m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, joy_data->right_x);
-		updateDrivetrainMotors();
-
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
 	}

@@ -10,7 +10,6 @@
 #include "ghost_util/angle_util.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "tf2/LinearMath/Quaternion.h"
-#include "ghost_util/unit_conversion_utils.hpp"
 
 namespace ghost_swerve {
 

@@ -1,5 +1,15 @@
 port_configuration:
     devices:
+        lift_right:
+            port: 1
+            type: MOTOR
+            reversed: false
+            config: lift_motor_config
+        tail_motor:
+            port: 4
+            type: MOTOR
+            reversed: false
+            config: tail_motor_config
         steering_front_right:
             port: 5
             type: ROTATION_SENSOR
@@ -30,6 +40,11 @@ port_configuration:
             type: ROTATION_SENSOR
             reversed: true
             config: steering_sensor_config
+        lift_left:
+            port: 11
+            type: MOTOR
+            reversed: true
+            config: lift_motor_config
         steering_front_left:
             port: 15
             type: ROTATION_SENSOR
@@ -94,8 +109,21 @@ port_configuration:
                 send_current_data: false
                 send_power_data: false
                 send_temperature_data: false
-        stick_motor_config:
-            gearset: 100
+        lift_motor_config:
+            gearset: 200
+            brake_mode: BRAKE
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 10.0
+                ff_vel_gain: 1.0
+                ff_torque_gain: 0.0
+            serial:
+                send_position_command: false
+                send_velocity_command: true
+                send_voltage_command: true
+        tail_motor_config:
+            gearset: 200
             brake_mode: COAST
             encoder_units: DEGREES
             controller:
