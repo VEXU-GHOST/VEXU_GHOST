@@ -236,14 +236,15 @@ public:
 	}
 
 	/**
-	 * @brief Updates module wheel and steering setpoints given a normalized base twist (each dimension is -1.0 -> 1.0).
-	 * This is internally scaled by the maximum linear/angular velocities of the robot.
+	 * @brief Updates module wheel and steering setpoints given a base twist.
 	 *
-	 * @param right_vel
-	 * @param forward_vel
-	 * @param clockwise_vel
+	 * @param right
+	 * @param forward
+	 * @param clockwise
 	 */
-	void calculateKinematicSwerveController(double right_vel, double forward_vel, double clockwise_vel);
+	void calculateKinematicSwerveControllerNormalized(double right_cmd, double forward_cmd, double clockwise_cmd);
+	void calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd);
+	void calculateKinematicSwerveControllerVelocity(double right_cmd, double forward_cmd, double clockwise_cmd);
 
 	const Eigen::Vector3d& getBaseVelocityCommand(){
 		return m_base_vel_cmd;
@@ -266,6 +267,16 @@ public:
 	}
 
 	double getOdometryAngle() const {
+		return m_odom_angle;
+	}
+
+	const Eigen::Vector2d& getWorldLocation(){
+		// TODO(maxxwilson) UPDATE THIS from sub
+		return m_odom_loc;
+	}
+
+	double getWorldAngle() const {
+		// TODO(maxxwilson) UPDATE THIS from sub
 		return m_odom_angle;
 	}
 

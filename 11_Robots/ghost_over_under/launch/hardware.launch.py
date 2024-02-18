@@ -44,7 +44,7 @@ def generate_launch_description():
         parameters=[ros_config_file, 
                     {
                         "robot_config_yaml_path": robot_config_yaml_path,
-                        "bt_path": bt_path
+                        "bt_path": bt_path,
                     }],
         arguments=[plugin_type, robot_name]
         # arguments=["--ros-args", "--log-level", "debug"]
@@ -98,10 +98,12 @@ def generate_launch_description():
 
     robot_localization_node = Node(
         package='robot_localization',
+        
         executable='ekf_node',
         name='ekf_localization_node',
         output='screen',
-        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
+        parameters=[ros_config_file],
+
     )
 
     return LaunchDescription([
@@ -109,7 +111,7 @@ def generate_launch_description():
         competition_state_machine_node,
         realsense_node,
         imu_filter_node,
-        robot_localization_node
-        # swerve_motion_planner_node
+        robot_localization_node,
+        swerve_motion_planner_node
         # rplidar_node,
     ])

@@ -35,7 +35,7 @@ ekf_localization_node:
     debug: false
 
     # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
-    debug_out_file: /home/melcruz/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
+    debug_out_file: ~/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
 
     use_sim_time: true
     # REP-105 (http://www.ros.org/reps/rep-0105.html) specifies four principal coordinate frames: base_link, odom, map, and

@@ -1,6 +1,8 @@
 #include "ghost_util/angle_util.hpp"
 #include "ghost_util/unit_conversion_utils.hpp"
 
+#include <math.h>
+
 namespace ghost_util {
 
 double WrapAngle360(double angle){
@@ -55,6 +57,23 @@ double SmallestAngleDistDeg(double a2, double a1){
 
 double SmallestAngleDistRad(double a2, double a1){
 	return DEG_TO_RAD * SmallestAngleDistDeg(RAD_TO_DEG * a2, RAD_TO_DEG * a1);
+}
+
+double quaternionToYawDeg(double w, double x, double y, double z){
+	return quaternionToYawRad(w, x, y, z) * RAD_TO_DEG;
+}
+void yawToQuaternionDeg(double yaw, double& w, double& x, double& y, double& z){
+	yawToQuaternionRad(yaw * DEG_TO_RAD, w, x, y, z);
+}
+
+double quaternionToYawRad(double w, double x, double y, double z){
+	return 2.0 * atan2(z, w);
+}
+void yawToQuaternionRad(double yaw, double& w, double& x, double& y, double& z){
+	w = cos(yaw * 0.5);
+	x = 0.0;
+	y = 0.0;
+	z = sin(yaw * 0.5);
 }
 
 } // namespace ghost_util

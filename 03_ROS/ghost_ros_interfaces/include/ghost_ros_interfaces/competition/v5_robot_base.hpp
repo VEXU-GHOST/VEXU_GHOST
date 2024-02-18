@@ -8,8 +8,10 @@
 
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
+#include "ghost_msgs/msg/robot_trajectory.hpp"
 
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
+#include <ghost_planners/robot_trajectory.hpp>
 
 namespace ghost_ros_interfaces {
 
@@ -96,18 +98,25 @@ public:
 protected:
 	std::shared_ptr<rclcpp::Node> node_ptr_;
 	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+	std::unordered_map<std::string, ghost_planners::RobotTrajectory::MotorTrajectory> trajectory_motor_map_;
+	double trajectory_start_time_;
+	
+	double getTimeFromStart() const;
+	// void update_motor_commands(double time);
+	std::unordered_map<std::string, double> get_commands(double time);
 
 private:
 	void loadRobotHardwareInterface();
 	void sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
 	void updateCompetitionState(bool is_disabled, bool is_autonomous);
-	double getTimeFromStart() const;
+	void trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg);
 
 	bool configured_ = false;
 	robot_state_e last_comp_state_ = robot_state_e::TELEOP;
 	robot_state_e curr_comp_state_ = robot_state_e::TELEOP;
 	rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_sub_;
 	rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_pub_;
+	rclcpp::Subscription<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_sub_;
 
 	std::chrono::time_point<std::chrono::system_clock> start_time_;
 };

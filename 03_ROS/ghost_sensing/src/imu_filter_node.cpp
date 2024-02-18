@@ -13,6 +13,12 @@ IMUFilterNode::IMUFilterNode() :
 	rclcpp::Node("imu_filter_node"),
 	m_msg_count(0){
 	// ROS Parameters
+	declare_parameter("input_imu_topic", "/camera/imu");
+	auto input_imu_topic = get_parameter("input_imu_topic").as_string();
+
+	declare_parameter("output_imu_topic", "estimation/imu/filtered");
+	auto output_imu_topic = get_parameter("output_imu_topic").as_string();
+
 	declare_parameter("calculate_bias", false);
 	m_calculate_bias = get_parameter("calculate_bias").as_bool();
 
@@ -52,13 +58,13 @@ IMUFilterNode::IMUFilterNode() :
 		m_imu_accel_bias = Eigen::Vector3d(0.0, 0.0, 0.0);
 		m_imu_gyro_bias = Eigen::Vector3d(0.0, 0.0, 0.0);
 		m_imu_accel_bias_covariance <<
-		        0.0, 0.0, 0.0,
-		        0.0, 0.0, 0.0,
-		        0.0, 0.0, 0.0;
+		    0.0, 0.0, 0.0,
+		    0.0, 0.0, 0.0,
+		    0.0, 0.0, 0.0;
 		m_imu_gyro_bias_covariance <<
-		        0.0, 0.0, 0.0,
-		        0.0, 0.0, 0.0,
-		        0.0, 0.0, 0.0;
+		    0.0, 0.0, 0.0,
+		    0.0, 0.0, 0.0,
+		    0.0, 0.0, 0.0;
 	}
 	if(!m_calculate_bias){
 		declare_parameter("accel_bias_x", 0.0);
@@ -124,10 +130,10 @@ IMUFilterNode::IMUFilterNode() :
 
 	// ROS Topics
 	m_imu_sub = this->create_subscription<sensor_msgs::msg::Imu>(
-		"/camera/imu", 10, std::bind(&IMUFilterNode::imu_callback, this, _1));
+		input_imu_topic, 10, std::bind(&IMUFilterNode::imu_callback, this, _1));
 
 	m_filtered_imu_pub = this->create_publisher<sensor_msgs::msg::Imu>(
-		"sensing/imu/filtered", 10);
+		output_imu_topic, 10);
 
 	m_vel_viz_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>(
 		"viz/imu_gyro",

@@ -1,15 +1,19 @@
 cmake_minimum_required(VERSION 3.5)
 project(ghost_planners)
 
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
+# Add Global CMake Config for Ghost Packages
+set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+find_package(Ghost CONFIG REQUIRED)
 
-# Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
+# # Default to C99
+# if(NOT CMAKE_C_STANDARD)
+#   set(CMAKE_C_STANDARD 99)
+# endif()
+
+# # Default to C++17
+# if(NOT CMAKE_CXX_STANDARD)
+#   set(CMAKE_CXX_STANDARD 17)
+# endif()
 
 # Set Package Dependencies
 set(DEPENDENCIES
@@ -25,6 +29,7 @@ set(DEPENDENCIES
   casadi
   ghost_estimation
   ghost_control
+  # ghost_v5_interfaces
   )
 
 foreach(pkg ${DEPENDENCIES})
@@ -35,14 +40,14 @@ ament_export_dependencies(${DEPENDENCIES})
 # Set Include Directories
 set(INCLUDE
 include
-${PYTHON_INCLUDE_DIRS}
+# ${PYTHON_INCLUDE_DIRS}
 )
 
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
 # set(CMAKE_BUILD_TYPE "DEBUG")
-set(CMAKE_BUILD_TYPE "RELEASE")
+# set(CMAKE_BUILD_TYPE "RELEASE")
 
 #################
 ### Libraries ###
@@ -66,6 +71,49 @@ set(CMAKE_BUILD_TYPE "RELEASE")
 #   RUNTIME DESTINATION bin
 #   INCLUDES DESTINATION include
 # )
+
+# robot trajectory class
+add_library(robot_trajectory SHARED src/robot_trajectory.cpp)
+# target_link_libraries(robot_trajectory
+#   DEPENDENCIES
+#   )
+target_include_directories(robot_trajectory
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(robot_trajectory
+  ${DEPENDENCIES}
+  )
+ament_export_targets(robot_trajectory HAS_LIBRARY_TARGET)
+install(
+  TARGETS robot_trajectory
+  EXPORT robot_trajectory
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+add_library(cubic_motion_planner SHARED src/cubic_motion_planner.cpp)
+target_include_directories(cubic_motion_planner
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(cubic_motion_planner
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  cubic_motion_planner
+)
+ament_export_targets(cubic_motion_planner HAS_LIBRARY_TARGET)
+install(
+  TARGETS cubic_motion_planner
+  EXPORT cubic_motion_planner
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 ######################
 ### Casadi Example ###

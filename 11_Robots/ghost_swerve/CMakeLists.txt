@@ -17,7 +17,11 @@ set(DEPENDENCIES
   PythonLibs
   visualization_msgs
   nav_msgs
+  ghost_msgs
   pluginlib
+  ghost_autonomy
+  ghost_planners
+  ghost_motion_planner_core
   Eigen3
   )
 
@@ -83,6 +87,23 @@ ARCHIVE DESTINATION lib
 RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
+
+add_executable(swerve_motion_planner
+  src/swerve_motion_planner.cpp
+)
+ament_target_dependencies(swerve_motion_planner
+  ${DEPENDENCIES}
+)
+target_link_libraries(swerve_motion_planner
+  swerve_model
+)
+target_include_directories(swerve_motion_planner
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  swerve_motion_planner
+  DESTINATION lib/${PROJECT_NAME})
 
 ###################
 ###### Tests ######
