@@ -1,0 +1,32 @@
+imu_filter_node:
+  ros__parameters:
+    calculate_bias: false
+    calculate_covariance: false
+    calibration_time: 30.0
+    sensor_frequency: 200.0
+
+    accel_bias_x: -0.136218
+    accel_bias_y: -9.42483
+    accel_bias_z: -2.90318
+
+    gyro_bias_x: -0.0050632
+    gyro_bias_y: 0.00207869
+    gyro_bias_z: -0.000868592
+
+    accel_covariance: [
+      9.92618e-05, 1.36598e-06,  2.8624e-07,
+      1.36598e-06, 0.000103017, 1.27159e-06,
+      2.8624e-07, 1.27159e-06, 0.000110698]
+    
+    gyro_covariance: [
+      4.09332e-06,  1.38296e-06, -2.18034e-07,
+      1.38296e-06,  1.59246e-05, -4.90858e-07,
+      -2.18034e-07, -4.90858e-07,  2.57037e-06]
+
+    camera_roll: -110.0
+    camera_pitch: 0.0
+    camera_yaw: -90.0
+
+    camera_x: 5.5
+    camera_y: 4.75
+    

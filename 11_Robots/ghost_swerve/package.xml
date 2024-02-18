@@ -12,9 +12,14 @@
   <test_depend>ament_lint_common</test_depend>
 
   <depend>ghost_ros_interfaces</depend>
+  <depend>ghost_util</depend>
+  <depend>ghost_estimation</depend>
   <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>pluginlib</depend>
+  <depend>ghost_autonomy</depend>
+  <depend>ghost_motion_planner_core</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
