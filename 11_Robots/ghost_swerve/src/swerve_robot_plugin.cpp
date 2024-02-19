@@ -97,6 +97,9 @@ void SwerveRobotPlugin::initialize(){
 
 	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
 
+    m_bag_recorder_client = node_ptr_->create_client<ghost_msgs::srv::ToggleBagRecorder>(
+        "toggle_bag_recorder");
+
 	// Setup Swerve Model
 	SwerveConfig swerve_model_config;
 	swerve_model_config.module_type = swerve_type_e::DIFFERENTIAL;
@@ -202,6 +205,18 @@ void SwerveRobotPlugin::autonomous(double current_time){
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	std::cout << "Teleop: " << current_time << std::endl;
+
+    // Toggle Bag Recorder
+    if(joy_data->btn_b && !m_recording_btn_pressed){
+        m_recording = !m_recording;
+        m_recording_btn_pressed = true;
+
+        auto req = std::make_shared<ghost_msgs::srv::ToggleBagRecorder::Request>();
+        m_bag_recorder_client->async_send_request(req);
+    }
+    else if(!joy_data->btn_b){
+        m_recording_btn_pressed = false;
+    }
 
 	if(joy_data->btn_l && joy_data->btn_u){
 		autonomous(current_time);
