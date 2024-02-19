@@ -10,7 +10,7 @@ using std::placeholders::_2;
 class BagRecorderNode : public rclcpp::Node {
 public:
 	BagRecorderNode() :
-		rclcpp::Node("toggle_bag_recorder_service") {
+		rclcpp::Node("bag_recorder_service") {
 		declare_parameter<int64_t>("disk_space_required_kb", 250 * 1024);
 		declare_parameter<int>("disk_check_period_s", 10);
 
@@ -21,10 +21,10 @@ public:
 		                                                         std::bind(&BagRecorderNode::ToggleRecording, this, _1, _2));
 		disk_check_timer = this->create_wall_timer(disk_check_period_, std::bind(&BagRecorderNode::EnforceFreeDiskSpace, this));
 
-
-		std::string startup_string = "Service Created.\n";
-		startup_string += "\tDisk Space Required (KB):    " + disk_space_required_       + "\n";
-		startup_string += "\tDisk Check Period (Seconds): " + disk_check_period_.count() + "\n";
+		std::string startup_string;
+		startup_string += "Service Created.\n";
+		startup_string += "\tDisk Space Required (KB):    " + std::to_string(disk_space_required_)       + "\n";
+		startup_string += "\tDisk Check Period (Seconds): " + std::to_string(disk_check_period_.count());
 
 		RCLCPP_INFO(rclcpp::get_logger("rclcpp"), startup_string.c_str());
 	};
