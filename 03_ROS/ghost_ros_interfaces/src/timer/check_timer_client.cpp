@@ -11,6 +11,7 @@ int main(int argc, char **argv){
 	rclcpp::Client<ghost_msgs::srv::CheckTimer>::SharedPtr check_timer_client =
 		node->create_client<ghost_msgs::srv::CheckTimer>("check_timer");
 	auto request = std::make_shared<ghost_msgs::srv::CheckTimer::Request>();
+	request->timer_name = "test_timer";
 
 	while(!check_timer_client->wait_for_service(1s)){
 		if(!rclcpp::ok()){
@@ -25,6 +26,12 @@ int main(int argc, char **argv){
 	if(rclcpp::spin_until_future_complete(node, response) != rclcpp::FutureReturnCode::SUCCESS){
 		RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service check_timer");
 	}
+
+	auto data = response.get();
+
+	RCLCPP_INFO(rclcpp::get_logger("rclcpp"), std::string("valid:   " + std::to_string(data->valid)).c_str());
+	RCLCPP_INFO(rclcpp::get_logger("rclcpp"), std::string("expired: " + std::to_string(data->expired)).c_str());
+	RCLCPP_INFO(rclcpp::get_logger("rclcpp"), std::string("elapsed: " + std::to_string(data->elapsed_ns)).c_str());
 
 	rclcpp::shutdown();
 }

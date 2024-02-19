@@ -11,6 +11,8 @@ int main(int argc, char **argv){
 	rclcpp::Client<ghost_msgs::srv::StartTimer>::SharedPtr start_timer_client =
 		node->create_client<ghost_msgs::srv::StartTimer>("start_timer");
 	auto request = std::make_shared<ghost_msgs::srv::StartTimer::Request>();
+	request->timer_name = "test_timer";
+	request->duration_ns = 5UL * 1000000000UL;
 
 	while(!start_timer_client->wait_for_service(1s)){
 		if(!rclcpp::ok()){
@@ -25,6 +27,9 @@ int main(int argc, char **argv){
 	if(rclcpp::spin_until_future_complete(node, response) != rclcpp::FutureReturnCode::SUCCESS){
 		RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service start_timer");
 	}
+
+	auto data = response.get();
+	RCLCPP_INFO(rclcpp::get_logger("rclcpp"), std::string("success: " + std::to_string(data->success)).c_str());
 
 	rclcpp::shutdown();
 }
