@@ -25,7 +25,7 @@ imu_filter_node:
       9.92618e-05, 1.36598e-06,  2.8624e-07,
       1.36598e-06, 0.000103017, 1.27159e-06,
       2.8624e-07, 1.27159e-06, 0.000110698]
-    
+
     gyro_covariance: [
       4.09332e-06,  1.38296e-06, -2.18034e-07,
       1.38296e-06,  1.59246e-05, -4.90858e-07,
@@ -37,7 +37,11 @@ imu_filter_node:
 
     camera_x: 5.5
     camera_y: 4.75
-    
+
+bag_recorder_service:
+  ros__parameters:
+    disk_space_required_kb: 256000
+    disk_check_period_s: 10
 
 competition_state_machine_node:
   ros__parameters:
@@ -51,24 +55,24 @@ competition_state_machine_node:
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
       # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
-      
+
       # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
       # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
 
       # Remember that LIDAR will correct periodically, so these can be a bit generous.
       # Too generous though, and you are either losing resolution or wasting computation.
 
-      k1: 0.1   # x error from x motion         # 50% error in primary direction
-      k2: 0.02   #0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
-      k3: 0.0   #0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k1: 0.1          # x error from x motion         # 50% error in primary direction
+      k2: 0.02  #0.05  # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k3: 0.0   #0.1   # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
-      k4: 0.02   # 0.05   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
-      k5: 0.1   # y error from y motion         # 50% error in primary direction           
-      k6: 0.0   # 0.1 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-      
-      k7: 0.0   #0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
-      k8: 0.0   #0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
-      k9: 0.15   # theta error from rotation     # 50% error in primary direction  
+      k4: 0.02  #0.05  # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k5: 0.1          # y error from y motion         # 50% error in primary direction
+      k6: 0.0   #0.1   # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+
+      k7: 0.0   #0.2   # theta error from x motion     # After 2ft of travel, 99% are within by 5°
+      k8: 0.0   #0.2   # theta error from y motion     # After 2ft of travel, 99% are within by 5°
+      k9: 0.15         # theta error from rotation     # 50% error in primary direction
 
       # motion planning
       move_to_pose_kp_x: 0.1
@@ -98,7 +102,7 @@ ekf_localization_node:
     # unspecified.
     transform_time_offset: 0.0
 
-    # Use this parameter to provide specify how long the tf listener should wait for a transform to become available. 
+    # Use this parameter to provide specify how long the tf listener should wait for a transform to become available.
     # Defaults to 0.0 if unspecified.
     transform_timeout: 0.0
 
@@ -135,9 +139,9 @@ ekf_localization_node:
     #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
     #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
     # map_frame: map              # Defaults to "map" if unspecified
-    odom_frame: odom            # Defaults to "odom" if unspecified
-    base_link_frame: base_link  # Defaults to "base_link" if unspecified
-    world_frame: odom          # Defaults to the value of odom_frame if unspecified
+    odom_frame: odom              # Defaults to "odom" if unspecified
+    base_link_frame: base_link    # Defaults to "base_link" if unspecified
+    world_frame: odom             # Defaults to the value of odom_frame if unspecified
 
     # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
     # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
