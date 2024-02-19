@@ -9,9 +9,9 @@ Add a single line summary describing the purpose of this PR.
 ### Reviewers
 Tag reviewers.
 
-- Required: @Maxx
+- Required:
   
-- Optional: @Melissa, @Jake
+- Optional:
 
 ---
 ### Changelog

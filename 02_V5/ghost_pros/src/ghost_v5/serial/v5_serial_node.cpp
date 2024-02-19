@@ -50,6 +50,7 @@ bool V5SerialNode::readV5ActuatorUpdate(){
 	int msg_len;
 	bool msg_recieved = serial_base_interface_->readMsgFromSerial(new_msg_, actuator_command_msg_len_);
 	if(msg_recieved){
+		v5_globals::screen_interface_ptr->updateLastConnectionTime();
 		std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
 		updateActuatorCommands(new_msg_);
 		actuator_lock.unlock();
