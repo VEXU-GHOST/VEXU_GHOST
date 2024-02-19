@@ -1,65 +1,80 @@
 port_configuration:
     devices:
-        steering_front_right:
+        lift_right:
             port: 1
+            type: MOTOR
+            reversed: false
+            config: lift_motor_config
+        tail_motor:
+            port: 4
+            type: MOTOR
+            reversed: false
+            config: tail_motor_config
+        steering_front_right:
+            port: 5
             type: ROTATION_SENSOR
             reversed: true
             config: steering_sensor_config
         drive_frr:
-            port: 2
+            port: 6
             type: MOTOR
             reversed: true
             config: drive_motor_config
         drive_frl:
-            port: 3
+            port: 7
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        steering_back_right:
+        drive_brf:
             port: 8
-            type: ROTATION_SENSOR
+            type: MOTOR
             reversed: true
-            config: steering_sensor_config
+            config: drive_motor_config
         drive_brb:
             port: 9
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_brf:
+        steering_back_right:
             port: 10
+            type: ROTATION_SENSOR
+            reversed: true
+            config: steering_sensor_config
+        lift_left:
+            port: 11
             type: MOTOR
             reversed: true
-            config: drive_motor_config
+            config: lift_motor_config
+        steering_front_left:
+            port: 15
+            type: ROTATION_SENSOR
+            reversed: true
+            config: steering_sensor_config
         drive_fll:
-            port: 11
+            port: 16
             type: MOTOR
             reversed: true
             config: drive_motor_config
         drive_flr:
-            port: 12
+            port: 17
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        steering_front_left:
-            port: 13
-            type: ROTATION_SENSOR
-            reversed: true
-            config: steering_sensor_config
-        steering_back_left:
-            port: 18
-            type: ROTATION_SENSOR
-            reversed: true
-            config: steering_sensor_config
         drive_blb:
-            port: 19
+            port: 18
             type: MOTOR
             reversed: true
             config: drive_motor_config
         drive_blf:
-            port: 20
+            port: 19
             type: MOTOR
             reversed: true
             config: drive_motor_config
+        steering_back_left:
+            port: 20
+            type: ROTATION_SENSOR
+            reversed: true
+            config: steering_sensor_config
 
     device_configurations:
         steering_sensor_config:
@@ -85,7 +100,7 @@ port_configuration:
                 nominal_voltage: 12.0
                 gear_ratio: 6.0
             serial:
-                send_position_command: true
+                send_position_command: false
                 send_velocity_command: true
                 send_voltage_command: true
                 send_torque_command: false
@@ -94,3 +109,29 @@ port_configuration:
                 send_current_data: false
                 send_power_data: false
                 send_temperature_data: false
+        lift_motor_config:
+            gearset: 200
+            brake_mode: BRAKE
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 10.0
+                ff_vel_gain: 1.0
+                ff_torque_gain: 0.0
+            serial:
+                send_position_command: false
+                send_velocity_command: true
+                send_voltage_command: true
+        tail_motor_config:
+            gearset: 200
+            brake_mode: COAST
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 10.0
+                ff_vel_gain: 1.0
+                ff_torque_gain: 0.0
+            serial:
+                send_position_command: false
+                send_velocity_command: true
+                send_voltage_command: true

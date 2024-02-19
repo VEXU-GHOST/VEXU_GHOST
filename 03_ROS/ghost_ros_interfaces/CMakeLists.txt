@@ -16,6 +16,7 @@ set(DEPENDENCIES
   ghost_msgs
   ghost_serial
   ghost_util
+  ghost_planners
   pluginlib
   rclcpp
   yaml-cpp

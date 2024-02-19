@@ -66,6 +66,7 @@ void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
 	// loc, angle, with the sensor characteristics defined by the provided
 	// parameters.
 	scan.resize((int)(num_ranges / config_params_.resize_factor));
+	std::cout << "GetPredictedPointCloud" << std::endl;
 
 	Vector2f sensor_loc = BaseLinkToSensorFrame(loc, angle);
 	int v_start_index = std::lower_bound(horizontal_lines_.begin(), horizontal_lines_.end(), Line2f(sensor_loc, sensor_loc), horizontal_line_compare) - horizontal_lines_.begin();
@@ -174,7 +175,7 @@ void ParticleFilter::Update(const vector<float>& ranges,
 	// Get predicted point cloud
 	Particle &particle = *p_ptr;
 	vector<Vector2f> predicted_cloud; // map frame
-
+	std::cout << "Update PF" << std::endl;
 	GetPredictedPointCloud(particle.loc,
 	                       particle.angle,
 	                       ranges.size(),
@@ -272,7 +273,7 @@ void ParticleFilter::ObserveLaser(const vector<float>& ranges,
 		}
 		double particle_update_diff = 1000 * (GetMonotonicTime() - particle_update_start);
 		p_update_diff_avg /= particles_.size();
-		// std::cout << "Particle Update (ms): " << particle_update_diff << " Avg (us): " << p_update_diff_avg << std::endl;
+		std::cout << "Particle Update (ms): " << particle_update_diff << " Avg (us): " << p_update_diff_avg << std::endl;
 
 		// Normalize log-likelihood weights by max log weight and transform back to linear scale
 		// Sum all linear weights and generate bins
