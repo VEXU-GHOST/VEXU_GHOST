@@ -58,8 +58,8 @@ void TimerService::StartTimerCallback(const std::shared_ptr<StartTimer::Request>
 	timers_[req->timer_name].second = req->duration_ns;
 
 	res->success = true;
-	RCLCPP_INFO(rclcpp::get_logger("rclcpp"),
-	            std::string("Created new timer with name \"" + req->timer_name + "\".").c_str());
+	RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"),
+	             std::string("Created new timer with name \"" + req->timer_name + "\".").c_str());
 }
 
 bool TimerService::ClearExpiredTimers() {
@@ -78,7 +78,7 @@ bool TimerService::ClearExpiredTimers() {
 	}
 
 	for(auto key : to_remove){
-		RCLCPP_INFO(rclcpp::get_logger("rclcpp"), std::string("Deleted timer \"" + key + "\".").c_str());
+		RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), std::string("Deleted timer \"" + key + "\".").c_str());
 		timers_.erase(key);
 	}
 
