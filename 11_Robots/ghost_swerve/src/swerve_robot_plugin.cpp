@@ -12,6 +12,13 @@ using std::placeholders::_1;
 namespace ghost_swerve {
 
 SwerveRobotPlugin::SwerveRobotPlugin(){
+	m_digital_io = std::vector<bool>(8, false);
+	m_digital_io_name_map = std::unordered_map<std::string, size_t>{
+		{"claw", 0},
+		{"right_wing", 1},
+		{"left_wing", 2},
+		{"tail", 3}
+	};
 }
 
 void SwerveRobotPlugin::initialize(){
@@ -166,7 +173,14 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double des_vel_y = command_map["y_vel"];
 	double des_theta = command_map["angle_pos"];
 	double des_theta_vel = command_map["angle_vel"];
-
+	// for (auto& [name, value]: command_map){
+	// 	RCLCPP_INFO(node_ptr_->get_logger(), "%s: %f", name.c_str(), value);
+	// }
+	// for (auto& [name, value]: trajectory_motor_map_){
+	// 	for (auto& v: value.velocity_vector){
+	// 		RCLCPP_INFO(node_ptr_->get_logger(), "%s: %f", name.c_str(), v);
+	// 	}
+	// }
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngle();
@@ -181,20 +195,94 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd theta: %f", vel_cmd_theta);
 
 
-	// m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, -vel_cmd_y, -vel_cmd_theta);
+	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, vel_cmd_y, -vel_cmd_theta);
 
-	// updateDrivetrainMotors();
+	updateDrivetrainMotors();
 }
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	std::cout << "Teleop: " << current_time << std::endl;
 
-	if(joy_data->btn_a){
+	if(joy_data->btn_l && joy_data->btn_u){
 		autonomous(current_time);
 	}
 	else{
-		m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, joy_data->right_x);
+		// Toggle Climb Mode
+		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
+			m_climb_mode = !m_climb_mode;
+			m_climb_mode_btn_pressed = true;
+		}
+		else if(!joy_data->btn_a){
+			m_climb_mode_btn_pressed = false;
+		}
+
+		// Toggle Tail Mode
+		if(joy_data->btn_b && !m_tail_mode_btn_pressed){
+			m_tail_mode = !m_tail_mode;
+			m_tail_mode_btn_pressed = true;
+		}
+		else if(!joy_data->btn_b){
+			m_tail_mode_btn_pressed = false;
+		}
+
+		if(m_tail_mode){
+			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, 0.0);
+
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("tail_motor", joy_data->right_x / 127.0);
+
+			m_climb_mode = false;
+		}
+		else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 0);
+		}
+
+		if(m_climb_mode){
+			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, 0.0);
+
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
+
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_right", joy_data->right_y / 127.0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_left", joy_data->right_y / 127.0);
+
+			m_tail_mode = false;
+		}
+		else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
+		}
+		if(!m_tail_mode && !m_climb_mode){
+			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x, joy_data->left_y, joy_data->right_x);
+		}
 		updateDrivetrainMotors();
+		// Set Wings
+		m_digital_io[m_digital_io_name_map.at("right_wing")] = joy_data->btn_r2;
+		m_digital_io[m_digital_io_name_map.at("left_wing")] = joy_data->btn_l2;
+
+		// Toggle Claw
+		if(joy_data->btn_r1 && !m_claw_btn_pressed){
+			m_claw_open = !m_claw_open;
+			m_claw_btn_pressed = true;
+		}
+		else if(!joy_data->btn_r1){
+			m_claw_btn_pressed = false;
+		}
+		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
+
+		// Toggle Tail
+		if(joy_data->btn_l1 && !m_tail_btn_pressed){
+			m_tail_down = !m_tail_down;
+			m_tail_btn_pressed = true;
+		}
+		else if(!joy_data->btn_l1){
+			m_tail_btn_pressed = false;
+		}
+		m_digital_io[m_digital_io_name_map.at("tail")] = m_tail_down;
+
+		rhi_ptr_->setDigitalIO(m_digital_io);
 	}
 }
 
@@ -395,7 +483,7 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 	auto ang_vel = trajectory_motor_map_["angle"].velocity_vector;
 	int j = 30;
 
-	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i += 25){
+	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i += 50){
 		auto marker_msg = visualization_msgs::msg::Marker{};
 
 		marker_msg.header.frame_id = "odom";

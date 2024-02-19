@@ -1,6 +1,9 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
+#include <stdexcept>
+#include <vector>
 
 namespace ghost_util {
 
@@ -9,9 +12,14 @@ T clamp(T val, T min, T max){
 	return std::max(min, std::min(val, max));
 }
 
-double sign(double val){
-	double sign = (val >= 0.0) ? 1.0 : -1.0;
-	return sign;
-}
+double sign(double val);
+
+double linearInterpolate(const std::vector<double> &x_data,
+                         const std::vector<double> &y_data,
+                         const double desired_x);
+
+double clampedLinearInterpolate(const std::vector<double> &x_data,
+                                const std::vector<double> &y_data,
+                                const double desired_x);
 
 }

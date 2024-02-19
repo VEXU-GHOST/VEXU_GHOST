@@ -73,6 +73,26 @@ protected:
 	double m_k7 = 0.0;
 	double m_k8 = 0.0;
 	double m_k9 = 0.0;
+
+	// Digital IO
+	std::vector<bool> m_digital_io;
+	std::unordered_map<std::string, size_t> m_digital_io_name_map;
+
+	// Claw
+	bool m_claw_btn_pressed = false;
+	bool m_claw_open = false;
+
+	// Tail
+	bool m_tail_btn_pressed = false;
+	bool m_tail_down = false;
+
+	// Climb Mode
+	bool m_climb_mode_btn_pressed = false;
+	bool m_climb_mode = false;
+
+	// Stick Mode
+	bool m_tail_mode_btn_pressed = false;
+	bool m_tail_mode = false;
 };
 
 } // namespace ghost_swerve

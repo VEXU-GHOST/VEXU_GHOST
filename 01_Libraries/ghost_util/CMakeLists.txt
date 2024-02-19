@@ -30,6 +30,23 @@ ament_export_include_directories(${INCLUDE})
 ######################
 ##### Ghost Util #####
 ######################
+add_library(math_util SHARED
+  src/math_util.cpp
+)
+target_include_directories(math_util
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(math_util HAS_LIBRARY_TARGET)
+install(
+  TARGETS math_util
+  EXPORT math_util
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 add_library(angle_util SHARED
   src/angle_util.cpp
 )
@@ -77,8 +94,8 @@ install(
 #################
 ament_add_gtest(test_angle_util test/test_angle_util.cpp)
 target_link_libraries(test_angle_util
-  angle_util
   gtest
+  angle_util
 )
 
 ament_add_gtest(test_vector_list test/test_vector_util.cpp)
@@ -89,6 +106,12 @@ target_link_libraries(test_vector_list
 ament_add_gtest(test_parsing_util test/test_parsing_util.cpp)
 target_link_libraries(test_parsing_util
   gtest
+)
+
+ament_add_gtest(test_math_util test/test_math_util.cpp)
+target_link_libraries(test_math_util
+  gtest
+  math_util
 )
 
 ament_package()

@@ -37,6 +37,8 @@ public:
 
 	void updateScreen();
 
+	void updateLastConnectionTime();
+
 	void setTitle(const std::string& title);
 
 	int getRefreshRateMilliseconds(){
@@ -53,6 +55,7 @@ private:
 	std::deque<std::string> print_queue_;
 	std::vector<std::string> screen_buffer_;
 	uint32_t last_update_time_ = 0;
+	uint32_t last_connection_time_ = 0;
 	int curr_row_ = 2;
 
 	// V5 Screen Params
