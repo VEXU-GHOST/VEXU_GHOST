@@ -410,31 +410,37 @@ void ParticleFilter::GetLocation(Eigen::Vector2f* loc_ptr,
 	// Compute the best estimate of the robot's location based on the current set
 	// of particles.
 
-
 	Eigen::Vector2f angle_point = Eigen::Vector2f(0, 0);
 	for(Particle particle : particles_){
 		loc += particle.loc * particle.weight;
 		angle_point += Eigen::Vector2f(cos(particle.angle), sin(particle.angle)) * particle.weight;
 	}
 
-	Eigen::Vector3f sum_diff = Eigen::Vector3f(0.0, 0.0, 0.0);
-	Eigen::Vector3f cov_vector = Eigen::Vector3f(0.0, 0.0, 0.0);
+	Eigen::Vector3d sum_diff = Eigen::Vector3d(0.0, 0.0, 0.0);
+	Eigen::Vector3d cov_vector = Eigen::Vector3d(0.0, 0.0, 0.0);
 	for(Particle particle : particles_){
 		Eigen::VectorXf weighted_particle = particle.loc * particle.weight;
-		double sum_diff_x = math_util::Pow(weighted_particle(0) - loc(0), 2);
-		double sum_diff_y = math_util::Pow(weighted_particle(1) - loc(1), 2);
-		double sum_diff_tht = math_util::Pow(weighted_particle(2) - loc(2), 2);
-		Eigen::Vector3f sum_data(sum_diff_x, sum_diff_y, sum_diff_tht);
+		std::cout << "particle_weight:" << particle.weight << std::endl;
+		Eigen::Vector2f weighted_angle_point = Eigen::Vector2f(cos(particle.angle), sin(particle.angle)) * particle.weight;
+		double weighted_angle = atan2(weighted_angle_point[1], weighted_angle_point[0]);
+		double sum_diff_x = particle.weight * math_util::Pow(particle.loc(0) - loc(0), 2);
+		std::cout << "sum_diff_x: " << sum_diff_x << std::endl;
+		double sum_diff_y = particle.weight * math_util::Pow(particle.loc(1) - loc(1), 2);
+		std::cout << "sum_diff_y: " << sum_diff_y << std::endl;
+		double sum_diff_tht = particle.weight * math_util::Pow(weighted_angle - angle, 2);
+		std::cout << "sum_diff_tht: " << sum_diff_tht << std::endl;
+
+		Eigen::Vector3d sum_data(sum_diff_x, sum_diff_y, sum_diff_tht);
 		sum_diff += sum_data;
 	}
 
 	cov_vector = sum_diff / particles_.size();
 	cov = {cov_vector(0), 0.0, 0.0, 0.0, 0.0, 0.0,
-	       0.0, cov_vector(1), 0.0, 0.0, 0.0, 0.0,
-	       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-	       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-	       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-	       0.0, 0.0, 0.0, 0.0, 0.0, cov_vector(2)};
+		   0.0, cov_vector(1), 0.0, 0.0, 0.0, 0.0,
+		   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		   0.0, 0.0, 0.0, 0.0, 0.0, cov_vector(2)};
 	loc /= weight_sum_;
 	angle_point /= weight_sum_;
 	angle = atan2(angle_point[1], angle_point[0]);

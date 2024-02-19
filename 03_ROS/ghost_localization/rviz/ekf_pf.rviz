@@ -5,9 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /PoseWithCovariance1
-        - /PoseWithCovariance1/Status1
         - /Odometry1
-        - /Odometry1/Status1
         - /Odometry1/Shape1
         - /Odometry1/Covariance1
         - /Odometry1/Covariance1/Position1
@@ -266,7 +264,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 100
+      Keep: 2
       Name: Odometry
       Position Tolerance: 0.10000000149011612
       Shape:
@@ -325,7 +323,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 23.547216415405273
+      Distance: 9.2686128616333
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -343,7 +341,7 @@ Visualization Manager:
       Pitch: 0.7853981852531433
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: -1.5707950592041016
+      Yaw: 4.712390422821045
     Saved: ~
 Window Geometry:
   Displays:
@@ -353,5 +351,5 @@ Window Geometry:
   Hide Right Dock: false
   QMainWindow State: 000000ff00000000fd00000001000000000000025d000003a2fc0200000001fb000000100044006900730070006c006100790073010000003b000003a2000000c700ffffff000004d5000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Width: 1848
-  X: 2046
-  Y: 156
+  X: 0
+  Y: 0

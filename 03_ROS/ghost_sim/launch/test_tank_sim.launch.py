@@ -102,12 +102,20 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
-    robot_localization_node = Node(
+    # robot_localization_node = Node(
+    #     package='robot_localization',
+    #     executable='ekf_node',
+    #     name='ekf_localization_node',
+    #     output='screen',
+    #     parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
+    # )
+
+    pf_ekf_localization_node = Node(
         package='robot_localization',
         executable='ekf_node',
-        name='ekf_localization_node',
+        name='pf_ekf_localization_node',
         output='screen',
-        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
+        parameters=[ghost_ros_base_dir + "/config/pf_ekf_localization_config.yaml"]
     )
 
     plot_juggler_node = Node(
@@ -119,14 +127,15 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(name='use_joy', default_value='false'),
         DeclareLaunchArgument(name='channel_id', default_value='1'),
-        DeclareLaunchArgument('sim_gui', default_value='true'),
+        DeclareLaunchArgument('sim_gui', default_value='false'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ekf_pf_launch,
         pf_ekf_launch,
         rviz_node,
         plot_juggler_node,
-        robot_localization_node,
+        # robot_localization_node,
+        pf_ekf_localization_node,
         # state_machine_node,
         OpaqueFunction(function = launch_setup),
     ])

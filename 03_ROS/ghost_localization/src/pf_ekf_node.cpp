@@ -67,7 +67,6 @@ PfEkfNode::PfEkfNode() :
 	cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
 	map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", map_qos);
 	world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
-	robot_state_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pf_robot_state", 10);
 	ekf_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pf_odometry", 10);
 
 	// Use simulated time in ROS TODO:!!!!
@@ -178,7 +177,6 @@ void PfEkfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 		laser_msg_received_ = true;
 	}
 	try{
-		std::cout << "Callback ObserveLaser" << std::endl;
 		last_laser_msg_ = msg;
 		particle_filter_.ObserveLaser(
 			msg->ranges,
@@ -258,7 +256,7 @@ void PfEkfNode::PublishRobotPose(rclcpp::Time stamp){
 	robot_pose_.pose.pose.position.y = robot_loc.y();
 	robot_pose_.pose.pose.position.z = 0.0; // TODO ??
 	robot_pose_.pose.covariance = covariance;
-	robot_state_pub_->publish(robot_pose_);
+	ekf_odom_pub_->publish(robot_pose_);
 }
 
 void PfEkfNode::PublishMapViz(){
@@ -352,9 +350,6 @@ void PfEkfNode::PublishVisualization(){
 void PfEkfNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg){
 	vector<particle_filter::Particle> particles;
 	particle_filter_.GetParticles(&particles);
-	RCLCPP_INFO(
-		this->get_logger(),
-		"DrawParticles");
 	for(const particle_filter::Particle &p : particles){
 		auto pose_msg = geometry_msgs::msg::Pose{};
 		pose_msg.position.x = p.loc.x();
