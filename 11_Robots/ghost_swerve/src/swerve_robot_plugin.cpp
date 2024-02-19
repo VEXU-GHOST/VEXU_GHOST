@@ -207,14 +207,14 @@ void SwerveRobotPlugin::teleop(double current_time){
 	std::cout << "Teleop: " << current_time << std::endl;
 
     // Toggle Bag Recorder
-    if(joy_data->btn_b && !m_recording_btn_pressed){
+    if(joy_data->btn_y && !m_recording_btn_pressed){
         m_recording = !m_recording;
         m_recording_btn_pressed = true;
 
         auto req = std::make_shared<ghost_msgs::srv::ToggleBagRecorder::Request>();
         m_bag_recorder_client->async_send_request(req);
     }
-    else if(!joy_data->btn_b){
+    else if(!joy_data->btn_y){
         m_recording_btn_pressed = false;
     }
 
