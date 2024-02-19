@@ -1,0 +1,4 @@
+string timer_name
+uint64 duration_ns
+---
+bool success
