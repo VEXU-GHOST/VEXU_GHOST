@@ -56,7 +56,7 @@ void BagRecorderNode::SpawnRecorderProcess() {
 
 	recorderPID_ = fork();
 	if(recorderPID_ == 0){
-		execl("/bin/sh", "sh", "-c", "exec ros2 bag record -a", NULL);
+		execl("/bin/sh", "sh", "-c", "exec ros2 bag record -a -o ~/bags/$(date +%m_%d_%Y-%H_%M_%S)", NULL);
 	}
 }
 
