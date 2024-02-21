@@ -196,10 +196,11 @@ void SwerveModel::updateBaseTwist(){
 	m_base_vel_curr[2] = (std::fabs(m_base_vel_curr[2]) > 0.02) ? m_base_vel_curr[2] : 0.0;
 }
 
+
 void SwerveModel::calculateKinematicSwerveControllerAngleControl(double right_cmd, double forward_cmd, double angle_cmd){
 	angle_cmd = ghost_util::WrapAngle2PI(angle_cmd);
 	double vel_cmd = ghost_util::SmallestAngleDistRad(angle_cmd, getWorldAngleRad()) * m_config.angle_control_kp;
-	calculateKinematicSwerveControllerNormalized(right_cmd, forward_cmd, -vel_cmd);
+	calculateKinematicSwerveControllerNormalized(right_cmd/127.0, forward_cmd/127.0, -vel_cmd);
 }
 
 void SwerveModel::calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd){
@@ -213,12 +214,23 @@ void SwerveModel::calculateKinematicSwerveControllerNormalized(double right_cmd,
 void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, double forward_cmd, double clockwise_cmd){
 	// Convert joystick to robot twist command
 	Eigen::Vector2d xy_vel_cmd_base_link(forward_cmd, -right_cmd);
+
+	if(m_is_field_oriented){
+		// Rotate velocity command to robot frame
+		auto rotate_world_to_base = Eigen::Rotation2D<double>(-m_odom_angle).toRotationMatrix();
+		xy_vel_cmd_base_link = rotate_world_to_base*xy_vel_cmd_base_link;
+	}
 	double lin_vel_cmd = std::clamp<double>(xy_vel_cmd_base_link.norm(), -m_max_base_lin_vel, m_max_base_lin_vel);
 	double ang_vel_cmd = std::clamp<double>(-clockwise_cmd, -m_max_base_ang_vel, m_max_base_ang_vel);
 
 	// Zero commands under 1%
 	lin_vel_cmd = (fabs(lin_vel_cmd) > m_max_base_lin_vel * 0.01) ? lin_vel_cmd : 0.0;
 	ang_vel_cmd = (fabs(ang_vel_cmd) > m_max_base_ang_vel * 0.01) ? ang_vel_cmd : 0.0;
+
+	// For combined linear and angular velocities, we scale down angular velocity (which tends to dominate).
+	if((fabs(lin_vel_cmd) > m_max_base_lin_vel * m_config.velocity_scaling_threshold) && (fabs(ang_vel_cmd) > m_max_base_ang_vel * m_config.velocity_scaling_threshold)){
+		ang_vel_cmd *= m_config.velocity_scaling_ratio;
+	}
 
 	// Calculate Linear Velocity Direction w/ error checking
 	Eigen::Vector2d linear_vel_dir(0.0, 0.0);
@@ -262,21 +274,22 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 		m_module_commands[module_name] = module_command;
 	}
 
-	const double x1 = 20.0;
-	// Transient Misalignment Heuristic
-	if(max_steering_error > x1){
-		// Linear Interpolation past certain angle
-		const double x2 = 45.0;
-		const double y1 = 1.0;
-		const double y2 = 0.0;
-		const double slope = (y2 - y1) / (x2 - x1);
-		const double intercept = y1 - slope * x1;
-		double attentuation_percent = std::max(slope * max_steering_error + intercept, 0.0);
-		for(auto& [name, command] : m_module_commands){
-			auto module_state = m_current_module_states.at(name);
-			m_module_commands[name].wheel_velocity_command *= attentuation_percent;
-		}
-	}
+	// TODO(maxxwilson) : FIX using the velocity based Least squares ICR norm
+	// const double x1 = 40.0;
+	// // Transient Misalignment Heuristic
+	// if(max_steering_error > x1){
+	// 	// Linear Interpolation past certain angle
+	// 	const double x2 = 70.0;
+	// 	const double y1 = 1.0;
+	// 	const double y2 = 0.0;
+	// 	const double slope = (y2 - y1) / (x2 - x1);
+	// 	const double intercept = y1 - slope * x1;
+	// 	double attentuation_percent = std::max(slope * max_steering_error + intercept, 0.0);
+	// 	for(auto& [name, command] : m_module_commands){
+	// 		auto module_state = m_current_module_states.at(name);
+	// 		m_module_commands[name].wheel_velocity_command *= attentuation_percent;
+	// 	}
+	// }
 
 	for(auto& [name, command] : m_module_commands){
 		// Calculate commands in Actuator space

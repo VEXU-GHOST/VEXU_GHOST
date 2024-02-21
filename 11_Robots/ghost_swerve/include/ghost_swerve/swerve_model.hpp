@@ -31,6 +31,10 @@ struct SwerveConfig {
 	double steering_kp;
 	double angle_control_kp;
 
+	// Velocity Scaling
+	double velocity_scaling_ratio;
+	double velocity_scaling_threshold;
+
 	// XY Position of each module relative to robot base
 	std::map<std::string, Eigen::Vector2d> module_positions;
 };

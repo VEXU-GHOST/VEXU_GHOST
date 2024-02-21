@@ -93,6 +93,18 @@ protected:
 	// Stick Mode
 	bool m_tail_mode_btn_pressed = false;
 	bool m_tail_mode = false;
+
+	// Field vs Robot Oriented Control
+	bool m_toggle_swerve_field_control_btn_pressed = false;
+	
+	// Auton Button
+	double m_auton_start_time = 0.0;
+
+	// Angle vs Velocity Control
+	bool m_toggle_swerve_angle_control_btn_pressed = false;
+	bool m_swerve_angle_control = false;
+	double m_angle_target = 0.0;
+	double m_joy_angle_control_threshold = 0.0;
 };
 
 } // namespace ghost_swerve
