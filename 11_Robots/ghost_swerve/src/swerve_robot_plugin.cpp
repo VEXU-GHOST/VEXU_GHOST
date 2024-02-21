@@ -164,7 +164,6 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
 
 	bt_->tick_tree();
-	publishTrajectoryVisualization();
 
 	auto command_map = get_commands(current_time);
 	double des_pos_x = command_map["x_pos"];
@@ -173,14 +172,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double des_vel_y = command_map["y_vel"];
 	double des_theta = command_map["angle_pos"];
 	double des_theta_vel = command_map["angle_vel"];
-	// for (auto& [name, value]: command_map){
-	// 	RCLCPP_INFO(node_ptr_->get_logger(), "%s: %f", name.c_str(), value);
-	// }
-	// for (auto& [name, value]: trajectory_motor_map_){
-	// 	for (auto& v: value.velocity_vector){
-	// 		RCLCPP_INFO(node_ptr_->get_logger(), "%s: %f", name.c_str(), v);
-	// 	}
-	// }
+	
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngle();
@@ -194,8 +186,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd y: %f", vel_cmd_y);
 	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd theta: %f", vel_cmd_theta);
 
-
-	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, vel_cmd_y, -vel_cmd_theta);
+	m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(-vel_cmd_y, vel_cmd_x, -vel_cmd_theta);
 
 	updateDrivetrainMotors();
 }

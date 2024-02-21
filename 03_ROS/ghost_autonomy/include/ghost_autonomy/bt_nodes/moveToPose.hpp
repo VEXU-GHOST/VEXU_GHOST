@@ -6,6 +6,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "ghost_util/angle_util.hpp"
+#include "ghost_util/unit_conversion_utils.hpp"
 
 using std::placeholders::_1;
 
