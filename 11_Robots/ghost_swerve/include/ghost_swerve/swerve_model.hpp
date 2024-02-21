@@ -6,6 +6,7 @@
 
 #include "eigen3/Eigen/Geometry"
 #include <ghost_util/angle_util.hpp>
+#include <ghost_util/unit_conversion_utils.hpp>
 #include "math/line2d.h"
 
 namespace ghost_swerve {
@@ -28,6 +29,7 @@ struct SwerveConfig {
 
 	// Kinematic Controller
 	double steering_kp;
+	double angle_control_kp;
 
 	// XY Position of each module relative to robot base
 	std::map<std::string, Eigen::Vector2d> module_positions;
@@ -246,6 +248,9 @@ public:
 	void calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd);
 	void calculateKinematicSwerveControllerVelocity(double right_cmd, double forward_cmd, double clockwise_cmd);
 
+	void calculateKinematicSwerveControllerAngleControl(double right_cmd, double forward_cmd, double angle_cmd);
+
+
 	const Eigen::Vector3d& getBaseVelocityCommand(){
 		return m_base_vel_cmd;
 	}
@@ -275,9 +280,22 @@ public:
 		return m_odom_loc;
 	}
 
-	double getWorldAngle() const {
+	double getWorldAngleDeg() const {
+		// TODO(maxxwilson) UPDATE THIS from sub
+		return m_odom_angle * ghost_util::RAD_TO_DEG;
+	}
+
+	double getWorldAngleRad() const {
 		// TODO(maxxwilson) UPDATE THIS from sub
 		return m_odom_angle;
+	}
+
+	void setFieldOrientedControl(bool field_oriented_control){
+		m_is_field_oriented = field_oriented_control;
+	}
+
+	bool isFieldOrientedControl() const {
+		return m_is_field_oriented;
 	}
 
 protected:
@@ -331,7 +349,6 @@ protected:
 	std::map <std::string, ModuleCommand> m_module_commands;
 
 	// Control Style
-	bool m_is_angle_control = false;
 	bool m_is_field_oriented = false;
 
 	// ICR States

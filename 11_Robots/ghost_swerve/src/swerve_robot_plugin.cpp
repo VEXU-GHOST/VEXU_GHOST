@@ -172,10 +172,10 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double des_vel_y = command_map["y_vel"];
 	double des_theta = command_map["angle_pos"];
 	double des_theta_vel = command_map["angle_vel"];
-	
+
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
-	double curr_theta = m_swerve_model_ptr->getWorldAngle();
+	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
 
 	// Calculate velocity command from motion plan
 	double vel_cmd_x = des_vel_x + (des_pos_x - curr_location.x()) * m_move_to_pose_kp_x;

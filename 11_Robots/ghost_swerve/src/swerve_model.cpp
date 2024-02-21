@@ -196,6 +196,12 @@ void SwerveModel::updateBaseTwist(){
 	m_base_vel_curr[2] = (std::fabs(m_base_vel_curr[2]) > 0.02) ? m_base_vel_curr[2] : 0.0;
 }
 
+void SwerveModel::calculateKinematicSwerveControllerAngleControl(double right_cmd, double forward_cmd, double angle_cmd){
+	angle_cmd = ghost_util::WrapAngle2PI(angle_cmd);
+	double vel_cmd = ghost_util::SmallestAngleDistRad(angle_cmd, getWorldAngleRad()) * m_config.angle_control_kp;
+	calculateKinematicSwerveControllerNormalized(right_cmd, forward_cmd, -vel_cmd);
+}
+
 void SwerveModel::calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd){
 	calculateKinematicSwerveControllerNormalized(right_cmd / 127.0, forward_cmd / 127.0, clockwise_cmd / 127.0);
 }
