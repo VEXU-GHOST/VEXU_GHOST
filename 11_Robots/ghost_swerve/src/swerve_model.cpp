@@ -275,21 +275,21 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 	}
 
 	// TODO(maxxwilson) : FIX using the velocity based Least squares ICR norm
-	// const double x1 = 40.0;
-	// // Transient Misalignment Heuristic
-	// if(max_steering_error > x1){
-	// 	// Linear Interpolation past certain angle
-	// 	const double x2 = 70.0;
-	// 	const double y1 = 1.0;
-	// 	const double y2 = 0.0;
-	// 	const double slope = (y2 - y1) / (x2 - x1);
-	// 	const double intercept = y1 - slope * x1;
-	// 	double attentuation_percent = std::max(slope * max_steering_error + intercept, 0.0);
-	// 	for(auto& [name, command] : m_module_commands){
-	// 		auto module_state = m_current_module_states.at(name);
-	// 		m_module_commands[name].wheel_velocity_command *= attentuation_percent;
-	// 	}
-	// }
+	const double x1 = 50.0;
+	// Transient Misalignment Heuristic
+	if(max_steering_error > x1){
+		// Linear Interpolation past certain angle
+		const double x2 = 90.0;
+		const double y1 = 1.0;
+		const double y2 = 0.0;
+		const double slope = (y2 - y1) / (x2 - x1);
+		const double intercept = y1 - slope * x1;
+		double attentuation_percent = std::max(slope * max_steering_error + intercept, 0.0);
+		for(auto& [name, command] : m_module_commands){
+			auto module_state = m_current_module_states.at(name);
+			m_module_commands[name].wheel_velocity_command *= attentuation_percent;
+		}
+	}
 
 	for(auto& [name, command] : m_module_commands){
 		// Calculate commands in Actuator space

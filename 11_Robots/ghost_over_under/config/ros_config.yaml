@@ -80,8 +80,8 @@ competition_state_machine_node:
       move_to_pose_kp_theta: 0.0
       steering_kp: 1.75
       angle_control_kp: 0.75
-      velocity_scaling_ratio: 0.5
-      velocity_scaling_threshold: 0.5
+      velocity_scaling_ratio: 1.0
+      velocity_scaling_threshold: 0.2
 
       joy_angle_control_threshold: 0.5
 
