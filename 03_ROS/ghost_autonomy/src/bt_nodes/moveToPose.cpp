@@ -55,7 +55,7 @@ BT::NodeStatus MoveToPose::tick() {
 	// geometry_msgs::msg::TwistStamped twist{};
 	msg.twist.twist.linear.x = velX;
 	msg.twist.twist.linear.y = velY;
-	msg.twist.twist.angular.x = omega;
+	msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
 
 	command_pub_->publish(msg);
 

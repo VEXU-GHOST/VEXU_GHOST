@@ -9,6 +9,11 @@ double sign(double val){
 double linearInterpolate(const std::vector<double> &x_data,
                          const std::vector<double> &y_data,
                          const double desired_x) {
+	// check if empty
+	if(x_data.size() == 0 || y_data.size() == 0){
+		throw std::runtime_error("[linearInterpolate] Error: cannot interpolate empty vector");
+	}
+
 	// check vector lengths
 	if(x_data.size() != y_data.size()){
 		throw std::runtime_error("[linearInterpolate] Error: size of input vectors are unequal");
