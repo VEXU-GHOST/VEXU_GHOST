@@ -6,6 +6,19 @@ bool isPositive(double val){
 	return val >= 0.0;
 }
 
+double slewRate(double curr, double next, double limit) {
+	limit = fabs(limit);
+	if(next > curr + limit){
+		return curr + limit;
+	}
+	else if(next < curr - limit){
+		return curr - limit;
+	}
+	else{
+		return next;
+	}
+}
+
 double sign(double val){
 	return isPositive(val) ? 1.0 : -1.0;
 }
