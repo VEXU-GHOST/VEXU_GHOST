@@ -14,6 +14,8 @@ T clamp(T val, T min, T max){
 
 double sign(double val);
 
+bool isPositive(double val);
+
 double linearInterpolate(const std::vector<double> &x_data,
                          const std::vector<double> &y_data,
                          const double desired_x);
