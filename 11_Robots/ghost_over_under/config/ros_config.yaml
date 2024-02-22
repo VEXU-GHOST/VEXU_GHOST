@@ -118,7 +118,7 @@ ekf_localization_node:
     # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
     debug_out_file: ~/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
 
-    use_sim_time: false
+    use_sim_time: true
     # REP-105 (http://www.ros.org/reps/rep-0105.html) specifies four principal coordinate frames: base_link, odom, map, and
     # earth. base_link is the coordinate frame that is affixed to the robot. Both odom and map are world-fixed frames.
     # The robot's position in the odom frame will drift over time, but is accurate in the short term and should be
@@ -186,7 +186,7 @@ ekf_localization_node:
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key
     # difference is that the relative parameter doesn't cause the measurement to be converted to a velocity before
     # integrating it. If you simply want your measurements to start at 0 for a given sensor, set this to true.
-    odom0_relative: false
+    odom0_relative: true
 
     # [ADVANCED] If your data is subject to outliers, use these threshold settings, expressed as Mahalanobis distances, to
     # control how far away from the current vehicle state a sensor measurement is permitted to be. Each defaults to
@@ -267,7 +267,7 @@ ekf_localization_node:
     # to be larger, which will cause the filter to trust the incoming measurement more during correction. The values are
     # ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below if
     # unspecified.
-    process_noise_covariance: [0.5,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    process_noise_covariance: [0.05,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.05,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.06,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.03,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
