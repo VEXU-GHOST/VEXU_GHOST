@@ -116,7 +116,7 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        ekf_pf_launch,
+        # ekf_pf_launch,
         rviz_node,
         # plot_juggler_node,
         robot_localization_node,

@@ -4,15 +4,18 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /MarkerArray1
-        - /MarkerArray1/Status1
+        - /Global Options1
+        - /Status1
+        - /Odometry1
+        - /Odometry1/Status1
+        - /Odometry1/Topic1
       Splitter Ratio: 0.5
-    Tree Height: 787
+    Tree Height: 793
 Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 0.6096 # 24" Tiles
+      Cell Size: 0.6096000075340271
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -41,6 +44,40 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /robot_description
       Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lidar_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -49,51 +86,112 @@ Visualization Manager:
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
-      Marker Scale: 0.2
+      Frames:
+        All Enabled: true
+        base_link:
+          Value: true
+        imu_link:
+          Value: true
+        left_wheel:
+          Value: true
+        lidar_link:
+          Value: true
+        odom:
+          Value: true
+        right_wheel:
+          Value: true
+      Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
+      Tree:
+        base_link:
+          imu_link:
+            {}
+          left_wheel:
+            {}
+          lidar_link:
+            {}
+          right_wheel:
+            {}
+        odom:
+          {}
       Update Interval: 0
       Value: true
-    - Class: rviz_default_plugins/PoseArray
+    - Alpha: 1
+      Arrow Length: 0.029999999329447746
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz_default_plugins/PoseArray
+      Color: 95; 53; 102
       Enabled: true
+      Head Length: 0.07000000029802322
+      Head Radius: 0.029999999329447746
       Name: Particle Cloud
+      Shaft Length: 0.23000000417232513
+      Shaft Radius: 0.009999999776482582
+      Shape: Arrow (Flat)
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /particle_cloud
-      Color: 95; 53; 102
-      Arrow Length: 0.03
       Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Map
+      Namespaces:
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /map_viz
-    - Class: rviz_default_plugins/LaserScan
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/LaserScan
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
       Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 0
+      Min Color: 0; 0; 0
+      Min Intensity: 0
       Name: LIDAR
-      Namespaces:
-        "": true
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: System Default
         Value: /scan
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: Swerve Kinematics
       Namespaces:
-        "controller": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -105,7 +203,7 @@ Visualization Manager:
       Enabled: true
       Name: Predicted Scan
       Namespaces:
-        "controller": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -113,10 +211,49 @@ Visualization Manager:
         Reliability Policy: System Default
         Value: /estimation_debug
       Value: true
+    - Angle Tolerance: 0.10000000149011612
+      Class: rviz_default_plugins/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Keep: 2
+      Name: Odometry
+      Position Tolerance: 0.10000000149011612
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.30000001192092896
+        Head Radius: 0.10000000149011612
+        Shaft Length: 1
+        Shaft Radius: 0.05000000074505806
+        Value: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /odometry/filtered
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
-    Fixed Frame: base_link
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -126,10 +263,24 @@ Visualization Manager:
     - Class: rviz_default_plugins/Select
     - Class: rviz_default_plugins/FocusCamera
     - Class: rviz_default_plugins/Measure
-    - Class: rviz_default_plugins/SetInitialPose
-      Topic: /initial_pose
-    - Class: rviz_default_plugins/SetGoal
       Line color: 128; 128; 0
+    - Class: rviz_default_plugins/SetInitialPose
+      Covariance x: 0.25
+      Covariance y: 0.25
+      Covariance yaw: 0.06853891909122467
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /initial_pose
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: goal_pose
   Transformation:
     Current:
       Class: rviz_default_plugins/TF
@@ -137,7 +288,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 5
+      Distance: 29.108184814453125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -155,7 +306,7 @@ Visualization Manager:
       Pitch: 0.7853981852531433
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: -1.570795
+      Yaw: -1.5707950592041016
     Saved: ~
 Window Geometry:
   Displays:
@@ -163,7 +314,7 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000025d0000039efc0200000001fb000000100044006900730070006c006100790073010000003d0000039e000000c900ffffff000004d50000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000025d000003a2fc0200000001fb000000100044006900730070006c006100790073010000003b000003a2000000c700ffffff000004d5000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Width: 1848
-  X: 72
-  Y: 27
+  X: 2142
+  Y: -19
