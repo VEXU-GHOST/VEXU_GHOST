@@ -12,6 +12,9 @@ T clamp(T val, T min, T max){
 	return std::max(min, std::min(val, max));
 }
 
+
+double slewRate(double curr, double next, double limit);
+
 double sign(double val);
 
 bool isPositive(double val);
