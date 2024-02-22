@@ -99,7 +99,7 @@ competition_state_machine_node:
       stick_endpoint1_deg: -20
       stick_endpoint2_deg: 30 # not an array because there are exactly 2 items
       stick_angle_soft_limit_offset: 5
-	    # switch directions at angle_min + offset or angle_max - offset
+      # switch directions at angle_min + offset or angle_max - offset
 
 ekf_localization_node:
   ros__parameters:
