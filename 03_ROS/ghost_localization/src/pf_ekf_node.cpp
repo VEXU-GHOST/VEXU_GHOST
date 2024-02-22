@@ -44,7 +44,7 @@ PfEkfNode::PfEkfNode() :
 	Node("pf_ekf_node"){
 	// Subscribers
 	odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-		"/odom",
+		"/sensors/wheel_odom",
 		10,
 		std::bind(&PfEkfNode::OdomCallback, this, _1));
 
@@ -185,8 +185,8 @@ void PfEkfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 			msg->angle_min + config_params.laser_angle_offset,
 			msg->angle_max + config_params.laser_angle_offset);
 
-		PublishRobotPose(msg->header.stamp);
-		PublishWorldTransform();
+		PublishRobotPose();
+		// PublishWorldTransform();
 		PublishVisualization();
 	}
 	catch(std::exception e){
@@ -211,7 +211,7 @@ void PfEkfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 
 		particle_filter_.Initialize(config_params.map, init_loc, init_angle);
 
-		PublishWorldTransform();
+		// PublishWorldTransform();
 		PublishVisualization();
 		PublishMapViz();
 	}
@@ -224,7 +224,7 @@ void PfEkfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 void PfEkfNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	this->last_filtered_odom_msg_ = *msg;
 	odom_loc_(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
-	odom_angle_ += 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
+	odom_angle_ = 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
 	try{
 		Vector2f robot_loc(0, 0);
 		float robot_angle(0);
@@ -232,8 +232,8 @@ void PfEkfNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 		particle_filter_.Predict(odom_loc_, odom_angle_);
 		particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
-		PublishRobotPose(last_filtered_odom_msg_.header.stamp);
-		PublishWorldTransform();
+		PublishRobotPose();
+		// PublishWorldTransform();
 		PublishVisualization();
 	}
 	catch(std::exception e){
@@ -241,7 +241,7 @@ void PfEkfNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	}
 }
 
-void PfEkfNode::PublishRobotPose(rclcpp::Time stamp){
+void PfEkfNode::PublishRobotPose(){
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
 	std::array<double, 36> covariance;
@@ -249,7 +249,7 @@ void PfEkfNode::PublishRobotPose(rclcpp::Time stamp){
 
 	auto robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
 
-	robot_pose_.header.stamp = stamp;
+	robot_pose_.header.stamp = this->get_clock()->now();
 	robot_pose_.header.frame_id = "base_link";
 
 	robot_pose_.pose.pose.position.x = robot_loc.x();

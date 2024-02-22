@@ -420,15 +420,11 @@ void ParticleFilter::GetLocation(Eigen::Vector2f* loc_ptr,
 	Eigen::Vector3d cov_vector = Eigen::Vector3d(0.0, 0.0, 0.0);
 	for(Particle particle : particles_){
 		Eigen::VectorXf weighted_particle = particle.loc * particle.weight;
-		std::cout << "particle_weight:" << particle.weight << std::endl;
 		Eigen::Vector2f weighted_angle_point = Eigen::Vector2f(cos(particle.angle), sin(particle.angle)) * particle.weight;
 		double weighted_angle = atan2(weighted_angle_point[1], weighted_angle_point[0]);
 		double sum_diff_x = particle.weight * math_util::Pow(particle.loc(0) - loc(0), 2);
-		std::cout << "sum_diff_x: " << sum_diff_x << std::endl;
 		double sum_diff_y = particle.weight * math_util::Pow(particle.loc(1) - loc(1), 2);
-		std::cout << "sum_diff_y: " << sum_diff_y << std::endl;
 		double sum_diff_tht = particle.weight * math_util::Pow(weighted_angle - angle, 2);
-		std::cout << "sum_diff_tht: " << sum_diff_tht << std::endl;
 
 		Eigen::Vector3d sum_data(sum_diff_x, sum_diff_y, sum_diff_tht);
 		sum_diff += sum_data;
