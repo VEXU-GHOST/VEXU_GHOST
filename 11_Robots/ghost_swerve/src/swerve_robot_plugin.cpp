@@ -89,7 +89,7 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.steering_kp = node_ptr_->get_parameter("swerve_robot_plugin.steering_kp").as_double();
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_ratio", 1.0);
 	swerve_model_config.velocity_scaling_ratio = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_ratio").as_double();
-		node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
+	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
 	swerve_model_config.velocity_scaling_threshold = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_threshold").as_double();
 
 
@@ -107,10 +107,10 @@ void SwerveRobotPlugin::initialize(){
 
 	// ROS Topics
 	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-	pose_topic,
-	10,
-	std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
-	);
+		pose_topic,
+		10,
+		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
+		);
 
 	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
@@ -234,14 +234,75 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_toggle_swerve_angle_control_btn_pressed = false;
 		}
 
+
+		if(m_swerve_angle_control){
+			if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
+				m_angle_target = atan2(joy_data->right_y / 127.0, joy_data->right_x / 127.0) - M_PI / 2;
+			}
+			m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(joy_data->left_x, joy_data->left_y, m_angle_target);
+		}
+		else{
+			double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
+			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x * scale, joy_data->left_y * scale, joy_data->right_x * scale);
+			m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
+		}
+		updateDrivetrainMotors();
+		// Set Wings
+		m_digital_io[m_digital_io_name_map.at("right_wing")] = joy_data->btn_r2;
+		m_digital_io[m_digital_io_name_map.at("left_wing")] = joy_data->btn_l2;
+
+
+#define CLIMB_RATIO 7. / 5.
+#define LIFTED POSITION 90 * CLIMB_RATIO
+#define DPSTORPM(x) (((double)x) / / 360.)  / 60.
+#define CLIMB_SPEED DPSTORPM(30) * CLIMB_RATIO
+
 		// Toggle Climb Mode
 		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
 			m_climb_mode = !m_climb_mode;
+			// only on first toggle
+			if(m_climb_mode){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
+				m_claw_open = true;
+				rhi_ptr_->setMotorPositionCommand("lift_right", LIFTED_POSITION);
+				rhi_ptr_->setMotorPositionCommand("lift_left", LIFTED_POSITION);
+			}
+			else{
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
+				m_claw_open = false;
+				rhi_ptr_->setMotorPositionCommand("lift_right",0);
+				rhi_ptr_->setMotorPositionCommand("lift_left",0);
+			}
 			m_climb_mode_btn_pressed = true;
 		}
 		else if(!joy_data->btn_a){
 			m_climb_mode_btn_pressed = false;
 		}
+		// Toggle Claw
+		if(m_climb_mode){
+			if(joy_data->btn_r2){
+				m_claw_open = !m_claw_open;
+				m_claw_btn_pressed = true;
+			}
+			if(joy_data->btn_l1){
+				// degrees p s
+				rhi_ptr_->setMotorVelocityCommandRPM("lift_right", CLIMB_SPEED);
+				rhi_ptr_->setMotorVelocityCommandRPM("lift_left", CLIMB_SPEED);
+			}
+			else if(joy_data->btn_l2){
+				rhi_ptr_->setMotorVelocityCommandRPM("lift_right", -CLIMB_SPEED);
+				rhi_ptr_->setMotorVelocityCommandRPM("lift_left", -CLIMB_SPEED);
+			}
+			else{
+				rhi_ptr_->setMotorVelocityCommandRPM("lift_right", 0);
+				rhi_ptr_->setMotorVelocityCommandRPM("lift_left", 0);
+			}
+		}
+
+		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
+
 
 		// Toggle Tail Mode
 		if(joy_data->btn_b && !m_tail_mode_btn_pressed){
@@ -252,41 +313,35 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_tail_mode_btn_pressed = false;
 		}
 
-		if(m_swerve_angle_control){
-			if(Eigen::Vector2d(joy_data->right_y/127.0, joy_data->right_x/127.0).norm() > m_joy_angle_control_threshold){
-				m_angle_target = atan2(joy_data->right_y/127.0, joy_data->right_x/127.0) - M_PI/2;
+#define UPRIGHT 1
+#define ALL_THE_WAY_RIGHT 2
+#define ALL_THE_WAY_LEFT 0
+#define CLOSE_TO(x,y) fabs(x - y) < 10
+		// Toggle Tail
+		auto tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
+		if(!m_climb_mode && joy_data->btn_l2){
+			m_digital_io[m_digital_io_name_map.at("tail")] = true;
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+			if(joy_data->btn_r2){
+				// do sweeeeeeep
+				static bool righting = false;
+
+				// when beyond extremes, go in that direction
+				if(CLOSE_TO(tail_mtr_pos, ALL_THE_WAY_LEFT)){
+					rhi_ptr_->setMotorPositionCommand("tail_motor", ALL_THE_WAY_RIGHT);
+				}
+				else if(CLOSE_TO(tail_mtr_pos, ALL_THE_WAY_RIGHT) ){
+					rhi_ptr_->setMotorPositionCommand("tail_motor", ALL_THE_WAY_LEFT);
+				}
 			}
-			m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(joy_data->left_x, joy_data->left_y, m_angle_target);
 		}
 		else{
-			double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
-			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x * scale, joy_data->left_y *scale, joy_data->right_x * scale);
-			m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
+			rhi_ptr_->setMotorPositionCommand("tail_motor", UPRIGHT);
+			if(CLOSE_TO(tail_mtr_pos, 20)){ // within 10 degrees of 20
+				m_digital_io[m_digital_io_name_map.at("tail")] = false;
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 300); // i'm going to give it less but not none so it can hold itself centered
+			}
 		}
-		updateDrivetrainMotors();
-		// Set Wings
-		m_digital_io[m_digital_io_name_map.at("right_wing")] = joy_data->btn_r2;
-		m_digital_io[m_digital_io_name_map.at("left_wing")] = joy_data->btn_l2;
-
-		// Toggle Claw
-		if(joy_data->btn_r1 && !m_claw_btn_pressed){
-			m_claw_open = !m_claw_open;
-			m_claw_btn_pressed = true;
-		}
-		else if(!joy_data->btn_r1){
-			m_claw_btn_pressed = false;
-		}
-		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
-
-		// Toggle Tail
-		if(joy_data->btn_l1 && !m_tail_btn_pressed){
-			m_tail_down = !m_tail_down;
-			m_tail_btn_pressed = true;
-		}
-		else if(!joy_data->btn_l1){
-			m_tail_btn_pressed = false;
-		}
-		m_digital_io[m_digital_io_name_map.at("tail")] = m_tail_down;
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
 	}
