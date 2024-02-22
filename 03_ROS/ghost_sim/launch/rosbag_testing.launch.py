@@ -58,7 +58,6 @@ def generate_launch_description():
 
     world_file = os.path.join(ghost_sim_share_dir, "worlds", "spin_up.world")
     rviz_config_path = os.path.join(ghost_localization_share_dir, 'rviz/ekf_pf.rviz')
-    print(rviz_config_path)
 
     # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
     simulation = IncludeLaunchDescription(

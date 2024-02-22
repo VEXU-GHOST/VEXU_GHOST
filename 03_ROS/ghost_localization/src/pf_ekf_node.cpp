@@ -66,7 +66,7 @@ PfEkfNode::PfEkfNode() :
 	debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("estimation_debug", 10);
 	cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
 	map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", map_qos);
-	world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
+	// world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
 	ekf_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pf_odometry", 10);
 
 	// Use simulated time in ROS TODO:!!!!
@@ -306,18 +306,14 @@ void PfEkfNode::PublishWorldTransform(){
 
 	world_to_base_tf.transform.translation.x = robot_loc.x();
 	world_to_base_tf.transform.translation.y = robot_loc.y();
-	// world_to_base_tf.transform.translation.x = odom_loc_.x();
-	// world_to_base_tf.transform.translation.y = odom_loc_.y();
 	world_to_base_tf.transform.translation.z = 0.0;
 	world_to_base_tf.transform.rotation.x = 0.0;
 	world_to_base_tf.transform.rotation.y = 0.0;
 	world_to_base_tf.transform.rotation.z = sin(robot_angle * 0.5);
 	world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
-	// world_to_base_tf.transform.rotation.z = sin(odom_angle_ * 0.5);
-	// world_to_base_tf.transform.rotation.w = cos(odom_angle_ * 0.5);
 
 	tf_msg.transforms.push_back(world_to_base_tf);
-	world_tf_pub_->publish(tf_msg);
+	// world_tf_pub_->publish(tf_msg);
 }
 
 void PfEkfNode::PublishVisualization(){
