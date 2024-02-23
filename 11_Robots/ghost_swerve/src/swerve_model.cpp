@@ -225,9 +225,15 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 	double lin_vel_cmd = std::clamp<double>(xy_vel_cmd_base_link.norm(), -m_max_base_lin_vel, m_max_base_lin_vel);
 	double ang_vel_cmd = std::clamp<double>(-clockwise_cmd, -m_max_base_ang_vel, m_max_base_ang_vel);
 
+	// std::cout << std::endl;
+	// std::cout << "lin_vel_cmd: " << lin_vel_cmd << std::endl;
+	// std::cout << "m_max_base_lin_vel * 0.01: " << m_max_base_lin_vel * 0.01 << std::endl;
+
 	// Zero commands under 1%
 	lin_vel_cmd = (fabs(lin_vel_cmd) > m_max_base_lin_vel * 0.01) ? lin_vel_cmd : 0.0;
 	ang_vel_cmd = (fabs(ang_vel_cmd) > m_max_base_ang_vel * 0.01) ? ang_vel_cmd : 0.0;
+
+	// std::cout << "lin_vel_cmd: " << lin_vel_cmd << std::endl;
 
 	// For combined linear and angular velocities, we scale down angular velocity (which tends to dominate).
 	if((fabs(lin_vel_cmd) > m_max_base_lin_vel * m_config.velocity_scaling_threshold) && (fabs(ang_vel_cmd) > m_max_base_ang_vel * m_config.velocity_scaling_threshold)){
@@ -239,6 +245,8 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 	if(xy_vel_cmd_base_link.norm() != 0){
 		linear_vel_dir = xy_vel_cmd_base_link.normalized();
 	}
+
+	// std::cout << "linear_vel_dir: " << linear_vel_dir << std::endl;
 
 	// Update base twist vector
 	m_base_vel_cmd = Eigen::Vector3d(xy_vel_cmd_base_link.x(), xy_vel_cmd_base_link.y(), ang_vel_cmd);
@@ -330,8 +338,6 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 				command.actuator_velocity_commands[0] *= (m_config.max_wheel_actuator_vel / max_velocity);
 			}
 		}
-	}
-	for(auto& [name, command] : m_module_commands){
 	}
 	// If we don't receive non-zero user input, zero everything
 	if((fabs(lin_vel_cmd) < 1e-5) && (fabs(ang_vel_cmd) < 1e-5)){

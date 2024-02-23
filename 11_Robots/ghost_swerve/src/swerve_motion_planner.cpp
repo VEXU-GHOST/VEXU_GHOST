@@ -19,7 +19,7 @@ void SwerveMotionPlanner::initialize(){
 	swerve_model_config.wheel_ratio = swerve_model_config.steering_ratio * 30.0 / 14.0;
 	swerve_model_config.wheel_radius = 2.75 / 2.0;
 	swerve_model_config.steering_kp = 2.0;
-	swerve_model_config.max_wheel_actuator_vel = 650.0;
+	swerve_model_config.max_wheel_actuator_vel = 600.0;
 	auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
 	swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius * ghost_util::INCHES_TO_METERS;
 
@@ -62,18 +62,18 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 
 	RCLCPP_INFO(get_logger(), "current x: %f, current x_vel: %f", xpos0[0], xpos0[1]);
 	RCLCPP_INFO(get_logger(), "current y: %f, current x_vel: %f", ypos0[0], ypos0[1]);
-	RCLCPP_INFO(get_logger(), "current theta: %f, current theta_vel: %f", ang0[0], ang0[1]);	
+	RCLCPP_INFO(get_logger(), "current theta: %f, current theta_vel: %f", ang0[0], ang0[1]);
 	RCLCPP_INFO(get_logger(), "final x: %f, final x_vel: %f", xposf[0], xposf[1]);
 	RCLCPP_INFO(get_logger(), "final y: %f, final x_vel: %f", yposf[0], yposf[1]);
-	RCLCPP_INFO(get_logger(), "final theta: %f, final theta_vel: %f", angf[0], ang0[1]);
-	
+	RCLCPP_INFO(get_logger(), "final theta: %f, final theta_vel: %f", angf[0], angf[1]);
+
 
 	// find final time
 	double v_max = 0.5;
 	// double a_max = 0.5;
 	double dist = Eigen::Vector2d(xposf[0] - xpos0[0], yposf[0] - ypos0[0]).norm();
 	double t0 = 0;
-	double tf = dist * 3 / v_max;
+	double tf = dist * 2 / v_max;
 	int n = tf * 100;
 	auto xpos_traj = CubicMotionPlanner::computeCubicTraj(xpos0, xposf, t0, tf, n);
 	auto ypos_traj = CubicMotionPlanner::computeCubicTraj(ypos0, yposf, t0, tf, n);

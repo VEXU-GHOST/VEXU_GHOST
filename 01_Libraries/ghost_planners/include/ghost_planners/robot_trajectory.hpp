@@ -20,26 +20,26 @@ public:
 			torque_vector = std::vector<double>();
 		}
 
-		std::tuple<bool, double> getPosition(double time){
-			if (position_vector.size() == 0){
+		std::tuple<bool, double> getPosition(double time) const {
+			if(position_vector.size() == 0){
 				return {false, 0};
 			}
 			return {true, ghost_util::clampedLinearInterpolate(time_vector, position_vector, time)};
 		}
-		std::tuple<bool, double> getVelocity(double time){
-			if (velocity_vector.size() == 0){
+		std::tuple<bool, double> getVelocity(double time) const {
+			if(velocity_vector.size() == 0){
 				return {false, 0};
 			}
 			return {true, ghost_util::clampedLinearInterpolate(time_vector, velocity_vector, time)};
 		}
-		std::tuple<bool, double> getVoltage(double time){
-			if (voltage_vector.size() == 0){
+		std::tuple<bool, double> getVoltage(double time) const {
+			if(voltage_vector.size() == 0){
 				return {false, 0};
 			}
 			return {true, ghost_util::clampedLinearInterpolate(time_vector, voltage_vector, time)};
 		}
-		std::tuple<bool, double> getTorque(double time){
-			if (torque_vector.size() == 0){
+		std::tuple<bool, double> getTorque(double time) const {
+			if(torque_vector.size() == 0){
 				return {false, 0};
 			}
 			return {true, ghost_util::clampedLinearInterpolate(time_vector, torque_vector, time)};
