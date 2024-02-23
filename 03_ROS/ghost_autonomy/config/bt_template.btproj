@@ -3,9 +3,7 @@
     <include path="bt.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
-        <Action ID="DriveForward" editable="true">
-            <input_port name="distance"/>
-        </Action>
+        <Action ID="CheckForRestart" editable="true"/>
         <Action ID="MoveToPose" editable="true">
             <input_port name="posX"/>
             <input_port name="posY"/>

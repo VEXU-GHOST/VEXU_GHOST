@@ -9,13 +9,15 @@
                   velY="0.0"
                   omega="0"/>
       <KeepRunningUntilFailure>
-        <SaySomething message="doing stuff"/>
+        <CheckForRestart/>
       </KeepRunningUntilFailure>
     </Sequence>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <Action ID="CheckForRestart"
+            editable="true"/>
     <Action ID="MoveToPose"
             editable="true">
       <input_port name="posX"/>
@@ -24,10 +26,6 @@
       <input_port name="velX"/>
       <input_port name="velY"/>
       <input_port name="omega"/>
-    </Action>
-    <Action ID="SaySomething"
-            editable="true">
-      <input_port name="message"/>
     </Action>
   </TreeNodesModel>
 

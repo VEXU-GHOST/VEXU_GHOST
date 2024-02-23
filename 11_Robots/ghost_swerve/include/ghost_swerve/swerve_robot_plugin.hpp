@@ -97,8 +97,8 @@ protected:
 	// Field vs Robot Oriented Control
 	bool m_toggle_swerve_field_control_btn_pressed = false;
 	
-	// Auton Button
-	double m_auton_start_time = 0.0;
+	// // Auton Button
+	// double m_auton_start_time = 0.0;
 
 	// Angle vs Velocity Control
 	bool m_toggle_swerve_angle_control_btn_pressed = false;
