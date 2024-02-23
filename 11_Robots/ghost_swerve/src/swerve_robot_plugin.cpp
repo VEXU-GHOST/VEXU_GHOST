@@ -76,6 +76,9 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_theta", 0.0);
 	m_move_to_pose_kp_theta = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_theta").as_double();
 
+	node_ptr_->declare_parameter("swerve_robot_plugin.joystick_slew_rate", 0.0);
+	m_joystick_slew_rate = node_ptr_->get_parameter("swerve_robot_plugin.joystick_slew_rate").as_double();
+
 	// Setup Swerve Model
 	SwerveConfig swerve_model_config;
 	swerve_model_config.module_type = swerve_type_e::DIFFERENTIAL;
@@ -85,11 +88,14 @@ void SwerveRobotPlugin::initialize(){
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.angle_control_kp", 0.2);
 	swerve_model_config.angle_control_kp = node_ptr_->get_parameter("swerve_robot_plugin.angle_control_kp").as_double();
+
 	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kp", 2.0);
 	swerve_model_config.steering_kp = node_ptr_->get_parameter("swerve_robot_plugin.steering_kp").as_double();
+
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_ratio", 1.0);
 	swerve_model_config.velocity_scaling_ratio = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_ratio").as_double();
-		node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
+
+	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
 	swerve_model_config.velocity_scaling_threshold = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_threshold").as_double();
 
 
@@ -107,10 +113,10 @@ void SwerveRobotPlugin::initialize(){
 
 	// ROS Topics
 	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-	pose_topic,
-	10,
-	std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
-	);
+		pose_topic,
+		10,
+		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
+		);
 
 	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
@@ -253,17 +259,29 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 
 		if(m_swerve_angle_control){
-			if(Eigen::Vector2d(joy_data->right_y/127.0, joy_data->right_x/127.0).norm() > m_joy_angle_control_threshold){
-				m_angle_target = atan2(joy_data->right_y/127.0, joy_data->right_x/127.0) - M_PI/2;
+			if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
+				m_angle_target = atan2(joy_data->right_y / 127.0, joy_data->right_x / 127.0) - M_PI / 2;
 			}
+
 			m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(joy_data->left_x, joy_data->left_y, m_angle_target);
 		}
 		else{
 			double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
-			m_swerve_model_ptr->calculateKinematicSwerveControllerJoystick(joy_data->left_x * scale, joy_data->left_y *scale, joy_data->right_x * scale);
+
+			m_curr_x_cmd = joy_data->left_x / 127.0 * scale;
+			m_curr_y_cmd = joy_data->left_y / 127.0 * scale;
+			m_curr_theta_cmd = joy_data->right_x / 127.0 * scale;
+
+			m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(m_curr_x_cmd, m_curr_y_cmd, m_curr_theta_cmd);
 			m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
 		}
+
+		m_last_x_cmd = m_curr_x_cmd;
+		m_last_y_cmd = m_curr_y_cmd;
+		m_last_theta_cmd = m_curr_theta_cmd;
+
 		updateDrivetrainMotors();
+
 		// Set Wings
 		m_digital_io[m_digital_io_name_map.at("right_wing")] = joy_data->btn_r2;
 		m_digital_io[m_digital_io_name_map.at("left_wing")] = joy_data->btn_l2;

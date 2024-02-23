@@ -191,6 +191,8 @@ void SwerveModel::updateBaseTwist(){
 	}
 
 	m_base_vel_curr = m_task_space_jacobian * module_velocity_vector;
+	m_ls_error_metric = (module_velocity_vector - m_task_space_jacobian_inverse * m_base_vel_curr).norm();
+
 	m_base_vel_curr[0] = (std::fabs(m_base_vel_curr[0]) > 0.01) ? m_base_vel_curr[0] : 0.0;
 	m_base_vel_curr[1] = (std::fabs(m_base_vel_curr[1]) > 0.01) ? m_base_vel_curr[1] : 0.0;
 	m_base_vel_curr[2] = (std::fabs(m_base_vel_curr[2]) > 0.02) ? m_base_vel_curr[2] : 0.0;
@@ -200,7 +202,7 @@ void SwerveModel::updateBaseTwist(){
 void SwerveModel::calculateKinematicSwerveControllerAngleControl(double right_cmd, double forward_cmd, double angle_cmd){
 	angle_cmd = ghost_util::WrapAngle2PI(angle_cmd);
 	double vel_cmd = ghost_util::SmallestAngleDistRad(angle_cmd, getWorldAngleRad()) * m_config.angle_control_kp;
-	calculateKinematicSwerveControllerNormalized(right_cmd/127.0, forward_cmd/127.0, -vel_cmd);
+	calculateKinematicSwerveControllerNormalized(right_cmd / 127.0, forward_cmd / 127.0, -vel_cmd);
 }
 
 void SwerveModel::calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd){
@@ -218,7 +220,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 	if(m_is_field_oriented){
 		// Rotate velocity command to robot frame
 		auto rotate_world_to_base = Eigen::Rotation2D<double>(-m_odom_angle).toRotationMatrix();
-		xy_vel_cmd_base_link = rotate_world_to_base*xy_vel_cmd_base_link;
+		xy_vel_cmd_base_link = rotate_world_to_base * xy_vel_cmd_base_link;
 	}
 	double lin_vel_cmd = std::clamp<double>(xy_vel_cmd_base_link.norm(), -m_max_base_lin_vel, m_max_base_lin_vel);
 	double ang_vel_cmd = std::clamp<double>(-clockwise_cmd, -m_max_base_ang_vel, m_max_base_ang_vel);
