@@ -19,6 +19,8 @@ enum swerve_type_e {
 struct SwerveConfig {
 	// Maximum linear speed of robot base (or linear velocity of wheel surface).
 	double max_wheel_lin_vel;
+	double max_lin_vel_slew; // for each axis independently
+	double max_ang_vel_slew;
 
 	// Module Config
 	swerve_type_e module_type;
@@ -333,6 +335,9 @@ protected:
 	double m_max_base_lin_vel = 0;
 	double m_max_base_ang_vel = 0;
 	int m_num_modules = 0;
+	double m_lin_vel_slew;
+	double m_ang_slew;
+
 	double LIN_VEL_TO_RPM;
 
 	// Jacobians

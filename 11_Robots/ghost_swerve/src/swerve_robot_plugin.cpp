@@ -121,6 +121,12 @@ void SwerveRobotPlugin::initialize(){
 	auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
 	swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius * ghost_util::INCHES_TO_METERS;
 
+	node_ptr_->declare_parameter("swerve_robot_plugin.max_ang_vel_slew", 0.); // 0 should stop the robot from moving when the param is not set
+	swerve_model_config.max_ang_vel_slew = node_ptr_->get_parameter("swerve_robot_plugin.max_ang_vel_slew").as_double();
+	node_ptr_->declare_parameter("swerve_robot_plugin.max_lin_vel_slew", 0.);
+	swerve_model_config.max_lin_vel_slew = node_ptr_->get_parameter("swerve_robot_plugin.max_lin_vel_slew").as_double();
+
+
 	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
 	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);
 	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.1143, 0.1143);

@@ -26,6 +26,8 @@ SwerveModel::SwerveModel(SwerveConfig config){
 void SwerveModel::validateConfig(){
 	std::unordered_map<std::string, double> double_params{
 		{"max_wheel_lin_vel", m_config.max_wheel_lin_vel},
+		{"max_lin_vel_slew", m_config.max_lin_vel_slew},
+		{"max_ang_vel_slew", m_config.max_ang_vel_slew},
 		{"steering_ratio", m_config.steering_ratio},
 		{"wheel_ratio", m_config.wheel_ratio},
 		{"wheel_radius", m_config.wheel_radius},
@@ -48,6 +50,9 @@ void SwerveModel::validateConfig(){
 
 	m_num_modules = m_config.module_positions.size();
 	LIN_VEL_TO_RPM = ghost_util::METERS_TO_INCHES / m_config.wheel_radius * ghost_util::RAD_PER_SEC_TO_RPM;
+
+	m_lin_vel_slew = m_config.max_lin_vel_slew;
+	m_ang_slew = m_config.max_ang_vel_slew;
 
 	// Initialize Odometry
 	m_odom_loc = Eigen::Vector2d::Zero();
@@ -247,7 +252,11 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 	// std::cout << "linear_vel_dir: " << linear_vel_dir << std::endl;
 
 	// Update base twist vector
-	m_base_vel_cmd = Eigen::Vector3d(xy_vel_cmd_base_link.x(), xy_vel_cmd_base_link.y(), ang_vel_cmd);
+	m_base_vel_cmd = Eigen::Vector3d(
+		ghost_util::slewRate(m_base_vel_cmd[0], xy_vel_cmd_base_link.x(), m_lin_vel_slew),
+		ghost_util::slewRate(m_base_vel_cmd[1], xy_vel_cmd_base_link.y(), m_lin_vel_slew),
+		ghost_util::slewRate(m_base_vel_cmd[2], ang_vel_cmd, m_ang_slew)
+		);
 
 	double max_steering_error = 0.0;
 	for(const auto& [module_name, module_position] : m_config.module_positions){
