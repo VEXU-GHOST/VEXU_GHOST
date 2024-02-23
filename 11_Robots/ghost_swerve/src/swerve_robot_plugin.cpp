@@ -255,11 +255,11 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 
 		// Toggle Skills mode
-		if(joy_data->btn_b && !m_toggle_skills_control_btn_pressed){
+		if(joy_data->btn_d && !m_toggle_skills_control_btn_pressed){
 			m_skills ^= 1;
 			m_toggle_skills_control_btn_pressed = true;
 		}
-		else if(!joy_data->btn_b){
+		else if(!joy_data->btn_d){
 			m_toggle_skills_control_btn_pressed = false;
 		}
 
@@ -343,7 +343,6 @@ void SwerveRobotPlugin::teleop(double current_time){
 			if(joy_data->btn_r1){
 				double ang = m_skills ? m_swerve_model_ptr->getConfig().stick_angle_skills : m_swerve_model_ptr->getConfig().stick_angle_normal;
 				std::cout << "stick angle " << ang << std::endl;
-
 				rhi_ptr_->setMotorPositionCommand("tail_motor", ang);
 			}
 			else{
