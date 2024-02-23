@@ -92,20 +92,20 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
 	swerve_model_config.velocity_scaling_threshold = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_threshold").as_double();
 
-	node_ptr_->declare_parameter("swerve_robot_plugin.lift_gear_ratio", NULL);
-	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_angle_deg", NULL);
-	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_speed_degps", NULL);
+	node_ptr_->declare_parameter("swerve_robot_plugin.lift_gear_ratio", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_angle_deg", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_speed_degps", 1.);
 	double gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.lift_gear_ratio").as_double();
 	swerve_model_config.lift_up_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.lift_up_angle_deg").as_double();
 	#define DPSTORPM(x) (x  / 360.)  * 60.
 	// this really should be somewhere better
 	swerve_model_config.lift_speed_rpm = DPSTORPM(gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.lift_up_speed_degps").as_double());
 
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", NULL);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", NULL);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_endpoint1_deg", NULL);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_endpoint2_deg", NULL);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset", NULL);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_endpoint1_deg", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_endpoint2_deg", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset", 1.);
 	gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.stick_gear_ratio").as_double();
 
 

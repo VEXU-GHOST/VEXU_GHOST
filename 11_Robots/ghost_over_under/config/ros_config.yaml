@@ -85,20 +85,20 @@ competition_state_machine_node:
 
       joy_angle_control_threshold: 0.5
 
-      lift_gear_ratio: 2/1 # ??  TODO MAXX# not sure which inverse but it multiplies gear ratio by angles to get motor angles so this should probably be greater than 1
+      lift_gear_ratio: 2.5 # ??  TODO MAXX# not sure which inverse but it multiplies gear ratio by angles to get motor angles so this should probably be greater than 1
 
-      lift_up_angle_deg: 90
+      lift_up_angle_deg: 90.
       # degree per second of actual lift
-      lift_up_speed_degps: 30
+      lift_up_speed_degps: 30.
 
       # TODO MAXX ALL OF THESE
-      stick_gear_ratio: 7/5  # IDK
+      stick_gear_ratio: 1.4  # IDK
       # 0 is the position we start on, slightly crooked
-      stick_upright_angle_deg: 10 
+      stick_upright_angle_deg: 10.
       # in degrees
-      stick_endpoint1_deg: -20
-      stick_endpoint2_deg: 30 # not an array because there are exactly 2 items
-      stick_angle_soft_limit_offset: 5
+      stick_endpoint1_deg: -20.
+      stick_endpoint2_deg: 30. # not an array because there are exactly 2 items
+      stick_angle_soft_limit_offset: 5.
       # switch directions at angle_min + offset or angle_max - offset
 
 ekf_localization_node:
