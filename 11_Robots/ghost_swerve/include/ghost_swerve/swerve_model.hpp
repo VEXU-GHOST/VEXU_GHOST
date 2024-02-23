@@ -212,6 +212,15 @@ public:
 		return m_module_jacobian_inv_transpose;
 	}
 
+
+	const Eigen::MatrixXd& getTaskSpaceJacobian() const {
+		return m_task_space_jacobian;
+	}
+
+	const Eigen::MatrixXd& getTaskSpaceJacobianInverse() const {
+		return m_task_space_jacobian_inverse;
+	}
+
 	/**
 	 * @brief Get the max linear velocity of the robot base at nominal motor speed.
 	 *
@@ -283,6 +292,10 @@ public:
 
 	double getICRQuality() const {
 		return m_icr_quality;
+	}
+
+	double getLeastSquaresErrorMetric() const {
+		return m_ls_error_metric;
 	}
 
 	const Eigen::Vector2d& getOdometryLocation(){
@@ -378,6 +391,7 @@ protected:
 	bool m_straight_line_translation;
 	double m_icr_quality = 0;
 	double m_icr_sse = 0;
+	double m_ls_error_metric = 0.0;
 };
 
 } // namespace ghost_swerve
