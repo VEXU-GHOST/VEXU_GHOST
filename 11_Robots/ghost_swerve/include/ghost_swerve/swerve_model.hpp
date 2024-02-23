@@ -39,7 +39,8 @@ struct SwerveConfig {
 
 	// Lift - motor angles, not outputs
 	double lift_up_angle;
-	double lift_speed_rpm;
+	double lift_kP;
+	double lift_speed;
 
 	// Stick - motor angles, not outputs
 	double stick_upright_angle;

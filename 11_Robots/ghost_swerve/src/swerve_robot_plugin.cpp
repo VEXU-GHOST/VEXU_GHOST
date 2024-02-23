@@ -94,12 +94,12 @@ void SwerveRobotPlugin::initialize(){
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_gear_ratio", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_angle_deg", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_speed_degps", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.lift_kP", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.lift_speed", 1.);
 	double gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.lift_gear_ratio").as_double();
 	swerve_model_config.lift_up_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.lift_up_angle_deg").as_double();
-	#define DPSTORPM(x) (x  / 360.)  * 60.
-	// this really should be somewhere better
-	swerve_model_config.lift_speed_rpm =  node_ptr_->get_parameter("swerve_robot_plugin.lift_up_speed_degps").as_double();
+	swerve_model_config.lift_kP =  node_ptr_->get_parameter("swerve_robot_plugin.lift_kP").as_double();
+	swerve_model_config.lift_speed =  node_ptr_->get_parameter("swerve_robot_plugin.lift_speed").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", 1.);
@@ -234,6 +234,19 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	updateDrivetrainMotors();
 }
+
+// sorry for puutting this here ik its kinda gross
+float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface>  rhi_ptr_,const std::string& motor1, const std::string &motor2, float pos_want, double kP) {
+	float pos1 = rhi_ptr_->getMotorPosition(motor1);
+	float pos2 =  rhi_ptr_->getMotorPosition(motor2);
+	float pos = (pos1 + pos2) / 2;
+	float action = std::clamp((pos_want - pos) * kP, -100., 100.); // TODO ???
+	rhi_ptr_->setMotorVoltageCommandPercent(motor1, action);
+	rhi_ptr_->setMotorVoltageCommandPercent(motor2,action);
+	std::cout << "pos1: " << pos1 << " pos2: " << pos2 << " want: " << pos_want << " kP " << kP << " error " << (pos_want - pos) << " action " << action << std::endl;
+	return pos - pos_want;
+}
+
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	std::cout << "Teleop: " << current_time << std::endl;
@@ -277,27 +290,22 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 		updateDrivetrainMotors();
 		// Set Wings
-		m_digital_io[m_digital_io_name_map.at("right_wing")] = joy_data->btn_r2;
-		m_digital_io[m_digital_io_name_map.at("left_wing")] = joy_data->btn_l2;
+		m_digital_io[m_digital_io_name_map.at("right_wing")] = !m_climb_mode && joy_data->btn_r2;
+		m_digital_io[m_digital_io_name_map.at("left_wing")] = !m_climb_mode && joy_data->btn_l2;
 
 
+		static double lift_target;
 		// Toggle Climb Mode
 		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
 			m_climb_mode = !m_climb_mode;
 			// only on first toggle
 			if(m_climb_mode){
-				// TODO REFACTOR TO GET CUSTOM CONTROL
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
-				m_claw_open = true;
-				rhi_ptr_->setMotorPositionCommand("lift_right", m_swerve_model_ptr->getConfig().lift_up_angle); // TODO MAXX IS THIS GOOD PRACTICE IDK
-				rhi_ptr_->setMotorPositionCommand("lift_left", m_swerve_model_ptr->getConfig().lift_up_angle);
+				lift_target = m_swerve_model_ptr->getConfig().lift_up_angle;
 			}
 			else{
-				m_claw_open = false;
-				rhi_ptr_->setMotorPositionCommand("lift_right",0);
-				rhi_ptr_->setMotorPositionCommand("lift_left",0);
+				lift_target = 0;
 			}
+			m_claw_open = m_climb_mode;
 			m_climb_mode_btn_pressed = true;
 		}
 		else if(!joy_data->btn_a){
@@ -305,31 +313,29 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 		// Toggle Claw
 		if(m_climb_mode){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
+
 			if(joy_data->btn_r2 & !m_claw_btn_pressed){
 				m_claw_open = !m_claw_open;
 				m_claw_btn_pressed = true;
-			} else if (joy_data->btn_r2) {
+			}
+			else if(!joy_data->btn_r2){
 				m_claw_btn_pressed = false;
 			}
 
 			if(joy_data->btn_l1){
-				// degrees p s
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", m_swerve_model_ptr->getConfig().lift_speed_rpm);
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", m_swerve_model_ptr->getConfig().lift_speed_rpm);
+				lift_target += m_swerve_model_ptr->getConfig().lift_speed;
 			}
 			else if(joy_data->btn_l2){
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -m_swerve_model_ptr->getConfig().lift_speed_rpm);
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -m_swerve_model_ptr->getConfig().lift_speed_rpm);
-			}
-			else{
-				rhi_ptr_->setMotorVelocityCommandRPM("lift_right", 0);
-				rhi_ptr_->setMotorVelocityCommandRPM("lift_left", 0);
+				lift_target -= m_swerve_model_ptr->getConfig().lift_speed;
 			}
 		}
-		else if(rhi_ptr_->getMotorPosition("lift_right") < 10){
+		else if(rhi_ptr_->getMotorPosition("lift_right") < 50){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
 		}
+		tempPID(rhi_ptr_, "lift_right", "lift_left", lift_target, m_swerve_model_ptr->getConfig().lift_kP); // go to 90deg
 
 		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
 
@@ -348,12 +354,12 @@ void SwerveRobotPlugin::teleop(double current_time){
 				rhi_ptr_->setMotorPositionCommand("tail_motor", ang);
 			}
 			else{
-				std::cout << "stick upright!" << std::endl;
+				// std::cout << "stick upright!" << std::endl;
 				rhi_ptr_->setMotorPositionCommand("tail_motor",  m_swerve_model_ptr->getConfig().stick_upright_angle);
 			}
 		}
 		else{
-			std::cout << "stick upright!" << std::endl;
+			// std::cout << "stick upright!" << std::endl;
 			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 			if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
 				m_digital_io[m_digital_io_name_map.at("tail")] = false;

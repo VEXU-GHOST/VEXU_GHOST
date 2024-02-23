@@ -89,7 +89,8 @@ competition_state_machine_node:
 
       lift_up_angle_deg: -90.
       # degree per second of actual lift
-      lift_up_speed_degps: 70. # TODO MAKE THIS VOLTAGE
+      lift_kP: 10. 
+      lift_speed: 1. #TODO
 
       # TODO MAXX ALL OF THESE
       stick_gear_ratio: 3.
