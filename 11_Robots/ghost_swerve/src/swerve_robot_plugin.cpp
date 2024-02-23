@@ -256,12 +256,12 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_toggle_swerve_field_control_btn_pressed = false;
 		}
 
-		// Toggle Field vs Robot Oriented
-		if(joy_data->btn_r && !m_toggle_skills_control_btn_pressed){
+		// Toggle Skills mode
+		if(joy_data->btn_a && !m_toggle_skills_control_btn_pressed){
 			m_skills ^= 1;
 			m_toggle_skills_control_btn_pressed = true;
 		}
-		else if(!joy_data->btn){
+		else if(!joy_data->btn_a){
 			m_toggle_skills_control_btn_pressed = false;
 		}
 
@@ -343,8 +343,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_digital_io[m_digital_io_name_map.at("tail")] = true;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
 			if(joy_data->btn_r1){
-				std::cout << "stick angle " << (righting ? m_swerve_model_ptr->getConfig().stick_angle_max : m_swerve_model_ptr->getConfig().stick_angle_min) << std::endl;
-				rhi_ptr_->setMotorPositionCommand("tail_motor", skills ? m_swerve_model_ptr->getConfig().stick_angle_max : m_swerve_model_ptr->getConfig().stick_angle_min);
+				std::cout << "stick angle " << (m_skills ? m_swerve_model_ptr->getConfig().stick_angle_max : m_swerve_model_ptr->getConfig().stick_angle_min) << std::endl;
+				rhi_ptr_->setMotorPositionCommand("tail_motor", m_skills ? m_swerve_model_ptr->getConfig().stick_angle_max : m_swerve_model_ptr->getConfig().stick_angle_min);
 			}
 			else{
 				std::cout << "stick upright!" << std::endl;
