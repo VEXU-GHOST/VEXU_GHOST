@@ -57,10 +57,10 @@ protected:
 
 	// Odometry
 	Eigen::Vector2d m_last_odom_loc = Eigen::Vector2d::Zero();
-	double m_last_odom_angle  = 0.0;
+	double m_last_odom_angle  = 135.0;
 
 	Eigen::Vector2d m_curr_odom_loc = Eigen::Vector2d::Zero();
-	double m_curr_odom_angle = 0.0;
+	double m_curr_odom_angle = 135.0;
 
 	Eigen::Vector3d m_curr_odom_std = Eigen::Vector3d::Zero();
 	Eigen::Vector3d m_curr_odom_cov = Eigen::Vector3d::Zero();
