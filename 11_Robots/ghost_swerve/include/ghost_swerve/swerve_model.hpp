@@ -35,6 +35,17 @@ struct SwerveConfig {
 	double velocity_scaling_ratio;
 	double velocity_scaling_threshold;
 
+	// Lift - motor angles, not outputs
+	double lift_up_angle;
+	double lift_speed_rpm;
+
+	// Stick - motor angles, not outputs
+	double stick_upright_angle;
+	double stick_angle_min;
+	double stick_angle_max;
+	double stick_turn_offset; 
+
+
 	// XY Position of each module relative to robot base
 	std::map<std::string, Eigen::Vector2d> module_positions;
 };
