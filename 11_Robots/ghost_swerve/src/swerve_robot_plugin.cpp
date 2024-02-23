@@ -156,7 +156,7 @@ void SwerveRobotPlugin::initialize(){
 		trajectory_marker_topic,
 		10);
 
-	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_, m_swerve_model_ptr);
+	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
