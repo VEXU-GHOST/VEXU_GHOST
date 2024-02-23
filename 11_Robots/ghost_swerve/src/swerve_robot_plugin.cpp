@@ -156,7 +156,7 @@ void SwerveRobotPlugin::initialize(){
 		trajectory_marker_topic,
 		10);
 
-	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
+	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_, m_swerve_model_ptr);
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
@@ -208,31 +208,74 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	bt_->tick_tree();
 
-	auto command_map = get_commands(current_time);
-	double des_pos_x = (command_map.count("x_pos") != 0) ? command_map.at("x_pos") : 0.0;
-	double des_vel_x = (command_map.count("x_vel") != 0) ? command_map.at("x_vel") : 0.0;
-	double des_pos_y = (command_map.count("y_pos") != 0) ? command_map.at("y_pos") : 0.0;
-	double des_vel_y = (command_map.count("y_vel") != 0) ? command_map.at("y_vel") : 0.0;
-	double des_theta = (command_map.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
-	double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
+	// arm down then swipe
+	// push stuff
+
+	// Enable Tail Mode
+	double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
+	double stick_turn_offset = m_swerve_model_ptr->getConfig().stick_turn_offset;
+	#define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
+
+	#define time_wrap(start_time, end_time) (current_time <= end_time && current_time > start_time)
 
 
-	// Get best state estimate
-	auto curr_location = m_swerve_model_ptr->getWorldLocation();
-	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
+	if(time_wrap(0, 10)){
+		m_digital_io[m_digital_io_name_map.at("tail")] = true;
+		rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+		
+		if(fmod(current_time,1.0) <= 0.4){
+			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_normal);
+		} else {
+			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
+		}
+	}
+	else{
+		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
+		if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
+			m_digital_io[m_digital_io_name_map.at("tail")] = false;
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
+		}
+	}
 
-	// Calculate velocity command from motion plan
-	double vel_cmd_x = des_vel_x + (des_pos_x - curr_location.x()) * m_move_to_pose_kp_x;
-	double vel_cmd_y = des_vel_y + (des_pos_y - curr_location.y()) * m_move_to_pose_kp_y;
-	double vel_cmd_theta = des_theta_vel + ghost_util::SmallestAngleDistRad(des_theta, curr_theta) * m_move_to_pose_kp_theta;
+	if(time_wrap(10, 12)){
+		m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(0, 1, -1);
+		updateDrivetrainMotors();
+	}
+	if(time_wrap(12, 14)){
+		m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(1, 1, 0);
+		updateDrivetrainMotors();
+	}
+	if(time_wrap(14, 18)){
+		m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(0, 1, 0);
+		updateDrivetrainMotors();
+	}
 
-	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
+
+	// auto command_map = get_commands(current_time);
+	// double des_pos_x = (command_map.count("x_pos") != 0) ? command_map.at("x_pos") : 0.0;
+	// double des_vel_x = (command_map.count("x_vel") != 0) ? command_map.at("x_vel") : 0.0;
+	// double des_pos_y = (command_map.count("y_pos") != 0) ? command_map.at("y_pos") : 0.0;
+	// double des_vel_y = (command_map.count("y_vel") != 0) ? command_map.at("y_vel") : 0.0;
+	// double des_theta = (command_map.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
+	// double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
+
+
+	// // Get best state estimate
+	// auto curr_location = m_swerve_model_ptr->getWorldLocation();
+	// double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
+
+	// // Calculate velocity command from motion plan
+	// double vel_cmd_x = des_vel_x + (des_pos_x - curr_location.x()) * m_move_to_pose_kp_x;
+	// double vel_cmd_y = des_vel_y + (des_pos_y - curr_location.y()) * m_move_to_pose_kp_y;
+	// double vel_cmd_theta = des_theta_vel + ghost_util::SmallestAngleDistRad(des_theta, curr_theta) * m_move_to_pose_kp_theta;
+
+	// std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
 
 	// calculateKinematicSwerveControllerVelocity(right_cmd * m_max_base_lin_vel, forward_cmd * m_max_base_lin_vel, clockwise_cmd * m_max_base_ang_vel);
 
-	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, vel_cmd_y, -vel_cmd_theta);
+	// m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, vel_cmd_y, -vel_cmd_theta);
 
-	updateDrivetrainMotors();
+	// updateDrivetrainMotors();
 }
 
 // sorry for puutting this here ik its kinda gross
