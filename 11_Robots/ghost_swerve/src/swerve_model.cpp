@@ -196,6 +196,8 @@ void SwerveModel::updateBaseTwist(){
 	}
 
 	m_base_vel_curr = m_task_space_jacobian * module_velocity_vector;
+	m_ls_error_metric = (module_velocity_vector - m_task_space_jacobian_inverse * m_base_vel_curr).norm();
+
 	m_base_vel_curr[0] = (std::fabs(m_base_vel_curr[0]) > 0.01) ? m_base_vel_curr[0] : 0.0;
 	m_base_vel_curr[1] = (std::fabs(m_base_vel_curr[1]) > 0.01) ? m_base_vel_curr[1] : 0.0;
 	m_base_vel_curr[2] = (std::fabs(m_base_vel_curr[2]) > 0.02) ? m_base_vel_curr[2] : 0.0;
