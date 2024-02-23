@@ -37,7 +37,7 @@ ament_export_include_directories(${INCLUDE})
 
 # bt node libraries
 set(NODES
-  driveForward
+  checkForRestart
   loggingNode
   moveToPose
 )

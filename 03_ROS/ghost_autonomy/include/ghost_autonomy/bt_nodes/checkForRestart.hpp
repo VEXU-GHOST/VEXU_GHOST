@@ -8,13 +8,15 @@
 using std::placeholders::_1;
 
 // SyncActionNode (synchronous action) with an input port.
-class DriveForward : public BT::SyncActionNode,
+class CheckForRestart : public BT::SyncActionNode,
 		             public rclcpp::Node {
 private:
 	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
+	std::chrono::time_point<std::chrono::system_clock> start_time_;
+	bool restarted_ = false;
 public:
 		// If your Node has ports, you must use this constructor signature
-		DriveForward(const std::string& name, const BT::NodeConfig& config,
+		CheckForRestart(const std::string& name, const BT::NodeConfig& config,
 		             std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr);
 
 		// It is mandatory to define this STATIC method.

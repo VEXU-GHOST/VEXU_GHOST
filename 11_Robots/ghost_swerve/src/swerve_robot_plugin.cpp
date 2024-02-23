@@ -205,12 +205,13 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	bt_->tick_tree();
 
 	auto command_map = get_commands(current_time);
-	double des_pos_x = command_map["x_pos"];
-	double des_vel_x = command_map["x_vel"];
-	double des_pos_y = command_map["y_pos"];
-	double des_vel_y = command_map["y_vel"];
-	double des_theta = command_map["angle_pos"];
-	double des_theta_vel = command_map["angle_vel"];
+	double des_pos_x = (command_map.count("x_pos") != 0) ? command_map.at("x_pos") : 0.0;
+	double des_vel_x = (command_map.count("x_vel") != 0) ? command_map.at("x_vel") : 0.0;
+	double des_pos_y = (command_map.count("y_pos") != 0) ? command_map.at("y_pos") : 0.0;
+	double des_vel_y = (command_map.count("y_vel") != 0) ? command_map.at("y_vel") : 0.0;
+	double des_theta = (command_map.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
+	double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
+
 
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
@@ -221,11 +222,11 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double vel_cmd_y = des_vel_y + (des_pos_y - curr_location.y()) * m_move_to_pose_kp_y;
 	double vel_cmd_theta = des_theta_vel + ghost_util::SmallestAngleDistRad(des_theta, curr_theta) * m_move_to_pose_kp_theta;
 
-	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd x: %f", vel_cmd_x);
-	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd y: %f", vel_cmd_y);
-	RCLCPP_INFO(node_ptr_->get_logger(), "vel cmd theta: %f", vel_cmd_theta);
+	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
 
-	m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(-vel_cmd_y, vel_cmd_x, -vel_cmd_theta);
+	// calculateKinematicSwerveControllerVelocity(right_cmd * m_max_base_lin_vel, forward_cmd * m_max_base_lin_vel, clockwise_cmd * m_max_base_ang_vel);
+
+	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(vel_cmd_x, vel_cmd_y, -vel_cmd_theta);
 
 	updateDrivetrainMotors();
 }
@@ -536,6 +537,51 @@ void SwerveRobotPlugin::publishVisualization(){
 
 		viz_msg.markers.push_back(marker_msg);
 	}
+
+	auto curr_vel_marker_msg = visualization_msgs::msg::Marker{};
+	curr_vel_marker_msg.header.frame_id = "base_link";
+	curr_vel_marker_msg.header.stamp = node_ptr_->get_clock()->now();
+	curr_vel_marker_msg.id = j++;
+	curr_vel_marker_msg.action = 0;
+	curr_vel_marker_msg.type = 0;
+	curr_vel_marker_msg.scale.x = 0.01;
+	curr_vel_marker_msg.scale.y = 0.01;
+	curr_vel_marker_msg.scale.z = 0.01;
+	curr_vel_marker_msg.color.b = 1.0;
+	curr_vel_marker_msg.color.a = 1;
+
+	curr_vel_marker_msg.points.push_back(geometry_msgs::msg::Point{});
+	auto curr_base_vel = m_swerve_model_ptr->getBaseVelocityCurrent();
+
+	geometry_msgs::msg::Point p1_curr{};
+	p1_curr.x = curr_base_vel.x();
+	p1_curr.y = curr_base_vel.y();
+	curr_vel_marker_msg.points.push_back(p1_curr);
+
+	viz_msg.markers.push_back(curr_vel_marker_msg);
+
+	auto cmd_vel_marker_msg = visualization_msgs::msg::Marker{};
+	cmd_vel_marker_msg.header.frame_id = "base_link";
+	cmd_vel_marker_msg.header.stamp = node_ptr_->get_clock()->now();
+	cmd_vel_marker_msg.id = j++;
+	cmd_vel_marker_msg.action = 0;
+	cmd_vel_marker_msg.type = 0;
+	cmd_vel_marker_msg.scale.x = 0.01;
+	cmd_vel_marker_msg.scale.y = 0.01;
+	cmd_vel_marker_msg.scale.z = 0.01;
+	cmd_vel_marker_msg.color.r = 1.0;
+	cmd_vel_marker_msg.color.a = 1;
+
+	cmd_vel_marker_msg.points.push_back(geometry_msgs::msg::Point{});
+	auto cmd_base_vel = m_swerve_model_ptr->getBaseVelocityCommand();
+
+	geometry_msgs::msg::Point p1_cmd{};
+	p1_cmd.x = cmd_base_vel.x();
+	p1_cmd.y = cmd_base_vel.y();
+	cmd_vel_marker_msg.points.push_back(p1_cmd);
+
+	viz_msg.markers.push_back(cmd_vel_marker_msg);
+
 	m_swerve_viz_pub->publish(viz_msg);
 }
 

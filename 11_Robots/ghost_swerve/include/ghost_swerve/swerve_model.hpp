@@ -330,9 +330,9 @@ protected:
 
 	// Configuration
 	SwerveConfig m_config;
-	double m_max_base_lin_vel;
-	double m_max_base_ang_vel;
-	int m_num_modules;
+	double m_max_base_lin_vel = 0;
+	double m_max_base_ang_vel = 0;
+	int m_num_modules = 0;
 	double LIN_VEL_TO_RPM;
 
 	// Jacobians
