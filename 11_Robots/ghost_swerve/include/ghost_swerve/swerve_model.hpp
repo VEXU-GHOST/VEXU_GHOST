@@ -43,8 +43,8 @@ struct SwerveConfig {
 
 	// Stick - motor angles, not outputs
 	double stick_upright_angle;
-	double stick_angle_min;
-	double stick_angle_max;
+	double stick_angle_skills;
+	double stick_angle_normal;
 	double stick_turn_offset; 
 
 
