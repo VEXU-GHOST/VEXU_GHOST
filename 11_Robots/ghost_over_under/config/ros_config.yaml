@@ -85,14 +85,14 @@ competition_state_machine_node:
 
       joy_angle_control_threshold: 0.5
 
-      lift_gear_ratio: 2.5 # ??  TODO MAXX# not sure which inverse but it multiplies gear ratio by angles to get motor angles so this should probably be greater than 1
+      lift_gear_ratio: 15.
 
-      lift_up_angle_deg: 90.
+      lift_up_angle_deg: -90.
       # degree per second of actual lift
-      lift_up_speed_degps: 30.
+      lift_up_speed_degps: 70. # TODO MAKE THIS VOLTAGE
 
       # TODO MAXX ALL OF THESE
-      stick_gear_ratio: 1.4  # IDK
+      stick_gear_ratio: 3.
       # 0 is the position we start on, slightly crooked
       stick_upright_angle_deg: 10.
       # in degrees

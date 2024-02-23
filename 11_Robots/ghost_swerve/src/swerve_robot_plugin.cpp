@@ -99,7 +99,7 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.lift_up_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.lift_up_angle_deg").as_double();
 	#define DPSTORPM(x) (x  / 360.)  * 60.
 	// this really should be somewhere better
-	swerve_model_config.lift_speed_rpm = DPSTORPM(gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.lift_up_speed_degps").as_double());
+	swerve_model_config.lift_speed_rpm =  node_ptr_->get_parameter("swerve_robot_plugin.lift_up_speed_degps").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", 1.);
@@ -257,12 +257,12 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 
 		// Toggle Field vs Robot Oriented
-		if(joy_data->btn_r && !m_toggle_swerve_angle_control_btn_pressed){
-			m_swerve_angle_control = !m_swerve_angle_control;
-			m_toggle_swerve_angle_control_btn_pressed = true;
+		if(joy_data->btn_r && !m_toggle_skills_control_btn_pressed){
+			m_skills ^= 1;
+			m_toggle_skills_control_btn_pressed = true;
 		}
-		else if(!joy_data->btn_r){
-			m_toggle_swerve_angle_control_btn_pressed = false;
+		else if(!joy_data->btn){
+			m_toggle_skills_control_btn_pressed = false;
 		}
 
 
@@ -288,6 +288,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_climb_mode = !m_climb_mode;
 			// only on first toggle
 			if(m_climb_mode){
+				// TODO REFACTOR TO GET CUSTOM CONTROL
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
 				m_claw_open = true;
@@ -295,8 +296,6 @@ void SwerveRobotPlugin::teleop(double current_time){
 				rhi_ptr_->setMotorPositionCommand("lift_left", m_swerve_model_ptr->getConfig().lift_up_angle);
 			}
 			else{
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
 				m_claw_open = false;
 				rhi_ptr_->setMotorPositionCommand("lift_right",0);
 				rhi_ptr_->setMotorPositionCommand("lift_left",0);
@@ -315,17 +314,21 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 			if(joy_data->btn_l1){
 				// degrees p s
-				rhi_ptr_->setMotorVelocityCommandRPM("lift_right", m_swerve_model_ptr->getConfig().lift_speed_rpm);
-				rhi_ptr_->setMotorVelocityCommandRPM("lift_left", m_swerve_model_ptr->getConfig().lift_speed_rpm);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", m_swerve_model_ptr->getConfig().lift_speed_rpm);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", m_swerve_model_ptr->getConfig().lift_speed_rpm);
 			}
 			else if(joy_data->btn_l2){
-				rhi_ptr_->setMotorVelocityCommandRPM("lift_right", -m_swerve_model_ptr->getConfig().lift_speed_rpm);
-				rhi_ptr_->setMotorVelocityCommandRPM("lift_left", -m_swerve_model_ptr->getConfig().lift_speed_rpm);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -m_swerve_model_ptr->getConfig().lift_speed_rpm);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -m_swerve_model_ptr->getConfig().lift_speed_rpm);
 			}
 			else{
 				rhi_ptr_->setMotorVelocityCommandRPM("lift_right", 0);
 				rhi_ptr_->setMotorVelocityCommandRPM("lift_left", 0);
 			}
+		}
+		else if(rhi_ptr_->getMotorPosition("lift_right") < 10){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
 		}
 
 		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
@@ -336,33 +339,24 @@ void SwerveRobotPlugin::teleop(double current_time){
 		double stick_turn_offset = m_swerve_model_ptr->getConfig().stick_turn_offset;
 		#define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
 
-		if(!m_climb_mode && joy_data->btn_l2){
+		if(!m_climb_mode && joy_data->btn_l1){
 			m_digital_io[m_digital_io_name_map.at("tail")] = true;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-			if(joy_data->btn_r2){
-				if(!m_tail_mode_btn_pressed){
-					// just started pressed
-					rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_max);
-					// arbritarily take it to one end, might want to flip this later idk TODO
-				}
-				m_tail_mode_btn_pressed = true;
-				// when beyond extremes, go in opposite direction
-				if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_angle_min)){
-					rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_max);
-				}
-				else if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_angle_max) ){
-					rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_min);
-				} // else stay on course for whatever you're at right now
+			if(joy_data->btn_r1){
+				std::cout << "stick angle " << (righting ? m_swerve_model_ptr->getConfig().stick_angle_max : m_swerve_model_ptr->getConfig().stick_angle_min) << std::endl;
+				rhi_ptr_->setMotorPositionCommand("tail_motor", skills ? m_swerve_model_ptr->getConfig().stick_angle_max : m_swerve_model_ptr->getConfig().stick_angle_min);
 			}
 			else{
-				m_tail_mode_btn_pressed = false;
+				std::cout << "stick upright!" << std::endl;
+				rhi_ptr_->setMotorPositionCommand("tail_motor",  m_swerve_model_ptr->getConfig().stick_upright_angle);
 			}
 		}
 		else{
+			std::cout << "stick upright!" << std::endl;
 			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 			if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
 				m_digital_io[m_digital_io_name_map.at("tail")] = false;
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 300); // i'm going to give it less but not none so it can hold itself centered
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
 			}
 		}
 
