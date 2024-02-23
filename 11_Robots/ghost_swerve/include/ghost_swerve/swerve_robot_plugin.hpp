@@ -91,7 +91,6 @@ protected:
 	bool m_climb_mode = false;
 
 	// Stick Mode
-	bool m_tail_mode_btn_pressed = false;
 	bool m_tail_mode = false;
 
 	// Field vs Robot Oriented Control
@@ -106,14 +105,10 @@ protected:
 	double m_angle_target = 0.0;
 	double m_joy_angle_control_threshold = 0.0;
 
-	// Slew Rate Control
-	double m_joystick_slew_rate = 2.0;
-	double m_last_x_cmd = 0.0;
-	double m_last_y_cmd = 0.0;
-	double m_last_theta_cmd = 0.0;
-	double m_curr_x_cmd = 0.0;
-	double m_curr_y_cmd = 0.0;
-	double m_curr_theta_cmd = 0.0;
+	// Skills mode
+	bool m_toggle_skills_control_btn_pressed = false;
+	bool m_skills,control = false;
+	
 };
 
 } // namespace ghost_swerve
