@@ -305,9 +305,11 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 		// Toggle Claw
 		if(m_climb_mode){
-			if(joy_data->btn_r2){
+			if(joy_data->btn_r2 & !m_claw_btn_pressed){
 				m_claw_open = !m_claw_open;
 				m_claw_btn_pressed = true;
+			} else if (joy_data->btn_r2) {
+				m_claw_btn_pressed = false;
 			}
 
 			if(joy_data->btn_l1){
