@@ -62,17 +62,17 @@ competition_state_machine_node:
       # Remember that LIDAR will correct periodically, so these can be a bit generous.
       # Too generous though, and you are either losing resolution or wasting computation.
 
-      k1: 0.1          # x error from x motion         # 50% error in primary direction
-      k2: 0.02  #0.05  # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k3: 0.0   #0.1   # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k1: 0.01          # x error from x motion         # 50% error in primary direction
+      k2: 0.05 #0.05  # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k3: 0.01   #0.1   # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
-      k4: 0.02  #0.05  # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k5: 0.1          # y error from y motion         # 50% error in primary direction
-      k6: 0.0   #0.1   # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k4: 0.05  #0.05  # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k5: 0.01  #0.01        # y error from y motion         # 50% error in primary direction
+      k6: 0.01   #0.1   # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
-      k7: 0.0   #0.2   # theta error from x motion     # After 2ft of travel, 99% are within by 5°
-      k8: 0.0   #0.2   # theta error from y motion     # After 2ft of travel, 99% are within by 5°
-      k9: 0.15         # theta error from rotation     # 50% error in primary direction
+      k7: 0.01   #0.2   # theta error from x motion     # After 2ft of travel, 99% are within by 5°
+      k8: 0.01   #0.2   # theta error from y motion     # After 2ft of travel, 99% are within by 5°
+      k9: 0.2         # theta error from rotation     # 50% error in primary direction
 
       # motion planning
       move_to_pose_kp_x: 0.1
@@ -165,7 +165,7 @@ ekf_localization_node:
 
     # If you have high-frequency data or are running with a low frequency parameter value, then you may want to increase
     # the size of the subscription queue so that more measurements are fused.
-    odom0_queue_size: 5
+    odom0_queue_size: 50
 
     # [ADVANCED] Large messages in ROS can exhibit strange behavior when they arrive at a high frequency. This is a result
     # of Nagle's algorithm. This option tells the ROS subscriber to use the tcpNoDelay option, which disables Nagle's
@@ -213,20 +213,6 @@ ekf_localization_node:
     # [ADVANCED] Some IMUs automatically remove acceleration due to gravity, and others don't. If yours doesn't, please set
     # this to true, and *make sure* your data conforms to REP-103, specifically, that the data is in ENU frame.
     imu0_remove_gravitational_acceleration: false
-
-    # # Incorporating simulator data to test performance of EKF
-    # odom1: /gz/model_pose # This topic does not exist given msg refactor :(
-    # odom1_config: [true, true, false,
-    #                false, false, true,
-    #                false, false, false,
-    #                false, false, false,
-    #                false, false, false,]
-    # odom1_differential: false
-    # odom1_relative: true
-    # odom1_queue_size: 5
-    # odom1_pose_rejection_threshold: 0.8                 # Note the difference in parameter names
-    # odom1_twist_rejection_threshold: 0.8                #
-    # odom1_linear_acceleration_rejection_threshold: 0.8  #
 
     # [ADVANCED]  The EKF and UKF models follow a standard predict/correct cycle. During prediction, if there is no
     # acceleration reference, the velocity at time t+1 is simply predicted to be the same as the velocity at time t. During

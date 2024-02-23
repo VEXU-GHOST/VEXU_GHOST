@@ -7,7 +7,6 @@ Panels:
         - /Global Options1
         - /Status1
         - /Odometry1
-        - /Odometry1/Status1
         - /Odometry1/Topic1
       Splitter Ratio: 0.5
     Tree Height: 793
@@ -90,15 +89,25 @@ Visualization Manager:
         All Enabled: true
         base_link:
           Value: true
-        imu_link:
+        camera_accel_frame:
           Value: true
-        left_wheel:
+        camera_accel_optical_frame:
+          Value: true
+        camera_gyro_frame:
+          Value: true
+        camera_gyro_optical_frame:
+          Value: true
+        camera_imu_frame:
+          Value: true
+        camera_imu_optical_frame:
+          Value: true
+        camera_link:
+          Value: true
+        imu_link:
           Value: true
         lidar_link:
           Value: true
         odom:
-          Value: true
-        right_wheel:
           Value: true
       Marker Scale: 0.20000000298023224
       Name: TF
@@ -109,11 +118,7 @@ Visualization Manager:
         base_link:
           imu_link:
             {}
-          left_wheel:
-            {}
           lidar_link:
-            {}
-          right_wheel:
             {}
         odom:
           {}
@@ -168,7 +173,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0
+      Max Intensity: 47
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: LIDAR
@@ -229,7 +234,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 2
+      Keep: 1
       Name: Odometry
       Position Tolerance: 0.10000000149011612
       Shape:
@@ -288,7 +293,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 29.108184814453125
+      Distance: 9.21211051940918
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -306,7 +311,7 @@ Visualization Manager:
       Pitch: 0.7853981852531433
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: -1.5707950592041016
+      Yaw: 4.712390422821045
     Saved: ~
 Window Geometry:
   Displays:
@@ -316,5 +321,5 @@ Window Geometry:
   Hide Right Dock: false
   QMainWindow State: 000000ff00000000fd00000001000000000000025d000003a2fc0200000001fb000000100044006900730070006c006100790073010000003b000003a2000000c700ffffff000004d5000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Width: 1848
-  X: 2142
-  Y: -19
+  X: 1977
+  Y: 238

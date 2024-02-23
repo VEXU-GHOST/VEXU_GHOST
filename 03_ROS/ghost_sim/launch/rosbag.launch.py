@@ -19,16 +19,6 @@ def launch_setup(context, *args, **kwargs):
     xml = xacro.process_file(xacro_path)
     doc = xml.toprettyxml(indent='  ')
     
-    spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity ghost1 -topic robot_description").split()
-
-    # Node to spawn robot model in Gazebo
-    gazebo_ros = Node(
-        package = "gazebo_ros",
-        executable = "spawn_entity.py",
-        output='screen',
-        arguments=spawn_entity_args,
-        parameters=[{'use_sim_time': True}])
-
     # Node to publish robot joint transforms
     robot_state_publisher = Node(
         package='robot_state_publisher',
@@ -52,7 +42,7 @@ def launch_setup(context, *args, **kwargs):
         }.items()
     )
 
-    return [gazebo_ros, robot_state_publisher, joy_launch_description]
+    return [robot_state_publisher, joy_launch_description]
 
 
 def generate_launch_description():
@@ -112,7 +102,7 @@ def generate_launch_description():
         name='plot_juggler'       
     )
 
-#  ros2 bag play bag2 --clock --remap '/odometry/filtered:=/odometry/filtered_null'
+#  ros2 bag play bag2 --clock --remap '/odometry/filtered:=/odometry/filtered_null' '/tf:=/tf_null'
     return LaunchDescription([
         DeclareLaunchArgument(name='use_joy', default_value='false'),
         DeclareLaunchArgument(name='channel_id', default_value='1'),
