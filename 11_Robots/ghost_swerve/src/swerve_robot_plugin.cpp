@@ -289,9 +289,12 @@ float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface>  rhi_
 	float pos2 =  rhi_ptr_->getMotorPosition(motor2);
 	float pos = (pos1 + pos2) / 2;
 	float action = std::clamp((pos_want - pos) * kP, -100., 100.); // TODO ???
+	if (fabs(action) < 1.5) {
+		action = 0;
+	}
 	rhi_ptr_->setMotorVoltageCommandPercent(motor1, action);
 	rhi_ptr_->setMotorVoltageCommandPercent(motor2,action);
-	std::cout << "pos1: " << pos1 << " pos2: " << pos2 << " want: " << pos_want << " kP " << kP << " error " << (pos_want - pos) << " action " << action << std::endl;
+	//std::cout << "pos1: " << pos1 << " pos2: " << pos2 << " want: " << pos_want << " kP " << kP << " error " << (pos_want - pos) << " action " << action << std::endl;
 	return pos - pos_want;
 }
 
@@ -377,6 +380,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 		// Toggle Claw
 		if(m_climb_mode){
+			//std::cout << "liftmotors on now" << std::endl;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
 
@@ -395,7 +399,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 				lift_target -= m_swerve_model_ptr->getConfig().lift_speed;
 			}
 		}
-		else if(rhi_ptr_->getMotorPosition("lift_right") < 50){
+		else if(fabs(rhi_ptr_->getMotorPosition("lift_right")) < 50){
+			//std::cout << "liftmotors off now" << std::endl;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
 		}
