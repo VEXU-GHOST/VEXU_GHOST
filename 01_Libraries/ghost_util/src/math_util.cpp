@@ -2,13 +2,35 @@
 
 namespace ghost_util {
 
+bool isPositive(double val){
+	return val >= 0.0;
+}
+
+double slewRate(double curr, double next, double limit) {
+	limit = fabs(limit);
+	if(next > curr + limit){
+		return curr + limit;
+	}
+	else if(next < curr - limit){
+		return curr - limit;
+	}
+	else{
+		return next;
+	}
+}
+
 double sign(double val){
-	return (val >= 0.0) ? 1.0 : -1.0;
+	return isPositive(val) ? 1.0 : -1.0;
 }
 
 double linearInterpolate(const std::vector<double> &x_data,
                          const std::vector<double> &y_data,
                          const double desired_x) {
+	// check if empty
+	if((x_data.size() == 0) || (y_data.size() == 0)){
+		throw std::runtime_error("[linearInterpolate] Error: cannot interpolate empty vector");
+	}
+
 	// check vector lengths
 	if(x_data.size() != y_data.size()){
 		throw std::runtime_error("[linearInterpolate] Error: size of input vectors are unequal");

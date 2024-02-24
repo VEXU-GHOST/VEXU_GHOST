@@ -75,9 +75,34 @@ competition_state_machine_node:
       k9: 0.15         # theta error from rotation     # 50% error in primary direction
 
       # motion planning
-      move_to_pose_kp_x: 0.1
-      move_to_pose_kp_y: 0.1
-      move_to_pose_kp_theta: 0.1
+      move_to_pose_kp_x: 8.0
+      move_to_pose_kp_y: 8.0
+      move_to_pose_kp_theta: 8.0
+      steering_kp: 1.75
+      angle_control_kp: 0.75
+      velocity_scaling_ratio: 1.0
+      velocity_scaling_threshold: 0.2
+
+      joy_angle_control_threshold: 0.5
+
+      lift_gear_ratio: 15.
+
+      lift_up_angle_deg: -70.
+      # degree per second of actual lift
+      lift_kP: .05
+      lift_speed: 10. #TODO
+
+      # TODO MAXX ALL OF THESE
+      stick_gear_ratio: 3.
+      # 0 is the position we start on, slightly crooked
+      stick_upright_angle_deg: 10.
+      # in degrees
+      stick_angle_normal: 45.
+      stick_angle_skills: -30. # not an array because there are exactly 2 items
+      stick_angle_soft_limit_offset: 5.
+      # switch directions at angle_min + offset or angle_max - offset
+      max_ang_vel_slew: 0.1
+      max_lin_vel_slew: 0.001
 
 ekf_localization_node:
   ros__parameters:

@@ -25,6 +25,6 @@ BT::NodeStatus SaySomething::tick() {
 		}
 		// use the method value() to extract the valid message.
 		RCLCPP_INFO(this->get_logger(), msg.value().c_str());
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		// std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		return BT::NodeStatus::SUCCESS;
 }
