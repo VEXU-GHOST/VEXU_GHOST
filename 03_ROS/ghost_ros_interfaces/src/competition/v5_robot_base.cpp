@@ -34,6 +34,13 @@ void V5RobotBase::configure(){
 		std::bind(&V5RobotBase::trajectoryCallback, this, _1)
 		);
 
+
+	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
+		"bag_recorder/start");
+
+	m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
+		"bag_recorder/stop");
+
 	start_time_ = std::chrono::system_clock::now();
 	trajectory_start_time_ = 0;
 
@@ -99,11 +106,23 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous){
 	if((curr_comp_state_ == robot_state_e::AUTONOMOUS) && (last_comp_state_ != robot_state_e::AUTONOMOUS)){
 		// DISABLED -> AUTONOMOUS
 		start_time_ = std::chrono::system_clock::now();
+		// start bag recording
+		auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+		m_start_recorder_client->async_send_request(req);
 	}
 	if((curr_comp_state_ == robot_state_e::TELEOP) && (last_comp_state_ != robot_state_e::TELEOP)){
 		// DISABLED/AUTONOMOUS -> TELEOP
 		start_time_ = std::chrono::system_clock::now();
 	}
+
+	if((curr_comp_state_ == robot_state_e::DISABLED) && (last_comp_state_ == robot_state_e::TELEOP)){
+		// TELEOP->DISABLE
+		start_time_ = std::chrono::system_clock::now();
+		// stop bag recording
+		auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+		m_stop_recorder_client->async_send_request(req);
+	}
+
 
 	last_comp_state_ = curr_comp_state_;
 }
