@@ -338,6 +338,9 @@ void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	std::cout << "Teleop: " << current_time << std::endl;
 
+	
+
+
 	if(joy_data->btn_u){
 		if(!m_auton_button_pressed){
 			m_auton_button_pressed = true;

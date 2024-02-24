@@ -128,6 +128,7 @@ protected:
 	bool m_skills_control = false;
 	bool m_auton_button_pressed = false;
 	int m_auton_index = 0;
+	bool m_teleop_started = false;
 };
 
 } // namespace ghost_swerve
