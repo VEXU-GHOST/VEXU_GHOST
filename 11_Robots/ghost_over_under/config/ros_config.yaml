@@ -86,10 +86,10 @@ competition_state_machine_node:
 
       lift_gear_ratio: 15.
 
-      lift_up_angle_deg: -70.
+      lift_up_angle_deg: -90.
       # degree per second of actual lift
       lift_kP: .05
-      lift_speed: 10. #TODO
+      lift_speed: -10. #TODO
 
       # TODO MAXX ALL OF THESE
       stick_gear_ratio: 3.
