@@ -7,6 +7,8 @@
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <ghost_msgs/msg/drivetrain_command.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
+#include <ghost_msgs/srv/start_recorder.hpp>
+#include <ghost_msgs/srv/stop_recorder.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <visualization_msgs/msg/marker.hpp>
@@ -41,6 +43,10 @@ protected:
 	// Subscribers
 	void poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_robot_pose_sub;
+
+	// Service Clients
+	rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
+	rclcpp::Client<ghost_msgs::srv::StopRecorder>::SharedPtr m_stop_recorder_client;
 
 	// Swerve Model
 	void updateDrivetrainMotors();
@@ -91,6 +97,10 @@ protected:
 
 	// Stick Mode
 	bool m_tail_mode = false;
+
+	// Bag Recorder
+	bool m_recording_btn_pressed = false;
+	bool m_recording = false;
 
 	// Field vs Robot Oriented Control
 	bool m_toggle_swerve_field_control_btn_pressed = false;

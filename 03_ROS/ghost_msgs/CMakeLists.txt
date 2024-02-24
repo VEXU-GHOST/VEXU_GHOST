@@ -29,9 +29,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MotorTrajectory.msg"
   "msg/RobotTrajectory.msg"
   "srv/BroadcastJacobian.srv"
-  "srv/ToggleBagRecorder.srv"
-  "srv/CheckTimer.srv"
+  "srv/StartRecorder.srv"
+  "srv/StopRecorder.srv"
   "srv/StartTimer.srv"
+  "srv/CheckTimer.srv"
   DEPENDENCIES std_msgs geometry_msgs
  )
 ament_export_dependencies(rosidl_default_runtime)
