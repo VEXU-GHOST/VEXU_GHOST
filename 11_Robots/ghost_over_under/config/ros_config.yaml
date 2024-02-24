@@ -84,7 +84,7 @@ competition_state_machine_node:
 
       joy_angle_control_threshold: 0.5
 
-      lift_gear_ratio: 45.
+      lift_gear_ratio: 30.
 
       lift_up_angle_deg: -90.
       # degree per second of actual lift
