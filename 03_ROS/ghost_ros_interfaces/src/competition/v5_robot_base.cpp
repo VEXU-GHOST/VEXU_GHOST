@@ -96,7 +96,7 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous){
 	}
 
 	// Process state transitions
-	if((curr_comp_state_ == robot_state_e::AUTONOMOUS) && (last_comp_state_ == robot_state_e::DISABLED)){
+	if((curr_comp_state_ == robot_state_e::AUTONOMOUS) && (last_comp_state_ != robot_state_e::AUTONOMOUS)){
 		// DISABLED -> AUTONOMOUS
 		start_time_ = std::chrono::system_clock::now();
 	}
