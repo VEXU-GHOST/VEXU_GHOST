@@ -467,13 +467,13 @@ void SwerveRobotPlugin::teleop(double current_time){
 			#define POS ((rhi_ptr_->getMotorPosition("lift_right") + rhi_ptr_->getMotorPosition("lift_left")) / 2)
 
 			if(joy_data->btn_l1){
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 1);
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 1);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -1);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -1);
 				lift_target = POS;
 			}
 			else if(joy_data->btn_l2){
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -1);
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -1);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 1);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 1);
 				lift_target = POS;
 			}
 			else{
