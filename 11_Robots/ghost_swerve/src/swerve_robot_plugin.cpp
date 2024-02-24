@@ -442,13 +442,13 @@ void SwerveRobotPlugin::teleop(double current_time){
 			else{
 				lift_target = 0;
 				m_claw_open = false;
+			claw_auto_extended = false;
 			}
 			// m_claw_open = m_climb_mode;
 			m_climb_mode_btn_pressed = true;
 		}
 		else if(!joy_data->btn_a){
 			m_climb_mode_btn_pressed = false;
-			claw_auto_extended = false;
 		}
 		// Toggle Claw
 		if(m_climb_mode){
@@ -464,11 +464,24 @@ void SwerveRobotPlugin::teleop(double current_time){
 				m_claw_btn_pressed = false;
 			}
 
+			#define POS ((rhi_ptr_->getMotorPosition("lift_right") + rhi_ptr_->getMotorPosition("lift_left")) / 2)
+
 			if(joy_data->btn_l1){
-				lift_target += m_swerve_model_ptr->getConfig().lift_speed;
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 1);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 1);
+				lift_target = POS;
 			}
 			else if(joy_data->btn_l2){
-				lift_target -= m_swerve_model_ptr->getConfig().lift_speed;
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -1);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -1);
+				lift_target = POS;
+			}
+			else{
+				float err = tempPID(rhi_ptr_, "lift_right", "lift_left", lift_target, m_swerve_model_ptr->getConfig().lift_kP); // go to 90deg
+				if((fabs(err) < 30) && (fabs(lift_target) > 1) && !claw_auto_extended){
+					m_claw_open = true;
+					claw_auto_extended = true;
+				}
 			}
 		}
 		else if(fabs(rhi_ptr_->getMotorPosition("lift_right")) < 50){
@@ -476,11 +489,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
 		}
-		float err = tempPID(rhi_ptr_, "lift_right", "lift_left", lift_target, m_swerve_model_ptr->getConfig().lift_kP); // go to 90deg
-		if(fabs(err) < 30 && fabs(lift_target) > 1 && !claw_auto_extended){
-			m_claw_open = true;
-			claw_auto_extended = true;
-		}
+
 
 		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
 
