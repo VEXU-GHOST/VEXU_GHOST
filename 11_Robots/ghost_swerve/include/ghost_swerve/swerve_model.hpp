@@ -31,6 +31,7 @@ struct SwerveConfig {
 
 	// Kinematic Controller
 	double steering_kp;
+	double move_to_pose_kp;
 	double angle_control_kp;
 
 	// Velocity Scaling
@@ -46,7 +47,7 @@ struct SwerveConfig {
 	double stick_upright_angle;
 	double stick_angle_skills;
 	double stick_angle_normal;
-	double stick_turn_offset; 
+	double stick_turn_offset;
 
 
 	// XY Position of each module relative to robot base
@@ -276,7 +277,7 @@ public:
 	void calculateKinematicSwerveControllerVelocity(double right_cmd, double forward_cmd, double clockwise_cmd);
 
 	void calculateKinematicSwerveControllerAngleControl(double right_cmd, double forward_cmd, double angle_cmd);
-
+	void calculateKinematicSwerveControllerMoveToPoseWorld(double des_x, double des_y, double angle_cmd);
 
 	const Eigen::Vector3d& getBaseVelocityCommand(){
 		return m_base_vel_cmd;
@@ -321,6 +322,15 @@ public:
 		return m_odom_angle;
 	}
 
+	void setOdometryAngle(double angle) {
+		m_odom_angle = angle;
+	}
+
+	void setOdometryLocation(double x, double y) {
+		m_odom_loc.x() = x;
+		m_odom_loc.y() = y;
+	}
+
 	void setFieldOrientedControl(bool field_oriented_control){
 		m_is_field_oriented = field_oriented_control;
 	}
@@ -351,7 +361,6 @@ protected:
 	int m_num_modules = 0;
 	double m_lin_vel_slew;
 	double m_ang_slew;
-
 	double LIN_VEL_TO_RPM;
 
 	// Jacobians

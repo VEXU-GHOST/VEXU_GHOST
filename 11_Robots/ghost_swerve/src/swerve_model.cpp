@@ -56,7 +56,9 @@ void SwerveModel::validateConfig(){
 
 	// Initialize Odometry
 	m_odom_loc = Eigen::Vector2d::Zero();
-	m_odom_angle = 0.0;
+	m_odom_loc.x() = ghost_util::INCHES_TO_METERS * -6.0;
+	m_odom_loc.y() = ghost_util::INCHES_TO_METERS * 6.0;
+	m_odom_angle = ghost_util::DEG_TO_RAD * 135.0;
 }
 
 void SwerveModel::calculateJacobians(){
@@ -209,6 +211,13 @@ void SwerveModel::calculateKinematicSwerveControllerAngleControl(double right_cm
 	double vel_cmd = ghost_util::SmallestAngleDistRad(angle_cmd, getWorldAngleRad()) * m_config.angle_control_kp;
 	calculateKinematicSwerveControllerNormalized(right_cmd / 127.0, forward_cmd / 127.0, -vel_cmd);
 }
+
+void SwerveModel::calculateKinematicSwerveControllerMoveToPoseWorld(double des_x, double des_y, double angle_cmd){
+	double x_vel = (des_x - getOdometryLocation().x()) * m_config.move_to_pose_kp;
+	double y_vel = (des_y - getOdometryLocation().y()) * m_config.move_to_pose_kp;
+	calculateKinematicSwerveControllerAngleControl(-y_vel, x_vel, angle_cmd);
+}
+
 
 void SwerveModel::calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd){
 	calculateKinematicSwerveControllerNormalized(right_cmd / 127.0, forward_cmd / 127.0, clockwise_cmd / 127.0);

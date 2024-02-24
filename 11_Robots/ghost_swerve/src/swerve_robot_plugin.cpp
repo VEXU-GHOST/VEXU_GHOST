@@ -67,11 +67,8 @@ void SwerveRobotPlugin::initialize(){
 	m_k8 = node_ptr_->get_parameter("swerve_robot_plugin.k8").as_double();
 	m_k9 = node_ptr_->get_parameter("swerve_robot_plugin.k9").as_double();
 
-	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_x", 0.0);
-	m_move_to_pose_kp_x = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_x").as_double();
-
-	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_y", 0.0);
-	m_move_to_pose_kp_y = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_y").as_double();
+	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_xy", 0.0);
+	m_move_to_pose_kp_xy = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_xy").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_theta", 0.0);
 	m_move_to_pose_kp_theta = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_theta").as_double();
@@ -88,6 +85,8 @@ void SwerveRobotPlugin::initialize(){
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.angle_control_kp", 0.2);
 	swerve_model_config.angle_control_kp = node_ptr_->get_parameter("swerve_robot_plugin.angle_control_kp").as_double();
+
+	swerve_model_config.move_to_pose_kp = m_move_to_pose_kp_xy;
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kp", 2.0);
 	swerve_model_config.steering_kp = node_ptr_->get_parameter("swerve_robot_plugin.steering_kp").as_double();
@@ -227,7 +226,15 @@ void SwerveRobotPlugin::autonomous(double current_time){
 		rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 	}
-	if(time_wrap(1, 10)){
+	if(time_wrap(1, 5)){
+		if(current_time - 1.0 <= 0.4){
+			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_normal);
+		}
+		else{
+			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
+		}
+	}
+	if(time_wrap(5, 15)){
 		if(fmod(current_time,1.0) <= 0.4){
 			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_normal);
 		}
@@ -235,41 +242,46 @@ void SwerveRobotPlugin::autonomous(double current_time){
 			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 		}
 	}
-	if(time_wrap(10,100)){
+	if(time_wrap(15,100)){
 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 		if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
 			m_digital_io[m_digital_io_name_map.at("tail")] = false;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
 		}
-	}
 
-	if(time_wrap(10, 12)){
 		double des_x = 0;
 		double des_y = 0.5;
 		double des_theta = M_PI_2;
-		double vel_cmd_x = (des_x - m_swerve_model_ptr->getOdometryLocation().x()) * m_move_to_pose_kp_x * 5;
-		double vel_cmd_y = (des_y - m_swerve_model_ptr->getOdometryLocation().y()) * m_move_to_pose_kp_y * 5;
 
-		m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(vel_cmd_x, vel_cmd_y, des_theta);
-	}
-	if(time_wrap(12, 14)){
-		double des_x = 0.5;
-		double des_y = 1;
-		double des_theta = M_PI_2;
-		double vel_cmd_x = (des_x - m_swerve_model_ptr->getOdometryLocation().x()) * m_move_to_pose_kp_x * 5;
-		double vel_cmd_y = (des_y - m_swerve_model_ptr->getOdometryLocation().y()) * m_move_to_pose_kp_y * 5;
+		switch(m_auton_index){
+			case 0:
+				des_x = ghost_util::INCHES_TO_METERS * -6.0;
+				des_y = 0.5;
+				des_theta = M_PI_2;
+			break;
+			case 1:
+				des_x = 0.0;
+				des_y = 0.75;
+				des_theta = M_PI_2;
+			break;
+			case 2:
+				des_x = 0.0;
+				des_y = 3.0;
+				des_theta = M_PI_2;
+			break;
+			default:
+				des_x = m_swerve_model_ptr->getOdometryLocation().x();
+				des_y = m_swerve_model_ptr->getOdometryLocation().y();
+				des_theta = m_swerve_model_ptr->getOdometryAngle();
+		}
 
-		m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(vel_cmd_x, vel_cmd_y, des_theta);
-	}
-	if(time_wrap(14, 18)){
-		double des_x = 0.5;
-		double des_y = 3;
-		double des_theta = M_PI_2;
-		double vel_cmd_x = (des_x - m_swerve_model_ptr->getOdometryLocation().x()) * m_move_to_pose_kp_x * 5;
-		double vel_cmd_y = (des_y - m_swerve_model_ptr->getOdometryLocation().y()) * m_move_to_pose_kp_y * 5;
+		m_swerve_model_ptr->calculateKinematicSwerveControllerMoveToPoseWorld(des_x, des_y, des_theta);
 
-		m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(vel_cmd_x, vel_cmd_y, des_theta);
+		if((abs(des_x - m_swerve_model_ptr->getOdometryLocation().x()) < 0.1) && (abs(des_y - m_swerve_model_ptr->getOdometryLocation().y()) < 0.1)){
+			m_auton_index++;
+		}
 	}
+
 	rhi_ptr_->setDigitalIO(m_digital_io);
 	updateDrivetrainMotors();
 
@@ -320,11 +332,26 @@ void SwerveRobotPlugin::teleop(double current_time){
 	std::cout << "Teleop: " << current_time << std::endl;
 
 	if(joy_data->btn_u){
+		if(!m_auton_button_pressed){
+			m_auton_button_pressed = true;
+
+			// Reset Odometry or whatever for auton
+			m_last_odom_angle = ghost_util::DEG_TO_RAD * 135.0;
+			m_curr_odom_angle = ghost_util::DEG_TO_RAD * 135.0;
+			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * -8.0;
+			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 8.0;
+			m_last_odom_loc.x() = ghost_util::INCHES_TO_METERS * -8.0;
+			m_last_odom_loc.y() = ghost_util::INCHES_TO_METERS * 8.0;
+			m_swerve_model_ptr->setOdometryLocation(m_curr_odom_loc.x(), m_curr_odom_loc.y());
+			m_swerve_model_ptr->setOdometryAngle(m_curr_odom_angle);
+		}
 		autonomous(current_time - m_auton_start_time);
 	}
 	else{
 		// Reset Auton Tester
 		m_auton_start_time = current_time;
+		m_auton_button_pressed = false;
+		m_auton_index = 0;
 
 		// Toggle Field vs Robot Oriented
 		if(joy_data->btn_x && !m_toggle_swerve_field_control_btn_pressed){
@@ -337,13 +364,18 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		// Toggle Skills mode
 		if(joy_data->btn_d && !m_toggle_skills_control_btn_pressed){
-			m_skills ^= 1;
+			m_skills_control ^= 1;
 			m_toggle_skills_control_btn_pressed = true;
 		}
 		else if(!joy_data->btn_d){
 			m_toggle_skills_control_btn_pressed = false;
 		}
 
+		if(joy_data->btn_l){
+			m_last_odom_angle = 0.0;
+			m_curr_odom_angle = 0.0;
+			m_swerve_model_ptr->setOdometryAngle(0.0);
+		}
 
 		if(m_swerve_angle_control){
 			if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
@@ -431,7 +463,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_digital_io[m_digital_io_name_map.at("tail")] = true;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
 			if(joy_data->btn_r1){
-				double ang = m_skills ? m_swerve_model_ptr->getConfig().stick_angle_skills : m_swerve_model_ptr->getConfig().stick_angle_normal;
+				double ang = m_skills_control ? m_swerve_model_ptr->getConfig().stick_angle_skills : m_swerve_model_ptr->getConfig().stick_angle_normal;
 				std::cout << "stick angle " << ang << std::endl;
 				rhi_ptr_->setMotorPositionCommand("tail_motor", ang);
 			}

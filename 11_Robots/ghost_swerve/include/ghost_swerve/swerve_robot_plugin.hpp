@@ -51,16 +51,15 @@ protected:
 	std::shared_ptr<RunTree> bt_;
 
 	// Motion Planner
-	double m_move_to_pose_kp_x = 0.0;
-	double m_move_to_pose_kp_y = 0.0;
+	double m_move_to_pose_kp_xy = 0.0;
 	double m_move_to_pose_kp_theta = 0.0;
 
 	// Odometry
 	Eigen::Vector2d m_last_odom_loc = Eigen::Vector2d::Zero();
-	double m_last_odom_angle  = 135.0;
+	double m_last_odom_angle  = 0.0;
 
 	Eigen::Vector2d m_curr_odom_loc = Eigen::Vector2d::Zero();
-	double m_curr_odom_angle = 135.0;
+	double m_curr_odom_angle = 0.0;
 
 	Eigen::Vector3d m_curr_odom_std = Eigen::Vector3d::Zero();
 	Eigen::Vector3d m_curr_odom_cov = Eigen::Vector3d::Zero();
@@ -116,8 +115,9 @@ protected:
 
 	// Skills mode
 	bool m_toggle_skills_control_btn_pressed = false;
-	bool m_skills,control = false;
-	
+	bool m_skills_control = false;
+	bool m_auton_button_pressed = false;
+	int m_auton_index = 0;
 };
 
 } // namespace ghost_swerve
