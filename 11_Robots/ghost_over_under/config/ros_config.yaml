@@ -96,7 +96,7 @@ competition_state_machine_node:
       # 0 is the position we start on, slightly crooked
       stick_upright_angle_deg: 55.
       # in degrees
-      stick_angle_normal: 120.
+      stick_angle_normal: 130.
       stick_angle_skills: -10. # not an array because there are exactly 2 items
       stick_angle_soft_limit_offset: 5.
       # switch directions at angle_min + offset or angle_max - offset

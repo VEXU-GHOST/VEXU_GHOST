@@ -220,6 +220,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	// arm down then swipe
 	// push stuff
+	double num_swipes = 2.0;
 
 	// Enable Tail Mode
 	double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
@@ -240,7 +241,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 		}
 	}
-	if(time_wrap(5, 15)){
+	if(time_wrap(5, 5+num_swipes)){
 		if(fmod(current_time,1.0) <= 0.4){
 			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_normal);
 		}
@@ -248,7 +249,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 		}
 	}
-	if(time_wrap(15,100)){
+	if(time_wrap(5+num_swipes,100)){
 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 		if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
 			m_digital_io[m_digital_io_name_map.at("tail")] = false;
@@ -261,7 +262,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 		switch(m_auton_index){
 			case 0:
-				des_x = ghost_util::INCHES_TO_METERS * -6.0;
+				des_x = 0;
 				des_y = 0.5;
 				des_theta = M_PI_2;
 			break;
@@ -283,7 +284,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 		m_swerve_model_ptr->calculateKinematicSwerveControllerMoveToPoseWorld(des_x, des_y, des_theta);
 
-		if((abs(des_x - m_swerve_model_ptr->getOdometryLocation().x()) < 0.1) && (abs(des_y - m_swerve_model_ptr->getOdometryLocation().y()) < 0.1)){
+		if((abs(des_x - m_swerve_model_ptr->getOdometryLocation().x()) < 0.025) && (abs(des_y - m_swerve_model_ptr->getOdometryLocation().y()) < 0.025)){
 			m_auton_index++;
 		}
 	}
