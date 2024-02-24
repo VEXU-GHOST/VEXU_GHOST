@@ -1,9 +1,11 @@
 #include <spawn.h>
-#include "ghost_msgs/srv/toggle_bag_recorder.hpp"
+#include "ghost_msgs/srv/start_recorder.hpp"
+#include "ghost_msgs/srv/stop_recorder.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "unistd.h"
 
-using ghost_msgs::srv::ToggleBagRecorder;
+using ghost_msgs::srv::StartRecorder;
+using ghost_msgs::srv::StopRecorder;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
@@ -17,8 +19,10 @@ public:
 		disk_space_required_ = get_parameter("disk_space_required_kb").as_int();
 		disk_check_period_ = std::chrono::seconds(get_parameter("disk_check_period_s").as_int());
 
-		this->service_ = this->create_service<ToggleBagRecorder>("toggle_bag_recorder",
-		                                                         std::bind(&BagRecorderNode::ToggleRecording, this, _1, _2));
+		this->start_service_ = this->create_service<StartRecorder>("bag_recorder/start",
+		                                                           std::bind(&BagRecorderNode::StartCallback, this, _1, _2));
+		this->stop_service_ = this->create_service<StopRecorder>("bag_recorder/stop",
+		                                                         std::bind(&BagRecorderNode::StopCallback, this, _1, _2));
 		disk_check_timer = this->create_wall_timer(disk_check_period_, std::bind(&BagRecorderNode::EnforceFreeDiskSpace, this));
 
 		std::string startup_string;
@@ -29,14 +33,15 @@ public:
 		RCLCPP_INFO(rclcpp::get_logger("rclcpp"), startup_string.c_str());
 	};
 
-	void ToggleRecording(const std::shared_ptr<ToggleBagRecorder::Request> req,
-	                     std::shared_ptr<ToggleBagRecorder::Response>      res);
+	void StartCallback(StartRecorder::Request::SharedPtr req, StartRecorder::Response::SharedPtr res);
+	void StopCallback(StopRecorder::Request::SharedPtr req, StopRecorder::Response::SharedPtr res);
 	void SpawnRecorderProcess();
 	void KillRecorderProcess();
 	void EnforceFreeDiskSpace();
 
 private:
-	rclcpp::Service<ToggleBagRecorder>::SharedPtr service_;
+	rclcpp::Service<StartRecorder>::SharedPtr start_service_;
+	rclcpp::Service<StopRecorder>::SharedPtr stop_service_;
 	bool recording_ = false;
 	pid_t recorderPID_ = -1;
 	unsigned long disk_space_required_;
@@ -45,22 +50,38 @@ private:
 	rclcpp::TimerBase::SharedPtr disk_check_timer;
 };
 
-void BagRecorderNode::ToggleRecording(const std::shared_ptr<ToggleBagRecorder::Request> req,
-                                      std::shared_ptr<ToggleBagRecorder::Response>      res) {
-	(!recording_) ? SpawnRecorderProcess() : KillRecorderProcess();
+void BagRecorderNode::StartCallback(StartRecorder::Request::SharedPtr req,
+                                    StartRecorder::Response::SharedPtr res){
+	SpawnRecorderProcess();
 }
 
-void BagRecorderNode::SpawnRecorderProcess() {
+void BagRecorderNode::StopCallback(StopRecorder::Request::SharedPtr req,
+                                   StopRecorder::Response::SharedPtr res){
+	KillRecorderProcess();
+}
+
+
+void BagRecorderNode::SpawnRecorderProcess(){
+	if(recording_){
+		RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Unable to start recorder; one already exists.");
+		return;
+	}
+
 	recording_ = true;
 	RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Starting recorder.");
 
 	recorderPID_ = fork();
 	if(recorderPID_ == 0){
-		execl("/bin/sh", "sh", "-c", "exec ros2 bag record -a", NULL);
+		execl("/bin/sh", "sh", "-c", "exec ros2 bag record -a -o ~/bags/$(date +%m_%d_%Y-%H_%M_%S)", NULL);
 	}
 }
 
 void BagRecorderNode::KillRecorderProcess() {
+	if(!recording_){
+		RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Unable to stop recorder; none exist.");
+		return;
+	}
+
 	recording_ = false;
 	RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Stopping recorder.");
 

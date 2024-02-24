@@ -182,18 +182,32 @@ install(TARGETS
   bag_recorder_service
   DESTINATION lib/${PROJECT_NAME})
   
-add_executable(bag_recorder_client
-  src/bag_recorder/bag_recorder_client.cpp
+add_executable(start_bag_recorder_client
+  src/bag_recorder/start_bag_recorder_client.cpp
 )
-ament_target_dependencies(bag_recorder_client
+ament_target_dependencies(start_bag_recorder_client
   ${DEPENDENCIES}
 )
-target_include_directories(bag_recorder_client
+target_include_directories(start_bag_recorder_client
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  bag_recorder_client
+  start_bag_recorder_client
+  DESTINATION lib/${PROJECT_NAME})
+  
+add_executable(stop_bag_recorder_client
+  src/bag_recorder/stop_bag_recorder_client.cpp
+)
+ament_target_dependencies(stop_bag_recorder_client
+  ${DEPENDENCIES}
+)
+target_include_directories(stop_bag_recorder_client
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  stop_bag_recorder_client
   DESTINATION lib/${PROJECT_NAME})
   
 #################

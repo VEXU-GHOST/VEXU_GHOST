@@ -162,6 +162,12 @@ void SwerveRobotPlugin::initialize(){
 		10);
 
 	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
+
+	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
+		"bag_recorder/start");
+
+	m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
+		"bag_recorder/stop");
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
@@ -343,7 +349,25 @@ void SwerveRobotPlugin::teleop(double current_time){
 		else if(!joy_data->btn_d){
 			m_toggle_skills_control_btn_pressed = false;
 		}
+    
+	// Toggle Bag Recorder
+	if(joy_data->btn_y && !m_recording_btn_pressed){
+		m_recording_btn_pressed = true;
 
+		if(!m_recording){
+			auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+			m_start_recorder_client->async_send_request(req);
+		}
+		else{
+			auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+			m_stop_recorder_client->async_send_request(req);
+		}
+
+		m_recording = !m_recording;
+	}
+	else if(!joy_data->btn_y){
+		m_recording_btn_pressed = false;
+	}
 
 		if(m_swerve_angle_control){
 			if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
