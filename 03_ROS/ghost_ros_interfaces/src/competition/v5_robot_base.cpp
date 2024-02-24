@@ -2,6 +2,7 @@
 
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
+#include "rclcpp/rclcpp.hpp"
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -68,19 +69,28 @@ void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::Sh
 	// Perform any operations that should happen on every loop
 	onNewSensorData();
 
-	// Execute Competition State Machine
-	switch(curr_comp_state_){
-		case robot_state_e::DISABLED:
-			disabled();
-		break;
+	try{
+		// Execute Competition State Machine
+		switch(curr_comp_state_){
+			case robot_state_e::DISABLED:
+				disabled();
+			break;
 
-		case robot_state_e::AUTONOMOUS:
-			autonomous(getTimeFromStart());
-		break;
+			case robot_state_e::AUTONOMOUS:
+				autonomous(getTimeFromStart());
+			break;
 
-		case robot_state_e::TELEOP:
-			teleop(getTimeFromStart());
-		break;
+			case robot_state_e::TELEOP:
+				teleop(getTimeFromStart());
+			break;
+		}
+	}
+	catch(std::exception& e){
+		RCLCPP_WARN(node_ptr_->get_logger(), e.what());
+	}
+	catch(...){
+		std::exception_ptr p = std::current_exception();
+		RCLCPP_WARN(node_ptr_->get_logger(), (p ? p.__cxa_exception_type()->name() : "null"));
 	}
 
 	// Get Actuator Msg from RobotHardwareInterface and publish
