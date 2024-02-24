@@ -71,12 +71,17 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
-    # rplidar_node = Node(
-    #     package='rplidar_ros',
-    #     executable='rplidar_scan_publisher',
-    #     name='rplidar_scan_publisher',
-    #     parameters=[{"frame_id": "lidar_link", 'angle_compensate': True}]
-    # )
+    rplidar_node = Node(
+        package='rplidar_ros',
+        executable='rplidar_node',
+        name='rplidar_node',
+        parameters=[{'channel_type': 'serial',
+                'serial_port': '/dev/ttyUSB0',
+                'serial_baudrate': 115200,
+                'frame_id': "lidar_link",
+                'inverted': False,
+                'angle_compensate': True}],
+    )
 
     imu_filter_node = Node(
         package='ghost_sensing',
@@ -121,6 +126,6 @@ def generate_launch_description():
         realsense_node,
         imu_filter_node,
         robot_localization_node,
-        swerve_motion_planner_node
-        # rplidar_node,
+        swerve_motion_planner_node,
+        rplidar_node
     ])
