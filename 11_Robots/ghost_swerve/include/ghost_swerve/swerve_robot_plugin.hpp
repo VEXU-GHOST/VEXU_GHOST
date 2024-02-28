@@ -14,7 +14,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include <ghost_autonomy/run_tree.hpp>
+#include <ghost_swerve/swerve_tree.hpp>
 
 namespace ghost_swerve {
 
@@ -54,7 +54,7 @@ protected:
 
 	// Autonomy
 	std::string bt_path_;
-	std::shared_ptr<RunTree> bt_;
+	std::shared_ptr<SwerveTree> bt_;
 
 	// Motion Planner
 	double m_move_to_pose_kp_xy = 0.0;

@@ -35,59 +35,6 @@ set(INCLUDE
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
-# bt node libraries
-set(NODES
-  checkForRestart
-  loggingNode
-  moveToPose
-)
-
-foreach(NODE ${NODES})
-  add_library(${NODE} SHARED
-    src/bt_nodes/${NODE}.cpp
-  )
-  target_include_directories(${NODE}
-    PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-  ament_target_dependencies(${NODE}
-    ${DEPENDENCIES}
-  )
-  ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
-  install(
-    TARGETS ${NODE}
-    EXPORT ${NODE}
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
-  )
-endforeach()
-
-# run tree library
-add_library(run_tree SHARED
-  src/run_tree.cpp
-)
-target_include_directories(run_tree
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(run_tree
-  ${DEPENDENCIES}
-)
-target_link_libraries(run_tree
-  ${NODES}
-)
-ament_export_targets(run_tree HAS_LIBRARY_TARGET)
-install(
-  TARGETS run_tree
-  EXPORT run_tree
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
 # test robot config publisher
 add_executable(publish_test
   src/publish_test.cpp
@@ -109,10 +56,6 @@ publish_test
 install(DIRECTORY include/
   DESTINATION include
 )
-install(DIRECTORY
-  launch
-  config
-  DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -1,6 +1,8 @@
-#include "ghost_autonomy/bt_nodes/checkForRestart.hpp"
+#include "ghost_swerve/bt_nodes/checkForRestart.hpp"
 
 using std::placeholders::_1;
+
+namespace ghost_swerve {
 
 // If your Node has ports, you must use this constructor signature
 CheckForRestart::CheckForRestart(const std::string& name, const BT::NodeConfig& config,
@@ -37,3 +39,5 @@ BT::NodeStatus CheckForRestart::tick() {
 
 	return BT::NodeStatus::SUCCESS;
 }
+
+} // namespace ghost_swerve

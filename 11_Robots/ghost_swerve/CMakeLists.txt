@@ -19,10 +19,12 @@ set(DEPENDENCIES
   nav_msgs
   ghost_msgs
   pluginlib
-  ghost_autonomy
+  tf2
   ghost_planners
   ghost_motion_planner_core
   Eigen3
+  behaviortree_cpp
+  behaviortree_ros2
   )
 
 # Iterates through the list and finds the packages!
@@ -105,6 +107,59 @@ install(TARGETS
   swerve_motion_planner
   DESTINATION lib/${PROJECT_NAME})
 
+# bt node libraries
+set(NODES
+  checkForRestart
+  loggingNode
+  moveToPose
+)
+
+foreach(NODE ${NODES})
+  add_library(${NODE} SHARED
+    src/bt_nodes/${NODE}.cpp
+  )
+  target_include_directories(${NODE}
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  ament_target_dependencies(${NODE}
+    ${DEPENDENCIES}
+  )
+  ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
+  install(
+    TARGETS ${NODE}
+    EXPORT ${NODE}
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+  )
+endforeach()
+
+# run tree library
+add_library(swerve_tree SHARED
+  src/swerve_tree.cpp
+)
+target_include_directories(swerve_tree
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(swerve_tree
+  ${DEPENDENCIES}
+)
+target_link_libraries(swerve_tree
+  ${NODES}
+)
+ament_export_targets(swerve_tree HAS_LIBRARY_TARGET)
+install(
+  TARGETS swerve_tree
+  EXPORT swerve_tree
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 ###################
 ###### Tests ######
 ###################
@@ -139,6 +194,8 @@ install(
 
 install(DIRECTORY
   urdf
+  config
+  launch
   DESTINATION share/${PROJECT_NAME})
 
 pluginlib_export_plugin_description_file(ghost_ros_interfaces plugins.xml)

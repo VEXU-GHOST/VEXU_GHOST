@@ -56,9 +56,9 @@ void SwerveModel::validateConfig(){
 
 	// Initialize Odometry
 	m_odom_loc = Eigen::Vector2d::Zero();
-	m_odom_loc.x() = ghost_util::INCHES_TO_METERS * -6.0;
+	m_odom_loc.x() = ghost_util::INCHES_TO_METERS * 6.0;
 	m_odom_loc.y() = ghost_util::INCHES_TO_METERS * 6.0;
-	m_odom_angle = ghost_util::DEG_TO_RAD * 135.0;
+	m_odom_angle = ghost_util::DEG_TO_RAD * 45.0;
 }
 
 void SwerveModel::calculateJacobians(){

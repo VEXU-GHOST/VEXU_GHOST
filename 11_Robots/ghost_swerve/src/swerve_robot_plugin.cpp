@@ -160,7 +160,7 @@ void SwerveRobotPlugin::initialize(){
 		trajectory_marker_topic,
 		10);
 
-	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
+	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr);
 
 	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
 		"bag_recorder/start");
@@ -216,78 +216,72 @@ void SwerveRobotPlugin::disabled(){
 void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
 
-	// bt_->tick_tree();
+	bt_->tick_tree();
 
 	// arm down then swipe
 	// push stuff
-	double num_swipes = 2.0;
+	// double num_swipes = 2.0;
 
-	// Enable Tail Mode
-	double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
-	double stick_turn_offset = m_swerve_model_ptr->getConfig().stick_turn_offset;
-	#define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
+	// // Enable Tail Mode
+	// double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
+	// double stick_turn_offset = m_swerve_model_ptr->getConfig().stick_turn_offset;
+	// #define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
 
-	#define time_wrap(start_time, end_time) (current_time <= end_time && current_time > start_time)
-	if(time_wrap(0, 1)){
-		m_digital_io[m_digital_io_name_map.at("tail")] = true;
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
-	}
-	if(time_wrap(1, 5)){
-		if(current_time - 1.0 <= 0.4){
-			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_normal);
-		}
-		else{
-			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
-		}
-	}
-	if(time_wrap(5, 5+num_swipes)){
-		if(fmod(current_time,1.0) <= 0.4){
-			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_normal);
-		}
-		else{
-			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
-		}
-	}
-	if(time_wrap(5+num_swipes,100)){
-		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
-		if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
-			m_digital_io[m_digital_io_name_map.at("tail")] = false;
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
-		}
+	// #define time_wrap(start_time, end_time) (current_time <= end_time && current_time > start_time)
+	// if(time_wrap(0, 1)){
+	// 	m_digital_io[m_digital_io_name_map.at("tail")] = true;
+	// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+	// 	rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
+	// }
+	// if(time_wrap(1, 5)){
+	// 	if(current_time - 1.0 <= 0.4){
+	// 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_normal);
+	// 	}
+	// 	else{
+	// 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
+	// 	}
+	// }
+	// if(time_wrap(5, 5+num_swipes)){
+	// 	if(fmod(current_time,1.0) <= 0.4){
+	// 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_angle_normal);
+	// 	}
+	// 	else{
+	// 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
+	// 	}
+	// }
+	// if(time_wrap(5+num_swipes,100)){
+	// 	rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
+	// 	if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
+	// 		m_digital_io[m_digital_io_name_map.at("tail")] = false;
+	// 		rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
+	// 	}
 
-		double des_x = 0;
-		double des_y = 0.5;
-		double des_theta = M_PI_2;
+		// double des_x = 0;
+		// double des_y = 0.5;
+		// double des_theta = M_PI_2;
 
-		switch(m_auton_index){
-			case 0:
-				des_x = 0;
-				des_y = 0.5;
-				des_theta = M_PI_2;
-			break;
-			case 1:
-				des_x = 0.0;
-				des_y = 0.75;
-				des_theta = M_PI_2;
-			break;
-			case 2:
-				des_x = 0.0;
-				des_y = 3.0;
-				des_theta = M_PI_2;
-			break;
-			default:
-				des_x = m_swerve_model_ptr->getOdometryLocation().x();
-				des_y = m_swerve_model_ptr->getOdometryLocation().y();
-				des_theta = m_swerve_model_ptr->getOdometryAngle();
-		}
-
-		m_swerve_model_ptr->calculateKinematicSwerveControllerMoveToPoseWorld(des_x, des_y, des_theta);
-
-		if((abs(des_x - m_swerve_model_ptr->getOdometryLocation().x()) < 0.025) && (abs(des_y - m_swerve_model_ptr->getOdometryLocation().y()) < 0.025)){
-			m_auton_index++;
-		}
-	}
+		// switch(m_auton_index){
+		// 	case 0:
+		// 		des_x = 0;
+		// 		des_y = 0.5;
+		// 		des_theta = M_PI_2;
+		// 	break;
+		// 	case 1:
+		// 		des_x = 0.0;
+		// 		des_y = 0.75;
+		// 		des_theta = M_PI_2;
+		// 	break;
+		// 	case 2:
+		// 		des_x = 0.0;
+		// 		des_y = 3.0;
+		// 		des_theta = M_PI_2;
+		// 	break;
+		// 	default:
+		// 		des_x = m_swerve_model_ptr->getOdometryLocation().x();
+		// 		des_y = m_swerve_model_ptr->getOdometryLocation().y();
+		// 		des_theta = m_swerve_model_ptr->getOdometryAngle();
+		// }
+	// }
 
 	rhi_ptr_->setDigitalIO(m_digital_io);
 	updateDrivetrainMotors();
@@ -338,20 +332,17 @@ void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	std::cout << "Teleop: " << current_time << std::endl;
 
-	
-
-
 	if(joy_data->btn_u){
 		if(!m_auton_button_pressed){
 			m_auton_button_pressed = true;
 
 			// Reset Odometry or whatever for auton
-			m_last_odom_angle = ghost_util::DEG_TO_RAD * 135.0;
-			m_curr_odom_angle = ghost_util::DEG_TO_RAD * 135.0;
-			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * -8.0;
-			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 8.0;
-			m_last_odom_loc.x() = ghost_util::INCHES_TO_METERS * -8.0;
-			m_last_odom_loc.y() = ghost_util::INCHES_TO_METERS * 8.0;
+			m_last_odom_angle = ghost_util::DEG_TO_RAD * 45.0;
+			m_curr_odom_angle = m_last_odom_angle;
+			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 6.0;
+			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 6.0;
+			m_last_odom_loc.x() = m_curr_odom_loc.x();
+			m_last_odom_loc.y() = m_last_odom_loc.y();
 			m_swerve_model_ptr->setOdometryLocation(m_curr_odom_loc.x(), m_curr_odom_loc.y());
 			m_swerve_model_ptr->setOdometryAngle(m_curr_odom_angle);
 		}

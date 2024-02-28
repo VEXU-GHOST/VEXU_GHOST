@@ -21,8 +21,8 @@ def generate_launch_description():
     plugin_type = "ghost_swerve::SwerveRobotPlugin"
     robot_name = "ghost_15"
 
-    ghost_autonomy_share_dir = get_package_share_directory('ghost_autonomy')
-    bt_path = os.path.join(ghost_autonomy_share_dir, "config", "bt.xml")
+    ghost_swerve_share_dir = get_package_share_directory('ghost_swerve')
+    bt_path = os.path.join(ghost_swerve_share_dir, "config", "bt.xml")
     
 
     ########################
