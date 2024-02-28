@@ -112,6 +112,7 @@ set(NODES
   checkForRestart
   loggingNode
   moveToPose
+  swipeTail
 )
 
 foreach(NODE ${NODES})

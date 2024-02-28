@@ -19,6 +19,7 @@
   <depend>nav_msgs</depend>
   <depend>pluginlib</depend>
   <depend>ghost_motion_planner_core</depend>
+  <depend>ghost_planners</depend>
   <depend>behaviortree_cpp</depend>
   <depend>behaviortree_ros2</depend>
 

@@ -339,8 +339,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 			// Reset Odometry or whatever for auton
 			m_last_odom_angle = ghost_util::DEG_TO_RAD * 45.0;
 			m_curr_odom_angle = m_last_odom_angle;
-			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 6.0;
-			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 6.0;
+			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 10.0;
+			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 10.0;
 			m_last_odom_loc.x() = m_curr_odom_loc.x();
 			m_last_odom_loc.y() = m_last_odom_loc.y();
 			m_swerve_model_ptr->setOdometryLocation(m_curr_odom_loc.x(), m_curr_odom_loc.y());

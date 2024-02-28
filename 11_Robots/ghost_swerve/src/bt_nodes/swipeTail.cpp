@@ -2,9 +2,9 @@
 
 namespace ghost_swerve {
 
-SwipeTail(const std::string& name, const BT::NodeConfig& config,
+SwipeTail::SwipeTail(const std::string& name, const BT::NodeConfig& config,
 			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-			std::shared_ptr<SwerveModel> swerve_ptr)
+			std::shared_ptr<SwerveModel> swerve_ptr) :
 	BT::SyncActionNode(name, config),
 	rclcpp::Node("move_to_pose_node"),
 	rhi_ptr_(rhi_ptr),
@@ -32,6 +32,14 @@ T SwipeTail::get_input(std::string key){
 
 // Override the virtual function tick()
 BT::NodeStatus SwipeTail::tick(){
+	auto m_digital_io = std::vector<bool>(8, false);
+	auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
+		{"claw", 0},
+		{"right_wing", 1},
+		{"left_wing", 2},
+		{"tail", 3}
+	};
+
 	int num_swipes = get_input<int>("num_swipes");
 
 	m_digital_io[m_digital_io_name_map.at("tail")] = true;
@@ -52,7 +60,7 @@ BT::NodeStatus SwipeTail::tick(){
 	}
 
 	double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
-	double stick_turn_offset = m_swerve_model_ptr->getConfig().stick_turn_offset;
+	double stick_turn_offset = swerve_ptr_->getConfig().stick_turn_offset;
 	#define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
 
 	if(500 < time_elapsed && time_elapsed < 1000 * num_swipes + 500){

@@ -17,13 +17,14 @@ public:
 
     // It is mandatory to define this STATIC method.
 	static BT::PortsList providedPorts();
-	// template <typename T>
-	// T get_input(std::string key);
 
 	// Override the virtual function tick()
 	BT::NodeStatus tick() override;
 
 private:
+	template <typename T>
+	T get_input(std::string key);
+	
     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 	std::shared_ptr<SwerveModel> swerve_ptr_;
     bool started_;
