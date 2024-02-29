@@ -283,7 +283,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 		// }
 	// }
 
-	rhi_ptr_->setDigitalIO(m_digital_io);
+	// rhi_ptr_->setDigitalIO(m_digital_io);
 	updateDrivetrainMotors();
 
 	// auto command_map = get_commands(current_time);
