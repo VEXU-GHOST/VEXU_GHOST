@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4">
+<root BTCPP_format="4"
+      main_tree_to_execute="tailTest">
   <BehaviorTree ID="main">
     <Sequence>
       <SwipeTail num_swipes="5"/>
@@ -18,6 +19,15 @@
                   theta="0"
                   threshold=""
                   timeout=""/>
+      <KeepRunningUntilFailure>
+        <CheckForRestart/>
+      </KeepRunningUntilFailure>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="tailTest">
+    <Sequence>
+      <SwipeTail num_swipes="5"/>
       <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>
