@@ -73,6 +73,7 @@ target_include_directories(swerve_robot_plugin
   $<INSTALL_INTERFACE:include>)
   target_link_libraries(swerve_robot_plugin
     swerve_model
+    swerve_tree
   )
 ament_target_dependencies(swerve_robot_plugin
   ${DEPENDENCIES}
