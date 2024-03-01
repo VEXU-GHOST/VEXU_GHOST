@@ -5,7 +5,7 @@ namespace ghost_swerve {
 SwipeTail::SwipeTail(const std::string& name, const BT::NodeConfig& config,
 			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 			std::shared_ptr<SwerveModel> swerve_ptr) :
-	BT::SyncActionNode(name, config),
+	BT::StatefulActionNode(name, config),
 	rclcpp::Node("swipe_tail"),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr){
@@ -30,8 +30,19 @@ T SwipeTail::get_input(std::string key){
 	return input.value();
 }
 
-// Override the virtual function tick()
-BT::NodeStatus SwipeTail::tick(){
+/// Method called once, when transitioning from the state IDLE.
+/// If it returns RUNNING, this becomes an asynchronous node.
+BT::NodeStatus SwipeTail::onStart(){
+	return BT::NodeStatus::RUNNING;
+}
+
+/// when the method halt() is called and the action is RUNNING, this method is invoked.
+/// This is a convenient place todo a cleanup, if needed.
+void SwipeTail::onHalted(){
+
+}
+
+BT::NodeStatus SwipeTail::onRunning() {
 	auto m_digital_io = std::vector<bool>(8, false);
 	auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
 		{"claw", 0},

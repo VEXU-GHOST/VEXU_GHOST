@@ -8,7 +8,7 @@ namespace ghost_swerve {
 MoveToPose::MoveToPose(const std::string& name, const BT::NodeConfig& config,
                        std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 					   std::shared_ptr<SwerveModel> swerve_ptr) :
-	BT::SyncActionNode(name, config),
+	BT::StatefulActionNode(name, config),
 	rclcpp::Node("move_to_pose_node"),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr){
@@ -41,8 +41,19 @@ T MoveToPose::get_input(std::string key){
 	return input.value();
 }
 
-// Override the virtual function tick()
-BT::NodeStatus MoveToPose::tick() {
+/// Method called once, when transitioning from the state IDLE.
+/// If it returns RUNNING, this becomes an asynchronous node.
+BT::NodeStatus MoveToPose::onStart(){
+	return BT::NodeStatus::RUNNING;
+}
+
+/// when the method halt() is called and the action is RUNNING, this method is invoked.
+/// This is a convenient place todo a cleanup, if needed.
+void MoveToPose::onHalted(){
+
+}
+
+BT::NodeStatus MoveToPose::onRunning() {
 	double posX = get_input<double>("posX");
 	double posY = get_input<double>("posY");
 	double theta = get_input<double>("theta");

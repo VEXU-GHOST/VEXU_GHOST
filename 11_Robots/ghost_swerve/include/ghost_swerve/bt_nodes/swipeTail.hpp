@@ -7,7 +7,7 @@
 
 namespace ghost_swerve {
     
-class SwipeTail : public BT::SyncActionNode,
+class SwipeTail : public BT::StatefulActionNode,
 	              public rclcpp::Node {
 
 public:
@@ -18,8 +18,16 @@ public:
     // It is mandatory to define this STATIC method.
 	static BT::PortsList providedPorts();
 
-	// Override the virtual function tick()
-	BT::NodeStatus tick() override;
+	/// Method called once, when transitioning from the state IDLE.
+	/// If it returns RUNNING, this becomes an asynchronous node.
+	BT::NodeStatus onStart();
+
+	/// method invoked when the action is already in the RUNNING state.
+	BT::NodeStatus onRunning();
+
+	/// when the method halt() is called and the action is RUNNING, this method is invoked.
+	/// This is a convenient place todo a cleanup, if needed.
+	void onHalted();
 
 private:
 	template <typename T>

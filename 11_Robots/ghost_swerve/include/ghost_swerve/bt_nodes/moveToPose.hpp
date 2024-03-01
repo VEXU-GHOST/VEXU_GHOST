@@ -14,7 +14,7 @@ using std::placeholders::_1;
 namespace ghost_swerve {
 
 // SyncActionNode (synchronous action) with an input port.
-class MoveToPose : public BT::SyncActionNode,
+class MoveToPose : public BT::StatefulActionNode,
 	               public rclcpp::Node {
 
 public:
@@ -26,8 +26,19 @@ public:
 	// It is mandatory to define this STATIC method.
 	static BT::PortsList providedPorts();
 
+	/// Method called once, when transitioning from the state IDLE.
+	/// If it returns RUNNING, this becomes an asynchronous node.
+	BT::NodeStatus onStart();
+
+	/// method invoked when the action is already in the RUNNING state.
+	BT::NodeStatus onRunning();
+
+	/// when the method halt() is called and the action is RUNNING, this method is invoked.
+	/// This is a convenient place todo a cleanup, if needed.
+	void onHalted();
+
 	// Override the virtual function tick()
-	BT::NodeStatus tick() override;
+	// BT::NodeStatus tick() override;
 
 private:
 	template <typename T>
