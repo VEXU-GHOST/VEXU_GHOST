@@ -44,7 +44,6 @@ T MoveToPose::get_input(std::string key){
 /// Method called once, when transitioning from the state IDLE.
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus MoveToPose::onStart(){
-	RCLCPP_INFO(this->get_logger(), "MoveToPose: onStart");
 	started_ = false;
 	return BT::NodeStatus::RUNNING;
 }
@@ -52,12 +51,10 @@ BT::NodeStatus MoveToPose::onStart(){
 /// when the method halt() is called and the action is RUNNING, this method is invoked.
 /// This is a convenient place todo a cleanup, if needed.
 void MoveToPose::onHalted(){
-	RCLCPP_INFO(this->get_logger(), "MoveToPose: onHalted");
 	resetStatus();
 }
 
 BT::NodeStatus MoveToPose::onRunning() {
-	RCLCPP_INFO(this->get_logger(), "MoveToPose: onRunning");
 	double posX = get_input<double>("posX");
 	double posY = get_input<double>("posY");
 	double theta = get_input<double>("theta");

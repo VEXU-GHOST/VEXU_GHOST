@@ -4,6 +4,7 @@
 #include "bt_nodes/loggingNode.hpp"
 #include "bt_nodes/moveToPose.hpp"
 #include "bt_nodes/swipeTail.hpp"
+#include "bt_nodes/setWing.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"

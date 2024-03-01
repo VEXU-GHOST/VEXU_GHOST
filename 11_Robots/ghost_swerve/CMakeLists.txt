@@ -114,6 +114,7 @@ set(NODES
   loggingNode
   moveToPose
   swipeTail
+  setWing
 )
 
 foreach(NODE ${NODES})
