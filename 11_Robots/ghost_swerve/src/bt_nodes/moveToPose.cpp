@@ -44,16 +44,20 @@ T MoveToPose::get_input(std::string key){
 /// Method called once, when transitioning from the state IDLE.
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus MoveToPose::onStart(){
+	RCLCPP_INFO(this->get_logger(), "MoveToPose: onStart");
+	started_ = false;
 	return BT::NodeStatus::RUNNING;
 }
 
 /// when the method halt() is called and the action is RUNNING, this method is invoked.
 /// This is a convenient place todo a cleanup, if needed.
 void MoveToPose::onHalted(){
-
+	RCLCPP_INFO(this->get_logger(), "MoveToPose: onHalted");
+	resetStatus();
 }
 
 BT::NodeStatus MoveToPose::onRunning() {
+	RCLCPP_INFO(this->get_logger(), "MoveToPose: onRunning");
 	double posX = get_input<double>("posX");
 	double posY = get_input<double>("posY");
 	double theta = get_input<double>("theta");
@@ -68,18 +72,21 @@ BT::NodeStatus MoveToPose::onRunning() {
 	swerve_ptr_->calculateKinematicSwerveControllerMoveToPoseWorld(posX, posY, theta);
 
 	if((abs(posX - swerve_ptr_->getOdometryLocation().x()) < threshold) && (abs(posY - swerve_ptr_->getOdometryLocation().y()) < threshold)){
+		RCLCPP_INFO(this->get_logger(), "MoveToPose: Success");
 		return BT::NodeStatus::SUCCESS;
 	}
 
 	if(started_){
 		auto now = std::chrono::system_clock::now();
 		int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
+		RCLCPP_INFO(this->get_logger(), "MoveToPose: %i ms elapsed", time_elapsed);
 		if (time_elapsed > timeout){
 			RCLCPP_WARN(this->get_logger(), "MoveToPose Timeout: %i ms elapsed", time_elapsed);
 			started_ = false;
 			return BT::NodeStatus::FAILURE;
 		}
 	} else {
+		RCLCPP_INFO(this->get_logger(), "MoveToPose: Started");
 		start_time_ = std::chrono::system_clock::now();
 		started_ = true;
 	}

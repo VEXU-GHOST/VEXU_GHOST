@@ -11,7 +11,7 @@
             <input_port name="threshold" default="0.025">m</input_port>
             <input_port name="timeout" default="5000">ms</input_port>
         </Action>
-        <Action ID="SaySomething" editable="true">
+        <Action ID="Logging" editable="true">
             <input_port name="message"/>
         </Action>
         <Action ID="SwipeTail" editable="true">

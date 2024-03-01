@@ -33,13 +33,14 @@ T SwipeTail::get_input(std::string key){
 /// Method called once, when transitioning from the state IDLE.
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus SwipeTail::onStart(){
+	started_ = false;
 	return BT::NodeStatus::RUNNING;
 }
 
 /// when the method halt() is called and the action is RUNNING, this method is invoked.
 /// This is a convenient place todo a cleanup, if needed.
 void SwipeTail::onHalted(){
-
+	resetStatus();
 }
 
 BT::NodeStatus SwipeTail::onRunning() {

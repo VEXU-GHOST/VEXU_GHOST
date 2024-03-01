@@ -4,7 +4,7 @@
 // If your Node has ports, you must use this constructor signature
 LoggingNode::LoggingNode(const std::string& name, const BT::NodeConfig& config) :
 		BT::SyncActionNode(name, config),
-		rclcpp::Node("test_node"){
+		rclcpp::Node("logging_node"){
 }
 
 // It is mandatory to define this STATIC method.

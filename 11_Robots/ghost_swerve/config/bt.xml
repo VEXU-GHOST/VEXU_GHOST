@@ -1,24 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="tailTest">
+      main_tree_to_execute="main">
   <BehaviorTree ID="main">
     <Sequence>
-      <SwipeTail num_swipes="5"/>
-      <MoveToPose posX="0.5"
+      <!-- <SwipeTail num_swipes="5"/> -->
+      <Logging message="before mtp 1"/>
+      <MoveToPose posX="0.33"
+                  posY="0.33"
+                  theta="45"
+                  threshold="0.025"
+                  timeout="5000"/>
+      <Logging message="before mtp 2"/>
+      <MoveToPose posX="0.45"
+                  posY="0.2"
+                  theta="0"
+                  threshold="0.025"
+                  timeout="5000"/>
+      <MoveToPose posX="0.7"
                   posY="0"
                   theta="0"
                   threshold="0.025"
                   timeout="5000"/>
-      <MoveToPose posX="0.75"
-                  posY="0"
-                  theta="0"
-                  threshold="0.025"
-                  timeout=""/>
       <MoveToPose posX="3.0"
                   posY="0"
                   theta="0"
-                  threshold=""
-                  timeout=""/>
+                  threshold="0.025"
+                  timeout="5000"/>
       <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>

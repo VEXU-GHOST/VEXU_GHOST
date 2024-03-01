@@ -15,7 +15,7 @@ SwerveTree::SwerveTree(std::string bt_path,
 		BT::BehaviorTreeFactory factory;
 
 		// add all nodes here
-		factory.registerNodeType<LoggingNode>("LoggingNode");
+		factory.registerNodeType<LoggingNode>("Logging");
 		factory.registerNodeType<CheckForRestart>("CheckForRestart", robot_hardware_interface_ptr);
 		factory.registerNodeType<MoveToPose>("MoveToPose", robot_hardware_interface_ptr, swerve_ptr);
 		factory.registerNodeType<SwipeTail>("SwipeTail", robot_hardware_interface_ptr, swerve_ptr);
