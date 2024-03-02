@@ -17,8 +17,7 @@ SwerveRobotPlugin::SwerveRobotPlugin(){
 		{"claw", 0},
 		{"right_wing", 1},
 		{"left_wing", 2},
-		{"tail", 3}
-	};
+		{"tail", 3}};
 }
 
 void SwerveRobotPlugin::initialize(){
@@ -98,12 +97,14 @@ void SwerveRobotPlugin::initialize(){
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_gear_ratio", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_angle_deg", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.lift_climbed_angle_deg", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_kP", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_speed", 1.);
 	double gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.lift_gear_ratio").as_double();
 	swerve_model_config.lift_up_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.lift_up_angle_deg").as_double();
-	swerve_model_config.lift_kP =  node_ptr_->get_parameter("swerve_robot_plugin.lift_kP").as_double();
-	swerve_model_config.lift_speed =  node_ptr_->get_parameter("swerve_robot_plugin.lift_speed").as_double();
+	swerve_model_config.lift_climbed_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.lift_climbed_angle_deg").as_double();
+	swerve_model_config.lift_kP = node_ptr_->get_parameter("swerve_robot_plugin.lift_kP").as_double();
+	swerve_model_config.lift_speed = node_ptr_->get_parameter("swerve_robot_plugin.lift_speed").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", 1.);
@@ -112,12 +113,10 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset", 1.);
 	gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.stick_gear_ratio").as_double();
 
-
 	swerve_model_config.stick_upright_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_upright_angle_deg").as_double();
 	swerve_model_config.stick_angle_skills = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_skills").as_double();
 	swerve_model_config.stick_angle_normal = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_normal").as_double();
 	swerve_model_config.stick_turn_offset = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset").as_double();
-
 
 	swerve_model_config.max_wheel_actuator_vel = 625.0;
 	auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
@@ -127,7 +126,6 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.max_ang_vel_slew = node_ptr_->get_parameter("swerve_robot_plugin.max_ang_vel_slew").as_double();
 	node_ptr_->declare_parameter("swerve_robot_plugin.max_lin_vel_slew", 0.);
 	swerve_model_config.max_lin_vel_slew = node_ptr_->get_parameter("swerve_robot_plugin.max_lin_vel_slew").as_double();
-
 
 	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
 	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);
@@ -141,8 +139,7 @@ void SwerveRobotPlugin::initialize(){
 	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
 		pose_topic,
 		10,
-		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1)
-		);
+		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1));
 
 	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
@@ -176,11 +173,10 @@ void SwerveRobotPlugin::onNewSensorData(){
 		{"left_front", std::tuple<std::string, std::string, std::string>("drive_fll", "drive_flr", "steering_front_left")},
 		{"right_front", std::tuple<std::string, std::string, std::string>("drive_frr", "drive_frl", "steering_front_right")},
 		{"left_back", std::tuple<std::string, std::string, std::string>("drive_blf", "drive_blb", "steering_back_left")},
-		{"right_back", std::tuple<std::string, std::string, std::string>("drive_brf", "drive_brb", "steering_back_right")}
-	};
+		{"right_back", std::tuple<std::string, std::string, std::string>("drive_brf", "drive_brb", "steering_back_right")}};
 
 	// Update each swerve module from new device data
-	for(const auto& [module_name, device_name_tuple] : module_motor_mapping){
+	for(const auto &[module_name, device_name_tuple] : module_motor_mapping){
 		// Get Device Names for this module
 		std::string m1_name = std::get<0>(device_name_tuple);
 		std::string m2_name = std::get<1>(device_name_tuple);
@@ -256,31 +252,31 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	// 		rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
 	// 	}
 
-		// double des_x = 0;
-		// double des_y = 0.5;
-		// double des_theta = M_PI_2;
+	// double des_x = 0;
+	// double des_y = 0.5;
+	// double des_theta = M_PI_2;
 
-		// switch(m_auton_index){
-		// 	case 0:
-		// 		des_x = 0;
-		// 		des_y = 0.5;
-		// 		des_theta = M_PI_2;
-		// 	break;
-		// 	case 1:
-		// 		des_x = 0.0;
-		// 		des_y = 0.75;
-		// 		des_theta = M_PI_2;
-		// 	break;
-		// 	case 2:
-		// 		des_x = 0.0;
-		// 		des_y = 3.0;
-		// 		des_theta = M_PI_2;
-		// 	break;
-		// 	default:
-		// 		des_x = m_swerve_model_ptr->getOdometryLocation().x();
-		// 		des_y = m_swerve_model_ptr->getOdometryLocation().y();
-		// 		des_theta = m_swerve_model_ptr->getOdometryAngle();
-		// }
+	// switch(m_auton_index){
+	// 	case 0:
+	// 		des_x = 0;
+	// 		des_y = 0.5;
+	// 		des_theta = M_PI_2;
+	// 	break;
+	// 	case 1:
+	// 		des_x = 0.0;
+	// 		des_y = 0.75;
+	// 		des_theta = M_PI_2;
+	// 	break;
+	// 	case 2:
+	// 		des_x = 0.0;
+	// 		des_y = 3.0;
+	// 		des_theta = M_PI_2;
+	// 	break;
+	// 	default:
+	// 		des_x = m_swerve_model_ptr->getOdometryLocation().x();
+	// 		des_y = m_swerve_model_ptr->getOdometryLocation().y();
+	// 		des_theta = m_swerve_model_ptr->getOdometryAngle();
+	// }
 	// }
 
 	// rhi_ptr_->setDigitalIO(m_digital_io);
@@ -293,7 +289,6 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	// double des_vel_y = (command_map.count("y_vel") != 0) ? command_map.at("y_vel") : 0.0;
 	// double des_theta = (command_map.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
 	// double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
-
 
 	// // Get best state estimate
 	// auto curr_location = m_swerve_model_ptr->getWorldLocation();
@@ -314,16 +309,16 @@ void SwerveRobotPlugin::autonomous(double current_time){
 }
 
 // sorry for puutting this here ik its kinda gross
-float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface>  rhi_ptr_,const std::string& motor1, const std::string &motor2, float pos_want, double kP) {
+float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_, const std::string &motor1, const std::string &motor2, float pos_want, double kP){
 	float pos1 = rhi_ptr_->getMotorPosition(motor1);
-	float pos2 =  rhi_ptr_->getMotorPosition(motor2);
+	float pos2 = rhi_ptr_->getMotorPosition(motor2);
 	float pos = (pos1 + pos2) / 2;
 	float action = std::clamp((pos_want - pos) * kP, -100., 100.); // TODO ???
 	if(fabs(action) < 1.5){
 		action = 0;
 	}
 	rhi_ptr_->setMotorVoltageCommandPercent(motor1, action);
-	rhi_ptr_->setMotorVoltageCommandPercent(motor2,action);
+	rhi_ptr_->setMotorVoltageCommandPercent(motor2, action);
 	// std::cout << "pos1: " << pos1 << " pos2: " << pos2 << " want: " << pos_want << " kP " << kP << " error " << (pos_want - pos) << " action " << action << std::endl;
 	return pos - pos_want;
 }
@@ -424,9 +419,6 @@ void SwerveRobotPlugin::teleop(double current_time){
 		m_digital_io[m_digital_io_name_map.at("right_wing")] = !m_climb_mode && joy_data->btn_r2;
 		m_digital_io[m_digital_io_name_map.at("left_wing")] = !m_climb_mode && joy_data->btn_l2;
 
-
-		static double lift_target;
-		static bool claw_auto_extended = false;
 		// Toggle Climb Mode
 		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
 			m_climb_mode = !m_climb_mode;
@@ -437,7 +429,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			else{
 				lift_target = 0;
 				m_claw_open = false;
-			claw_auto_extended = false;
+				claw_auto_extended = false;
 			}
 			// m_claw_open = m_climb_mode;
 			m_climb_mode_btn_pressed = true;
@@ -450,6 +442,9 @@ void SwerveRobotPlugin::teleop(double current_time){
 			// std::cout << "liftmotors on now" << std::endl;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
+			if(!m_claw_open){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
+			}
 
 			if(joy_data->btn_r2 & !m_claw_btn_pressed){
 				m_claw_open = !m_claw_open;
@@ -459,7 +454,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 				m_claw_btn_pressed = false;
 			}
 
-			#define POS ((rhi_ptr_->getMotorPosition("lift_right") + rhi_ptr_->getMotorPosition("lift_left")) / 2)
+#define POS ((rhi_ptr_->getMotorPosition("lift_right") + rhi_ptr_->getMotorPosition("lift_left")) / 2)
 
 			if(joy_data->btn_l1){
 				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -1);
@@ -485,14 +480,12 @@ void SwerveRobotPlugin::teleop(double current_time){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
 		}
 
-
 		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
-
 
 		// Enable Tail Mode
 		double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
 		double stick_turn_offset = m_swerve_model_ptr->getConfig().stick_turn_offset;
-		#define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
+#define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
 
 		if(!m_climb_mode && joy_data->btn_l1){
 			m_digital_io[m_digital_io_name_map.at("tail")] = true;
@@ -504,7 +497,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			}
 			else{
 				// std::cout << "stick upright!" << std::endl;
-				rhi_ptr_->setMotorPositionCommand("tail_motor",  m_swerve_model_ptr->getConfig().stick_upright_angle);
+				rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
 			}
 		}
 		else if(m_climb_mode){
@@ -530,22 +523,31 @@ void SwerveRobotPlugin::updateDrivetrainMotors(){
 		{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
 		{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
 		{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
-		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}
-	};
+		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}};
 
-	for(const auto & [module_name, motor_name_pair] : module_actuator_motor_mapping){
+	for(const auto &[module_name, motor_name_pair] : module_actuator_motor_mapping){
 		std::string m1_name = motor_name_pair.first;
 		std::string m2_name = motor_name_pair.second;
 		auto command = m_swerve_model_ptr->getModuleCommand(module_name);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
+
+		if(m_climb_mode && !m_claw_open){
+			// reduce current to drivetrain when in climb mode and hooked onto the pole
+			rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 750);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 750);
+		}
+		else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
+		}
+
 		rhi_ptr_->setMotorVelocityCommandRPM(m1_name, command.actuator_velocity_commands[0]);
 		rhi_ptr_->setMotorVoltageCommandPercent(m1_name, command.actuator_voltage_commands[0]);
 
-		rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 2500);
 		rhi_ptr_->setMotorVelocityCommandRPM(m2_name, command.actuator_velocity_commands[1]);
 		rhi_ptr_->setMotorVoltageCommandPercent(m2_name, command.actuator_voltage_commands[1]);
 	}
 }
+
 
 void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
 }
@@ -590,8 +592,7 @@ void SwerveRobotPlugin::publishOdometry(){
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, m_curr_odom_cov.z()
-	};
+		0.0, 0.0, 0.0, 0.0, 0.0, m_curr_odom_cov.z()};
 
 	msg.pose.covariance = pose_covariance;
 
@@ -619,13 +620,12 @@ void SwerveRobotPlugin::publishOdometry(){
 		m_k9 * abs(current_velocity.z());
 
 	std::array<double, 36> vel_covariance{
-		sigma_x_vel*sigma_x_vel, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, sigma_y_vel*sigma_y_vel, 0.0, 0.0, 0.0, 0.0,
+		sigma_x_vel * sigma_x_vel, 0.0, 0.0, 0.0, 0.0, 0.0,
+		0.0, sigma_y_vel * sigma_y_vel, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht_vel*sigma_tht_vel
-	};
+		0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht_vel * sigma_tht_vel};
 
 	msg.twist.covariance = vel_covariance;
 
@@ -645,7 +645,7 @@ void SwerveRobotPlugin::publishVisualization(){
 	auto msg = sensor_msgs::msg::JointState{};
 	msg.header.stamp = node_ptr_->get_clock()->now();
 
-	for(const auto & [module_name, joint_name_pair] : joint_name_map){
+	for(const auto &[module_name, joint_name_pair] : joint_name_map){
 		auto wheel_joint_name = joint_name_pair.first;
 		auto steering_joint_name = joint_name_pair.second;
 		auto module_state = m_swerve_model_ptr->getCurrentModuleState(module_name);
@@ -665,12 +665,11 @@ void SwerveRobotPlugin::publishVisualization(){
 		"left_front",
 		"right_front",
 		"left_back",
-		"right_back"
-	};
+		"right_back"};
 
 	visualization_msgs::msg::MarkerArray viz_msg;
 	int j = 0;
-	for(const auto& name : module_names){
+	for(const auto &name : module_names){
 		auto module_command = m_swerve_model_ptr->getModuleCommand(name);
 		auto module_position = m_swerve_model_ptr->getConfig().module_positions.at(name);
 		auto marker_msg = visualization_msgs::msg::Marker{};
@@ -782,7 +781,7 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 		marker_msg.pose.position.x = x[i];
 		marker_msg.pose.position.y = y[i];
 		marker_msg.pose.position.z = 0;
-		double w,x,y,z;
+		double w, x, y, z;
 		ghost_util::yawToQuaternionRad(ang[i], w, x, y, z);
 		marker_msg.pose.orientation.w = w;
 		marker_msg.pose.orientation.x = x;
@@ -802,6 +801,5 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 }
 
 } // namespace ghost_swerve
-
 
 PLUGINLIB_EXPORT_CLASS(ghost_swerve::SwerveRobotPlugin, ghost_ros_interfaces::V5RobotBase)

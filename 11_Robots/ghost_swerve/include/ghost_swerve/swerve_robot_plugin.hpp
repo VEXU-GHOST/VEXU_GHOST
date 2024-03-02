@@ -86,6 +86,7 @@ protected:
 	// Claw
 	bool m_claw_btn_pressed = false;
 	bool m_claw_open = false;
+	bool claw_auto_extended = false;
 
 	// Tail
 	bool m_tail_btn_pressed = false;
@@ -94,6 +95,8 @@ protected:
 	// Climb Mode
 	bool m_climb_mode_btn_pressed = false;
 	bool m_climb_mode = false;
+	double lift_target;
+
 
 	// Stick Mode
 	bool m_tail_mode = false;

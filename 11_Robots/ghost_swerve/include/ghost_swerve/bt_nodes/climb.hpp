@@ -5,39 +5,41 @@
 #include "rclcpp/rclcpp.hpp"
 #include "ghost_swerve/swerve_model.hpp"
 
-namespace ghost_swerve {
-    
-class Climb : public BT::StatefulActionNode,
-	              public rclcpp::Node {
+namespace ghost_swerve
+{
 
-public:
-    Climb(const std::string& name, const BT::NodeConfig& config,
-	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-	           std::shared_ptr<SwerveModel> swerve_ptr);
+	class Climb : public BT::StatefulActionNode,
+				  public rclcpp::Node
+	{
 
-    // It is mandatory to define this STATIC method.
-	static BT::PortsList providedPorts();
+	public:
+		Climb(const std::string &name, const BT::NodeConfig &config,
+			  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+			  std::shared_ptr<SwerveModel> swerve_ptr);
 
-	/// Method called once, when transitioning from the state IDLE.
-	/// If it returns RUNNING, this becomes an asynchronous node.
-	BT::NodeStatus onStart();
+		// It is mandatory to define this STATIC method.
+		static BT::PortsList providedPorts();
 
-	/// method invoked when the action is already in the RUNNING state.
-	BT::NodeStatus onRunning();
+		/// Method called once, when transitioning from the state IDLE.
+		/// If it returns RUNNING, this becomes an asynchronous node.
+		BT::NodeStatus onStart();
 
-	/// when the method halt() is called and the action is RUNNING, this method is invoked.
-	/// This is a convenient place todo a cleanup, if needed.
-	void onHalted();
+		/// method invoked when the action is already in the RUNNING state.
+		BT::NodeStatus onRunning();
 
-private:
-	template <typename T>
-	T get_input(std::string key);
-	
-    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
-	std::shared_ptr<SwerveModel> swerve_ptr_;
-	std::chrono::time_point<std::chrono::system_clock> start_time_;
+		/// when the method halt() is called and the action is RUNNING, this method is invoked.
+		/// This is a convenient place todo a cleanup, if needed.
+		void onHalted();
 
-};
+	private:
+		double lift_target;
+		bool claw_auto_extended;
+		template <typename T>
+		T get_input(std::string key);
 
+		std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+		std::shared_ptr<SwerveModel> swerve_ptr_;
+		std::chrono::time_point<std::chrono::system_clock> start_time_;
+	};
 
 } // namespace ghost_swerve

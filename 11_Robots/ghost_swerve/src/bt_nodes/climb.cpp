@@ -2,9 +2,9 @@
 
 namespace ghost_swerve {
 
-Climb::Climb(const std::string& name, const BT::NodeConfig& config,
-			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-			std::shared_ptr<SwerveModel> swerve_ptr) :
+Climb::Climb(const std::string &name, const BT::NodeConfig &config,
+             std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+             std::shared_ptr<SwerveModel> swerve_ptr) :
 	BT::StatefulActionNode(name, config),
 	rclcpp::Node("climb"),
 	rhi_ptr_(rhi_ptr),
@@ -14,6 +14,7 @@ Climb::Climb(const std::string& name, const BT::NodeConfig& config,
 // It is mandatory to define this STATIC method.
 BT::PortsList Climb::providedPorts(){
 	return {
+	    BT::InputPort<bool>("climbed"),
 	};
 }
 
@@ -23,7 +24,7 @@ T Climb::get_input(std::string key){
 	// Check if expected is valid. If not, throw its error
 	if(!input){
 		throw BT::RuntimeError("missing required input [" + key + "]: ",
-		                       input.error() );
+		                       input.error());
 	}
 	return input.value();
 }
@@ -37,31 +38,39 @@ BT::NodeStatus Climb::onStart(){
 /// when the method halt() is called and the action is RUNNING, this method is invoked.
 /// This is a convenient place todo a cleanup, if needed.
 void Climb::onHalted(){
+	rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
+	rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
+
 	resetStatus();
 }
 
-BT::NodeStatus Climb::onRunning() {
-	auto m_digital_io = std::vector<bool>(8, false);
-	auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-		{"claw", 0},
-		{"right_wing", 1},
-		{"left_wing", 2},
-		{"tail", 3}
-	};
-
+BT::NodeStatus Climb::onRunning(){
 	auto status = BT::NodeStatus::RUNNING;
+	bool climbed = get_input<bool>("climbed");
+	if(climbed){
+		lift_target = m_swerve_model_ptr->getConfig().lift_climbed_angle;
+		m_claw_open = false;
+	}
+	else{
+		lift_target = m_swerve_model_ptr->getConfig().lift_up_angle;
+		m_claw_open = true;
+	}
 
 	RCLCPP_INFO(this->get_logger(), "Climbing");
-	
-	// rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_angle_normal);
 
-	// rhi_ptr_->setDigitalIO(m_digital_io);
+	// Toggle Climb Mode
+	rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
+	rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
 
-	// do not return any status but RUNNING 
+	float err = tempPID(rhi_ptr_, "lift_right", "lift_left", lift_target, m_swerve_model_ptr->getConfig().lift_kP); // go to 90deg
+	// ignore err
+
+	m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
+
+	// do not return any status but RUNNING
 	// so it keeps the state at the end of the auton
 
 	return status;
 }
-
 
 } // namespace ghost_swerve
