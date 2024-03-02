@@ -36,6 +36,8 @@ namespace ghost_swerve
 		bool claw_auto_extended;
 		template <typename T>
 		T get_input(std::string key);
+		float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_, const std::string &motor1, const std::string &motor2, float pos_want, double kP);
+		
 
 		std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 		std::shared_ptr<SwerveModel> swerve_ptr_;

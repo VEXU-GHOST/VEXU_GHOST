@@ -44,16 +44,40 @@ void Climb::onHalted(){
 	resetStatus();
 }
 
+float Climb::tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_, const std::string &motor1, const std::string &motor2, float pos_want, double kP){
+	float pos1 = rhi_ptr_->getMotorPosition(motor1);
+	float pos2 = rhi_ptr_->getMotorPosition(motor2);
+	float pos = (pos1 + pos2) / 2;
+	float action = std::clamp((pos_want - pos) * kP, -100., 100.); // TODO ???
+	if(fabs(action) < 1.5){
+		action = 0;
+	}
+	rhi_ptr_->setMotorVoltageCommandPercent(motor1, action);
+	rhi_ptr_->setMotorVoltageCommandPercent(motor2, action);
+	// std::cout << "pos1: " << pos1 << " pos2: " << pos2 << " want: " << pos_want << " kP " << kP << " error " << (pos_want - pos) << " action " << action << std::endl;
+	return pos - pos_want;
+}
+
 BT::NodeStatus Climb::onRunning(){
+	auto m_digital_io = std::vector<bool>(8, false);
+	auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
+		{"claw", 0},
+		{"right_wing", 1},
+		{"left_wing", 2},
+		{"tail", 3}
+	};
+
+	bool claw_open;
 	auto status = BT::NodeStatus::RUNNING;
 	bool climbed = get_input<bool>("climbed");
+	
 	if(climbed){
-		lift_target = m_swerve_model_ptr->getConfig().lift_climbed_angle;
-		m_claw_open = false;
+		lift_target = swerve_ptr_->getConfig().lift_climbed_angle;
+		claw_open = false;
 	}
 	else{
-		lift_target = m_swerve_model_ptr->getConfig().lift_up_angle;
-		m_claw_open = true;
+		lift_target = swerve_ptr_->getConfig().lift_up_angle;
+		claw_open = true;
 	}
 
 	RCLCPP_INFO(this->get_logger(), "Climbing");
@@ -62,10 +86,10 @@ BT::NodeStatus Climb::onRunning(){
 	rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
 	rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
 
-	float err = tempPID(rhi_ptr_, "lift_right", "lift_left", lift_target, m_swerve_model_ptr->getConfig().lift_kP); // go to 90deg
+	float err = tempPID(rhi_ptr_, "lift_right", "lift_left", lift_target, swerve_ptr_->getConfig().lift_kP); // go to 90deg
 	// ignore err
 
-	m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
+	m_digital_io[m_digital_io_name_map.at("claw")] = claw_open;
 
 	rhi_ptr_->setDigitalIO(m_digital_io);
 

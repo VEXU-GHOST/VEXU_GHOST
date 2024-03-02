@@ -20,6 +20,7 @@ SwerveTree::SwerveTree(std::string bt_path,
 		factory.registerNodeType<MoveToPose>("MoveToPose", robot_hardware_interface_ptr, swerve_ptr);
 		factory.registerNodeType<SwipeTail>("SwipeTail", robot_hardware_interface_ptr, swerve_ptr);
 		factory.registerNodeType<SetWing>("SetWing", robot_hardware_interface_ptr, swerve_ptr);
+		factory.registerNodeType<Climb>("Climb", robot_hardware_interface_ptr, swerve_ptr);
 
 		tree_ = factory.createTreeFromFile(bt_path_);
 }

@@ -115,6 +115,7 @@ set(NODES
   moveToPose
   swipeTail
   setWing
+  climb
 )
 
 foreach(NODE ${NODES})
