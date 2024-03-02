@@ -94,7 +94,11 @@ BT::NodeStatus SwipeTail::onRunning() {
 		status = BT::NodeStatus::SUCCESS;
 	}
 
-	m_digital_io[m_digital_io_name_map.at("tail")] = true;
+	if(status == BT::NodeStatus::SUCCESS){
+		m_digital_io[m_digital_io_name_map.at("tail")] = false;
+	} else {
+		m_digital_io[m_digital_io_name_map.at("tail")] = true;
+	}
 
 	rhi_ptr_->setDigitalIO(m_digital_io);
 	return status;
