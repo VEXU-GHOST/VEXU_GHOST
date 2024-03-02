@@ -7,7 +7,7 @@
 
 namespace ghost_swerve {
     
-class SetWing : public BT::StatefulActionNode,
+class SetWing : public BT::SyncActionNode,
 	              public rclcpp::Node {
 
 public:
@@ -18,16 +18,7 @@ public:
     // It is mandatory to define this STATIC method.
 	static BT::PortsList providedPorts();
 
-	/// Method called once, when transitioning from the state IDLE.
-	/// If it returns RUNNING, this becomes an asynchronous node.
-	BT::NodeStatus onStart();
-
-	/// method invoked when the action is already in the RUNNING state.
-	BT::NodeStatus onRunning();
-
-	/// when the method halt() is called and the action is RUNNING, this method is invoked.
-	/// This is a convenient place todo a cleanup, if needed.
-	void onHalted();
+	BT::NodeStatus tick();
 
 private:
 	template <typename T>

@@ -3,37 +3,49 @@
       main_tree_to_execute="main">
   <BehaviorTree ID="main">
     <Sequence>
-      <!-- <SwipeTail num_swipes="5"/> -->
+      <SwipeTail num_swipes="5"/>
       <MoveToPose posX="0.33"
                   posY="0.33"
                   theta="45"
                   threshold="0.025"
                   timeout="5000"/>
       <MoveToPose posX="0.45"
-                  posY="0.2"
+                  posY="0.15"
                   theta="0"
                   threshold="0.025"
                   timeout="10000"/>
-      <MoveToPose posX="0.9"
-                  posY="0.2"
-                  theta="-5"
-                  threshold="0.025"
-                  timeout="10000"/>
-      <MoveToPose posX="2.75"
-                  posY="0.3"
-                  theta="-5"
-                  threshold="0.025"
-                  timeout="10000"/>
-      <MoveToPose posX="3.00"
-                  posY="0.45"
-                  theta="45"
-                  threshold="0.025"
-                  timeout="10000"/>
-      <MoveToPose posX="3.25"
-                  posY="1.2"
-                  theta="90"
-                  threshold="0.025"
-                  timeout="10000"/>
+      <ReactiveSequence>
+        <SetWing state="true"/>
+        <MoveToPose posX="0.9"
+                    posY="0.15"
+                    theta="0"
+                    threshold="0.025"
+                    timeout="10000"/>
+      </ReactiveSequence>
+      <ReactiveSequence>
+        <SetWing state="true"/>
+        <MoveToPose posX="2.95"
+                    posY="0.25"
+                    theta="0"
+                    threshold="0.025"
+                    timeout="10000"/>
+      </ReactiveSequence>
+      <ReactiveSequence>
+        <SetWing state="true"/>
+        <MoveToPose posX="3.05"
+                    posY="0.25"
+                    theta="45"
+                    threshold="0.025"
+                    timeout="10000"/>
+      </ReactiveSequence>
+      <ReactiveSequence>
+        <SetWing state="true"/>
+        <MoveToPose posX="3.20"
+                    posY="1.2"
+                    theta="90"
+                    threshold="0.025"
+                    timeout="10000"/>
+      </ReactiveSequence>
       <Logging message="Done"/>
       <KeepRunningUntilFailure>
         <CheckForRestart/>
@@ -41,14 +53,14 @@
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="odomTest">
+  <BehaviorTree ID="tailTest">
     <Sequence>
-      <!-- <SwipeTail num_swipes="5"/> -->
-      <MoveToPose posX="0"
+      <SwipeTail num_swipes="5"/>
+      <!-- <MoveToPose posX="0"
                   posY="1"
                   theta="0"
                   threshold="0.025"
-                  timeout="5000"/>
+                  timeout="5000"/> -->
       <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>
@@ -68,6 +80,10 @@
                   default="0.025">m</input_port>
       <input_port name="timeout"
                   default="5000">ms</input_port>
+    </Action>
+    <Action ID="SetWing"
+            editable="true">
+      <input_port name="state"/>
     </Action>
     <Action ID="SwipeTail"
             editable="true">

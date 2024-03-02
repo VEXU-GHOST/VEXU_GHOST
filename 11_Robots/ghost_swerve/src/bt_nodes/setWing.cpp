@@ -5,8 +5,8 @@ namespace ghost_swerve {
 SetWing::SetWing(const std::string& name, const BT::NodeConfig& config,
 			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 			std::shared_ptr<SwerveModel> swerve_ptr) :
-	BT::StatefulActionNode(name, config),
-	rclcpp::Node("swipe_tail"),
+	BT::SyncActionNode(name, config),
+	rclcpp::Node("set_wing"),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr){
 }
@@ -29,19 +29,7 @@ T SetWing::get_input(std::string key){
 	return input.value();
 }
 
-/// Method called once, when transitioning from the state IDLE.
-/// If it returns RUNNING, this becomes an asynchronous node.
-BT::NodeStatus SetWing::onStart(){
-	return BT::NodeStatus::RUNNING;
-}
-
-/// when the method halt() is called and the action is RUNNING, this method is invoked.
-/// This is a convenient place todo a cleanup, if needed.
-void SetWing::onHalted(){
-	resetStatus();
-}
-
-BT::NodeStatus SetWing::onRunning() {
+BT::NodeStatus SetWing::tick() {
 	auto m_digital_io = std::vector<bool>(8, false);
 	auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
 		{"claw", 0},

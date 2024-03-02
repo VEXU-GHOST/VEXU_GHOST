@@ -68,7 +68,6 @@ BT::NodeStatus SwipeTail::onRunning() {
 	} else {
 		start_time_ = std::chrono::system_clock::now();
 		started_ = true;
-		m_digital_io[m_digital_io_name_map.at("tail")] = true;
 		rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
 		rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_upright_angle);
 	}
@@ -84,17 +83,18 @@ BT::NodeStatus SwipeTail::onRunning() {
 			rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_angle_normal);
 		}
 		else{
-			rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_upright_angle);
+			rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_angle_skills);
 		}
 		status = BT::NodeStatus::RUNNING;
 	} else if(time_elapsed > 1000 * num_swipes + 500){
 		rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_upright_angle);
 		if(MTR_CLOSE_TO(swerve_ptr_->getConfig().stick_upright_angle)){ // within n degrees of upright
-			m_digital_io[m_digital_io_name_map.at("tail")] = false;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
 		}
 		status = BT::NodeStatus::SUCCESS;
 	}
+
+	m_digital_io[m_digital_io_name_map.at("tail")] = true;
 
 	rhi_ptr_->setDigitalIO(m_digital_io);
 	return status;
