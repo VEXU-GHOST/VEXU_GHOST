@@ -67,6 +67,8 @@ BT::NodeStatus Climb::onRunning(){
 
 	m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
 
+	rhi_ptr_->setDigitalIO(m_digital_io);
+
 	// do not return any status but RUNNING
 	// so it keeps the state at the end of the auton
 
