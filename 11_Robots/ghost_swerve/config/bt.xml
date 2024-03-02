@@ -3,28 +3,28 @@
       main_tree_to_execute="main">
   <BehaviorTree ID="main">
     <Sequence>
-      <SwipeTail num_swipes="5"/>
-      <MoveToPose posX="0.33"
-                  posY="0.33"
+      <!-- <SwipeTail num_swipes="25"/> -->
+      <MoveToPose posX="0.43"
+                  posY="0.43"
                   theta="45"
                   threshold="0.025"
                   timeout="10000"/>
       <MoveToPose posX="0.28"
-                  posY="0.38"
+                  posY="0.48"
                   theta="-45"
                   threshold="0.025"
                   timeout="10000"/>
       <ReactiveSequence>
         <SetWing state="true"/>
-        <MoveToPose posX="0.43"
-                    posY="0.23"
+        <MoveToPose posX="0.50"
+                    posY="0.20"
                     theta="-45"
                     threshold="0.025"
                     timeout="10000"/>
       </ReactiveSequence>
       <ReactiveSequence>
         <SetWing state="true"/>
-        <MoveToPose posX="0.9"
+        <MoveToPose posX="0.7"
                     posY="0.15"
                     theta="0"
                     threshold="0.025"
@@ -33,7 +33,7 @@
       <ReactiveSequence>
         <SetWing state="true"/>
         <MoveToPose posX="2.5"
-                    posY="0.25"
+                    posY="0.0"
                     theta="0"
                     threshold="0.025"
                     timeout="10000"/>
