@@ -1,11 +1,11 @@
 /*
- * Filename: gazebo_joint_pid_plugin
+ * Filename: test_publisher_v5_actuator_cmd
  * Created Date: Sunday August 7th 2022
- * Author: Maxx Wilson
+ * Author: Melissa Cruz
  * Author Email: JesseMaxxWilson@utexas.edu
  *
  * Last Modified: Saturday September 10th 2022 10:50:34 am
- * Modified By: Maxx Wilson
+ * Modified By: Melissa Cruz
  */
 
 #include "ghost_sim/test_publisher_v5_actuator_cmd.hpp"
@@ -17,7 +17,7 @@ testPublisherV5ActuatorCmd::testPublisherV5ActuatorCmd() :
 	rclcpp::TimerBase::SharedPtr timer_;
 
 	// Initialize Publisher
-	output_pub_ = this->create_publisher<ghost_msgs::msg::V5ActuatorCommand>("v5actuator/setpoint", 10);
+	output_pub_ = this->create_publisher<ghost_msgs::msg::V5ActuatorCommand>("v5/actuator_command", 10);
 }
 
 
@@ -35,28 +35,54 @@ void testPublisherV5ActuatorCmd::publishData(){
 			motor_cmd = this->populateMotorCmd(loop_index);
 			loop_index += 1;
 		});
-
-	// RCLCPP_INFO(
-	//     this->get_logger(),
-	//     "Publishing to setpoint");
 	output_pub_->publish(msg);
 }
 
 ghost_msgs::msg::V5MotorCommand testPublisherV5ActuatorCmd::populateMotorCmd(const int loop_index){
 	ghost_msgs::msg::V5MotorCommand v5_motor_cmd = ghost_msgs::msg::V5MotorCommand();
-	v5_motor_cmd.motor_name = "motor_" + std::to_string(loop_index);
-	v5_motor_cmd.device_id = loop_index;
-	v5_motor_cmd.desired_position = loop_index * 2; // degrees
-	v5_motor_cmd.desired_velocity = 0.0;
-	v5_motor_cmd.desired_torque = 0.0;
-	v5_motor_cmd.desired_voltage = 0.0;
-	v5_motor_cmd.current_limit = 5; // milliAmps
+	if(loop_index == 0){
+		v5_motor_cmd.motor_name = motors_[loop_index];
+		v5_motor_cmd.device_id = loop_index;
+		v5_motor_cmd.desired_position = 0; // degrees
+		v5_motor_cmd.desired_velocity = 0.5;
+		v5_motor_cmd.desired_torque = 0.0;
+		v5_motor_cmd.desired_voltage = 0.0;
+		v5_motor_cmd.current_limit = 2500; // milliAmps
 
-	v5_motor_cmd.position_control = true;
-	v5_motor_cmd.velocity_control = false;
-	v5_motor_cmd.torque_control = false;
-	v5_motor_cmd.voltage_control = false;
+		v5_motor_cmd.position_control = false;
+		v5_motor_cmd.velocity_control = true;
+		v5_motor_cmd.torque_control = false;
+		v5_motor_cmd.voltage_control = false;
+	}
+	else if(loop_index < 8){
+		v5_motor_cmd.motor_name = motors_[loop_index];
+		v5_motor_cmd.device_id = loop_index;
+		v5_motor_cmd.desired_position = 0.0; // degrees
+		v5_motor_cmd.desired_velocity = 0.0;
+		v5_motor_cmd.desired_torque = 0.0;
+		v5_motor_cmd.desired_voltage = 0.0;
+		v5_motor_cmd.current_limit = 2500; // milliAmps
 
+		v5_motor_cmd.position_control = false;
+		v5_motor_cmd.velocity_control = true;
+		v5_motor_cmd.torque_control = false;
+		v5_motor_cmd.voltage_control = false;
+	}
+
+	else{
+		v5_motor_cmd.motor_name = "N/A";
+		v5_motor_cmd.device_id = loop_index;
+		v5_motor_cmd.desired_position = 0.0; // degrees
+		v5_motor_cmd.desired_velocity = 0.0;
+		v5_motor_cmd.desired_torque = 0.0;
+		v5_motor_cmd.desired_voltage = 0.0;
+		v5_motor_cmd.current_limit = 0.0; // milliAmps
+
+		v5_motor_cmd.position_control = false;
+		v5_motor_cmd.velocity_control = false;
+		v5_motor_cmd.torque_control = false;
+		v5_motor_cmd.voltage_control = false;
+	}
 	return v5_motor_cmd;
 }
 
