@@ -47,7 +47,6 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     # Load relevant filepaths
-    gazebo_ros_share_dir = get_package_share_directory('gazebo_ros')
     ghost_ros_share_dir = get_package_share_directory('ghost_ros_interfaces')
     ghost_over_under_share_dir = get_package_share_directory('ghost_over_under')
 
@@ -58,21 +57,8 @@ def generate_launch_description():
     ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces")
 
     world_file = os.path.join(ghost_sim_share_dir, "worlds", "spin_up.world")
-    rviz_config_path = os.path.join(ghost_localization_share_dir, 'rviz/ekf_pf.rviz')
-    print(rviz_config_path)
+    rviz_config_path = os.path.join(ghost_sim_share_dir, 'rviz/bag_playback.rviz')
 
-    # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
-    simulation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(gazebo_ros_share_dir,
-                         'launch', 'gazebo.launch.py')
-        ),
-        launch_arguments={
-            'world': world_file,
-            'gui': LaunchConfiguration("sim_gui"),
-            'verbose': LaunchConfiguration('verbose'),
-            }.items()
-    )
 
     ekf_pf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -93,7 +79,14 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_localization_node',
         output='screen',
-        parameters=[ghost_over_under_share_dir + "/config/ros_config.yaml"]
+        parameters=[ghost_sim_share_dir + "/config/bag_ros_config.yaml"]
+    )
+
+    bag_set_pose_time = Node(
+        package='ghost_sim',
+        executable='bag_set_pose_time',
+        name='bag_set_pose_time',
+        output='screen'
     )
 
     plot_juggler_node = Node(
@@ -108,11 +101,10 @@ def generate_launch_description():
         DeclareLaunchArgument(name='channel_id', default_value='1'),
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
-        # simulation,
         # ekf_pf_launch,
         rviz_node,
         plot_juggler_node,
         robot_localization_node,
-        # state_machine_node,
+        bag_set_pose_time,
         OpaqueFunction(function = launch_setup),
     ])

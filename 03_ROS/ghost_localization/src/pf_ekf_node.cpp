@@ -57,7 +57,7 @@ PfEkfNode::PfEkfNode() :
 	map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
 
 	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		"/initial_pose",
+		"/set_pose",
 		10,
 		std::bind(&PfEkfNode::InitialPoseCallback, this, _1)
 		);
@@ -250,8 +250,8 @@ void PfEkfNode::PublishRobotPose(rclcpp::Time stamp){
 	auto robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
 	// covariance is row major form
 	std::array<double, 36> covariance = {config_params.k1, config_params.k4, 0.0, config_params.k7, 0.0, 0.0,
-		                             config_params.k2, config_params.k5, 0.0, config_params.k8, 0.0, 0.0,
-		                             config_params.k3, config_params.k6, 0.0, config_params.k9, 0.0, 0.0};
+		                                 config_params.k2, config_params.k5, 0.0, config_params.k8, 0.0, 0.0,
+		                                 config_params.k3, config_params.k6, 0.0, config_params.k9, 0.0, 0.0};
 
 	robot_pose_.header.stamp = stamp;
 	robot_pose_.header.frame_id = "base_link";
