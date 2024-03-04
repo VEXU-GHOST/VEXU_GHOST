@@ -39,9 +39,9 @@ ament_export_dependencies(${DEPENDENCIES})
 include_directories(include)
 ament_export_include_directories(include)
   
-######################
-### AMRL Share Lib ###
-######################
+#######################
+### AMRL Shared Lib ###
+#######################
 include_directories(src/shared)
 add_subdirectory(src/shared)
 ament_export_targets(amrl_shared_lib HAS_LIBRARY_TARGET)
@@ -54,9 +54,9 @@ install(
   INCLUDES DESTINATION include
 )
 
-###############
-### Filters ###
-###############
+########################
+### Filter Libraries ###
+########################
 add_library(first_order_low_pass_filter SHARED
 src/filters/first_order_low_pass_filter.cpp
 )

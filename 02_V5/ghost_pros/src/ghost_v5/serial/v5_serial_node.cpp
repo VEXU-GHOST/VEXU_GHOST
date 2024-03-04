@@ -1,211 +1,191 @@
+#define PROS_USE_SIMPLE_NAMES
 
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
-#include "ghost_common/v5_robot_config_defs.hpp"
 #include "ghost_v5/globals/v5_globals.hpp"
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 
+#include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
+
 #include "pros/adi.h"
 #include "pros/apix.h"
+#include "pros/misc.h"
 
-using ghost_serial::BITMASK_ARR_32BIT;
 
-namespace ghost_v5
-{
+using ghost_util::BITMASK_ARR_32BIT;
+using namespace ghost_v5_interfaces::devices;
+using namespace ghost_v5_interfaces;
 
-	V5SerialNode::V5SerialNode(
-		std::string read_msg_start_seq,
-		bool use_checksum) : read_msg_id_{1}, write_msg_id_{1}
-	{
-		// Calculate Msg Sizes based on robot configuration
-		actuator_command_msg_len_ = ghost_v5_config::get_actuator_command_msg_len();
-		sensor_update_msg_len_ = ghost_v5_config::get_sensor_update_msg_len();
-		int num_motors_ = 0;
+namespace ghost_v5 {
 
-		// Array to store latest incoming msg
-		new_msg_ = std::vector<unsigned char>(actuator_command_msg_len_, 0);
+V5SerialNode::V5SerialNode(std::shared_ptr<RobotHardwareInterface> robot_hardware_interface_ptr){
+	// Set Hardware Interface
+	hardware_interface_ptr_ = robot_hardware_interface_ptr;
 
-		// Construct Serial Interface
-		serial_base_interface_ = std::make_unique<ghost_serial::V5SerialBase>(
-			read_msg_start_seq,
-			actuator_command_msg_len_,
-			use_checksum);
+	// Calculate Msg Sizes based on robot configuration
+	actuator_command_msg_len_ = hardware_interface_ptr_->getActuatorCommandMsgLength();
+	sensor_update_msg_len_ = hardware_interface_ptr_->getSensorUpdateMsgLength();
+
+	// Array to store latest incoming msg
+	new_msg_ = std::vector<unsigned char>(actuator_command_msg_len_, 0);
+
+	// Construct Serial Interface
+	serial_base_interface_ = std::make_unique<ghost_serial::V5SerialBase>(
+		"msg",
+		actuator_command_msg_len_,
+		true);
+}
+
+V5SerialNode::~V5SerialNode(){
+}
+
+void V5SerialNode::initSerial(){
+	pros::c::serctl(SERCTL_DISABLE_COBS, NULL);
+	pros::c::serctl(SERCTL_BLKWRITE, NULL);
+}
+
+bool V5SerialNode::readV5ActuatorUpdate(){
+	int msg_len;
+	bool msg_recieved = serial_base_interface_->readMsgFromSerial(new_msg_, actuator_command_msg_len_);
+	if(msg_recieved){
+		v5_globals::screen_interface_ptr->updateLastConnectionTime();
+		std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
+		updateActuatorCommands(new_msg_);
+		actuator_lock.unlock();
 	}
+	return msg_recieved;
+}
 
-	V5SerialNode::~V5SerialNode()
-	{
-	}
+void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
+	hardware_interface_ptr_->deserialize(buffer);
 
-	void V5SerialNode::initSerial()
-	{
-		pros::c::serctl(SERCTL_DISABLE_COBS, NULL);
-		pros::c::serctl(SERCTL_BLKWRITE, NULL);
-	}
+	v5_globals::digital_out_cmds = hardware_interface_ptr_->getDigitalIO();
 
-	bool V5SerialNode::readV5ActuatorUpdate()
-	{
-		int msg_len;
-		bool msg_recieved = serial_base_interface_->readMsgFromSerial(new_msg_.data(), actuator_command_msg_len_);
-		if (msg_recieved)
-		{
-			std::unique_lock<pros::Mutex> actuator_lock(v5_globals::actuator_update_lock);
-			updateActuatorCommands(new_msg_.data());
-			actuator_lock.unlock();
-		}
-		return msg_recieved;
-	}
+	for(const auto& name : *hardware_interface_ptr_){
+		auto device_data_ptr = hardware_interface_ptr_->getDeviceData<DeviceData>(name);
 
-	void V5SerialNode::updateActuatorCommands(unsigned char buffer[])
-	{
-		// Index to count 32-bit values from buffer
-		int buffer_8bit_index = 0;
-
-		// Update each motor based on msg configuration and new values
-		for (const auto &[name, config] : ghost_v5_config::motor_config_map)
-		{
-			// For clarity of configuration file
-			// Copy Current Limit
-			int32_t current_limit;
-			memcpy(&current_limit, buffer + buffer_8bit_index, 4);
-			buffer_8bit_index += 4;
-			v5_globals::motors[name]->getMotorInterfacePtr()->set_current_limit(current_limit);
-
-			// Copy Position Command
-			int32_t position_command;
-			memcpy(&position_command, buffer + buffer_8bit_index, 4);
-			buffer_8bit_index += 4;
-
-			// Copy Velocity Command
-			float velocity_command;
-			memcpy(&velocity_command, buffer + buffer_8bit_index, 4);
-			buffer_8bit_index += 4;
-
-			// Copy Voltage Command
-			float voltage_command;
-			memcpy(&voltage_command, buffer + buffer_8bit_index, 4);
-			buffer_8bit_index += 4;
-
-			// Copy Velocity Command
-			float torque_command;
-			memcpy(&torque_command, buffer + buffer_8bit_index, 4);
-			buffer_8bit_index += 4;
-
-			uint8_t actuator_flags_byte;
-			memcpy(&actuator_flags_byte, buffer + buffer_8bit_index, 1);
-			buffer_8bit_index++;
-
-			bool position_control = (bool)(actuator_flags_byte & 0x01);
-			actuator_flags_byte >>= 1;
-			bool velocity_control = (bool)(actuator_flags_byte & 0x01);
-			actuator_flags_byte >>= 1;
-			bool voltage_control = (bool)(actuator_flags_byte & 0x01);
-			actuator_flags_byte >>= 1;
-			bool torque_control = (bool)(actuator_flags_byte & 0x01);
-
-			v5_globals::motors[name]->setControlMode(position_control, velocity_control, voltage_control, torque_control);
-			v5_globals::motors[name]->setMotorCommand(position_command, velocity_command, voltage_command, torque_command);
-		}
-
-		// Update incoming msg id
-		uint32_t msg_id;
-		memcpy(&msg_id, buffer + buffer_8bit_index, 4);
-		buffer_8bit_index += 4;
-
-		// Update Digital Outputs
-		uint8_t digital_out_vector = 0;
-		memcpy(&digital_out_vector, buffer + buffer_8bit_index, 1);
-		buffer_8bit_index += 4;
-		for (int i = 7; i >= 0; i--)
-		{
-			v5_globals::digital_out_cmds[i] = (bool)(digital_out_vector & 0x01);
-			digital_out_vector >>= 1;
-		}
-	}
-
-	void V5SerialNode::writeV5StateUpdate()
-	{
-		int buffer_32bit_index = 0;
-		unsigned char sensor_update_msg_buffer[sensor_update_msg_len_] = {
-			0,
-		};
-		uint32_t device_connected_vector = 0;
-
-		// Update V5 Motor Encoders
-		for (const auto &[name, config] : ghost_v5_config::motor_config_map)
-		{
-			float position = v5_globals::motors[name]->getMotorInterfacePtr()->get_position();
-			float velocity = v5_globals::motors[name]->getVelocityFilteredRPM();
-			float voltage = v5_globals::motors[name]->getVoltageCommand();
-			float current = v5_globals::motors[name]->getMotorInterfacePtr()->get_current_draw();
-			float temp = v5_globals::motors[name]->getMotorInterfacePtr()->get_temperature();
-			float power = v5_globals::motors[name]->getMotorInterfacePtr()->get_power();
-
-			// If device is connected (and recieving valid sensor updates), set corresponding bit in connected vector
-			if (v5_globals::motors[name]->getDeviceIsConnected())
+		switch(device_data_ptr->type){
+			case device_type_e::MOTOR:
 			{
-				device_connected_vector |= (BITMASK_ARR_32BIT[config.port]);
+				auto motor_device_data_ptr = device_data_ptr->as<MotorDeviceData>();
+				v5_globals::motor_interfaces.at(name)->setCurrentLimit(motor_device_data_ptr->current_limit);
+
+				v5_globals::motor_interfaces.at(name)->setMotorCommand(
+					motor_device_data_ptr->position_command,
+					motor_device_data_ptr->velocity_command,
+					motor_device_data_ptr->voltage_command,
+					motor_device_data_ptr->torque_command);
+
+				v5_globals::motor_interfaces.at(name)->setControlMode(
+					motor_device_data_ptr->position_control,
+					motor_device_data_ptr->velocity_control,
+					motor_device_data_ptr->voltage_control,
+					motor_device_data_ptr->torque_control);
 			}
-			else
+			break;
+
+			case device_type_e::ROTATION_SENSOR:
 			{
-				device_connected_vector &= (~BITMASK_ARR_32BIT[config.port]);
+				continue;
+			}
+			break;
+
+			case device_type_e::JOYSTICK:
+			{
+				continue;
 			}
 
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &voltage, 4);
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &current, 4);
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &temp, 4);
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &power, 4);
-		}
+			break;
 
-		// Update V5 Sensors
-		for (const auto &[name, config] : ghost_v5_config::encoder_config_map)
-		{
-			float position = ((float)v5_globals::encoders[name]->get_position()) / 100.0;
-			float velocity = ((float)v5_globals::encoders[name]->get_velocity()) * 60.0 / 100.0 / 360.0; // Centidegrees -> RPM
-
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &position, 4);
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &velocity, 4);
-
-			if (position != PROS_ERR && velocity != PROS_ERR_F)
+			case device_type_e::INVALID:
 			{
-				device_connected_vector |= (BITMASK_ARR_32BIT[config.port]);
+				throw std::runtime_error("ERROR: Attempted to initialize unsupported device using ghost_v5_interfaces.");
 			}
-			else
+			break;
+
+			default:
 			{
-				device_connected_vector &= (~BITMASK_ARR_32BIT[config.port]);
+				throw std::runtime_error("ERROR: Attempted to initialize unsupported device using ghost_v5_interfaces.");
 			}
+			break;
 		}
-
-		// Poll joystick channels
-		for (int i = 0; i < 4; i++)
-		{
-			float analog_input = ((float)v5_globals::controller_main.get_analog(v5_globals::joy_channels[i])) / 127.0;
-			memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index++), &analog_input, 4);
-		}
-
-		// Poll joystick button channels
-		uint16_t digital_states = 0;
-		for (auto &btn : v5_globals::joy_btns)
-		{
-			digital_states += (uint16_t)v5_globals::controller_main.get_digital(btn);
-			digital_states <<= 1;
-		}
-
-		// Poll competition mode
-		digital_states += pros::competition::is_disabled();
-		digital_states <<= 1;
-		digital_states += pros::competition::is_autonomous();
-		digital_states <<= 1;
-		digital_states += pros::competition::is_connected();
-		digital_states <<= 1;
-
-		memcpy(sensor_update_msg_buffer + 4 * buffer_32bit_index, &digital_states, 2);
-		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2, &device_connected_vector, 4);
-		memcpy(sensor_update_msg_buffer + 4 * (buffer_32bit_index) + 2 + 4, &write_msg_id_, 4);
-
-		serial_base_interface_->writeMsgToSerial(sensor_update_msg_buffer, sensor_update_msg_len_);
-		write_msg_id_++;
 	}
+}
+
+void V5SerialNode::writeV5StateUpdate(){
+	// Competition States
+	hardware_interface_ptr_->setDisabledStatus(pros::competition::is_disabled());
+	hardware_interface_ptr_->setAutonomousStatus(pros::competition::is_autonomous());
+	hardware_interface_ptr_->setConnectedStatus(pros::competition::is_connected());
+
+	// Joysticks
+	auto joy_1_data = std::make_shared<JoystickDeviceData>(MAIN_JOYSTICK_NAME);
+	joy_1_data->left_x = v5_globals::controller_main.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
+	joy_1_data->left_y = v5_globals::controller_main.get_analog(ANALOG_LEFT_Y);
+	joy_1_data->right_x = v5_globals::controller_main.get_analog(ANALOG_RIGHT_X);
+	joy_1_data->right_y = v5_globals::controller_main.get_analog(ANALOG_RIGHT_Y);
+	joy_1_data->btn_a = v5_globals::controller_main.get_digital(DIGITAL_A);
+	joy_1_data->btn_b = v5_globals::controller_main.get_digital(DIGITAL_B);
+	joy_1_data->btn_x = v5_globals::controller_main.get_digital(DIGITAL_X);
+	joy_1_data->btn_y = v5_globals::controller_main.get_digital(DIGITAL_Y);
+	joy_1_data->btn_u = v5_globals::controller_main.get_digital(DIGITAL_UP);
+	joy_1_data->btn_d = v5_globals::controller_main.get_digital(DIGITAL_DOWN);
+	joy_1_data->btn_l = v5_globals::controller_main.get_digital(DIGITAL_LEFT);
+	joy_1_data->btn_r = v5_globals::controller_main.get_digital(DIGITAL_RIGHT);
+	joy_1_data->btn_l1 = v5_globals::controller_main.get_digital(DIGITAL_L1);
+	joy_1_data->btn_l2 = v5_globals::controller_main.get_digital(DIGITAL_L2);
+	joy_1_data->btn_r1 = v5_globals::controller_main.get_digital(DIGITAL_R1);
+	joy_1_data->btn_r2 = v5_globals::controller_main.get_digital(DIGITAL_R2);
+	hardware_interface_ptr_->setDeviceData(joy_1_data);
+
+
+	if(hardware_interface_ptr_->contains(PARTNER_JOYSTICK_NAME)){
+		auto joy_2_data = std::make_shared<JoystickDeviceData>(PARTNER_JOYSTICK_NAME);
+		joy_2_data->left_x = v5_globals::controller_partner.get_analog(ANALOG_LEFT_X);
+		joy_2_data->left_y = v5_globals::controller_partner.get_analog(ANALOG_LEFT_Y);
+		joy_2_data->right_x = v5_globals::controller_partner.get_analog(ANALOG_RIGHT_X);
+		joy_2_data->right_y = v5_globals::controller_partner.get_analog(ANALOG_RIGHT_Y);
+		joy_2_data->btn_a = v5_globals::controller_partner.get_digital(DIGITAL_A);
+		joy_2_data->btn_b = v5_globals::controller_partner.get_digital(DIGITAL_B);
+		joy_2_data->btn_x = v5_globals::controller_partner.get_digital(DIGITAL_X);
+		joy_2_data->btn_y = v5_globals::controller_partner.get_digital(DIGITAL_Y);
+		joy_2_data->btn_u = v5_globals::controller_partner.get_digital(DIGITAL_UP);
+		joy_2_data->btn_d = v5_globals::controller_partner.get_digital(DIGITAL_DOWN);
+		joy_2_data->btn_l = v5_globals::controller_partner.get_digital(DIGITAL_LEFT);
+		joy_2_data->btn_r = v5_globals::controller_partner.get_digital(DIGITAL_RIGHT);
+		joy_2_data->btn_l1 = v5_globals::controller_partner.get_digital(DIGITAL_L1);
+		joy_2_data->btn_l2 = v5_globals::controller_partner.get_digital(DIGITAL_L2);
+		joy_2_data->btn_r1 = v5_globals::controller_partner.get_digital(DIGITAL_R1);
+		joy_2_data->btn_r2 = v5_globals::controller_partner.get_digital(DIGITAL_R2);
+		hardware_interface_ptr_->setDeviceData(joy_2_data);
+	}
+
+	// Motors
+	for(const auto& [name, device] : v5_globals::motor_interfaces){
+		auto motor_device_data_ptr = hardware_interface_ptr_->getDeviceData<MotorDeviceData>(name);
+		auto motor_interface_ptr = device->getMotorInterfacePtr();
+		motor_device_data_ptr->curr_position = motor_interface_ptr->get_position();
+		motor_device_data_ptr->curr_velocity_rpm = device->getVelocityFilteredRPM();
+		motor_device_data_ptr->curr_torque_nm = motor_interface_ptr->get_torque();
+		motor_device_data_ptr->curr_voltage_mv = motor_interface_ptr->get_voltage();
+		motor_device_data_ptr->curr_current_ma = motor_interface_ptr->get_current_draw();
+		motor_device_data_ptr->curr_power_w = motor_interface_ptr->get_power();
+		motor_device_data_ptr->curr_temp_c = motor_interface_ptr->get_temperature();
+		hardware_interface_ptr_->setDeviceData(motor_device_data_ptr);
+	}
+
+	// Encoders
+	for(const auto& [name, device] : v5_globals::encoders){
+		auto rotation_sensor_data_ptr = hardware_interface_ptr_->getDeviceData<RotationSensorDeviceData>(name);
+		rotation_sensor_data_ptr->angle = ((float) device->get_angle()) / 100.0;
+		rotation_sensor_data_ptr->position = ((float) device->get_position()) / 100.0;
+		rotation_sensor_data_ptr->velocity = ((float) device->get_velocity()) / 100.0;
+		hardware_interface_ptr_->setDeviceData(rotation_sensor_data_ptr);
+	}
+
+	serial_base_interface_->writeMsgToSerial(hardware_interface_ptr_->serialize().data(), sensor_update_msg_len_);
+}
 
 } // namespace ghost_v5

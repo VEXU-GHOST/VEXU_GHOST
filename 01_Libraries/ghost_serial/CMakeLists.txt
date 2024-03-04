@@ -1,66 +1,26 @@
 cmake_minimum_required(VERSION 3.5)
 project(ghost_serial)
 
-#########################
-#### Compile Options ####
-#########################
-
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
-
-# set(CMAKE_BUILD_TYPE "DEBUG")
-set(CMAKE_BUILD_TYPE "RELEASE")
-
-if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
-  add_compile_options(-g -O0)
-endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
-
-add_compile_options(-DGHOST_DEBUG_VERBOSE)
-
-# Device specific flag for code portability between Coprocessor, V5 Brain, and TM4C
-add_definitions(-DGHOST_JETSON=1)
-add_definitions(-DGHOST_V5_BRAIN=2)
-add_definitions(-DGHOST_TM4C=3)
-
-add_definitions(-DGHOST_DEVICE=1)
+# Add Global CMake Config for Ghost Packages
+set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+find_package(Ghost CONFIG REQUIRED)
 
 ######################
 #### Dependencies ####
 ######################
-find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_gtest REQUIRED)
+# Set Package Dependencies
+set(DEPENDENCIES
+  ament_cmake
+  ament_cmake_gtest
+  ghost_msgs
+  )
 
-find_package(rclcpp REQUIRED)
-find_package(ghost_msgs REQUIRED)
+foreach(pkg ${DEPENDENCIES})
+  find_package(${pkg} REQUIRED)
+endforeach()
+ament_export_dependencies(${DEPENDENCIES})
 
 include_directories(include)
-
-####################
-### Serial Utils ###
-####################
-add_library(serial_utils SHARED
-  src/serial_utils/bitmasks.cpp
-)
-target_include_directories(serial_utils
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_export_targets(serial_utils HAS_LIBRARY_TARGET)
-install(
-  TARGETS serial_utils
-  EXPORT serial_utils
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
 
 ####################
 ### COBS Library ###
@@ -113,7 +73,6 @@ add_library(jetson_serial_base SHARED
   src/base_interfaces/jetson_serial_base.cpp
 )
 target_link_libraries(jetson_serial_base
-  serial_utils  
   cobs
   msg_parser
 )
@@ -148,6 +107,11 @@ target_link_libraries(test_msg_parser
 ###############
 ### Install ###
 ###############
+install(
+  PROGRAMS scripts/serial_test_util.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(
   DIRECTORY include/
   DESTINATION include
