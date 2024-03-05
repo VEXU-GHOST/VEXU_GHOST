@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main">
+      main_tree_to_execute="test">
   <BehaviorTree ID="main">
     <Sequence>
       <SwipeTail num_swipes="25"/>
@@ -55,9 +55,25 @@
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="tailTest">
+  <BehaviorTree ID="test">
     <Sequence>
-      <SwipeTail num_swipes="5"/>
+      <!-- <SwipeTail num_swipes="5"/> -->
+      <MoveToPose posX="0.5"
+                  posY="0.0"
+                  theta="0"
+                  velX="0.0"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.025"
+                  timeout="10000"/>
+      <MoveToPose posX="0.5"
+                  posY="0.5"
+                  theta="0"
+                  velX="0.0"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.025"
+                  timeout="10000"/>
       <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>
@@ -77,6 +93,9 @@
       <input_port name="posX">m</input_port>
       <input_port name="posY">m</input_port>
       <input_port name="theta">deg</input_port>
+      <input_port name="velX">m.s</input_port>
+      <input_port name="velY">m.s</input_port>
+      <input_port name="omega">deg.s</input_port>
       <input_port name="threshold"
                   default="0.025">m</input_port>
       <input_port name="timeout"
