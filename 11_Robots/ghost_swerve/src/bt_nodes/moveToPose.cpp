@@ -22,11 +22,11 @@ BT::PortsList MoveToPose::providedPorts(){
 	    BT::InputPort<double>("posX"),
 	    BT::InputPort<double>("posY"),
 	    BT::InputPort<double>("theta"),
+	    BT::InputPort<double>("velX"),
+	    BT::InputPort<double>("velY"),
+	    BT::InputPort<double>("omega"),
 	    BT::InputPort<double>("threshold"),
 	    BT::InputPort<int>("timeout"),
-	    // BT::InputPort<double>("velX"),
-	    // BT::InputPort<double>("velY"),
-	    // BT::InputPort<double>("omega"),
 	};
 }
 
@@ -58,15 +58,32 @@ BT::NodeStatus MoveToPose::onRunning() {
 	double posX = get_input<double>("posX");
 	double posY = get_input<double>("posY");
 	double theta = get_input<double>("theta");
+	double velX = get_input<double>("velX");
+	double velY = get_input<double>("velY");
+	double omega = get_input<double>("omega");
 	double threshold = get_input<double>("threshold");
 	int timeout = get_input<int>("timeout");
-	// double velX = get_input<double>("velX");
-	// double velY = get_input<double>("velY");
-	// double omega = get_input<double>("omega");
 
 	theta *= ghost_util::DEG_TO_RAD;
 
-	swerve_ptr_->calculateKinematicSwerveControllerMoveToPoseWorld(posX, posY, theta);
+	// swerve_ptr_->calculateKinematicSwerveControllerMoveToPoseWorld(posX, posY, theta);
+
+	double w,x,y,z;
+	ghost_util::yawToQuaternionDeg(theta, w, x, y, z);
+	ghost_msgs::msg::DrivetrainCommand msg{};
+	msg.pose.pose.position.x = posX;
+	msg.pose.pose.position.y = posY;
+	msg.pose.pose.orientation.x = x;
+	msg.pose.pose.orientation.y = y;
+	msg.pose.pose.orientation.z = z;
+	msg.pose.pose.orientation.w = w;
+
+	// geometry_msgs::msg::TwistStamped twist{};
+	msg.twist.twist.linear.x = velX;
+	msg.twist.twist.linear.y = velY;
+	msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
+
+	command_pub_->publish(msg);
 
 	if((abs(posX - swerve_ptr_->getOdometryLocation().x()) < threshold) && (abs(posY - swerve_ptr_->getOdometryLocation().y()) < threshold)){
 		RCLCPP_INFO(this->get_logger(), "MoveToPose: Success");
@@ -86,38 +103,16 @@ BT::NodeStatus MoveToPose::onRunning() {
 		RCLCPP_INFO(this->get_logger(), "MoveToPose: Started");
 		start_time_ = std::chrono::system_clock::now();
 		started_ = true;
+
+		RCLCPP_INFO(this->get_logger(), "posX: %f", posX);
+		RCLCPP_INFO(this->get_logger(), "posY: %f", posY);
+		RCLCPP_INFO(this->get_logger(), "theta: %f", theta);
+		RCLCPP_INFO(this->get_logger(), "velX: %f", velX);
+		RCLCPP_INFO(this->get_logger(), "velY: %f", velY);
+		RCLCPP_INFO(this->get_logger(), "omega: %f", omega);
 	}
 	 
 	return BT::NodeStatus::RUNNING;
-
-	// double w,x,y,z;
-	// ghost_util::yawToQuaternionDeg(theta, w, x, y, z);
-	// ghost_msgs::msg::DrivetrainCommand msg{};
-	// msg.pose.pose.position.x = posX;
-	// msg.pose.pose.position.y = posY;
-	// msg.pose.pose.orientation.x = x;
-	// msg.pose.pose.orientation.y = y;
-	// msg.pose.pose.orientation.z = z;
-	// msg.pose.pose.orientation.w = w;
-
-	// // geometry_msgs::msg::TwistStamped twist{};
-	// msg.twist.twist.linear.x = velX;
-	// msg.twist.twist.linear.y = velY;
-	// msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
-
-	// command_pub_->publish(msg);
-
-	// RCLCPP_INFO(this->get_logger(), "posX: %f", posX);
-	// RCLCPP_INFO(this->get_logger(), "posY: %f", posY);
-	// RCLCPP_INFO(this->get_logger(), "theta: %f", theta);
-	// RCLCPP_INFO(this->get_logger(), "velX: %f", velX);
-	// RCLCPP_INFO(this->get_logger(), "velY: %f", velY);
-	// RCLCPP_INFO(this->get_logger(), "omega: %f", omega);
-
-	// // subscrive to odom and check if reached goal
-	// // also timeout
-
-	// return BT::NodeStatus::SUCCESS;
 }
 
 } // namespace ghost_swerve
