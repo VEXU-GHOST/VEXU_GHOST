@@ -67,7 +67,6 @@ def generate_launch_description():
 
     world_file = os.path.join(ghost_sim_share_dir, "worlds", "spin_up.world")
     rviz_config_path = os.path.join(ghost_localization_share_dir, 'rviz/ekf_pf.rviz')
-    print(rviz_config_path)
 
     # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
     simulation = IncludeLaunchDescription(
@@ -118,7 +117,7 @@ def generate_launch_description():
         simulation,
         # ekf_pf_launch,
         rviz_node,
-        # plot_juggler_node,
+        plot_juggler_node,
         robot_localization_node,
         # state_machine_node,
         OpaqueFunction(function = launch_setup),
