@@ -8,7 +8,7 @@ using std::placeholders::_1;
 
 void SwerveMotionPlanner::initialize(){
 	odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-		"/sensors/wheel_odom",
+		"/odometry/filtered",
 		10,
 		std::bind(&SwerveMotionPlanner::odomCallback, this, _1)
 		);

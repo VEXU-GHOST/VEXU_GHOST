@@ -61,18 +61,38 @@
       <MoveToPose posX="0.5"
                   posY="0.0"
                   theta="0"
-                  velX="0.0"
+                  velX="0.25"
                   velY="0.0"
                   omega="0.0"
-                  threshold="0.025"
+                  threshold="0.05"
+                  angle_threshold="5"
                   timeout="10000"/>
       <MoveToPose posX="0.5"
                   posY="0.5"
-                  theta="0"
+                  theta="90"
                   velX="0.0"
+                  velY="0.25"
+                  omega="0.0"
+                  threshold="0.05"
+                  angle_threshold="5"
+                  timeout="10000"/>
+      <MoveToPose posX="0.0"
+                  posY="0.0"
+                  theta="0"
+                  velX="-0.1"
                   velY="0.0"
                   omega="0.0"
-                  threshold="0.025"
+                  threshold="0.05"
+                  angle_threshold="5"
+                  timeout="10000"/>
+      <MoveToPose posX="0.0"
+                  posY="-0.5"
+                  theta="0"
+                  velX="0.0"
+                  velY="0.2"
+                  omega="0.0"
+                  threshold="0.05"
+                  angle_threshold="5"
                   timeout="10000"/>
       <KeepRunningUntilFailure>
         <CheckForRestart/>
@@ -98,6 +118,8 @@
       <input_port name="omega">deg.s</input_port>
       <input_port name="threshold"
                   default="0.025">m</input_port>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
       <input_port name="timeout"
                   default="5000">ms</input_port>
     </Action>

@@ -308,19 +308,25 @@ public:
 		return m_odom_angle;
 	}
 
+	void setWorldPose(const double x, const double y){
+		m_world_loc.x() = x;
+		m_world_loc.y() = y;
+	}
+
+	void setWorldAngle(const double theta){
+		m_world_angle = theta;
+	}
+
 	const Eigen::Vector2d& getWorldLocation(){
-		// TODO(maxxwilson) UPDATE THIS from sub
-		return m_odom_loc;
+		return m_world_loc;
 	}
 
 	double getWorldAngleDeg() const {
-		// TODO(maxxwilson) UPDATE THIS from sub
-		return m_odom_angle * ghost_util::RAD_TO_DEG;
+		return m_world_angle * ghost_util::RAD_TO_DEG;
 	}
 
 	double getWorldAngleRad() const {
-		// TODO(maxxwilson) UPDATE THIS from sub
-		return m_odom_angle;
+		return m_world_angle;
 	}
 
 	void setOdometryAngle(double angle) {
@@ -378,7 +384,9 @@ protected:
 
 	// Odometry
 	Eigen::Vector2d m_odom_loc;
+	Eigen::Vector2d m_world_loc;
 	double m_odom_angle;
+	double m_world_angle;
 
 	// Current centroidal states
 	double m_curr_angle;

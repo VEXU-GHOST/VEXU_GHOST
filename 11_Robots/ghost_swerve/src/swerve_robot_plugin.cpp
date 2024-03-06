@@ -29,7 +29,7 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("odom_topic", "/sensors/wheel_odom");
 	std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
 
-	node_ptr_->declare_parameter("pose_topic", "/estimation/robot_pose");
+	node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
 	std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
 
 	node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
@@ -136,7 +136,7 @@ void SwerveRobotPlugin::initialize(){
 	m_swerve_model_ptr->setFieldOrientedControl(true);
 
 	// ROS Topics
-	m_robot_pose_sub = node_ptr_->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+	m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
 		pose_topic,
 		10,
 		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1));
@@ -482,7 +482,10 @@ void SwerveRobotPlugin::updateDrivetrainMotors(){
 }
 
 
-void SwerveRobotPlugin::poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
+void SwerveRobotPlugin::poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
+	double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+	m_swerve_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y);
+	m_swerve_model_ptr->setWorldAngle(theta);
 }
 
 void SwerveRobotPlugin::publishOdometry(){

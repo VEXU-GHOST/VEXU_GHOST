@@ -26,6 +26,7 @@ BT::PortsList MoveToPose::providedPorts(){
 	    BT::InputPort<double>("velY"),
 	    BT::InputPort<double>("omega"),
 	    BT::InputPort<double>("threshold"),
+	    BT::InputPort<double>("angle_threshold"),
 	    BT::InputPort<int>("timeout"),
 	};
 }
@@ -62,14 +63,16 @@ BT::NodeStatus MoveToPose::onRunning() {
 	double velY = get_input<double>("velY");
 	double omega = get_input<double>("omega");
 	double threshold = get_input<double>("threshold");
+	double angle_threshold = get_input<double>("angle_threshold");
 	int timeout = get_input<int>("timeout");
 
 	theta *= ghost_util::DEG_TO_RAD;
+	angle_threshold *= ghost_util::DEG_TO_RAD;
 
 	// swerve_ptr_->calculateKinematicSwerveControllerMoveToPoseWorld(posX, posY, theta);
 
 	double w,x,y,z;
-	ghost_util::yawToQuaternionDeg(theta, w, x, y, z);
+	ghost_util::yawToQuaternionRad(theta, w, x, y, z);
 	ghost_msgs::msg::DrivetrainCommand msg{};
 	msg.pose.pose.position.x = posX;
 	msg.pose.pose.position.y = posY;
@@ -85,7 +88,9 @@ BT::NodeStatus MoveToPose::onRunning() {
 
 	command_pub_->publish(msg);
 
-	if((abs(posX - swerve_ptr_->getOdometryLocation().x()) < threshold) && (abs(posY - swerve_ptr_->getOdometryLocation().y()) < threshold)){
+	if( (abs(posX - swerve_ptr_->getOdometryLocation().x()) < threshold) &&
+		(abs(posY - swerve_ptr_->getOdometryLocation().y()) < threshold) &&
+		(abs(theta - swerve_ptr_->getOdometryAngle()) < angle_threshold)){
 		RCLCPP_INFO(this->get_logger(), "MoveToPose: Success");
 		return BT::NodeStatus::SUCCESS;
 	}
