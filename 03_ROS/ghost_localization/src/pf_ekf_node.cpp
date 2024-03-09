@@ -57,7 +57,7 @@ PfEkfNode::PfEkfNode() :
 	map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
 
 	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		"/initial_pose",
+		"/set_pose",
 		10,
 		std::bind(&PfEkfNode::InitialPoseCallback, this, _1)
 		);
@@ -66,7 +66,7 @@ PfEkfNode::PfEkfNode() :
 	debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("estimation_debug", 10);
 	cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
 	map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", map_qos);
-	// world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
+	world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
 	ekf_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pf_odometry", 10);
 
 	// Use simulated time in ROS TODO:!!!!
@@ -186,7 +186,7 @@ void PfEkfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 			msg->angle_max + config_params.laser_angle_offset);
 
 		PublishRobotPose();
-		// PublishWorldTransform();
+		PublishWorldTransform();
 		PublishVisualization();
 	}
 	catch(std::exception e){
@@ -211,7 +211,7 @@ void PfEkfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 
 		particle_filter_.Initialize(config_params.map, init_loc, init_angle);
 
-		// PublishWorldTransform();
+		PublishWorldTransform();
 		PublishVisualization();
 		PublishMapViz();
 	}
@@ -233,7 +233,7 @@ void PfEkfNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 		particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 		PublishRobotPose();
-		// PublishWorldTransform();
+		PublishWorldTransform();
 		PublishVisualization();
 	}
 	catch(std::exception e){
@@ -250,7 +250,7 @@ void PfEkfNode::PublishRobotPose(){
 	auto robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
 
 	robot_pose_.header.stamp = this->get_clock()->now();
-	robot_pose_.header.frame_id = "base_link";
+	robot_pose_.header.frame_id = config_params.world_frame;
 
 	robot_pose_.pose.pose.position.x = robot_loc.x();
 	robot_pose_.pose.pose.position.y = robot_loc.y();
@@ -313,7 +313,7 @@ void PfEkfNode::PublishWorldTransform(){
 	world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
 
 	tf_msg.transforms.push_back(world_to_base_tf);
-	// world_tf_pub_->publish(tf_msg);
+	world_tf_pub_->publish(tf_msg);
 }
 
 void PfEkfNode::PublishVisualization(){

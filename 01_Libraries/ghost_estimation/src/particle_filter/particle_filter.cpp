@@ -186,7 +186,6 @@ void ParticleFilter::Update(const vector<float>& ranges,
 	// resize the ranges
 	vector<float> trimmed_ranges(predicted_cloud.size());
 	particle.weight = 0;
-
 	// Calculate the particle weight
 	for(std::size_t i = 0; i < predicted_cloud.size(); i++){
 		int laser_index = i * config_params_.resize_factor;
