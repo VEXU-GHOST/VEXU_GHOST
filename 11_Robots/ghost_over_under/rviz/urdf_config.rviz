@@ -3,7 +3,7 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-        Expanded:
+      Expanded:
         - /MarkerArray1
         - /MarkerArray1/Status1
       Splitter Ratio: 0.5
@@ -12,7 +12,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-       Cell Size: 0.6096 # 24" Tiles
+      Cell Size: 0.6096 # 24" Tiles
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -118,6 +118,7 @@ Visualization Manager:
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
+      Marker Scale: 0.2
       Frames:
         All Enabled: true
         base_footprint:
@@ -172,6 +173,7 @@ Visualization Manager:
               {}
       Update Interval: 0
       Value: true
+      Class: rviz_default_plugins/PoseArray
     - Alpha: 1
       Arrow Length: 0.029999999329447746
       Axes Length: 0.30000001192092896
@@ -192,6 +194,8 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /particle_cloud
+      Color: 95; 53; 102
+      Arrow Length: 0.03
       Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
@@ -205,6 +209,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /map_viz
+      Class: rviz_default_plugins/LaserScan
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -225,6 +230,8 @@ Visualization Manager:
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: LIDAR
+      Namespaces:
+      "": true
       Position Transformer: ""
       Selectable: true
       Size (Pixels): 3
@@ -244,6 +251,7 @@ Visualization Manager:
       Enabled: true
       Name: Swerve Kinematics
       Namespaces:
+        "controller": true
         {}
       Topic:
         Depth: 5
@@ -256,6 +264,7 @@ Visualization Manager:
       Enabled: true
       Name: Predicted Scan
       Namespaces:
+        "controller": true
         {}
       Topic:
         Depth: 5
@@ -279,6 +288,7 @@ Visualization Manager:
     - Class: rviz_default_plugins/Measure
       Line color: 128; 128; 0
     - Class: rviz_default_plugins/SetInitialPose
+      Topic: /initial_pose
       Covariance x: 0.25
       Covariance y: 0.25
       Covariance yaw: 0.06853891909122467
@@ -289,6 +299,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /initial_pose
     - Class: rviz_default_plugins/SetGoal
+      Line color: 128; 128; 0
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -320,15 +331,15 @@ Visualization Manager:
       Pitch: 0.7853981852531433
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.712390422821045
+      Yaw: -1.570795
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 701
+  Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
   QMainWindow State: 000000ff00000000fd00000001000000000000025d00000267fc0200000001fb000000100044006900730070006c006100790073010000003b00000267000000c700ffffff000002a10000026700000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
-  Width: 1284
-  X: -37
-  Y: 100
+  Width: 1848
+  X: 72
+  Y: 27
