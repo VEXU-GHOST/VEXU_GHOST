@@ -3,14 +3,16 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+        Expanded:
+        - /MarkerArray1
+        - /MarkerArray1/Status1
       Splitter Ratio: 0.5
-    Tree Height: 478
+    Tree Height: 787
 Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 0.6096000075340271
+       Cell Size: 0.6096 # 24" Tiles
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -54,6 +56,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+          Class: rviz_default_plugins/PoseArray
         front_bar:
           Alpha: 1
           Show Axes: false
