@@ -243,6 +243,8 @@ void IMUFilterNode::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
 
 void IMUFilterNode::publishFilteredIMU(){
 	sensor_msgs::msg::Imu msg{};
+	msg.header.stamp = this->get_clock()->now();
+	msg.header.frame_id = "base_link";
 	msg.angular_velocity.x = m_filtered_gyro_vector_base_link.x();
 	msg.angular_velocity.y = m_filtered_gyro_vector_base_link.y();
 	msg.angular_velocity.z = m_filtered_gyro_vector_base_link.z();

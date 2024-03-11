@@ -95,7 +95,7 @@ void SwerveRobotPlugin::initialize(){
 		trajectory_marker_topic,
 		10);
 
-	bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
+	// bt_ = std::make_shared<RunTree>(bt_path, rhi_ptr_);
 
 	// Setup Swerve Model
 	SwerveConfig swerve_model_config;
@@ -163,7 +163,7 @@ void SwerveRobotPlugin::disabled(){
 void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
 
-	bt_->tick_tree();
+	// bt_->tick_tree();
 	publishTrajectoryVisualization();
 
 	auto command_map = get_commands(current_time);

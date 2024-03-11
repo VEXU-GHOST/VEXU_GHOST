@@ -67,12 +67,12 @@ competition_state_machine_node:
       k3: 0.01   #0.1   # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k4: 0.05  #0.05  # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k5: 0.01  #0.01        # y error from y motion         # 50% error in primary direction
+      k5: 0.5  #0.01        # y error from y motion         # 50% error in primary direction travel ~11 in over 24 in
       k6: 0.01   #0.1   # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k7: 0.01   #0.2   # theta error from x motion     # After 2ft of travel, 99% are within by 5°
-      k8: 0.01   #0.2   # theta error from y motion     # After 2ft of travel, 99% are within by 5°
-      k9: 0.2         # theta error from rotation     # 50% error in primary direction
+      k8: 0.01   #0.2   # theta error from y motion     # After 2ft of travel 8.62 or 4.93 deg off, 99% are within by 5°
+      k9: 0.13         # theta error from rotation     # 13% error in primary direction 90 deg off by 12.28deg || 180 turn off by 20 deg
 
       # motion planning
       move_to_pose_kp_x: 0.1
