@@ -173,7 +173,7 @@ Visualization Manager:
               {}
       Update Interval: 0
       Value: true
-      Class: rviz_default_plugins/PoseArray
+    - Class: rviz_default_plugins/PoseArray
     - Alpha: 1
       Arrow Length: 0.029999999329447746
       Axes Length: 0.30000001192092896
@@ -209,7 +209,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /map_viz
-      Class: rviz_default_plugins/LaserScan
+    - Class: rviz_default_plugins/LaserScan
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -231,7 +231,7 @@ Visualization Manager:
       Min Intensity: 0
       Name: LIDAR
       Namespaces:
-      "": true
+        "": true
       Position Transformer: ""
       Selectable: true
       Size (Pixels): 3
@@ -339,7 +339,7 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000025d00000267fc0200000001fb000000100044006900730070006c006100790073010000003b00000267000000c700ffffff000002a10000026700000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000025d0000039efc0200000001fb000000100044006900730070006c006100790073010000003d0000039e000000c900ffffff000004d50000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Width: 1848
   X: 72
   Y: 27
