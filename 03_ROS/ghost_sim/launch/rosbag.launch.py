@@ -59,12 +59,13 @@ def generate_launch_description():
     world_file = os.path.join(ghost_sim_share_dir, "worlds", "spin_up.world")
     rviz_config_path = os.path.join(ghost_sim_share_dir, 'rviz/bag_playback.rviz')
 
-
-    ekf_pf_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(ghost_localization_share_dir,
-                         'launch', 'ekf_pf.launch.py')
-        ))
+    ekf_pf_node = Node(
+        package='ghost_localization',
+        executable='ekf_pf_node',
+        name='ekf_pf_node',
+        output='screen',
+        parameters=[ghost_over_under_share_dir + "/config/ros_config.yaml"]
+    )
     
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
@@ -101,7 +102,7 @@ def generate_launch_description():
         DeclareLaunchArgument(name='channel_id', default_value='1'),
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
-        # ekf_pf_launch,
+        ekf_pf_node,
         rviz_node,
         plot_juggler_node,
         robot_localization_node,

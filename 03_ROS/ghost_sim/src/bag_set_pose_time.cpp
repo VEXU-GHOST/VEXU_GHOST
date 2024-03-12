@@ -23,7 +23,7 @@ BagSetPoseTime::BagSetPoseTime() :
 		std::bind(&BagSetPoseTime::BagSetPoseTimeCallback, this, _1));
 
 	// Publishers
-	set_pose_time_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("set_pose", 10);
+	set_pose_time_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("initial_pose", 10);
 }
 
 
