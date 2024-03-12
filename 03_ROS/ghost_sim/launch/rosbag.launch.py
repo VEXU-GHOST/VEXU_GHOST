@@ -20,12 +20,12 @@ def launch_setup(context, *args, **kwargs):
     doc = xml.toprettyxml(indent='  ')
     
     # Node to publish robot joint transforms
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='screen',
-        parameters=[{'use_sim_time': True}, {"robot_description": doc}])
+    # robot_state_publisher = Node(
+    #     package='robot_state_publisher',
+    #     executable='robot_state_publisher',
+    #     name='robot_state_publisher',
+    #     output='screen',
+    #     parameters=[{'use_sim_time': True}, {"robot_description": doc}])
 
     # Joystick (Only launched if joystick CLI arg is set to True)
     joy_launch_description = IncludeLaunchDescription(
@@ -42,7 +42,7 @@ def launch_setup(context, *args, **kwargs):
         }.items()
     )
 
-    return [robot_state_publisher, joy_launch_description]
+    return [joy_launch_description]
 
 
 def generate_launch_description():
@@ -79,7 +79,7 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_localization_node',
         output='screen',
-        parameters=[ghost_sim_share_dir + "/config/bag_ros_config.yaml"]
+        parameters=[ghost_over_under_share_dir + "/config/ros_config.yaml"]
     )
 
     bag_set_pose_time = Node(
