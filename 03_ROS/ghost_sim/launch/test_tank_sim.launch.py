@@ -136,17 +136,10 @@ def generate_launch_description():
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ekf_pf_launch,
-<<<<<<< HEAD
         pf_ekf_node,
         rviz_node,
         plot_juggler_node,
         # robot_localization_node,
         pf_ekf_localization_node,
-=======
-        rviz_node,
-        plot_juggler_node,
-        robot_localization_node,
-        # state_machine_node,
->>>>>>> mel_ekf_tuning
         OpaqueFunction(function = launch_setup),
     ])
