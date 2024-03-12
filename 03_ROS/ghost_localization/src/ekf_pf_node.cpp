@@ -54,7 +54,7 @@ EkfPfNode::EkfPfNode() :
 		std::bind(&EkfPfNode::LaserCallback, this, _1));
 
 	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		"/initial_pose",
+		"/set_pose",
 		10,
 		std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
 		);
@@ -246,6 +246,7 @@ void EkfPfNode::PublishRobotPose(rclcpp::Time stamp){
 	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 	robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
+
 	robot_pose_.header.stamp = stamp;
 	robot_pose_.header.frame_id = "base_link";
 

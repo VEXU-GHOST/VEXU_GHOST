@@ -1,5 +1,5 @@
 import os
-
+import xacro
 from launch import LaunchDescription
 
 from ament_index_python import get_package_share_directory
@@ -23,6 +23,14 @@ def generate_launch_description():
 
     ghost_autonomy_share_dir = get_package_share_directory('ghost_autonomy')
     bt_path = os.path.join(ghost_autonomy_share_dir, "config", "bt.xml")
+
+    # Robot state publisher params
+    filename = "ghost_15.xacro"
+
+    # Load XACRO and process to urdf then to text
+    xacro_path = os.path.join(ghost_over_under_base_dir, "urdf", filename)
+    xml = xacro.process_file(xacro_path)
+    doc = xml.toprettyxml(indent='  ')
     
 
     ########################
@@ -78,6 +86,14 @@ def generate_launch_description():
     #     parameters=[{"frame_id": "lidar_link", 'angle_compensate': True}]
     # )
 
+    # Node to publish robot joint transforms
+    robot_state_publisher = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        output='screen',
+        parameters=[{'use_sim_time': True}, {"robot_description": doc}])
+
     imu_filter_node = Node(
         package='ghost_sensing',
         executable='imu_filter_node',
@@ -120,6 +136,7 @@ def generate_launch_description():
         realsense_node,
         imu_filter_node,
         robot_localization_node,
-        swerve_motion_planner_node
+        swerve_motion_planner_node,
+        robot_state_publisher
         # rplidar_node,
     ])

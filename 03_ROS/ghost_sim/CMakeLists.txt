@@ -48,6 +48,20 @@ include
 ${PYTHON_INCLUDE_DIRS}
 )
 
+##############################
+####   Bag Sim Time Node  ####
+# ##############################
+add_executable(bag_set_pose_time
+  src/bag_set_pose_time.cpp
+)
+ament_target_dependencies(bag_set_pose_time
+  rclcpp
+  geometry_msgs
+)
+install(TARGETS
+bag_set_pose_time
+  DESTINATION lib/${PROJECT_NAME})
+
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
@@ -126,26 +140,10 @@ ament_target_dependencies(test_diff_drive
 #     $<INSTALL_INTERFACE:include>)
 # ament_export_libraries(v5_robot_plugin)
 
-# add_executable(ground_truth_pose_publisher
-#   src/ground_truth_pose_publisher.cpp
-# )
-# ament_target_dependencies(ground_truth_pose_publisher
-#   ${DEPENDENCIES}
-# )
-# install(TARGETS
-#   ground_truth_pose_publisher
-#   DESTINATION lib/${PROJECT_NAME})
 
-################
-### Install ####
-################
-# install(
-#   PROGRAMS launch/test_tank_sim.launch.py
-#   DESTINATION lib/${PROJECT_NAME}
-# )
 
 install(
-  DIRECTORY include
+  DIRECTORY include/
   DESTINATION include
 )
 
@@ -153,8 +151,11 @@ install(DIRECTORY
   launch
   urdf
   worlds
+  rviz
   config
   DESTINATION share/${PROJECT_NAME})
+
+ament_export_include_directories(include)
 
 
 ament_package()
