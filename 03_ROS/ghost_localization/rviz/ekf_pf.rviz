@@ -314,7 +314,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /set_pose
+        Value: /initial_pose
     - Class: rviz_default_plugins/SetGoal
       Topic:
         Depth: 5

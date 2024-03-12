@@ -54,7 +54,7 @@ EkfPfNode::EkfPfNode() :
 		std::bind(&EkfPfNode::LaserCallback, this, _1));
 
 	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		"/set_pose",
+		"/initial_pose",
 		10,
 		std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
 		);
@@ -185,7 +185,7 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 			msg->angle_min + config_params.laser_angle_offset,
 			msg->angle_max + config_params.laser_angle_offset);
 
-		PublishRobotPose(msg->header.stamp);
+		PublishRobotPose();
 		PublishWorldTransform();
 		PublishVisualization();
 	}
@@ -224,13 +224,15 @@ void EkfPfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	this->last_filtered_odom_msg_ = *msg;
 	odom_loc_(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
-	odom_angle_ += 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
+	odom_angle_ = 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
 	try{
+		Vector2f robot_loc(0, 0);
+		float robot_angle(0);
+		std::array<double,36> covariance;
 		particle_filter_.Predict(odom_loc_, odom_angle_);
-		// PublishGhostRobotState(msg);
 
-		// PublishJointStateMsg(msg);
-		PublishRobotPose(last_filtered_odom_msg_.header.stamp);
+		particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
+		PublishRobotPose();
 		PublishWorldTransform();
 		PublishVisualization();
 	}
@@ -239,7 +241,7 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	}
 }
 
-void EkfPfNode::PublishRobotPose(rclcpp::Time stamp){
+void EkfPfNode::PublishRobotPose(){
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
 	std::array<double, 36> covariance;
@@ -247,12 +249,12 @@ void EkfPfNode::PublishRobotPose(rclcpp::Time stamp){
 
 	robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
 
-	robot_pose_.header.stamp = stamp;
-	robot_pose_.header.frame_id = "base_link";
+	robot_pose_.header.stamp = this->get_clock()->now();
+	robot_pose_.header.frame_id = config_params.world_frame;
 
 	robot_pose_.pose.pose.position.x = robot_loc.x();
 	robot_pose_.pose.pose.position.y = robot_loc.y();
-	robot_pose_.pose.pose.position.z = 0.0; // TODO ??
+	robot_pose_.pose.pose.position.z = 0.0;
 	robot_pose_.pose.covariance = covariance;
 	robot_pose_pub_->publish(robot_pose_);
 }
@@ -304,15 +306,11 @@ void EkfPfNode::PublishWorldTransform(){
 
 	world_to_base_tf.transform.translation.x = robot_loc.x();
 	world_to_base_tf.transform.translation.y = robot_loc.y();
-	// world_to_base_tf.transform.translation.x = odom_loc_.x();
-	// world_to_base_tf.transform.translation.y = odom_loc_.y();
 	world_to_base_tf.transform.translation.z = 0.0;
 	world_to_base_tf.transform.rotation.x = 0.0;
 	world_to_base_tf.transform.rotation.y = 0.0;
 	world_to_base_tf.transform.rotation.z = sin(robot_angle * 0.5);
 	world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
-	// world_to_base_tf.transform.rotation.z = sin(odom_angle_ * 0.5);
-	// world_to_base_tf.transform.rotation.w = cos(odom_angle_ * 0.5);
 
 	tf_msg.transforms.push_back(world_to_base_tf);
 	world_tf_pub_->publish(tf_msg);

@@ -5,6 +5,8 @@ ekf_localization_node:
     # frequency specified here, regardless of whether it receives more measurements. Defaults to 30 if unspecified.
     frequency: 30.0
 
+    publish_tf: false
+
     # The period, in seconds, after which we consider a sensor to have timed out. In this event, we carry out a predict
     # cycle on the EKF without correcting it. This parameter can be thought of as the minimum frequency with which the
     # filter will generate new output. Defaults to 1 / frequency if not specified.
@@ -37,7 +39,7 @@ ekf_localization_node:
     # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
     debug_out_file: ~/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
 
-    use_sim_time: false
+    use_sim_time: true
     # REP-105 (http://www.ros.org/reps/rep-0105.html) specifies four principal coordinate frames: base_link, odom, map, and
     # earth. base_link is the coordinate frame that is affixed to the robot. Both odom and map are world-fixed frames.
     # The robot's position in the odom frame will drift over time, but is accurate in the short term and should be
@@ -99,7 +101,7 @@ ekf_localization_node:
     # data is converted to velocity data by differentiating the absolute pose measurements. These velocities are then
     # integrated as usual. NOTE: this only applies to sensors that provide pose measurements; setting differential to true
     # for twist measurements has no effect.
-    odom0_differential: true
+    odom0_differential: false
 
     # [ADVANCED] When the node starts, if this parameter is true, then the first measurement is treated as a "zero point"
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key
@@ -133,19 +135,11 @@ ekf_localization_node:
     # this to true, and *make sure* your data conforms to REP-103, specifically, that the data is in ENU frame.
     imu0_remove_gravitational_acceleration: true
 
-    # # Incorporating simulator data to test performance of EKF
-    # odom1: /gz/model_pose # This topic does not exist given msg refactor :(
-    # odom1_config: [true, true, false,
-    #                false, false, true,
-    #                false, false, false,
-    #                false, false, false,
-    #                false, false, false,]
-    # odom1_differential: false
-    # odom1_relative: true
-    # odom1_queue_size: 5
-    # odom1_pose_rejection_threshold: 0.8                 # Note the difference in parameter names
-    # odom1_twist_rejection_threshold: 0.8                #
-    # odom1_linear_acceleration_rejection_threshold: 0.8  #
+    initial_state: [0.0,  0.0,  0.0,
+                      0.0,     0.0,  0.0,
+                      0.0,     0.0,  0.0,
+                      0.0,     0.0,  0.0,
+                      0.0,     0.0,  0.0]
 
     # [ADVANCED]  The EKF and UKF models follow a standard predict/correct cycle. During prediction, if there is no
     # acceleration reference, the velocity at time t+1 is simply predicted to be the same as the velocity at time t. During
@@ -223,4 +217,4 @@ ekf_localization_node:
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
 
-      # use_dynamic_process_noise_covariance: true
+    # use_dynamic_process_noise_covariance: true

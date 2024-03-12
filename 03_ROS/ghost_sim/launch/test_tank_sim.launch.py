@@ -83,11 +83,14 @@ def generate_launch_description():
             }.items()
     )
 
-    ekf_pf_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(ghost_localization_share_dir,
-                         'launch', 'ekf_pf.launch.py')
-        ))
+    ekf_pf_node = Node(
+        package='ghost_localization',
+        executable='ekf_pf_node',
+        name='ekf_pf_node',
+        output='screen',
+        parameters=[ghost_localization_share_dir + "/config/ekf_pf_node.yaml"],
+        remappings=[('/sensors/wheel_odom', '/odom')],
+    )
     
     pf_ekf_node = Node(
         package='ghost_localization',
@@ -111,7 +114,8 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_localization_node',
         output='screen',
-        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
+        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"],
+        remappings=[('/sensors/wheel_odom', '/odom')]
     )
 
     pf_ekf_localization_node = Node(
@@ -135,11 +139,9 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_gui', default_value='false'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        # ekf_pf_launch,
-        pf_ekf_node,
+        ekf_pf_node,
         rviz_node,
         plot_juggler_node,
-        # robot_localization_node,
-        pf_ekf_localization_node,
+        robot_localization_node,
         OpaqueFunction(function = launch_setup),
     ])

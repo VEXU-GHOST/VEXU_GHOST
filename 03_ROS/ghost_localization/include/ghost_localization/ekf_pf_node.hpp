@@ -64,7 +64,7 @@ private:
 	void PublishWorldTransform();
 	void DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg);
 	void PublishMapViz();
-	void PublishRobotPose(rclcpp::Time stamp);
+	void PublishRobotPose();
 
 	// Particle Filter
 	particle_filter::ParticleFilter particle_filter_;

@@ -4,8 +4,8 @@
 ekf_pf_node:
   ros__parameters:
     particle_filter:
-      world_frame: "odom"
-      # map: "/home/melcruz/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      world_frame: "map"
+      map: "/home/melcruz/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0
@@ -40,7 +40,7 @@ ekf_pf_node:
       # Remember that LIDAR will correct periodically, so these can be a bit generous.
       # Too generous though, and you are either losing resolution or wasting computation.
 
-      k1: 0.5   # x error from x motion         # 50% error in primary direction
+      k1: 0.05   # x error from x motion         # 50% error in primary direction
       k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
       k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
