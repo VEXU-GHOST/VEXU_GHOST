@@ -82,7 +82,7 @@ EkfPfNode::EkfPfNode() :
 	const Vector2f init_loc(config_params.init_x, config_params.init_y);
 	const float init_angle = config_params.init_r;
 
-	odom_loc_(config_params.init_x, config_params.init_y);
+	odom_loc_ = Eigen::Vector2f(config_params.init_x, config_params.init_y);
 	odom_angle_ = config_params.init_r;
 
 	particle_filter_.Initialize(config_params.map, init_loc, config_params.init_r);
@@ -223,8 +223,9 @@ void EkfPfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 // Odometry
 void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	this->last_filtered_odom_msg_ = *msg;
-	odom_loc_(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
+	odom_loc_ = Eigen::Vector2f(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
 	odom_angle_ = 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
+
 	try{
 		Vector2f robot_loc(0, 0);
 		float robot_angle(0);
