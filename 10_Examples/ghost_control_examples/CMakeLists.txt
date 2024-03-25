@@ -63,4 +63,8 @@ casadi_trajectory_generation
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
+#####################################
+### Trajectory Generation Example ###
+#####################################
+
 ament_package()
