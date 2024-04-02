@@ -11,6 +11,7 @@ ROSSubscriber::ROSSubscriber() :
 void ROSSubscriber::topic_callback(const visualization_msgs::msg::Marker::SharedPtr msg){
 	auto now = this->get_clock()->now();
 	auto diff = now - msg->header.stamp;
-	RCLCPP_INFO(this->get_logger(), "%ld us", diff.nanoseconds() / 1000);
+	RCLCPP_INFO(this->get_logger(), "X-coord is: %f", msg->pose.position.x);
 }
+
 }

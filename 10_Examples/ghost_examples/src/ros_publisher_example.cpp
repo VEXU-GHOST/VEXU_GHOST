@@ -2,10 +2,8 @@
 #include <functional>
 #include <memory>
 #include <string>
-
-#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/laser_scan.hpp"
 
 using namespace std::chrono_literals;
 
