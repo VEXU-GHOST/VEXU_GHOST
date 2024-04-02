@@ -1,10 +1,10 @@
-#include <cstdio>
+// #include <cstdio>
 
-int main(int argc, char ** argv)
-{
-  (void) argc;
-  (void) argv;
+// int main(int argc, char ** argv)
+// {
+//   (void) argc;
+//   (void) argv;
 
-  printf("hello world rviz_animators package\n");
-  return 0;
-}
+//   printf("hello world rviz_animators package\n");
+//   return 0;
+// }

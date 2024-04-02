@@ -1,27 +1,26 @@
 cmake_minimum_required(VERSION 3.8)
 project(rviz_animators)
 
-# set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
-# find_package(Ghost CONFIG REQUIRED)
-
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# foreach(pkg ${DEPENDENCIES})
+#   find_package(${pkg} REQUIRED)
+# endforeach()
+
+find_package(ament_cmake REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
 
 set(DEPENDENCIES
   ament_cmake
-  ament_cmake_gtest
-  ament_cmake_python
   rclcpp
-  rclpy
   visualization_msgs
+  std_msgs
   )
-
-foreach(pkg ${DEPENDENCIES})
-  find_package(${pkg} REQUIRED)
-endforeach()
 
 ament_export_dependencies(${DEPENDENCIES})
 
@@ -32,9 +31,6 @@ set(INCLUDE
 include_directories(${INCLUDE})
 
 ament_export_include_directories(${INCLUDE})
-
-
-
 
 
   add_executable(publisher src/publisher.cpp)
@@ -67,7 +63,7 @@ target_link_libraries(main
   subscriber
 )
 install(TARGETS
-  main
+main
   DESTINATION lib/${PROJECT_NAME})
 
 #   ament_add_gtest(animation_test test/test.cpp)

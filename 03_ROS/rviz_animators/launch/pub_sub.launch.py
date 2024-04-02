@@ -30,5 +30,3 @@ def generate_launch_description():
         subscriber_node
     ])
 
-
-    "$(find my_package)/path/to/your_rviz_config_file.rviz"
