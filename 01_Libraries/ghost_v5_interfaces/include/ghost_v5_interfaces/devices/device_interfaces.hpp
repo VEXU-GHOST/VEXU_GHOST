@@ -13,7 +13,7 @@ namespace devices {
 enum device_type_e {
 	MOTOR,
 	ROTATION_SENSOR,
-	INERTIAL_SENSOR, // Unsupported
+	INERTIAL_SENSOR,
 	DISTANCE_SENSOR, // Unsupported
 	OPTICAL_SENSOR,  // Unsupported
 	VISION_SENSOR,   // Unsupported

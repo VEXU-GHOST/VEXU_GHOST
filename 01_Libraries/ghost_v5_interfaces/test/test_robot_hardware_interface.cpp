@@ -236,7 +236,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineCoprocessorTo
 TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocessor){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_, hardware_type_e::V5_BRAIN);
 
-	// Update all motors in the default robot config
+	// Update Motors
 	auto motor_data_1 = getRandomMotorData(false);
 	motor_data_1->name = "left_drive_motor";
 	hw_interface.setDeviceData(motor_data_1);
@@ -246,6 +246,8 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	auto motor_data_3 = getRandomMotorData(false);
 	motor_data_3->name = "default_motor";
 	hw_interface.setDeviceData(motor_data_3);
+
+	// Update Rotation Sensors
 	auto rotation_sensor_1 = getRandomRotationSensorData();
 	rotation_sensor_1->name = "rotation_sensor_1";
 	hw_interface.setDeviceData(rotation_sensor_1);
@@ -253,10 +255,17 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	rotation_sensor_2->name = "rotation_sensor_2";
 	hw_interface.setDeviceData(rotation_sensor_2);
 
+	// Update Inertial Sensor
+	auto inertial_sensor_1 = getRandomInertialSensorData();
+	inertial_sensor_1->name = "inertial_sensor_1";
+	hw_interface.setDeviceData(inertial_sensor_1);
+
+	// Update Competition State
 	hw_interface.setDisabledStatus(getRandomBool());
 	hw_interface.setAutonomousStatus(getRandomBool());
 	hw_interface.setConnectedStatus(getRandomBool());
 
+	// Update Joystick
 	auto joy = getRandomJoystickData();
 	joy->name = MAIN_JOYSTICK_NAME;
 	hw_interface.setDeviceData(joy);
@@ -271,7 +280,7 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocessorDualJoystick){
 	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::V5_BRAIN);
 
-	// Update all motors in the default robot config
+	// Update Motors
 	auto motor_data_1 = getRandomMotorData(false);
 	motor_data_1->name = "left_drive_motor";
 	hw_interface.setDeviceData(motor_data_1);
@@ -281,6 +290,8 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	auto motor_data_3 = getRandomMotorData(false);
 	motor_data_3->name = "default_motor";
 	hw_interface.setDeviceData(motor_data_3);
+
+	// Update Rotation Sensors
 	auto rotation_sensor_1 = getRandomRotationSensorData();
 	rotation_sensor_1->name = "rotation_sensor_1";
 	hw_interface.setDeviceData(rotation_sensor_1);
@@ -288,10 +299,17 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
 	rotation_sensor_2->name = "rotation_sensor_2";
 	hw_interface.setDeviceData(rotation_sensor_2);
 
+	// Update Inertial Sensor
+	auto inertial_sensor_1 = getRandomInertialSensorData();
+	inertial_sensor_1->name = "inertial_sensor_1";
+	hw_interface.setDeviceData(inertial_sensor_1);
+
+	// Update Competition State
 	hw_interface.setDisabledStatus(getRandomBool());
 	hw_interface.setAutonomousStatus(getRandomBool());
 	hw_interface.setConnectedStatus(getRandomBool());
 
+	// Update Joysticks
 	auto joy = getRandomJoystickData();
 	joy->name = MAIN_JOYSTICK_NAME;
 	hw_interface.setDeviceData(joy);
@@ -340,6 +358,37 @@ TEST_F(RobotHardwareInterfaceTestFixture, testRotationSensorStateGetters){
 	EXPECT_EQ(hw_interface.getRotationSensorAngleDegrees("rotation_sensor_1"), sensor_data_ptr->angle);
 	EXPECT_EQ(hw_interface.getRotationSensorPositionDegrees("rotation_sensor_1"), sensor_data_ptr->position);
 	EXPECT_EQ(hw_interface.getRotationSensorVelocityRPM("rotation_sensor_1"), sensor_data_ptr->velocity);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testInertialSensorStateGetters){
+	RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::COPROCESSOR);
+
+	// Default
+	EXPECT_EQ(hw_interface.getInertialSensorXAccel("inertial_sensor_1"), 0);
+	EXPECT_EQ(hw_interface.getInertialSensorYAccel("inertial_sensor_1"), 0);
+	EXPECT_EQ(hw_interface.getInertialSensorZAccel("inertial_sensor_1"), 0);
+	EXPECT_EQ(hw_interface.getInertialSensorXRate("inertial_sensor_1"), 0);
+	EXPECT_EQ(hw_interface.getInertialSensorYRate("inertial_sensor_1"), 0);
+	EXPECT_EQ(hw_interface.getInertialSensorZRate("inertial_sensor_1"), 0);
+	EXPECT_EQ(hw_interface.getInertialSensorHeading("inertial_sensor_1"), 0);
+
+	auto sensor_data_ptr = hw_interface.getDeviceData<InertialSensorDeviceData>("inertial_sensor_1");
+	sensor_data_ptr->x_accel = getRandomFloat();
+	sensor_data_ptr->y_accel = getRandomFloat();
+	sensor_data_ptr->z_accel = getRandomFloat();
+	sensor_data_ptr->x_rate = getRandomFloat();
+	sensor_data_ptr->y_rate = getRandomFloat();
+	sensor_data_ptr->z_rate = getRandomFloat();
+	sensor_data_ptr->heading = getRandomFloat();
+	hw_interface.setDeviceData(sensor_data_ptr);
+
+	EXPECT_EQ(hw_interface.getInertialSensorXAccel("inertial_sensor_1"), sensor_data_ptr->x_accel);
+	EXPECT_EQ(hw_interface.getInertialSensorYAccel("inertial_sensor_1"), sensor_data_ptr->y_accel);
+	EXPECT_EQ(hw_interface.getInertialSensorZAccel("inertial_sensor_1"), sensor_data_ptr->z_accel);
+	EXPECT_EQ(hw_interface.getInertialSensorXRate("inertial_sensor_1"), sensor_data_ptr->x_rate);
+	EXPECT_EQ(hw_interface.getInertialSensorYRate("inertial_sensor_1"), sensor_data_ptr->y_rate);
+	EXPECT_EQ(hw_interface.getInertialSensorZRate("inertial_sensor_1"), sensor_data_ptr->z_rate);
+	EXPECT_EQ(hw_interface.getInertialSensorHeading("inertial_sensor_1"), sensor_data_ptr->heading);
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorPositionCommand){

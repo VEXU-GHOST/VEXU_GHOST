@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <ghost_util/test_util.hpp>
+#include "ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
@@ -29,6 +30,14 @@ devices::RotationSensorDeviceData::SerialConfig getRandomRotationSensorSerialCon
 	config.send_angle_data = ghost_util::getRandomBool();
 	config.send_position_data = ghost_util::getRandomBool();
 	config.send_velocity_data = ghost_util::getRandomBool();
+	return config;
+}
+
+devices::InertialSensorDeviceData::SerialConfig getRandomInertialSensorSerialConfig(){
+	devices::InertialSensorDeviceData::SerialConfig config;
+	config.send_accel_data = ghost_util::getRandomBool();
+	config.send_gyro_data = ghost_util::getRandomBool();
+	config.send_heading_data = ghost_util::getRandomBool();
 	return config;
 }
 
@@ -117,6 +126,25 @@ std::shared_ptr<devices::RotationSensorDeviceData> getRandomRotationSensorData(d
 	}
 
 	return rot_sensor_ptr;
+}
+
+std::shared_ptr<devices::InertialSensorDeviceData> getRandomInertialSensorData(devices::InertialSensorDeviceData::SerialConfig serial_config = devices::InertialSensorDeviceData::SerialConfig()) {
+	auto inertial_sensor_ptr = std::make_shared<devices::InertialSensorDeviceData>("test", serial_config);
+	if(serial_config.send_accel_data){
+		inertial_sensor_ptr->x_accel = ghost_util::getRandomFloat();
+		inertial_sensor_ptr->y_accel = ghost_util::getRandomFloat();
+		inertial_sensor_ptr->z_accel = ghost_util::getRandomFloat();
+	}
+	if(serial_config.send_gyro_data){
+		inertial_sensor_ptr->x_rate = ghost_util::getRandomFloat();
+		inertial_sensor_ptr->y_rate = ghost_util::getRandomFloat();
+		inertial_sensor_ptr->z_rate = ghost_util::getRandomFloat();
+	}
+	if(serial_config.send_heading_data){
+		inertial_sensor_ptr->heading = ghost_util::getRandomFloat();
+	}
+
+	return inertial_sensor_ptr;
 }
 
 }
