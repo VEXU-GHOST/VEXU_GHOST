@@ -3,6 +3,8 @@
 #include "eigen3/Eigen/Geometry"
 #include <casadi/casadi.hpp>
 
+#include <ghost_util/unit_conversion_utils.hpp>
+
 #include "matplotlibcpp.h"
 
 namespace plt = matplotlibcpp;
@@ -13,8 +15,8 @@ int main(int argc, char *argv[]){
 	///// User Input Configuration /////
 	////////////////////////////////////
 	const float TIME_HORIZON = 1.0;
-	const float DT = 0.01;
-	const int NUM_SWERVE_MODULES = 4;
+	const float DT = 0.25;
+	const int NUM_SWERVE_MODULES = 0;
 
 	// 2D Point Mass model
 	const std::vector<std::string> STATE_NAMES = {
@@ -29,21 +31,28 @@ int main(int argc, char *argv[]){
 		"base_accel_theta"};
 
 	std::vector<std::string> JOINT_STATE_NAMES = {
-		"steering_angle",
-		"steering_vel",
-		"steering_accel",
-		"wheel_vel",
-		"wheel_accel",
-		"voltage_1",
-		"voltage_2",
+		// "steering_angle",
+		// "steering_vel",
+		// "steering_accel",
+		// "wheel_vel",
+		// "wheel_accel",
+		// "voltage_1",
+		// "voltage_2",
 	};
 	const std::vector<std::string> PARAM_NAMES = {
-		"final_pose_x"};
+		"init_pose_x",
+		"init_pose_y",
+		"init_pose_theta",
+		"init_vel_x",
+		"init_vel_y",
+		"init_vel_theta",
+	};
 
 	// List pairs of base state and derivative state
 	std::vector<std::pair<std::string, std::string> > euler_integration_state_names = {
 		std::pair<std::string, std::string>{"base_pose_x", "base_vel_x"},
 		std::pair<std::string, std::string>{"base_pose_y", "base_vel_y"},
+		std::pair<std::string, std::string>{"base_pose_theta", "base_vel_theta"},
 		std::pair<std::string, std::string>{"base_vel_x", "base_accel_x"},
 		std::pair<std::string, std::string>{"base_vel_y", "base_accel_y"},
 		std::pair<std::string, std::string>{"base_vel_theta", "base_accel_theta"},
@@ -68,18 +77,18 @@ int main(int argc, char *argv[]){
 	////////////////////////////
 	// Shorthand to get symbolic state variable by name
 	auto get_state = [&state_vector, &state_index_map](std::string name){
-				 return state_vector(state_index_map.at(name));
-			 };
+						 return state_vector(state_index_map.at(name));
+					 };
 
 	// Shorthand to get symbolic parameter by name
 	auto get_param = [&param_vector, &param_index_map](std::string name){
-				 return param_vector(param_index_map.at(name));
-			 };
+						 return param_vector(param_index_map.at(name));
+					 };
 
 	// Shorthand to get knot string prefix from knotpoint index
 	auto get_knot_prefix = [](int i){
-				       return "k" + std::to_string(i) + "_";
-			       };
+							   return "k" + std::to_string(i) + "_";
+						   };
 
 	//////////////////////////////////////////////
 	///// Initialize Time, State, and Inputs /////
@@ -149,25 +158,24 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	// Initial and Terminal Constraints
-	auto initial_state_constraint_vector = vertcat(
-		get_state("k0_base_pose_x") - 1,
-		-get_state("k0_base_pose_x") + 1,
-		get_state("k0_base_vel_x"),
-		-get_state("k0_base_vel_x"));
+	// Initial Constraints
+	std::vector<std::pair<std::string, std::string> > initial_state_constraint_param_pairs{
+		std::pair<std::string, std::string>{"k0_base_pose_x", "init_pose_x"},
+		std::pair<std::string, std::string>{"k0_base_pose_y", "init_pose_y"},
+		std::pair<std::string, std::string>{"k0_base_pose_theta", "init_pose_theta"},
+		std::pair<std::string, std::string>{"k0_base_vel_x", "init_vel_x"},
+		std::pair<std::string, std::string>{"k0_base_vel_y", "init_vel_y"},
+		std::pair<std::string, std::string>{"k0_base_vel_theta", "init_vel_theta"}
+	};
+	auto initial_state_constraint_vector = casadi::Matrix<casadi::SXElem>();
 
-	std::string final_knot_prefix = get_knot_prefix(NUM_KNOTS - 1);
-	auto final_state_constraint_vector = vertcat(
-		get_state(final_knot_prefix + "base_pose_x") - get_param("final_pose_x"),
-		-get_state(final_knot_prefix + "base_pose_x") + get_param("final_pose_x"),
-		get_state(final_knot_prefix + "base_vel_x"),
-		-get_state(final_knot_prefix + "base_vel_x"));
-
+	for(const auto& pair : initial_state_constraint_param_pairs){
+		initial_state_constraint_vector = vertcat(initial_state_constraint_vector, get_state(pair.first) - get_param(pair.second));
+	}
 	// Combine all constraints into single vector
 	auto constraints = vertcat(
 		integration_constraints_vector,
-		initial_state_constraint_vector,
-		final_state_constraint_vector);
+		initial_state_constraint_vector);
 
 	///////////////////////////
 	///// Formulate Costs /////
@@ -209,8 +217,8 @@ int main(int argc, char *argv[]){
 	solver_args["ubx"] = DM::ones(NUM_OPT_VARS) * DM::inf();
 	solver_args["lbg"] = 0;
 	solver_args["ubg"] = 0;
-	solver_args["x0"] = DM::ones(NUM_OPT_VARS);
-	solver_args["p"] = {5.0};
+	solver_args["x0"] = DM::zeros(NUM_OPT_VARS);
+	solver_args["p"] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	res = solver(solver_args);
 
 	/////////////////////////////
@@ -240,6 +248,20 @@ int main(int argc, char *argv[]){
 	std::cout << state_solution_map["base_vel_x"].size() << std::endl;
 	std::cout << state_solution_map["base_accel_x"].size() << std::endl;
 
+	std::vector<double> x_angle_components;
+	std::vector<double> y_angle_components;
+
+	x_angle_components.reserve(state_solution_map["base_pose_theta"].size());
+	y_angle_components.reserve(state_solution_map["base_pose_theta"].size());
+
+	for(const auto & angle : state_solution_map["base_pose_theta"]){
+		x_angle_components.push_back(cos(ghost_util::DEG_TO_RAD*angle));
+		y_angle_components.push_back(sin(ghost_util::DEG_TO_RAD*angle));
+	}
+
+	plt::figure();
+	plt::quiver(state_solution_map["base_pose_x"], state_solution_map["base_pose_y"], x_angle_components, y_angle_components);
+
 	plt::figure();
 	plt::subplot(3, 1, 1);
 	plt::plot(time_vector, state_solution_map["base_pose_x"]);
@@ -247,6 +269,25 @@ int main(int argc, char *argv[]){
 	plt::plot(time_vector, state_solution_map["base_vel_x"]);
 	plt::subplot(3, 1, 3);
 	plt::plot(time_vector, state_solution_map["base_accel_x"]);
+	plt::title("X");
+
+	plt::figure();
+	plt::subplot(3, 1, 1);
+	plt::plot(time_vector, state_solution_map["base_pose_y"]);
+	plt::subplot(3, 1, 2);
+	plt::plot(time_vector, state_solution_map["base_vel_y"]);
+	plt::subplot(3, 1, 3);
+	plt::plot(time_vector, state_solution_map["base_accel_y"]);
+	plt::title("Y");
+
+	plt::figure();
+	plt::subplot(3, 1, 1);
+	plt::plot(time_vector, state_solution_map["base_pose_theta"]);
+	plt::subplot(3, 1, 2);
+	plt::plot(time_vector, state_solution_map["base_vel_theta"]);
+	plt::subplot(3, 1, 3);
+	plt::plot(time_vector, state_solution_map["base_accel_theta"]);
+	plt::title("Theta");
 	plt::show();
 
 	return 0;
