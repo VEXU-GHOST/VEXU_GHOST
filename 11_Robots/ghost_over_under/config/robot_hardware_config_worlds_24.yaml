@@ -10,6 +10,10 @@ port_configuration:
             type: ROTATION_SENSOR
             reversed: true
             config: steering_sensor_config
+        imu:
+            port: 3
+            type: INERTIAL_SENSOR
+            config: inertial_sensor_config
         lift_right:
             port: 4
             type: MOTOR
@@ -82,7 +86,12 @@ port_configuration:
             serial:
                 send_angle_data: true
                 send_position_data: false
-                send_velocity_data: true                
+                send_velocity_data: true    
+        inertial_sensor_no_config:
+            serial:
+                send_accel_data: true
+                send_gyro_data: true
+                send_heading_data: true    
         drive_motor_config:
             gearset: 600
             brake_mode: COAST

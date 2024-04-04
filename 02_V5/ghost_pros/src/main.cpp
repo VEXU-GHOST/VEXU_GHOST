@@ -165,6 +165,13 @@ void initialize(){
 				}
 				break;
 
+				case device_type_e::INERTIAL_SENSOR:
+				{
+					auto inertial_sensor_config_ptr = config_ptr->as<const InertialSensorDeviceConfig>();
+					v5_globals::imus[device_name] = std::make_shared<pros::Imu>(inertial_sensor_config_ptr->port);
+				}
+				break;
+
 				case device_type_e::JOYSTICK:
 					// Do nothing, these are initialized already
 				break;
