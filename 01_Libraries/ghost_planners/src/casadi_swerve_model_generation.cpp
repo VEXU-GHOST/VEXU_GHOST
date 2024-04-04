@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
 	///// User Input Configuration /////
 	////////////////////////////////////
 	const float TIME_HORIZON = 1.0;
-	const float DT = 0.25;
+	const float DT = 0.05;
 	const int NUM_SWERVE_MODULES = 0;
 
 	// 2D Point Mass model
@@ -46,16 +46,9 @@ int main(int argc, char *argv[]){
 		"init_vel_x",
 		"init_vel_y",
 		"init_vel_theta",
-	};
-
-	// List pairs of base state and derivative state
-	std::vector<std::pair<std::string, std::string> > euler_integration_state_names = {
-		std::pair<std::string, std::string>{"base_pose_x", "base_vel_x"},
-		std::pair<std::string, std::string>{"base_pose_y", "base_vel_y"},
-		std::pair<std::string, std::string>{"base_pose_theta", "base_vel_theta"},
-		std::pair<std::string, std::string>{"base_vel_x", "base_accel_x"},
-		std::pair<std::string, std::string>{"base_vel_y", "base_accel_y"},
-		std::pair<std::string, std::string>{"base_vel_theta", "base_accel_theta"},
+		"des_vel_x",
+		"des_vel_y",
+		"des_vel_theta",
 	};
 
 	////////////////////////////////////////////
@@ -132,6 +125,16 @@ int main(int argc, char *argv[]){
 	/////////////////////////////////
 
 	// EULER INTEGRATION CONSTRAINTS
+	// List pairs of base state and derivative state
+	std::vector<std::pair<std::string, std::string> > euler_integration_state_names = {
+		std::pair<std::string, std::string>{"base_pose_x", "base_vel_x"},
+		std::pair<std::string, std::string>{"base_pose_y", "base_vel_y"},
+		std::pair<std::string, std::string>{"base_pose_theta", "base_vel_theta"},
+		std::pair<std::string, std::string>{"base_vel_x", "base_accel_x"},
+		std::pair<std::string, std::string>{"base_vel_y", "base_accel_y"},
+		std::pair<std::string, std::string>{"base_vel_theta", "base_accel_theta"},
+	};
+
 	// Add joint states for each swerve module to the integration states pairs
 	for(int m = 1; m < NUM_SWERVE_MODULES + 1; m++){
 		std::string module_prefix = "m" + std::to_string(m) + "_";
@@ -158,7 +161,7 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	// Initial Constraints
+	// Initial State Constraints
 	std::vector<std::pair<std::string, std::string> > initial_state_constraint_param_pairs{
 		std::pair<std::string, std::string>{"k0_base_pose_x", "init_pose_x"},
 		std::pair<std::string, std::string>{"k0_base_pose_y", "init_pose_y"},
@@ -177,6 +180,27 @@ int main(int argc, char *argv[]){
 		integration_constraints_vector,
 		initial_state_constraint_vector);
 
+	// Optimization Variables Limits
+	auto lbx = DM::ones(NUM_OPT_VARS) * -DM::inf();
+	auto ubx = DM::ones(NUM_OPT_VARS) * DM::inf();
+
+	for(int k = 0; k < NUM_KNOTS; k++){
+		std::string curr_knot_prefix = get_knot_prefix(k);
+		lbx(state_index_map[curr_knot_prefix + "base_vel_x"]) = -1.389;
+		ubx(state_index_map[curr_knot_prefix + "base_vel_x"]) = 1.389;
+		lbx(state_index_map[curr_knot_prefix + "base_vel_y"]) = -1.389;
+		ubx(state_index_map[curr_knot_prefix + "base_vel_y"]) = 1.389;
+		lbx(state_index_map[curr_knot_prefix + "base_vel_theta"]) = -7.0305;
+		ubx(state_index_map[curr_knot_prefix + "base_vel_theta"]) = 7.0305;
+
+		lbx(state_index_map[curr_knot_prefix + "base_accel_x"]) = -5.5755;
+		ubx(state_index_map[curr_knot_prefix + "base_accel_x"]) = 5.5755;
+		lbx(state_index_map[curr_knot_prefix + "base_accel_y"]) = -5.5755;
+		ubx(state_index_map[curr_knot_prefix + "base_accel_y"]) = 5.5755;
+		lbx(state_index_map[curr_knot_prefix + "base_accel_theta"]) = -45.97811;
+		ubx(state_index_map[curr_knot_prefix + "base_accel_theta"]) = 45.97811;
+	}
+
 	///////////////////////////
 	///// Formulate Costs /////
 	///////////////////////////
@@ -190,9 +214,18 @@ int main(int argc, char *argv[]){
 
 		// Normalize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
 		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_x"), 2) + pow(get_state(next_knot_prefix + "base_accel_x"), 2));
+		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_y"), 2) + pow(get_state(next_knot_prefix + "base_accel_y"), 2));
+		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_theta"), 2) + pow(get_state(next_knot_prefix + "base_accel_theta"), 2));
+
+		// Penalize Velocity Deviation
+		f += 10 * 1 / DT * (pow(get_param("des_vel_x") - get_state(curr_knot_prefix + "base_vel_x"), 2) + pow(get_param("des_vel_x") - get_state(next_knot_prefix + "base_vel_x"), 2));
+		f += 10 * 1 / DT * (pow(get_param("des_vel_y") - get_state(curr_knot_prefix + "base_vel_y"), 2) + pow(get_param("des_vel_y") - get_state(next_knot_prefix + "base_vel_y"), 2));
+		f += 10 * 1 / DT * (pow(get_param("des_vel_theta") - get_state(curr_knot_prefix + "base_vel_theta"), 2) + pow(get_param("des_vel_theta") - get_state(next_knot_prefix + "base_vel_theta"), 2));
 
 		// Minimize jerk via finite difference
 		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_x") - get_state(curr_knot_prefix + "base_accel_x"), 2));
+		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_y") - get_state(curr_knot_prefix + "base_accel_y"), 2));
+		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_theta") - get_state(curr_knot_prefix + "base_accel_theta"), 2));
 	}
 
 	/////////////////////////
@@ -213,12 +246,12 @@ int main(int argc, char *argv[]){
 	///// Test Solve /////
 	//////////////////////
 	std::map<std::string, DM> solver_args, res;
-	solver_args["lbx"] = DM::ones(NUM_OPT_VARS) * -DM::inf();
-	solver_args["ubx"] = DM::ones(NUM_OPT_VARS) * DM::inf();
+	solver_args["lbx"] = lbx;
+	solver_args["ubx"] = ubx;
 	solver_args["lbg"] = 0;
 	solver_args["ubg"] = 0;
 	solver_args["x0"] = DM::zeros(NUM_OPT_VARS);
-	solver_args["p"] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+	solver_args["p"] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 10.0, 0.5, 5.0};
 	res = solver(solver_args);
 
 	/////////////////////////////
@@ -255,39 +288,39 @@ int main(int argc, char *argv[]){
 	y_angle_components.reserve(state_solution_map["base_pose_theta"].size());
 
 	for(const auto & angle : state_solution_map["base_pose_theta"]){
-		x_angle_components.push_back(cos(ghost_util::DEG_TO_RAD*angle));
-		y_angle_components.push_back(sin(ghost_util::DEG_TO_RAD*angle));
+		x_angle_components.push_back(cos(angle));
+		y_angle_components.push_back(sin(angle));
 	}
 
 	plt::figure();
 	plt::quiver(state_solution_map["base_pose_x"], state_solution_map["base_pose_y"], x_angle_components, y_angle_components);
 
 	plt::figure();
+	plt::suptitle("X");
 	plt::subplot(3, 1, 1);
 	plt::plot(time_vector, state_solution_map["base_pose_x"]);
 	plt::subplot(3, 1, 2);
 	plt::plot(time_vector, state_solution_map["base_vel_x"]);
 	plt::subplot(3, 1, 3);
 	plt::plot(time_vector, state_solution_map["base_accel_x"]);
-	plt::title("X");
 
 	plt::figure();
+	plt::suptitle("Y");
 	plt::subplot(3, 1, 1);
 	plt::plot(time_vector, state_solution_map["base_pose_y"]);
 	plt::subplot(3, 1, 2);
 	plt::plot(time_vector, state_solution_map["base_vel_y"]);
 	plt::subplot(3, 1, 3);
 	plt::plot(time_vector, state_solution_map["base_accel_y"]);
-	plt::title("Y");
 
 	plt::figure();
+	plt::suptitle("Theta");
 	plt::subplot(3, 1, 1);
 	plt::plot(time_vector, state_solution_map["base_pose_theta"]);
 	plt::subplot(3, 1, 2);
 	plt::plot(time_vector, state_solution_map["base_vel_theta"]);
 	plt::subplot(3, 1, 3);
 	plt::plot(time_vector, state_solution_map["base_accel_theta"]);
-	plt::title("Theta");
 	plt::show();
 
 	return 0;
