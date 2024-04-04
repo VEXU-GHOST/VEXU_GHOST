@@ -1,18 +1,20 @@
+#include <ghost_planners/robot_trajectory.hpp>
+#include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
-#include <ghost_planners/robot_trajectory.hpp>
 
+#include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/msg/v5_actuator_command.hpp>
 #include <ghost_msgs/msg/v5_device_header.hpp>
+#include <ghost_msgs/msg/v5_inertial_sensor_state.hpp>
 #include <ghost_msgs/msg/v5_joystick_state.hpp>
 #include <ghost_msgs/msg/v5_motor_command.hpp>
 #include <ghost_msgs/msg/v5_motor_state.hpp>
 #include <ghost_msgs/msg/v5_rotation_sensor_state.hpp>
 #include <ghost_msgs/msg/v5_sensor_update.hpp>
-#include <ghost_msgs/msg/robot_trajectory.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -109,6 +111,24 @@ void toROSMsg(const ghost_v5_interfaces::devices::RotationSensorDeviceData& rota
  * @param rotation_sensor_msg
  */
 void fromROSMsg(ghost_v5_interfaces::devices::RotationSensorDeviceData& rotation_sensor_data, const ghost_msgs::msg::V5RotationSensorState& rotation_sensor_msg);
+
+// Inertial Sensor
+
+/**
+ * @brief Copies inertial sensor state data from a InertialSensorDeviceData object into a V5InertialSensorState msg.
+ *
+ * @param inertial_sensor_data
+ * @param inertial_sensor_msg
+ */
+void toROSMsg(const ghost_v5_interfaces::devices::InertialSensorDeviceData& inertial_sensor_data, ghost_msgs::msg::V5InertialSensorState& inertial_sensor_msg);
+
+/**
+ * @brief Copies inertial sensor state data from a V5InertialSensorState msg into a InertialSensorDeviceData object.
+ *
+ * @param inertial_sensor_data
+ * @param inertial_sensor_msg
+ */
+void fromROSMsg(ghost_v5_interfaces::devices::InertialSensorDeviceData& inertial_sensor_data, const ghost_msgs::msg::V5InertialSensorState& inertial_sensor_msg);
 
 // Aggregate Actuator Command
 

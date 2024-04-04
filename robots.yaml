@@ -1,5 +1,5 @@
 ### Points to selected robot configuration for PROS compile ###
-selected_robot: GHOST_15
+selected_robot: GHOST_24
 
 ### Lists available robot configurations ###
 EXAMPLE_ROBOT:
@@ -9,4 +9,4 @@ GHOST_15:
   config_file: 11_Robots/ghost_over_under/config/robot_hardware_config_preworlds_swerve.yaml
   
 GHOST_24:
-  config_file:: 11_Robots/ghost_over_under/config/robot_hardware_config_worlds_24.yaml
+  config_file: 11_Robots/ghost_over_under/config/robot_hardware_config_worlds_24.yaml

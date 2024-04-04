@@ -172,8 +172,8 @@ void SwerveRobotPlugin::onNewSensorData(){
 	std::unordered_map<std::string, std::tuple<std::string, std::string, std::string> > module_motor_mapping{
 		{"left_front", std::tuple<std::string, std::string, std::string>("drive_fll", "drive_flr", "steering_front_left")},
 		{"right_front", std::tuple<std::string, std::string, std::string>("drive_frr", "drive_frl", "steering_front_right")},
-		{"left_back", std::tuple<std::string, std::string, std::string>("drive_blf", "drive_blb", "steering_back_left")},
-		{"right_back", std::tuple<std::string, std::string, std::string>("drive_brf", "drive_brb", "steering_back_right")}};
+		{"left_back", std::tuple<std::string, std::string, std::string>("drive_bll", "drive_blr", "steering_back_left")},
+		{"right_back", std::tuple<std::string, std::string, std::string>("drive_brr", "drive_brl", "steering_back_right")}};
 
 	// Update each swerve module from new device data
 	for(const auto &[module_name, device_name_tuple] : module_motor_mapping){
@@ -269,7 +269,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_curr_odom_angle = m_last_odom_angle;
 			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 0.0;
 			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
-			m_last_odom_loc.x() = m_curr_odom_loc.x();			
+			m_last_odom_loc.x() = m_curr_odom_loc.x();
 			m_last_odom_loc.y() = m_last_odom_loc.y();
 			m_swerve_model_ptr->setOdometryLocation(m_curr_odom_loc.x(), m_curr_odom_loc.y());
 			m_swerve_model_ptr->setOdometryAngle(m_curr_odom_angle);
@@ -455,8 +455,8 @@ void SwerveRobotPlugin::updateDrivetrainMotors(){
 	std::unordered_map<std::string, std::pair<std::string, std::string> > module_actuator_motor_mapping{
 		{"left_front", std::pair<std::string, std::string>("drive_fll", "drive_flr")},
 		{"right_front", std::pair<std::string, std::string>("drive_frr", "drive_frl")},
-		{"left_back", std::pair<std::string, std::string>("drive_blf", "drive_blb")},
-		{"right_back", std::pair<std::string, std::string>("drive_brf", "drive_brb")}};
+		{"left_back", std::pair<std::string, std::string>("drive_bll", "drive_blr")},
+		{"right_back", std::pair<std::string, std::string>("drive_brr", "drive_brl")}};
 
 	for(const auto &[module_name, motor_name_pair] : module_actuator_motor_mapping){
 		std::string m1_name = motor_name_pair.first;

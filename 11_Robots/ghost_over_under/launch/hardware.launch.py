@@ -16,7 +16,7 @@ def generate_launch_description():
     ros_config_file = os.path.join(ghost_over_under_base_dir, "config/ros_config.yaml")
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
-    robot_config_yaml_path = os.path.join(ghost_over_under_base_dir, "config/robot_hardware_config.yaml")
+    robot_config_yaml_path = os.path.join(ghost_over_under_base_dir, "config/robot_hardware_config_worlds_24.yaml")
 
     plugin_type = "ghost_swerve::SwerveRobotPlugin"
     robot_name = "ghost_15"
@@ -120,11 +120,11 @@ def generate_launch_description():
 
     return LaunchDescription([
         serial_node,
-        competition_state_machine_node,
-        bag_recorder_service,
-        realsense_node,
-        imu_filter_node,
-        robot_localization_node,
-        swerve_motion_planner_node,
-        rplidar_node
+        # competition_state_machine_node,
+        # bag_recorder_service,
+        # realsense_node,
+        # imu_filter_node,
+        # robot_localization_node,
+        # swerve_motion_planner_node,
+        # rplidar_node
     ])
