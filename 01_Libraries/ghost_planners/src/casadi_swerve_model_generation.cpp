@@ -10,33 +10,6 @@
 namespace plt = matplotlibcpp;
 using namespace casadi;
 
-void plotRectanglePoints(double x, double y, double width, double height, double angle, std::vector<double>& x_points, std::vector<double>& y_points){
-	auto rotation_matrix = Eigen::Rotation2D<double>(angle).toRotationMatrix();
-
-	Eigen::Vector2d top_left = rotation_matrix * Eigen::Vector2d(-width / 2,height / 2);
-	Eigen::Vector2d top_right = rotation_matrix * Eigen::Vector2d(width / 2,height / 2);
-	Eigen::Vector2d bottom_right = rotation_matrix * Eigen::Vector2d(width / 2, -height / 2);
-	Eigen::Vector2d bottom_left = rotation_matrix * Eigen::Vector2d(-width / 2, -height / 2);
-
-	x_points.clear();
-	x_points.reserve(5);
-	x_points.push_back(x + top_left.x());
-	x_points.push_back(x + top_right.x());
-	x_points.push_back(x + bottom_right.x());
-	x_points.push_back(x + bottom_left.x());
-	x_points.push_back(x + top_left.x());
-
-	y_points.clear();
-	y_points.reserve(5);
-	y_points.push_back(y + top_left.y());
-	y_points.push_back(y + top_right.y());
-	y_points.push_back(y + bottom_right.y());
-	y_points.push_back(y + bottom_left.y());
-	y_points.push_back(y + top_left.y());
-
-	return;
-}
-
 int main(int argc, char *argv[]){
 	////////////////////////////////////
 	///// User Input Configuration /////
@@ -50,6 +23,14 @@ int main(int argc, char *argv[]){
 	const double WHEEL_BASE_WIDTH = 12.5 * ghost_util::INCHES_TO_METERS;
 	const double WHEEL_DIAM = 2.75 * ghost_util::INCHES_TO_METERS;
 	const double WHEEL_WIDTH = 1 * ghost_util::INCHES_TO_METERS;
+	const double M1_X = WHEEL_BASE_WIDTH / 2;
+	const double M1_Y = WHEEL_BASE_WIDTH / 2;
+	const double M2_X = -WHEEL_BASE_WIDTH / 2;
+	const double M2_Y = WHEEL_BASE_WIDTH / 2;
+	const double M3_X = -WHEEL_BASE_WIDTH / 2;
+	const double M3_Y = -WHEEL_BASE_WIDTH / 2;
+	const double M4_X = WHEEL_BASE_WIDTH / 2;
+	const double M4_Y = -WHEEL_BASE_WIDTH / 2;
 
 	// 2D Point Mass model
 	std::vector<std::string> STATE_NAMES = {
@@ -425,6 +406,33 @@ int main(int argc, char *argv[]){
 		lateral_force_y_components.push_back(lateral_force * cos(angle));
 	}
 
+	auto plotRectanglePoints = [&](double x, double y, double width, double height, double angle, std::vector<double>& x_points, std::vector<double>& y_points){
+								   auto rotation_matrix = Eigen::Rotation2D<double>(angle).toRotationMatrix();
+
+								   Eigen::Vector2d top_left = rotation_matrix * Eigen::Vector2d(-width / 2,height / 2);
+								   Eigen::Vector2d top_right = rotation_matrix * Eigen::Vector2d(width / 2,height / 2);
+								   Eigen::Vector2d bottom_right = rotation_matrix * Eigen::Vector2d(width / 2, -height / 2);
+								   Eigen::Vector2d bottom_left = rotation_matrix * Eigen::Vector2d(-width / 2, -height / 2);
+
+								   x_points.clear();
+								   x_points.reserve(5);
+								   x_points.push_back(x + top_left.x());
+								   x_points.push_back(x + top_right.x());
+								   x_points.push_back(x + bottom_right.x());
+								   x_points.push_back(x + bottom_left.x());
+								   x_points.push_back(x + top_left.x());
+
+								   y_points.clear();
+								   y_points.reserve(5);
+								   y_points.push_back(y + top_left.y());
+								   y_points.push_back(y + top_right.y());
+								   y_points.push_back(y + bottom_right.y());
+								   y_points.push_back(y + bottom_left.y());
+								   y_points.push_back(y + top_left.y());
+
+								   return;
+							   };
+
 	plt::figure();
 	for(int k = 0; k < NUM_KNOTS; k++){
 		plt::clf();
@@ -493,7 +501,7 @@ int main(int argc, char *argv[]){
 										 std::map<std::string, std::string>{{"color", "blue"}});
 								 };
 
-		plot_wheel_module(Eigen::Vector2d(WHEEL_BASE_WIDTH / 2, WHEEL_BASE_WIDTH / 2),"m1_");
+		plot_wheel_module(Eigen::Vector2d(M1_X, M1_Y),"m1_");
 
 		// plot_wheel_module(
 		// 	Eigen::Vector2d(-WHEEL_BASE_WIDTH / 2, WHEEL_BASE_WIDTH / 2),
@@ -502,7 +510,7 @@ int main(int argc, char *argv[]){
 		// 	Eigen::Vector2d(lateral_force_x_components[k], lateral_force_y_components[k])
 		// 	);
 
-		plot_wheel_module(Eigen::Vector2d(-WHEEL_BASE_WIDTH / 2, -WHEEL_BASE_WIDTH / 2),"m1_");
+		plot_wheel_module(Eigen::Vector2d(M3_X, M3_Y),"m1_");
 
 		// plot_wheel_module(
 		// 	Eigen::Vector2d(WHEEL_BASE_WIDTH / 2, -WHEEL_BASE_WIDTH / 2),
