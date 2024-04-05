@@ -319,7 +319,7 @@ int main(int argc, char *argv[]){
 	solver_args["lbg"] = lbg;
 	solver_args["ubg"] = ubg;
 	solver_args["x0"] = DM::zeros(NUM_OPT_VARS);
-	solver_args["p"] = {10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5, 1.5, 0.0, 3.14159 / 4.0, 0.0};
+	solver_args["p"] = {10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5, 1.5, 0.1, 3.14159 / 4.0, 0.0};
 	res = solver(solver_args);
 
 	/////////////////////////////
@@ -344,6 +344,10 @@ int main(int argc, char *argv[]){
 		}
 	}
 
+	//////////////////////////////
+	///// Animate Trajectory /////
+	//////////////////////////////
+
 	std::vector<double> x_pos;
 	std::vector<double> y_pos;
 	std::vector<double> x_vel;
@@ -354,7 +358,7 @@ int main(int argc, char *argv[]){
 	std::vector<double> wheel_force_y_components;
 	std::vector<double> lateral_force_x_components;
 	std::vector<double> lateral_force_y_components;
-	int resolution = 15;
+	int resolution = 1;
 
 	std::cout << NUM_KNOTS << std::endl;
 
@@ -386,6 +390,120 @@ int main(int argc, char *argv[]){
 		wheel_force_y_components.push_back(wheel_force * sin(angle));
 		lateral_force_x_components.push_back(-lateral_force * sin(angle));
 		lateral_force_y_components.push_back(lateral_force * cos(angle));
+	}
+
+	const double wheel_base_width = 16.5 * ghost_util::INCHES_TO_METERS;
+	const double drivetrain_dimension = 12.5 * ghost_util::INCHES_TO_METERS;
+	const double wheel_diam = 2.75 * ghost_util::INCHES_TO_METERS;
+	const double wheel_width = 1 * ghost_util::INCHES_TO_METERS;
+
+	// Allocate points for chassis
+	Eigen::Vector2d chassis_top_left;
+	Eigen::Vector2d chassis_top_right;
+	Eigen::Vector2d chassis_bottom_right;
+	Eigen::Vector2d chassis_bottom_left;
+
+	// Allocate points for wheel
+	Eigen::Vector2d m1_top_left;
+	Eigen::Vector2d m1_top_right;
+	Eigen::Vector2d m1_bottom_right;
+	Eigen::Vector2d m1_bottom_left;
+	Eigen::Vector2d m1_steering_center;
+
+	plt::figure();
+	for(int k = 0; k < NUM_KNOTS; k++){
+		plt::clf();
+		double x = state_solution_map["base_pose_x"][k];
+		double y = state_solution_map["base_pose_y"][k];
+		double theta = state_solution_map["base_pose_theta"][k];
+		double x_vel = state_solution_map["base_vel_x"][k];
+		double y_vel = state_solution_map["base_vel_y"][k];
+		double m1_steering_angle = state_solution_map["m1_steering_angle"][k];
+
+		// Plot Chassis
+		auto rotate_theta = Eigen::Rotation2D<double>(theta).toRotationMatrix();
+
+		chassis_top_left = rotate_theta * Eigen::Vector2d(-wheel_base_width / 2,wheel_base_width / 2);
+		chassis_top_right = rotate_theta * Eigen::Vector2d(wheel_base_width / 2,wheel_base_width / 2);
+		chassis_bottom_right = rotate_theta * Eigen::Vector2d(wheel_base_width / 2, -wheel_base_width / 2);
+		chassis_bottom_left = rotate_theta * Eigen::Vector2d(-wheel_base_width / 2, -wheel_base_width / 2);
+
+		std::vector<double> x_points{
+			x + chassis_top_left.x(),
+			x + chassis_top_right.x(),
+			x + chassis_bottom_right.x(),
+			x + chassis_bottom_left.x(),
+			x + chassis_top_left.x()
+		};
+		std::vector<double> y_points{
+			y + chassis_top_left.y(),
+			y + chassis_top_right.y(),
+			y + chassis_bottom_right.y(),
+			y + chassis_bottom_left.y(),
+			y + chassis_top_left.y()
+		};
+
+		plt::axis("scaled");
+		plt::xlim(-48.0 * ghost_util::INCHES_TO_METERS, 48.0 * ghost_util::INCHES_TO_METERS);
+		plt::ylim(-48.0 * ghost_util::INCHES_TO_METERS, 48.0 * ghost_util::INCHES_TO_METERS);
+
+		// Plot Chassis
+		plt::plot(
+			x_points,
+			y_points,
+			std::map<std::string, std::string>{{"color", "black"}});
+
+		// Plot Base Linear Velocity
+		plt::plot(
+			std::vector<double>{x, x + x_vel / 100.0},
+			std::vector<double>{y, y + y_vel / 100.0},
+			std::map<std::string, std::string>{{"color", "red"}});
+
+		// Plot Base Link Center Point
+		plt::scatter(
+			std::vector<double>{x},
+			std::vector<double>{y});
+
+		// Plot Wheel
+		auto rotate_steering = Eigen::Rotation2D<double>(m1_steering_angle).toRotationMatrix();
+		m1_steering_center = Eigen::Vector2d(x, y) + rotate_theta * Eigen::Vector2d(drivetrain_dimension / 2,drivetrain_dimension / 2);
+		m1_top_left = m1_steering_center + rotate_steering * Eigen::Vector2d(-wheel_diam / 2,wheel_width / 2);
+		m1_top_right = m1_steering_center + rotate_steering * Eigen::Vector2d(wheel_diam / 2,wheel_width / 2);
+		m1_bottom_right = m1_steering_center + rotate_steering * Eigen::Vector2d(wheel_diam / 2, -wheel_width / 2);
+		m1_bottom_left = m1_steering_center + rotate_steering * Eigen::Vector2d(-wheel_diam / 2, -wheel_width / 2);
+
+		std::vector<double> m1_x_points{
+			m1_top_left.x(),
+			m1_top_right.x(),
+			m1_bottom_right.x(),
+			m1_bottom_left.x(),
+			m1_top_left.x()
+		};
+		std::vector<double> m1_y_points{
+			m1_top_left.y(),
+			m1_top_right.y(),
+			m1_bottom_right.y(),
+			m1_bottom_left.y(),
+			m1_top_left.y()
+		};
+
+		// Plot Module 1
+		plt::plot(
+			m1_x_points,
+			m1_y_points,
+			std::map<std::string, std::string>{{"color", "black"}});
+
+		plt::plot(
+			std::vector<double>{m1_steering_center.x(), m1_steering_center.x() + wheel_force_x_components[k] / 100.0},
+			std::vector<double>{m1_steering_center.y(), m1_steering_center.y() + wheel_force_y_components[k] / 100.0},
+			std::map<std::string, std::string>{{"color", "red"}});
+
+		plt::plot(
+			std::vector<double>{m1_steering_center.x(), m1_steering_center.x() + lateral_force_x_components[k] / 100.0},
+			std::vector<double>{m1_steering_center.y(), m1_steering_center.y() + lateral_force_y_components[k] / 100.0},
+			std::map<std::string, std::string>{{"color", "blue"}});
+
+		plt::pause(DT);
 	}
 
 	plt::figure();
