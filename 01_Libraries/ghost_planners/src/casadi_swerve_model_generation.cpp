@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
 	////////////////////////////////////
 	const float TIME_HORIZON = 1.0;
 	const float DT = 0.01;
-	const int NUM_SWERVE_MODULES = 1;
+	const int NUM_SWERVE_MODULES = 2;
 
 	// Swerve Config
 	const double CHASSIS_WIDTH = 16.5 * ghost_util::INCHES_TO_METERS;
@@ -50,8 +50,6 @@ int main(int argc, char *argv[]){
 		"steering_accel",
 		"wheel_force",
 		"lateral_force"
-		// "steering_vel",
-		// "steering_accel",
 		// "wheel_vel",
 		// "wheel_accel",
 		// "voltage_1",
@@ -67,6 +65,7 @@ int main(int argc, char *argv[]){
 	}
 	const std::vector<std::string> PARAM_NAMES = {
 		"mass",
+		"inertia",
 		"init_pose_x",
 		"init_pose_y",
 		"init_pose_theta",
@@ -77,7 +76,9 @@ int main(int argc, char *argv[]){
 		"des_vel_y",
 		"des_vel_theta",
 		"init_m1_steering_angle",
-		"init_m1_steering_vel"
+		"init_m1_steering_vel",
+		"init_m2_steering_angle",
+		"init_m2_steering_vel" // TODO: make this for loop over NUM_SWERVE_MODULESs
 	};
 
 	////////////////////////////////////////////
@@ -163,15 +164,13 @@ int main(int argc, char *argv[]){
 		std::pair<std::string, std::string>{"base_vel_x", "base_accel_x"},
 		std::pair<std::string, std::string>{"base_vel_y", "base_accel_y"},
 		std::pair<std::string, std::string>{"base_vel_theta", "base_accel_theta"},
-		std::pair<std::string, std::string>{"m1_steering_angle", "m1_steering_vel"},
-		std::pair<std::string, std::string>{"m1_steering_vel", "m1_steering_accel"},
 	};
 
 	// Add joint states for each swerve module to the integration states pairs
 	for(int m = 1; m < NUM_SWERVE_MODULES + 1; m++){
 		std::string module_prefix = "m" + std::to_string(m) + "_";
+		euler_integration_state_names.push_back(std::pair<std::string, std::string>{module_prefix + "steering_angle", module_prefix + "steering_vel"});
 		euler_integration_state_names.push_back(std::pair<std::string, std::string>{module_prefix + "steering_vel", module_prefix + "steering_accel"});
-		// euler_integration_state_names.push_back(std::pair<std::string, std::string>{module_prefix + "wheel_vel", module_prefix + "wheel_accel"});
 	}
 
 	// Populate euler integration constraints for state vector
@@ -202,7 +201,9 @@ int main(int argc, char *argv[]){
 		std::pair<std::string, std::string>{"k0_base_vel_y", "init_vel_y"},
 		std::pair<std::string, std::string>{"k0_base_vel_theta", "init_vel_theta"},
 		std::pair<std::string, std::string>{"k0_m1_steering_angle", "init_m1_steering_angle"},
-		std::pair<std::string, std::string>{"k0_m1_steering_vel", "init_m1_steering_vel"}
+		std::pair<std::string, std::string>{"k0_m1_steering_vel", "init_m1_steering_vel"},
+		std::pair<std::string, std::string>{"k0_m2_steering_angle", "init_m2_steering_angle"},
+		std::pair<std::string, std::string>{"k0_m2_steering_vel", "init_m2_steering_vel"} // TODO: make this for loop over NUM_SWERVE_MODULES
 	};
 	auto initial_state_constraint_vector = casadi::Matrix<casadi::SXElem>();
 	for(const auto& pair : initial_state_constraint_param_pairs){
@@ -215,13 +216,26 @@ int main(int argc, char *argv[]){
 		std::string curr_knot_prefix = get_knot_prefix(k);
 		auto accel_x = get_state(curr_knot_prefix + "base_accel_x");
 		auto accel_y = get_state(curr_knot_prefix + "base_accel_y");
-		auto wheel_force = get_state(curr_knot_prefix + "m1_wheel_force");
-		auto lateral_force = get_state(curr_knot_prefix + "m1_lateral_force");
-		auto steering_angle = get_state(curr_knot_prefix + "m1_steering_angle");
-		auto x_accel_constraint = get_param("mass") * get_state(curr_knot_prefix + "base_accel_x") - cos(steering_angle) * wheel_force + sin(steering_angle) * lateral_force;
-		auto y_accel_constraint = get_param("mass") * get_state(curr_knot_prefix + "base_accel_y") - sin(steering_angle) * wheel_force - cos(steering_angle) * lateral_force;
+		auto x_accel_constraint = get_param("mass") * get_state(curr_knot_prefix + "base_accel_x");
+		auto y_accel_constraint = get_param("mass") * get_state(curr_knot_prefix + "base_accel_y");
+		auto theta_accel_constraint = get_param("inertia") * get_state(curr_knot_prefix + "base_accel_theta");
+
+		for(int m = 1; m < NUM_SWERVE_MODULES + 1; m++){
+			std::string module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
+			auto wheel_force = get_state(module_prefix + "wheel_force");
+			auto lateral_force = get_state(module_prefix + "lateral_force");
+			auto steering_angle = get_state(module_prefix + "steering_angle");
+
+			// TODO: This needs to be world oriented (i.e. include theta as well).
+			x_accel_constraint += -cos(steering_angle) * wheel_force + sin(steering_angle) * lateral_force;
+			y_accel_constraint += -sin(steering_angle) * wheel_force - cos(steering_angle) * lateral_force;
+			// TODO: fill this in
+			theta_accel_constraint += 0.0;
+		}
+
 		acceleration_dynamics_constraint_vector = vertcat(acceleration_dynamics_constraint_vector, x_accel_constraint);
 		acceleration_dynamics_constraint_vector = vertcat(acceleration_dynamics_constraint_vector, y_accel_constraint);
+		// acceleration_dynamics_constraint_vector = vertcat(acceleration_dynamics_constraint_vector, theta_accel_constraint);
 	}
 
 	// Zero Lateral wheel velocity constraint
@@ -230,9 +244,14 @@ int main(int argc, char *argv[]){
 		std::string curr_knot_prefix = get_knot_prefix(k);
 		auto vel_x = get_state(curr_knot_prefix + "base_vel_x");
 		auto vel_y = get_state(curr_knot_prefix + "base_vel_y");
-		auto steering_angle = get_state(curr_knot_prefix + "m1_steering_angle");
-		auto vel_constraint = -vel_x*sin(steering_angle) + vel_y * cos(steering_angle);
-		zero_lateral_wheel_vel_constraint = vertcat(zero_lateral_wheel_vel_constraint, vel_constraint);
+
+		for(int m = 1; m < NUM_SWERVE_MODULES + 1; m++){
+			std::string module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
+			auto steering_angle = get_state(module_prefix + "steering_angle");
+			// TODO: this is wrong, needs angular velocity resulting from offset swerve module
+			auto vel_constraint = -vel_x*sin(steering_angle) + vel_y * cos(steering_angle);
+			zero_lateral_wheel_vel_constraint = vertcat(zero_lateral_wheel_vel_constraint, vel_constraint);
+		}
 	}
 
 	// Combine all constraints into single vector
@@ -262,11 +281,14 @@ int main(int argc, char *argv[]){
 		lbx(state_index_map[curr_knot_prefix + "base_accel_theta"]) = -45.97811;
 		ubx(state_index_map[curr_knot_prefix + "base_accel_theta"]) = 45.97811;
 
-		lbx(state_index_map[curr_knot_prefix + "m1_steering_accel"]) = -5000.0;
-		ubx(state_index_map[curr_knot_prefix + "m1_steering_accel"]) = 5000.0;
+		for(int m = 1; m < NUM_SWERVE_MODULES + 1; m++){
+			std::string module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
+			lbx(state_index_map[module_prefix + "steering_accel"]) = -5000.0;
+			ubx(state_index_map[module_prefix + "steering_accel"]) = 5000.0;
 
-		lbx(state_index_map[curr_knot_prefix + "m1_wheel_force"]) = -20.0;
-		ubx(state_index_map[curr_knot_prefix + "m1_wheel_force"]) = 20.0;
+			lbx(state_index_map[module_prefix + "wheel_force"]) = -20.0;
+			ubx(state_index_map[module_prefix + "wheel_force"]) = 20.0;
+		}
 	}
 
 	auto lbg = DM::zeros(constraints.size1());
@@ -295,7 +317,10 @@ int main(int argc, char *argv[]){
 		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_x"), 2) + pow(get_state(next_knot_prefix + "base_accel_x"), 2));
 		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_y"), 2) + pow(get_state(next_knot_prefix + "base_accel_y"), 2));
 		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_theta"), 2) + pow(get_state(next_knot_prefix + "base_accel_theta"), 2));
+
+		// TODO: make this for loop over NUM_SWERVE_MODULES
 		f += 0.01 * 1 / DT * (pow(get_state(curr_knot_prefix + "m1_steering_accel"), 2) + pow(get_state(next_knot_prefix + "m1_steering_accel"), 2));
+		f += 0.01 * 1 / DT * (pow(get_state(curr_knot_prefix + "m2_steering_accel"), 2) + pow(get_state(next_knot_prefix + "m2_steering_accel"), 2));
 
 		// Penalize Velocity Deviation
 		f += 500.0 * 1 / DT * (pow(get_param("des_vel_x") - get_state(curr_knot_prefix + "base_vel_x"), 2) + pow(get_param("des_vel_x") - get_state(next_knot_prefix + "base_vel_x"), 2));
@@ -306,7 +331,10 @@ int main(int argc, char *argv[]){
 		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_x") - get_state(curr_knot_prefix + "base_accel_x"), 2));
 		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_y") - get_state(curr_knot_prefix + "base_accel_y"), 2));
 		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_theta") - get_state(curr_knot_prefix + "base_accel_theta"), 2));
+
+		// TODO: make this for loop over NUM_SWERVE_MODULES
 		f += 0.01 * 1 / DT * (pow(get_state(next_knot_prefix + "m1_steering_accel") - get_state(curr_knot_prefix + "m1_steering_accel"), 2));
+		f += 0.01 * 1 / DT * (pow(get_state(next_knot_prefix + "m2_steering_accel") - get_state(curr_knot_prefix + "m2_steering_accel"), 2));
 	}
 
 	/////////////////////////
@@ -333,7 +361,7 @@ int main(int argc, char *argv[]){
 	solver_args["lbg"] = lbg;
 	solver_args["ubg"] = ubg;
 	solver_args["x0"] = DM::zeros(NUM_OPT_VARS);
-	solver_args["p"] = {10.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5, 1.5, 0.1, 3.14159 / 4.0, 0.0};
+	solver_args["p"] = {10.0, 0.14868, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5, 1.5, 0.1, 3.14159 / 4.0, 0.0, -3.14159 / 4.0, 0.0};
 	res = solver(solver_args);
 
 	/////////////////////////////
@@ -502,6 +530,7 @@ int main(int argc, char *argv[]){
 								 };
 
 		plot_wheel_module(Eigen::Vector2d(M1_X, M1_Y),"m1_");
+		plot_wheel_module(Eigen::Vector2d(M2_X, M2_Y),"m2_");
 
 		// plot_wheel_module(
 		// 	Eigen::Vector2d(-WHEEL_BASE_WIDTH / 2, WHEEL_BASE_WIDTH / 2),
@@ -510,7 +539,6 @@ int main(int argc, char *argv[]){
 		// 	Eigen::Vector2d(lateral_force_x_components[k], lateral_force_y_components[k])
 		// 	);
 
-		plot_wheel_module(Eigen::Vector2d(M3_X, M3_Y),"m1_");
 
 		// plot_wheel_module(
 		// 	Eigen::Vector2d(WHEEL_BASE_WIDTH / 2, -WHEEL_BASE_WIDTH / 2),
