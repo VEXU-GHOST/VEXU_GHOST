@@ -17,39 +17,45 @@ class AnimationPublisher : public rclcpp::Node
 // };
 
 // std::vector<Point> vector_;
-std::vector<double> x_data_vector_;
-std::vector<double> y_data_vector_;
-std::vector<double> time_vector_;
+// std::vector<double> x_data_vector_;
+// std::vector<double> y_data_vector_;
+// std::vector<double> time_vector_;
 
   // visualization_msgs::msg::Marker marker_msg_;
 
   public:
     AnimationPublisher()
-    : Node("animation_publisher"), count_(0)
+    : Node("animation_publisher"), count_(0),path_index_(0)
     {
       publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("topic", 10);
 
       timer_ = this->create_wall_timer(500ms, std::bind(&AnimationPublisher::timer_callback, this));
 
-      x_data_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-      y_data_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-      time_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+      // x_data_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+      // y_data_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+      // time_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+
+            for (double x = 0.0; x <= 5; x += 0.1) {
+            double y = 0.0; // Assuming the line lies in the xy-plane
+            double z = 0.0;
+            path_.push_back(createPose(x, y, z));
+        }
     }
 
   private:
 
-   vector_values(int x_vector,int  y_vector, i){
+  //  vector_values(int x_vector,int  y_vector, i){
 
 
-    int x_vector_value = x_vector[i];
-    int y_vector_value = y_vector[i];
+  //   int x_vector_value = x_vector[i];
+  //   int y_vector_value = y_vector[i];
 
-    int array[2];
-    array[0] = x_vector_value;
-    array[1] = y_vector_value;
+  //   int array[2];
+  //   array[0] = x_vector_value;
+  //   array[1] = y_vector_value;
 
-    return array;
-  }
+  //   return array;
+  // }
 
 
     void timer_callback()
@@ -67,11 +73,13 @@ std::vector<double> time_vector_;
       marker_msg_.id = 0;
       marker_msg_.type = visualization_msgs::msg::Marker::SPHERE;
       marker_msg_.action = visualization_msgs::msg::Marker::ADD;
-      // marker_msg_.pose.position.x = 1;
-      // marker_msg_.pose.position.y = 1;
-      // marker_msg_.pose.position.z = 1;
-      // marker_msg_.pose.orientation.x = 0.0;
-      // marker_msg_.pose.orientation.y = 0.0;
+
+      auto next_pose = path_[path_index_];
+      marker_msg_.pose.position.x = next_pose.position.x;
+      marker_msg_.pose.position.y = next_pose.position.y;
+      marker_msg_.pose.position.z = next_pose.position.z;
+      marker_msg_.pose.orientation.x = 0.0;
+      marker_msg_.pose.orientation.y = 0.0;
       marker_msg_.pose.orientation.z = 0.0;
       marker_msg_.pose.orientation.w = 1.0;
       marker_msg_.scale.x = 1.0;
@@ -83,15 +91,23 @@ std::vector<double> time_vector_;
       marker_msg_.color.b = 0.0; // Blue
 
 
-      for(int i = 0; i < 10, i++){
-      array = vector_values(x_data_vector_, y_data_vector_, i)
-      marker_msg_.pose.position.x = array[0];
-      marker_msg_.pose.position.y = array[1];
+      // for(int i = 0; i < 10, i++){
+      // array = vector_values(x_data_vector_, y_data_vector_, i)
+      // marker_msg_.pose.position.x = array[0];
+      // marker_msg_.pose.position.y = array[1];
 
+      publisher_->publish(marker_msg_);
+
+      path_index_ = (path_index_ + 1) % path_.size();
 
       }
 
-      publisher_->publish(marker_msg_);
+      geometry_msgs::msg::Pose createPose(double x, double y, double z) {
+      geometry_msgs::msg::Pose pose;
+      pose.position.x = x;
+      pose.position.y = y;
+      pose.position.z = z;
+      return pose;
     
       
     // for (int i = 0; i < 10; ++i) {
@@ -113,6 +129,9 @@ std::vector<double> time_vector_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher_;
     size_t count_;
+    std::vector<geometry_msgs::msg::Pose> path_;
+    size_t path_index_;
+
 };
 
 int main(int argc, char * argv[])
