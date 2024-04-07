@@ -56,7 +56,6 @@ def generate_launch_description():
     home_dir = os.path.expanduser('~')
     ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces")
 
-    world_file = os.path.join(ghost_sim_share_dir, "worlds", "spin_up.world")
     rviz_config_path = os.path.join(ghost_sim_share_dir, 'rviz/bag_playback.rviz')
 
     ekf_pf_node = Node(

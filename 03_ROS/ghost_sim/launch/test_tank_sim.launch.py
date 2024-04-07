@@ -91,15 +91,6 @@ def generate_launch_description():
         parameters=[ghost_localization_share_dir + "/config/ekf_pf_node.yaml"],
         remappings=[('/sensors/wheel_odom', '/odom')],
     )
-    
-    pf_ekf_node = Node(
-        package='ghost_localization',
-        executable='pf_ekf_node',
-        name='pf_ekf_node',
-        output='screen',
-        parameters=[ghost_localization_share_dir + "/config/pf_ekf_node.yaml"],
-        remappings=[('/sensors/wheel_odom', '/odom')],
-    )
 
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
@@ -115,15 +106,6 @@ def generate_launch_description():
         name='ekf_localization_node',
         output='screen',
         parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"],
-        remappings=[('/sensors/wheel_odom', '/odom')]
-    )
-
-    pf_ekf_localization_node = Node(
-        package='robot_localization',
-        executable='ekf_node',
-        name='pf_ekf_localization_node',
-        output='screen',
-        parameters=[ghost_ros_base_dir + "/config/pf_ekf_localization_config.yaml"],
         remappings=[('/sensors/wheel_odom', '/odom')]
     )
 

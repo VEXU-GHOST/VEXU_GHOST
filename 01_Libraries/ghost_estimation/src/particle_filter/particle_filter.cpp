@@ -216,7 +216,6 @@ void ParticleFilter::Resample() {
 		new_particles[i] = particles_[new_particle_index];
 		new_particles[i].weight = 1 / ((double) particles_.size());
 	}
-
 	// After resampling:
 	particles_ = new_particles;
 }
@@ -231,6 +230,7 @@ void ParticleFilter::LowVarianceResample() {
 		new_particles[i] = particles_[new_particle_index];
 		new_particles[i].weight = 1 / ((double) particles_.size()); // rng_.UniformRandom(); good for testing
 	}
+
 	weight_sum_ = 1.0;
 
 	// After resampling:
