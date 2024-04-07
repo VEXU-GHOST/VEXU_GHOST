@@ -10,6 +10,7 @@
 #include <ghost_msgs/srv/start_recorder.hpp>
 #include <ghost_msgs/srv/stop_recorder.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
@@ -39,6 +40,7 @@ protected:
 	rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_swerve_viz_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
+	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
 
 	// Subscribers
 	void poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);

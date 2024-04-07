@@ -41,6 +41,75 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /robot_description
       Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+          Class: rviz_default_plugins/PoseArray
+        front_bar:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_bar:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lidar_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_bar:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        steering_link_back:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        steering_link_left:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        steering_link_right:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_link_back:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_link_left:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_link_right:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -50,18 +119,78 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Marker Scale: 0.2
+      Frames:
+        All Enabled: true
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        front_bar:
+          Value: true
+        left_bar:
+          Value: true
+        lidar_link:
+          Value: true
+        right_bar:
+          Value: true
+        steering_link_back:
+          Value: true
+        steering_link_left:
+          Value: true
+        steering_link_right:
+          Value: true
+        wheel_link_back:
+          Value: true
+        wheel_link_left:
+          Value: true
+        wheel_link_right:
+          Value: true
+      Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
+      Tree:
+        base_link:
+          base_footprint:
+            {}
+          front_bar:
+            {}
+          left_bar:
+            {}
+          lidar_link:
+            {}
+          right_bar:
+            {}
+          steering_link_back:
+            wheel_link_back:
+              {}
+          steering_link_left:
+            wheel_link_left:
+              {}
+          steering_link_right:
+            wheel_link_right:
+              {}
       Update Interval: 0
       Value: true
     - Class: rviz_default_plugins/PoseArray
+    - Alpha: 1
+      Arrow Length: 0.029999999329447746
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz_default_plugins/PoseArray
+      Color: 95; 53; 102
       Enabled: true
+      Head Length: 0.07000000029802322
+      Head Radius: 0.029999999329447746
       Name: Particle Cloud
+      Shaft Length: 0.23000000417232513
+      Shaft Radius: 0.009999999776482582
+      Shape: Arrow (Flat)
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /particle_cloud
@@ -71,29 +200,59 @@ Visualization Manager:
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Map
+      Namespaces:
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /map_viz
     - Class: rviz_default_plugins/LaserScan
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/LaserScan
+      Color: 255; 255; 255
+      Color Transformer: ""
+      Decay Time: 0
       Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
       Name: LIDAR
       Namespaces:
         "": true
+      Position Transformer: ""
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
       Topic:
         Depth: 5
         Durability Policy: Volatile
+        Filter size: 10
         History Policy: Keep Last
         Reliability Policy: System Default
         Value: /scan
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: Swerve Kinematics
       Namespaces:
         "controller": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -106,6 +265,7 @@ Visualization Manager:
       Name: Predicted Scan
       Namespaces:
         "controller": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -126,10 +286,26 @@ Visualization Manager:
     - Class: rviz_default_plugins/Select
     - Class: rviz_default_plugins/FocusCamera
     - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
     - Class: rviz_default_plugins/SetInitialPose
       Topic: /initial_pose
+      Covariance x: 0.25
+      Covariance y: 0.25
+      Covariance yaw: 0.06853891909122467
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /initial_pose
     - Class: rviz_default_plugins/SetGoal
       Line color: 128; 128; 0
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: goal_pose
   Transformation:
     Current:
       Class: rviz_default_plugins/TF
