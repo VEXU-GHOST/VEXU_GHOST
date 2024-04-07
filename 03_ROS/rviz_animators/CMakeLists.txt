@@ -10,6 +10,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+#find_package(ghost_msgs REQUIRED)
 
 
 set(DEPENDENCIES
@@ -83,7 +84,7 @@ install(
 )
 
 install(DIRECTORY
-  launch
+  launch config
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()
