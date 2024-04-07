@@ -6,6 +6,7 @@
 
 #include "eigen3/Eigen/Geometry"
 #include <ghost_util/angle_util.hpp>
+#include <ghost_util/unit_conversion_utils.hpp>
 #include "math/line2d.h"
 
 namespace ghost_swerve {
@@ -18,6 +19,8 @@ enum swerve_type_e {
 struct SwerveConfig {
 	// Maximum linear speed of robot base (or linear velocity of wheel surface).
 	double max_wheel_lin_vel;
+	double max_lin_vel_slew; // for each axis independently
+	double max_ang_vel_slew;
 
 	// Module Config
 	swerve_type_e module_type;
@@ -28,6 +31,25 @@ struct SwerveConfig {
 
 	// Kinematic Controller
 	double steering_kp;
+	double move_to_pose_kp;
+	double angle_control_kp;
+
+	// Velocity Scaling
+	double velocity_scaling_ratio;
+	double velocity_scaling_threshold;
+
+	// Lift - motor angles, not outputs
+	double lift_up_angle;
+	double lift_climbed_angle;
+	double lift_kP;
+	double lift_speed;
+
+	// Stick - motor angles, not outputs
+	double stick_upright_angle;
+	double stick_angle_skills;
+	double stick_angle_normal;
+	double stick_turn_offset;
+
 
 	// XY Position of each module relative to robot base
 	std::map<std::string, Eigen::Vector2d> module_positions;
@@ -192,6 +214,15 @@ public:
 		return m_module_jacobian_inv_transpose;
 	}
 
+
+	const Eigen::MatrixXd& getTaskSpaceJacobian() const {
+		return m_task_space_jacobian;
+	}
+
+	const Eigen::MatrixXd& getTaskSpaceJacobianInverse() const {
+		return m_task_space_jacobian_inverse;
+	}
+
 	/**
 	 * @brief Get the max linear velocity of the robot base at nominal motor speed.
 	 *
@@ -246,6 +277,9 @@ public:
 	void calculateKinematicSwerveControllerJoystick(double right_cmd, double forward_cmd, double clockwise_cmd);
 	void calculateKinematicSwerveControllerVelocity(double right_cmd, double forward_cmd, double clockwise_cmd);
 
+	void calculateKinematicSwerveControllerAngleControl(double right_cmd, double forward_cmd, double angle_cmd);
+	void calculateKinematicSwerveControllerMoveToPoseWorld(double des_x, double des_y, double angle_cmd);
+
 	const Eigen::Vector3d& getBaseVelocityCommand(){
 		return m_base_vel_cmd;
 	}
@@ -262,6 +296,10 @@ public:
 		return m_icr_quality;
 	}
 
+	double getLeastSquaresErrorMetric() const {
+		return m_ls_error_metric;
+	}
+
 	const Eigen::Vector2d& getOdometryLocation(){
 		return m_odom_loc;
 	}
@@ -270,14 +308,42 @@ public:
 		return m_odom_angle;
 	}
 
-	const Eigen::Vector2d& getWorldLocation(){
-		// TODO(maxxwilson) UPDATE THIS from sub
-		return m_odom_loc;
+	void setWorldPose(const double x, const double y){
+		m_world_loc.x() = x;
+		m_world_loc.y() = y;
 	}
 
-	double getWorldAngle() const {
-		// TODO(maxxwilson) UPDATE THIS from sub
-		return m_odom_angle;
+	void setWorldAngle(const double theta){
+		m_world_angle = theta;
+	}
+
+	const Eigen::Vector2d& getWorldLocation(){
+		return m_world_loc;
+	}
+
+	double getWorldAngleDeg() const {
+		return m_world_angle * ghost_util::RAD_TO_DEG;
+	}
+
+	double getWorldAngleRad() const {
+		return m_world_angle;
+	}
+
+	void setOdometryAngle(double angle) {
+		m_odom_angle = angle;
+	}
+
+	void setOdometryLocation(double x, double y) {
+		m_odom_loc.x() = x;
+		m_odom_loc.y() = y;
+	}
+
+	void setFieldOrientedControl(bool field_oriented_control){
+		m_is_field_oriented = field_oriented_control;
+	}
+
+	bool isFieldOrientedControl() const {
+		return m_is_field_oriented;
 	}
 
 protected:
@@ -297,9 +363,11 @@ protected:
 
 	// Configuration
 	SwerveConfig m_config;
-	double m_max_base_lin_vel;
-	double m_max_base_ang_vel;
-	int m_num_modules;
+	double m_max_base_lin_vel = 0;
+	double m_max_base_ang_vel = 0;
+	int m_num_modules = 0;
+	double m_lin_vel_slew;
+	double m_ang_slew;
 	double LIN_VEL_TO_RPM;
 
 	// Jacobians
@@ -316,7 +384,9 @@ protected:
 
 	// Odometry
 	Eigen::Vector2d m_odom_loc;
+	Eigen::Vector2d m_world_loc;
 	double m_odom_angle;
+	double m_world_angle;
 
 	// Current centroidal states
 	double m_curr_angle;
@@ -331,7 +401,6 @@ protected:
 	std::map <std::string, ModuleCommand> m_module_commands;
 
 	// Control Style
-	bool m_is_angle_control = false;
 	bool m_is_field_oriented = false;
 
 	// ICR States
@@ -340,6 +409,7 @@ protected:
 	bool m_straight_line_translation;
 	double m_icr_quality = 0;
 	double m_icr_sse = 0;
+	double m_ls_error_metric = 0.0;
 };
 
 } // namespace ghost_swerve

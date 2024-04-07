@@ -60,6 +60,7 @@ install(
 set(UTIL_LIBS
   load_motor_device_config_yaml
   load_rotation_sensor_device_config_yaml
+  load_inertial_sensor_device_config_yaml
 )
 
 foreach(UTIL ${UTIL_LIBS})
@@ -134,6 +135,7 @@ set(DEVICE_TESTS
   test_device_config_interfaces
   test_motor_device_interface
   test_rotation_sensor_device_interface
+  test_inertial_sensor_device_interface
   test_joystick_device_interface
 )
 foreach(TEST ${DEVICE_TESTS})
@@ -152,6 +154,7 @@ foreach(TEST ${UTIL_LIBS})
     gtest_main
     load_motor_device_config_yaml
     load_rotation_sensor_device_config_yaml
+    load_inertial_sensor_device_config_yaml
     device_config_factory_utils
     yaml-cpp
   )

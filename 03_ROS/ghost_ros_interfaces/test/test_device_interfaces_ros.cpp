@@ -75,6 +75,17 @@ TEST(TestDeviceInterfaces, testRotationSensorStateMsg){
 	EXPECT_EQ(*rotation_input, *rotation_output);
 }
 
+TEST(TestDeviceInterfaces, testInertialSensorStateMsg){
+	auto inertial_input = getRandomInertialSensorData();
+	auto msg = std::make_shared<ghost_msgs::msg::V5InertialSensorState>();
+	auto inertial_output = std::make_shared<InertialSensorDeviceData>("");
+
+	toROSMsg(*inertial_input, *msg);
+	fromROSMsg(*inertial_output, *msg);
+
+	EXPECT_EQ(*inertial_input, *inertial_output);
+}
+
 TEST(TestDeviceInterfaces, testJoystickStateMsg){
 	auto joy_input = getRandomJoystickData();
 	auto msg = std::make_shared<ghost_msgs::msg::V5JoystickState>();
@@ -137,7 +148,7 @@ TEST(TestDeviceInterfaces, testRobotTrajectoryCallback){
 	expected_map["motor"] = *mt_input;
 
 	toROSMsg(*rt_input, *msg);
-	
+
 	// trajectory_start_time_ = getTimeFromStart();
 	for(int i = 0; i < msg->motor_names.size(); i++){
 		auto motor_trajectory = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();

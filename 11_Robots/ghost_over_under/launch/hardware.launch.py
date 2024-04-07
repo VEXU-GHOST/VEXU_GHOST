@@ -16,21 +16,13 @@ def generate_launch_description():
     ros_config_file = os.path.join(ghost_over_under_base_dir, "config/ros_config.yaml")
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
-    robot_config_yaml_path = os.path.join(ghost_over_under_base_dir, "config/robot_hardware_config.yaml")
+    robot_config_yaml_path = os.path.join(ghost_over_under_base_dir, "config/robot_hardware_config_worlds_24.yaml")
 
     plugin_type = "ghost_swerve::SwerveRobotPlugin"
     robot_name = "ghost_15"
 
-    ghost_autonomy_share_dir = get_package_share_directory('ghost_autonomy')
-    bt_path = os.path.join(ghost_autonomy_share_dir, "config", "bt.xml")
-
-    # Robot state publisher params
-    filename = "ghost_15.xacro"
-
-    # Load XACRO and process to urdf then to text
-    xacro_path = os.path.join(ghost_over_under_base_dir, "urdf", filename)
-    xml = xacro.process_file(xacro_path)
-    doc = xml.toprettyxml(indent='  ')
+    ghost_swerve_share_dir = get_package_share_directory('ghost_swerve')
+    bt_path = os.path.join(ghost_swerve_share_dir, "config", "bt.xml")
     
 
     ########################
@@ -79,20 +71,17 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
-    # rplidar_node = Node(
-    #     package='rplidar_ros',
-    #     executable='rplidar_scan_publisher',
-    #     name='rplidar_scan_publisher',
-    #     parameters=[{"frame_id": "lidar_link", 'angle_compensate': True}]
-    # )
-
-    # Node to publish robot joint transforms
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='screen',
-        parameters=[{'use_sim_time': True}, {"robot_description": doc}])
+    rplidar_node = Node(
+        package='rplidar_ros',
+        executable='rplidar_node',
+        name='rplidar_node',
+        parameters=[{'channel_type': 'serial',
+                'serial_port': '/dev/ttyUSB0',
+                'serial_baudrate': 115200,
+                'frame_id': "lidar_link",
+                'inverted': False,
+                'angle_compensate': True}],
+    )
 
     imu_filter_node = Node(
         package='ghost_sensing',
@@ -131,12 +120,11 @@ def generate_launch_description():
 
     return LaunchDescription([
         serial_node,
-        competition_state_machine_node,
-        bag_recorder_service,
-        realsense_node,
-        imu_filter_node,
-        robot_localization_node,
-        swerve_motion_planner_node,
-        robot_state_publisher
-        # rplidar_node,
+        # competition_state_machine_node,
+        # bag_recorder_service,
+        # realsense_node,
+        # imu_filter_node,
+        # robot_localization_node,
+        # swerve_motion_planner_node,
+        # rplidar_node
     ])

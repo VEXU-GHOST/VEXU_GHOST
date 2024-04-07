@@ -46,7 +46,7 @@ void ScreenInterface::updateScreen(){
 		std::string title_str;
 		// enables or disables based on time AND blinks based on heartbeat toggle
 		if (last_connection_time_ + 1000 > pros::millis() && heartbeat_toggle)
-			title_str = std::string("======= ") + title_string_ + std::string(" =======");
+			title_str = std::string("------- ") + title_string_ + std::string(" -------");
 		else
 			title_str = std::string("        ") + title_string_ + std::string("        ");
 

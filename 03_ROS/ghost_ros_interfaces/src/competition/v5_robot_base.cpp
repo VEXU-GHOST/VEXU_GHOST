@@ -2,6 +2,7 @@
 
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
+#include "rclcpp/rclcpp.hpp"
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -34,6 +35,13 @@ void V5RobotBase::configure(){
 		std::bind(&V5RobotBase::trajectoryCallback, this, _1)
 		);
 
+
+	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
+		"bag_recorder/start");
+
+	m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
+		"bag_recorder/stop");
+
 	start_time_ = std::chrono::system_clock::now();
 	trajectory_start_time_ = 0;
 
@@ -61,19 +69,28 @@ void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::Sh
 	// Perform any operations that should happen on every loop
 	onNewSensorData();
 
-	// Execute Competition State Machine
-	switch(curr_comp_state_){
-		case robot_state_e::DISABLED:
-			disabled();
-		break;
+	try{
+		// Execute Competition State Machine
+		switch(curr_comp_state_){
+			case robot_state_e::DISABLED:
+				disabled();
+			break;
 
-		case robot_state_e::AUTONOMOUS:
-			autonomous(getTimeFromStart());
-		break;
+			case robot_state_e::AUTONOMOUS:
+				autonomous(getTimeFromStart());
+			break;
 
-		case robot_state_e::TELEOP:
-			teleop(getTimeFromStart());
-		break;
+			case robot_state_e::TELEOP:
+				teleop(getTimeFromStart());
+			break;
+		}
+	}
+	catch(std::exception& e){
+		RCLCPP_WARN(node_ptr_->get_logger(), e.what());
+	}
+	catch(...){
+		std::exception_ptr p = std::current_exception();
+		RCLCPP_WARN(node_ptr_->get_logger(), (p ? p.__cxa_exception_type()->name() : "null"));
 	}
 
 	// Get Actuator Msg from RobotHardwareInterface and publish
@@ -96,14 +113,26 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous){
 	}
 
 	// Process state transitions
-	if((curr_comp_state_ == robot_state_e::AUTONOMOUS) && (last_comp_state_ == robot_state_e::DISABLED)){
+	if((curr_comp_state_ == robot_state_e::AUTONOMOUS) && (last_comp_state_ != robot_state_e::AUTONOMOUS)){
 		// DISABLED -> AUTONOMOUS
 		start_time_ = std::chrono::system_clock::now();
+		// start bag recording
+		auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+		m_start_recorder_client->async_send_request(req);
 	}
 	if((curr_comp_state_ == robot_state_e::TELEOP) && (last_comp_state_ != robot_state_e::TELEOP)){
 		// DISABLED/AUTONOMOUS -> TELEOP
 		start_time_ = std::chrono::system_clock::now();
 	}
+
+	if((curr_comp_state_ == robot_state_e::DISABLED) && (last_comp_state_ == robot_state_e::TELEOP)){
+		// TELEOP->DISABLE
+		start_time_ = std::chrono::system_clock::now();
+		// stop bag recording
+		auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+		m_stop_recorder_client->async_send_request(req);
+	}
+
 
 	last_comp_state_ = curr_comp_state_;
 }
@@ -115,7 +144,8 @@ double V5RobotBase::getTimeFromStart() const {
 
 void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg){
 	RCLCPP_INFO(node_ptr_->get_logger(), "Received Trajectory");
-	trajectory_start_time_ = getTimeFromStart();
+	// trajectory_start_time_ = getTimeFromStart();
+	m_auton_start_time = getTimeFromStart();
 	for(int i = 0; i < msg->motor_names.size(); i++){
 		auto motor_trajectory = std::make_shared<RobotTrajectory::MotorTrajectory>();
 		fromROSMsg(*motor_trajectory, msg->trajectories[i]);
@@ -123,13 +153,19 @@ void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::Sha
 	}
 }
 
-std::unordered_map<std::string, double> V5RobotBase::get_commands(double time){
+std::unordered_map<std::string, double> V5RobotBase::get_commands(double time) const {
 	std::unordered_map<std::string, double> map;
 	// if (trajectory_start_time_ == 0) bad
-	time = time - trajectory_start_time_;
+	// time = time - trajectory_start_time_;
 	for(auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
-		map[motor_name + "_pos"] = motor_trajectory.getPosition(time);
-		map[motor_name + "_vel"] = motor_trajectory.getVelocity(time);
+		const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
+		if(is_pos_command){
+			map[motor_name + "_pos"] = position;
+		}
+		const auto [is_velocity_command, velocity] = motor_trajectory.getVelocity(time);
+		if(is_velocity_command){
+			map[motor_name + "_vel"] = velocity;
+		}
 	}
 	return map;
 }

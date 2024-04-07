@@ -5,6 +5,9 @@ port_configuration:
             port: 4
             type: ROTATION_SENSOR
             reversed: true
+        inertial_sensor_1:
+            port: 7
+            type: INERTIAL_SENSOR
         test_motor:
             port: 2
             type: MOTOR

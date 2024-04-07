@@ -1,4 +1,4 @@
-#include "ghost_msgs/srv/toggle_bag_recorder.hpp"
+#include "ghost_msgs/srv/start_recorder.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
@@ -6,11 +6,11 @@ using namespace std::chrono_literals;
 int main(int argc, char **argv){
 	rclcpp::init(argc, argv);
 
-	std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("toggle_bag_recorder_client");
+	std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("start_bag_recorder_client");
 
-	rclcpp::Client<ghost_msgs::srv::ToggleBagRecorder>::SharedPtr client =
-		node->create_client<ghost_msgs::srv::ToggleBagRecorder>("toggle_bag_recorder");
-	auto request = std::make_shared<ghost_msgs::srv::ToggleBagRecorder::Request>();
+	rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr client =
+		node->create_client<ghost_msgs::srv::StartRecorder>("bag_recorder/start");
+	auto request = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
 
 	while(!client->wait_for_service(1s)){
 		if(!rclcpp::ok()){
@@ -23,7 +23,7 @@ int main(int argc, char **argv){
 	auto response = client->async_send_request(request);
 
 	if(rclcpp::spin_until_future_complete(node, response) != rclcpp::FutureReturnCode::SUCCESS){
-		RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service toggle_bag_recorder");
+		RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service bag_recorder/start");
 	}
 
 	rclcpp::shutdown();

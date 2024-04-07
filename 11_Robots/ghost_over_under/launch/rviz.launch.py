@@ -6,9 +6,9 @@ import xacro
 
 def generate_launch_description():
     pkg_share = launch_ros.substitutions.FindPackageShare(package='ghost_over_under').find('ghost_over_under')
-    xacro_path = os.path.join(pkg_share, 'urdf/ghost_15.xacro')
-    # rviz_config_path = os.path.join(pkg_share, 'rviz/base_link_config.rviz')
-    rviz_config_path = os.path.join(pkg_share, 'rviz/odom_config.rviz')
+    xacro_path = os.path.join(pkg_share, 'urdf/ghost_24.xacro')
+    rviz_config_path = os.path.join(pkg_share, 'rviz/base_link_config.rviz')
+    # rviz_config_path = os.path.join(pkg_share, 'rviz/odom_config.rviz')
 
     robot_state_publisher_node = launch_ros.actions.Node(
         name = "robot_state_publisher",
@@ -24,7 +24,14 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
+    joint_state_publisher_gui_node = launch_ros.actions.Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        name='joint_state_publisher_gui',
+    )
+
     return launch.LaunchDescription([
         robot_state_publisher_node,
+        joint_state_publisher_gui_node,
         rviz_node
     ])

@@ -145,6 +145,29 @@ void fromROSMsg(RotationSensorDeviceData& rotation_sensor_data, const V5Rotation
 	rotation_sensor_data.velocity = rotation_sensor_msg.velocity;
 }
 
+void toROSMsg(const InertialSensorDeviceData& inertial_sensor_data, V5InertialSensorState& inertial_sensor_msg){
+	toROSMsg(inertial_sensor_data, inertial_sensor_msg.device_header); // Set device header
+	inertial_sensor_msg.x_accel = inertial_sensor_data.x_accel;
+	inertial_sensor_msg.y_accel = inertial_sensor_data.y_accel;
+	inertial_sensor_msg.z_accel = inertial_sensor_data.z_accel;
+	inertial_sensor_msg.x_rate = inertial_sensor_data.x_rate;
+	inertial_sensor_msg.y_rate = inertial_sensor_data.y_rate;
+	inertial_sensor_msg.z_rate = inertial_sensor_data.z_rate;
+	inertial_sensor_msg.heading = inertial_sensor_data.heading;
+}
+
+void fromROSMsg(InertialSensorDeviceData& inertial_sensor_data, const V5InertialSensorState& inertial_sensor_msg){
+	fromROSMsg(inertial_sensor_data, inertial_sensor_msg.device_header); // Set base attributes
+	inertial_sensor_data.x_accel = inertial_sensor_msg.x_accel;
+	inertial_sensor_data.y_accel = inertial_sensor_msg.y_accel;
+	inertial_sensor_data.z_accel = inertial_sensor_msg.z_accel;
+	inertial_sensor_data.x_rate = inertial_sensor_msg.x_rate;
+	inertial_sensor_data.y_rate = inertial_sensor_msg.y_rate;
+	inertial_sensor_data.z_rate = inertial_sensor_msg.z_rate;
+	inertial_sensor_data.heading = inertial_sensor_msg.heading;
+}
+
+
 void toROSMsg(const RobotHardwareInterface& hardware_interface, V5ActuatorCommand& actuator_cmd_msg){
 	actuator_cmd_msg.msg_id = hardware_interface.getMsgID();
 
@@ -216,6 +239,12 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5SensorUpdate& 
 			toROSMsg(*rotation_data_ptr, msg);
 			sensor_update_msg.rotation_sensors.push_back(msg);
 		}
+		else if(device_data_ptr->type == device_type_e::INERTIAL_SENSOR){
+			V5InertialSensorState msg{};
+			auto inertial_data_ptr = device_data_ptr->as<InertialSensorDeviceData>();
+			toROSMsg(*inertial_data_ptr, msg);
+			sensor_update_msg.inertial_sensors.push_back(msg);
+		}
 		else if(device_data_ptr->type == device_type_e::JOYSTICK){
 			V5JoystickState msg{};
 			auto joy_data_ptr = device_data_ptr->as<JoystickDeviceData>();
@@ -265,6 +294,13 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5SensorUpdate
 		auto rotation_sensor_data_ptr = hardware_interface.getDeviceData<RotationSensorDeviceData>(rotation_sensor_msg.device_header.name);
 		fromROSMsg(*rotation_sensor_data_ptr, rotation_sensor_msg);
 		hardware_interface.setDeviceData(rotation_sensor_data_ptr);
+	}
+
+	// Inertial Sensors
+	for(const auto &inertial_sensor_msg : sensor_update_msg.inertial_sensors){
+		auto inertial_sensor_data_ptr = hardware_interface.getDeviceData<InertialSensorDeviceData>(inertial_sensor_msg.device_header.name);
+		fromROSMsg(*inertial_sensor_data_ptr, inertial_sensor_msg);
+		hardware_interface.setDeviceData(inertial_sensor_data_ptr);
 	}
 
 	// Digital IO

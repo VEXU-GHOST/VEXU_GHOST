@@ -5,17 +5,20 @@
 #include <mutex>
 #include <unordered_map>
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
+#include "ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 
 
 #if GHOST_DEVICE == GHOST_JETSON
-    #define CROSSPLATFORM_MUTEX_T std::mutex
+	#define CROSSPLATFORM_MUTEX_T std::mutex
 #elif GHOST_DEVICE == GHOST_V5_BRAIN
-    #include "api.h"
-    #include "pros/apix.h"
-    #define CROSSPLATFORM_MUTEX_T pros::Mutex
+	#include "api.h"
+	#include "pros/apix.h"
+	#define CROSSPLATFORM_MUTEX_T pros::Mutex
 #else
-    #error "Ghost Device compile flag is not set to valid value"
+	#error "Ghost Device compile flag is not set to valid value"
 #endif
 
 namespace ghost_v5_interfaces {
@@ -105,14 +108,6 @@ public:
 	float getMotorPosition(const std::string& motor_name);
 
 	/**
-	 * @brief Returns motor velocity in RPM
-	 *
-	 * @param motor_name
-	 * @return float
-	 */
-	float getMotorVelocityRPM(const std::string& motor_name);
-
-	/**
 	 * @brief Sets motor position in the configured encoder units.
 	 *
 	 * @param motor_name
@@ -120,30 +115,9 @@ public:
 	 */
 	void setMotorPositionCommand(const std::string& motor_name, float position_cmd);
 
-	/**
-	 * @brief Set the motor velocity in RPM.
-	 *
-	 * @param motor_name
-	 * @param velocity_cmd
-	 */
+	float getMotorVelocityRPM(const std::string& motor_name);
 	void setMotorVelocityCommandRPM(const std::string& motor_name, float velocity_cmd);
-
-	/**
-	 * @brief Set the motor voltage as a percent of the maximum voltage (i.e. -1.0 -> 1.0).
-	 *
-	 * @param motor_name
-	 * @param voltage_cmd
-	 */
 	void setMotorVoltageCommandPercent(const std::string& motor_name, float voltage_cmd);
-
-	/**
-	 * @brief Set the motor torque command as a percent of the maximum torque (i.e. -1.0 -> 1.0).
-	 * There is no real torque feedback/sensing in a V5 Motor, so this is based on open-loop DC Motor Models
-	 * and may be innacurate. Not recommended for competition use.
-	 *
-	 * @param motor_name
-	 * @param torque_cmd
-	 */
 	void setMotorTorqueCommandPercent(const std::string& motor_name, float torque_cmd);
 
 	/**
@@ -189,46 +163,32 @@ public:
 	///////////////// Rotation Sensor Interfaces /////////////////
 	//////////////////////////////////////////////////////////////
 
-	/**
-	 * @brief Returns angle of Rotation Sensor in degrees
-	 *
-	 * @param sensor_name
-	 * @return float
-	 */
 	float getRotationSensorAngleDegrees(const std::string& sensor_name);
-
-	/**
-	 * @brief Returns position of Rotation Sensor in degrees
-	 *
-	 * @param sensor_name
-	 * @return float
-	 */
 	float getRotationSensorPositionDegrees(const std::string& sensor_name);
-
-	/**
-	 * @brief Returns velocity of Rotation Sensor in RPM
-	 *
-	 * @param sensor_name
-	 * @return float
-	 */
 	float getRotationSensorVelocityRPM(const std::string& sensor_name);
+
+	//////////////////////////////////////////////////////////////
+	///////////////// Inertial Sensor Interfaces /////////////////
+	//////////////////////////////////////////////////////////////
+	float getInertialSensorXRate(const std::string& sensor_name);
+	float getInertialSensorYRate(const std::string& sensor_name);
+	float getInertialSensorZRate(const std::string& sensor_name);
+	float getInertialSensorXAccel(const std::string& sensor_name);
+	float getInertialSensorYAccel(const std::string& sensor_name);
+	float getInertialSensorZAccel(const std::string& sensor_name);
+	float getInertialSensorHeading(const std::string& sensor_name);
+
+	//////////////////////////////////////////////////////////////
+	///////////////// Joystick Device Interfaces /////////////////
+	//////////////////////////////////////////////////////////////
+	std::shared_ptr<devices::JoystickDeviceData> getMainJoystickData();
+	std::shared_ptr<devices::JoystickDeviceData> getPartnerJoystickData();
 
 	//////////////////////////////////////////////////////////////
 	///////////////////////// Digital IO /////////////////////////
 	//////////////////////////////////////////////////////////////
 
-	/**
-	 * @brief Update the digital io ports.
-	 *
-	 * @param digital_io
-	 */
 	void setDigitalIO(const std::vector<bool>& digital_io);
-
-	/**
-	 * @brief Get values of digital io ports.
-	 *
-	 * @return const std::vector<bool>&
-	 */
 	const std::vector<bool>& getDigitalIO() const;
 
 	/////////////////////////////////////////////////////////
@@ -316,20 +276,6 @@ public:
 		throwOnNonexistentDevice(device_name);
 		return device_pair_name_map_.at(device_name).data_ptr->clone()->as<T>();
 	}
-
-	/**
-	 * @brief Returns Device Data for Primary Joystick
-	 *
-	 * @return std::shared_ptr<devices::JoystickDeviceData>
-	 */
-	std::shared_ptr<devices::JoystickDeviceData> getMainJoystickData();
-
-	/**
-	 * @brief Returns Device Data for Secondary Joystick.
-	 *
-	 * @return std::shared_ptr<devices::JoystickDeviceData>
-	 */
-	std::shared_ptr<devices::JoystickDeviceData> getPartnerJoystickData();
 
 	/////////////////////////////////////////////////////////////
 	/////////////////////// Serialization ///////////////////////

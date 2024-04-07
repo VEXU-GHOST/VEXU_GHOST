@@ -42,10 +42,10 @@ void zero_actuators(){
 		m.second->setMotorCommand(0.0, 0.0, 0.0, 0.0);
 	}
 
-	// Zero Pneumatics
-	for(int i = 0; i < 8; i++){
-		v5_globals::adi_ports[i].set_value(false);
-	}
+	// // Zero Pneumatics
+	// for(int i = 0; i < 8; i++){
+	// 	v5_globals::adi_ports[i].set_value(false);
+	// }
 	actuator_lock.unlock();
 }
 
@@ -165,6 +165,13 @@ void initialize(){
 				}
 				break;
 
+				case device_type_e::INERTIAL_SENSOR:
+				{
+					auto inertial_sensor_config_ptr = config_ptr->as<const InertialSensorDeviceConfig>();
+					v5_globals::imus[device_name] = std::make_shared<pros::Imu>(inertial_sensor_config_ptr->port);
+				}
+				break;
+
 				case device_type_e::JOYSTICK:
 					// Do nothing, these are initialized already
 				break;
@@ -193,6 +200,9 @@ void initialize(){
 		}
 
 		zero_actuators();
+		for(int i = 0; i < 8; i++){
+			v5_globals::adi_ports[i].set_value(false);
+		}
 		v5_globals::serial_node_ptr->initSerial();
 		pros::Task reader_thread(reader_loop, "reader thread");
 		pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");

@@ -1,6 +1,3 @@
-#include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
-#include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
-
 #include "ghost_util/math_util.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
@@ -28,6 +25,11 @@ RobotHardwareInterface::RobotHardwareInterface(std::shared_ptr<DeviceConfigMap> 
 			pair.data_ptr = std::make_shared<RotationSensorDeviceData>(
 				val->name,
 				pair.config_ptr->as<const RotationSensorDeviceConfig>()->serial_config);
+		}
+		else if(pair.config_ptr->type == device_type_e::INERTIAL_SENSOR){
+			pair.data_ptr = std::make_shared<InertialSensorDeviceData>(
+				val->name,
+				pair.config_ptr->as<const InertialSensorDeviceConfig>()->serial_config);
 		}
 		else if(pair.config_ptr->type == device_type_e::JOYSTICK){
 			pair.data_ptr = std::make_shared<JoystickDeviceData>(
@@ -295,6 +297,67 @@ float RobotHardwareInterface::getRotationSensorVelocityRPM(const std::string& se
 	}
 	else{
 		throw std::runtime_error(std::string("[RobotHardwareInterface::getRotationSensorAngleDegrees] Error: ") + sensor_name + " is not configured to send velocity data!");
+	}
+}
+
+float RobotHardwareInterface::getInertialSensorXRate(const std::string& sensor_name){
+	if(getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data){
+		return getDeviceData<InertialSensorDeviceData>(sensor_name)->x_rate;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getInertialSensorXRate] Error: ") + sensor_name + " is not configured to send gyro data!");
+	}
+}
+float RobotHardwareInterface::getInertialSensorYRate(const std::string& sensor_name){
+	if(getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data){
+		return getDeviceData<InertialSensorDeviceData>(sensor_name)->y_rate;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getInertialSensorYRate] Error: ") + sensor_name + " is not configured to send gyro data!");
+	}
+}
+float RobotHardwareInterface::getInertialSensorZRate(const std::string& sensor_name){
+	if(getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data){
+		return getDeviceData<InertialSensorDeviceData>(sensor_name)->z_rate;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getInertialSensorZRate] Error: ") + sensor_name + " is not configured to send gyro data!");
+	}
+}
+
+float RobotHardwareInterface::getInertialSensorXAccel(const std::string& sensor_name){
+	if(getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_accel_data){
+		return getDeviceData<InertialSensorDeviceData>(sensor_name)->x_accel;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getInertialSensorXAccel] Error: ") + sensor_name + " is not configured to send accel data!");
+	}
+}
+
+float RobotHardwareInterface::getInertialSensorYAccel(const std::string& sensor_name){
+	if(getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_accel_data){
+		return getDeviceData<InertialSensorDeviceData>(sensor_name)->y_accel;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getInertialSensorYAccel] Error: ") + sensor_name + " is not configured to send accel data!");
+	}
+}
+
+float RobotHardwareInterface::getInertialSensorZAccel(const std::string& sensor_name){
+	if(getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_accel_data){
+		return getDeviceData<InertialSensorDeviceData>(sensor_name)->z_accel;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getInertialSensorZAccel] Error: ") + sensor_name + " is not configured to send accel data!");
+	}
+}
+
+float RobotHardwareInterface::getInertialSensorHeading(const std::string& sensor_name){
+	if(getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_heading_data){
+		return getDeviceData<InertialSensorDeviceData>(sensor_name)->heading;
+	}
+	else{
+		throw std::runtime_error(std::string("[RobotHardwareInterface::getInertialSensorHeading] Error: ") + sensor_name + " is not configured to send heading data!");
 	}
 }
 

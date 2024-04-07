@@ -92,6 +92,12 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 			}
 			break;
 
+			case device_type_e::INERTIAL_SENSOR:
+			{
+				continue;
+			}
+			break;
+
 			case device_type_e::JOYSTICK:
 			{
 				continue;
@@ -183,6 +189,27 @@ void V5SerialNode::writeV5StateUpdate(){
 		rotation_sensor_data_ptr->position = ((float) device->get_position()) / 100.0;
 		rotation_sensor_data_ptr->velocity = ((float) device->get_velocity()) / 100.0;
 		hardware_interface_ptr_->setDeviceData(rotation_sensor_data_ptr);
+	}
+
+	// Inertial Sensors
+	for(const auto& [name, device] : v5_globals::imus){
+		auto inertial_sensor_data_ptr = hardware_interface_ptr_->getDeviceData<InertialSensorDeviceData>(name);
+
+		// Set Acceleration
+		auto accel_s = device->get_accel();
+		inertial_sensor_data_ptr->x_accel = accel_s.x;
+		inertial_sensor_data_ptr->y_accel = accel_s.y;
+		inertial_sensor_data_ptr->z_accel = accel_s.z;
+
+		// Set Angular Rates
+		auto gyro_s = device->get_gyro_rate();
+		inertial_sensor_data_ptr->x_rate = gyro_s.x;
+		inertial_sensor_data_ptr->y_rate = gyro_s.y;
+		inertial_sensor_data_ptr->z_rate = gyro_s.z;
+
+		// Set Heading
+		inertial_sensor_data_ptr->heading = (float) device->get_heading();
+		hardware_interface_ptr_->setDeviceData(inertial_sensor_data_ptr);
 	}
 
 	serial_base_interface_->writeMsgToSerial(hardware_interface_ptr_->serialize().data(), sensor_update_msg_len_);

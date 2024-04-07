@@ -6,12 +6,15 @@
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
 
+#include "ghost_msgs/msg/robot_trajectory.hpp"
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "ghost_msgs/msg/robot_trajectory.hpp"
+#include <ghost_msgs/srv/start_recorder.hpp>
+#include <ghost_msgs/srv/stop_recorder.hpp>
 
-#include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 #include <ghost_planners/robot_trajectory.hpp>
+#include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 
 namespace ghost_ros_interfaces {
 
@@ -100,10 +103,12 @@ protected:
 	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 	std::unordered_map<std::string, ghost_planners::RobotTrajectory::MotorTrajectory> trajectory_motor_map_;
 	double trajectory_start_time_;
-	
+	// Auton Button
+	double m_auton_start_time = 0.0;
+
 	double getTimeFromStart() const;
 	// void update_motor_commands(double time);
-	std::unordered_map<std::string, double> get_commands(double time);
+	std::unordered_map<std::string, double> get_commands(double time) const;
 
 private:
 	void loadRobotHardwareInterface();
@@ -117,6 +122,10 @@ private:
 	rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_sub_;
 	rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_pub_;
 	rclcpp::Subscription<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_sub_;
+
+	// Service Clients
+	rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
+	rclcpp::Client<ghost_msgs::srv::StopRecorder>::SharedPtr m_stop_recorder_client;
 
 	std::chrono::time_point<std::chrono::system_clock> start_time_;
 };

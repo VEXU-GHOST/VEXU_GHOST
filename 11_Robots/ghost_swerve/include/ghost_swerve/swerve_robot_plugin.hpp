@@ -7,12 +7,14 @@
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <ghost_msgs/msg/drivetrain_command.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
+#include <ghost_msgs/srv/start_recorder.hpp>
+#include <ghost_msgs/srv/stop_recorder.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include <ghost_autonomy/run_tree.hpp>
+#include <ghost_swerve/swerve_tree.hpp>
 
 namespace ghost_swerve {
 
@@ -39,8 +41,12 @@ protected:
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
 
 	// Subscribers
-	void poseUpdateCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
-	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_robot_pose_sub;
+	void poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+	rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
+
+	// Service Clients
+	rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
+	rclcpp::Client<ghost_msgs::srv::StopRecorder>::SharedPtr m_stop_recorder_client;
 
 	// Swerve Model
 	void updateDrivetrainMotors();
@@ -48,11 +54,10 @@ protected:
 
 	// Autonomy
 	std::string bt_path_;
-	std::shared_ptr<RunTree> bt_;
+	std::shared_ptr<SwerveTree> bt_;
 
 	// Motion Planner
-	double m_move_to_pose_kp_x = 0.0;
-	double m_move_to_pose_kp_y = 0.0;
+	double m_move_to_pose_kp_xy = 0.0;
 	double m_move_to_pose_kp_theta = 0.0;
 
 	// Odometry
@@ -81,6 +86,7 @@ protected:
 	// Claw
 	bool m_claw_btn_pressed = false;
 	bool m_claw_open = false;
+	bool claw_auto_extended = false;
 
 	// Tail
 	bool m_tail_btn_pressed = false;
@@ -89,10 +95,43 @@ protected:
 	// Climb Mode
 	bool m_climb_mode_btn_pressed = false;
 	bool m_climb_mode = false;
+	double lift_target;
+
 
 	// Stick Mode
-	bool m_tail_mode_btn_pressed = false;
 	bool m_tail_mode = false;
+
+	// Bag Recorder
+	bool m_recording_btn_pressed = false;
+	bool m_recording = false;
+
+	// Field vs Robot Oriented Control
+	bool m_toggle_swerve_field_control_btn_pressed = false;
+
+	// Auton Button
+	double m_auton_start_time = 0.0;
+
+	// Angle vs Velocity Control
+	bool m_toggle_swerve_angle_control_btn_pressed = false;
+	bool m_swerve_angle_control = false;
+	double m_angle_target = 0.0;
+	double m_joy_angle_control_threshold = 0.0;
+
+	// Slew Rate Control
+	double m_joystick_slew_rate = 2.0;
+	double m_last_x_cmd = 0.0;
+	double m_last_y_cmd = 0.0;
+	double m_last_theta_cmd = 0.0;
+	double m_curr_x_cmd = 0.0;
+	double m_curr_y_cmd = 0.0;
+	double m_curr_theta_cmd = 0.0;
+
+	// Skills mode
+	bool m_toggle_skills_control_btn_pressed = false;
+	bool m_skills_control = false;
+	bool m_auton_button_pressed = false;
+	int m_auton_index = 0;
+	bool m_teleop_started = false;
 };
 
 } // namespace ghost_swerve
