@@ -134,6 +134,11 @@ protected:
 	bool m_auton_button_pressed = false;
 	int m_auton_index = 0;
 	bool m_teleop_started = false;
+
+	// Burnout Prevention
+	float m_burnout_RPM_threshold;
+	float m_burnout_dist_threshold;
+	float m_last_intake_position;
 };
 
 } // namespace ghost_swerve
