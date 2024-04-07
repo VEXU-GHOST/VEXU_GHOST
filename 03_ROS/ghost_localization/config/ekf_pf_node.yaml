@@ -5,7 +5,7 @@ ekf_pf_node:
   ros__parameters:
     particle_filter:
       world_frame: "odom"
-      map: "/home/melcruz/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      # map: "/home/melcruz/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0
