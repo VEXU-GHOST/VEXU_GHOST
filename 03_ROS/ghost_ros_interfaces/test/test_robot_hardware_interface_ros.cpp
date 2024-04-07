@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "yaml-cpp/yaml.h"
 
+#include <ghost_util/test_util.hpp>
+
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
@@ -14,6 +16,7 @@
 
 using namespace ghost_ros_interfaces::msg_helpers;
 using namespace ghost_ros_interfaces;
+using namespace ghost_util;
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::test_util;
 using namespace ghost_v5_interfaces::util;

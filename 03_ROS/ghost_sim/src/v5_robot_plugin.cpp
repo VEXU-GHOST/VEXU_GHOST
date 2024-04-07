@@ -17,8 +17,11 @@
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_encoder_state.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
+#include "sensor_msgs/msg/joy.hpp"
 
+#include "ghost_common/util/angle_util.hpp"
 #include "ghost_common/util/parsing_util.hpp"
+
 #include "ghost_common/v5_robot_config_defs.hpp"
 
 #include "ghost_control/models/dc_motor_model.hpp"
@@ -44,20 +47,40 @@ public:
 	// Gazebo Ptrs
 	gazebo::physics::ModelPtr model_;
 
+	// Time object
+	rclcpp::Clock clock_;
+
 	// Parameter Vectors
 	std::vector<std::string> motor_names_;
 	std::vector<std::string> encoder_names_;
 	std::vector<std::string> joint_names_;
 
 	// Incoming joint state data
-	std::vector<std::string> joint_msg_list_;
-	Eigen::VectorXd joint_positions_;
+	Eigen::VectorXd joint_angles_;
 	Eigen::VectorXd joint_velocities_;
 	Eigen::VectorXd joint_efforts_;
+	Eigen::VectorXd joint_cmd_torques_;
+
+	// Incoming high level motor state data
+	Eigen::VectorXd motor_positions_;
+	Eigen::VectorXd motor_velocities_;
+	Eigen::VectorXd motor_efforts_;
 
 	// Outgoing encoder data
-	Eigen::VectorXf encoder_vel_data_;
-	ghost_msgs::msg::V5EncoderState encoder_msg_;
+	Eigen::VectorXd encoder_positions_;
+	Eigen::VectorXd encoder_velocities_;
+
+	// Motor Controller Gains
+	double feedforward_voltage_gain_ = 1.0;
+	double feedforward_velocity_gain_ = 1.0;
+	double velocity_gain_ = 15.0;
+	double position_gain_ = 0.0;
+	double nominal_voltage_;
+
+	// Note that the float32 torque_nm parameter of this msg type is ignored since
+	// torques can only be applied not measured in Gazebo
+	std::array<ghost_msgs::msg::V5EncoderState, 21> encoder_msg_;
+	ghost_msgs::msg::V5SensorUpdate sensor_msg_;
 
 	std::unordered_map<std::string, std::shared_ptr<DCMotorModel> > motor_model_map_;
 	std::unordered_map<std::string, std::shared_ptr<MotorController> > motor_controller_map_;
@@ -71,6 +94,15 @@ public:
 	rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
 
 	std::mutex actuator_update_callback_mutex;
+
+	// node for simulator joystick commands
+	rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joystick_command_sub_;
+	ghost_msgs::msg::V5Joystick joystick_msg_;
+
+	// Constants
+	// float DEG_TO_RAD = M_PI / 180;
+	// float RAD_TO_DEG = 180 / M_PI;
+	float RADS_TO_RPM = (0.5 * 60) / (M_PI);
 };
 
 V5RobotPlugin::V5RobotPlugin() :
@@ -117,6 +149,30 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 			}
 		});
 
+	impl_->joystick_command_sub_ = impl_->ros_node_->create_subscription<sensor_msgs::msg::Joy>(
+		"/joy",
+		10,
+		[this](const sensor_msgs::msg::Joy::SharedPtr msg){
+			impl_->joystick_msg_.joystick_left_x = msg->axes[0];
+			impl_->joystick_msg_.joystick_left_y = msg->axes[1];
+			impl_->joystick_msg_.joystick_right_x = msg->axes[2];
+			impl_->joystick_msg_.joystick_right_y = msg->axes[3];
+
+			impl_->joystick_msg_.btn_x = msg->buttons[0];
+			impl_->joystick_msg_.btn_a = msg->buttons[1];
+			impl_->joystick_msg_.btn_b = msg->buttons[2];
+			impl_->joystick_msg_.btn_y = msg->buttons[3];
+			impl_->joystick_msg_.btn_l1 = msg->buttons[4];
+			impl_->joystick_msg_.btn_r1 = msg->buttons[5];
+			impl_->joystick_msg_.btn_l2 = msg->buttons[6];
+			impl_->joystick_msg_.btn_r2 = msg->buttons[7];
+
+			impl_->joystick_msg_.btn_left = std::max(0,int(msg->axes[4]));
+			impl_->joystick_msg_.btn_right = std::max(0,-int(msg->axes[4]));
+			impl_->joystick_msg_.btn_up = std::max(0,int(msg->axes[5]));
+			impl_->joystick_msg_.btn_down = std::max(0,-int(msg->axes[5]));
+		});
+
 	// Initialize ROS Publishers
 	impl_->sensor_update_pub_ = impl_->ros_node_->create_publisher<ghost_msgs::msg::V5SensorUpdate>(
 		"v5/sensor_update",
@@ -143,6 +199,12 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 	impl_->motor_names_ = ghost_common::getVectorFromString<std::string>(sdf->GetElement("motor_names")->Get<std::string>(), ' ');
 	impl_->encoder_names_ = ghost_common::getVectorFromString<std::string>(sdf->GetElement("encoder_names")->Get<std::string>(), ' ');
 
+	// Define eigen vector sizes using number of joints
+	impl_->joint_angles_.resize(impl_->joint_names_.size());
+	impl_->joint_velocities_.resize(impl_->joint_names_.size());
+	impl_->joint_efforts_.resize(impl_->joint_names_.size());
+	impl_->encoder_velocities_.resize(impl_->encoder_names_.size());
+
 	std::vector<double> actuator_jacobian_temp = ghost_common::getVectorFromString<double>(sdf->GetElement("actuator_jacobian")->Get<std::string>(), ' ');
 	std::vector<double> sensor_jacobian_temp = ghost_common::getVectorFromString<double>(sdf->GetElement("sensor_jacobian")->Get<std::string>(), ' ');
 
@@ -168,6 +230,8 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 	std::cout << "[V5 Robot Plugin] Sensor Jacobian: \n"
 	          << impl_->sensor_jacobian_ << std::endl;
 
+
+	std::cout << "reading motor names in constructor" << std::endl;
 	// // Instantiate Motor Models and Motor Controllers for each motor
 	for(const std::string &name : impl_->motor_names_){
 		//     // Get config from global definitions
@@ -179,10 +243,12 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 				config.motor__stall_torque,
 				config.motor__free_current,
 				config.motor__stall_current,
-				config.motor__max_voltage,
+				config.motor__max_voltage, // TODO: max voltage is nominal voltage?
 				config.motor__gear_ratio);
 
 			impl_->motor_controller_map_[name] = std::make_shared<MotorController>(config);
+
+			impl_->nominal_voltage_ = config.motor__max_voltage;
 		}
 		catch(const std::exception& e){
 			throw(std::runtime_error("[V5 Robot Plugin] Error: Motor Name <" + name + ">"));
@@ -193,67 +259,151 @@ void V5RobotPlugin::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf){
 	// iteration. Remove this call, the connection and the callback if not needed.
 	impl_->update_connection_ = gazebo::event::Events::ConnectWorldUpdateBegin(
 		std::bind(&V5RobotPlugin::OnUpdate, this));
+
+	// initialize joystick msg
+	impl_->sensor_msg_.joystick_msg.joystick_left_x = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_left_y = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_right_x = 0.0;
+	impl_->sensor_msg_.joystick_msg.joystick_right_y = 0.0;
+
+	impl_->sensor_msg_.joystick_msg.btn_a = false;
+	impl_->sensor_msg_.joystick_msg.btn_b = false;
+	impl_->sensor_msg_.joystick_msg.btn_x = false;
+	impl_->sensor_msg_.joystick_msg.btn_y = false;
+	impl_->sensor_msg_.joystick_msg.btn_up = false;
+	impl_->sensor_msg_.joystick_msg.btn_down = false;
+	impl_->sensor_msg_.joystick_msg.btn_left = false;
+	impl_->sensor_msg_.joystick_msg.btn_right = false;
+	impl_->sensor_msg_.joystick_msg.btn_l1 = false;
+	impl_->sensor_msg_.joystick_msg.btn_l2 = false;
+	impl_->sensor_msg_.joystick_msg.btn_r1 = false;
+	impl_->sensor_msg_.joystick_msg.btn_r2 = false;
+
+	impl_->joystick_msg_ = impl_->sensor_msg_.joystick_msg;
 }
 
 void V5RobotPlugin::jointToEncoderTransform(){
+	impl_->encoder_positions_ = impl_->sensor_jacobian_.completeOrthogonalDecomposition().pseudoInverse() * impl_->joint_angles_;
+	impl_->encoder_velocities_ = impl_->sensor_jacobian_.completeOrthogonalDecomposition().pseudoInverse() * impl_->joint_velocities_;
+}
+
+Eigen::VectorXd V5RobotPlugin::motorToJointTransform(const Eigen::VectorXd& motor_data){
+	// Actuator Jacobian 6X8 rad/s
+	// Motor Data 6X1 RPM
+	auto joint_data = impl_->actuator_jacobian_.transpose() * motor_data * impl_->RADS_TO_RPM;
+
+	return joint_data;
+}
+
+Eigen::VectorXd V5RobotPlugin::jointToMotorTransform(const Eigen::VectorXd& joint_data){
+	// Actuator Jacobian 6X8
+	// Joint Data 6X1
+	auto motor_data = impl_->actuator_jacobian_.inverse() * joint_data;
+	return motor_data;
+}
+
+void V5RobotPlugin::wrapEncoderMsg(){
 	int col_index = 0;
-	// Lamda for-each expression to get encoder values for every joint
-	for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](const std::string &joint_data){
-			// Get iterator that points to corresponding joint name in joint_names_
-			auto joint_name_itr = find(impl_->joint_names_.begin(), impl_->joint_names_.end(), joint_data);
 
-			// Convert iterator to index
-			size_t jacobian_row_index = distance(begin(impl_->joint_names_), joint_name_itr);
+	for_each(begin(impl_->encoder_names_), end(impl_->encoder_names_), [&](const std::string &encoder_name){
+			auto encoder_vel_data = impl_->encoder_velocities_;
+			auto encoder_pos_data = impl_->encoder_positions_;
+			impl_->encoder_msg_[col_index].device_name = encoder_name;
+			impl_->encoder_msg_[col_index].device_id = 1;
+			impl_->encoder_msg_[col_index].device_connected = true;
+			impl_->encoder_msg_[col_index].position_degrees = encoder_pos_data(col_index);
+			impl_->encoder_msg_[col_index].velocity_rpm = encoder_vel_data(col_index);
+			impl_->encoder_msg_[col_index].torque_nm = 0.0;
+			impl_->encoder_msg_[col_index].voltage_mv = 0.0;
+			impl_->encoder_msg_[col_index].current_ma = 0.0;
+			impl_->encoder_msg_[col_index].power_w = 0.0;
+			impl_->encoder_msg_[col_index].temp_c = 0.0;
 
-			// impl_->encoder_vel_data_[col_index] = impl_->model_->GetJoint(joint_data)->Position() * impl_->sensor_jacobian_(jacobian_row_index, col_index);
 			col_index++;
-			impl_->encoder_msg_ = this->wrapEncoderMsg(col_index);
 		});
 }
 
-ghost_msgs::msg::V5EncoderState V5RobotPlugin::wrapEncoderMsg(const int col_index){
-	auto msg = ghost_msgs::msg::V5EncoderState();
-	msg.device_name = impl_->encoder_names_[col_index];
-	msg.device_id = 1;
-	msg.device_connected = true;
-	msg.position_degrees = 30.0;
-	// msg.position_degrees = (encoder_vel_data_[col_index] - last_encoder_vel_data_[col_index]) * dt;
-	msg.velocity_rpm = impl_->encoder_vel_data_(col_index);
-	msg.torque_nm = 0.0;
-	msg.voltage_mv = 0.0;
-	msg.current_ma = 0.0;
-	msg.power_w = 0.0;
-	msg.temp_c = 0.0;
+void V5RobotPlugin::populateSensorMsg(){
+	impl_->sensor_msg_.header.stamp = impl_->clock_.now();
+	impl_->sensor_msg_.header.frame_id = "base";
+	impl_->sensor_msg_.msg_id = 1;
+	impl_->sensor_msg_.encoders = impl_->encoder_msg_;
 
-	return msg;
+	// hardware parameters
+	impl_->sensor_msg_.digital_port_vector[8] = (false, false, false, false, false, false, false, false);
+
+	impl_->sensor_msg_.joystick_msg = impl_->joystick_msg_;
 }
 
-ghost_msgs::msg::V5SensorUpdate V5RobotPlugin::populateSensorMsg(){
-	auto msg = ghost_msgs::msg::V5SensorUpdate();
-	// msg.header =;
-	// msg.msg_id = 1;
-	// msg.encoders =
-
-	return msg;
-}
-
-void V5RobotPlugin::getJointStates(){
+// Preserves order of joints listed in xacro
+void V5RobotPlugin::updateJointStates(){
 	int index = 0;
 	// Lamda for-each expression to get encoder values for every joint
-	for_each(begin(impl_->joint_msg_list_), end(impl_->joint_msg_list_), [&](const std::string &joint_name){
-			impl_->joint_positions_(index) = impl_->model_->GetJoint(joint_name)->Position(2);
-			impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
-			impl_->joint_efforts_(index) = impl_->model_->GetJoint(joint_name)->GetForce(2);
-			index++;
+	for_each(begin(impl_->joint_names_), end(impl_->joint_names_), [&](const std::string &joint_name){
+			try{
+				impl_->joint_angles_(index) = fmod(impl_->model_->GetJoint(joint_name)->Position(2) * ghost_common::RAD_TO_DEG, 360);
+				impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
+				index++;
+			}
+			catch(const std::exception& e){
+				// What type exception does GetJoint return
+				throw(std::runtime_error("[V5 Robot Plugin] Error: GetJoint passed non-existent joint name <" + joint_name + ">."));
+			}
 		});
+}
+
+void V5RobotPlugin::updateMotorController(){
+	int motor_index = 0;
+	// Defined to avoid out of bounds indexing
+	Eigen::VectorXd motor_torques = Eigen::VectorXd::Zero(impl_->motor_names_.size());
+	Eigen::VectorXd motor_angles = this->jointToMotorTransform(impl_->joint_angles_);
+
+	Eigen::VectorXd motor_velocities = impl_->RADS_TO_RPM * this->jointToMotorTransform(impl_->joint_velocities_);
+	for(const std::string &name : impl_->motor_names_){
+		// Get V5 Motor Motor Model, and Motor Controller for each motor
+		auto motor_model_ptr = impl_->motor_model_map_.at(name);
+		auto motor_controller_ptr = impl_->motor_controller_map_.at(name);
+
+		// Wrap angle error
+		double angle_error = fmod(motor_controller_ptr->getPositionCommand(), 360) - motor_angles(motor_index);
+		double angle_sign = std::abs(angle_error) / angle_error;
+		angle_error = std::abs(angle_error) > 180 ? angle_sign * 360 - angle_error : angle_error;
+
+		// Update motor
+		motor_model_ptr->setMotorSpeedRPM(motor_velocities(motor_index));
+
+		// Calculate control inputs
+		float voltage_feedforward = motor_controller_ptr->getVoltageCommand() * impl_->nominal_voltage_ * 1000 * impl_->feedforward_voltage_gain_;
+		float velocity_feedforward = motor_controller_ptr->getVelocityCommand() * impl_->feedforward_velocity_gain_;
+		float velocity_feedback = (motor_controller_ptr->getVelocityCommand() - motor_velocities(motor_index)) * impl_->velocity_gain_;
+		float position_feedback = (angle_error) * impl_->position_gain_;
+
+		motor_model_ptr->setMotorEffortMillivolts(voltage_feedforward + velocity_feedforward + velocity_feedback + position_feedback);
+
+		motor_torques(motor_index) = motor_model_ptr->getTorqueOutput();
+		motor_index++;
+	}
+	impl_->joint_cmd_torques_ = this->motorToJointTransform(motor_torques);
+	// TODO: is interface to publish current joint torque the same as gz joint pid plugin?
+	// Nothing is publishing the output joint torques
+}
+
+void V5RobotPlugin::applySimJointTorques(){
+	int joint_index = 0;
+	for(const std::string &name : impl_->joint_names_){
+		auto link = impl_->model_->GetJoint(name)->GetJointLink(0);
+		// For simulatilon stability, only apply torque if larger than a threshhold
+		if(std::abs(impl_->joint_cmd_torques_(joint_index)) > 1e-5){
+			link->AddRelativeTorque(ignition::math::v6::Vector3d(0.0, 0.0, impl_->joint_cmd_torques_(joint_index)));
+			std::cout << name << " joint_torque: " << impl_->joint_cmd_torques_(joint_index) << std::endl;
+		}
+		joint_index++;
+	}
 }
 
 void V5RobotPlugin::OnUpdate(){
 	// Acquire msg update lock
 	std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
-
-	this->getJointStates();
-	std::cout << impl_->joint_positions_ << std::endl;
 
 	// 1) Populate Joint Position and Velocity Vectors
 	// 2) Process Sensor Update
@@ -271,14 +421,22 @@ void V5RobotPlugin::OnUpdate(){
 	//  3.7) Transform actuator torques to joint torques using  using Jacobian transpose
 	//  3.8) Update each joint in gazebo
 
-	// Converts joint data from Gazebo to encoder data using sensor jacobian matrix
+	this->updateJointStates();
+
+	this->updateMotorController();
+
+	this->applySimJointTorques();
+
 	this->jointToEncoderTransform();
-	// sensor update pub publishes a sensor msg: wrap encoder_msg again to a sensor msg
-	// impl_->sensor_update_pub_->publish(impl_->encoder_msg_);
+
+	this->wrapEncoderMsg();
+
 	this->populateSensorMsg();
+
+	impl_->sensor_update_pub_->publish(impl_->sensor_msg_);
 }
 
 // Register this plugin with the simulator
 GZ_REGISTER_MODEL_PLUGIN(V5RobotPlugin)
 
-}       // namespace v5_robot_plugin
+}// namespace v5_robot_plugin
