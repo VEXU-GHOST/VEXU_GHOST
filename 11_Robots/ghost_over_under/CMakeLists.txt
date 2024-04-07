@@ -18,7 +18,6 @@ endforeach()
 # Tell any packages that depend on us what dependencies we need.
 ament_export_dependencies(${DEPENDENCIES})
 
-
 install(DIRECTORY
   config
   launch

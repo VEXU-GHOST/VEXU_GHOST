@@ -16,6 +16,7 @@ set(DEPENDENCIES
   ghost_msgs
   ghost_serial
   ghost_util
+  ghost_planners
   pluginlib
   rclcpp
   yaml-cpp
@@ -103,6 +104,50 @@ install(
   INCLUDES DESTINATION include
 )
 
+# Timer Service
+add_executable(timer_service
+  src/timer/timer_service.cpp
+)
+ament_target_dependencies(timer_service
+  ${DEPENDENCIES}
+)
+target_include_directories(timer_service
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  timer_service
+  DESTINATION lib/${PROJECT_NAME})
+  
+add_executable(start_timer_client
+  src/timer/start_timer_client.cpp
+)
+ament_target_dependencies(start_timer_client
+  ${DEPENDENCIES}
+)
+target_include_directories(start_timer_client
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  start_timer_client
+  DESTINATION lib/${PROJECT_NAME})
+  
+add_executable(check_timer_client
+  src/timer/check_timer_client.cpp
+)
+ament_target_dependencies(check_timer_client
+  ${DEPENDENCIES}
+)
+target_include_directories(check_timer_client
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  check_timer_client
+  DESTINATION lib/${PROJECT_NAME})
+
+
 # Competition State Machine Node
 add_executable(competition_state_machine_node
   src/competition/competition_state_machine_node.cpp
@@ -120,6 +165,49 @@ target_include_directories(competition_state_machine_node
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
   competition_state_machine_node
+  DESTINATION lib/${PROJECT_NAME})
+
+# Bag Recorder Nodes
+add_executable(bag_recorder_service
+  src/bag_recorder/bag_recorder_service.cpp
+)
+ament_target_dependencies(bag_recorder_service
+  ${DEPENDENCIES}
+)
+target_include_directories(bag_recorder_service
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  bag_recorder_service
+  DESTINATION lib/${PROJECT_NAME})
+  
+add_executable(start_bag_recorder_client
+  src/bag_recorder/start_bag_recorder_client.cpp
+)
+ament_target_dependencies(start_bag_recorder_client
+  ${DEPENDENCIES}
+)
+target_include_directories(start_bag_recorder_client
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  start_bag_recorder_client
+  DESTINATION lib/${PROJECT_NAME})
+  
+add_executable(stop_bag_recorder_client
+  src/bag_recorder/stop_bag_recorder_client.cpp
+)
+ament_target_dependencies(stop_bag_recorder_client
+  ${DEPENDENCIES}
+)
+target_include_directories(stop_bag_recorder_client
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  stop_bag_recorder_client
   DESTINATION lib/${PROJECT_NAME})
   
 #################

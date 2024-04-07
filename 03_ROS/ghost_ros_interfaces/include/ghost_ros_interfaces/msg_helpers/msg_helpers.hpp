@@ -1,11 +1,15 @@
+#include <ghost_planners/robot_trajectory.hpp>
+#include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
+#include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/msg/v5_actuator_command.hpp>
 #include <ghost_msgs/msg/v5_device_header.hpp>
+#include <ghost_msgs/msg/v5_inertial_sensor_state.hpp>
 #include <ghost_msgs/msg/v5_joystick_state.hpp>
 #include <ghost_msgs/msg/v5_motor_command.hpp>
 #include <ghost_msgs/msg/v5_motor_state.hpp>
@@ -108,6 +112,24 @@ void toROSMsg(const ghost_v5_interfaces::devices::RotationSensorDeviceData& rota
  */
 void fromROSMsg(ghost_v5_interfaces::devices::RotationSensorDeviceData& rotation_sensor_data, const ghost_msgs::msg::V5RotationSensorState& rotation_sensor_msg);
 
+// Inertial Sensor
+
+/**
+ * @brief Copies inertial sensor state data from a InertialSensorDeviceData object into a V5InertialSensorState msg.
+ *
+ * @param inertial_sensor_data
+ * @param inertial_sensor_msg
+ */
+void toROSMsg(const ghost_v5_interfaces::devices::InertialSensorDeviceData& inertial_sensor_data, ghost_msgs::msg::V5InertialSensorState& inertial_sensor_msg);
+
+/**
+ * @brief Copies inertial sensor state data from a V5InertialSensorState msg into a InertialSensorDeviceData object.
+ *
+ * @param inertial_sensor_data
+ * @param inertial_sensor_msg
+ */
+void fromROSMsg(ghost_v5_interfaces::devices::InertialSensorDeviceData& inertial_sensor_data, const ghost_msgs::msg::V5InertialSensorState& inertial_sensor_msg);
+
 // Aggregate Actuator Command
 
 /**
@@ -149,6 +171,20 @@ void toROSMsg(const ghost_v5_interfaces::RobotHardwareInterface& hardware_interf
  * @param sensor_update_msg
  */
 void fromROSMsg(ghost_v5_interfaces::RobotHardwareInterface& hardware_interface, const ghost_msgs::msg::V5SensorUpdate& sensor_update_msg);
+
+// /**
+//  * @brief Copies trajectory data from a RobotTrajectory msg into all listed devices within a RobotTrajectory object
+//  *
+//  * Note: ROS2 Time requires a node, and thus we can't extract or set the Header msg time from a utility function.
+//  * If you want the msg timing to be correct, you need to do it yourself from your ROS Node.
+//  *
+//  * @param robot_trajectory
+//  * @param robot_trajectory_msg
+//  */
+void fromROSMsg(ghost_planners::RobotTrajectory& robot_trajectory, const ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg);
+void fromROSMsg(ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, const ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg);
+void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg);
+void toROSMsg(const ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg);
 
 } // namespace msg_helpers
 

@@ -40,9 +40,9 @@ JetsonV5SerialNode::JetsonV5SerialNode() :
 
 	// Load Robot Configuration
 	auto device_config_map = loadRobotConfigFromYAMLFile(robot_config_yaml_path);
-	robot_hardware_interface_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map, hardware_type_e::COPROCESSOR);
-	actuator_command_msg_len_ = robot_hardware_interface_ptr_->getActuatorCommandMsgLength();
-	sensor_update_msg_len_ = robot_hardware_interface_ptr_->getSensorUpdateMsgLength();
+	rhi_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map, hardware_type_e::COPROCESSOR);
+	actuator_command_msg_len_ = rhi_ptr_->getActuatorCommandMsgLength();
+	sensor_update_msg_len_ = rhi_ptr_->getSensorUpdateMsgLength();
 	sensor_update_msg_ = std::vector<unsigned char>(sensor_update_msg_len_, 0);
 
 	// Debug Info
@@ -174,9 +174,9 @@ void JetsonV5SerialNode::actuatorCommandCallback(const ghost_msgs::msg::V5Actuat
 		return;
 	}
 
-	fromROSMsg(*robot_hardware_interface_ptr_, *msg);
+	fromROSMsg(*rhi_ptr_, *msg);
 
-	auto msg_buffer = robot_hardware_interface_ptr_->serialize();
+	auto msg_buffer = rhi_ptr_->serialize();
 
 	serial_base_interface_->writeMsgToSerial(msg_buffer.data(), actuator_command_msg_len_);
 }
@@ -185,7 +185,7 @@ void JetsonV5SerialNode::publishV5SensorUpdate(const std::vector<unsigned char>&
 	RCLCPP_DEBUG(get_logger(), "Publishing Sensor Update");
 
 	// Update hardware interface
-	robot_hardware_interface_ptr_->deserialize(buffer);
+	rhi_ptr_->deserialize(buffer);
 
 	// Initialize msg and set time
 	ghost_msgs::msg::V5SensorUpdate sensor_update_msg{};
@@ -193,7 +193,7 @@ void JetsonV5SerialNode::publishV5SensorUpdate(const std::vector<unsigned char>&
 	sensor_update_msg.header.stamp = curr_ros_time;
 
 	// Convert updated RHI to msg
-	toROSMsg(*robot_hardware_interface_ptr_, sensor_update_msg);
+	toROSMsg(*rhi_ptr_, sensor_update_msg);
 
 	// Publish update
 	sensor_update_pub_->publish(sensor_update_msg);

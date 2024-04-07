@@ -1,8 +1,10 @@
 #include <ghost_util/yaml_utils.hpp>
+#include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
+#include <ghost_v5_interfaces/util/load_inertial_sensor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_motor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_rotation_sensor_device_config_yaml.hpp>
 
@@ -67,13 +69,25 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 
 			case device_type_e::ROTATION_SENSOR:
 			{
-				// Load motor config (or default if not specified)
+				// Load rotation sensor config (or default if not specified)
 				auto rotation_sensor_config_ptr = std::make_shared<RotationSensorDeviceConfig>();
 				std::string device_config_name;
 				if(loadYAMLParam(device_yaml_node, "config", device_config_name, verbose)){
 					loadRotationSensorDeviceConfigFromYAML(node["port_configuration"], device_name, rotation_sensor_config_ptr);
 				}
 				device_config_base_ptr = rotation_sensor_config_ptr;
+			}
+			break;
+
+			case device_type_e::INERTIAL_SENSOR:
+			{
+				// Load inertial sensor config (or default if not specified)
+				auto inertial_sensor_config_ptr = std::make_shared<InertialSensorDeviceConfig>();
+				std::string device_config_name;
+				if(loadYAMLParam(device_yaml_node, "config", device_config_name, verbose)){
+					loadInertialSensorDeviceConfigFromYAML(node["port_configuration"], device_name, inertial_sensor_config_ptr);
+				}
+				device_config_base_ptr = inertial_sensor_config_ptr;
 			}
 			break;
 
@@ -215,6 +229,20 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			output_file << "\t" + sensor_name + "->" + "serial_config.send_angle_data = " + std::to_string(config_ptr->serial_config.send_angle_data) + ";\n";
 			output_file << "\t" + sensor_name + "->" + "serial_config.send_position_data = " + std::to_string(config_ptr->serial_config.send_position_data) + ";\n";
 			output_file << "\t" + sensor_name + "->" + "serial_config.send_velocity_data = " + std::to_string(config_ptr->serial_config.send_velocity_data) + ";\n";
+			output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
+			output_file << "\n";
+		}
+		else if(val->type == device_type_e::INERTIAL_SENSOR){
+			auto config_ptr = val->as<const InertialSensorDeviceConfig>();
+			std::string sensor_name = config_ptr->name;
+
+			output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::InertialSensorDeviceConfig> " + sensor_name + " = std::make_shared<ghost_v5_interfaces::devices::InertialSensorDeviceConfig>();\n";
+			output_file << "\t" + sensor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+			output_file << "\t" + sensor_name + "->" + "name = \"" + sensor_name + "\";\n";
+			output_file << "\t" + sensor_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::INERTIAL_SENSOR;\n";
+			output_file << "\t" + sensor_name + "->" + "serial_config.send_accel_data = " + std::to_string(config_ptr->serial_config.send_accel_data) + ";\n";
+			output_file << "\t" + sensor_name + "->" + "serial_config.send_gyro_data = " + std::to_string(config_ptr->serial_config.send_gyro_data) + ";\n";
+			output_file << "\t" + sensor_name + "->" + "serial_config.send_heading_data = " + std::to_string(config_ptr->serial_config.send_heading_data) + ";\n";
 			output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
 			output_file << "\n";
 		}

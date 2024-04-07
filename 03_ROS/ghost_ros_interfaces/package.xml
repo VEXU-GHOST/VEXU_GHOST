@@ -12,6 +12,7 @@
   <depend>ghost_serial</depend>
   <depend>ghost_util</depend>
   <depend>ghost_msgs</depend>
+  <depend>ghost_planners</depend>
 
   <depend>pluginlib</depend>
   

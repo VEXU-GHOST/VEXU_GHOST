@@ -145,6 +145,29 @@ void fromROSMsg(RotationSensorDeviceData& rotation_sensor_data, const V5Rotation
 	rotation_sensor_data.velocity = rotation_sensor_msg.velocity;
 }
 
+void toROSMsg(const InertialSensorDeviceData& inertial_sensor_data, V5InertialSensorState& inertial_sensor_msg){
+	toROSMsg(inertial_sensor_data, inertial_sensor_msg.device_header); // Set device header
+	inertial_sensor_msg.x_accel = inertial_sensor_data.x_accel;
+	inertial_sensor_msg.y_accel = inertial_sensor_data.y_accel;
+	inertial_sensor_msg.z_accel = inertial_sensor_data.z_accel;
+	inertial_sensor_msg.x_rate = inertial_sensor_data.x_rate;
+	inertial_sensor_msg.y_rate = inertial_sensor_data.y_rate;
+	inertial_sensor_msg.z_rate = inertial_sensor_data.z_rate;
+	inertial_sensor_msg.heading = inertial_sensor_data.heading;
+}
+
+void fromROSMsg(InertialSensorDeviceData& inertial_sensor_data, const V5InertialSensorState& inertial_sensor_msg){
+	fromROSMsg(inertial_sensor_data, inertial_sensor_msg.device_header); // Set base attributes
+	inertial_sensor_data.x_accel = inertial_sensor_msg.x_accel;
+	inertial_sensor_data.y_accel = inertial_sensor_msg.y_accel;
+	inertial_sensor_data.z_accel = inertial_sensor_msg.z_accel;
+	inertial_sensor_data.x_rate = inertial_sensor_msg.x_rate;
+	inertial_sensor_data.y_rate = inertial_sensor_msg.y_rate;
+	inertial_sensor_data.z_rate = inertial_sensor_msg.z_rate;
+	inertial_sensor_data.heading = inertial_sensor_msg.heading;
+}
+
+
 void toROSMsg(const RobotHardwareInterface& hardware_interface, V5ActuatorCommand& actuator_cmd_msg){
 	actuator_cmd_msg.msg_id = hardware_interface.getMsgID();
 
@@ -161,6 +184,9 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5ActuatorComman
 			continue;
 		}
 		else if(device_data_ptr->type == device_type_e::JOYSTICK){
+			continue;
+		}
+		else if(device_data_ptr->type == device_type_e::INERTIAL_SENSOR){
 			continue;
 		}
 		else{
@@ -216,6 +242,12 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5SensorUpdate& 
 			toROSMsg(*rotation_data_ptr, msg);
 			sensor_update_msg.rotation_sensors.push_back(msg);
 		}
+		else if(device_data_ptr->type == device_type_e::INERTIAL_SENSOR){
+			V5InertialSensorState msg{};
+			auto inertial_data_ptr = device_data_ptr->as<InertialSensorDeviceData>();
+			toROSMsg(*inertial_data_ptr, msg);
+			sensor_update_msg.inertial_sensors.push_back(msg);
+		}
 		else if(device_data_ptr->type == device_type_e::JOYSTICK){
 			V5JoystickState msg{};
 			auto joy_data_ptr = device_data_ptr->as<JoystickDeviceData>();
@@ -267,8 +299,55 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5SensorUpdate
 		hardware_interface.setDeviceData(rotation_sensor_data_ptr);
 	}
 
+	// Inertial Sensors
+	for(const auto &inertial_sensor_msg : sensor_update_msg.inertial_sensors){
+		auto inertial_sensor_data_ptr = hardware_interface.getDeviceData<InertialSensorDeviceData>(inertial_sensor_msg.device_header.name);
+		fromROSMsg(*inertial_sensor_data_ptr, inertial_sensor_msg);
+		hardware_interface.setDeviceData(inertial_sensor_data_ptr);
+	}
+
 	// Digital IO
 	hardware_interface.setDigitalIO(sensor_update_msg.digital_io);
+}
+
+void fromROSMsg(ghost_planners::RobotTrajectory& robot_trajectory, const ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg){
+	robot_trajectory.motor_names = robot_trajectory_msg.motor_names;
+	robot_trajectory.motor_trajectories.clear();
+	robot_trajectory.motor_trajectories.reserve(robot_trajectory_msg.trajectories.size());
+	for(const auto& motor_trajectory_msg : robot_trajectory_msg.trajectories){
+		auto motor_trajectory_ptr = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
+		fromROSMsg(*motor_trajectory_ptr, motor_trajectory_msg);
+		robot_trajectory.add_trajectory(motor_trajectory_ptr);
+	}
+}
+
+void fromROSMsg(ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, const ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg){
+	motor_trajectory.time_vector = motor_trajectory_msg.time;
+	motor_trajectory.velocity_vector = motor_trajectory_msg.velocity;
+	motor_trajectory.voltage_vector = motor_trajectory_msg.voltage;
+	motor_trajectory.position_vector = motor_trajectory_msg.position;
+	motor_trajectory.torque_vector = motor_trajectory_msg.torque;
+}
+
+void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg){
+	std::cerr << "toROSMsg robot trajectory\n";
+	robot_trajectory_msg.motor_names = robot_trajectory.motor_names;
+	for(const auto& motor_trajectory : robot_trajectory.motor_trajectories){
+		std::cerr << "getting motor trajectory msg\n";
+		auto motor_trajectory_msg = std::make_shared<ghost_msgs::msg::MotorTrajectory>();
+		toROSMsg(motor_trajectory, *motor_trajectory_msg);
+		robot_trajectory_msg.trajectories.push_back(*motor_trajectory_msg);
+	}
+}
+
+void toROSMsg(const ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg){
+	std::cerr << "toROSMsg motor trajectory\n";
+	motor_trajectory_msg.position = motor_trajectory.position_vector;
+	motor_trajectory_msg.time = motor_trajectory.time_vector;
+	motor_trajectory_msg.torque = motor_trajectory.torque_vector;
+	motor_trajectory_msg.velocity = motor_trajectory.velocity_vector;
+	motor_trajectory_msg.voltage = motor_trajectory.voltage_vector;
+	std::cerr << "toROSMsg motor trajectory done\n";
 }
 
 } // namespace msg_helpers

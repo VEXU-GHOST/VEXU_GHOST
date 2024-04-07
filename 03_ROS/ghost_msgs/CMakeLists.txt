@@ -9,6 +9,7 @@ find_package(Ghost CONFIG REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 # Custom Msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -22,10 +23,18 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/device_msgs/states/V5JoystickState.msg"
   "msg/device_msgs/states/V5MotorState.msg"
   "msg/device_msgs/states/V5RotationSensorState.msg"
+  "msg/device_msgs/states/V5InertialSensorState.msg"
   "msg/V5ActuatorCommand.msg"
   "msg/V5SensorUpdate.msg"
+  "msg/DrivetrainCommand.msg"
+  "msg/MotorTrajectory.msg"
+  "msg/RobotTrajectory.msg"
   "srv/BroadcastJacobian.srv"
-  DEPENDENCIES std_msgs
+  "srv/StartRecorder.srv"
+  "srv/StopRecorder.srv"
+  "srv/StartTimer.srv"
+  "srv/CheckTimer.srv"
+  DEPENDENCIES std_msgs geometry_msgs
  )
 ament_export_dependencies(rosidl_default_runtime)
 

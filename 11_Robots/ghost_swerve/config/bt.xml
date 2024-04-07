@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+      main_tree_to_execute="test">
+  <BehaviorTree ID="main">
+    <Sequence>
+      <SwipeTail num_swipes="25"/>
+      <MoveToPose posX="0.43"
+                  posY="0.43"
+                  theta="45"
+                  threshold="0.025"
+                  timeout="10000"/>
+      <MoveToPose posX="0.28"
+                  posY="0.48"
+                  theta="-45"
+                  threshold="0.025"
+                  timeout="10000"/>
+      <ReactiveSequence>
+        <SetWing state="true"/>
+        <MoveToPose posX="0.50"
+                    posY="0.20"
+                    theta="-45"
+                    threshold="0.025"
+                    timeout="10000"/>
+      </ReactiveSequence>
+      <ReactiveSequence>
+        <SetWing state="true"/>
+        <MoveToPose posX="0.7"
+                    posY="0.15"
+                    theta="0"
+                    threshold="0.025"
+                    timeout="10000"/>
+      </ReactiveSequence>
+      <ReactiveSequence>
+        <SetWing state="true"/>
+        <MoveToPose posX="2.5"
+                    posY="0.10"
+                    theta="0"
+                    threshold="0.025"
+                    timeout="10000"/>
+      </ReactiveSequence>
+      <MoveToPose posX="0.9"
+                  posY="0.05"
+                  theta="0"
+                  threshold="0.025"
+                  timeout="10000"/>
+      <!-- <MoveToPose posX="0.6"
+                  posY="0.5"
+                  theta="0"
+                  threshold="0.025"
+                  timeout="10000"/> -->
+      <Logging message="Done"/>
+      <KeepRunningUntilFailure>
+        <CheckForRestart/>
+      </KeepRunningUntilFailure>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test">
+    <Sequence>
+      <!-- <SwipeTail num_swipes="5"/> -->
+      <MoveToPose posX="0.71"
+                  posY="0.0"
+                  theta="0"
+                  velX="0.20"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.05"
+                  angle_threshold="5"
+                  timeout="10000"/>
+      <MoveToPose posX="0.60"
+                  posY="0.60"
+                  theta="0"
+                  velX="-0.10"
+                  velY="0.20"
+                  omega="0.0"
+                  threshold="0.05"
+                  angle_threshold="5"
+                  timeout="10000"/>
+      <MoveToPose posX="0.40"
+                  posY="0.70"
+                  theta="-90"
+                  velX="-0.10"
+                  velY="0.20"
+                  omega="0.0"
+                  threshold="0.05"
+                  angle_threshold="5"
+                  timeout="10000"/>
+      <MoveToPose posX="0.4"
+                  posY="1.22"
+                  theta="-90"
+                  velX="0.0"
+                  velY="0.20"
+                  omega="0.0"
+                  threshold="0.05"
+                  angle_threshold="5"
+                  timeout="10000"/>
+      <MoveToPose posX="0.4"
+                  posY="0.65"
+                  theta="-90"
+                  velX="0.0"
+                  velY="-0.2"
+                  omega="0.0"
+                  threshold="0.05"
+                  angle_threshold="5"
+                  timeout="10000"/>
+      <KeepRunningUntilFailure>
+        <CheckForRestart/>
+      </KeepRunningUntilFailure>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="CheckForRestart"
+            editable="true"/>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPose"
+            editable="true">
+      <input_port name="posX">m</input_port>
+      <input_port name="posY">m</input_port>
+      <input_port name="theta">deg</input_port>
+      <input_port name="velX">m.s</input_port>
+      <input_port name="velY">m.s</input_port>
+      <input_port name="omega">deg.s</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+    </Action>
+    <Action ID="SetWing"
+            editable="true">
+      <input_port name="state"/>
+    </Action>
+    <Action ID="SwipeTail"
+            editable="true">
+      <input_port name="num_swipes"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

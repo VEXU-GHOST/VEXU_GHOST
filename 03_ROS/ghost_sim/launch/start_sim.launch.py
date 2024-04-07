@@ -35,7 +35,22 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[{'use_sim_time': False}, {"robot_description": doc}])
 
-    return [gazebo_ros, robot_state_publisher]
+    # Joystick (Only launched if joystick CLI arg is set to True)
+    joy_launch_description = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                ghost_sim_share_dir,
+                "launch",
+                "joystick.launch.py"
+            )
+        ),
+        condition=launch.conditions.IfCondition(LaunchConfiguration("use_joy")),
+        launch_arguments={
+            'channel_id': LaunchConfiguration("channel_id"),
+        }.items()
+    )
+
+    return [gazebo_ros, robot_state_publisher, joy_launch_description]
 
 
 def generate_launch_description():
@@ -45,9 +60,9 @@ def generate_launch_description():
     ghost_sim_share_dir = get_package_share_directory('ghost_sim')
 
     home_dir = os.path.expanduser('~')
-    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "ghost_ros")
+    ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros")
 
-    world_file = os.path.join(ghost_sim_share_dir, "urdf", "spin_up.world")
+    world_file = os.path.join(ghost_sim_share_dir, "world", "default.world")
     rviz_config_path = os.path.join(ghost_ros_share_dir, 'rviz/urdf_config.rviz')
 
     # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
@@ -69,6 +84,12 @@ def generate_launch_description():
         name='ground_truth_pose_publisher',
     )
 
+    v5_actuator_cmd_publisher = Node(
+        package='ghost_sim',
+        executable = 'test_publisher_v5_actuator_cmd',
+        name = 'test_publisher_v5_actuator_cmd',
+    )
+
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -77,43 +98,32 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
-    # Joystick (Only launched if joystick CLI arg is set to True)
-    joy_launch_description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                ghost_sim_share_dir,
-                "launch",
-                "joystick.launch.py"
-            )
-        ),
-        condition=launch.conditions.IfCondition(LaunchConfiguration("joystick"))
+    estimator_node = Node(
+        package='ghost_ros',
+        executable='ghost_estimator_node',
+        name='ghost_estimator_node',
+        output='screen',
+        parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
     )
 
-    # estimator_node = Node(
-    #     package='ghost_ros',
-    #     executable='ghost_estimator_node',
-    #     name='ghost_estimator_node',
-    #     output='screen',
-    #     parameters=[ghost_ros_base_dir + "/config/ghost_estimator_config.yaml"]
-    # )
-
-    # state_machine_node = Node(
-    #     package='ghost_ros',
-    #     executable='robot_state_machine_node',
-    #     name='ghost_state_machine_node',
-    #     output='screen',
-    #     parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
-    # )
+    state_machine_node = Node(
+        package='ghost_ros',
+        executable='robot_state_machine_node',
+        name='ghost_state_machine',
+        output='screen',
+        parameters=[ghost_ros_base_dir + "/config/ghost_state_machine_config.yaml"]
+    )
 
     return LaunchDescription([
-        DeclareLaunchArgument(name='joystick', default_value='false'),
+        DeclareLaunchArgument(name='use_joy', default_value='true'),
+        DeclareLaunchArgument(name='channel_id', default_value='1'),
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
         # ground_truth_publisher,
-        # rviz_node,
-        joy_launch_description,
+        rviz_node,
         # estimator_node,
-        # state_machine_node,
+        state_machine_node,
+        # v5_actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)
     ])

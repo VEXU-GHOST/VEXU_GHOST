@@ -125,6 +125,24 @@ TEST_F(TestAngleUtil, testSmallestAngleDistRad){
 	EXPECT_NEAR(0.4,    SmallestAngleDistRad(0.2, 2 * M_PI - 0.2), 0.01);
 }
 
+TEST_F(TestAngleUtil, testYawToQuaternionDeg){
+	double w, x, y, z;
+	yawToQuaternionDeg(45.0, w, x,y, z);
+	EXPECT_NEAR(w, 0.9238795, 1e-6);
+	EXPECT_NEAR(x, 0.0,1e-6);
+	EXPECT_NEAR(y, 0.0,1e-6);
+	EXPECT_NEAR(z, 0.3826834, 1e-6);
+}
+
+TEST_F(TestAngleUtil, testYawToQuaternionDegNegative){
+	double w, x, y, z;
+	yawToQuaternionDeg(-14.5, w, x,y, z);
+	EXPECT_NEAR(w, 0.9920049, 1e-6);
+	EXPECT_NEAR(x, 0.0,1e-6);
+	EXPECT_NEAR(y, 0.0,1e-6);
+	EXPECT_NEAR(z, -0.126199, 1e-6);
+}
+
 int main(int argc, char **argv) {
 	::testing::InitGoogleTest(&argc, argv);
 	return RUN_ALL_TESTS();

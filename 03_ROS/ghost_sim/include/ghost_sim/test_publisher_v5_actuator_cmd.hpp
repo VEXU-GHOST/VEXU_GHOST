@@ -33,6 +33,10 @@ public:
 
 	void publishData();
 	rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr output_pub_;
+	std::array<std::string, 8> motors_{"DRIVE_LEFT_FRONT_LEFT_MOTOR",
+		                           "DRIVE_LEFT_FRONT_RIGHT_MOTOR", "DRIVE_LEFT_BACK_LEFT_MOTOR", "DRIVE_LEFT_BACK_RIGHT_MOTOR",
+		                           "DRIVE_RIGHT_FRONT_LEFT_MOTOR", "DRIVE_RIGHT_FRONT_RIGHT_MOTOR", "DRIVE_RIGHT_BACK_LEFT_MOTOR",
+		                           "DRIVE_RIGHT_BACK_RIGHT_MOTOR"};
 	ghost_msgs::msg::V5MotorCommand populateMotorCmd(const int loop_index);
 
 	// private:
