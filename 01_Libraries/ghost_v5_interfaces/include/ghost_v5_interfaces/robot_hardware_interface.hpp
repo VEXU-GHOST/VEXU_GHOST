@@ -115,6 +115,7 @@ public:
 	 */
 	void setMotorPositionCommand(const std::string& motor_name, float position_cmd);
 
+	float getMotorCurrentMA(const std::string& motor_name);
 	float getMotorVelocityRPM(const std::string& motor_name);
 	void setMotorVelocityCommandRPM(const std::string& motor_name, float velocity_cmd);
 	void setMotorVoltageCommandPercent(const std::string& motor_name, float voltage_cmd);

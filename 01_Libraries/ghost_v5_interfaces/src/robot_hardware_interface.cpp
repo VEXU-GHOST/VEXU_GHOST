@@ -209,6 +209,9 @@ void RobotHardwareInterface::setDeviceData(std::shared_ptr<DeviceData> device_da
 float RobotHardwareInterface::getMotorPosition(const std::string& motor_name){
 	return getDeviceData<MotorDeviceData>(motor_name)->curr_position;
 }
+float RobotHardwareInterface::getMotorCurrentMA(const std::string& motor_name){
+	return getDeviceData<MotorDeviceData>(motor_name)->curr_current_ma;
+}
 float RobotHardwareInterface::getMotorVelocityRPM(const std::string& motor_name){
 	return getDeviceData<MotorDeviceData>(motor_name)->curr_velocity_rpm;
 }
