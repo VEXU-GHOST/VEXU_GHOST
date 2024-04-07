@@ -6,6 +6,11 @@ AnimationSubscriber::AnimationSubscriber() :
 	Node("animation_subscriber"){
 	// subscription_ = this->create_subscription<visualization_msgs::msg::Marker>(
 	// "animation_topic", 10, std::bind(&AnimationSubscriber::topic_callback, this, std::placeholders:: _1));
+	declare_parameter("test_param", "default");
+	std::string test_param = get_parameter("test_param").as_string();
+	
+	RCLCPP_INFO(get_logger(), test_param.c_str());
+
 	subscription_ = this->create_subscription<visualization_msgs::msg::Marker>(
     "topic", 10, std::bind(&AnimationSubscriber::topic_callback, this, std::placeholders:: _1));
 }
