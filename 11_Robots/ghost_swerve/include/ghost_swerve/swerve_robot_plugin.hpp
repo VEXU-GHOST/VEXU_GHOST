@@ -136,9 +136,15 @@ protected:
 	bool m_teleop_started = false;
 
 	// Burnout Prevention
-	float m_burnout_RPM_threshold;
-	float m_burnout_dist_threshold;
-	float m_last_intake_position;
+	float m_burnout_current_threshold_ma;
+	float m_burnout_velocity_threshold_rpm;
+	long m_burnout_stall_duration_ns;
+	long m_burnout_cooldown_duration_ns;
+
+	rclcpp::Time m_intake_stall_start;
+	rclcpp::Time m_intake_cooldown_start;
+	bool m_intake_stalling = false;
+	bool m_intake_cooling_down = false;
 };
 
 } // namespace ghost_swerve
