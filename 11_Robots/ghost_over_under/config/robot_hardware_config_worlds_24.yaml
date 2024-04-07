@@ -79,6 +79,11 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: tail_motor_config
+        intake_motor:
+            port: 20
+            type: MOTOR
+            reversed: false
+            config: intake_motor_config
 
     device_configurations:
         steering_sensor_config:
@@ -86,12 +91,12 @@ port_configuration:
             serial:
                 send_angle_data: true
                 send_position_data: false
-                send_velocity_data: true    
+                send_velocity_data: true
         inertial_sensor_config:
             serial:
                 send_accel_data: true
                 send_gyro_data: true
-                send_heading_data: true    
+                send_heading_data: true
         drive_motor_config:
             gearset: 600
             brake_mode: COAST
