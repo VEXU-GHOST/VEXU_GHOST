@@ -149,3 +149,16 @@ port_configuration:
                 send_position_command: true
                 send_velocity_command: false
                 send_voltage_command: true
+        intake_motor_config:
+            gearset: 600
+            brake_mode: BRAKE
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 0.0
+                ff_vel_gain: 0.0
+                ff_torque_gain: 100.0
+            serial:
+                send_position_command: false
+                send_velocity_command: false
+                send_voltage_command: true

@@ -230,7 +230,7 @@ void SwerveRobotPlugin::onNewSensorData(){
 
 	publishOdometry();
 	publishVisualization();
-	publishTrajectoryVisualization();
+	// publishTrajectoryVisualization();
 }
 
 void SwerveRobotPlugin::disabled(){
@@ -248,18 +248,29 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double des_vel_y = (command_map.count("y_vel") != 0) ? command_map.at("y_vel") : 0.0;
 	double des_theta = (command_map.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
 	double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
+	double pos_threshold = (command_map.count("threshold_pos") != 0) ? command_map.at("threshold_pos") : 0.0;
+	double theta_threshold = (command_map.count("threshold_vel") != 0) ? command_map.at("threshold_vel") : 0.0;
 
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
 
 	// Calculate velocity command from motion plan
-	double vel_cmd_x = des_vel_x + (des_pos_x - curr_location.x()) * m_move_to_pose_kp_xy;
-	double vel_cmd_y = des_vel_y + (des_pos_y - curr_location.y()) * m_move_to_pose_kp_xy;
-	double vel_cmd_theta = des_theta_vel + ghost_util::SmallestAngleDistRad(des_theta, curr_theta) * m_move_to_pose_kp_theta;
+	double x_error = des_pos_x - curr_location.x();
+	double y_error = des_pos_y - curr_location.y();
+	double theta_error = ghost_util::SmallestAngleDistRad(des_theta, curr_theta);
+	double vel_cmd_x = (abs(x_error) <= pos_threshold/2.0) ? 0.0 : des_vel_x + (x_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_y = (abs(y_error) <= pos_threshold/2.0) ? 0.0 : des_vel_y + (y_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_theta = (abs(theta_error) <= theta_threshold) ? 0.0 : des_theta_vel + theta_error * m_move_to_pose_kp_theta;
 
-	std::cout << "des pos x: " << des_pos_x << std::endl;
-	std::cout << "des pos y: " << des_pos_y << std::endl;
+	std::cout << "pos_threshold: " << pos_threshold << std::endl;
+	std::cout << "theta_threshold: " << theta_threshold << std::endl;
+
+
+	std::cout << "des_pos_x: " << des_pos_x << std::endl;
+	std::cout << "des_pos_y: " << des_pos_y << std::endl;
+	std::cout << "x_error: " << x_error << std::endl;
+	std::cout << "y_error: " << y_error << std::endl;
 
 	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
 	std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
@@ -301,8 +312,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
 			m_last_odom_loc.x() = m_curr_odom_loc.x();
 			m_last_odom_loc.y() = m_last_odom_loc.y();
-			m_swerve_model_ptr->setOdometryLocation(m_curr_odom_loc.x(), m_curr_odom_loc.y());
-			m_swerve_model_ptr->setOdometryAngle(m_curr_odom_angle);
+			m_swerve_model_ptr->setWorldPose(m_curr_odom_loc.x(), m_curr_odom_loc.y());
+			m_swerve_model_ptr->setWorldAngle(m_curr_odom_angle);
 		}
 		autonomous(current_time - m_auton_start_time);
 	}
@@ -379,8 +390,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 		updateDrivetrainMotors();
 
 		// Set Wings
-		m_digital_io[m_digital_io_name_map.at("right_wing")] = !m_climb_mode && joy_data->btn_r2;
-		m_digital_io[m_digital_io_name_map.at("left_wing")] = !m_climb_mode && joy_data->btn_l2;
+		// m_digital_io[m_digital_io_name_map.at("right_wing")] = !m_climb_mode && joy_data->btn_r2;
+		// m_digital_io[m_digital_io_name_map.at("left_wing")] = !m_climb_mode && joy_data->btn_l2;
 
 		// Toggle Climb Mode
 		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
@@ -475,6 +486,18 @@ void SwerveRobotPlugin::teleop(double current_time){
 				m_digital_io[m_digital_io_name_map.at("tail")] = false;
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
 			}
+		}
+
+		if(joy_data->btn_l1){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
+		}
+		else if(joy_data->btn_l2){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+		}
+		else{
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
 		}
 
 		rhi_ptr_->setDigitalIO(m_digital_io);

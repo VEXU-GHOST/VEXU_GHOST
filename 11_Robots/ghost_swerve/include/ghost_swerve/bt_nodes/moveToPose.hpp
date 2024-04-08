@@ -48,6 +48,7 @@ private:
 	std::shared_ptr<SwerveModel> swerve_ptr_;
 	rclcpp::Publisher<ghost_msgs::msg::DrivetrainCommand>::SharedPtr command_pub_;
 	std::chrono::time_point<std::chrono::system_clock> start_time_;
+	std::chrono::time_point<std::chrono::system_clock> plan_time_;
 	bool started_;
 
 };

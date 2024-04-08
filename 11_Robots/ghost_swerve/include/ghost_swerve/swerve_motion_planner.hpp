@@ -19,7 +19,7 @@ namespace ghost_swerve {
 class SwerveMotionPlanner : public ghost_motion_planner::MotionPlanner {
 private:
 	// std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
-	std::shared_ptr<SwerveModel> m_swerve_model_ptr;
+	// std::shared_ptr<SwerveModel> m_swerve_model_ptr;
 	double current_x = 0.0;
 	double current_y = 0.0;
 	double current_x_vel = 0.0;
