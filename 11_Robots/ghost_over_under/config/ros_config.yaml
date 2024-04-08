@@ -188,6 +188,11 @@ competition_state_machine_node:
       max_ang_vel_slew: 100.1
       max_lin_vel_slew: 100.001
 
+      burnout_absolute_current_threshold_ma: 100.0
+      burnout_absolute_velocity_threshold_rpm: 50.0
+      burnout_stall_duration_ms: 0.0
+      burnout_cooldown_duration_ms: 0.0
+
 ekf_localization_node:
   ros__parameters:
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
