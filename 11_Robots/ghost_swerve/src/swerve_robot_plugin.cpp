@@ -480,8 +480,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 		rhi_ptr_->setDigitalIO(m_digital_io);
 
 		// If INTAKE_MOTOR stalling, update state and timer
-		if((rhi_ptr_->getMotorCurrentMA("intake_motor") > m_burnout_absolute_current_threshold_ma)
-		   && (rhi_ptr_->getMotorVelocityRPM("intake_motor") < m_burnout_absolute_rpm_threshold)){
+		if((std::fabs(rhi_ptr_->getMotorCurrentMA("intake_motor")) > m_burnout_absolute_current_threshold_ma)
+		   && (std::fabs(rhi_ptr_->getMotorVelocityRPM("intake_motor")) < m_burnout_absolute_rpm_threshold)){
 			if(!m_intake_stalling){
 				m_intake_stall_start = node_ptr_->now();
 				m_intake_stalling = true;
