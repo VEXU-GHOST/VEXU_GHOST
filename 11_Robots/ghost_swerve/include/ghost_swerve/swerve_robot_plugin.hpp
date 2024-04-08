@@ -136,10 +136,10 @@ protected:
 	bool m_teleop_started = false;
 
 	// Burnout Prevention
-	float m_burnout_current_threshold_ma;
-	float m_burnout_velocity_threshold_rpm;
-	long m_burnout_stall_duration_ns;
-	long m_burnout_cooldown_duration_ns;
+	float m_burnout_absolute_current_threshold_ma;
+	float m_burnout_absolute_rpm_threshold;
+	long m_burnout_stall_duration_ms;
+	long m_burnout_cooldown_duration_ms;
 
 	rclcpp::Time m_intake_stall_start;
 	rclcpp::Time m_intake_cooldown_start;

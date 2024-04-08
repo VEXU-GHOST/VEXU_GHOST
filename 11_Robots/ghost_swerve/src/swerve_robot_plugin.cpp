@@ -135,10 +135,15 @@ void SwerveRobotPlugin::initialize(){
 	m_swerve_model_ptr = std::make_shared<SwerveModel>(swerve_model_config);
 	m_swerve_model_ptr->setFieldOrientedControl(true);
 
-	m_burnout_current_threshold_ma   = node_ptr_->get_parameter("swerve_robot_plugin.burnout_current_threshold_ma").as_double();
-	m_burnout_velocity_threshold_rpm = node_ptr_->get_parameter("swerve_robot_plugin.burnout_velocity_threshold_rpm").as_double();
-	m_burnout_stall_duration_ns    = node_ptr_->get_parameter("swerve_robot_plugin.burnout_timer_duration_ns").as_double();
-	m_burnout_cooldown_duration_ns = node_ptr_->get_parameter("swerve_robot_plugin.burnout_cooldown_duration_ns").as_double();
+	node_ptr_->declare_parameter("swerve_robot_plugin.burnout_absolute_current_threshold_ma", 1000.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.burnout_absolute_rpm_threshold", 50.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.burnout_timer_duration_ms", 1000);
+	node_ptr_->declare_parameter("swerve_robot_plugin.burnout_cooldown_duration_ms", 1000);
+
+	m_burnout_absolute_current_threshold_ma = node_ptr_->get_parameter("swerve_robot_plugin.burnout_absolute_current_threshold_ma").as_double();
+	m_burnout_absolute_rpm_threshold        = node_ptr_->get_parameter("swerve_robot_plugin.burnout_absolute_velocity_threshold_rpm").as_double();
+	m_burnout_stall_duration_ms    = node_ptr_->get_parameter("swerve_robot_plugin.burnout_stall_duration_ms").as_double();
+	m_burnout_cooldown_duration_ms = node_ptr_->get_parameter("swerve_robot_plugin.burnout_cooldown_duration_ms").as_double();
 
 	// ROS Topics
 	m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
@@ -475,9 +480,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 		rhi_ptr_->setDigitalIO(m_digital_io);
 
 		// If INTAKE_MOTOR stalling, update state and timer
-		if(!m_intake_cooling_down
-		   && (rhi_ptr_->getMotorCurrentMA("intake_motor") > m_burnout_current_threshold_ma)
-		   && (rhi_ptr_->getMotorVelocityRPM("intake_motor") < m_burnout_velocity_threshold_rpm)){
+		if((rhi_ptr_->getMotorCurrentMA("intake_motor") > m_burnout_absolute_current_threshold_ma)
+		   && (rhi_ptr_->getMotorVelocityRPM("intake_motor") < m_burnout_absolute_rpm_threshold)){
 			if(!m_intake_stalling){
 				m_intake_stall_start = node_ptr_->now();
 				m_intake_stalling = true;
@@ -489,7 +493,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		// If INTAKE_MOTOR stalled for too long, start cooldown period
 		if(!m_intake_cooling_down && m_intake_stalling
-		   && ((node_ptr_->now() - m_intake_stall_start).nanoseconds() > m_burnout_stall_duration_ns) ){
+		   && ((node_ptr_->now() - m_intake_stall_start).nanoseconds() > m_burnout_stall_duration_ms) ){
 			m_intake_stalling = false;
 			m_intake_cooling_down = true;
 			m_intake_cooldown_start = node_ptr_->now();
@@ -497,11 +501,11 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		// Enforce INTAKE_MOTOR cooldown period
 		if(m_intake_cooling_down){
-			if((node_ptr_->now() - m_intake_cooldown_start).nanoseconds() > m_burnout_cooldown_duration_ns){
-				m_intake_cooling_down = false;
+			if((node_ptr_->now() - m_intake_cooldown_start).nanoseconds() <= m_burnout_cooldown_duration_ms){
+				rhi_ptr_->setMotorTorqueCommandPercent("intake_motor", 0);
 			}
 			else{
-				rhi_ptr_->setMotorTorqueCommandPercent("intake_motor", 0);
+				m_intake_cooling_down = false;
 			}
 		}
 	}
