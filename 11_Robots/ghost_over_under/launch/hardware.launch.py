@@ -115,16 +115,24 @@ def generate_launch_description():
         name='ekf_localization_node',
         output='screen',
         parameters=[ros_config_file],
+    )
 
+    ekf_pf_node = Node(
+        package='ghost_localization',
+        executable='ekf_pf_node',
+        name='ekf_pf_node',
+        output='screen',
+        parameters=[ros_config_file],
     )
 
     return LaunchDescription([
         serial_node,
-        # competition_state_machine_node,
-        # bag_recorder_service,
+        competition_state_machine_node,
+        bag_recorder_service,
+        ekf_pf_node,
         # realsense_node,
-        # imu_filter_node,
-        # robot_localization_node,
-        # swerve_motion_planner_node,
-        # rplidar_node
+        imu_filter_node,
+        robot_localization_node,
+        swerve_motion_planner_node,
+        rplidar_node
     ])

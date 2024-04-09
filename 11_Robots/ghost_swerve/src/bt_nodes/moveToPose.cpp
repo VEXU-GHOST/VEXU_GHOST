@@ -46,6 +46,7 @@ T MoveToPose::get_input(std::string key){
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus MoveToPose::onStart(){
 	started_ = false;
+	plan_time_ = std::chrono::system_clock::now();
 	return BT::NodeStatus::RUNNING;
 }
 
@@ -80,17 +81,17 @@ BT::NodeStatus MoveToPose::onRunning() {
 	msg.pose.pose.orientation.y = y;
 	msg.pose.pose.orientation.z = z;
 	msg.pose.pose.orientation.w = w;
+	msg.pose.pose.position.z = threshold;
+	msg.twist.twist.angular.x = angle_threshold;
 
 	// geometry_msgs::msg::TwistStamped twist{};
 	msg.twist.twist.linear.x = velX;
 	msg.twist.twist.linear.y = velY;
 	msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
 
-	command_pub_->publish(msg);
-
-	if( (abs(posX - swerve_ptr_->getOdometryLocation().x()) < threshold) &&
-		(abs(posY - swerve_ptr_->getOdometryLocation().y()) < threshold) &&
-		(abs(theta - swerve_ptr_->getOdometryAngle()) < angle_threshold)){
+	if( (abs(posX - swerve_ptr_->getWorldLocation().x()) < threshold) &&
+		(abs(posY - swerve_ptr_->getWorldLocation().y()) < threshold) &&
+		(abs(theta - swerve_ptr_->getWorldAngleRad()) < angle_threshold)){
 		RCLCPP_INFO(this->get_logger(), "MoveToPose: Success");
 		return BT::NodeStatus::SUCCESS;
 	}
@@ -98,11 +99,16 @@ BT::NodeStatus MoveToPose::onRunning() {
 	if(started_){
 		auto now = std::chrono::system_clock::now();
 		int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
-		RCLCPP_INFO(this->get_logger(), "MoveToPose: %i ms elapsed", time_elapsed);
+		int time_elapsed_since_plan = std::chrono::duration_cast<std::chrono::milliseconds>(now - plan_time_).count();
+		// RCLCPP_INFO(this->get_logger(), "MoveToPose: %i ms elapsed", time_elapsed);
 		if (time_elapsed > timeout){
 			RCLCPP_WARN(this->get_logger(), "MoveToPose Timeout: %i ms elapsed", time_elapsed);
 			started_ = false;
 			return BT::NodeStatus::FAILURE;
+		} else if (time_elapsed_since_plan > 200){
+			command_pub_->publish(msg);
+			RCLCPP_INFO(this->get_logger(), "MoveToPose: sent command");
+			plan_time_ = std::chrono::system_clock::now();
 		}
 	} else {
 		RCLCPP_INFO(this->get_logger(), "MoveToPose: Started");

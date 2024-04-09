@@ -186,6 +186,9 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5ActuatorComman
 		else if(device_data_ptr->type == device_type_e::JOYSTICK){
 			continue;
 		}
+		else if(device_data_ptr->type == device_type_e::INERTIAL_SENSOR){
+			continue;
+		}
 		else{
 			std::string dev_type_str;
 			if(DEVICE_TYPE_TO_STRING_MAP.count(device_data_ptr->type) == 1){

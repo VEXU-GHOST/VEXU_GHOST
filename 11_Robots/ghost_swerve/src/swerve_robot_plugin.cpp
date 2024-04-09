@@ -127,10 +127,10 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("swerve_robot_plugin.max_lin_vel_slew", 0.);
 	swerve_model_config.max_lin_vel_slew = node_ptr_->get_parameter("swerve_robot_plugin.max_lin_vel_slew").as_double();
 
-	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
-	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);
-	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.1143, 0.1143);
-	swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.1143, -0.1143);
+	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.15875, 0.15875);
+	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.15875, -0.15875);
+	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.15875, 0.15875);
+	swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.15875, -0.15875);
 
 	m_swerve_model_ptr = std::make_shared<SwerveModel>(swerve_model_config);
 	m_swerve_model_ptr->setFieldOrientedControl(true);
@@ -164,6 +164,10 @@ void SwerveRobotPlugin::initialize(){
 
 	m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
 		"bag_recorder/stop");
+
+	imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
+		"/sensors/imu",
+		10);
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
@@ -200,10 +204,23 @@ void SwerveRobotPlugin::onNewSensorData(){
 		m_swerve_model_ptr->setModuleState(module_name, new_state);
 	}
 
+
+	sensor_msgs::msg::Imu imu_msg{};
+	imu_msg.header.frame_id = "imu_link";
+	imu_msg.header.stamp = node_ptr_->get_clock()->now();
+	imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
+	imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
+	imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
+	imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
+	imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
+	imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+	imu_pub->publish(imu_msg);
+
 	m_swerve_model_ptr->updateSwerveModel();
 
 	publishOdometry();
 	publishVisualization();
+	// publishTrajectoryVisualization();
 }
 
 void SwerveRobotPlugin::disabled(){
@@ -222,15 +239,29 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double des_vel_y = (command_map.count("y_vel") != 0) ? command_map.at("y_vel") : 0.0;
 	double des_theta = (command_map.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
 	double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
+	double pos_threshold = (command_map.count("threshold_pos") != 0) ? command_map.at("threshold_pos") : 0.0;
+	double theta_threshold = (command_map.count("threshold_vel") != 0) ? command_map.at("threshold_vel") : 0.0;
 
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
 
 	// Calculate velocity command from motion plan
-	double vel_cmd_x = des_vel_x + (des_pos_x - curr_location.x()) * m_move_to_pose_kp_xy;
-	double vel_cmd_y = des_vel_y + (des_pos_y - curr_location.y()) * m_move_to_pose_kp_xy;
-	double vel_cmd_theta = des_theta_vel + ghost_util::SmallestAngleDistRad(des_theta, curr_theta) * m_move_to_pose_kp_theta;
+	double x_error = des_pos_x - curr_location.x();
+	double y_error = des_pos_y - curr_location.y();
+	double theta_error = ghost_util::SmallestAngleDistRad(des_theta, curr_theta);
+	double vel_cmd_x = (abs(x_error) <= pos_threshold/2.0) ? 0.0 : des_vel_x + (x_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_y = (abs(y_error) <= pos_threshold/2.0) ? 0.0 : des_vel_y + (y_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_theta = (abs(theta_error) <= theta_threshold) ? 0.0 : des_theta_vel + theta_error * m_move_to_pose_kp_theta;
+
+	std::cout << "pos_threshold: " << pos_threshold << std::endl;
+	std::cout << "theta_threshold: " << theta_threshold << std::endl;
+
+
+	std::cout << "des_pos_x: " << des_pos_x << std::endl;
+	std::cout << "des_pos_y: " << des_pos_y << std::endl;
+	std::cout << "x_error: " << x_error << std::endl;
+	std::cout << "y_error: " << y_error << std::endl;
 
 	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
 	std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
@@ -259,21 +290,21 @@ float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_p
 
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
-	std::cout << "Teleop: " << current_time << std::endl;
+	// std::cout << "Teleop: " << current_time << std::endl;
 
 	if(joy_data->btn_u){
 		if(!m_auton_button_pressed){
 			m_auton_button_pressed = true;
 
-			// Reset Odometry or whatever for auton
+			//   Odometry or whatever for auton
 			m_last_odom_angle = ghost_util::DEG_TO_RAD * 0.0;
 			m_curr_odom_angle = m_last_odom_angle;
 			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 0.0;
 			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
 			m_last_odom_loc.x() = m_curr_odom_loc.x();
 			m_last_odom_loc.y() = m_last_odom_loc.y();
-			m_swerve_model_ptr->setOdometryLocation(m_curr_odom_loc.x(), m_curr_odom_loc.y());
-			m_swerve_model_ptr->setOdometryAngle(m_curr_odom_angle);
+			m_swerve_model_ptr->setWorldPose(m_curr_odom_loc.x(), m_curr_odom_loc.y());
+			m_swerve_model_ptr->setWorldAngle(m_curr_odom_angle);
 		}
 		autonomous(current_time - m_auton_start_time);
 	}
@@ -350,8 +381,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 		updateDrivetrainMotors();
 
 		// Set Wings
-		m_digital_io[m_digital_io_name_map.at("right_wing")] = !m_climb_mode && joy_data->btn_r2;
-		m_digital_io[m_digital_io_name_map.at("left_wing")] = !m_climb_mode && joy_data->btn_l2;
+		// m_digital_io[m_digital_io_name_map.at("right_wing")] = !m_climb_mode && joy_data->btn_r2;
+		// m_digital_io[m_digital_io_name_map.at("left_wing")] = !m_climb_mode && joy_data->btn_l2;
 
 		// Toggle Climb Mode
 		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
@@ -446,6 +477,18 @@ void SwerveRobotPlugin::teleop(double current_time){
 				m_digital_io[m_digital_io_name_map.at("tail")] = false;
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
 			}
+		}
+
+		if(joy_data->btn_l1){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
+		}
+		else if(joy_data->btn_l2){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+		}
+		else{
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
 		}
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
@@ -686,7 +729,7 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 	visualization_msgs::msg::MarkerArray viz_msg;
 	auto time = trajectory_motor_map_["x"].time_vector;
 
-	RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory viz");
+	// RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory viz");
 	if(trajectory_motor_map_.size() == 0){
 		RCLCPP_WARN(node_ptr_->get_logger(), "empty trajectory");
 		return;
@@ -732,7 +775,7 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 		viz_msg.markers.push_back(marker_msg);
 	}
 
-	RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory arrows");
+	// RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory arrows");
 
 	m_trajectory_viz_pub->publish(viz_msg);
 }
