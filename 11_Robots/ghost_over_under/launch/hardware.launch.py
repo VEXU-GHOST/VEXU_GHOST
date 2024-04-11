@@ -19,7 +19,7 @@ def generate_launch_description():
     robot_config_yaml_path = os.path.join(ghost_over_under_base_dir, "config/robot_hardware_config_worlds_24.yaml")
 
     plugin_type = "ghost_swerve::SwerveRobotPlugin"
-    robot_name = "ghost_15"
+    robot_name = "ghost_24"
 
     ghost_swerve_share_dir = get_package_share_directory('ghost_swerve')
     bt_path = os.path.join(ghost_swerve_share_dir, "config", "bt.xml")
@@ -91,11 +91,9 @@ def generate_launch_description():
         parameters=[ros_config_file],
     )
 
-    realsense_share = get_package_share_directory('realsense2_camera')
     realsense_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(realsense_share,
-                         'launch', 'rs_launch.py')
+            os.path.join(get_package_share_directory('realsense2_camera'), 'launch', 'rs_launch.py')
         ),
         launch_arguments={
             'unite_imu_method': '2',
@@ -129,10 +127,10 @@ def generate_launch_description():
         serial_node,
         competition_state_machine_node,
         bag_recorder_service,
-        ekf_pf_node,
+        # ekf_pf_node,
         # realsense_node,
-        imu_filter_node,
-        robot_localization_node,
-        swerve_motion_planner_node,
-        rplidar_node
+        # imu_filter_node,
+        # robot_localization_node,
+        # swerve_motion_planner_node,
+        # rplidar_node
     ])

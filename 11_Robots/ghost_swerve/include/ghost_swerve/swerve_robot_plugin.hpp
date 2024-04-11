@@ -95,10 +95,7 @@ protected:
 	bool m_tail_down = false;
 
 	// Climb Mode
-	bool m_climb_mode_btn_pressed = false;
 	bool m_climb_mode = false;
-	double lift_target;
-
 
 	// Stick Mode
 	bool m_tail_mode = false;
@@ -115,7 +112,6 @@ protected:
 
 	// Angle vs Velocity Control
 	bool m_toggle_swerve_angle_control_btn_pressed = false;
-	bool m_swerve_angle_control = false;
 	double m_angle_target = 0.0;
 	double m_joy_angle_control_threshold = 0.0;
 
@@ -129,8 +125,6 @@ protected:
 	double m_curr_theta_cmd = 0.0;
 
 	// Skills mode
-	bool m_toggle_skills_control_btn_pressed = false;
-	bool m_skills_control = false;
 	bool m_auton_button_pressed = false;
 	int m_auton_index = 0;
 	bool m_teleop_started = false;
