@@ -1,0 +1,3 @@
+animation_subscriber:
+  ros__parameters:
+    mode: playback
