@@ -128,12 +128,12 @@ port_configuration:
             encoder_units: DEGREES
             controller:
                 pos_gain: 0.0
-                vel_gain: 40.0
+                vel_gain: 0.0
                 ff_vel_gain: 1.0
                 ff_torque_gain: 0.0
             serial:
                 send_position_command: false
-                send_velocity_command: true
+                send_velocity_command: false
                 send_voltage_command: true
         tail_motor_config:
             gearset: 200

@@ -15,9 +15,7 @@ SwerveRobotPlugin::SwerveRobotPlugin(){
 	m_digital_io = std::vector<bool>(8, false);
 	m_digital_io_name_map = std::unordered_map<std::string, size_t>{
 		{"claw", 0},
-		{"right_wing", 1},
-		{"left_wing", 2},
-		{"tail", 3}};
+		{"tail", 1}};
 }
 
 void SwerveRobotPlugin::initialize(){
@@ -250,8 +248,8 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double x_error = des_pos_x - curr_location.x();
 	double y_error = des_pos_y - curr_location.y();
 	double theta_error = ghost_util::SmallestAngleDistRad(des_theta, curr_theta);
-	double vel_cmd_x = (abs(x_error) <= pos_threshold/2.0) ? 0.0 : des_vel_x + (x_error) * m_move_to_pose_kp_xy;
-	double vel_cmd_y = (abs(y_error) <= pos_threshold/2.0) ? 0.0 : des_vel_y + (y_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_x = (abs(x_error) <= pos_threshold / 2.0) ? 0.0 : des_vel_x + (x_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_y = (abs(y_error) <= pos_threshold / 2.0) ? 0.0 : des_vel_y + (y_error) * m_move_to_pose_kp_xy;
 	double vel_cmd_theta = (abs(theta_error) <= theta_threshold) ? 0.0 : des_theta_vel + theta_error * m_move_to_pose_kp_theta;
 
 	std::cout << "pos_threshold: " << pos_threshold << std::endl;
@@ -323,15 +321,6 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_toggle_swerve_field_control_btn_pressed = false;
 		}
 
-		// Toggle Skills mode
-		if(joy_data->btn_d && !m_toggle_skills_control_btn_pressed){
-			m_skills_control ^= 1;
-			m_toggle_skills_control_btn_pressed = true;
-		}
-		else if(!joy_data->btn_d){
-			m_toggle_skills_control_btn_pressed = false;
-		}
-
 		if(joy_data->btn_l){
 			m_last_odom_angle = 0.0;
 			m_curr_odom_angle = 0.0;
@@ -356,23 +345,23 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_recording_btn_pressed = false;
 		}
 
-		if(m_swerve_angle_control){
-			if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
-				m_angle_target = atan2(joy_data->right_y / 127.0, joy_data->right_x / 127.0) - M_PI / 2;
-			}
+		// if(m_swerve_angle_control){
+		// 	if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
+		// 		m_angle_target = atan2(joy_data->right_y / 127.0, joy_data->right_x / 127.0) - M_PI / 2;
+		// 	}
 
-			m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(joy_data->left_x, joy_data->left_y, m_angle_target);
-		}
-		else{
-			double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
+		// 	m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(joy_data->left_x, joy_data->left_y, m_angle_target);
+		// }
+		// else{
+		double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
 
-			m_curr_x_cmd = joy_data->left_x / 127.0 * scale;
-			m_curr_y_cmd = joy_data->left_y / 127.0 * scale;
-			m_curr_theta_cmd = joy_data->right_x / 127.0 * scale;
+		m_curr_x_cmd = joy_data->left_x / 127.0 * scale;
+		m_curr_y_cmd = joy_data->left_y / 127.0 * scale;
+		m_curr_theta_cmd = joy_data->right_x / 127.0 * scale;
 
-			m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(m_curr_x_cmd, m_curr_y_cmd, m_curr_theta_cmd);
-			m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
-		}
+		m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(m_curr_x_cmd, m_curr_y_cmd, m_curr_theta_cmd);
+		m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
+		// }
 
 		m_last_x_cmd = m_curr_x_cmd;
 		m_last_y_cmd = m_curr_y_cmd;
@@ -380,115 +369,41 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		updateDrivetrainMotors();
 
-		// Set Wings
-		// m_digital_io[m_digital_io_name_map.at("right_wing")] = !m_climb_mode && joy_data->btn_r2;
-		// m_digital_io[m_digital_io_name_map.at("left_wing")] = !m_climb_mode && joy_data->btn_l2;
-
-		// Toggle Climb Mode
-		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
-			m_climb_mode = !m_climb_mode;
-			// only on first toggle
-			if(m_climb_mode){
-				lift_target = m_swerve_model_ptr->getConfig().lift_up_angle;
-			}
-			else{
-				lift_target = 0;
-				m_claw_open = false;
-				claw_auto_extended = false;
-			}
-			// m_claw_open = m_climb_mode;
-			m_climb_mode_btn_pressed = true;
-		}
-		else if(!joy_data->btn_a){
-			m_climb_mode_btn_pressed = false;
-		}
-		// Toggle Claw
-		if(m_climb_mode){
-			// std::cout << "liftmotors on now" << std::endl;
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
-			if(!m_claw_open){
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
-			}
-
-			if(joy_data->btn_r2 & !m_claw_btn_pressed){
-				m_claw_open = !m_claw_open;
-				m_claw_btn_pressed = true;
-			}
-			else if(!joy_data->btn_r2){
-				m_claw_btn_pressed = false;
-			}
-
-#define POS ((rhi_ptr_->getMotorPosition("lift_right") + rhi_ptr_->getMotorPosition("lift_left")) / 2)
-
-			if(joy_data->btn_l1){
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -1);
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -1);
-				lift_target = POS;
-			}
-			else if(joy_data->btn_l2){
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 1);
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 1);
-				lift_target = POS;
-			}
-			else{
-				float err = tempPID(rhi_ptr_, "lift_right", "lift_left", lift_target, m_swerve_model_ptr->getConfig().lift_kP); // go to 90deg
-				if((fabs(err) < 30) && (fabs(lift_target) > 1) && !claw_auto_extended){
-					m_claw_open = true;
-					claw_auto_extended = true;
-				}
-			}
-		}
-		else if(fabs(rhi_ptr_->getMotorPosition("lift_right")) < 50){
-			// std::cout << "liftmotors off now" << std::endl;
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
-		}
-
-		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
-
-		// Enable Tail Mode
-		double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
-		double stick_turn_offset = m_swerve_model_ptr->getConfig().stick_turn_offset;
-#define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
-
-		if(!m_climb_mode && joy_data->btn_l1){
-			m_digital_io[m_digital_io_name_map.at("tail")] = true;
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-			if(joy_data->btn_r1){
-				double ang = m_skills_control ? m_swerve_model_ptr->getConfig().stick_angle_skills : m_swerve_model_ptr->getConfig().stick_angle_normal;
-				std::cout << "stick angle " << ang << std::endl;
-				rhi_ptr_->setMotorPositionCommand("tail_motor", ang);
-			}
-			else{
-				// std::cout << "stick upright!" << std::endl;
-				rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
-			}
-		}
-		else if(m_climb_mode){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-
-			rhi_ptr_->setMotorPositionCommand("tail_motor", 0);
-		}
-		else{
-			// std::cout << "stick upright!" << std::endl;
-			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
-			if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
-				m_digital_io[m_digital_io_name_map.at("tail")] = false;
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
-			}
-		}
-
-		if(joy_data->btn_l1){
+		// Intake
+		if(joy_data->btn_r1){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
 			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
 		}
-		else if(joy_data->btn_l2){
+		else if(joy_data->btn_r2){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
 			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
 		}
 		else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
 			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
+		}
+
+		// Climb Testing
+		if(joy_data->btn_l1){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -1.0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -1.0);
+		}
+		else if(joy_data->btn_l2){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 1.0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 1.0);
+		}
+		else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 0);
 		}
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
