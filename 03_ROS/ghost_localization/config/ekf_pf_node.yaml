@@ -5,6 +5,7 @@ ekf_pf_node:
   ros__parameters:
     particle_filter:
       world_frame: "map"
+      rviz_set_pose_topic: "/set_pose"
       map: "./03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position

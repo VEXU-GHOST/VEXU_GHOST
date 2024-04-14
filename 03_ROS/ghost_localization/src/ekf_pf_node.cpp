@@ -53,12 +53,6 @@ EkfPfNode::EkfPfNode() :
 		rclcpp::SensorDataQoS(),
 		std::bind(&EkfPfNode::LaserCallback, this, _1));
 
-	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		"/initial_pose",
-		10,
-		std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
-		);
-
 	auto map_qos = rclcpp::QoS(10);
 	map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
 
@@ -74,6 +68,12 @@ EkfPfNode::EkfPfNode() :
 	this->set_parameter(use_sim_time_param);
 
 	LoadROSParams();
+
+	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+		rviz_set_pose_topic_,
+		10,
+		std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
+		);
 
 	particle_filter_ = ParticleFilter(config_params);
 	first_map_load_ = true;
@@ -93,6 +93,9 @@ void EkfPfNode::LoadROSParams(){
 
 	declare_parameter("particle_filter.world_frame", "");
 	config_params.world_frame = get_parameter("particle_filter.world_frame").as_string();
+
+	declare_parameter("particle_filter.rviz_set_pose_topic", "");
+	rviz_set_pose_topic_ = get_parameter("particle_filter.rviz_set_pose_topic").as_string();
 
 	declare_parameter("particle_filter.map", "");
 	config_params.map = get_parameter("particle_filter.map").as_string();

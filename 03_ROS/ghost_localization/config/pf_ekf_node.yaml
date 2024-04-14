@@ -2,7 +2,7 @@ pf_ekf_node:
   ros__parameters:
     particle_filter:
       world_frame: "map"
-      map: "/home/melcruz/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      map: "./VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0

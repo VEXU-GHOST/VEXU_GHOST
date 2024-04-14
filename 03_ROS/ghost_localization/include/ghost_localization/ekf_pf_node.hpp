@@ -78,6 +78,7 @@ private:
 	particle_filter::ParticleFilterConfig config_params;
 	bool first_map_load_;
 	bool laser_msg_received_;
+	std::string rviz_set_pose_topic_;
 
 	Eigen::Vector2f odom_loc_;
 	float odom_angle_;
