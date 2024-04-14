@@ -1,3 +1,5 @@
 animation_subscriber:
   ros__parameters:
-    mode: playback
+    # mode: playback
+    mode_playback: false
+    mode_visualization: false
