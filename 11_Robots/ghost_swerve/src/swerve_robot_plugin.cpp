@@ -384,25 +384,34 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		// Climb Testing
 		if(joy_data->btn_l1){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -1.0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -1.0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
 		}
 		else if(joy_data->btn_l2){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 1.0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 1.0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
 		}
 		else{
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
 		}
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
