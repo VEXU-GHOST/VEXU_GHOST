@@ -14,7 +14,7 @@ port_configuration:
             port: 3
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
-        lift_right:
+        lift_r1:
             port: 4
             type: MOTOR
             reversed: false
@@ -69,7 +69,7 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        lift_left:
+        lift_l1:
             port: 15
             type: MOTOR
             reversed: true
@@ -84,6 +84,11 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: intake_motor_config
+        lift_r2:
+            port: 21
+            type: MOTOR
+            reversed: true
+            config: lift_motor_config
     device_configurations:
         steering_sensor_config:
             data_rate: 5
@@ -123,7 +128,7 @@ port_configuration:
                 send_power_data: false
                 send_temperature_data: false
         lift_motor_config:
-            gearset: 200
+            gearset: 600
             brake_mode: BRAKE
             encoder_units: DEGREES
             controller:
