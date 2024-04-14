@@ -14,12 +14,14 @@ find_package(ament_cmake REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 set(DEPENDENCIES
   ament_cmake
   rclcpp
   visualization_msgs
   std_msgs
+  geometry_msgs
   )
 
 ament_export_dependencies(${DEPENDENCIES})
