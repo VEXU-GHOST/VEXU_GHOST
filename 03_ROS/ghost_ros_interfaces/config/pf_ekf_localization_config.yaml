@@ -1,208 +1,5 @@
-ghost_serial_node:
+pf_ekf_localization_node:
   ros__parameters:
-    port_name: "/dev/ttyACM1"
-    backup_port_name: "/dev/ttyACM2"
-    verbose: false
-
-imu_filter_node:
-  ros__parameters:
-    input_imu_topic: /sensors/imu
-    output_imu_topic: /estimation/imu/filtered
-    calculate_bias: false
-    calculate_covariance: false
-    calibration_time: 5.0
-    sensor_frequency: 100.0
-
-    accel_bias_x: 0.0409958
-    accel_bias_y: 0.991383
-    accel_bias_z: 0.032677
-
-    gyro_bias_x: -0.0050632
-    gyro_bias_y: 0.00207869
-    gyro_bias_z: -0.000868592
-
-    accel_covariance: [
-      1.64868e-06, 1.95563e-07, 8.17889e-08,
-      1.95563e-07, 5.70874e-06, 5.11217e-08,
-      8.17889e-08, 5.11217e-08, 1.22049e-06]
-
-    gyro_covariance: [
-      4.09332e-06,  1.38296e-06, -2.18034e-07,
-      1.38296e-06,  1.59246e-05, -4.90858e-07,
-      -2.18034e-07, -4.90858e-07,  2.57037e-06]
-
-    camera_roll: -90.0
-    camera_pitch: 0.0
-    camera_yaw: -90.0
-
-bag_recorder_service:
-  ros__parameters:
-    disk_space_required_kb: 256000
-    disk_check_period_s: 10
-
-# If you are using the sweve model and you are tuning the k1-9 parameters,
-# the swerve model plugin has its own duplicate (11_Robots/ghost_over_under/config/ros_config.yaml) of the k1-9 parameters that must
-# be changed as well as this file. TODO: make a class for this
-ekf_pf_node:
-  ros__parameters:
-    particle_filter:
-      world_frame: "map"
-      rviz_set_pose_topic: "/set_pose"
-      map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
-
-      # map: "./VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
-
-      # Initial position
-      init_x: 0.0
-      init_y: 0.0
-      init_r: 0.0
-
-      # Initial cloud distribution
-      init_x_sigma: 0.1         #
-      init_y_sigma: 0.1         #
-      init_r_sigma: 0.25        #
-
-      # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
-      # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
-      # You can tune this up and down based on performance, but I recommend starting from some initial guess based on robot config or data
-
-      # Robot Constants
-      laser_offset: -0.209
-      laser_angle_offset: 1.179166718
-      
-      # RPLidar A1 datasheet
-      range_min: 0.15
-      range_max: 5.0
-      sigma_observation: 0.1 # Prof recommends 0.15-0.2 based on sensor specs
-
-      # Motion Model Params
-      # These calculate odometry standard deviations. X is forward, Y is left on robot.
-      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
-      
-      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
-      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
-
-      # Remember that LIDAR will correct periodically, so these can be a bit generous.
-      # Too generous though, and you are either losing resolution or wasting computation.
-
-      k1: 0.5   # x error from x motion         # 50% error in primary direction
-      k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
-      k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-
-      k4: 0.05   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
-      k5: 0.5   # y error from y motion         # 50% error in primary direction           
-      k6: 0.1 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-      
-      k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
-      k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
-      k9: 1.5   # theta error from rotation     # 50% error in primary direction  
-
-      # Dont perform LIDAR updates unless we move a certain distance or angle.
-      min_update_dist:  0.05
-      min_update_angle: 0.005
-
-      # Computation Factors
-      num_particles: 200        # Increase until computation runs out
-      resize_factor: 10.0       # num_points / resize_factor = num_rays
-      resample_frequency: 4     # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
-
-      # Statistical gain for lidar scan confidence (Requires experimental tuning)
-      # Technically speaking, this is the statisical correlation between all the scans of the lidar. They aren't independent, because many scans
-      # may hit the same object. They also aren't totally dependent because there are sharp discontinuities between different objects.
-      # Max is gamma = 1,  all lidar rays are totally uncorrelated. Minimum is gamma = 1/n means they are perfectly correlated.
-
-      # In practice, this is a tunable param which will increase or decrease overall LIDAR confidence.
-      # One good way to tune is to look at how different the particle weights are from each other. 
-      # Decreasing gamma should decrease confidence in lidar observation and weight particles less harshly, IIRC?
-      gamma: 0.09
-
-      # Limits maximum penalty for a bad laser scan
-      # Increasing these makes it harsher on short/long errors for scan
-      # Short scans are very common for other robots and dynamic obstacles
-      # Long scans are extremely unlikely for comp (you see through walls?). Doorways make this viable in buildings and when glass is present.
-      dist_short: 0.24          # 1 std from sensor 68.2%
-      dist_long: 0.28           # 2 std from sensor 95%
-
-      # Some robots can't place a LIDAR with 360° view. These parameters allow you to permanently ignore the obscured range of the scan.
-      use_skip_range: true
-      skip_index_min: 1
-      skip_index_max: 2
-
-      # use_sim_time: true
-
-competition_state_machine_node:
-  ros__parameters:
-    odom_topic: "/sensors/wheel_odom"
-    pose_topic: "/odometry/filtered"
-
-    swerve_robot_plugin:
-      # If you are using the localization stack and you are tuning the k1-9 parameters,
-      # the localization stack has its own duplicate (03_ROS/ghost_localization/config/ekf_pf_node.yaml) of the k1-9 parameters that must
-      # be changed as well as this file. TODO: make a class for this
-      # Motion Model Params
-      # These calculate odometry standard deviations. X is forward, Y is left on robot.
-      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
-
-      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
-      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
-
-      # Remember that LIDAR will correct periodically, so these can be a bit generous.
-      # Too generous though, and you are either losing resolution or wasting computation.
-
-      k1: 0.5   # x error from x motion         # 50% error in primary direction
-      k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
-      k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-
-      k4: 0.05   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
-      k5: 0.5   # y error from y motion         # 50% error in primary direction           
-      k6: 0.1 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-      
-      k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
-      k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
-      k9: 1.0   # theta error from rotation     # 50% error in primary direction  
-
-      # motion planning
-      move_to_pose_kp_xy: 1.0
-      move_to_pose_kp_theta: 2.0
-      steering_kp: 1.75
-      angle_control_kp: 0.75
-      velocity_scaling_ratio: 1.0
-      velocity_scaling_threshold: 0.2
-
-      joy_angle_control_threshold: 0.5
-
-      lift_gear_ratio: 30.
-
-      lift_up_angle_deg: -90.
-      lift_climbed_angle_deg: -150.
-      # degree per second of actual lift
-      lift_kP: .05
-      lift_speed: -10. #TODO
-
-      # TODO MAXX ALL OF THESE
-      stick_gear_ratio: 3.
-      # 0 is the position we start on, slightly crooked
-      stick_upright_angle_deg: 55.
-      # in degrees
-      stick_angle_normal: 130.
-      stick_angle_skills: 10. # not an array because there are exactly 2 items
-      stick_angle_soft_limit_offset: 5.
-      # switch directions at angle_min + offset or angle_max - offset
-      max_ang_vel_slew: 100.1
-      max_lin_vel_slew: 100.001
-
-ekf_localization_node:
-  ros__parameters:
-    # Needs to be specified to accomodate time difference between running bags and running hardware
-    # See: https://answers.ros.org/question/362875/set_pose-breaks-robot_localization
-    # set_pose_time_topc: "/set_pose"
-
-    initial_state: [1.524,  0.3048,  0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0]
-
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
     # computation until it receives at least one message from one of the inputs. It will then run continuously at the
     # frequency specified here, regardless of whether it receives more measurements. Defaults to 30 if unspecified.
@@ -224,7 +21,7 @@ ekf_localization_node:
     # unspecified.
     transform_time_offset: 0.0
 
-    # Use this parameter to provide specify how long the tf listener should wait for a transform to become available.
+    # Use this parameter to provide specify how long the tf listener should wait for a transform to become available. 
     # Defaults to 0.0 if unspecified.
     transform_timeout: 0.0
 
@@ -238,7 +35,7 @@ ekf_localization_node:
     debug: false
 
     # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
-    debug_out_file: ~/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
+    debug_out_file: /home/melcruz/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
 
     use_sim_time: true
     # REP-105 (http://www.ros.org/reps/rep-0105.html) specifies four principal coordinate frames: base_link, odom, map, and
@@ -261,9 +58,9 @@ ekf_localization_node:
     #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
     #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
     # map_frame: map              # Defaults to "map" if unspecified
-    odom_frame: odom              # Defaults to "odom" if unspecified
-    base_link_frame: base_link    # Defaults to "base_link" if unspecified
-    world_frame: odom             # Defaults to the value of odom_frame if unspecified
+    odom_frame: odom            # Defaults to "odom" if unspecified
+    base_link_frame: base_link  # Defaults to "base_link" if unspecified
+    world_frame: odom          # Defaults to the value of odom_frame if unspecified
 
     # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
     # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
@@ -287,7 +84,7 @@ ekf_localization_node:
 
     # If you have high-frequency data or are running with a low frequency parameter value, then you may want to increase
     # the size of the subscription queue so that more measurements are fused.
-    odom0_queue_size: 50
+    odom0_queue_size: 5
 
     # [ADVANCED] Large messages in ROS can exhibit strange behavior when they arrive at a high frequency. This is a result
     # of Nagle's algorithm. This option tells the ROS subscriber to use the tcpNoDelay option, which disables Nagle's
@@ -308,7 +105,7 @@ ekf_localization_node:
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key
     # difference is that the relative parameter doesn't cause the measurement to be converted to a velocity before
     # integrating it. If you simply want your measurements to start at 0 for a given sensor, set this to true.
-    odom0_relative: false
+    odom0_relative: true
 
     # [ADVANCED] If your data is subject to outliers, use these threshold settings, expressed as Mahalanobis distances, to
     # control how far away from the current vehicle state a sensor measurement is permitted to be. Each defaults to
@@ -319,12 +116,12 @@ ekf_localization_node:
     #odom0_pose_rejection_threshold: 5
     #odom0_twist_rejection_threshold: 1
 
-    imu0: /estimation/imu/filtered
+    imu0: /imu
     imu0_config: [false, false, false,
                   false,  false,  false,
                   false, false, false,
                   true,  true,  true,
-                  true,  true,  false]
+                  true,  true,  true]
     imu0_differential: false
     imu0_relative: true
     imu0_queue_size: 5
@@ -335,6 +132,20 @@ ekf_localization_node:
     # [ADVANCED] Some IMUs automatically remove acceleration due to gravity, and others don't. If yours doesn't, please set
     # this to true, and *make sure* your data conforms to REP-103, specifically, that the data is in ENU frame.
     imu0_remove_gravitational_acceleration: false
+
+    # Odometry source is particle filter. Particle filter provides absolute position data
+    odom1: /pf_odometry
+    odom1_config: [true, true, false,
+                   false, false, true,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false,]
+    odom1_differential: false
+    odom1_relative: true
+    odom1_queue_size: 5
+    odom1_pose_rejection_threshold: 0.8                 # Note the difference in parameter names
+    odom1_twist_rejection_threshold: 0.8                #
+    odom1_linear_acceleration_rejection_threshold: 0.8  #
 
     # [ADVANCED]  The EKF and UKF models follow a standard predict/correct cycle. During prediction, if there is no
     # acceleration reference, the velocity at time t+1 is simply predicted to be the same as the velocity at time t. During
@@ -375,18 +186,18 @@ ekf_localization_node:
     # to be larger, which will cause the filter to trust the incoming measurement more during correction. The values are
     # ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below if
     # unspecified.
-    process_noise_covariance: [0.5,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.1,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    process_noise_covariance: [0.05,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.05,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.06,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.03,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.03,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.5,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.06,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.025,   0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.025,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.04,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.01,   0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.01,   0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.05,   0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.02,   0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.01,   0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.01,   0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.015]
@@ -396,20 +207,20 @@ ekf_localization_node:
     # question. Users should take care not to use large values for variables that will not be measured directly. The values
     # are ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below
     #if unspecified.
-    initial_estimate_covariance: [1e-5,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    1e-5,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    initial_estimate_covariance: [1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                  0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                  0.0,    0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     1e-9,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,
+                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,
+                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
 
       # use_dynamic_process_noise_covariance: true

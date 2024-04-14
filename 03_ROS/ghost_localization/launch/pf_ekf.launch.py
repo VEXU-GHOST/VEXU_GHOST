@@ -31,7 +31,7 @@ def generate_launch_description():
         executable='pf_ekf_node',
         name='pf_ekf_node',
         output='screen',
-        parameters=[ghost_localization_share_dir + "/config/ekf_pf_node.yaml"],
+        parameters=[ghost_localization_share_dir + "/config/pf_ekf_node.yaml"],
     )
 
     return LaunchDescription([

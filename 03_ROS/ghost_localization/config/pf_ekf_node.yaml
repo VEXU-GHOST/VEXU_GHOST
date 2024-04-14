@@ -1,8 +1,8 @@
 pf_ekf_node:
   ros__parameters:
     particle_filter:
-      world_frame: "odom"
-      map: "/home/melcruz/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      world_frame: "map"
+      map: "./VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0
@@ -37,17 +37,17 @@ pf_ekf_node:
       # Remember that LIDAR will correct periodically, so these can be a bit generous.
       # Too generous though, and you are either losing resolution or wasting computation.
 
-      k1: 0.5   # x error from x motion         # 50% error in primary direction
+      k1: 0.05   # x error from x motion         # 50% error in primary direction
       k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
-      k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k3: 0.01 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k4: 0.05   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
-      k5: 0.5   # y error from y motion         # 50% error in primary direction           
-      k6: 0.1 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k5: 0.05   # y error from y motion         # 50% error in primary direction           
+      k6: 0.01 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
       
-      k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
-      k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
-      k9: 1.5   # theta error from rotation     # 50% error in primary direction  
+      k7: 0.05  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
+      k8: 0.05  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
+      k9: 0.01   # theta error from rotation     # 50% error in primary direction  
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
       min_update_dist:  0.05

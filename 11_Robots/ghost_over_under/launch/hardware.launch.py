@@ -1,5 +1,5 @@
 import os
-
+import xacro
 from launch import LaunchDescription
 
 from ament_index_python import get_package_share_directory
@@ -127,10 +127,10 @@ def generate_launch_description():
         serial_node,
         competition_state_machine_node,
         bag_recorder_service,
-        # ekf_pf_node,
+        ekf_pf_node,
         # realsense_node,
-        # imu_filter_node,
-        # robot_localization_node,
+        imu_filter_node,
+        robot_localization_node,
         # swerve_motion_planner_node,
-        # rplidar_node
+        rplidar_node
     ])

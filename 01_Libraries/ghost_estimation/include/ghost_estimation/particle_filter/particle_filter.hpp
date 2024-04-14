@@ -114,7 +114,7 @@ public:
 	void GetParticles(std::vector<Particle>* particles) const;
 
 	// Get robot's current location.
-	void GetLocation(Eigen::Vector2f* loc, float* angle) const;
+	void GetLocation(Eigen::Vector2f* loc, float* angle, std::array<double, 36>* cov_ptr) const;
 
 	// Update particle weight based on laser.
 	void Update(const std::vector<float>& ranges,
