@@ -14,8 +14,9 @@ namespace ghost_swerve {
 SwerveRobotPlugin::SwerveRobotPlugin(){
 	m_digital_io = std::vector<bool>(8, false);
 	m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-		{"claw", 0},
-		{"tail", 1}};
+		{"tail", 0},
+		{"claw", 1}
+	};
 }
 
 void SwerveRobotPlugin::initialize(){
@@ -289,6 +290,7 @@ float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_p
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	// std::cout << "Teleop: " << current_time << std::endl;
+	m_swerve_model_ptr->setFieldOrientedControl(false);
 
 	if(joy_data->btn_u){
 		if(!m_auton_button_pressed){
@@ -312,38 +314,38 @@ void SwerveRobotPlugin::teleop(double current_time){
 		m_auton_button_pressed = false;
 		m_auton_index = 0;
 
-		// Toggle Field vs Robot Oriented
-		if(joy_data->btn_x && !m_toggle_swerve_field_control_btn_pressed){
-			m_swerve_model_ptr->setFieldOrientedControl(!m_swerve_model_ptr->isFieldOrientedControl());
-			m_toggle_swerve_field_control_btn_pressed = true;
-		}
-		else if(!joy_data->btn_x){
-			m_toggle_swerve_field_control_btn_pressed = false;
-		}
+		// // Toggle Field vs Robot Oriented
+		// if(joy_data->btn_x && !m_toggle_swerve_field_control_btn_pressed){
+		// 	m_swerve_model_ptr->setFieldOrientedControl(!m_swerve_model_ptr->isFieldOrientedControl());
+		// 	m_toggle_swerve_field_control_btn_pressed = true;
+		// }
+		// else if(!joy_data->btn_x){
+		// 	m_toggle_swerve_field_control_btn_pressed = false;
+		// }
 
-		if(joy_data->btn_l){
-			m_last_odom_angle = 0.0;
-			m_curr_odom_angle = 0.0;
-			m_swerve_model_ptr->setOdometryAngle(0.0);
-		}
-		// Toggle Bag Recorder
-		if(joy_data->btn_y && !m_recording_btn_pressed){
-			m_recording_btn_pressed = true;
+		// if(joy_data->btn_l){
+		// 	m_last_odom_angle = 0.0;
+		// 	m_curr_odom_angle = 0.0;
+		// 	m_swerve_model_ptr->setOdometryAngle(0.0);
+		// }
+		// // Toggle Bag Recorder
+		// if(joy_data->btn_y && !m_recording_btn_pressed){
+		// 	m_recording_btn_pressed = true;
 
-			if(!m_recording){
-				auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-				m_start_recorder_client->async_send_request(req);
-			}
-			else{
-				auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
-				m_stop_recorder_client->async_send_request(req);
-			}
+		// 	if(!m_recording){
+		// 		auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+		// 		m_start_recorder_client->async_send_request(req);
+		// 	}
+		// 	else{
+		// 		auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+		// 		m_stop_recorder_client->async_send_request(req);
+		// 	}
 
-			m_recording = !m_recording;
-		}
-		else if(!joy_data->btn_y){
-			m_recording_btn_pressed = false;
-		}
+		// 	m_recording = !m_recording;
+		// }
+		// else if(!joy_data->btn_y){
+		// 	m_recording_btn_pressed = false;
+		// }
 
 		// if(m_swerve_angle_control){
 		// 	if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
@@ -384,7 +386,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 
 		// Climb Testing
-		if(joy_data->btn_l1){
+		if(joy_data->btn_l2){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
 			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
 
@@ -394,7 +396,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
 			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
 		}
-		else if(joy_data->btn_l2){
+		else if(joy_data->btn_l1){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
 			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
 
@@ -414,6 +416,15 @@ void SwerveRobotPlugin::teleop(double current_time){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
 			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
 		}
+
+		if(joy_data->btn_d){
+			m_claw_open = false;
+		}
+		else if(joy_data->btn_l){
+			m_claw_open = true;
+		}
+
+		m_digital_io[m_digital_io_name_map["claw"]] = m_claw_open;
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
 	}
