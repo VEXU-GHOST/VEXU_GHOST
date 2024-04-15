@@ -100,7 +100,7 @@ port_configuration:
             serial:
                 send_accel_data: true
                 send_gyro_data: true
-                send_heading_data: true    
+                send_heading_data: false    
         drive_motor_config:
             gearset: 600
             brake_mode: COAST
@@ -128,7 +128,7 @@ port_configuration:
                 send_power_data: false
                 send_temperature_data: false
         lift_motor_config:
-            gearset: 600
+            gearset: 200
             brake_mode: BRAKE
             encoder_units: DEGREES
             controller:
