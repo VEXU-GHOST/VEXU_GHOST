@@ -25,6 +25,7 @@ MotorController::Config loadMotorControllerConfigFromYAML(YAML::Node node, bool 
 	loadYAMLParam(node, "vel_gain", config.vel_gain, verbose);
 	loadYAMLParam(node, "ff_vel_gain", config.ff_vel_gain, verbose);
 	loadYAMLParam(node, "ff_torque_gain", config.ff_torque_gain, verbose);
+	loadYAMLParam(node, "cmd_duration", config.cmd_duration, verbose);
 	return config;
 }
 

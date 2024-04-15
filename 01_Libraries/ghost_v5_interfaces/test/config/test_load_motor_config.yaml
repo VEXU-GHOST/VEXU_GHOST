@@ -37,6 +37,7 @@ port_configuration:
                 vel_gain: 118.0
                 ff_vel_gain: 400.0
                 ff_torque_gain: 2587.0
+                cmd_duration: 4
             model:
                 free_speed: 1104.0
                 stall_torque: 52.25

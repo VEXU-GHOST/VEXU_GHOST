@@ -37,11 +37,14 @@ float MotorController::updateMotor(float position, float velocity){
 	cmd_voltage_mv_ = ghost_util::clamp(cmd_voltage_mv_, -max_voltage_mv, max_voltage_mv);
 
 	// Motor control mode must be constantly refreshed
-	position_active_ = false;
-	velocity_active_ = false;
-	torque_active_ = false;
-	voltage_active_ = false;
+	if(loops_since_last_cmd_ >= controller_config_.cmd_duration){
+		velocity_active_ = false;
+		torque_active_ = false;
+		voltage_active_ = false;
+		position_active_ = false;
+	}
 
+	loops_since_last_cmd_++;
 	return cmd_voltage_mv_;
 }
 

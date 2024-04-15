@@ -204,6 +204,7 @@ void generateCodeFromRobotConfig(std::shared_ptr<DeviceConfigMap> config_ptr, st
 			output_file << "\t" + motor_name + "->" + "controller_config.vel_gain = " +         std::to_string(config_ptr->controller_config.vel_gain) + ";\n";
 			output_file << "\t" + motor_name + "->" + "controller_config.ff_vel_gain = " +      std::to_string(config_ptr->controller_config.ff_vel_gain) + ";\n";
 			output_file << "\t" + motor_name + "->" + "controller_config.ff_torque_gain = " +   std::to_string(config_ptr->controller_config.ff_torque_gain) + ";\n";
+			output_file << "\t" + motor_name + "->" + "controller_config.cmd_duration = " +   std::to_string(config_ptr->controller_config.cmd_duration) + ";\n";
 			output_file << "\t" + motor_name + "->" + "serial_config.send_position_command = " +   std::to_string(config_ptr->serial_config.send_position_command) + ";\n";
 			output_file << "\t" + motor_name + "->" + "serial_config.send_velocity_command = " +   std::to_string(config_ptr->serial_config.send_velocity_command) + ";\n";
 			output_file << "\t" + motor_name + "->" + "serial_config.send_voltage_command = " +   std::to_string(config_ptr->serial_config.send_voltage_command) + ";\n";

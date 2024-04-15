@@ -162,6 +162,7 @@ port_configuration:
                 vel_gain: 0.0
                 ff_vel_gain: 0.0
                 ff_torque_gain: 100.0
+                cmd_duration: 2
             serial:
                 send_position_command: false
                 send_velocity_command: false
