@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="test">
+      main_tree_to_execute="test2">
   <BehaviorTree ID="main">
     <Sequence>
       <SwipeTail num_swipes="25"/>
@@ -94,7 +94,7 @@
   <BehaviorTree ID="test2">
     <Sequence>
       <!-- <SwipeTail num_swipes="5"/> -->
-      <MoveToPose posX="0.71"
+      <MoveToPose posX="1.37"
                   posY="0.0"
                   theta="0"
                   velX="0.20"
@@ -103,7 +103,7 @@
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
-      <MoveToPose posX="0.60"
+      <MoveToPose posX="1.25"
                   posY="0.60"
                   theta="0"
                   velX="-0.10"
@@ -112,8 +112,8 @@
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
-      <MoveToPose posX="0.40"
-                  posY="0.70"
+      <MoveToPose posX="0.97"
+                  posY="1.36"
                   theta="-90"
                   velX="-0.10"
                   velY="0.20"
@@ -121,19 +121,19 @@
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
-      <MoveToPose posX="0.4"
-                  posY="1.22"
-                  theta="-90"
-                  velX="0.0"
-                  velY="0.20"
+      <MoveToPose posX="0.90"
+                  posY="1.36"
+                  theta="0"
+                  velX="-0.10"
+                  velY="0.0"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
-      <MoveToPose posX="0.4"
-                  posY="0.65"
+      <MoveToPose posX="0.97"
+                  posY="0.80"
                   theta="-90"
-                  velX="0.0"
+                  velX="0.10"
                   velY="-0.2"
                   omega="0.0"
                   threshold="0.05"
