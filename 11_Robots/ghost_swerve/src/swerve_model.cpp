@@ -15,16 +15,17 @@ SwerveModel::SwerveModel(SwerveConfig config){
 	calculateJacobians();
 	calculateMaxBaseTwist();
 
-	// Add each module to module_states map
+	// Initialize module specific data
 	for(const auto & [name, _] : m_config.module_positions){
 		m_current_module_states[name] = ModuleState();
 		m_previous_module_states[name] = ModuleState();
 		m_module_commands[name] = ModuleCommand();
+		m_error_sum_map[name] = 0.0;
 	}
 }
 
 void SwerveModel::validateConfig(){
-	std::unordered_map<std::string, double> double_params{
+	std::unordered_map<std::string, double> larger_than_zero_params{
 		{"max_wheel_lin_vel", m_config.max_wheel_lin_vel},
 		{"max_lin_vel_slew", m_config.max_lin_vel_slew},
 		{"max_ang_vel_slew", m_config.max_ang_vel_slew},
@@ -32,13 +33,28 @@ void SwerveModel::validateConfig(){
 		{"wheel_ratio", m_config.wheel_ratio},
 		{"wheel_radius", m_config.wheel_radius},
 		{"steering_kp", m_config.steering_kp},
+		{"controller_dt", m_config.controller_dt},
 		{"max_wheel_actuator_vel", m_config.max_wheel_actuator_vel}
 	};
 
-	for(const auto& [key, val] : double_params){
+	for(const auto& [key, val] : larger_than_zero_params){
 		if(val <= 0){
 			std::string err_string =
 				std::string("[SwerveModel::validateConfig] Error: ") + key + " must be non-zero and positive!";
+			throw std::runtime_error(err_string);
+		}
+	}
+
+	std::unordered_map<std::string, double> larger_or_equal_to_zero_params{
+		{"steering_ki", m_config.steering_ki},
+		{"steering_ki_limit", m_config.steering_ki_limit},
+		{"steering_control_deadzone", m_config.steering_control_deadzone}
+	};
+
+	for(const auto& [key, val] : larger_or_equal_to_zero_params){
+		if(val < 0){
+			std::string err_string =
+				std::string("[SwerveModel::validateConfig] Error: ") + key + " must be positive!";
 			throw std::runtime_error(err_string);
 		}
 	}
@@ -296,10 +312,20 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 			// Recalculate error
 			steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, steering_angle);
 		}
+
+		// Update error sum for integral control
+		m_error_sum_map[module_name] += steering_error * m_config.controller_dt;
+		m_error_sum_map[module_name] = ghost_util::clamp<double>(m_error_sum_map[module_name], -m_config.steering_ki_limit, m_config.steering_ki_limit);
 		max_steering_error = std::max(max_steering_error, std::fabs(steering_error));
 
 		// Set steering voltage using position control law
-		module_command.steering_velocity_command = steering_error * m_config.steering_kp;
+		module_command.steering_velocity_command = steering_error * m_config.steering_kp + m_error_sum_map[module_name] * m_config.steering_ki;
+
+		// If steering is within a given tolerance, zero the steering command.
+		// In real system, steering error is never absolute zero, so this helps to maximize drivetrain power.
+		if(std::fabs(steering_error) < m_config.steering_control_deadzone){
+			module_command.steering_velocity_command = 0.0;
+		}
 
 		// Update module command
 		m_module_commands[module_name] = module_command;

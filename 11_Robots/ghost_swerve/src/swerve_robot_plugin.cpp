@@ -86,9 +86,20 @@ void SwerveRobotPlugin::initialize(){
 
 	swerve_model_config.move_to_pose_kp = m_move_to_pose_kp_xy;
 
-	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kp", 2.0);
-	swerve_model_config.steering_kp = node_ptr_->get_parameter("swerve_robot_plugin.steering_kp").as_double();
 
+	// Swerve Steering Controller
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kp", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_ki", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_ki_limit", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.controller_dt", 0.01);
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_control_deadzone", 0.0);
+	swerve_model_config.steering_kp = node_ptr_->get_parameter("swerve_robot_plugin.steering_kp").as_double();
+	swerve_model_config.steering_ki = node_ptr_->get_parameter("swerve_robot_plugin.steering_ki").as_double();
+	swerve_model_config.steering_ki_limit = node_ptr_->get_parameter("swerve_robot_plugin.steering_ki_limit").as_double();
+	swerve_model_config.controller_dt = node_ptr_->get_parameter("swerve_robot_plugin.controller_dt").as_double();
+	swerve_model_config.steering_control_deadzone = node_ptr_->get_parameter("swerve_robot_plugin.steering_control_deadzone").as_double();
+
+	// Combined Motion Scaling
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_ratio", 1.0);
 	swerve_model_config.velocity_scaling_ratio = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_ratio").as_double();
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
