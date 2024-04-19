@@ -117,7 +117,9 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.stick_angle_normal = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_normal").as_double();
 	swerve_model_config.stick_turn_offset = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset").as_double();
 
-	swerve_model_config.max_wheel_actuator_vel = 625.0;
+	node_ptr_->declare_parameter("swerve_robot_plugin.max_wheel_actuator_vel", 625.0);
+	swerve_model_config.max_wheel_actuator_vel = node_ptr_->get_parameter("swerve_robot_plugin.max_wheel_actuator_vel").as_double();
+
 	auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
 	swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius * ghost_util::INCHES_TO_METERS;
 
@@ -372,62 +374,21 @@ void SwerveRobotPlugin::teleop(double current_time){
 		m_last_y_cmd = m_curr_y_cmd;
 		m_last_theta_cmd = m_curr_theta_cmd;
 
-		// updateDrivetrainMotors();
+		updateDrivetrainMotors();
 
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_fll", 2500);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_flr", 2500);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_frl", 2500);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_frr", 2500);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_bll", 2500);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_blr", 2500);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_brl", 2500);
-		rhi_ptr_->setMotorCurrentLimitMilliAmps("drive_brr", 2500);
-
+		// Intake
 		if(joy_data->btn_r1){
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_fll", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_flr", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_frl", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_frr", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_bll", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_blr", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_brl", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_brr", 1.0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
 		}
 		else if(joy_data->btn_r2){
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_fll", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_flr", -1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_frl", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_frr", -1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_bll", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_blr", -1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_brl", 1.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_brr", -1.0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
 		}
 		else{
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_fll", 0.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_flr", 0.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_frl", 0.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_frr", 0.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_bll", 0.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_blr", 0.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_brl", 0.0);
-			rhi_ptr_->setMotorVoltageCommandPercent("drive_brr", 0.0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
 		}
-
-
-		// // Intake
-		// if(joy_data->btn_r1){
-		// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-		// 	rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
-		// }
-		// else if(joy_data->btn_r2){
-		// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-		// 	rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
-		// }
-		// else{
-		// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
-		// 	rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
-		// }
 
 		// Climb Testing
 		if(joy_data->btn_l2){
