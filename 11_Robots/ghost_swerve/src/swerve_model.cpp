@@ -314,16 +314,16 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 		}
 
 		// Update error sum for integral control
-		m_error_sum_map[module_name] += steering_error * m_config.controller_dt;
-		m_error_sum_map[module_name] = ghost_util::clamp<double>(m_error_sum_map[module_name], -m_config.steering_ki_limit, m_config.steering_ki_limit);
+		m_error_sum_map[module_name] += steering_error * m_config.controller_dt;         // CHANGED
+		m_error_sum_map[module_name] = ghost_util::clamp<double>(m_error_sum_map[module_name], -m_config.steering_ki_limit, m_config.steering_ki_limit);         // CHANGED
 		max_steering_error = std::max(max_steering_error, std::fabs(steering_error));
 
 		// Set steering voltage using position control law
-		module_command.steering_velocity_command = steering_error * m_config.steering_kp + m_error_sum_map[module_name] * m_config.steering_ki;
+		module_command.steering_velocity_command = steering_error * m_config.steering_kp + m_error_sum_map[module_name] * m_config.steering_ki; // CHANGED
 
 		// If steering is within a given tolerance, zero the steering command.
 		// In real system, steering error is never absolute zero, so this helps to maximize drivetrain power.
-		if(std::fabs(steering_error) < m_config.steering_control_deadzone){
+		if(std::fabs(steering_error) < m_config.steering_control_deadzone){  // CHANGED
 			module_command.steering_velocity_command = 0.0;
 		}
 
