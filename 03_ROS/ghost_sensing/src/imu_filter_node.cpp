@@ -42,6 +42,13 @@ IMUFilterNode::IMUFilterNode() :
 
 	m_base_link_to_camera_rotation = getRotationMatrixFromEulerAnglesDegrees(roll, pitch, yaw);
 
+	std::cout << "IMU Roll: " << roll << std::endl;
+	std::cout << "IMU Pitch: " << pitch << std::endl;
+	std::cout << "IMU Yaw: " << yaw << std::endl;
+
+	std::cout << "Base Link to IMU Rotation Matrix:" << std::endl;
+	std::cout << m_base_link_to_camera_rotation << std::endl;
+
 	declare_parameter("camera_x", 0.0);
 	auto camera_x = get_parameter("camera_x").as_double();
 
