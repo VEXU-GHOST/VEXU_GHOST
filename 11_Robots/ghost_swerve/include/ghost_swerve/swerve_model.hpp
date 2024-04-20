@@ -31,6 +31,7 @@ struct SwerveConfig {
 
 	// Kinematic Controller
 	double steering_kp;
+	double steering_kd;
 	double steering_ki;
 	double steering_ki_limit;
 	double controller_dt;
