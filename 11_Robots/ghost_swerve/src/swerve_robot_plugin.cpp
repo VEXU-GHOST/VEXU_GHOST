@@ -116,17 +116,17 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.lift_kP = node_ptr_->get_parameter("swerve_robot_plugin.lift_kP").as_double();
 	swerve_model_config.lift_speed = node_ptr_->get_parameter("swerve_robot_plugin.lift_speed").as_double();
 
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_skills", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_normal", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset", 1.);
-	gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.stick_gear_ratio").as_double();
+	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
+	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", 1.);
+	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_skills", 1.);
+	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_normal", 1.);
+	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset", 1.);
+	// gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.stick_gear_ratio").as_double();
 
-	swerve_model_config.stick_upright_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_upright_angle_deg").as_double();
-	swerve_model_config.stick_angle_skills = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_skills").as_double();
-	swerve_model_config.stick_angle_normal = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_normal").as_double();
-	swerve_model_config.stick_turn_offset = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset").as_double();
+	// swerve_model_config.stick_upright_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_upright_angle_deg").as_double();
+	// swerve_model_config.stick_angle_skills = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_skills").as_double();
+	// swerve_model_config.stick_angle_normal = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_normal").as_double();
+	// swerve_model_config.stick_turn_offset = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.max_wheel_actuator_vel", 625.0);
 	swerve_model_config.max_wheel_actuator_vel = node_ptr_->get_parameter("swerve_robot_plugin.max_wheel_actuator_vel").as_double();
@@ -440,6 +440,45 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_claw_open = true;
 		}
 
+		if(joy_data->btn_b){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
+			m_claw_open = false;
+		}
+		else if(joy_data->btn_a){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
+			m_claw_open = true;
+		}
+
+		if(joy_data->btn_l1 || joy_data->btn_l){//intake lift
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_lift_motor", 1.0);
+		} else {
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("intake_lift_motor", 0);
+		}
+
+		bool tail_down = false;
+		//tail left and intake up
+		if(joy_data->btn_l){
+			tail_down = true;
+			if(joy_data->btn_r2){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+				rhi_ptr_->setMotorPositionCommand("tail_motor", 60);
+			}
+			else {
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+				rhi_ptr_->setMotorPositionCommand("tail_motor", 0);
+			}
+		}
+		else {
+			tail_down = false;
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+			rhi_ptr_->setMotorPositionCommand("tail_motor", 0);
+		}
+
+		m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
 		m_digital_io[m_digital_io_name_map["claw"]] = m_claw_open;
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
