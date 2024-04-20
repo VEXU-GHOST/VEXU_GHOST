@@ -46,6 +46,7 @@ void SwerveModel::validateConfig(){
 	}
 
 	std::unordered_map<std::string, double> larger_or_equal_to_zero_params{
+		{"steering_kd", m_config.steering_kd},
 		{"steering_ki", m_config.steering_ki},
 		{"steering_ki_limit", m_config.steering_ki_limit},
 		{"steering_control_deadzone", m_config.steering_control_deadzone}
@@ -303,6 +304,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 
 		double steering_angle = m_current_module_states.at(module_name).steering_angle;
 		double steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, steering_angle);
+		double steering_velocity = m_current_module_states.at(module_name).steering_velocity;
 
 		if(fabs(steering_error) > 90.0){
 			// Flip commands
@@ -319,7 +321,9 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 		max_steering_error = std::max(max_steering_error, std::fabs(steering_error));
 
 		// Set steering voltage using position control law
-		module_command.steering_velocity_command = steering_error * m_config.steering_kp + m_error_sum_map[module_name] * m_config.steering_ki;
+		module_command.steering_velocity_command = steering_error * m_config.steering_kp 
+												+ m_error_sum_map[module_name] * m_config.steering_ki
+												- steering_velocity * m_config.steering_kd;
 
 		// If steering is within a given tolerance, zero the steering command.
 		// In real system, steering error is never absolute zero, so this helps to maximize drivetrain power.
