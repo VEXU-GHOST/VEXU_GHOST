@@ -5,6 +5,7 @@
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <ghost_msgs/msg/drivetrain_command.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/srv/start_recorder.hpp>
@@ -34,6 +35,7 @@ protected:
 	// Publishers
 	void publishVisualization();
 	void publishOdometry();
+	void publishBaseTwist();
 	void publishTrajectoryVisualization();
 
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
@@ -41,6 +43,7 @@ protected:
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_swerve_viz_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
 	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+	rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_base_twist_cmd_pub;
 
 	// Subscribers
 	void poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);

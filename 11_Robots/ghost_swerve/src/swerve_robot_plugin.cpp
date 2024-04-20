@@ -86,7 +86,6 @@ void SwerveRobotPlugin::initialize(){
 
 	swerve_model_config.move_to_pose_kp = m_move_to_pose_kp_xy;
 
-
 	// Swerve Steering Controller
 	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kp", 0.0);
 	node_ptr_->declare_parameter("swerve_robot_plugin.steering_ki", 0.0);
@@ -169,6 +168,10 @@ void SwerveRobotPlugin::initialize(){
 		trajectory_marker_topic,
 		10);
 
+	m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::TwistStamped>(
+		"/cmd_vel",
+		10);
+
 	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr);
 
 	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
@@ -232,6 +235,7 @@ void SwerveRobotPlugin::onNewSensorData(){
 
 	publishOdometry();
 	publishVisualization();
+	publishBaseTwist();
 	// publishTrajectoryVisualization();
 }
 
@@ -481,6 +485,17 @@ void SwerveRobotPlugin::poseUpdateCallback(const nav_msgs::msg::Odometry::Shared
 	double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
 	m_swerve_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y);
 	m_swerve_model_ptr->setWorldAngle(theta);
+}
+
+void SwerveRobotPlugin::publishBaseTwist(){
+	geometry_msgs::msg::TwistStamped msg{};
+	msg.header.frame_id = "base_link";
+	msg.header.stamp = node_ptr_->get_clock()->now();
+	auto base_vel_cmd = m_swerve_model_ptr->getBaseVelocityCommand();
+	msg.twist.linear.x = base_vel_cmd.x();
+	msg.twist.linear.y = base_vel_cmd.y();
+	msg.twist.angular.z = base_vel_cmd.z();
+	m_base_twist_cmd_pub->publish(msg);
 }
 
 void SwerveRobotPlugin::publishOdometry(){

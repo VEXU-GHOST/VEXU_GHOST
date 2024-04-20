@@ -124,13 +124,13 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        serial_node,
+        # serial_node,
         competition_state_machine_node,
         bag_recorder_service,
         # ekf_pf_node,
         # realsense_node,
         imu_filter_node,
         robot_localization_node,
-        swerve_motion_planner_node,
-        rplidar_node
+        # swerve_motion_planner_node,
+        # rplidar_node
     ])
