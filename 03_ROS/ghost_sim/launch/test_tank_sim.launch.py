@@ -100,6 +100,23 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
+    odom_ekf_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='odom_ekf_node',
+        output='screen',
+        parameters=[ros_config_file],
+        remappings=[('/sensors/wheel_odom', '/odom')]
+    )
+
+    map_ekf_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='map_ekf_node',
+        output='screen',
+        parameters=[ros_config_file],
+    )
+
     robot_localization_node = Node(
         package='robot_localization',
         executable='ekf_node',
@@ -124,6 +141,7 @@ def generate_launch_description():
         ekf_pf_node,
         rviz_node,
         plot_juggler_node,
-        robot_localization_node,
+        map_ekf_node,
+        odom_ekf_node,
         OpaqueFunction(function = launch_setup),
     ])
