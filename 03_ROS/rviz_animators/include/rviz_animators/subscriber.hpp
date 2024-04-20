@@ -25,6 +25,6 @@ private:
 	// void topic_callback(std_msgs::msg::String::SharedPtr msg);
 	void topic_callback(visualization_msgs::msg::Marker::SharedPtr msg);
 	rclcpp::Subscription<visualization_msgs::msg::Marker>::SharedPtr subscription_;
-};
 
+};
 }

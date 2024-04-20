@@ -1,206 +1,305 @@
 #include <chrono>
 #include <functional>
+#include <iostream>
+#include <map>
 #include <memory>
 #include <string>
+#include <vector>
+#include "geometry_msgs/msg/pose.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "visualization_msgs/msg/marker.hpp"
-#include"geometry_msgs/msg/pose.hpp"
-#include <map>
-#include <vector>
-#include<iostream>
 
 using namespace std::chrono_literals;
 
-class AnimationPublisher : public rclcpp::Node
-{
+class AnimationPublisher : public rclcpp::Node {
+	// declare_parameters_from_file("/home/annievu/VEXU_GHOST/03_ROS/rviz_animators/config/test.yaml");
+	// declare_parameter("mode", "default");
+	// std::string test_param = get_parameter("mode").as_string()
+	// std::string mode_ = this->get_parameter("mode").as_string();
+	// auto node = std::make_shared<rclcpp::Node>("parameter_loader");
+	// declare_parameter<std::string>("mode", "playback");
+	// std::string mode_ = this->get_parameter("mode").as_string();
 
-  std::string mode_ = this->get_parameter("mode").as_string();
-//  this->declare_parameters_from_file("/home/annievu/VEXU_GHOST/03_ROS/rviz_animators/config/test.yaml");
-// struct Point{
-//   double x;
-//   double y;
-// };
+public:
+	AnimationPublisher() :
+		Node("marker_publisher"),
+		count_(0),
+		path_index_(0){
+		declare_parameter<std::string>("mode", "default");
+		std::string mode_ = this->get_parameter("mode").as_string();
+		publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("topic", 10);
+		std::map<double, std::vector<double> > mapOfPos;
+		// std::string mode_ = "visualization";
+		// Insert some elements into the map
+		mapOfPos[1.0] = {0.0, 0.0, 0.0};
+		mapOfPos[2.0] = {1.0, 0.0,0.0};
+		mapOfPos[3.0] = {2.0, 0.0, 0.0};
+		mapOfPos[4.0] = {3.0, 0.0, 0.0};
+		mapOfPos[5.0] = {4.0, 0.0,0.0};
+		mapOfPos[6.0] = {5.0, 0.0, 0.0};
+		mapOfPos[7.0] = {6.0, 0.0, 0.0};
+		mapOfPos[8.0] = {7.0, 0.0,0.0};
+		mapOfPos[9.0] = {8.0, 0.0, 0.0};
+		mapOfPos[10.0] = {9.0, 0.0, 0.0};
+		mapOfPos[11.0] = {10.0, 0.0,0.0};
+		mapOfPos[12.0] = {11.0, 0.0, 0.0};
 
-  public:
+		if(mode_ == "playback"){
+			timer_ = this->create_wall_timer(500ms, std::bind(&AnimationPublisher::playback_callback, this));
+			// poseObjects(linearInterpolation3D(0.1, mapOfPos), path_)
+			for(const auto& pair : linearInterpolation3D(0.1, mapOfPos)){
+				double x = pair.second[0];  // Accessing the first element of the vector
+				double y = pair.second[1];  // Accessing the second element of the vector
+				double z = pair.second[2];  // Accessing the third element of the vector
+				// int id = pair.first;
+				path_.push_back(createPose(x, y, z));
+			}
+		}
 
-  AnimationPublisher():Node("marker_publisher"), count_(0), path_index_(0){
+		else if(mode_ == "visualization"){
+			timer1_ = this->create_wall_timer(500ms, std::bind(&AnimationPublisher::visualization_callback, this));
 
-      publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("topic", 10);
+			for(const auto& pair : linearInterpolation3D(0.5, mapOfPos)){
+				double x = pair.second[0];  // Accessing the first element of the vector
+				double y = pair.second[1];  // Accessing the second element of the vector
+				double z = pair.second[2];  // Accessing the third element of the vector
+				// int id = pair.first;
+				path_.push_back(createPose(x, y, z));
+			}
+		}
+	}
 
-      // mode_service_ = this->create_service<std_srvs::srv::SetBool>(
-      // "switch_trajectory_mode", std::bind(&AnimationPublisher::modeSwitchCallback, this,
-      // std::placeholders::_1, std::placeholders::_2));
-
-     mode_ = "playback"; //hardcoding mode to be playback omg
-
-    timer_ = this->create_wall_timer(500ms, std::bind(&AnimationPublisher::timer_callback, this));
-
-    std::map<int64_t, std::vector<double>> mapOfPos;
-
-    // Insert some elements into the map
-    mapOfPos[1] = {0.0, 0.0, 0.0};
-    mapOfPos[2] = {1.0, 0.0,0.0};
-    mapOfPos[3] = {2.0, 0.0, 0.0};
-    mapOfPos[4] = {3.0, 0.0, 0.0};
-    mapOfPos[5] = {4.0, 0.0,0.0};
-    mapOfPos[6] = {5.0, 0.0, 0.0};
-    
-      // x_data_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-      // y_data_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-      // time_vector_ = std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-// Iterating through the map and creating Pose objects
-    for (const auto& pair : mapOfPos) {
-        double x = pair.second[0];  // Accessing the first element of the vector
-        double y = pair.second[1];  // Accessing the second element of the vector
-        double z = pair.second[2];  // Accessing the third element of the vector
-        path_.push_back(createPose(x, y, z));
-}
-  
-    }
-
-  private:
-
-
-    void timer_callback()
-  {
-
-      auto marker_msg_ = visualization_msgs::msg::Marker();
-      marker_msg_.header.frame_id = "map";
-      marker_msg_.header.stamp = this->get_clock()->now();
-      // marker_msg_.header.stamp = this->now();
-      marker_msg_.ns = "basic_shapes";
-      marker_msg_.id = 0;
-      marker_msg_.type = visualization_msgs::msg::Marker::SPHERE;
-      marker_msg_.action = visualization_msgs::msg::Marker::ADD;
-
-      auto next_pose = path_[path_index_];
-      marker_msg_.pose.position.x = next_pose.position.x;
-      marker_msg_.pose.position.y = next_pose.position.y;
-      marker_msg_.pose.position.z = next_pose.position.z;
-      marker_msg_.pose.orientation.x = 0.0;
-      marker_msg_.pose.orientation.y = 0.0;
-      marker_msg_.pose.orientation.z = 0.0;
-      marker_msg_.pose.orientation.w = 1.0;
-      marker_msg_.scale.x = 1.0;
-      marker_msg_.scale.y = 1.0;
-      marker_msg_.scale.z = 1.0;
-      marker_msg_.color.a = 1.0; // Alpha
-      marker_msg_.color.r = 1.0; // Red
-      marker_msg_.color.g = 0.0; // Green
-      marker_msg_.color.b = 0.0; // Blue
-
-      
-      publisher_->publish(marker_msg_);
-      path_index_ = (path_index_ + 1) % path_.size();
+	// Iterating through the map and creating Pose objects
+	// for(const auto& pair : linearInterpolation3D(0.1, mapOfPos)){
+	// 	double x = pair.second[0];  // Accessing the first element of the vector
+	// 	double y = pair.second[1];  // Accessing the second element of the vector
+	// 	double z = pair.second[2];  // Accessing the third element of the vector
+	// 	// int id = pair.first;
+	// 	path_.push_back(createPose(x, y, z));
 
 
-  //     // if (mode_ == "playback"){
-        
-  //     //   }
-  //     // else if(mode_ == "visualization"){
+private:
 
-  //     //  } 
-
-     }
-
-      geometry_msgs::msg::Pose createPose(double x, double y, double z) {
-      geometry_msgs::msg::Pose pose;
-        pose.position.x = x;
-        pose.position.y = y;
-        pose.position.z = z;
-        return pose;
-      }
-
-  //     }
-
-
-  // void timer_callback(){
-  //   auto message = visualization_msgs::msg::Marker();
-
-  //   std::map<std::string, std::vector<int>> dataMap;
-
-  //   // Example data
-  //   std::vector<int> values1 = {1, 2, 3};
-  //   std::vector<int> values2 = {4, 5, 6};
-  //   std::vector<int> values3 = {7, 8, 9};
-
-  //   // Insert elements into the map
-  //   dataMap[000] = values1;
-  //   dataMap[001] = values2;
-  //   dataMap[002] = values3;
+	void playback_callback(){
+		auto marker_msg_ = visualization_msgs::msg::Marker();
+		marker_msg_.header.frame_id = "map";
+		marker_msg_.header.stamp = this->get_clock()->now();
+		marker_msg_.ns = "basic_shapes";
+		marker_msg_.id = 0;
+		marker_msg_.type = visualization_msgs::msg::Marker::SPHERE;
+		marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+		auto next_pose = path_[path_index_];
+		marker_msg_.pose.position.x = next_pose.position.x;
+		marker_msg_.pose.position.y = next_pose.position.y;
+		marker_msg_.pose.position.z = next_pose.position.z;
+		marker_msg_.pose.orientation.x = 0.0;
+		marker_msg_.pose.orientation.y = 0.0;
+		marker_msg_.pose.orientation.z = 0.0;
+		marker_msg_.pose.orientation.w = 1.0;
+		marker_msg_.scale.x = 1.0;
+		marker_msg_.scale.y = 1.0;
+		marker_msg_.scale.z = 1.0;
+		marker_msg_.color.a = 1.0; // Alpha
+		marker_msg_.color.r = 1.0; // Red
+		marker_msg_.color.g = 0.0; // Green
+		marker_msg_.color.b = 0.0; // Blue
+		publisher_->publish(marker_msg_);
+		path_index_ = (path_index_ + 1) % path_.size();
+	}
 
 
-  //    for (auto& pair : dataMap) {
-  //       // message->id.push_back(pair.first);
-  //       message.pose.position.x = push_back(pair.second);
-  //   }
-
-  //   // Publish the message
-  //   publisher_->publish(message);
-
-  // }
+	// void visualization_callback(){
+	// 	//
+	// 	// visualization_msgs::msg::MarkerArray marker_ar;
+	// 	// auto marker_msg_ = visualization_msgs::msg::MarkerArray();
 
 
-  
+	// 	// for(int i = 0; i < 7; ++i){
+	// 		auto marker_msg_ = visualization_msgs::msg::Marker();
+	// 		marker_msg_.header.frame_id = "map";
+	// 		marker_msg_.header.stamp = this->get_clock()->now();
+	// 		marker_msg_.ns = "basic_shapes";
+	// 		marker_msg_.id = i;
+	// 		marker_msg_.type = visualization_msgs::msg::Marker::SPHERE;
+	// 		marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+	// 		auto next_pose = path_[path_index_];
+	// 		marker_msg_.pose.position.x = next_pose.position.x;
+	// 		marker_msg_.pose.position.y = next_pose.position.y;
+	// 		marker_msg_.pose.position.z = next_pose.position.z;
+	// 		marker_msg_.pose.orientation.x = 0.0;
+	// 		marker_msg_.pose.orientation.y = 0.0;
+	// 		marker_msg_.pose.orientation.z = 0.0;
+	// 		marker_msg_.pose.orientation.w = 1.0;
+	// 		marker_msg_.scale.x = 1.0;
+	// 		marker_msg_.scale.y = 1.0;
+	// 		marker_msg_.scale.z = 1.0;
+	// 		marker_msg_.color.a = 1.0;// Alpha
+	// 		marker_msg_.color.r = 1.0; // Red
+	// 		marker_msg_.color.g = .5 * i; // Green
+	// 		marker_msg_.color.b = 0.0; // Blue
+	// 		// Add the marker to the marker array
+	// 		// Move to the next pose in the path
+	// 		publisher_->publish(marker_msg_);
+	// 		path_index_ = (path_index_ + 1) % path_.size();
+	// 	}
+
+	void visualization_callback(){
+		auto marker_msg_ = visualization_msgs::msg::Marker();
+
+		marker_msg_.header.frame_id = "map";
+		marker_msg_.header.stamp = this->get_clock()->now();
+		marker_msg_.ns = "basic_shapes";
+		marker_msg_.id = 1;
+		marker_msg_.type = visualization_msgs::msg::Marker::SPHERE;
+		marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+		auto next_pose = path_[path_index_];
+		marker_msg_.pose.position.x = next_pose.position.x;
+		marker_msg_.pose.position.y = next_pose.position.y;
+		marker_msg_.pose.position.z = next_pose.position.z;
+		marker_msg_.pose.orientation.x = 0.0;
+		marker_msg_.pose.orientation.y = 0.0;
+		marker_msg_.pose.orientation.z = 0.0;
+		marker_msg_.pose.orientation.w = 1.0;
+		marker_msg_.scale.x = 1.0;
+		marker_msg_.scale.y = 1.0;
+		marker_msg_.scale.z = 1.0;
+		marker_msg_.color.a = 1.0;// Alpha
+		marker_msg_.color.r = 1.0; // Red
+		marker_msg_.color.g = 0.0; // Green
+		marker_msg_.color.b = 0.0; // Blue
+		// Add the marker to the marker array
+		// Move to the next pose in the path
+		publisher_->publish(marker_msg_);
+		path_index_ = (path_index_ + 1) % path_.size();
+		// Publish the marker array
+
+		marker_msg_.header.frame_id = "map";
+		marker_msg_.header.stamp = this->get_clock()->now();
+		marker_msg_.ns = "basic_shapes";
+		marker_msg_.id = 2;
+		marker_msg_.type = visualization_msgs::msg::Marker::SPHERE;
+		marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+		marker_msg_.pose.position.x = next_pose.position.x + .5;
+		marker_msg_.pose.position.y = next_pose.position.y;
+		marker_msg_.pose.position.z = next_pose.position.z;
+		marker_msg_.pose.orientation.x = 0.0;
+		marker_msg_.pose.orientation.y = 0.0;
+		marker_msg_.pose.orientation.z = 0.0;
+		marker_msg_.pose.orientation.w = 1.0;
+		marker_msg_.scale.x = 1.0;
+		marker_msg_.scale.y = 1.0;
+		marker_msg_.scale.z = 1.0;
+		marker_msg_.color.a = .7;// Alpha
+		marker_msg_.color.r = 1.0; // Red
+		marker_msg_.color.g = 0.5; // Green
+		marker_msg_.color.b = 0.0; // Blue
+		// Add the marker to the marker array
+		// Move to the next pose in the path
+		publisher_->publish(marker_msg_);
+		path_index_ = (path_index_ + 1) % path_.size();
+
+		marker_msg_.header.frame_id = "map";
+		marker_msg_.header.stamp = this->get_clock()->now();
+		marker_msg_.ns = "basic_shapes";
+		marker_msg_.id = 3;
+		marker_msg_.type = visualization_msgs::msg::Marker::SPHERE;
+		marker_msg_.action = visualization_msgs::msg::Marker::ADD;
+		marker_msg_.pose.position.x = next_pose.position.x + 1;
+		marker_msg_.pose.position.y = next_pose.position.y;
+		marker_msg_.pose.position.z = next_pose.position.z;
+		marker_msg_.pose.orientation.x = 0.0;
+		marker_msg_.pose.orientation.y = 0.0;
+		marker_msg_.pose.orientation.z = 0.0;
+		marker_msg_.pose.orientation.w = 1.0;
+		marker_msg_.scale.x = 1.0;
+		marker_msg_.scale.y = 1.0;
+		marker_msg_.scale.z = 1.0;
+		marker_msg_.color.a = .5;// Alpha
+		marker_msg_.color.r = 1.0; // Red
+		marker_msg_.color.g = 0.5; // Green
+		marker_msg_.color.b = 0.5; // Blue
+		// Add the marker to the marker array
+		// Move to the next pose in the path
+		publisher_->publish(marker_msg_);
+		path_index_ = (path_index_ + 1) % path_.size();
+	}
+	geometry_msgs::msg::Pose createPose(double x, double y, double z) {
+		geometry_msgs::msg::Pose pose;
+		pose.position.x = x;
+		pose.position.y = y;
+		pose.position.z = z;
+		return pose;
+	}
 
 
-      
-    // for (int i = 0; i < 10; ++i) {
-    //     Point currentPos;
-    //     currentPos.x = x*0.25;
-    //     currentPos.y = y*0.25
-    //     currentPos.z = 0;
+	std::map<double, std::vector<double> > linearInterpolation3D(double t, const std::map<double, std::vector<double> >& map) {
+		// Clamp interpolation parameter t between [0, 1]
+		t = std::max(0.0, std::min(1.0, t));
 
-    //     auto timestamp = std::chrono::system_clock::now(); // Record current timestamp
-    //     vector.push_back({currentPos, timestamp}); // Store position and timestamp in vector
-    //     Point.stamp = ros::Time::now() + ros::Duration(i);  // Example: increment timestamp by i seconds
-    //     std::this_thread::sleep_for(std::chrono::seconds(1));
-    // }
+		std::map<double, std::vector<double> > combined_map;
 
-    // publisher_->publish(marker_msg_);
+		// Iterate over the map to interpolate values
+		auto it = map.begin();
+		while(it != map.end()){
+			// Get the current key and value
+			double current_key = it->first;
+			const std::vector<double>& current_value = it->second;
 
-  
+			// Find the next element
+			auto next_it = std::next(it);
+			if(next_it == map.end()){
+				// No more elements to interpolate
+				break;
+			}
+
+			// Get the next key and value
+			double next_key = next_it->first;
+			const std::vector<double>& next_value = next_it->second;
+
+			// Perform linear interpolation between current and next values
+			std::vector<double> interpolated_value;
+			for(size_t i = 0; i < current_value.size(); ++i){
+				double interpolated_component = current_value[i] + t * (next_value[i] - current_value[i]);
+				interpolated_value.push_back(interpolated_component);
+			}
+
+			auto key = (current_key + next_key) / 2;
+
+			// Insert the original and interpolated values into the combined map
+			combined_map[current_key] = current_value;
+			combined_map[key] = interpolated_value;
+
+			// Move to the next element
+			++it;
+		}
+
+		return combined_map;
+	}
+
+	void poseObjects(std::map<double, std::vector<double> >& map, std::vector<geometry_msgs::msg::Pose> path){
+		for(const auto& pair : map){
+			double x = pair.second[0];  // Accessing the first element of the vector
+			double y = pair.second[1];  // Accessing the second element of the vector
+			double z = pair.second[2];  // Accessing the third element of the vector
+			// int id = pair.first;
+			path.push_back(createPose(x, y, z));
+		}
+	}
 
 
-    // void  modeSwitchCallback(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
-    //                     std::shared_ptr<std_srvs::srv::SetBool::Response> response) {
-    
-    // // auto response = std_srvs::srv::SetBool::Response();
-    // if (request->data) {
-    //     mode_ = "visualization";
-    // } else {
-    //     mode_ = "playback";
-    // }
-    // response->success = true;
-    // response->message = "Mode switched successfully";
-
-    // // publisher_->publish(response);
-
-    // }
-
-// void modeSwitchCallback(){
-//   if (mode_ == "playback"){
-//     //random code here
-//   }
-//   else if(mode_ == "visualization"){
-//     //more random code here
-//   }
-// }
-
-
-    rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher_;
-    size_t count_;
-    std::vector<geometry_msgs::msg::Pose> path_;
-    size_t path_index_;
-    // std::string mode_;
-
-
+	rclcpp::TimerBase::SharedPtr timer_;
+	rclcpp::TimerBase::SharedPtr timer1_;
+	rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher_;
+	size_t count_;
+	std::vector<geometry_msgs::msg::Pose> path_;
+	size_t path_index_;
+	std::string mode_;
 };
-int main(int argc, char * argv[])
-{
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<AnimationPublisher>());
-  rclcpp::shutdown();
-  return 0;
+
+
+int main(int argc, char * argv[]){
+	rclcpp::init(argc, argv);
+	rclcpp::spin(std::make_shared<AnimationPublisher>());
+	rclcpp::shutdown();
+	return 0;
 }

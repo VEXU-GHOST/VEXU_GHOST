@@ -21,10 +21,10 @@ def generate_launch_description():
         package = 'rviz_animators',
         # This name is specified in the CmakeLists.txt file of this package 
         executable = 'publisher',
+        parameters=[yaml_path]
     )
 
     subscriber_node = launch_ros.actions.Node(
-        name='subscriber_node',
         package= 'rviz_animators',
         # This name is specified in the CmakeLists.txt file of this package 
         executable='main',
