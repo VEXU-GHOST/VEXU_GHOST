@@ -40,6 +40,11 @@ bag_recorder_service:
     disk_space_required_kb: 256000
     disk_check_period_s: 10
 
+covariance_2d_publisher:
+  ros__parameters:
+    input_topic_names:
+    - /odometry/filtered
+
 competition_state_machine_node:
   ros__parameters:
     odom_topic: "/sensors/wheel_odom"
@@ -72,7 +77,6 @@ competition_state_machine_node:
       # motion planning
       move_to_pose_kp_xy: 1.0
       move_to_pose_kp_theta: 2.0
-
 
       # Steering Controller
       steering_kp: 1.75
