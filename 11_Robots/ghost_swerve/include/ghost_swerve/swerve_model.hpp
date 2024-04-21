@@ -19,8 +19,8 @@ enum swerve_type_e {
 struct SwerveConfig {
 	// Maximum linear speed of robot base (or linear velocity of wheel surface).
 	double max_wheel_lin_vel;
-	double max_lin_vel_slew; // for each axis independently
-	double max_ang_vel_slew;
+	double max_lin_vel_slew = 1.0; // for each axis independently
+	double max_ang_vel_slew = 1.0;
 
 	// Module Config
 	swerve_type_e module_type;
@@ -31,8 +31,15 @@ struct SwerveConfig {
 
 	// Kinematic Controller
 	double steering_kp;
+	double steering_kd;
+	double steering_ki;
+	double steering_ki_limit;
+	double controller_dt;
+	double steering_control_deadzone;
 	double move_to_pose_kp;
 	double angle_control_kp;
+	double angle_heuristic_start_angle;
+	double angle_heuristic_end_angle;
 
 	// Velocity Scaling
 	double velocity_scaling_ratio;
@@ -387,6 +394,9 @@ protected:
 	Eigen::Vector2d m_world_loc;
 	double m_odom_angle;
 	double m_world_angle;
+
+	// Steering Integral
+	std::unordered_map<std::string, double> m_error_sum_map;
 
 	// Current centroidal states
 	double m_curr_angle;

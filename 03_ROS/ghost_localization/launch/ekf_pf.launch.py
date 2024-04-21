@@ -17,6 +17,8 @@ def generate_launch_description():
     # Load relevant filepaths
     ghost_localization_share_dir = get_package_share_directory('ghost_localization')
     rviz_config_path = os.path.join(ghost_localization_share_dir, 'rviz/ekf_pf.rviz')
+    ghost_over_under_share_dir = get_package_share_directory('ghost_over_under')
+
 
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
@@ -31,7 +33,7 @@ def generate_launch_description():
         executable='ekf_pf_node',
         name='ekf_pf_node',
         output='screen',
-        parameters=[ghost_localization_share_dir + "/config/ekf_pf_node.yaml"],
+        parameters=[ghost_over_under_share_dir + "/config/ros_config.yaml"]
     )
 
     return LaunchDescription([
@@ -39,5 +41,4 @@ def generate_launch_description():
         DeclareLaunchArgument('verbose', default_value='true'),
         # rviz_node,
         ekf_pf_node
-        # plot_juggler_node,
     ])

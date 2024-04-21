@@ -21,9 +21,24 @@ find_package(ghost_msgs REQUIRED)
 
 include_directories(include)
 
-##############################
-#### Ghost EKF-PF Node ####
-##############################
+###############################
+### 2D Covariance Publisher ###
+###############################
+add_executable(covariance_2d_publisher src/covariance_2d_publisher.cpp)
+ament_target_dependencies(covariance_2d_publisher
+  nav_msgs
+  rclcpp)
+target_include_directories(covariance_2d_publisher
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  covariance_2d_publisher
+  DESTINATION lib/${PROJECT_NAME})
+
+###############################
+###### Ghost EKF-PF Node ######
+###############################
 add_executable(ekf_pf_node
   src/ekf_pf_node.cpp
 )
@@ -55,33 +70,33 @@ ekf_pf_node
 ##############################
 #### Ghost PF-EKF Node ####
 ##############################
-# add_executable(pf_ekf_node
-#   src/pf_ekf_node.cpp
-# )
-# ament_target_dependencies(pf_ekf_node
-#   rclcpp
-#   tf2_msgs
-#   sensor_msgs
-#   visualization_msgs
-#   nav_msgs
-#   ghost_msgs
-#   ghost_estimation
-#   ghost_util
-#   Eigen3
-# )
-# target_link_libraries(pf_ekf_node
-#   ghost_estimation::amrl_shared_lib
-#   ghost_estimation::vector_map
-#   ghost_estimation::particle_filter
-#   yaml-cpp
-# )
-# target_include_directories(pf_ekf_node
-#   PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# install(TARGETS
-# pf_ekf_node
-#   DESTINATION lib/${PROJECT_NAME})
+add_executable(pf_ekf_node
+  src/pf_ekf_node.cpp
+)
+ament_target_dependencies(pf_ekf_node
+  rclcpp
+  tf2_msgs
+  sensor_msgs
+  visualization_msgs
+  nav_msgs
+  ghost_msgs
+  ghost_estimation
+  ghost_util
+  Eigen3
+)
+target_link_libraries(pf_ekf_node
+  ghost_estimation::amrl_shared_lib
+  ghost_estimation::vector_map
+  ghost_estimation::particle_filter
+  yaml-cpp
+)
+target_include_directories(pf_ekf_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+pf_ekf_node
+  DESTINATION lib/${PROJECT_NAME})
 
 #################
 #### Install ####

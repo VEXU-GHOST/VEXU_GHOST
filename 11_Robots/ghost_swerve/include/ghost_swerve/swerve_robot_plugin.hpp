@@ -5,6 +5,7 @@
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <ghost_msgs/msg/drivetrain_command.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/srv/start_recorder.hpp>
@@ -34,6 +35,7 @@ protected:
 	// Publishers
 	void publishVisualization();
 	void publishOdometry();
+	void publishBaseTwist();
 	void publishTrajectoryVisualization();
 
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
@@ -41,6 +43,7 @@ protected:
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_swerve_viz_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
 	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+	rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_base_twist_cmd_pub;
 
 	// Subscribers
 	void poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
@@ -95,10 +98,7 @@ protected:
 	bool m_tail_down = false;
 
 	// Climb Mode
-	bool m_climb_mode_btn_pressed = false;
 	bool m_climb_mode = false;
-	double lift_target;
-
 
 	// Stick Mode
 	bool m_tail_mode = false;
@@ -115,7 +115,6 @@ protected:
 
 	// Angle vs Velocity Control
 	bool m_toggle_swerve_angle_control_btn_pressed = false;
-	bool m_swerve_angle_control = false;
 	double m_angle_target = 0.0;
 	double m_joy_angle_control_threshold = 0.0;
 
@@ -129,11 +128,13 @@ protected:
 	double m_curr_theta_cmd = 0.0;
 
 	// Skills mode
-	bool m_toggle_skills_control_btn_pressed = false;
-	bool m_skills_control = false;
 	bool m_auton_button_pressed = false;
 	int m_auton_index = 0;
 	bool m_teleop_started = false;
+
+	// stick
+	double m_stick_angle_start = 0;
+	double m_stick_angle_kick = 0;
 
 	// Burnout Prevention
 	float m_burnout_absolute_current_threshold_ma;

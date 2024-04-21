@@ -19,15 +19,6 @@ def launch_setup(context, *args, **kwargs):
     xml = xacro.process_file(xacro_path)
     doc = xml.toprettyxml(indent='  ')
     
-    spawn_entity_args = ("-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity ghost1 -topic robot_description").split()
-
-    # Node to spawn robot model in Gazebo
-    gazebo_ros = Node(
-        package = "gazebo_ros",
-        executable = "spawn_entity.py",
-        output='screen',
-        arguments=spawn_entity_args,
-        parameters=[{'use_sim_time': True}])
 
     # Node to publish robot joint transforms
     robot_state_publisher = Node(
@@ -35,9 +26,7 @@ def launch_setup(context, *args, **kwargs):
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters=[{'use_sim_time': True}, {"robot_description": doc}],
-        remappings=[('/sensors/wheel_odom', '/odom')]
-    )
+        parameters=[{'use_sim_time': True}, {"robot_description": doc}])
 
     # Joystick (Only launched if joystick CLI arg is set to True)
     joy_launch_description = IncludeLaunchDescription(
@@ -54,7 +43,7 @@ def launch_setup(context, *args, **kwargs):
         }.items()
     )
 
-    return [gazebo_ros, robot_state_publisher, joy_launch_description]
+    return [robot_state_publisher, joy_launch_description]
 
 
 def generate_launch_description():
@@ -83,14 +72,17 @@ def generate_launch_description():
             }.items()
     )
 
-    ekf_pf_node = Node(
-        package='ghost_localization',
-        executable='ekf_pf_node',
-        name='ekf_pf_node',
-        output='screen',
-        parameters=[ghost_localization_share_dir + "/config/ekf_pf_node.yaml"],
-        remappings=[('/sensors/wheel_odom', '/odom')],
-    )
+    ekf_pf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(ghost_localization_share_dir,
+                         'launch', 'ekf_pf.launch.py')
+        ))
+    
+    pf_ekf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(ghost_localization_share_dir,
+                         'launch', 'pf_ekf.launch.py')
+        ))
 
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
@@ -100,13 +92,20 @@ def generate_launch_description():
         arguments=['-d', rviz_config_path],
     )
 
-    robot_localization_node = Node(
+    # robot_localization_node = Node(
+    #     package='robot_localization',
+    #     executable='ekf_node',
+    #     name='ekf_localization_node',
+    #     output='screen',
+    #     parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
+    # )
+
+    pf_ekf_localization_node = Node(
         package='robot_localization',
         executable='ekf_node',
-        name='ekf_localization_node',
+        name='pf_ekf_localization_node',
         output='screen',
-        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"],
-        remappings=[('/sensors/wheel_odom', '/odom')]
+        parameters=[ghost_ros_base_dir + "/config/pf_ekf_localization_config.yaml"]
     )
 
     plot_juggler_node = Node(
@@ -120,10 +119,13 @@ def generate_launch_description():
         DeclareLaunchArgument(name='channel_id', default_value='1'),
         DeclareLaunchArgument('sim_gui', default_value='false'),
         DeclareLaunchArgument('verbose', default_value='true'),
-        simulation,
-        ekf_pf_node,
+        # simulation,
+        # ekf_pf_launch,
+        pf_ekf_launch,
         rviz_node,
         plot_juggler_node,
-        robot_localization_node,
+        # robot_localization_node,
+        pf_ekf_localization_node,
+        # state_machine_node,
         OpaqueFunction(function = launch_setup),
     ])

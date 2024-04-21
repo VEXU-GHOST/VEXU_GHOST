@@ -14,7 +14,7 @@ port_configuration:
             port: 3
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
-        lift_right:
+        lift_r1:
             port: 4
             type: MOTOR
             reversed: false
@@ -69,7 +69,7 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        lift_left:
+        lift_l1:
             port: 15
             type: MOTOR
             reversed: true
@@ -84,7 +84,16 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: intake_motor_config
-
+        intake_lift_motor:   
+            port: 21
+            type: MOTOR
+            reversed: false
+            config: intake_lift_motor_config
+        lift_r2:
+            port: 19
+            type: MOTOR
+            reversed: true
+            config: lift_motor_config
     device_configurations:
         steering_sensor_config:
             data_rate: 5
@@ -96,7 +105,7 @@ port_configuration:
             serial:
                 send_accel_data: true
                 send_gyro_data: true
-                send_heading_data: true
+                send_heading_data: false    
         drive_motor_config:
             gearset: 600
             brake_mode: COAST
@@ -129,12 +138,25 @@ port_configuration:
             encoder_units: DEGREES
             controller:
                 pos_gain: 0.0
-                vel_gain: 40.0
+                vel_gain: 0.0
                 ff_vel_gain: 1.0
                 ff_torque_gain: 0.0
             serial:
                 send_position_command: false
-                send_velocity_command: true
+                send_velocity_command: false
+                send_voltage_command: true
+        intake_lift_motor_config:
+            gearset: 200
+            brake_mode: BRAKE
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 10.0
+                vel_gain: 0.0
+                ff_vel_gain: 0.0
+                ff_torque_gain: 0.0
+            serial:
+                send_position_command: true
+                send_velocity_command: false
                 send_voltage_command: true
         tail_motor_config:
             gearset: 200

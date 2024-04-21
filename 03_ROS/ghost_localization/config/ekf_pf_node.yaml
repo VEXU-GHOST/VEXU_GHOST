@@ -4,8 +4,9 @@
 ekf_pf_node:
   ros__parameters:
     particle_filter:
-      world_frame: "odom"
-      # map: "/home/melcruz/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      world_frame: "map"
+      rviz_set_pose_topic: "/set_pose"
+      map: "./03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
       init_x: 0.0
@@ -40,7 +41,7 @@ ekf_pf_node:
       # Remember that LIDAR will correct periodically, so these can be a bit generous.
       # Too generous though, and you are either losing resolution or wasting computation.
 
-      k1: 0.5   # x error from x motion         # 50% error in primary direction
+      k1: 0.05   # x error from x motion         # 50% error in primary direction
       k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
       k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
@@ -59,7 +60,7 @@ ekf_pf_node:
       # Computation Factors
       num_particles: 200        # Increase until computation runs out
       resize_factor: 10.0       # num_points / resize_factor = num_rays
-      resample_frequency: 4     # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
+      resample_frequency: 1     # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
 
       # Statistical gain for lidar scan confidence (Requires experimental tuning)
       # Technically speaking, this is the statisical correlation between all the scans of the lidar. They aren't independent, because many scans

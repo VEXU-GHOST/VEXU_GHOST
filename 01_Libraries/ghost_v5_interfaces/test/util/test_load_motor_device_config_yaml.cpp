@@ -76,6 +76,7 @@ TEST_F(TestLoadMotorDeviceConfigYAML, testLoadMotorControllerConfig){
 	test_controller_config.vel_gain = 118.0;
 	test_controller_config.ff_vel_gain = 400.0;
 	test_controller_config.ff_torque_gain = 2587.0;
+	test_controller_config.cmd_duration = 4;
 
 	MotorController::Config loaded_controller_config;
 	EXPECT_NO_THROW(loaded_controller_config = loadMotorControllerConfigFromYAML(config_yaml_["port_configuration"]["device_configurations"]["test_motor_config"]["controller"]));

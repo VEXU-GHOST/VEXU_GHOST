@@ -8,27 +8,10 @@ using std::placeholders::_1;
 
 void SwerveMotionPlanner::initialize(){
 	odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-		"/odometry/filtered",
+		"/map_ekf/odometry",
 		10,
 		std::bind(&SwerveMotionPlanner::odomCallback, this, _1)
 		);
-
-	// SwerveConfig swerve_model_config;
-	// swerve_model_config.module_type = swerve_type_e::DIFFERENTIAL;
-	// swerve_model_config.steering_ratio = 13.0 / 44.0;
-	// swerve_model_config.wheel_ratio = swerve_model_config.steering_ratio * 30.0 / 14.0;
-	// swerve_model_config.wheel_radius = 2.75 / 2.0;
-	// swerve_model_config.steering_kp = 2.0;
-	// swerve_model_config.max_wheel_actuator_vel = 600.0;
-	// auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
-	// swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius * ghost_util::INCHES_TO_METERS;
-
-	// swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
-	// swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);
-	// swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.1143, 0.1143);
-	// swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.1143, -0.1143);
-
-	// m_swerve_model_ptr = std::make_shared<SwerveModel>(swerve_model_config);
 }
 
 void SwerveMotionPlanner::odomCallback(nav_msgs::msg::Odometry::SharedPtr msg){
@@ -59,7 +42,6 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	std::vector<double> yposf({cmd->pose.pose.position.y, cmd->twist.twist.linear.y});
 	std::vector<double> ang0({current_angle, current_omega});
 	std::vector<double> angf({current_angle + ghost_util::SmallestAngleDistRad(angle_f, current_angle), cmd->twist.twist.angular.z});
-
 	double threshold = cmd->pose.pose.position.z;
 	double angle_threshold = cmd->twist.twist.angular.x;
 

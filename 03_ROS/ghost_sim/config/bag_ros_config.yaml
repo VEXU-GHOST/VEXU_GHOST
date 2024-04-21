@@ -1,11 +1,92 @@
+ghost_serial_node:
+  ros__parameters:
+    port_name: "/dev/ttyACM1"
+    backup_port_name: "/dev/ttyACM2"
+    verbose: false
+
+imu_filter_node:
+  ros__parameters:
+    input_imu_topic: /camera/imu
+    output_imu_topic: /estimation/imu/filtered
+    calculate_bias: false
+    calculate_covariance: false
+    calibration_time: 5.0
+    sensor_frequency: 200.0
+
+    accel_bias_x: -0.136218
+    accel_bias_y: -9.42483
+    accel_bias_z: -2.90318
+
+    gyro_bias_x: -0.0050632
+    gyro_bias_y: 0.00207869
+    gyro_bias_z: -0.000868592
+
+    accel_covariance: [
+      9.92618e-05, 1.36598e-06,  2.8624e-07,
+      1.36598e-06, 0.000103017, 1.27159e-06,
+      2.8624e-07, 1.27159e-06, 0.000110698]
+
+    gyro_covariance: [
+      4.09332e-06,  1.38296e-06, -2.18034e-07,
+      1.38296e-06,  1.59246e-05, -4.90858e-07,
+      -2.18034e-07, -4.90858e-07,  2.57037e-06]
+
+    camera_roll: -110.0
+    camera_pitch: 0.0
+    camera_yaw: -90.0
+
+    camera_x: 5.5
+    camera_y: 4.75
+
+bag_recorder_service:
+  ros__parameters:
+    disk_space_required_kb: 256000
+    disk_check_period_s: 10
+
+competition_state_machine_node:
+  ros__parameters:
+    odom_topic: "/sensors/wheel_odom"
+    pose_topic: "/estimation/robot_pose"
+
+    swerve_robot_plugin:
+      # If you are using the localization stack and you are tuning the k1-9 parameters,
+      # the localization stack has its own duplicate (03_ROS/ghost_localization/config/ekf_pf_node.yaml) of the k1-9 parameters that must
+      # be changed as well as this file. TODO: make a class for this
+      # Motion Model Params
+      # These calculate odometry standard deviations. X is forward, Y is left on robot.
+      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
+
+      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
+      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
+
+      # Remember that LIDAR will correct periodically, so these can be a bit generous.
+      # Too generous though, and you are either losing resolution or wasting computation.
+
+      k1: 0.01          # x error from x motion         # 50% error in primary direction
+      k2: 0.05 #0.05  # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k3: 0.01   #0.1   # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+
+      k4: 0.05  #0.05  # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k5: 0.01  #0.01        # y error from y motion         # 50% error in primary direction
+      k6: 0.01   #0.1   # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+
+      k7: 0.01   #0.2   # theta error from x motion     # After 2ft of travel, 99% are within by 5°
+      k8: 0.01   #0.2   # theta error from y motion     # After 2ft of travel, 99% are within by 5°
+      k9: 0.2         # theta error from rotation     # 50% error in primary direction
+
+      # motion planning
+      move_to_pose_kp_x: 0.1
+      move_to_pose_kp_y: 0.1
+      move_to_pose_kp_theta: 0.1
+
 ekf_localization_node:
   ros__parameters:
+    use_sim_time: true
+
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
     # computation until it receives at least one message from one of the inputs. It will then run continuously at the
     # frequency specified here, regardless of whether it receives more measurements. Defaults to 30 if unspecified.
     frequency: 30.0
-
-    publish_tf: false
 
     # The period, in seconds, after which we consider a sensor to have timed out. In this event, we carry out a predict
     # cycle on the EKF without correcting it. This parameter can be thought of as the minimum frequency with which the
@@ -23,7 +104,7 @@ ekf_localization_node:
     # unspecified.
     transform_time_offset: 0.0
 
-    # Use this parameter to provide specify how long the tf listener should wait for a transform to become available. 
+    # Use this parameter to provide specify how long the tf listener should wait for a transform to become available.
     # Defaults to 0.0 if unspecified.
     transform_timeout: 0.0
 
@@ -60,16 +141,16 @@ ekf_localization_node:
     #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
     #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
     # map_frame: map              # Defaults to "map" if unspecified
-    odom_frame: odom            # Defaults to "odom" if unspecified
-    base_link_frame: base_link  # Defaults to "base_link" if unspecified
-    world_frame: odom          # Defaults to the value of odom_frame if unspecified
+    odom_frame: odom              # Defaults to "odom" if unspecified
+    base_link_frame: base_link    # Defaults to "base_link" if unspecified
+    world_frame: odom             # Defaults to the value of odom_frame if unspecified
 
     # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
     # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
     # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
     # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
     # default values, and must be specified.
-    odom0: /odom
+    odom0: /sensors/wheel_odom
 
     # Each sensor reading updates some or all of the filter's state. These options give you greater control over which
     # values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only
@@ -86,7 +167,7 @@ ekf_localization_node:
 
     # If you have high-frequency data or are running with a low frequency parameter value, then you may want to increase
     # the size of the subscription queue so that more measurements are fused.
-    odom0_queue_size: 5
+    odom0_queue_size: 50
 
     # [ADVANCED] Large messages in ROS can exhibit strange behavior when they arrive at a high frequency. This is a result
     # of Nagle's algorithm. This option tells the ROS subscriber to use the tcpNoDelay option, which disables Nagle's
@@ -118,12 +199,12 @@ ekf_localization_node:
     #odom0_pose_rejection_threshold: 5
     #odom0_twist_rejection_threshold: 1
 
-    imu0: /imu
+    imu0: /estimation/imu/filtered
     imu0_config: [false, false, false,
                   false,  false,  false,
                   false, false, false,
                   true,  true,  true,
-                  true,  true,  true]
+                  false,  false,  false]
     imu0_differential: false
     imu0_relative: true
     imu0_queue_size: 5
@@ -133,13 +214,7 @@ ekf_localization_node:
 
     # [ADVANCED] Some IMUs automatically remove acceleration due to gravity, and others don't. If yours doesn't, please set
     # this to true, and *make sure* your data conforms to REP-103, specifically, that the data is in ENU frame.
-    imu0_remove_gravitational_acceleration: true
-
-    initial_state: [0.0,  0.0,  0.0,
-                      0.0,     0.0,  0.0,
-                      0.0,     0.0,  0.0,
-                      0.0,     0.0,  0.0,
-                      0.0,     0.0,  0.0]
+    imu0_remove_gravitational_acceleration: false
 
     # [ADVANCED]  The EKF and UKF models follow a standard predict/correct cycle. During prediction, if there is no
     # acceleration reference, the velocity at time t+1 is simply predicted to be the same as the velocity at time t. During
@@ -180,8 +255,8 @@ ekf_localization_node:
     # to be larger, which will cause the filter to trust the incoming measurement more during correction. The values are
     # ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below if
     # unspecified.
-    process_noise_covariance: [0.05,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.05,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    process_noise_covariance: [1.0,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    1.0,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.06,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.03,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.03,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
@@ -217,4 +292,4 @@ ekf_localization_node:
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
 
-    # use_dynamic_process_noise_covariance: true
+      # use_dynamic_process_noise_covariance: true

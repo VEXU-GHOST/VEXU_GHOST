@@ -31,10 +31,10 @@
             <!-- output: odometrySource 0 for ENCODER 1 for WORLD -->
             <odometrySource>1</odometrySource>
             <publish_odom>true</publish_odom>
-            <publish_odom_tf>true</publish_odom_tf>
+            <publish_odom_tf>false</publish_odom_tf>
             <publish_wheel_tf>true</publish_wheel_tf>
 
-            <odometry_topic>odom</odometry_topic>
+            <odometry_topic>sensors/wheel_odom</odometry_topic>
             <odometry_frame>odom</odometry_frame>
             <robot_base_frame>base_link</robot_base_frame>
         </plugin>

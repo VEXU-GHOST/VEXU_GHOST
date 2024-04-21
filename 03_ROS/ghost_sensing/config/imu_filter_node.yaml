@@ -23,10 +23,10 @@ imu_filter_node:
       1.38296e-06,  1.59246e-05, -4.90858e-07,
       -2.18034e-07, -4.90858e-07,  2.57037e-06]
 
-    camera_roll: -110.0
-    camera_pitch: 0.0
-    camera_yaw: -90.0
+    sensor_roll: -110.0
+    sensor_pitch: 0.0
+    sensor_yaw: -90.0
 
-    camera_x: 5.5
-    camera_y: 4.75
+    sensor_x: 5.5
+    sensor_y: 4.75
     

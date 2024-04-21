@@ -43,8 +43,8 @@ private:
 	Eigen::Matrix3d m_imu_gyro_bias_covariance_base_link;
 
 	// Base Link Transform
-	Eigen::Matrix3d m_base_link_to_camera_rotation;
-	Eigen::Vector3d m_base_link_to_camera_translation;
+	Eigen::Matrix3d m_base_link_to_sensor_rotation;
+	Eigen::Vector3d m_base_link_to_sensor_translation;
 
 	// Filtered IMU Data
 	Eigen::Vector3d m_filtered_accel_vector_base_link;
