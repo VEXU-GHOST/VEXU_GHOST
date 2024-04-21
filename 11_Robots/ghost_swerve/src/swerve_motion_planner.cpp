@@ -8,7 +8,7 @@ using std::placeholders::_1;
 
 void SwerveMotionPlanner::initialize(){
 	odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-		"/odometry/filtered",
+		"/map_ekf/odometry",
 		10,
 		std::bind(&SwerveMotionPlanner::odomCallback, this, _1)
 		);
@@ -42,7 +42,6 @@ void SwerveMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCo
 	std::vector<double> yposf({cmd->pose.pose.position.y, cmd->twist.twist.linear.y});
 	std::vector<double> ang0({current_angle, current_omega});
 	std::vector<double> angf({current_angle + ghost_util::SmallestAngleDistRad(angle_f, current_angle), cmd->twist.twist.angular.z});
-
 	double threshold = cmd->pose.pose.position.z;
 	double angle_threshold = cmd->twist.twist.angular.x;
 

@@ -88,11 +88,17 @@ void SwerveRobotPlugin::initialize(){
 
 	// Swerve Steering Controller
 	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kp", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kd", 0.0);
 	node_ptr_->declare_parameter("swerve_robot_plugin.steering_ki", 0.0);
 	node_ptr_->declare_parameter("swerve_robot_plugin.steering_ki_limit", 0.0);
 	node_ptr_->declare_parameter("swerve_robot_plugin.controller_dt", 0.01);
 	node_ptr_->declare_parameter("swerve_robot_plugin.steering_control_deadzone", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.angle_heuristic_start_angle", 0.01);
+	node_ptr_->declare_parameter("swerve_robot_plugin.angle_heuristic_end_angle", 0.0);
+	swerve_model_config.angle_heuristic_start_angle = node_ptr_->get_parameter("swerve_robot_plugin.angle_heuristic_start_angle").as_double();
+	swerve_model_config.angle_heuristic_end_angle = node_ptr_->get_parameter("swerve_robot_plugin.angle_heuristic_end_angle").as_double();
 	swerve_model_config.steering_kp = node_ptr_->get_parameter("swerve_robot_plugin.steering_kp").as_double();
+	swerve_model_config.steering_kd = node_ptr_->get_parameter("swerve_robot_plugin.steering_kd").as_double();
 	swerve_model_config.steering_ki = node_ptr_->get_parameter("swerve_robot_plugin.steering_ki").as_double();
 	swerve_model_config.steering_ki_limit = node_ptr_->get_parameter("swerve_robot_plugin.steering_ki_limit").as_double();
 	swerve_model_config.controller_dt = node_ptr_->get_parameter("swerve_robot_plugin.controller_dt").as_double();
@@ -115,15 +121,15 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.lift_kP = node_ptr_->get_parameter("swerve_robot_plugin.lift_kP").as_double();
 	swerve_model_config.lift_speed = node_ptr_->get_parameter("swerve_robot_plugin.lift_speed").as_double();
 
-	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
-	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", 1.);
-	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_skills", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_start", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_kick", 1.);
 	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_normal", 1.);
 	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset", 1.);
-	// gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.stick_gear_ratio").as_double();
+	gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.stick_gear_ratio").as_double();
 
-	// swerve_model_config.stick_upright_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_upright_angle_deg").as_double();
-	// swerve_model_config.stick_angle_skills = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_skills").as_double();
+	m_stick_angle_start = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_start").as_double();
+	m_stick_angle_kick = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_kick").as_double();
 	// swerve_model_config.stick_angle_normal = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_normal").as_double();
 	// swerve_model_config.stick_turn_offset = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset").as_double();
 
@@ -310,7 +316,7 @@ float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_p
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	// std::cout << "Teleop: " << current_time << std::endl;
-	m_swerve_model_ptr->setFieldOrientedControl(false);
+	// m_swerve_model_ptr->setFieldOrientedControl(true);
 
 	if(joy_data->btn_u){
 		if(!m_auton_button_pressed){
@@ -343,7 +349,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_toggle_swerve_field_control_btn_pressed = false;
 		}
 
-		if(joy_data->btn_l){
+		if(joy_data->btn_l2){
 			m_last_odom_angle = 0.0;
 			m_curr_odom_angle = 0.0;
 			m_swerve_model_ptr->setOdometryAngle(0.0);
@@ -391,12 +397,16 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		updateDrivetrainMotors();
 
+
+		bool tail_mode = joy_data->btn_d && joy_data->btn_l;
+		bool climb_mode = joy_data->btn_a && joy_data->btn_b;
+
 		// Intake
-		if(joy_data->btn_r1){
+		if(joy_data->btn_r1 && !tail_mode && !climb_mode){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
 			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
 		}
-		else if(joy_data->btn_r2){
+		else if(joy_data->btn_r2 && !tail_mode && !climb_mode){
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
 			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
 		}
@@ -406,80 +416,72 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 
 		// Climb Testing
-		if(joy_data->btn_l2){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
+		if(climb_mode){
+			if(joy_data->btn_l2){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
-		}
-		else if(joy_data->btn_l1){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
+			}
+			else if(joy_data->btn_l1){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
-		}
-		else{
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
+			}
+			else{
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
 
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
-		}
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
+			}
 
-		if(joy_data->btn_d){
-			m_claw_open = false;
-		}
-		else if(joy_data->btn_l){
-			m_claw_open = true;
-		}
-
-		if(joy_data->btn_b){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
-			m_claw_open = false;
-		}
-		else if(joy_data->btn_a){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
-			m_claw_open = true;
+			if(joy_data->btn_r2){
+				m_claw_open = false;
+			}
+			else if(joy_data->btn_r1){
+				m_claw_open = true;
+			}
 		}
 
-		if(joy_data->btn_l1 || joy_data->btn_l){//intake lift
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("intake_lift_motor", 1.0);
-		} else {
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
-			rhi_ptr_->setMotorVoltageCommandPercent("intake_lift_motor", 0);
-		}
+		// if(joy_data->btn_l1 || joy_data->btn_l){// intake lift
+		// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
+		// 	rhi_ptr_->setMotorVoltageCommandPercent("intake_lift_motor", 1.0);
+		// }
+		// else{
+		// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
+		// 	rhi_ptr_->setMotorVoltageCommandPercent("intake_lift_motor", 0);
+		// }
 
 		bool tail_down = false;
-		//tail left and intake up
-		if(joy_data->btn_l){
+		// tail left and intake up
+		if(tail_mode){
 			tail_down = true;
 			if(joy_data->btn_r2){
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-				rhi_ptr_->setMotorPositionCommand("tail_motor", 60);
+				rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_kick);
 			}
-			else {
+			else{
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-				rhi_ptr_->setMotorPositionCommand("tail_motor", 0);
+				rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
 			}
 		}
-		else {
+		else{
 			tail_down = false;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-			rhi_ptr_->setMotorPositionCommand("tail_motor", 0);
+			rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
 		}
 
 		m_digital_io[m_digital_io_name_map["tail"]] = tail_down;

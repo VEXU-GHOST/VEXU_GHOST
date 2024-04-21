@@ -38,6 +38,8 @@ struct SwerveConfig {
 	double steering_control_deadzone;
 	double move_to_pose_kp;
 	double angle_control_kp;
+	double angle_heuristic_start_angle;
+	double angle_heuristic_end_angle;
 
 	// Velocity Scaling
 	double velocity_scaling_ratio;

@@ -131,6 +131,10 @@ protected:
 	bool m_auton_button_pressed = false;
 	int m_auton_index = 0;
 	bool m_teleop_started = false;
+
+	// stick
+	double m_stick_angle_start = 0;
+	double m_stick_angle_kick = 0;
 };
 
 } // namespace ghost_swerve

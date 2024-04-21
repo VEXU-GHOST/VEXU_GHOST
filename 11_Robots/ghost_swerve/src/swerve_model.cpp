@@ -49,7 +49,9 @@ void SwerveModel::validateConfig(){
 		{"steering_kd", m_config.steering_kd},
 		{"steering_ki", m_config.steering_ki},
 		{"steering_ki_limit", m_config.steering_ki_limit},
-		{"steering_control_deadzone", m_config.steering_control_deadzone}
+		{"steering_control_deadzone", m_config.steering_control_deadzone},
+		{"angle_heuristic_start_angle", m_config.angle_heuristic_start_angle},
+		{"angle_heuristic_end_angle", m_config.angle_heuristic_end_angle}
 	};
 
 	for(const auto& [key, val] : larger_or_equal_to_zero_params){
@@ -321,9 +323,9 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 		max_steering_error = std::max(max_steering_error, std::fabs(steering_error));
 
 		// Set steering voltage using position control law
-		module_command.steering_velocity_command = steering_error * m_config.steering_kp 
-												+ m_error_sum_map[module_name] * m_config.steering_ki
-												- steering_velocity * m_config.steering_kd;
+		module_command.steering_velocity_command = steering_error * m_config.steering_kp
+		                                           + m_error_sum_map[module_name] * m_config.steering_ki
+		                                           - steering_velocity * m_config.steering_kd;
 
 		// If steering is within a given tolerance, zero the steering command.
 		// In real system, steering error is never absolute zero, so this helps to maximize drivetrain power.
@@ -336,11 +338,11 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 	}
 
 	// TODO(maxxwilson) : FIX using the velocity based Least squares ICR norm
-	const double x1 = 50.0;
+	const double x1 = m_config.angle_heuristic_start_angle;
 	// Transient Misalignment Heuristic
 	if(max_steering_error > x1){
 		// Linear Interpolation past certain angle
-		const double x2 = 90.0;
+		const double x2 = m_config.angle_heuristic_end_angle;
 		const double y1 = 1.0;
 		const double y2 = 0.0;
 		const double slope = (y2 - y1) / (x2 - x1);

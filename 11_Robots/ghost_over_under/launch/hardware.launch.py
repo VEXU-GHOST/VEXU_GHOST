@@ -107,12 +107,22 @@ def generate_launch_description():
             }.items()
     )
 
-    robot_localization_node = Node(
+    odom_ekf_node = Node(
         package='robot_localization',
         executable='ekf_node',
-        name='ekf_localization_node',
+        name='odom_ekf_node',
         output='screen',
         parameters=[ros_config_file],
+        remappings=[('odometry/filtered', '/odom_ekf/odometry')]
+    )
+
+    map_ekf_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='map_ekf_node',
+        output='screen',
+        parameters=[ros_config_file],
+        remappings=[('odometry/filtered', '/map_ekf/odometry')]
     )
 
     ekf_pf_node = Node(
@@ -127,10 +137,11 @@ def generate_launch_description():
         serial_node,
         competition_state_machine_node,
         bag_recorder_service,
-        # ekf_pf_node,
+        ekf_pf_node,
         # realsense_node,
         imu_filter_node,
-        robot_localization_node,
+        odom_ekf_node,
+        map_ekf_node,
         swerve_motion_planner_node,
         rplidar_node
     ])

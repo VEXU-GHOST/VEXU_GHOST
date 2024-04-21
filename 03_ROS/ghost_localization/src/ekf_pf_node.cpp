@@ -44,7 +44,7 @@ EkfPfNode::EkfPfNode() :
 	Node("ekf_pf_node"){
 	// Subscribers
 	ekf_odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-		"/odometry/filtered",
+		"/odom_ekf/odometry",
 		10,
 		std::bind(&EkfPfNode::EkfCallback, this, _1));
 
@@ -64,7 +64,7 @@ EkfPfNode::EkfPfNode() :
 	robot_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("estimation/pose", 10);
 
 	// Use simulated time in ROS TODO:!!!!
-	rclcpp::Parameter use_sim_time_param("use_sim_time", true);
+	rclcpp::Parameter use_sim_time_param("use_sim_time", false);
 	this->set_parameter(use_sim_time_param);
 
 	LoadROSParams();
