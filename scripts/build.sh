@@ -7,6 +7,8 @@ then
     exit 0
 fi
 
+pkill ros
+
 # Get processor architecture to determine if we should build simulator or not (not on robot hardware)
 arch=$(uname -p)
 
