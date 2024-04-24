@@ -135,6 +135,17 @@ protected:
 	// stick
 	double m_stick_angle_start = 0;
 	double m_stick_angle_kick = 0;
+
+	// Burnout Prevention
+	float m_burnout_absolute_current_threshold_ma;
+	float m_burnout_absolute_rpm_threshold;
+	long m_burnout_stall_duration_ms;
+	long m_burnout_cooldown_duration_ms;
+
+	rclcpp::Time m_intake_stall_start;
+	rclcpp::Time m_intake_cooldown_start;
+	bool m_intake_stalling = false;
+	bool m_intake_cooling_down = false;
 };
 
 } // namespace ghost_swerve

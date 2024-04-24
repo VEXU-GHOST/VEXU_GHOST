@@ -100,7 +100,7 @@ port_configuration:
             serial:
                 send_angle_data: true
                 send_position_data: false
-                send_velocity_data: true    
+                send_velocity_data: true
         inertial_sensor_config:
             serial:
                 send_accel_data: true

@@ -118,6 +118,11 @@ competition_state_machine_node:
       max_ang_vel_slew: 1.0 # 0.0 <-> 1.0
       max_lin_vel_slew: 1.0 # 0.0 <-> 1.0
 
+      burnout_absolute_current_threshold_ma: 100.0
+      burnout_absolute_velocity_threshold_rpm: 20.0
+      burnout_stall_duration_ms: 500
+      burnout_cooldown_duration_ms: 5000
+
 # If you are using the sweve model and you are tuning the k1-9 parameters,
 # the swerve model plugin has its own duplicate (11_Robots/ghost_over_under/config/ros_config.yaml) of the k1-9 parameters that must
 # be changed as well as this file. TODO: make a class for this
@@ -215,7 +220,7 @@ odom_ekf_node:
     # See: https://answers.ros.org/question/362875/set_pose-breaks-robot_localization
     # set_pose_time_topc: "/set_pose"
 
-    initial_state: [1.524,  0.3048,  0.0,
+    initial_state: [0.0,  0.0,  0.0,
                   0.0,     0.0,  0.0,
                   0.0,     0.0,  0.0,
                   0.0,     0.0,  0.0,
