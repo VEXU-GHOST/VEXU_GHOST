@@ -235,7 +235,6 @@ void SwerveRobotPlugin::onNewSensorData(){
 		m_swerve_model_ptr->setModuleState(module_name, new_state);
 	}
 
-
 	sensor_msgs::msg::Imu imu_msg{};
 	imu_msg.header.frame_id = "imu_link";
 	imu_msg.header.stamp = node_ptr_->get_clock()->now();
@@ -245,6 +244,8 @@ void SwerveRobotPlugin::onNewSensorData(){
 	imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
 	imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
 	imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+	double yaw = -rhi_ptr_->getInertialSensorHeading("imu");
+	ghost_util::yawToQuaternionDeg(yaw, imu_msg.orientation.w, imu_msg.orientation.x, imu_msg.orientation.y, imu_msg.orientation.z);
 	imu_pub->publish(imu_msg);
 
 	m_swerve_model_ptr->updateSwerveModel();
@@ -524,7 +525,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		// Enforce INTAKE_MOTOR cooldown period
 		if(m_intake_cooling_down){
-			if((node_ptr_->now() - m_intake_cooldown_start).nanoseconds() <= m_burnout_cooldown_duration_ms * 1000000 && intake_command){
+			if(((node_ptr_->now() - m_intake_cooldown_start).nanoseconds() <= m_burnout_cooldown_duration_ms * 1000000) && intake_command){
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
 				rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
 				rhi_ptr_->setMotorTorqueCommandPercent("intake_motor", 0);

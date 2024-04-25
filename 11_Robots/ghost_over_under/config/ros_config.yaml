@@ -12,6 +12,7 @@ imu_filter_node:
     calculate_covariance: false
     calibration_time: 5.0
     sensor_frequency: 100.0
+    heading_covariance: 0.001
 
     accel_bias_x: 0.0409958
     accel_bias_y: 0.991383
@@ -342,7 +343,7 @@ odom_ekf_node:
 
     imu0: /estimation/imu/filtered
     imu0_config: [false, false, false,
-                  false,  false,  false,
+                  false,  false,  true,
                   false, false, false,
                   false,  false,  true,
                   false,  false,  false]

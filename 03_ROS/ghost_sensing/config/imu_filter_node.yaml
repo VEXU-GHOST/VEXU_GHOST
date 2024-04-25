@@ -5,6 +5,8 @@ imu_filter_node:
     calibration_time: 30.0
     sensor_frequency: 200.0
 
+    heading_covariance: 0.1
+
     accel_bias_x: -0.136218
     accel_bias_y: -9.42483
     accel_bias_z: -2.90318

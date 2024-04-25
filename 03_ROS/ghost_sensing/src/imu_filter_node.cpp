@@ -57,6 +57,9 @@ IMUFilterNode::IMUFilterNode() :
 
 	m_base_link_to_sensor_translation = Eigen::Vector3d(sensor_x, sensor_y, 0.0);
 
+	declare_parameter("heading_covariance", 0.0);
+	m_heading_covariance = get_parameter("heading_covariance").as_double();
+
 	// Handle Bias Calibration
 	if(m_calculate_bias || m_calculate_covariance){
 		m_num_msgs_init = (int) m_calibration_time * m_sensor_freq;
@@ -177,6 +180,7 @@ void IMUFilterNode::printBiasEstimates(){
 }
 
 void IMUFilterNode::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg){
+	m_last_input_msg = msg;
 	auto raw_gyro_vector = Eigen::Vector3d(msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z);
 	auto raw_accel_vector = Eigen::Vector3d(msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z);
 
@@ -276,6 +280,13 @@ void IMUFilterNode::publishFilteredIMU(){
 	msg.linear_acceleration_covariance[6] = m_imu_accel_bias_covariance_base_link(6);
 	msg.linear_acceleration_covariance[7] = m_imu_accel_bias_covariance_base_link(7);
 	msg.linear_acceleration_covariance[8] = m_imu_accel_bias_covariance_base_link(8);
+
+	msg.orientation.w = m_last_input_msg->orientation.w;
+	msg.orientation.x = m_last_input_msg->orientation.x;
+	msg.orientation.y = m_last_input_msg->orientation.y;
+	msg.orientation.z = m_last_input_msg->orientation.z;
+
+	msg.orientation_covariance[8] = m_heading_covariance;
 	m_filtered_imu_pub->publish(msg);
 }
 
