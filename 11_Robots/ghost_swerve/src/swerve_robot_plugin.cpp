@@ -295,6 +295,11 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double pos_threshold = (command_map.count("threshold_pos") != 0) ? command_map.at("threshold_pos") : 0.0;
 	double theta_threshold = (command_map.count("threshold_vel") != 0) ? command_map.at("threshold_vel") : 0.0;
 
+	auto command_map_final = get_commands(current_time + 1000000);
+	double final_pos_x = (command_map_final.count("x_pos") != 0) ? command_map.at("x_pos") : 0.0;
+	double final_pos_y = (command_map_final.count("y_pos") != 0) ? command_map.at("y_pos") : 0.0;
+	double final_pos_theta = (command_map_final.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
+
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
@@ -306,11 +311,14 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	// Calculate velocity command from motion plan
 	double x_error = des_pos_x - curr_location.x();
+	double x_error_final = final_pos_x - curr_location.x();
 	double y_error = des_pos_y - curr_location.y();
+	double y_error_final = final_pos_y - curr_location.y();
 	double theta_error = ghost_util::SmallestAngleDistRad(des_theta, curr_theta);
-	double vel_cmd_x = (abs(x_error) <= pos_threshold / 4.0) ? 0.0 : des_vel_x + (des_vel_x - curr_vel_x) * m_move_to_pose_kd_xy + (x_error) * m_move_to_pose_kp_xy;
-	double vel_cmd_y = (abs(y_error) <= pos_threshold / 4.0) ? 0.0 : des_vel_y + (des_vel_y - curr_vel_y) * m_move_to_pose_kd_xy + (y_error) * m_move_to_pose_kp_xy;
-	double vel_cmd_theta = (abs(theta_error) <= theta_threshold / 2.0) ? 0.0 : des_theta_vel + (des_theta_vel - curr_vel_theta) * m_move_to_pose_kd_theta + theta_error * m_move_to_pose_kp_theta;
+	double theta_error_final = ghost_util::SmallestAngleDistRad(final_pos_theta, curr_theta);
+	double vel_cmd_x = (abs(x_error_final) <= pos_threshold / 4.0) ? 0.0 : des_vel_x + (des_vel_x - curr_vel_x) * m_move_to_pose_kd_xy + (x_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_y = (abs(y_error_final) <= pos_threshold / 4.0) ? 0.0 : des_vel_y + (des_vel_y - curr_vel_y) * m_move_to_pose_kd_xy + (y_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_theta = (abs(theta_error_final) <= theta_threshold / 2.0) ? 0.0 : des_theta_vel + (des_theta_vel - curr_vel_theta) * m_move_to_pose_kd_theta + theta_error * m_move_to_pose_kp_theta;
 
 	publishCurrentTwist(curr_vel_x, curr_vel_y, curr_vel_theta);
 	publishDesiredTwist(des_vel_x, des_vel_y, des_theta_vel);
@@ -361,15 +369,15 @@ void SwerveRobotPlugin::teleop(double current_time){
 		if(!m_auton_button_pressed){
 			m_auton_button_pressed = true;
 
-			//   Odometry or whatever for auton
-			m_last_odom_angle = ghost_util::DEG_TO_RAD * 0.0;
-			m_curr_odom_angle = m_last_odom_angle;
-			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 0.0;
-			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
-			m_last_odom_loc.x() = m_curr_odom_loc.x();
-			m_last_odom_loc.y() = m_last_odom_loc.y();
-			m_swerve_model_ptr->setWorldPose(m_curr_odom_loc.x(), m_curr_odom_loc.y());
-			m_swerve_model_ptr->setWorldAngle(m_curr_odom_angle);
+			// //   Odometry or whatever for auton
+			// m_last_odom_angle = ghost_util::DEG_TO_RAD * 0.0;
+			// m_curr_odom_angle = m_last_odom_angle;
+			// m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 0.0;
+			// m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
+			// m_last_odom_loc.x() = m_curr_odom_loc.x();
+			// m_last_odom_loc.y() = m_last_odom_loc.y();
+			// m_swerve_model_ptr->setWorldPose(m_curr_odom_loc.x(), m_curr_odom_loc.y());
+			// m_swerve_model_ptr->setWorldAngle(m_curr_odom_angle);
 		}
 		autonomous(current_time - m_auton_start_time);
 	}

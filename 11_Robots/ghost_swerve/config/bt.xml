@@ -152,13 +152,13 @@
       <!-- <SwipeTail num_swipes="5"/> -->
       <Logging message="started"/>
       <MoveToPose posX="1.0"
-                  posY="0.0"
-                  theta="90"
+                  posY="0.5"
+                  theta="-90"
                   velX="0.00"
                   velY="0.0"
                   omega="0.0"
-                  threshold="0.08"
-                  angle_threshold="2.5"
+                  threshold="0.04"
+                  angle_threshold="2.0"
                   timeout="10000"/>
       <Delay delay_msec="5000">
         <AlwaysSuccess/>

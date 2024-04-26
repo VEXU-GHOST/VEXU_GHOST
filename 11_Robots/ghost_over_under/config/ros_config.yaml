@@ -78,10 +78,10 @@ competition_state_machine_node:
       k9: 0.5   # theta error from rotation   # 25% error in primary direction  
 
       # motion planning
-      move_to_pose_kp_xy: 2.0
-      move_to_pose_kd_xy: 0.5
-      move_to_pose_kp_theta: 1.0
-      move_to_pose_kd_theta: 2.0
+      move_to_pose_kp_xy: 1.0
+      move_to_pose_kd_xy: 0.7
+      move_to_pose_kp_theta: 0.9
+      move_to_pose_kd_theta: 0.7
 
       # Steering Controller
       steering_kp: 1.75
