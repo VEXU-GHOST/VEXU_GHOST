@@ -89,9 +89,9 @@ BT::NodeStatus MoveToPose::onRunning() {
 	msg.twist.twist.linear.y = velY;
 	msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
 
-	if( (abs(posX - swerve_ptr_->getWorldLocation().x()) < threshold) &&
-		(abs(posY - swerve_ptr_->getWorldLocation().y()) < threshold) &&
-		(abs(theta - swerve_ptr_->getWorldAngleRad()) < angle_threshold)){
+	if( (abs(posX - swerve_ptr_->getWorldLocation().x()) < 2.0*threshold) &&
+		(abs(posY - swerve_ptr_->getWorldLocation().y()) < 2.0*threshold) &&
+		(abs(theta - swerve_ptr_->getWorldAngleRad()) < 2.0*angle_threshold)){
 		RCLCPP_INFO(this->get_logger(), "MoveToPose: Success");
 		return BT::NodeStatus::SUCCESS;
 	}

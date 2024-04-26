@@ -282,6 +282,15 @@ void SwerveRobotPlugin::disabled(){
 void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
 
+	if(!m_recording){
+		auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+		m_start_recorder_client->async_send_request(req);
+		m_recording = true;
+	}
+
+	auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+	m_start_recorder_client->async_send_request(req);
+
 	bt_->tick_tree();
 	// publishTrajectoryVisualization();
 
@@ -306,9 +315,15 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
 	auto curr_vel = m_swerve_model_ptr->getBaseVelocityCurrent();
+	// if(m_is_field_oriented){
+		// Rotate velocity command to robot frame
+	Eigen::Vector2d vel_odom(curr_vel.x(), curr_vel.y());
+	auto rotate_world_to_base = Eigen::Rotation2D<double>(curr_theta).toRotationMatrix();
+	vel_odom = rotate_world_to_base * vel_odom;
+	// }
 	// auto curr_vel = m_swerve_model_ptr->getWorldTranslationalVelocity();
-	auto curr_vel_x = curr_vel.x();
-	auto curr_vel_y = curr_vel.y();
+	auto curr_vel_x = vel_odom.x();
+	auto curr_vel_y = vel_odom.y();
 	auto curr_vel_theta = m_swerve_model_ptr->getWorldAngularVelocity();
 
 	// Calculate velocity command from motion plan
