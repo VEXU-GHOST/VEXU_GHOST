@@ -295,10 +295,12 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double pos_threshold = (command_map.count("threshold_pos") != 0) ? command_map.at("threshold_pos") : 0.0;
 	double theta_threshold = (command_map.count("threshold_vel") != 0) ? command_map.at("threshold_vel") : 0.0;
 
-	auto command_map_final = get_commands(current_time + 1000000);
-	double final_pos_x = (command_map_final.count("x_pos") != 0) ? command_map.at("x_pos") : 0.0;
-	double final_pos_y = (command_map_final.count("y_pos") != 0) ? command_map.at("y_pos") : 0.0;
-	double final_pos_theta = (command_map_final.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
+	auto command_map_final = get_commands(current_time + 100.0);
+	double final_pos_x = (command_map_final.count("x_pos") != 0) ? command_map_final.at("x_pos") : 0.0;
+	double final_pos_y = (command_map_final.count("y_pos") != 0) ? command_map_final.at("y_pos") : 0.0;
+	double final_pos_theta = (command_map_final.count("angle_pos") != 0) ? command_map_final.at("angle_pos") : 0.0;
+	
+	// std::cout << "final_pos_x: " << final_pos_x << std::endl;
 
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
@@ -324,23 +326,21 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	publishDesiredTwist(des_vel_x, des_vel_y, des_theta_vel);
 	publishDesiredPose(des_pos_x, des_pos_y, des_theta);
 
-	std::cout << "pos_threshold: " << pos_threshold << std::endl;
-	std::cout << "theta_threshold: " << theta_threshold << std::endl;
+	// std::cout << "pos_threshold: " << pos_threshold << std::endl;
+	// std::cout << "theta_threshold: " << theta_threshold << std::endl;
 
-	std::cout << "des_pos_x: " << des_pos_x << std::endl;
-	std::cout << "des_pos_y: " << des_pos_y << std::endl;
+	// std::cout << "des_pos_x: " << des_pos_x << std::endl;
+	// std::cout << "des_pos_y: " << des_pos_y << std::endl;
 	// std::cout << "x_error: " << x_error << std::endl;
 	// std::cout << "y_error: " << y_error << std::endl;
 
-	std::cout << "curr_location.x(): " << curr_location.x() << std::endl;
-	std::cout << "curr_location.y(): " << curr_location.y() << std::endl;
+	// std::cout << "curr_location.x(): " << curr_location.x() << std::endl;
+	// std::cout << "curr_location.y(): " << curr_location.y() << std::endl;
 
-	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
-	std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
+	// std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
+	// std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
 
-	// calculateKinematicSwerveControllerVelocity(right_cmd * m_max_base_lin_vel, forward_cmd * m_max_base_lin_vel, clockwise_cmd * m_max_base_ang_vel);
 	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(-vel_cmd_y, vel_cmd_x, -vel_cmd_theta);
-	// m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(vel_cmd_x, vel_cmd_y, des_theta);
 
 	updateDrivetrainMotors();
 }

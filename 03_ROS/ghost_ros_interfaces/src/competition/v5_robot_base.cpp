@@ -155,8 +155,7 @@ void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::Sha
 
 std::unordered_map<std::string, double> V5RobotBase::get_commands(double time) const {
 	std::unordered_map<std::string, double> map;
-	// if (trajectory_start_time_ == 0) bad
-	// time = time - trajectory_start_time_;
+	time -= m_auton_start_time;
 	for(auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
 		const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
 		if(is_pos_command){

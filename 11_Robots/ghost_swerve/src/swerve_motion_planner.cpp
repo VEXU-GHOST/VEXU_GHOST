@@ -18,7 +18,7 @@ void SwerveMotionPlanner::odomCallback(nav_msgs::msg::Odometry::SharedPtr msg){
 	current_x = msg->pose.pose.position.x;
 	current_y = msg->pose.pose.position.y;
 	current_x_vel = msg->twist.twist.linear.x;
-	current_y_vel = msg->twist.twist.linear.x;
+	current_y_vel = msg->twist.twist.linear.y;
 
 	current_angle = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
 	current_omega = msg->twist.twist.angular.z;
