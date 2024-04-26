@@ -45,6 +45,16 @@ protected:
 	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
 	rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_base_twist_cmd_pub;
 
+
+	// rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_pos_pub;
+	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_vel_pub;
+	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_vel_pub;
+	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
+
+	void publishDesiredTwist(double des_vel_x, double des_vel_y, double des_theta_vel);
+	void publishCurrentTwist(double curr_vel_x, double curr_vel_y, double des_vel_theta);
+	void publishDesiredPose(double des_x, double des_y, double des_theta);
+
 	// Subscribers
 	void poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
 	rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
@@ -63,7 +73,9 @@ protected:
 
 	// Motion Planner
 	double m_move_to_pose_kp_xy = 0.0;
+	double m_move_to_pose_kd_xy = 0.0;
 	double m_move_to_pose_kp_theta = 0.0;
+	double m_move_to_pose_kd_theta = 0.0;
 
 	// Odometry
 	Eigen::Vector2d m_last_odom_loc = Eigen::Vector2d::Zero();

@@ -46,7 +46,7 @@ T MoveToPose::get_input(std::string key){
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus MoveToPose::onStart(){
 	started_ = false;
-	plan_time_ = std::chrono::system_clock::now();
+	// plan_time_ = std::chrono::system_clock::now();
 	return BT::NodeStatus::RUNNING;
 }
 
@@ -105,7 +105,7 @@ BT::NodeStatus MoveToPose::onRunning() {
 			RCLCPP_WARN(this->get_logger(), "MoveToPose Timeout: %i ms elapsed", time_elapsed);
 			started_ = false;
 			return BT::NodeStatus::FAILURE;
-		} else if (time_elapsed_since_plan > 200){
+		} else if (time_elapsed_since_plan > 10000){
 			command_pub_->publish(msg);
 			RCLCPP_INFO(this->get_logger(), "MoveToPose: sent command");
 			plan_time_ = std::chrono::system_clock::now();

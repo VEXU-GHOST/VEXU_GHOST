@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="test2">
-  <BehaviorTree ID="main">
-    <Sequence>
-      <SwipeTail num_swipes="25"/>
+      main_tree_to_execute="straight">
+  <!-- <BehaviorTree ID="main"> -->
+    <!-- <Sequence> -->
+      <!-- <SwipeTail num_swipes="25"/>
       <MoveToPose posX="0.43"
                   posY="0.43"
                   theta="45"
@@ -43,43 +43,45 @@
                   theta="0"
                   threshold="0.025"
                   timeout="10000"/>
-      <!-- <MoveToPose posX="0.6"
+      <MoveToPose posX="0.6"
                   posY="0.5"
                   theta="0"
                   threshold="0.025"
                   timeout="10000"/> -->
-      <Logging message="Done"/>
-      <KeepRunningUntilFailure>
-        <CheckForRestart/>
-      </KeepRunningUntilFailure>
-    </Sequence>
-  </BehaviorTree>
+      <!-- <Logging message="Done"/> -->
+      <!-- <KeepRunningUntilFailure> -->
+        <!-- <CheckForRestart/> -->
+      <!-- </KeepRunningUntilFailure> -->
+    <!-- </Sequence> -->
+  <!-- </BehaviorTree> -->
 
   <BehaviorTree ID="test">
     <Sequence>
-      <!-- <SwipeTail num_swipes="5"/> -->
       <MoveToPose posX="0.5"
                   posY="0.0"
                   theta="0"
-                  velX="0.20"
-                  velY="0.0"
+                  velX="0.50"
+                  velY="0.1"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
+      <!-- <Delay delay_msec="1000"> -->
+        <!-- <AlwaysSuccess/> -->
+      <!-- </Delay> -->
       <MoveToPose posX="0.5"
-                  posY="0.5"
+                  posY="0.4"
                   theta="0"
-                  velX="0.0"
-                  velY="0.20"
+                  velX="-0.10"
+                  velY="0.50"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
       <MoveToPose posX="0.0"
-                  posY="0.50"
+                  posY="0.40"
                   theta="-90"
-                  velX="-0.10"
+                  velX="-0.50"
                   velY="0.0"
                   omega="0.0"
                   threshold="0.05"
@@ -95,42 +97,42 @@
     <Sequence>
       <!-- <SwipeTail num_swipes="5"/> -->
       <MoveToPose posX="1.37"
-                  posY="0.0"
+                  posY="0.1"
                   theta="0"
-                  velX="0.20"
-                  velY="0.0"
+                  velX="0.50"
+                  velY="0.2"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
-      <MoveToPose posX="1.25"
+      <MoveToPose posX="1.35"
                   posY="0.60"
                   theta="0"
-                  velX="-0.10"
-                  velY="0.20"
+                  velX="-0.50"
+                  velY="0.50"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
-      <MoveToPose posX="0.97"
+      <MoveToPose posX="0.87"
                   posY="1.36"
                   theta="-90"
-                  velX="-0.10"
-                  velY="0.20"
+                  velX="-0.50"
+                  velY="0.50"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
-      <MoveToPose posX="0.90"
+      <MoveToPose posX="0.67"
                   posY="1.36"
-                  theta="0"
-                  velX="-0.10"
+                  theta="45"
+                  velX="-0.50"
                   velY="0.0"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5"
                   timeout="10000"/>
-      <MoveToPose posX="0.97"
+      <!-- <MoveToPose posX="0.97"
                   posY="0.80"
                   theta="-90"
                   velX="0.10"
@@ -138,13 +140,34 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5"
-                  timeout="10000"/>
+                  timeout="10000"/> -->
       <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>
     </Sequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="straight">
+    <Sequence>
+      <!-- <SwipeTail num_swipes="5"/> -->
+      <Logging message="started"/>
+      <MoveToPose posX="1.0"
+                  posY="0.0"
+                  theta="90"
+                  velX="0.00"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.08"
+                  angle_threshold="2.5"
+                  timeout="10000"/>
+      <Delay delay_msec="5000">
+        <AlwaysSuccess/>
+      </Delay>
+      <KeepRunningUntilFailure>
+        <CheckForRestart/>
+      </KeepRunningUntilFailure>
+    </Sequence>
+  </BehaviorTree>
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
     <Action ID="CheckForRestart"

@@ -45,13 +45,13 @@ bag_recorder_service:
 covariance_2d_publisher:
   ros__parameters:
     input_topic_names:
-    - /map_ekf/odometry
+    - /odom_ekf/odometry
 
 competition_state_machine_node:
   ros__parameters:
     odom_topic: "/sensors/wheel_odom"
-    # pose_topic: "/odometry/filtered"
     pose_topic: "/odom_ekf/odometry"
+    # pose_topic: "/map_ekf/odometry"
 
     swerve_robot_plugin:
       # Motion Model Params
@@ -78,8 +78,10 @@ competition_state_machine_node:
       k9: 0.5   # theta error from rotation   # 25% error in primary direction  
 
       # motion planning
-      move_to_pose_kp_xy: 1.0
-      move_to_pose_kp_theta: 2.0
+      move_to_pose_kp_xy: 2.0
+      move_to_pose_kd_xy: 0.5
+      move_to_pose_kp_theta: 1.0
+      move_to_pose_kd_theta: 2.0
 
       # Steering Controller
       steering_kp: 1.75
@@ -87,13 +89,13 @@ competition_state_machine_node:
       steering_ki: 0.0
       steering_ki_limit: 0.0
       steering_control_deadzone: 1.0 # Degrees
-      angle_heuristic_start_angle: 20.0
-      angle_heuristic_end_angle: 90.0
+      angle_heuristic_start_angle: 15.0
+      angle_heuristic_end_angle: 45.0
       
       controller_dt: 0.01 # 100 Hz
       angle_control_kp: 0.75
       velocity_scaling_ratio: 1.0
-      velocity_scaling_threshold: 0.2
+      velocity_scaling_threshold: 1.2
 
       joy_angle_control_threshold: 0.5
 
@@ -134,8 +136,7 @@ ekf_pf_node:
       rviz_set_pose_topic: "/set_pose"
       map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
-      # map: "./VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
-
+      # 1.524,  0.3048
       # Initial position
       init_x: 0.0
       init_y: 0.0
@@ -331,7 +332,9 @@ odom_ekf_node:
     # data is converted to velocity data by differentiating the absolute pose measurements. These velocities are then
     # integrated as usual. NOTE: this only applies to sensors that provide pose measurements; setting differential to true
     # for twist measurements has no effect.
+    # odom0_differential: false
     odom0_differential: false
+
 
     # [ADVANCED] When the node starts, if this parameter is true, then the first measurement is treated as a "zero point"
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key

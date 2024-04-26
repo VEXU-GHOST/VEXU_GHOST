@@ -67,9 +67,13 @@ void SwerveRobotPlugin::initialize(){
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_xy", 0.0);
 	m_move_to_pose_kp_xy = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_xy").as_double();
+	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kd_xy", 0.0);
+	m_move_to_pose_kd_xy = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kd_xy").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_theta", 0.0);
 	m_move_to_pose_kp_theta = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_theta").as_double();
+	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kd_theta", 0.0);
+	m_move_to_pose_kd_theta = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kd_theta").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.joystick_slew_rate", 0.0);
 	m_joystick_slew_rate = node_ptr_->get_parameter("swerve_robot_plugin.joystick_slew_rate").as_double();
@@ -199,6 +203,18 @@ void SwerveRobotPlugin::initialize(){
 	imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
 		"/sensors/imu",
 		10);
+
+	m_des_vel_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
+		"/des_vel",
+		10);
+
+	m_cur_vel_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
+		"/cur_vel",
+		10);
+
+	m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
+		"/des_pos",
+		10);
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
@@ -278,18 +294,26 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
+	auto curr_vel = m_swerve_model_ptr->getBaseVelocityCurrent();
+	// auto curr_vel = m_swerve_model_ptr->getWorldTranslationalVelocity();
+	auto curr_vel_x = curr_vel.x();
+	auto curr_vel_y = curr_vel.y();
+	auto curr_vel_theta = m_swerve_model_ptr->getWorldAngularVelocity();
 
 	// Calculate velocity command from motion plan
 	double x_error = des_pos_x - curr_location.x();
 	double y_error = des_pos_y - curr_location.y();
 	double theta_error = ghost_util::SmallestAngleDistRad(des_theta, curr_theta);
-	double vel_cmd_x = (abs(x_error) <= pos_threshold / 2.0) ? 0.0 : des_vel_x + (x_error) * m_move_to_pose_kp_xy;
-	double vel_cmd_y = (abs(y_error) <= pos_threshold / 2.0) ? 0.0 : des_vel_y + (y_error) * m_move_to_pose_kp_xy;
-	double vel_cmd_theta = (abs(theta_error) <= theta_threshold) ? 0.0 : des_theta_vel + theta_error * m_move_to_pose_kp_theta;
+	double vel_cmd_x = (abs(x_error) <= pos_threshold / 4.0) ? 0.0 : des_vel_x + (des_vel_x - curr_vel_x) * m_move_to_pose_kd_xy + (x_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_y = (abs(y_error) <= pos_threshold / 4.0) ? 0.0 : des_vel_y + (des_vel_y - curr_vel_y) * m_move_to_pose_kd_xy + (y_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_theta = (abs(theta_error) <= theta_threshold / 2.0) ? 0.0 : des_theta_vel + (des_theta_vel - curr_vel_theta) * m_move_to_pose_kd_theta + theta_error * m_move_to_pose_kp_theta;
+
+	publishCurrentTwist(curr_vel_x, curr_vel_y, curr_vel_theta);
+	publishDesiredTwist(des_vel_x, des_vel_y, des_theta_vel);
+	publishDesiredPose(des_pos_x, des_pos_y, des_theta);
 
 	std::cout << "pos_threshold: " << pos_threshold << std::endl;
 	std::cout << "theta_threshold: " << theta_threshold << std::endl;
-
 
 	std::cout << "des_pos_x: " << des_pos_x << std::endl;
 	std::cout << "des_pos_y: " << des_pos_y << std::endl;
@@ -572,6 +596,8 @@ void SwerveRobotPlugin::poseUpdateCallback(const nav_msgs::msg::Odometry::Shared
 	double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
 	m_swerve_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y);
 	m_swerve_model_ptr->setWorldAngle(theta);
+	m_swerve_model_ptr->setWorldTranslationalVelocity(msg->twist.twist.linear.x, msg->twist.twist.linear.y);
+	m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
 }
 
 void SwerveRobotPlugin::publishBaseTwist(){
@@ -831,6 +857,35 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 	// RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory arrows");
 
 	m_trajectory_viz_pub->publish(viz_msg);
+}
+
+void SwerveRobotPlugin::publishCurrentTwist(double curr_vel_x, double curr_vel_y, double curr_vel_theta){
+	geometry_msgs::msg::Twist msg{};
+	msg.linear.x = curr_vel_x;
+	msg.linear.y = curr_vel_y;
+	msg.angular.z = curr_vel_theta;
+	m_cur_vel_pub->publish(msg);
+}
+
+void SwerveRobotPlugin::publishDesiredTwist(double des_vel_x, double des_vel_y, double des_vel_theta){
+	geometry_msgs::msg::Twist msg{};
+	msg.linear.x = des_vel_x;
+	msg.linear.y = des_vel_y;
+	msg.angular.z = des_vel_theta;
+	m_des_vel_pub->publish(msg);
+}
+
+void SwerveRobotPlugin::publishDesiredPose(double des_x, double des_y, double des_theta){
+	geometry_msgs::msg::Pose msg{};
+	msg.position.x = des_x;
+	msg.position.y = des_y;
+	ghost_util::yawToQuaternionRad(
+		des_theta,
+		msg.orientation.w,
+		msg.orientation.x,
+		msg.orientation.y,
+		msg.orientation.z);
+	m_des_pos_pub->publish(msg);
 }
 
 } // namespace ghost_swerve

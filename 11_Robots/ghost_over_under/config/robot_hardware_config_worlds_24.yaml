@@ -112,7 +112,7 @@ port_configuration:
             encoder_units: DEGREES
             controller:
                 pos_gain: 0.0
-                vel_gain: 10.0
+                vel_gain: 15.0
                 ff_vel_gain: 1.0
                 ff_torque_gain: 0.0
             model:

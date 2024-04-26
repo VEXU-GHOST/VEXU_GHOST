@@ -324,6 +324,23 @@ public:
 		m_world_angle = theta;
 	}
 
+	void setWorldTranslationalVelocity(const double x, const double y){
+		m_world_vel.x() = x;
+		m_world_vel.y() = y;
+	}
+
+	void setWorldAngularVelocity(const double omega){
+		m_world_angle_vel = omega;
+	}
+
+	const Eigen::Vector2d& getWorldTranslationalVelocity(){
+		return m_world_vel;
+	}
+
+	const double getWorldAngularVelocity(){
+		return m_world_angle_vel;
+	}
+
 	const Eigen::Vector2d& getWorldLocation(){
 		return m_world_loc;
 	}
@@ -392,8 +409,12 @@ protected:
 	// Odometry
 	Eigen::Vector2d m_odom_loc;
 	Eigen::Vector2d m_world_loc;
+	Eigen::Vector2d m_world_vel;
+
+	
 	double m_odom_angle;
 	double m_world_angle;
+	double m_world_angle_vel;
 
 	// Steering Integral
 	std::unordered_map<std::string, double> m_error_sum_map;
