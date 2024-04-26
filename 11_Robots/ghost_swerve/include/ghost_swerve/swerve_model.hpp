@@ -44,6 +44,7 @@ struct SwerveConfig {
 	// Velocity Scaling
 	double velocity_scaling_ratio;
 	double velocity_scaling_threshold;
+	bool swerve_heuristic_bool;
 
 	// Lift - motor angles, not outputs
 	double lift_up_angle;

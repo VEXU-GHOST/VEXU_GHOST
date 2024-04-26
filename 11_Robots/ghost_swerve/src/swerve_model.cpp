@@ -272,6 +272,8 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 	// std::cout << "lin_vel_cmd: " << lin_vel_cmd << std::endl;
 
 	// For combined linear and angular velocities, we scale down angular velocity (which tends to dominate).
+	if(m_config.swerve_heuristic_bool)
+
 	if((fabs(lin_vel_cmd) > m_max_base_lin_vel * m_config.velocity_scaling_threshold) && (fabs(ang_vel_cmd) > m_max_base_ang_vel * m_config.velocity_scaling_threshold)){
 		ang_vel_cmd *= m_config.velocity_scaling_ratio;
 	}

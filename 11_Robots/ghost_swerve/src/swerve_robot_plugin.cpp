@@ -113,6 +113,8 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.velocity_scaling_ratio = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_ratio").as_double();
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
 	swerve_model_config.velocity_scaling_threshold = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_threshold").as_double();
+	node_ptr_->declare_parameter("swerve_robot_plugin.swerve_heuristic_bool", true);
+	swerve_model_config.swerve_heuristic_bool = node_ptr_->get_parameter("swerve_robot_plugin.swerve_heuristic_bool").as_bool();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_gear_ratio", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_angle_deg", 1.);
@@ -152,6 +154,8 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.15875, -0.15875);
 	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.15875, 0.15875);
 	swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.15875, -0.15875);
+	
+	swerve_model_config.swerve_heuristic_bool = false;
 
 	m_swerve_model_ptr = std::make_shared<SwerveModel>(swerve_model_config);
 	m_swerve_model_ptr->setFieldOrientedControl(true);
