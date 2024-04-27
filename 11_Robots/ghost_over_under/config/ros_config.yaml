@@ -54,10 +54,10 @@ competition_state_machine_node:
     # pose_topic: "/map_ekf/odometry"
 
     swerve_robot_plugin:
-      # m_init_world_y: -1.524
       m_init_world_y: -1.524
-      # m_init_world_x: -0.3048
-      m_init_world_x: 0.9144
+      # m_init_world_y: -1.524
+      m_init_world_x: -0.3048
+      # m_init_world_x: 0.9144
       m_init_world_theta: 0.0
 
       m_init_sigma_x: 0.2
