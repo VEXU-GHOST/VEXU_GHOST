@@ -339,17 +339,17 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	// Get best state estimate
 	auto curr_location = m_swerve_model_ptr->getWorldLocation();
 	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
-	auto curr_vel = m_swerve_model_ptr->getBaseVelocityCurrent();
+	auto curr_vel = m_swerve_model_ptr->getWorldTranslationalVelocity();
+	auto curr_vel_theta = m_swerve_model_ptr->getWorldAngularVelocity();
+
 	// if(m_is_field_oriented){
 	// Rotate velocity command to robot frame
-	Eigen::Vector2d vel_odom(curr_vel.x(), curr_vel.y());
-	auto rotate_world_to_base = Eigen::Rotation2D<double>(curr_theta).toRotationMatrix();
-	vel_odom = rotate_world_to_base * vel_odom;
+	// Eigen::Vector2d vel_odom(curr_vel.x(), curr_vel.y());
+	// auto rotate_world_to_base = Eigen::Rotation2D<double>(curr_theta).toRotationMatrix();
+	// vel_odom = rotate_world_to_base * vel_odom;
 	// }
-	// auto curr_vel = m_swerve_model_ptr->getWorldTranslationalVelocity();
-	auto curr_vel_x = vel_odom.x();
-	auto curr_vel_y = vel_odom.y();
-	auto curr_vel_theta = m_swerve_model_ptr->getWorldAngularVelocity();
+	auto curr_vel_x = curr_vel.x();
+	auto curr_vel_y = curr_vel.y();
 
 	// Calculate velocity command from motion plan
 	double x_error = des_pos_x - curr_location.x();
