@@ -54,6 +54,14 @@ competition_state_machine_node:
     # pose_topic: "/map_ekf/odometry"
 
     swerve_robot_plugin:
+      m_init_world_x: 1.524
+      m_init_world_y: 0.3048
+      m_init_world_theta: 0.0
+
+      m_init_sigma_x: 0.2
+      m_init_sigma_y: 0.2
+      m_init_sigma_theta: 0.35
+
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
       # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
@@ -665,5 +673,5 @@ map_ekf_node:
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
-
-      # use_dynamic_process_noise_covariance: true
+    disabled_at_startup: true
+    dynamic_process_noise_covariance: true

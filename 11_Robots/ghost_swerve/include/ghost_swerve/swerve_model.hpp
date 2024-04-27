@@ -308,6 +308,7 @@ public:
 		return m_ls_error_metric;
 	}
 
+	// Base States
 	const Eigen::Vector2d& getOdometryLocation(){
 		return m_odom_loc;
 	}
@@ -316,34 +317,13 @@ public:
 		return m_odom_angle;
 	}
 
-	void setWorldPose(const double x, const double y){
-		m_world_loc.x() = x;
-		m_world_loc.y() = y;
-	}
-
-	void setWorldAngle(const double theta){
-		m_world_angle = theta;
-	}
-
-	void setWorldTranslationalVelocity(const double x, const double y){
-		m_world_vel.x() = x;
-		m_world_vel.y() = y;
-	}
-
-	void setWorldAngularVelocity(const double omega){
-		m_world_angle_vel = omega;
-	}
-
-	const Eigen::Vector2d& getWorldTranslationalVelocity(){
-		return m_world_vel;
-	}
-
-	const double getWorldAngularVelocity(){
-		return m_world_angle_vel;
-	}
-
 	const Eigen::Vector2d& getWorldLocation(){
 		return m_world_loc;
+	}
+
+	void setWorldLocation(const double x, const double y){
+		m_world_loc.x() = x;
+		m_world_loc.y() = y;
 	}
 
 	double getWorldAngleDeg() const {
@@ -354,22 +334,36 @@ public:
 		return m_world_angle;
 	}
 
-	void setOdometryAngle(double angle) {
-		m_odom_angle = angle;
+	void setWorldAngleRad(const double theta){
+		m_world_angle = theta;
 	}
 
-	void setOdometryLocation(double x, double y) {
-		m_odom_loc.x() = x;
-		m_odom_loc.y() = y;
+	const Eigen::Vector2d& getWorldTranslationalVelocity(){
+		return m_world_vel;
+	}
+
+	void setWorldTranslationalVelocity(const double x, const double y){
+		m_world_vel.x() = x;
+		m_world_vel.y() = y;
+	}
+
+	const double getWorldAngularVelocity(){
+		return m_world_angle_vel;
+	}
+
+	void setWorldAngularVelocity(const double omega){
+		m_world_angle_vel = omega;
+	}
+
+
+	bool isFieldOrientedControl() const {
+		return m_is_field_oriented;
 	}
 
 	void setFieldOrientedControl(bool field_oriented_control){
 		m_is_field_oriented = field_oriented_control;
 	}
 
-	bool isFieldOrientedControl() const {
-		return m_is_field_oriented;
-	}
 
 protected:
 	// Initialization
@@ -409,12 +403,12 @@ protected:
 
 	// Odometry
 	Eigen::Vector2d m_odom_loc;
-	Eigen::Vector2d m_world_loc;
-	Eigen::Vector2d m_world_vel;
-
-	
 	double m_odom_angle;
+
+	Eigen::Vector2d m_world_loc;
 	double m_world_angle;
+
+	Eigen::Vector2d m_world_vel;
 	double m_world_angle_vel;
 
 	// Steering Integral

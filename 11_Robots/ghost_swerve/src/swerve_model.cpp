@@ -73,14 +73,15 @@ void SwerveModel::validateConfig(){
 	m_lin_vel_slew = m_config.max_lin_vel_slew;
 	m_ang_slew = m_config.max_ang_vel_slew;
 
-	// Initialize Odometry
+	// Initialize Base States
 	m_odom_loc = Eigen::Vector2d::Zero();
-	m_odom_loc.x() = ghost_util::INCHES_TO_METERS * 0.0;
-	// m_odom_loc.x() = ghost_util::INCHES_TO_METERS * 10.0;
-	m_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
-	// m_odom_loc.y() = ghost_util::INCHES_TO_METERS * 10.0;
-	// m_odom_angle = ghost_util::DEG_TO_RAD * 45.0;
-	m_odom_angle = ghost_util::DEG_TO_RAD * 0.0;
+	m_odom_angle = 0.0;
+
+	m_world_loc = Eigen::Vector2d::Zero();
+	m_world_angle = 0.0;
+
+	m_world_vel = Eigen::Vector2d::Zero();
+	m_world_angle_vel = 0.0;
 }
 
 void SwerveModel::calculateJacobians(){
@@ -255,7 +256,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 
 	if(m_is_field_oriented){
 		// Rotate velocity command to robot frame
-		auto rotate_world_to_base = Eigen::Rotation2D<double>(-m_odom_angle).toRotationMatrix();
+		auto rotate_world_to_base = Eigen::Rotation2D<double>(-m_world_angle).toRotationMatrix();
 		xy_vel_cmd_base_link = rotate_world_to_base * xy_vel_cmd_base_link;
 	}
 	double lin_vel_cmd = std::clamp<double>(xy_vel_cmd_base_link.norm(), -m_max_base_lin_vel, m_max_base_lin_vel);

@@ -116,6 +116,22 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("swerve_robot_plugin.swerve_heuristic_bool", true);
 	swerve_model_config.swerve_heuristic_bool = node_ptr_->get_parameter("swerve_robot_plugin.swerve_heuristic_bool").as_bool();
 
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_world_x", m_init_world_x);
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_world_y", m_init_world_y);
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_world_theta", m_init_world_theta);
+
+	m_init_world_x = node_ptr_->get_parameter("swerve_robot_plugin.m_init_world_x").as_double();
+	m_init_world_y = node_ptr_->get_parameter("swerve_robot_plugin.m_init_world_y").as_double();
+	m_init_world_theta = node_ptr_->get_parameter("swerve_robot_plugin.m_init_world_theta").as_double();
+
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_sigma_x", m_init_sigma_x);
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_sigma_y", m_init_sigma_y);
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_sigma_theta", m_init_sigma_theta);
+
+	m_init_sigma_x = node_ptr_->get_parameter("swerve_robot_plugin.m_init_sigma_x").as_double();
+	m_init_sigma_y = node_ptr_->get_parameter("swerve_robot_plugin.m_init_sigma_y").as_double();
+	m_init_sigma_theta = node_ptr_->get_parameter("swerve_robot_plugin.m_init_sigma_theta").as_double();
+
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_gear_ratio", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_angle_deg", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_climbed_angle_deg", 1.);
@@ -154,7 +170,7 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.15875, -0.15875);
 	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.15875, 0.15875);
 	swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.15875, -0.15875);
-	
+
 	swerve_model_config.swerve_heuristic_bool = false;
 
 	m_swerve_model_ptr = std::make_shared<SwerveModel>(swerve_model_config);
@@ -174,7 +190,7 @@ void SwerveRobotPlugin::initialize(){
 	m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
 		pose_topic,
 		10,
-		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1));
+		std::bind(&SwerveRobotPlugin::worldOdometryUpdateCallback, this, _1));
 
 	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
@@ -204,6 +220,10 @@ void SwerveRobotPlugin::initialize(){
 	m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
 		"bag_recorder/stop");
 
+	m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+		"/set_pose",
+		10);
+
 	imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
 		"/sensors/imu",
 		10);
@@ -219,6 +239,8 @@ void SwerveRobotPlugin::initialize(){
 	m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
 		"/des_pos",
 		10);
+
+	resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
@@ -280,6 +302,10 @@ void SwerveRobotPlugin::disabled(){
 }
 
 void SwerveRobotPlugin::autonomous(double current_time){
+	if(m_is_first_auton_loop){
+		resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
+		m_is_first_auton_loop = false;
+	}
 	std::cout << "Autonomous: " << current_time << std::endl;
 
 	if(!m_recording){
@@ -303,12 +329,11 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
 	double pos_threshold = (command_map.count("threshold_pos") != 0) ? command_map.at("threshold_pos") : 0.0;
 	double theta_threshold = (command_map.count("threshold_vel") != 0) ? command_map.at("threshold_vel") : 0.0;
-
 	auto command_map_final = get_commands(current_time + 100.0);
 	double final_pos_x = (command_map_final.count("x_pos") != 0) ? command_map_final.at("x_pos") : 0.0;
 	double final_pos_y = (command_map_final.count("y_pos") != 0) ? command_map_final.at("y_pos") : 0.0;
 	double final_pos_theta = (command_map_final.count("angle_pos") != 0) ? command_map_final.at("angle_pos") : 0.0;
-	
+
 	// std::cout << "final_pos_x: " << final_pos_x << std::endl;
 
 	// Get best state estimate
@@ -316,7 +341,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
 	auto curr_vel = m_swerve_model_ptr->getBaseVelocityCurrent();
 	// if(m_is_field_oriented){
-		// Rotate velocity command to robot frame
+	// Rotate velocity command to robot frame
 	Eigen::Vector2d vel_odom(curr_vel.x(), curr_vel.y());
 	auto rotate_world_to_base = Eigen::Rotation2D<double>(curr_theta).toRotationMatrix();
 	vel_odom = rotate_world_to_base * vel_odom;
@@ -375,6 +400,38 @@ float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_p
 	return pos - pos_want;
 }
 
+void SwerveRobotPlugin::resetPose(double x, double y, double theta){
+	std::cout << "Resetting Pose!" << std::endl;
+	m_last_odom_loc = m_curr_odom_loc;
+	m_last_odom_angle = m_curr_odom_angle;
+
+	m_init_world_x = x;
+	m_init_world_y = y;
+	m_init_world_theta = theta;
+
+	geometry_msgs::msg::PoseWithCovarianceStamped msg{};
+
+	msg.header.frame_id = "odom";
+	msg.header.stamp = node_ptr_->get_clock()->now();
+
+	msg.pose.pose.position.x = x;
+	msg.pose.pose.position.y = y;
+	msg.pose.pose.position.z = 0;
+
+	ghost_util::yawToQuaternionRad(
+		theta,
+		msg.pose.pose.orientation.w,
+		msg.pose.pose.orientation.x,
+		msg.pose.pose.orientation.y,
+		msg.pose.pose.orientation.z);
+
+	msg.pose.covariance[0] = m_init_sigma_x * m_init_sigma_x;
+	msg.pose.covariance[7] = m_init_sigma_y * m_init_sigma_y;
+	msg.pose.covariance[35] = m_init_sigma_theta * m_init_sigma_theta;
+
+	m_set_pose_publisher->publish(msg);
+}
+
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
 	// std::cout << "Teleop: " << current_time << std::endl;
@@ -398,6 +455,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 	}
 	else{
 		// Reset Auton Tester
+		m_is_first_auton_loop = true;
 		m_auton_start_time = current_time;
 		m_auton_button_pressed = false;
 		m_auton_index = 0;
@@ -411,11 +469,15 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_toggle_swerve_field_control_btn_pressed = false;
 		}
 
-		if(joy_data->btn_l2){
-			m_last_odom_angle = 0.0;
-			m_curr_odom_angle = 0.0;
-			m_swerve_model_ptr->setOdometryAngle(0.0);
+		static bool reset_pose_btn_pressed = false;
+		if(joy_data->btn_l2 && !reset_pose_btn_pressed){
+			resetPose(0.0, 0.0, 0.0);
+			reset_pose_btn_pressed = true;
 		}
+		else if(!joy_data->btn_l2){
+			reset_pose_btn_pressed = false;
+		}
+
 		// Toggle Bag Recorder
 		if(joy_data->btn_y && !m_recording_btn_pressed){
 			m_recording_btn_pressed = true;
@@ -459,10 +521,10 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		updateDrivetrainMotors();
 
-
 		bool tail_mode = joy_data->btn_d && joy_data->btn_l;
 		bool climb_mode = joy_data->btn_a && joy_data->btn_b;
 		bool intake_command = false;
+
 		// Intake
 		if(joy_data->btn_r1 && !tail_mode && !climb_mode){
 			intake_command = true;
@@ -619,10 +681,10 @@ void SwerveRobotPlugin::updateDrivetrainMotors(){
 }
 
 
-void SwerveRobotPlugin::poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
+void SwerveRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
-	m_swerve_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y);
-	m_swerve_model_ptr->setWorldAngle(theta);
+	m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
+	m_swerve_model_ptr->setWorldAngleRad(theta);
 	m_swerve_model_ptr->setWorldTranslationalVelocity(msg->twist.twist.linear.x, msg->twist.twist.linear.y);
 	m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
 }

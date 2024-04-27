@@ -37,6 +37,7 @@ protected:
 	void publishOdometry();
 	void publishBaseTwist();
 	void publishTrajectoryVisualization();
+	void resetPose(double x, double y, double theta);
 
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
 	rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
@@ -50,13 +51,14 @@ protected:
 	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_vel_pub;
 	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_vel_pub;
 	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
+	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
 
 	void publishDesiredTwist(double des_vel_x, double des_vel_y, double des_theta_vel);
 	void publishCurrentTwist(double curr_vel_x, double curr_vel_y, double des_vel_theta);
 	void publishDesiredPose(double des_x, double des_y, double des_theta);
 
 	// Subscribers
-	void poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+	void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
 	rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
 
 	// Service Clients
@@ -95,6 +97,14 @@ protected:
 	double m_k7 = 0.0;
 	double m_k8 = 0.0;
 	double m_k9 = 0.0;
+
+	// Pose Reset Covariances
+	double m_init_sigma_x = 0.2;        // 99% within +-24" (two tiles)
+	double m_init_sigma_y = 0.2;        // 99% within +-24" (two tiles)
+	double m_init_sigma_theta = 0.35;   // 99% within 60 degrees
+	double m_init_world_x = 0.0;
+	double m_init_world_y = 0.0;
+	double m_init_world_theta = 0.0;
 
 	// Digital IO
 	std::vector<bool> m_digital_io;
@@ -136,10 +146,10 @@ protected:
 	double m_curr_y_cmd = 0.0;
 	double m_curr_theta_cmd = 0.0;
 
-	// Skills mode
+	// Auton States
 	bool m_auton_button_pressed = false;
 	int m_auton_index = 0;
-	bool m_teleop_started = false;
+	bool m_is_first_auton_loop = true;
 
 	// stick
 	double m_stick_angle_start = 0;
