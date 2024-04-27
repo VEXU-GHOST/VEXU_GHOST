@@ -212,7 +212,7 @@ void SwerveRobotPlugin::initialize(){
 		"/cmd_vel",
 		10);
 
-	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr);
+	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms, m_burnout_cooldown_duration_ms);
 
 	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
 		"bag_recorder/start");
@@ -314,8 +314,8 @@ void SwerveRobotPlugin::autonomous(double current_time){
 		m_recording = true;
 	}
 
-	auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-	m_start_recorder_client->async_send_request(req);
+	// auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+	// m_start_recorder_client->async_send_request(req);
 
 	bt_->tick_tree();
 	// publishTrajectoryVisualization();
@@ -358,8 +358,8 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	double y_error_final = final_pos_y - curr_location.y();
 	double theta_error = ghost_util::SmallestAngleDistRad(des_theta, curr_theta);
 	double theta_error_final = ghost_util::SmallestAngleDistRad(final_pos_theta, curr_theta);
-	double vel_cmd_x = (abs(x_error_final) <= pos_threshold / 4.0) ? 0.0 : des_vel_x + (des_vel_x - curr_vel_x) * m_move_to_pose_kd_xy + (x_error) * m_move_to_pose_kp_xy;
-	double vel_cmd_y = (abs(y_error_final) <= pos_threshold / 4.0) ? 0.0 : des_vel_y + (des_vel_y - curr_vel_y) * m_move_to_pose_kd_xy + (y_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_x = (abs(x_error_final) <= pos_threshold / 2.0) ? 0.0 : des_vel_x + (des_vel_x - curr_vel_x) * m_move_to_pose_kd_xy + (x_error) * m_move_to_pose_kp_xy;
+	double vel_cmd_y = (abs(y_error_final) <= pos_threshold / 2.0) ? 0.0 : des_vel_y + (des_vel_y - curr_vel_y) * m_move_to_pose_kd_xy + (y_error) * m_move_to_pose_kp_xy;
 	double vel_cmd_theta = (abs(theta_error_final) <= theta_threshold / 2.0) ? 0.0 : des_theta_vel + (des_theta_vel - curr_vel_theta) * m_move_to_pose_kd_theta + theta_error * m_move_to_pose_kp_theta;
 
 	publishCurrentTwist(curr_vel_x, curr_vel_y, curr_vel_theta);
@@ -374,11 +374,17 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	// std::cout << "x_error: " << x_error << std::endl;
 	// std::cout << "y_error: " << y_error << std::endl;
 
-	// std::cout << "curr_location.x(): " << curr_location.x() << std::endl;
-	// std::cout << "curr_location.y(): " << curr_location.y() << std::endl;
+	std::cout << "curr_location.x(): " << curr_location.x() << std::endl;
+	std::cout << "curr_location.y(): " << curr_location.y() << std::endl;
 
-	// std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
-	// std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
+	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
+	std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
+
+	if (des_pos_x == 0.0 && des_pos_y == 0.0){
+		vel_cmd_x = 0.0;
+		vel_cmd_y = 0.0;
+		vel_cmd_theta = 0.0;		
+	}
 
 	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(-vel_cmd_y, vel_cmd_x, -vel_cmd_theta);
 

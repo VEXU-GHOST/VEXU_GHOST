@@ -54,8 +54,10 @@ competition_state_machine_node:
     # pose_topic: "/map_ekf/odometry"
 
     swerve_robot_plugin:
-      m_init_world_x: 1.524
-      m_init_world_y: 0.3048
+      # m_init_world_y: -1.524
+      m_init_world_y: -1.524
+      # m_init_world_x: -0.3048
+      m_init_world_x: 0.9144
       m_init_world_theta: 0.0
 
       m_init_sigma_x: 0.2
@@ -131,7 +133,7 @@ competition_state_machine_node:
       max_lin_vel_slew: 1.0 # 0.0 <-> 1.0
 
       burnout_absolute_current_threshold_ma: 100.0
-      burnout_absolute_velocity_threshold_rpm: 50.0
+      burnout_absolute_velocity_threshold_rpm: 400.0
       burnout_stall_duration_ms: 500
       burnout_cooldown_duration_ms: 5000
 

@@ -11,7 +11,7 @@ CheckForRestart::CheckForRestart(const std::string& name, const BT::NodeConfig& 
 		rclcpp::Node("CheckForRestart_node"),
 		robot_hardware_interface_ptr_(robot_hardware_interface_ptr){
 			start_time_ = std::chrono::system_clock::now();
-			restarted_ = false;
+			restarted_ = true;
 }
 
 // It is mandatory to define this STATIC method.

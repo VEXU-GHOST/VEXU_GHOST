@@ -114,7 +114,7 @@ set(NODES
   loggingNode
   moveToPose
   swipeTail
-  setWing
+  intakeCmd
   climb
 )
 

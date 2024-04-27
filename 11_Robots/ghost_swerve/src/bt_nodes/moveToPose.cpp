@@ -27,6 +27,7 @@ BT::PortsList MoveToPose::providedPorts(){
 	    BT::InputPort<double>("omega"),
 	    BT::InputPort<double>("threshold"),
 	    BT::InputPort<double>("angle_threshold"),
+	    BT::InputPort<double>("speed"),
 	    BT::InputPort<int>("timeout"),
 	};
 }
@@ -46,7 +47,7 @@ T MoveToPose::get_input(std::string key){
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus MoveToPose::onStart(){
 	started_ = false;
-	// plan_time_ = std::chrono::system_clock::now();
+	// plan_time_ = std::chrono::();
 	return BT::NodeStatus::RUNNING;
 }
 
@@ -65,7 +66,12 @@ BT::NodeStatus MoveToPose::onRunning() {
 	double omega = get_input<double>("omega");
 	double threshold = get_input<double>("threshold");
 	double angle_threshold = get_input<double>("angle_threshold");
+	double speed = get_input<double>("speed");
 	int timeout = get_input<int>("timeout");
+
+	double tile_to_meters = 0.6096;
+	posX *= tile_to_meters;
+	posY *= tile_to_meters;
 
 	theta *= ghost_util::DEG_TO_RAD;
 	angle_threshold *= ghost_util::DEG_TO_RAD;
@@ -83,15 +89,16 @@ BT::NodeStatus MoveToPose::onRunning() {
 	msg.pose.pose.orientation.w = w;
 	msg.pose.pose.position.z = threshold;
 	msg.twist.twist.angular.x = angle_threshold;
+	msg.speed = speed;
 
 	// geometry_msgs::msg::TwistStamped twist{};
 	msg.twist.twist.linear.x = velX;
 	msg.twist.twist.linear.y = velY;
 	msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
 
-	if( (abs(posX - swerve_ptr_->getWorldLocation().x()) < 2.0*threshold) &&
-		(abs(posY - swerve_ptr_->getWorldLocation().y()) < 2.0*threshold) &&
-		(abs(theta - swerve_ptr_->getWorldAngleRad()) < 2.0*angle_threshold)){
+	if( (abs(posX - swerve_ptr_->getWorldLocation().x()) < threshold) &&
+		(abs(posY - swerve_ptr_->getWorldLocation().y()) < threshold) &&
+		(abs(ghost_util::SmallestAngleDistRad(theta, swerve_ptr_->getWorldAngleRad())) < angle_threshold)){
 		RCLCPP_INFO(this->get_logger(), "MoveToPose: Success");
 		return BT::NodeStatus::SUCCESS;
 	}
@@ -99,22 +106,30 @@ BT::NodeStatus MoveToPose::onRunning() {
 	if(started_){
 		auto now = std::chrono::system_clock::now();
 		int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
-		int time_elapsed_since_plan = std::chrono::duration_cast<std::chrono::milliseconds>(now - plan_time_).count();
+		// int time_elapsed_since_plan = std::chrono::duration_cast<std::chrono::milliseconds>(now - plan_time_).count();
 		// RCLCPP_INFO(this->get_logger(), "MoveToPose: %i ms elapsed", time_elapsed);
-		if (time_elapsed > timeout){
-			RCLCPP_WARN(this->get_logger(), "MoveToPose Timeout: %i ms elapsed", time_elapsed);
-			started_ = false;
-			return BT::NodeStatus::FAILURE;
-		} else if (time_elapsed_since_plan > 10000){
-			command_pub_->publish(msg);
-			RCLCPP_INFO(this->get_logger(), "MoveToPose: sent command");
-			plan_time_ = std::chrono::system_clock::now();
+		if (timeout > 0){
+			if (time_elapsed > timeout){
+				RCLCPP_WARN(this->get_logger(), "MoveToPose Timeout: %i ms elapsed", time_elapsed);
+				// started_ = false;
+				// return BT::NodeStatus::FAILURE;
+			// } else if (time_elapsed_since_plan > 10000){
+				start_time_ = std::chrono::system_clock::now();
+				command_pub_->publish(msg);
+				RCLCPP_INFO(this->get_logger(), "MoveToPose: sent command");
+				// plan_time_ = std::chrono::system_clock::now();
+			}
+		} else {
+			if (time_elapsed > abs(timeout)){
+				return BT::NodeStatus::SUCCESS;
+			}
 		}
 	} else {
 		RCLCPP_INFO(this->get_logger(), "MoveToPose: Started");
 		start_time_ = std::chrono::system_clock::now();
 		started_ = true;
-
+		command_pub_->publish(msg);
+		
 		RCLCPP_INFO(this->get_logger(), "posX: %f", posX);
 		RCLCPP_INFO(this->get_logger(), "posY: %f", posY);
 		RCLCPP_INFO(this->get_logger(), "theta: %f", theta);
