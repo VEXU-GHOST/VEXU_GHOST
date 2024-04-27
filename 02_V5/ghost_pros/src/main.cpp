@@ -22,6 +22,34 @@ using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
 
+void calibrateIMU(std::shared_ptr<pros::Imu> imu_ptr) {
+	int attempt = 1;
+	bool calibrated = false;
+	// calibrate inertial, and if calibration fails, then repeat 5 times or until successful
+	while(attempt <= 5){
+		imu_ptr->reset();
+		// wait until IMU is calibrated
+		do{pros::delay(10);
+		}while(imu_ptr->get_status() != 0xFF && imu_ptr->is_calibrating());
+		// exit if imu has been calibrated
+		if(!isnanf(imu_ptr->get_heading()) && !isinf(imu_ptr->get_heading())){
+			calibrated = true;
+			break;
+		}
+		// indicate error
+		pros::c::controller_rumble(pros::E_CONTROLLER_MASTER, "---");
+		v5_globals::screen_interface_ptr->addToPrintQueue("IMU failed to calibrate! Attempt #{}", attempt);
+		attempt++;
+	}
+	// check if calibration attempts were successful
+	if(attempt > 5){
+		v5_globals::screen_interface_ptr->addToPrintQueue("IMU calibration failed");
+	}
+	else{
+		v5_globals::screen_interface_ptr->addToPrintQueue("IMU calibrated!");
+	}
+}
+
 void exit_main_loop(const std::exception& e){
 	v5_globals::run = false;
 
@@ -169,6 +197,7 @@ void initialize(){
 				{
 					auto inertial_sensor_config_ptr = config_ptr->as<const InertialSensorDeviceConfig>();
 					v5_globals::imus[device_name] = std::make_shared<pros::Imu>(inertial_sensor_config_ptr->port);
+					calibrateIMU(v5_globals::imus[device_name]);
 				}
 				break;
 
