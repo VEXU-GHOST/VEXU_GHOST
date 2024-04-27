@@ -208,7 +208,7 @@ void SwerveRobotPlugin::initialize(){
 		trajectory_marker_topic,
 		10);
 
-	m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::TwistStamped>(
+	m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
 		"/cmd_vel",
 		10);
 
@@ -690,13 +690,11 @@ void SwerveRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometr
 }
 
 void SwerveRobotPlugin::publishBaseTwist(){
-	geometry_msgs::msg::TwistStamped msg{};
-	msg.header.frame_id = "base_link";
-	msg.header.stamp = node_ptr_->get_clock()->now();
+	geometry_msgs::msg::Twist msg{};
 	auto base_vel_cmd = m_swerve_model_ptr->getBaseVelocityCommand();
-	msg.twist.linear.x = base_vel_cmd.x();
-	msg.twist.linear.y = base_vel_cmd.y();
-	msg.twist.angular.z = base_vel_cmd.z();
+	msg.linear.x = base_vel_cmd.x();
+	msg.linear.y = base_vel_cmd.y();
+	msg.angular.z = base_vel_cmd.z();
 	m_base_twist_cmd_pub->publish(msg);
 }
 

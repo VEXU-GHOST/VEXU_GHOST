@@ -44,7 +44,7 @@ protected:
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_swerve_viz_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
 	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
-	rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_base_twist_cmd_pub;
+	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_base_twist_cmd_pub;
 
 
 	// rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_pos_pub;
