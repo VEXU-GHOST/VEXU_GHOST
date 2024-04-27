@@ -146,11 +146,11 @@ port_configuration:
                 send_velocity_command: false
                 send_voltage_command: true
         intake_lift_motor_config:
-            gearset: 200
+            gearset: 600
             brake_mode: BRAKE
-            encoder_units: DEGREES
+            encoder_units: ROTATIONS
             controller:
-                pos_gain: 10.0
+                pos_gain: 20000.0
                 vel_gain: 0.0
                 ff_vel_gain: 0.0
                 ff_torque_gain: 0.0

@@ -526,21 +526,50 @@ void SwerveRobotPlugin::teleop(double current_time){
 		bool intake_command = false;
 
 		// Intake
+		double intake_voltage;
 		if(joy_data->btn_r1 && !tail_mode && !climb_mode){
 			intake_command = true;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
+			intake_voltage = -1.0;
 		}
 		else if(joy_data->btn_r2 && !tail_mode && !climb_mode){
 			intake_command = true;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+			intake_voltage = 1.0;
 		}
 		else{
 			intake_command = false;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
-			rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
+			intake_voltage = 0.0;
 		}
+
+		bool intake_up = false;
+		double intake_lift_target;
+		if(joy_data->btn_l1){// intake lift
+			intake_up = true;
+			intake_lift_target = 0.0;
+		}
+		else{
+			intake_up = false;
+			intake_lift_target = 7.0;
+		}
+
+		if(std::fabs(rhi_ptr_->getMotorPosition("intake_lift_motor") - intake_lift_target) < 0.05){
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
+			if(intake_up && !intake_command){
+				intake_voltage = 0.0;
+			}
+		}
+		else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
+			if(intake_up && !intake_command){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 1000);
+				intake_voltage = -1.0;
+			}
+		}
+		rhi_ptr_->setMotorPositionCommand("intake_lift_motor", intake_lift_target);
+
+		rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
 
 		// Climb Testing
 		if(climb_mode){
@@ -582,15 +611,6 @@ void SwerveRobotPlugin::teleop(double current_time){
 				m_claw_open = true;
 			}
 		}
-
-		// if(joy_data->btn_l1 || joy_data->btn_l){// intake lift
-		// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
-		// 	rhi_ptr_->setMotorVoltageCommandPercent("intake_lift_motor", 1.0);
-		// }
-		// else{
-		// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
-		// 	rhi_ptr_->setMotorVoltageCommandPercent("intake_lift_motor", 0);
-		// }
 
 		bool tail_down = false;
 		// tail left and intake up
@@ -641,7 +661,6 @@ void SwerveRobotPlugin::teleop(double current_time){
 			if(((node_ptr_->now() - m_intake_cooldown_start).nanoseconds() <= m_burnout_cooldown_duration_ms * 1000000) && intake_command){
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
 				rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
-				rhi_ptr_->setMotorTorqueCommandPercent("intake_motor", 0);
 			}
 			else{
 				m_intake_cooling_down = false;
