@@ -183,13 +183,13 @@ ekf_pf_node:
       # Too generous though, and you are either losing resolution or wasting computation.
 
       # MAKE SURE THESE MATCH IN THE SWERVE MODEL
-      k1: 0.25  # x error from x motion         # 50% error in primary direction
-      k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
-      k3: 0.02 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k1: 0.4  # x error from x motion         # 50% error in primary direction
+      k2: 0.1   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
+      k3: 0.05 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
-      k4: 0.05   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
-      k5: 0.25  # y error from y motion         # 50% error in primary direction           
-      k6: 0.02 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k4: 0.1   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
+      k5: 0.4  # y error from y motion         # 50% error in primary direction           
+      k6: 0.05 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
             
       k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
       k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
