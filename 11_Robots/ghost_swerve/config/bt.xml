@@ -22,7 +22,7 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="2000"
+                  timeout="-3000"
                   speed="0.5"/>
       <ReactiveFallback>
         <IntakeCmd in="true"/>
@@ -45,7 +45,7 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="2000"
+                  timeout="-2000"
                   speed="0.5"/>
       <SubTree ID="score"
                _autoremap="false"/>
@@ -64,7 +64,7 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="1000"
+                  timeout="-2000"
                   speed="0.5"/>
       <MoveToPose posX="1.0"
                   posY="-1.0"
@@ -74,7 +74,7 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="1000"
+                  timeout="-2000"
                   speed="0.3"/>
       <MoveToPose posX="1.0"
                   posY="-0.5"
@@ -84,7 +84,7 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="2000"
+                  timeout="-2000"
                   speed="0.3"/>
       <ReactiveFallback>
         <IntakeCmd in="false"/>
@@ -107,7 +107,7 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="2000"
+                  timeout="-2000"
                   speed="0.5"/>
     </Sequence>
   </BehaviorTree>
@@ -202,7 +202,7 @@
                   omega="0.0"
                   threshold="0.08"
                   angle_threshold="5.0"
-                  timeout="2000"
+                  timeout="-3000"
                   speed="0.5"/>
       <!-- <MoveToPose posX="2.0"
                   posY="-2.0"
@@ -234,7 +234,7 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="2000"
+                  timeout="-3000"
                   speed="0.3"/>
       <SubTree ID="far_triball"
                _autoremap="false"/>
