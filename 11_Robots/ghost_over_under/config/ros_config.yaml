@@ -149,8 +149,8 @@ ekf_pf_node:
 
       # 1.524,  0.3048
       # Initial position
-      init_x: 0.0
-      init_y: 0.0
+      init_x: -0.3048
+      init_y: -1.524
       init_r: 0.0
 
       # Initial cloud distribution

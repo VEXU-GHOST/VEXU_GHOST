@@ -137,7 +137,7 @@ def generate_launch_description():
         serial_node,
         competition_state_machine_node,
         bag_recorder_service,
-        # ekf_pf_node,
+        ekf_pf_node,
         # realsense_node,
         imu_filter_node,
         odom_ekf_node,

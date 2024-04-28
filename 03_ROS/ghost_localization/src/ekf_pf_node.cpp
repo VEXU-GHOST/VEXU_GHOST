@@ -140,11 +140,13 @@ void EkfPfNode::LoadROSParams(){
 	config_params.k8 = get_parameter("particle_filter.k8").as_double();
 	config_params.k9 = get_parameter("particle_filter.k9").as_double();
 
-	declare_parameter("particle_filter.laser_offset", 0.0);
+	declare_parameter("particle_filter.laser_offset_x", 0.0);
+	declare_parameter("particle_filter.laser_offset_y", 0.0);
 	declare_parameter("particle_filter.laser_angle_offset", 0.0);
 	declare_parameter("particle_filter.min_update_dist", 0.0);
 	declare_parameter("particle_filter.min_update_angle", 0.0);
-	config_params.laser_offset = get_parameter("particle_filter.laser_offset").as_double();
+	config_params.laser_offset_x = get_parameter("particle_filter.laser_offset_x").as_double();
+	config_params.laser_offset_y = get_parameter("particle_filter.laser_offset_y").as_double();
 	config_params.laser_angle_offset = get_parameter("particle_filter.laser_angle_offset").as_double();
 	config_params.min_update_dist = get_parameter("particle_filter.min_update_dist").as_double();
 	config_params.min_update_angle = get_parameter("particle_filter.min_update_angle").as_double();
