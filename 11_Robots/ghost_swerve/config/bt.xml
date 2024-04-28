@@ -201,8 +201,8 @@
                   velY="0.0"
                   omega="0.0"
                   threshold="0.08"
-                  angle_threshold="2.0"
-                  timeout="1000"
+                  angle_threshold="5.0"
+                  timeout="2000"
                   speed="0.5"/>
       <!-- <MoveToPose posX="2.0"
                   posY="-2.0"
