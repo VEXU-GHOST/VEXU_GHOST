@@ -145,6 +145,7 @@ ekf_pf_node:
     particle_filter:
       world_frame: "map"
       rviz_set_pose_topic: "/set_pf_pose"
+      # map: "/home/maxx/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
       map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
@@ -162,9 +163,9 @@ ekf_pf_node:
       # You can tune this up and down based on performance, but I recommend starting from some initial guess based on robot config or data
 
       # Robot Constants
-      laser_offset_x: 0.0
-      laser_offset_y: 0.0
-      laser_angle_offset: 1.179166718
+      laser_offset_x: 0.1651
+      laser_offset_y: -0.1651
+      laser_angle_offset: 3.14159
       
       # RPLidar A1 datasheet
       range_min: 0.15
