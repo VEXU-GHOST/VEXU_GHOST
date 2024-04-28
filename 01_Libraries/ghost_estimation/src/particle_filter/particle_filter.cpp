@@ -441,8 +441,17 @@ void ParticleFilter::GetLocation(Eigen::Vector2f* loc_ptr,
 	angle = atan2(angle_point[1], angle_point[0]);
 }
 
+/**
+ * @brief Given location and angle of the robot, return the position of the sensor?
+ *
+ * @param loc
+ * @param angle
+ * @return Eigen::Vector2f
+ */
 Eigen::Vector2f ParticleFilter::BaseLinkToSensorFrame(const Eigen::Vector2f &loc, const float &angle){
-	return loc + Vector2f(config_params_.laser_offset * cos(angle), config_params_.laser_offset * sin(angle));
+	auto sensor_location_relative = Eigen::Vector2f(config_params_.laser_offset_x, config_params_.laser_offset_y);
+	auto rot = Eigen::Rotation2D<float>(angle).toRotationMatrix();
+	return loc + rot * sensor_location_relative;
 }
 
 }  // namespace particle_filter

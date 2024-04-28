@@ -424,7 +424,7 @@ void EkfPfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg)
 			if((range >= config_params.range_min) && (range <= config_params.range_max) ){
 				float angle = last_laser_msg_->angle_min + i * last_laser_msg_->angle_increment + config_params.laser_angle_offset + robot_angle;
 
-				Eigen::Vector2f p = Eigen::Vector2f(range * cos(angle), range * sin(angle)) + robot_loc + rot_bl_to_world * Eigen::Vector2f(config_params.laser_offset, 0.0);
+				Eigen::Vector2f p = Eigen::Vector2f(range * cos(angle), range * sin(angle)) + robot_loc + rot_bl_to_world * Eigen::Vector2f(config_params.laser_offset_x, config_params.laser_offset_y);
 				auto point_msg = geometry_msgs::msg::Point{};
 				point_msg.x = p.x();
 				point_msg.y = p.y();

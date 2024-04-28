@@ -145,7 +145,7 @@ ekf_pf_node:
     particle_filter:
       world_frame: "map"
       rviz_set_pose_topic: "/set_pose"
-      map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      map: "/home/maxx/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # 1.524,  0.3048
       # Initial position
@@ -163,7 +163,8 @@ ekf_pf_node:
       # You can tune this up and down based on performance, but I recommend starting from some initial guess based on robot config or data
 
       # Robot Constants
-      laser_offset: -0.209
+      laser_offset_x: 0.0
+      laser_offset_y: 0.0
       laser_angle_offset: 1.179166718
       
       # RPLidar A1 datasheet
@@ -195,8 +196,8 @@ ekf_pf_node:
       k9: 1.5   # theta error from rotation     # 50% error in primary direction  
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
-      min_update_dist:  0.05
-      min_update_angle: 0.005
+      min_update_dist:  5.0 #0.05
+      min_update_angle: 10.0 #0.005
 
       # Computation Factors
       num_particles: 200        # Increase until computation runs out

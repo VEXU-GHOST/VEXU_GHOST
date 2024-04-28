@@ -70,33 +70,33 @@ ekf_pf_node
 ##############################
 #### Ghost PF-EKF Node ####
 ##############################
-add_executable(pf_ekf_node
-  src/pf_ekf_node.cpp
-)
-ament_target_dependencies(pf_ekf_node
-  rclcpp
-  tf2_msgs
-  sensor_msgs
-  visualization_msgs
-  nav_msgs
-  ghost_msgs
-  ghost_estimation
-  ghost_util
-  Eigen3
-)
-target_link_libraries(pf_ekf_node
-  ghost_estimation::amrl_shared_lib
-  ghost_estimation::vector_map
-  ghost_estimation::particle_filter
-  yaml-cpp
-)
-target_include_directories(pf_ekf_node
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-pf_ekf_node
-  DESTINATION lib/${PROJECT_NAME})
+# add_executable(pf_ekf_node
+#   src/pf_ekf_node.cpp
+# )
+# ament_target_dependencies(pf_ekf_node
+#   rclcpp
+#   tf2_msgs
+#   sensor_msgs
+#   visualization_msgs
+#   nav_msgs
+#   ghost_msgs
+#   ghost_estimation
+#   ghost_util
+#   Eigen3
+# )
+# target_link_libraries(pf_ekf_node
+#   ghost_estimation::amrl_shared_lib
+#   ghost_estimation::vector_map
+#   ghost_estimation::particle_filter
+#   yaml-cpp
+# )
+# target_include_directories(pf_ekf_node
+#   PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
+# install(TARGETS
+# pf_ekf_node
+#   DESTINATION lib/${PROJECT_NAME})
 
 #################
 #### Install ####
