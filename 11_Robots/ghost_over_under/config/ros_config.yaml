@@ -54,15 +54,15 @@ competition_state_machine_node:
     # pose_topic: "/map_ekf/odometry"
 
     swerve_robot_plugin:
-      m_init_world_y: -1.524
+      # m_init_world_x: -0.3048
       # m_init_world_y: -1.524
-      m_init_world_x: -0.3048
-      # m_init_world_x: 0.9144
+      m_init_world_x: 0.0
+      m_init_world_y: 0.0
       m_init_world_theta: 0.0
 
-      m_init_sigma_x: 0.2
-      m_init_sigma_y: 0.2
-      m_init_sigma_theta: 0.35
+      m_init_sigma_x: 0.05
+      m_init_sigma_y: 0.05
+      m_init_sigma_theta: 0.25
 
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
@@ -144,19 +144,18 @@ ekf_pf_node:
   ros__parameters:
     particle_filter:
       world_frame: "map"
-      rviz_set_pose_topic: "/set_pose"
-      map: "/home/maxx/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      rviz_set_pose_topic: "/set_pf_pose"
+      map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
-      # 1.524,  0.3048
       # Initial position
       init_x: -0.3048
       init_y: -1.524
       init_r: 0.0
 
       # Initial cloud distribution
-      init_x_sigma: 0.1         #
-      init_y_sigma: 0.1         #
-      init_r_sigma: 0.25        #
+      init_x_sigma: 0.05         #
+      init_y_sigma: 0.05         #
+      init_r_sigma: 0.2        #
 
       # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
       # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
@@ -234,11 +233,11 @@ odom_ekf_node:
     # See: https://answers.ros.org/question/362875/set_pose-breaks-robot_localization
     # set_pose_time_topc: "/set_pose"
 
-    initial_state: [0.0,  0.0,  0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0]
+    initial_state: [0.0, 0.0, 0.0,
+                    0.0, 0.0,  0.0,
+                    0.0, 0.0,  0.0,
+                    0.0, 0.0,  0.0,
+                    0.0, 0.0,  0.0]
 
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
     # computation until it receives at least one message from one of the inputs. It will then run continuously at the
@@ -436,12 +435,12 @@ odom_ekf_node:
     # are ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below
     #if unspecified.
     # initial_estimate_covariance: [0.075, 0.075, 1e-9, 1e-9, 1e-9, 0.125, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9]
-    initial_estimate_covariance: [1e-5,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    1e-5,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    initial_estimate_covariance: [0.0025,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                  0.0,    0.0025,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0625,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     1e-9,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,

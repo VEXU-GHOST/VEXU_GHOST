@@ -240,7 +240,7 @@ void SwerveRobotPlugin::initialize(){
 		"/des_pos",
 		10);
 
-	resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
+	// resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
@@ -380,10 +380,10 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
 	std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
 
-	if (des_pos_x == 0.0 && des_pos_y == 0.0){
+	if((des_pos_x == 0.0) && (des_pos_y == 0.0)){
 		vel_cmd_x = 0.0;
 		vel_cmd_y = 0.0;
-		vel_cmd_theta = 0.0;		
+		vel_cmd_theta = 0.0;
 	}
 
 	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(-vel_cmd_y, vel_cmd_x, -vel_cmd_theta);
