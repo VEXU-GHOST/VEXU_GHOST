@@ -141,7 +141,7 @@ def generate_launch_description():
         # realsense_node,
         imu_filter_node,
         odom_ekf_node,
-        # map_ekf_node,
+        map_ekf_node,
         swerve_motion_planner_node,
         rplidar_node
     ])
