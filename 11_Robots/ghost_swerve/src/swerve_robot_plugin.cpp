@@ -518,11 +518,11 @@ void SwerveRobotPlugin::teleop(double current_time){
 		// 	m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(joy_data->left_x, joy_data->left_y, m_angle_target);
 		// }
 		// else{
-		double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
+		// double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
 
-		m_curr_x_cmd = joy_data->left_x / 127.0 * scale;
-		m_curr_y_cmd = joy_data->left_y / 127.0 * scale;
-		m_curr_theta_cmd = joy_data->right_x / 127.0 * scale;
+		m_curr_x_cmd = joy_data->left_x / 127.0; //* scale;
+		m_curr_y_cmd = joy_data->left_y / 127.0; //* scale;
+		m_curr_theta_cmd = joy_data->right_x / 127.0; //* scale;
 
 		m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(m_curr_x_cmd, m_curr_y_cmd, m_curr_theta_cmd);
 		m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
