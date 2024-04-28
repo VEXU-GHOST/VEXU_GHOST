@@ -44,7 +44,6 @@ struct SwerveConfig {
 	// Velocity Scaling
 	double velocity_scaling_ratio;
 	double velocity_scaling_threshold;
-	bool swerve_heuristic_bool;
 
 	// Lift - motor angles, not outputs
 	double lift_up_angle;
@@ -365,6 +364,14 @@ public:
 	}
 
 
+	void enableSwerveHeuristics(){
+		m_swerve_heuristics_enabled = true;
+	}
+
+	void disableSwerveHeuristics(){
+		m_swerve_heuristics_enabled = false;
+	}
+
 protected:
 	// Initialization
 	void validateConfig();
@@ -388,6 +395,7 @@ protected:
 	double m_lin_vel_slew;
 	double m_ang_slew;
 	double LIN_VEL_TO_RPM;
+	bool m_swerve_heuristics_enabled = true;
 
 	// Jacobians
 	Eigen::Matrix2d m_module_jacobian;                      // Maps actuator velocities to joint velocities

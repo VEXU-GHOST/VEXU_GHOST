@@ -50,8 +50,8 @@ covariance_2d_publisher:
 competition_state_machine_node:
   ros__parameters:
     odom_topic: "/sensors/wheel_odom"
-    pose_topic: "/odom_ekf/odometry"
-    # pose_topic: "/map_ekf/odometry"
+    backup_pose_topic: "/odom_ekf/odometry"
+    pose_topic: "/map_ekf/odometry"
 
     swerve_robot_plugin:
       # m_init_world_x: -0.3048
@@ -106,7 +106,6 @@ competition_state_machine_node:
       angle_control_kp: 0.75
       velocity_scaling_ratio: 1.0
       velocity_scaling_threshold: 1.2
-      swerve_heuristic_bool: false
 
       joy_angle_control_threshold: 0.5
 

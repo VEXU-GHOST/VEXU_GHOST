@@ -31,6 +31,9 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
 	std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
 
+	node_ptr_->declare_parameter("backup_pose_topic", "/odometry/filtered");
+	std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
+
 	node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
 	std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
 
@@ -113,8 +116,6 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.velocity_scaling_ratio = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_ratio").as_double();
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
 	swerve_model_config.velocity_scaling_threshold = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_threshold").as_double();
-	node_ptr_->declare_parameter("swerve_robot_plugin.swerve_heuristic_bool", true);
-	swerve_model_config.swerve_heuristic_bool = node_ptr_->get_parameter("swerve_robot_plugin.swerve_heuristic_bool").as_bool();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_world_x", m_init_world_x);
 	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_world_y", m_init_world_y);
@@ -171,8 +172,6 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.15875, 0.15875);
 	swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.15875, -0.15875);
 
-	swerve_model_config.swerve_heuristic_bool = false;
-
 	m_swerve_model_ptr = std::make_shared<SwerveModel>(swerve_model_config);
 	m_swerve_model_ptr->setFieldOrientedControl(true);
 
@@ -191,6 +190,12 @@ void SwerveRobotPlugin::initialize(){
 		pose_topic,
 		10,
 		std::bind(&SwerveRobotPlugin::worldOdometryUpdateCallback, this, _1));
+
+	m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
+		backup_pose_topic,
+		10,
+		std::bind(&SwerveRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
+
 
 	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
@@ -302,11 +307,12 @@ void SwerveRobotPlugin::disabled(){
 }
 
 void SwerveRobotPlugin::autonomous(double current_time){
+	std::cout << "Autonomous: " << current_time << std::endl;
 	if(m_is_first_auton_loop){
-		resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
 		m_is_first_auton_loop = false;
 	}
-	std::cout << "Autonomous: " << current_time << std::endl;
+
+	m_swerve_model_ptr->disableSwerveHeuristics();
 
 	if(!m_recording){
 		auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
@@ -440,22 +446,13 @@ void SwerveRobotPlugin::resetPose(double x, double y, double theta){
 
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
+	m_swerve_model_ptr->enableSwerveHeuristics();
 	// std::cout << "Teleop: " << current_time << std::endl;
 	// m_swerve_model_ptr->setFieldOrientedControl(true);
 
 	if(joy_data->btn_u){
 		if(!m_auton_button_pressed){
 			m_auton_button_pressed = true;
-
-			// //   Odometry or whatever for auton
-			// m_last_odom_angle = ghost_util::DEG_TO_RAD * 0.0;
-			// m_curr_odom_angle = m_last_odom_angle;
-			// m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 0.0;
-			// m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
-			// m_last_odom_loc.x() = m_curr_odom_loc.x();
-			// m_last_odom_loc.y() = m_last_odom_loc.y();
-			// m_swerve_model_ptr->setWorldPose(m_curr_odom_loc.x(), m_curr_odom_loc.y());
-			// m_swerve_model_ptr->setWorldAngle(m_curr_odom_angle);
 		}
 		autonomous(current_time - m_auton_start_time);
 	}
@@ -476,11 +473,11 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 
 		static bool reset_pose_btn_pressed = false;
-		if(joy_data->btn_l2 && !reset_pose_btn_pressed){
+		if(joy_data->btn_d && joy_data->btn_l && !reset_pose_btn_pressed && m_use_backup_estimator){
 			resetPose(0.0, 0.0, 0.0);
 			reset_pose_btn_pressed = true;
 		}
-		else if(!joy_data->btn_l2){
+		else if(!joy_data->btn_d && !joy_data->btn_l){
 			reset_pose_btn_pressed = false;
 		}
 
@@ -501,6 +498,16 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 		else if(!joy_data->btn_y){
 			m_recording_btn_pressed = false;
+		}
+
+
+		static bool btn_r_pressed = false;
+		if(joy_data->btn_r && !btn_r_pressed){
+			btn_r_pressed = true;
+			m_use_backup_estimator = !m_use_backup_estimator;
+		}
+		else if(!joy_data->btn_r){
+			btn_r_pressed = false;
 		}
 
 		// if(m_swerve_angle_control){
@@ -527,7 +534,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		updateDrivetrainMotors();
 
-		bool tail_mode = joy_data->btn_d && joy_data->btn_l;
+		bool tail_mode = joy_data->btn_l2;
 		bool climb_mode = joy_data->btn_a && joy_data->btn_b;
 		bool intake_command = false;
 
@@ -707,11 +714,23 @@ void SwerveRobotPlugin::updateDrivetrainMotors(){
 
 
 void SwerveRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
-	double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
-	m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
-	m_swerve_model_ptr->setWorldAngleRad(theta);
-	m_swerve_model_ptr->setWorldTranslationalVelocity(msg->twist.twist.linear.x, msg->twist.twist.linear.y);
-	m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
+	if(!m_use_backup_estimator){
+		double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+		m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
+		m_swerve_model_ptr->setWorldAngleRad(theta);
+		m_swerve_model_ptr->setWorldTranslationalVelocity(msg->twist.twist.linear.x, msg->twist.twist.linear.y);
+		m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
+	}
+}
+
+void SwerveRobotPlugin::worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg){
+	if(m_use_backup_estimator){
+		double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+		m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
+		m_swerve_model_ptr->setWorldAngleRad(theta);
+		m_swerve_model_ptr->setWorldTranslationalVelocity(msg->twist.twist.linear.x, msg->twist.twist.linear.y);
+		m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
+	}
 }
 
 void SwerveRobotPlugin::publishBaseTwist(){
