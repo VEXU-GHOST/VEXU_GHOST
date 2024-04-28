@@ -44,7 +44,7 @@ def generate_launch_description():
 
     return launch.LaunchDescription([
         robot_state_publisher_node,
-        # covariance_2d_publisher_node,
+        covariance_2d_publisher_node,
         # joint_state_publisher_gui_node,
         rviz_node
     ])

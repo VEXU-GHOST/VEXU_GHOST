@@ -145,8 +145,8 @@ ekf_pf_node:
     particle_filter:
       world_frame: "map"
       rviz_set_pose_topic: "/set_pf_pose"
-      # map: "/home/maxx/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
-      map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      map: "/home/maxx/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      # map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
       init_x: -0.3048
@@ -226,6 +226,7 @@ ekf_pf_node:
       use_skip_range: false
       skip_index_min: 1
       skip_index_max: 2
+      publish_tf: false
 
       use_sim_time: false
 
@@ -460,7 +461,7 @@ map_ekf_node:
     # See: https://answers.ros.org/question/362875/set_pose-breaks-robot_localization
     # set_pose_time_topic: "/set_pose"
 
-    initial_state: [1.524,  0.3048,  0.0,
+    initial_state: [-0.3048, -1.524, 0.0,
                   0.0,     0.0,  0.0,
                   0.0,     0.0,  0.0,
                   0.0,     0.0,  0.0,
@@ -502,10 +503,6 @@ map_ekf_node:
 
     # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
     debug_out_file: ~/VEXU_GHOST/03_ROS/ghost_ros_interfaces/robot_localization_debug.txt
-
-    # Publish map to odom
-    publish_tf: true
-    
     use_sim_time: false
     # REP-105 (http://www.ros.org/reps/rep-0105.html) specifies four principal coordinate frames: base_link, odom, map, and
     # earth. base_link is the coordinate frame that is affixed to the robot. Both odom and map are world-fixed frames.
@@ -514,7 +511,7 @@ map_ekf_node:
     # frame, is a world-fixed coordinate frame, and while it contains the most globally accurate position estimate for your
     # robot, it is subject to discrete jumps, e.g., due to the fusion of GPS data or a correction from a map-based
     # localization node. The earth frame is used to relate multiple map frames by giving them a common reference frame.
-    # ekf_localization_nodfe and ukf_localization_node are not concerned with the earth frame.
+    # ekf_localization_node and ukf_localization_node are not concerned with the earth frame.
     # Here is how to use the following settings:
     # 1. Set the map_frame, odom_frame, and base_link frames to the appropriate frame names for your system.
     #     1a. If your system does not have a map_frame, just remove it, and make sure "world_frame" is set to the value of
@@ -531,6 +528,18 @@ map_ekf_node:
     base_link_frame: base_link    # Defaults to "base_link" if unspecified
     world_frame: map             # Defaults to the value of odom_frame if unspecified
 
+    pose0: /estimation/pose
+
+    pose0_config: [true, true,  false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, false,
+                  false, false, false]
+
+    pose0_differential: false
+    pose0_relative: false
+    pose0_queue_size: 5
+
     # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
     # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
     # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
@@ -546,10 +555,10 @@ map_ekf_node:
     # has no pose information, so the first six values would be meaningless in that case. Each vector defaults to all false
     # if unspecified, effectively making this parameter required for each sensor.
     odom0_config: [false, false,  false,
-                  false, false, false,
-                  true, true, false,
-                  false, false, true,
-                  false, false, false]
+              false, false, false,
+              true, true, true,
+              false, false, false,
+              false, false, false]
 
     # If you have high-frequency data or are running with a low frequency parameter value, then you may want to increase
     # the size of the subscription queue so that more measurements are fused.
@@ -568,7 +577,9 @@ map_ekf_node:
     # data is converted to velocity data by differentiating the absolute pose measurements. These velocities are then
     # integrated as usual. NOTE: this only applies to sensors that provide pose measurements; setting differential to true
     # for twist measurements has no effect.
+    # odom0_differential: false
     odom0_differential: true
+
 
     # [ADVANCED] When the node starts, if this parameter is true, then the first measurement is treated as a "zero point"
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key
@@ -582,20 +593,20 @@ map_ekf_node:
     # required. Data is specified at the level of pose and twist variables, rather than for each variable in isolation.
     # For messages that have both pose and twist data, the parameter specifies to which part of the message we are applying
     # the thresholds.
-    #odom0_pose_rejection_threshold: 5
-    #odom0_twist_rejection_threshold: 1
 
-    pose0: /estimation/pose
-
-    pose0_config: [true, true,  false,
-                  false, false, true,
+    imu0: /estimation/imu/filtered
+    imu0_config: [false, false, false,
+                  false,  false,  true,
                   false, false, false,
-                  false, false, false,
-                  false, false, false]
+                  false,  false,  true,
+                  false,  false,  false]
+    imu0_differential: false
+    imu0_relative: true
+    imu0_queue_size: 5
 
-    pose0_differential: false
-    pose0_relative: false
-    pose0_queue_size: 5
+    # [ADVANCED] Some IMUs automatically remove acceleration due to gravity, and others don't. If yours doesn't, please set
+    # this to true, and *make sure* your data conforms to REP-103, specifically, that the data is in ENU frame.
+    imu0_remove_gravitational_acceleration: false
 
     # [ADVANCED]  The EKF and UKF models follow a standard predict/correct cycle. During prediction, if there is no
     # acceleration reference, the velocity at time t+1 is simply predicted to be the same as the velocity at time t. During
@@ -614,9 +625,18 @@ map_ekf_node:
     # false.
     stamped_control: false
     # The last issued control command will be used in prediction for this period. Defaults to 0.2.
-    control_timeout: 0.2
+    control_timeout: 0.05
+
     # Which velocities are being controlled. Order is vx, vy, vz, vroll, vpitch, vyaw.
-    control_config: [true, false, false, false, false, false]
+    control_config: [true, true, false, false, false, true]
+    # Places limits on how large the acceleration term will be. Should match your robot's kinematics.
+    acceleration_limits: [20.0, 20.0, 0.0, 0.0, 0.0, 13.0]
+    # Acceleration and deceleration limits are not always the same for robots.
+    deceleration_limits: [3.0, 3.0, 0.0, 0.0, 0.0, 22.0]
+
+    # If your robot cannot instantaneously reach its acceleration limit, the permitted change can be controlled with these
+    # gains
+    # acceleration_gains: [0.8, 0.0, 0.0, 0.0, 0.0, 0.9]
     # If your robot cannot instantaneously reach its deceleration limit, the permitted change can be controlled with these
     # gains
     # deceleration_gains: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
@@ -629,33 +649,35 @@ map_ekf_node:
     # to be larger, which will cause the filter to trust the incoming measurement more during correction. The values are
     # ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below if
     # unspecified.
-    process_noise_covariance: [0.01,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.01,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.06,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.03,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.03,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+
+    process_noise_covariance: [0.5,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.5,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    1e-6,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.5,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.025,   0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.025,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.04,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.01,   0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.01,   0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.5,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.5,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1e-6,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,    0.0,
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.05,   0.0,    0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.01,   0.0,    0.0,
                               0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.01,   0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.015]
+                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-6]
 
     # [ADVANCED] This represents the initial value for the state estimate error covariance matrix. Setting a diagonal
     # value (variance) to a large value will result in rapid convergence for initial measurements of the variable in
     # question. Users should take care not to use large values for variables that will not be measured directly. The values
     # are ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below
     #if unspecified.
-    initial_estimate_covariance: [1e-5,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    1e-5,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+    # initial_estimate_covariance: [0.075, 0.075, 1e-9, 1e-9, 1e-9, 0.125, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9]
+    initial_estimate_covariance: [0.0025,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                  0.0,    0.0025,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
+                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0625,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     1e-9,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
@@ -665,5 +687,4 @@ map_ekf_node:
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,    0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
-    disabled_at_startup: true
-    dynamic_process_noise_covariance: true
+      # use_dynamic_process_noise_covariance: true

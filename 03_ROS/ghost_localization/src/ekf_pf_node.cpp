@@ -173,10 +173,12 @@ void EkfPfNode::LoadROSParams(){
 	declare_parameter("particle_filter.use_skip_range", false);
 	declare_parameter("particle_filter.skip_index_min", 0);
 	declare_parameter("particle_filter.skip_index_max", 0);
+	declare_parameter("particle_filter.publish_tf", false);
 
 	config_params.use_skip_range = get_parameter("particle_filter.use_skip_range").as_bool();
 	config_params.skip_index_min = get_parameter("particle_filter.skip_index_min").as_int();
 	config_params.skip_index_max = get_parameter("particle_filter.skip_index_max").as_int();
+	publish_tf_ = get_parameter("particle_filter.publish_tf").as_bool();
 }
 
 void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
@@ -193,8 +195,10 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 			msg->angle_max + config_params.laser_angle_offset);
 
 		PublishRobotPose();
-		PublishWorldTransform();
 		PublishVisualization();
+		if(publish_tf_){
+			PublishWorldTransform();
+		}
 	}
 	catch(std::exception e){
 		RCLCPP_ERROR(this->get_logger(), "Laser : % s ", e.what());
@@ -218,7 +222,9 @@ void EkfPfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 
 		particle_filter_.Initialize(config_params.map, init_loc, init_angle);
 
-		PublishWorldTransform();
+		if(publish_tf_){
+			PublishWorldTransform();
+		}
 		PublishVisualization();
 		PublishMapViz();
 	}
@@ -243,8 +249,10 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 
 		particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 		PublishRobotPose();
-		PublishWorldTransform();
 		PublishVisualization();
+		if(publish_tf_){
+			PublishWorldTransform();
+		}
 	}
 	catch(std::exception e){
 		RCLCPP_ERROR(this->get_logger(), "Odom: %s", e.what());
@@ -265,6 +273,14 @@ void EkfPfNode::PublishRobotPose(){
 	robot_pose_.pose.pose.position.x = robot_loc.x();
 	robot_pose_.pose.pose.position.y = robot_loc.y();
 	robot_pose_.pose.pose.position.z = 0.0;
+
+	ghost_util::yawToQuaternionRad(
+		robot_angle,
+		robot_pose_.pose.pose.orientation.w,
+		robot_pose_.pose.pose.orientation.x,
+		robot_pose_.pose.pose.orientation.y,
+		robot_pose_.pose.pose.orientation.z
+		);
 	robot_pose_.pose.covariance = covariance;
 	robot_pose_pub_->publish(robot_pose_);
 }
