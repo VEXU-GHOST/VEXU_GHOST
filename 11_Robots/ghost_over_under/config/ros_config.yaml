@@ -145,8 +145,8 @@ ekf_pf_node:
     particle_filter:
       world_frame: "map"
       rviz_set_pose_topic: "/set_pf_pose"
-      map: "/home/maxx/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
-      # map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      # map: "/home/maxx/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+      map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
       init_x: -0.3048
