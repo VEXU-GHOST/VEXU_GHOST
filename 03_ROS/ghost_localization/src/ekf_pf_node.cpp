@@ -145,11 +145,13 @@ void EkfPfNode::LoadROSParams(){
 	declare_parameter("particle_filter.laser_angle_offset", 0.0);
 	declare_parameter("particle_filter.min_update_dist", 0.0);
 	declare_parameter("particle_filter.min_update_angle", 0.0);
+	declare_parameter("particle_filter.max_update_angular_velocity", 0.0);
 	config_params.laser_offset_x = get_parameter("particle_filter.laser_offset_x").as_double();
 	config_params.laser_offset_y = get_parameter("particle_filter.laser_offset_y").as_double();
 	config_params.laser_angle_offset = get_parameter("particle_filter.laser_angle_offset").as_double();
 	config_params.min_update_dist = get_parameter("particle_filter.min_update_dist").as_double();
 	config_params.min_update_angle = get_parameter("particle_filter.min_update_angle").as_double();
+	config_params.max_update_angular_velocity = get_parameter("particle_filter.max_update_angular_velocity").as_double();
 
 	declare_parameter("particle_filter.sigma_observation", 0.0);
 	declare_parameter("particle_filter.gamma", 0.0);
@@ -230,6 +232,8 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	this->last_filtered_odom_msg_ = *msg;
 	odom_loc_ = Eigen::Vector2f(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
 	odom_angle_ = 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
+
+	particle_filter_.setAngularVelocity(msg->twist.twist.angular.z);
 
 	try{
 		Vector2f robot_loc(0, 0);

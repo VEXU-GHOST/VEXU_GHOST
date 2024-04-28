@@ -183,21 +183,22 @@ ekf_pf_node:
       # Too generous though, and you are either losing resolution or wasting computation.
 
       # MAKE SURE THESE MATCH IN THE SWERVE MODEL
-      k1: 0.5   # x error from x motion         # 50% error in primary direction
+      k1: 0.25  # x error from x motion         # 50% error in primary direction
       k2: 0.05   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
-      k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k3: 0.02 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k4: 0.05   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
-      k5: 0.5   # y error from y motion         # 50% error in primary direction           
-      k6: 0.1 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-      
+      k5: 0.25  # y error from y motion         # 50% error in primary direction           
+      k6: 0.02 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+            
       k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
       k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
-      k9: 1.5   # theta error from rotation     # 50% error in primary direction  
+      k9: 0.5   # theta error from rotation     # 50% error in primary direction  
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
-      min_update_dist:  5.0 #0.05
+      min_update_dist:  0.05 #0.05
       min_update_angle: 10.0 #0.005
+      max_update_angular_velocity: 1.0
 
       # Computation Factors
       num_particles: 200        # Increase until computation runs out
@@ -212,7 +213,7 @@ ekf_pf_node:
       # In practice, this is a tunable param which will increase or decrease overall LIDAR confidence.
       # One good way to tune is to look at how different the particle weights are from each other. 
       # Decreasing gamma should decrease confidence in lidar observation and weight particles less harshly, IIRC?
-      gamma: 0.09
+      gamma: 0.05
 
       # Limits maximum penalty for a bad laser scan
       # Increasing these makes it harsher on short/long errors for scan
@@ -222,7 +223,7 @@ ekf_pf_node:
       dist_long: 0.28           # 2 std from sensor 95%
 
       # Some robots can't place a LIDAR with 360° view. These parameters allow you to permanently ignore the obscured range of the scan.
-      use_skip_range: true
+      use_skip_range: false
       skip_index_min: 1
       skip_index_max: 2
 

@@ -250,7 +250,7 @@ void ParticleFilter::ObserveLaser(const vector<float>& ranges,
 	// Call the Update and Resample steps as necessary.
 	double delta_translation = (last_update_loc_ - prev_odom_loc_).norm();
 	double delta_angle = math_util::AngleDiff(last_update_angle_, prev_odom_angle_);
-	if((delta_translation > config_params_.min_update_dist) || (std::abs(delta_angle) > config_params_.min_update_angle) ){
+	if(((delta_translation > config_params_.min_update_dist) || (std::abs(delta_angle) > config_params_.min_update_angle)) && (std::abs(angular_velocity_curr_) < config_params_.max_update_angular_velocity)){
 		static int i = 0;
 		double start_time = GetMonotonicTime();
 		max_weight_log_ = -1e10; // Should be smaller than any
