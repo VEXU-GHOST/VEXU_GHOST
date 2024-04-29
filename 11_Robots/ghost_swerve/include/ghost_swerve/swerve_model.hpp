@@ -362,7 +362,13 @@ public:
 	void setFieldOrientedControl(bool field_oriented_control){
 		m_is_field_oriented = field_oriented_control;
 	}
-
+	
+	void setAutoStatus(bool state){
+		m_auto_status = state;
+	}
+	bool getAutoStatus(){
+		return m_auto_status;
+	}
 
 	void enableSwerveHeuristics(){
 		m_swerve_heuristics_enabled = true;
@@ -444,6 +450,8 @@ protected:
 	double m_icr_quality = 0;
 	double m_icr_sse = 0;
 	double m_ls_error_metric = 0.0;
+
+	bool m_auto_status = false;
 };
 
 } // namespace ghost_swerve

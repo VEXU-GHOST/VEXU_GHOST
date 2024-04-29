@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="both_triballs">
+      main_tree_to_execute="close_triball">
   <BehaviorTree ID="far_triball">
     <Sequence>
       <Logging message="started"/>
@@ -49,32 +49,32 @@
                   speed="0.5"/>
       <SubTree ID="score"
                _autoremap="false"/>
-      <!-- <KeepRunningUntilFailure>
+      <KeepRunningUntilFailure>
         <CheckForRestart/>
-      </KeepRunningUntilFailure> -->
+      </KeepRunningUntilFailure>
     </Sequence>
   </BehaviorTree>
   <BehaviorTree ID="score">
     <Sequence>
-      <MoveToPose posX="1.9"
+      <MoveToPose posX="2.0"
                   posY="-2.0"
                   theta="-45"
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
-                  threshold="0.05"
+                  threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-2000"
-                  speed="0.5"/>
+                  timeout="-5000"
+                  speed="0.3"/>
       <MoveToPose posX="1.0"
                   posY="-1.0"
                   theta="-45"
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
-                  threshold="0.05"
+                  threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-2000"
+                  timeout="-5000"
                   speed="0.3"/>
       <MoveToPose posX="1.0"
                   posY="-0.5"
@@ -82,9 +82,9 @@
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
-                  threshold="0.05"
+                  threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-2000"
+                  timeout="-5000"
                   speed="0.3"/>
       <ReactiveFallback>
         <IntakeCmd in="false"/>
@@ -97,7 +97,7 @@
                     threshold="0.10"
                     angle_threshold="5.0"
                     timeout="-2000"
-                    speed="0.8"/>
+                    speed="0.5"/>
       </ReactiveFallback>
       <MoveToPose posX="1.0"
                   posY="-0.5"
@@ -105,10 +105,10 @@
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
-                  threshold="0.05"
+                  threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-2000"
-                  speed="0.5"/>
+                  timeout="-5000"
+                  speed="0.3"/>
     </Sequence>
   </BehaviorTree>
   <BehaviorTree ID="score1">
@@ -183,6 +183,9 @@
       <Logging message="close triball"/>
       <ReactiveFallback>
         <IntakeCmd in="true"/>
+        <Delay delay_msec="5000">
+          <AlwaysSuccess/>
+        </Delay>
         <!-- <MoveToPose posX="-2.6"
                     posY="-2.6"
                     theta="45"
@@ -200,10 +203,10 @@
                   velX="0.00"
                   velY="0.0"
                   omega="0.0"
-                  threshold="0.08"
+                  threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-3000"
-                  speed="0.5"/>
+                  timeout="-5000"
+                  speed="0.3"/>
       <!-- <MoveToPose posX="2.0"
                   posY="-2.0"
                   theta="135"
@@ -214,11 +217,14 @@
                   angle_threshold="2.0"
                   timeout="1000"
                   speed="0.5"/> -->
-      <SubTree ID="score"
-               _autoremap="false"/>
-      <!-- <KeepRunningUntilFailure>
+      <!-- <SubTree ID="score"
+               _autoremap="false"/> -->
+      <KeepRunningUntilFailure>
         <CheckForRestart/>
-      </KeepRunningUntilFailure> -->
+      </KeepRunningUntilFailure>
+      <RetryUntilSuccessful num_attempts="-1">
+        <AutoDone/>
+      </RetryUntilSuccessful>
     </Sequence>
   </BehaviorTree>
 
@@ -305,6 +311,8 @@
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
     <Action ID="CheckForRestart"
+            editable="true"/>
+    <Action ID="AutoDone"
             editable="true"/>
     <Action ID="IntakeCmd"
             editable="true">

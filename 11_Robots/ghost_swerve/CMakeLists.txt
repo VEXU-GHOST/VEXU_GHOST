@@ -116,6 +116,7 @@ set(NODES
   swipeTail
   intakeCmd
   climb
+  autoDone
 )
 
 foreach(NODE ${NODES})

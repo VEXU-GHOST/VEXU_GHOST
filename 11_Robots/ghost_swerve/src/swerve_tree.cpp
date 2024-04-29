@@ -29,6 +29,7 @@ SwerveTree::SwerveTree(std::string bt_path,
 					burnout_stall_duration_ms,
 					burnout_cooldown_duration_ms);
 		factory.registerNodeType<Climb>("Climb", robot_hardware_interface_ptr, swerve_ptr);
+		factory.registerNodeType<AutoDone>("AutoDone", robot_hardware_interface_ptr, swerve_ptr);
 
 		tree_ = factory.createTreeFromFile(bt_path_);
 }

@@ -115,7 +115,7 @@ protected:
 
 	// Claw
 	bool m_claw_btn_pressed = false;
-	bool m_claw_open = false;
+	bool m_claw_open = true;
 	bool claw_auto_extended = false;
 
 	// Tail

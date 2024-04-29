@@ -246,6 +246,11 @@ void SwerveRobotPlugin::initialize(){
 		10);
 
 	// resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
+	if(!m_recording){
+		auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+		m_start_recorder_client->async_send_request(req);
+		m_recording = true;
+	}
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
@@ -386,7 +391,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
 	std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
 
-	if((des_pos_x == 0.0) && (des_pos_y == 0.0)){
+	if((des_pos_x == 0.0) && (des_pos_y == 0.0) || m_swerve_model_ptr->getAutoStatus()){
 		vel_cmd_x = 0.0;
 		vel_cmd_y = 0.0;
 		vel_cmd_theta = 0.0;
@@ -535,17 +540,17 @@ void SwerveRobotPlugin::teleop(double current_time){
 		updateDrivetrainMotors();
 
 		bool tail_mode = joy_data->btn_l2;
-		bool climb_mode = joy_data->btn_a && joy_data->btn_b;
+		m_climb_mode = joy_data->btn_a && joy_data->btn_b;
 		bool intake_command = false;
 
 		// Intake
 		double intake_voltage;
-		if(joy_data->btn_r1 && !tail_mode && !climb_mode){
+		if(joy_data->btn_r1 && !tail_mode && !m_climb_mode){
 			intake_command = true;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
 			intake_voltage = -1.0;
 		}
-		else if(joy_data->btn_r2 && !tail_mode && !climb_mode){
+		else if(joy_data->btn_r2 && !tail_mode && !m_climb_mode){
 			intake_command = true;
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
 			intake_voltage = 1.0;
@@ -558,26 +563,27 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		bool intake_up = false;
 		double intake_lift_target;
-		if(joy_data->btn_l1){// intake lift
-			intake_up = true;
-			intake_lift_target = 0.0;
-		}
-		else{
-			intake_up = false;
-			intake_lift_target = 7.0;
-		}
-
-		if(std::fabs(rhi_ptr_->getMotorPosition("intake_lift_motor") - intake_lift_target) < 0.05){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
-			if(intake_up && !intake_command){
-				intake_voltage = 0.0;
+		if(!m_climb_mode){
+			if(joy_data->btn_l1){// intake lift
+				intake_up = true;
+				intake_lift_target = 0.0;
 			}
-		}
-		else{
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
-			if(intake_up && !intake_command){
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 1000);
-				intake_voltage = -1.0;
+			else{
+				intake_up = false;
+				intake_lift_target = 7.0;
+			}
+			if(std::fabs(rhi_ptr_->getMotorPosition("intake_lift_motor") - intake_lift_target) < 0.05){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
+				if(intake_up && !intake_command){
+					intake_voltage = 0.0;
+				}
+			}
+			else{
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
+				if(intake_up && !intake_command ){
+					rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 1000);
+					intake_voltage = -1.0;
+				}
 			}
 		}
 		rhi_ptr_->setMotorPositionCommand("intake_lift_motor", intake_lift_target);
@@ -585,7 +591,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 		rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
 
 		// Climb Testing
-		if(climb_mode){
+		if(m_climb_mode){
 			if(joy_data->btn_l2){
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
 				rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
@@ -623,6 +629,15 @@ void SwerveRobotPlugin::teleop(double current_time){
 			else if(joy_data->btn_r1){
 				m_claw_open = true;
 			}
+		} else{
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
 		}
 
 		bool tail_down = false;
@@ -645,7 +660,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 		}
 
 		m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
-		m_digital_io[m_digital_io_name_map["claw"]] = m_claw_open;
+		m_digital_io[m_digital_io_name_map["claw"]] = !m_claw_open;
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
 

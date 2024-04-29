@@ -5,6 +5,7 @@
 #include "bt_nodes/moveToPose.hpp"
 #include "bt_nodes/swipeTail.hpp"
 #include "bt_nodes/intakeCmd.hpp"
+#include "bt_nodes/autoDone.hpp"
 #include "bt_nodes/climb.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
