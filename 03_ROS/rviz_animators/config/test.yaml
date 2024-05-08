@@ -1,9 +1,11 @@
-animation_subscriber:
-  ros__parameters:
-    mode: visualization
-    bool_test: true
+# animation_subscriber:
+#   ros__parameters:
+#     mode: playback
+#     bool_test: true
 
-animation_publisher:
+marker_publisher:
   ros__parameters:
-    mode: visualization
-    bool_test: true
+    mode: playback
+
+# parameter:
+#   mode: playback

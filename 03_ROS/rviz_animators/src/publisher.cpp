@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <yaml-cpp/yaml.h>
 #include "geometry_msgs/msg/pose.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "visualization_msgs/msg/marker.hpp"
@@ -17,20 +18,40 @@ class AnimationPublisher : public rclcpp::Node {
 	// std::string test_param = get_parameter("mode").as_string()
 	// std::string mode_ = this->get_parameter("mode").as_string();
 	// auto node = std::make_shared<rclcpp::Node>("parameter_loader");
-	// declare_parameter<std::string>("mode", "playback");
-	// std::string mode_ = this->get_parameter("mode").as_string();
+
+	// loadParametersFromFile("/home/annievu/VEXU_GHOST/03_ROS/rviz_animators/config/test.yaml");
+	// this->declare_parameter<std::string>("mode", "playback");
+	// mode_ = this->get_parameter("mode").as_string();
 
 public:
 	AnimationPublisher() :
 		Node("marker_publisher"),
 		count_(0),
 		path_index_(0){
-		declare_parameter<std::string>("mode", "default");
-		std::string mode_ = this->get_parameter("mode").as_string();
-		publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("topic", 10);
 		std::map<double, std::vector<double> > mapOfPos;
+
+		this->declare_parameter<std::string>("yaml_path", "");
+
+		// Get the YAML file path parameter
+		yaml_path_ = this->get_parameter("yaml_path").as_string();
+
+		// // Load parameters from the YAML file
+		// this->load_parameters_from_file(yaml_path_);
+
+		// Get other parameters from the loaded parameters
+		this->declare_parameter("mode", "visualization");
+		mode_ = this->get_parameter("mode").as_string();
+		// this->get_parameter("mode", mode_);
+		std::cout << mode_ << std::endl;
+
+
+		// this->declare_parameter("mode", "default");
+		// mode_ = this->get_parameter("mode").as_string();
+
 		// std::string mode_ = "visualization";
+		publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("topic", 10);
 		// Insert some elements into the map
+
 		mapOfPos[1.0] = {0.0, 0.0, 0.0};
 		mapOfPos[2.0] = {1.0, 0.0,0.0};
 		mapOfPos[3.0] = {2.0, 0.0, 0.0};
@@ -43,6 +64,9 @@ public:
 		mapOfPos[10.0] = {9.0, 0.0, 0.0};
 		mapOfPos[11.0] = {10.0, 0.0,0.0};
 		mapOfPos[12.0] = {11.0, 0.0, 0.0};
+
+		// timer_ = this->create_wall_timer(10ms, std::bind(&AnimationPublisher::printMessage, this, mode_));
+
 
 		if(mode_ == "playback"){
 			timer_ = this->create_wall_timer(500ms, std::bind(&AnimationPublisher::playback_callback, this));
@@ -79,6 +103,32 @@ public:
 
 
 private:
+
+
+	// void load_parameters_from_file(const std::string& yaml_path) {
+	//     // Open the YAML file
+	//     YAML::Node config = YAML::LoadFile(yaml_path);
+
+	//     // Assuming the YAML file contains parameters under a 'parameters' key
+	//     if (config["parameters"]) {
+	//         // Access parameters and process them accordingly
+	//         YAML::Node parameters = config["parameters"];
+
+	//         // Example: Print out each parameter
+	//         for (const auto& param : parameters) {
+	//             std::string name = param.first.as<std::string>();
+	//             std::string value = param.second.as<std::string>();
+	//             std::cout << "Parameter: " << name << ", Value: " << value << std::endl;
+	//         }
+	//     } else {
+	//         // Handle the case where the 'parameters' key is not found
+	//         std::cerr << "Error: 'parameters' key not found in YAML file." << std::endl;
+	//     }
+	// }
+
+	// void printMessage(std::string& message) {
+	// 	std::cout << message << std::endl; // Print to standard output
+	// }
 
 	void playback_callback(){
 		auto marker_msg_ = visualization_msgs::msg::Marker();
@@ -294,6 +344,7 @@ private:
 	std::vector<geometry_msgs::msg::Pose> path_;
 	size_t path_index_;
 	std::string mode_;
+	std::string yaml_path_;
 };
 
 
