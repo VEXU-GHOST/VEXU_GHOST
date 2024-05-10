@@ -2,9 +2,9 @@
 
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
-LoggingNode::LoggingNode(const std::string& name, const BT::NodeConfig& config) :
+LoggingNode::LoggingNode(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr) :
 		BT::SyncActionNode(name, config),
-		rclcpp::Node("logging_node"){
+		node_ptr_(node_ptr){
 }
 
 // It is mandatory to define this STATIC method.
@@ -24,7 +24,7 @@ BT::NodeStatus LoggingNode::tick() {
 										msg.error() );
 		}
 		// use the method value() to extract the valid message.
-		RCLCPP_INFO(this->get_logger(), msg.value().c_str());
+		RCLCPP_INFO(node_ptr_->get_logger(), msg.value().c_str());
 		// std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		return BT::NodeStatus::SUCCESS;
 }

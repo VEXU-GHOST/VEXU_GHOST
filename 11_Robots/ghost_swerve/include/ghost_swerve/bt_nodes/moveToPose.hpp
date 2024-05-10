@@ -14,12 +14,11 @@ using std::placeholders::_1;
 namespace ghost_swerve {
 
 // SyncActionNode (synchronous action) with an input port.
-class MoveToPose : public BT::StatefulActionNode,
-	               public rclcpp::Node {
+class MoveToPose : public BT::StatefulActionNode{
 
 public:
 	// If your Node has ports, you must use this constructor signature
-	MoveToPose(const std::string& name, const BT::NodeConfig& config,
+	MoveToPose(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
 	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 	           std::shared_ptr<SwerveModel> swerve_ptr);
 
@@ -49,6 +48,7 @@ private:
 	rclcpp::Publisher<ghost_msgs::msg::DrivetrainCommand>::SharedPtr command_pub_;
 	std::chrono::time_point<std::chrono::system_clock> start_time_;
 	std::chrono::time_point<std::chrono::system_clock> plan_time_;
+	std::shared_ptr<rclcpp::Node> node_ptr_;
 	bool started_;
 
 };

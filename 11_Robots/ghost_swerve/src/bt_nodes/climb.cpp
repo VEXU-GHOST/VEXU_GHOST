@@ -2,11 +2,11 @@
 
 namespace ghost_swerve {
 
-Climb::Climb(const std::string &name, const BT::NodeConfig &config,
+Climb::Climb(const std::string &name, const BT::NodeConfig &config, std::shared_ptr<rclcpp::Node> node_ptr,
              std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
              std::shared_ptr<SwerveModel> swerve_ptr) :
 	BT::StatefulActionNode(name, config),
-	rclcpp::Node("climb"),
+	node_ptr_(node_ptr),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr){
 }
@@ -80,7 +80,7 @@ BT::NodeStatus Climb::onRunning(){
 		claw_open = true;
 	}
 
-	RCLCPP_INFO(this->get_logger(), "Climbing");
+	RCLCPP_INFO(node_ptr_->get_logger(), "Climbing");
 
 	// Toggle Climb Mode
 	rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);

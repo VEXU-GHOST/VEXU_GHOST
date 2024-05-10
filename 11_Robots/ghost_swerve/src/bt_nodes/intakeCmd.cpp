@@ -2,14 +2,14 @@
 
 namespace ghost_swerve {
 
-IntakeCmd::IntakeCmd(const std::string& name, const BT::NodeConfig& config,
+IntakeCmd::IntakeCmd(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
 			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 			std::shared_ptr<SwerveModel> swerve_ptr,
 			double burnout_absolute_rpm_threshold,
 			double burnout_stall_duration_ms,
 			double burnout_cooldown_duration_ms) :
 	BT::SyncActionNode(name, config),
-	rclcpp::Node("intake_cmd"),
+	node_ptr_(node_ptr),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr),
 	burnout_absolute_rpm_threshold_(burnout_absolute_rpm_threshold),
@@ -124,7 +124,7 @@ BT::NodeStatus IntakeCmd::tick() {
 
 
 	rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
-	RCLCPP_INFO(this->get_logger(), "intaking");
+	RCLCPP_INFO(node_ptr_->get_logger(), "intaking");
 
 	return status;
 }

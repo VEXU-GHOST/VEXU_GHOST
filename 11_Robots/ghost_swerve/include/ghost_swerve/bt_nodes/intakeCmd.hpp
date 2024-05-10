@@ -7,11 +7,10 @@
 
 namespace ghost_swerve {
     
-class IntakeCmd : public BT::SyncActionNode,
-	              public rclcpp::Node {
+class IntakeCmd : public BT::SyncActionNode{
 
 public:
-    IntakeCmd(const std::string& name, const BT::NodeConfig& config,
+    IntakeCmd(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
 	           	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 	           	std::shared_ptr<SwerveModel> swerve_ptr,
 			   	double burnout_absolute_rpm_threshold,
@@ -36,6 +35,7 @@ private:
 	std::chrono::time_point<std::chrono::system_clock> intake_cooldown_start_;
 
     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+	std::shared_ptr<rclcpp::Node> node_ptr_;
 	std::shared_ptr<SwerveModel> swerve_ptr_;
 };
 

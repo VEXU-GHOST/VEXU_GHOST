@@ -2,11 +2,11 @@
 
 namespace ghost_swerve {
 
-SwipeTail::SwipeTail(const std::string& name, const BT::NodeConfig& config,
+SwipeTail::SwipeTail(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
 			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 			std::shared_ptr<SwerveModel> swerve_ptr) :
 	BT::StatefulActionNode(name, config),
-	rclcpp::Node("swipe_tail"),
+	node_ptr_(node_ptr),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr){
 	started_ = false;
@@ -57,7 +57,7 @@ BT::NodeStatus SwipeTail::onRunning() {
 	int num_swipes = get_input<int>("num_swipes");
 
 	if(num_swipes <= 0){
-		RCLCPP_ERROR(this->get_logger(), "NumSwipes: invalid input");
+		RCLCPP_ERROR(node_ptr_->get_logger(), "NumSwipes: invalid input");
 		return BT::NodeStatus::FAILURE;
 	}
 

@@ -5,14 +5,16 @@ using std::placeholders::_1;
 namespace ghost_swerve {
 
 // If your Node has ports, you must use this constructor signature
-MoveToPose::MoveToPose(const std::string& name, const BT::NodeConfig& config,
+MoveToPose::MoveToPose(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
                        std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 					   std::shared_ptr<SwerveModel> swerve_ptr) :
 	BT::StatefulActionNode(name, config),
-	rclcpp::Node("move_to_pose_node"),
 	rhi_ptr_(rhi_ptr),
+	node_ptr_(node_ptr),
 	swerve_ptr_(swerve_ptr){
-	command_pub_ = create_publisher<ghost_msgs::msg::DrivetrainCommand>("/motion_planner/command", 10);
+	command_pub_ = node_ptr_->create_publisher<ghost_msgs::msg::DrivetrainCommand>(
+		"/motion_planner/command", 
+		10);
 	started_ = false;
 }
 
@@ -99,7 +101,7 @@ BT::NodeStatus MoveToPose::onRunning() {
 	if( (abs(posX - swerve_ptr_->getWorldLocation().x()) < threshold) &&
 		(abs(posY - swerve_ptr_->getWorldLocation().y()) < threshold) &&
 		(abs(ghost_util::SmallestAngleDistRad(theta, swerve_ptr_->getWorldAngleRad())) < angle_threshold)){
-		RCLCPP_INFO(this->get_logger(), "MoveToPose: Success");
+		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPose: Success");
 		return BT::NodeStatus::SUCCESS;
 	}
 
@@ -107,16 +109,16 @@ BT::NodeStatus MoveToPose::onRunning() {
 		auto now = std::chrono::system_clock::now();
 		int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
 		// int time_elapsed_since_plan = std::chrono::duration_cast<std::chrono::milliseconds>(now - plan_time_).count();
-		// RCLCPP_INFO(this->get_logger(), "MoveToPose: %i ms elapsed", time_elapsed);
+		// RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPose: %i ms elapsed", time_elapsed);
 		if (timeout > 0){
 			if (time_elapsed > timeout){
-				RCLCPP_WARN(this->get_logger(), "MoveToPose Timeout: %i ms elapsed", time_elapsed);
+				RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPose Timeout: %i ms elapsed", time_elapsed);
 				// started_ = false;
 				// return BT::NodeStatus::FAILURE;
 			// } else if (time_elapsed_since_plan > 10000){
 				start_time_ = std::chrono::system_clock::now();
 				command_pub_->publish(msg);
-				RCLCPP_INFO(this->get_logger(), "MoveToPose: sent command");
+				RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPose: sent command");
 				// plan_time_ = std::chrono::system_clock::now();
 			}
 		} else {
@@ -125,17 +127,17 @@ BT::NodeStatus MoveToPose::onRunning() {
 			}
 		}
 	} else {
-		RCLCPP_INFO(this->get_logger(), "MoveToPose: Started");
+		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPose: Started");
 		start_time_ = std::chrono::system_clock::now();
 		started_ = true;
 		command_pub_->publish(msg);
 		
-		RCLCPP_INFO(this->get_logger(), "posX: %f", posX);
-		RCLCPP_INFO(this->get_logger(), "posY: %f", posY);
-		RCLCPP_INFO(this->get_logger(), "theta: %f", theta);
-		RCLCPP_INFO(this->get_logger(), "velX: %f", velX);
-		RCLCPP_INFO(this->get_logger(), "velY: %f", velY);
-		RCLCPP_INFO(this->get_logger(), "omega: %f", omega);
+		RCLCPP_INFO(node_ptr_->get_logger(), "posX: %f", posX);
+		RCLCPP_INFO(node_ptr_->get_logger(), "posY: %f", posY);
+		RCLCPP_INFO(node_ptr_->get_logger(), "theta: %f", theta);
+		RCLCPP_INFO(node_ptr_->get_logger(), "velX: %f", velX);
+		RCLCPP_INFO(node_ptr_->get_logger(), "velY: %f", velY);
+		RCLCPP_INFO(node_ptr_->get_logger(), "omega: %f", omega);
 	}
 	 
 	return BT::NodeStatus::RUNNING;

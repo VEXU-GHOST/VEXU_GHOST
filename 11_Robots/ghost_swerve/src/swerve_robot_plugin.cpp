@@ -217,7 +217,7 @@ void SwerveRobotPlugin::initialize(){
 		"/cmd_vel",
 		10);
 
-	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms, m_burnout_cooldown_duration_ms);
+	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, node_ptr_, m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms, m_burnout_cooldown_duration_ms);
 
 	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
 		"bag_recorder/start");

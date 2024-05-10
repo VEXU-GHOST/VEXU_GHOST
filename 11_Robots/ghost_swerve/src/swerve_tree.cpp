@@ -11,25 +11,27 @@ namespace ghost_swerve {
 SwerveTree::SwerveTree(std::string bt_path, 
 						std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
 						std::shared_ptr<SwerveModel> swerve_ptr,
+						std::shared_ptr<rclcpp::Node> node_ptr,
 						double burnout_absolute_rpm_threshold,
 						double burnout_stall_duration_ms,
 						double burnout_cooldown_duration_ms) :
-			bt_path_(bt_path)
+			bt_path_(bt_path),
+			node_ptr_(node_ptr)
 		{
 
 		BT::BehaviorTreeFactory factory;
 
 		// add all nodes here
-		factory.registerNodeType<LoggingNode>("Logging");
-		factory.registerNodeType<CheckForRestart>("CheckForRestart", robot_hardware_interface_ptr);
-		factory.registerNodeType<MoveToPose>("MoveToPose", robot_hardware_interface_ptr, swerve_ptr);
-		factory.registerNodeType<SwipeTail>("SwipeTail", robot_hardware_interface_ptr, swerve_ptr);
-		factory.registerNodeType<IntakeCmd>("IntakeCmd", robot_hardware_interface_ptr, swerve_ptr,
+		factory.registerNodeType<LoggingNode>("Logging", node_ptr_);
+		factory.registerNodeType<CheckForRestart>("CheckForRestart", node_ptr_, robot_hardware_interface_ptr);
+		factory.registerNodeType<MoveToPose>("MoveToPose", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
+		factory.registerNodeType<SwipeTail>("SwipeTail", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
+		factory.registerNodeType<IntakeCmd>("IntakeCmd", node_ptr_, robot_hardware_interface_ptr, swerve_ptr,
 					burnout_absolute_rpm_threshold,
 					burnout_stall_duration_ms,
 					burnout_cooldown_duration_ms);
-		factory.registerNodeType<Climb>("Climb", robot_hardware_interface_ptr, swerve_ptr);
-		// factory.registerNodeType<AutoDone>("AutoDone", robot_hardware_interface_ptr, swerve_ptr);
+		factory.registerNodeType<Climb>("Climb", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
+		// factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
 
 		tree_ = factory.createTreeFromFile(bt_path_);
 }

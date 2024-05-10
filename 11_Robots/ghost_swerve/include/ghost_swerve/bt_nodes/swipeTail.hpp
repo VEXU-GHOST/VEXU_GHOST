@@ -7,11 +7,10 @@
 
 namespace ghost_swerve {
     
-class SwipeTail : public BT::StatefulActionNode,
-	              public rclcpp::Node {
+class SwipeTail : public BT::StatefulActionNode{
 
 public:
-    SwipeTail(const std::string& name, const BT::NodeConfig& config,
+    SwipeTail(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
 	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 	           std::shared_ptr<SwerveModel> swerve_ptr);
 
@@ -36,6 +35,7 @@ private:
     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 	std::shared_ptr<SwerveModel> swerve_ptr_;
     bool started_;
+	std::shared_ptr<rclcpp::Node> node_ptr_;
 	std::chrono::time_point<std::chrono::system_clock> start_time_;
 
 };
