@@ -14,6 +14,7 @@ void MotionPlanner::configure(){
 	// node_ptr_ = std::make_shared<rclcpp::Node>("motion_planner_node");
 
 	// loadRobotHardwareInterface();
+	RCLCPP_INFO(get_logger(), "configuring");
 
 	declare_parameter("command_topic", "/motion_planner/command");
 	std::string command_topic = get_parameter("command_topic").as_string();

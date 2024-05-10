@@ -8,7 +8,7 @@ using Eigen::MatrixXd;
 using Eigen::MatrixXf;
 
 void CubicMotionPlanner::initialize(){
-	
+	RCLCPP_INFO(get_logger(), "initializing");
 }
 
 
