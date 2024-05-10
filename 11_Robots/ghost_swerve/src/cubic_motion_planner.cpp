@@ -27,8 +27,8 @@ void CubicMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCom
 	std::vector<double> xposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
 	std::vector<double> ypos0({current_y_, current_y_vel_});
 	std::vector<double> yposf({cmd->pose.pose.position.y, cmd->twist.twist.linear.y});
-	std::vector<double> ang0({current_theta_, current_theta_vel_});
-	std::vector<double> angf({current_theta_ + ghost_util::SmallestAngleDistRad(theta_f, current_theta_), cmd->twist.twist.angular.z});
+	std::vector<double> ang0({current_theta_rad_, current_theta_vel_rad_});
+	std::vector<double> angf({current_theta_rad_ + ghost_util::SmallestAngleDistRad(theta_f, current_theta_rad_), cmd->twist.twist.angular.z});
 	double pos_threshold = cmd->pose.pose.position.z;
 	double theta_threshold = cmd->twist.twist.angular.x;
 

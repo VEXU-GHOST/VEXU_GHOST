@@ -12,7 +12,7 @@ namespace ghost_motion_planner {
 void MotionPlanner::configure(std::string node_name){
 	std::cout << "Configuring Motion Planner" << std::endl;
 	node_ptr_ = std::make_shared<rclcpp::Node>(node_name);
-	
+
 	node_ptr_->declare_parameter("command_topic", "/motion_planner/command");
 	std::string command_topic = node_ptr_->get_parameter("command_topic").as_string();
 
@@ -72,8 +72,8 @@ void MotionPlanner::odomCallback(nav_msgs::msg::Odometry::SharedPtr msg){
 	current_x_vel_ = msg->twist.twist.linear.x;
 	current_y_vel_ = msg->twist.twist.linear.y;
 
-	current_theta_ = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
-	current_theta_vel_ = msg->twist.twist.angular.z;
+	current_theta_rad_ = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+	current_theta_vel_rad_ = msg->twist.twist.angular.z;
 }
 
 } // namespace ghost_motion_planner

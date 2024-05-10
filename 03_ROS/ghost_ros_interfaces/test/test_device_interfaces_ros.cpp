@@ -105,13 +105,11 @@ TEST(TestDeviceInterfaces, testTrajectoryMsg){
 
 	auto mt_output = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
 	mt_output->position_vector.push_back(0);
-	std::cerr << "about to rosmsg\n";
 
 	auto msg = std::make_shared<ghost_msgs::msg::Trajectory>();
 
 	// Convert to ROS Msg
 	toROSMsg(*mt_input, *msg);
-	std::cerr << "between rosmsg\n";
 	fromROSMsg(*mt_output, *msg);
 
 	EXPECT_EQ(*mt_input, *mt_output);
@@ -119,7 +117,6 @@ TEST(TestDeviceInterfaces, testTrajectoryMsg){
 
 TEST(TestDeviceInterfaces, testRobotTrajectoryMsg){
 	auto rt_input = std::make_shared<ghost_planners::RobotTrajectory>();
-	// rt_input->motor_names.push_back("motor");
 	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
 	mt_input->position_vector.push_back(0);
 	rt_input->x_trajectory = *mt_input;
@@ -134,29 +131,3 @@ TEST(TestDeviceInterfaces, testRobotTrajectoryMsg){
 
 	EXPECT_EQ(*rt_input, *rt_output);
 }
-
-// TEST(TestDeviceInterfaces, testRobotTrajectoryCallback){
-// 	auto rt_input = std::make_shared<ghost_planners::RobotTrajectory>();
-// 	// rt_input->motor_names.push_back("motor");
-// 	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
-// 	mt_input->position_vector.push_back(0);
-// 	rt_input->x_trajectory = *mt_input;
-
-// 	auto msg = std::make_shared<ghost_msgs::msg::RobotTrajectory>();
-
-// 	std::unordered_map<std::string, ghost_planners::RobotTrajectory::Trajectory> trajectory_motor_map_, expected_map;
-// 	expected_map["motor"] = *mt_input;
-
-// 	toROSMsg(*rt_input, *msg);
-
-// 	// trajectory_start_time_ = getTimeFromStart();
-// 	auto motor_trajectory = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
-// 	fromROSMsg(*motor_trajectory, msg->x_trajectory);
-// 	// trajectory_motor_map_[msg->mo] = *motor_trajectory;
-
-// 	// Convert to ROS Msg
-// 	// toROSMsg(*rt_input, *msg);
-// 	// fromROSMsg(*rt_output, *msg);
-
-// 	EXPECT_EQ(trajectory_motor_map_, expected_map);
-// }

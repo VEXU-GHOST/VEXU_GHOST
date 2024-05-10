@@ -334,7 +334,7 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	// auto command_map = get_commands(current_time);
 
-	if(robot_trajectory_ptr_){
+	if(robot_trajectory_ptr_->isNotEmpty()){
 		double time = current_time - trajectory_start_time_;
 		double des_pos_x = robot_trajectory_ptr_->x_trajectory.getPosition(time);
 		double des_vel_x = robot_trajectory_ptr_->x_trajectory.getVelocity(time);

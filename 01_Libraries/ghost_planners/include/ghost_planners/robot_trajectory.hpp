@@ -18,8 +18,6 @@ public:
 			velocity_vector = std::vector<double>();
 
 			threshold = 1.0;
-			// voltage_vector = std::vector<double>();
-			// torque_vector = std::vector<double>();
 		}
 		double getPosition(double time) const {
 			return ghost_util::clampedLinearInterpolate(time_vector, position_vector, time);
@@ -30,30 +28,12 @@ public:
 			}
 			return ghost_util::clampedLinearInterpolate(time_vector, velocity_vector, time);
 		}
-		std::tuple<bool, double> getPositionAndCheck(double time) const {
-			if(position_vector.size() == 0){
-				return {false, 0};
-			}
-			return {true, ghost_util::clampedLinearInterpolate(time_vector, position_vector, time)};
+		bool checkPosition() const {
+			return !position_vector.empty();
 		}
-		std::tuple<bool, double> getVelocityAndCheck(double time) const {
-			if(velocity_vector.size() == 0){
-				return {false, 0};
-			}
-			return {true, ghost_util::clampedLinearInterpolate(time_vector, velocity_vector, time)};
+		bool checkVelocity() const {
+			return !velocity_vector.empty();
 		}
-		// std::tuple<bool, double> getVoltage(double time) const {
-		// 	if(voltage_vector.size() == 0){
-		// 		return {false, 0};
-		// 	}
-		// 	return {true, ghost_util::clampedLinearInterpolate(time_vector, voltage_vector, time)};
-		// }
-		// std::tuple<bool, double> getTorque(double time) const {
-		// 	if(torque_vector.size() == 0){
-		// 		return {false, 0};
-		// 	}
-		// 	return {true, ghost_util::clampedLinearInterpolate(time_vector, torque_vector, time)};
-		// }
 
 		// values
 		std::vector<double> time_vector;
@@ -61,19 +41,14 @@ public:
 		std::vector<double> velocity_vector;
 
 		double threshold;
-		// std::vector<double> voltage_vector;
-		// std::vector<double> torque_vector;
 
 		bool operator==(const RobotTrajectory::Trajectory &rhs) const {
 			return (time_vector == rhs.time_vector) && (position_vector == rhs.position_vector) &&
-			       (velocity_vector == rhs.velocity_vector);// && (voltage_vector == rhs.voltage_vector) &&
-			    //    (torque_vector == rhs.torque_vector);
+			       (velocity_vector == rhs.velocity_vector);
 		}
 	};
 
 	RobotTrajectory();
-
-	// Trajectory get_values(double time);
 
 	Trajectory x_trajectory;
 	Trajectory y_trajectory;
@@ -85,7 +60,7 @@ public:
 			   (theta_trajectory == rhs.theta_trajectory);
 	}
 
-	operator bool() const { 
+	bool isNotEmpty() const { 
 		return !x_trajectory.time_vector.empty() &&
 			   !y_trajectory.time_vector.empty() &&
 			   !theta_trajectory.time_vector.empty(); 
