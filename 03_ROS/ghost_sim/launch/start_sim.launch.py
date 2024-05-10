@@ -28,7 +28,7 @@ def launch_setup(context, *args, **kwargs):
         arguments=spawn_entity_args)
 
     # Node to publish robot joint transforms
-    robot_state_publisher = Node
+    robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
