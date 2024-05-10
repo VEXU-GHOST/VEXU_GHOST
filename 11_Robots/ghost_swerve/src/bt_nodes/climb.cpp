@@ -66,11 +66,10 @@ BT::NodeStatus Climb::onRunning(){
 		{"left_wing", 2},
 		{"tail", 3}
 	};
-
 	bool claw_open;
 	auto status = BT::NodeStatus::RUNNING;
 	bool climbed = get_input<bool>("climbed");
-	
+
 	if(climbed){
 		lift_target = swerve_ptr_->getConfig().lift_climbed_angle;
 		claw_open = false;

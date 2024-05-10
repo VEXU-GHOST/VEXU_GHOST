@@ -2,10 +2,10 @@
 
 namespace ghost_swerve {
 
-using ghost_ros_interfaces::msg_helpers::toROSMsg;
-using std::placeholders::_1;
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
+using ghost_ros_interfaces::msg_helpers::toROSMsg;
+using std::placeholders::_1;
 
 void CubicMotionPlanner::initialize(){
 	RCLCPP_INFO(node_ptr_->get_logger(), "initializing");
@@ -113,7 +113,7 @@ MatrixXf CubicMotionPlanner::computeCubicCoeff(double t0, double tf, std::vector
 	return A.inverse() * B;
 }
 
-std::tuple<std::vector<double>, std::vector<double>, std::vector<double>> CubicMotionPlanner::computeCubicTraj(std::vector<double> vec_q0,
+std::tuple<std::vector<double>, std::vector<double>, std::vector<double> > CubicMotionPlanner::computeCubicTraj(std::vector<double> vec_q0,
                                                                                                                 std::vector<double> vec_qf, double t0, double tf, int n){
 	// A = coefficients
 	// n = number of timesteps

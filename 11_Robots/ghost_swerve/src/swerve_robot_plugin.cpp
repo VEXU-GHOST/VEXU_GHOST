@@ -334,9 +334,8 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	// auto command_map = get_commands(current_time);
 
-	if (robot_trajectory_ptr_){
+	if(robot_trajectory_ptr_){
 		double time = current_time - trajectory_start_time_;
-
 		double des_pos_x = robot_trajectory_ptr_->x_trajectory.getPosition(time);
 		double des_vel_x = robot_trajectory_ptr_->x_trajectory.getVelocity(time);
 		double des_pos_y = robot_trajectory_ptr_->y_trajectory.getPosition(time);
@@ -356,7 +355,6 @@ void SwerveRobotPlugin::autonomous(double current_time){
 		double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
 		auto curr_vel = m_swerve_model_ptr->getWorldTranslationalVelocity();
 		auto curr_vel_theta = m_swerve_model_ptr->getWorldAngularVelocity();
-
 		auto curr_vel_x = curr_vel.x();
 		auto curr_vel_y = curr_vel.y();
 
@@ -524,9 +522,9 @@ void SwerveRobotPlugin::teleop(double current_time){
 		// else{
 		// double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
 
-		m_curr_x_cmd = joy_data->left_x / 127.0; //* scale;
-		m_curr_y_cmd = joy_data->left_y / 127.0; //* scale;
-		m_curr_theta_cmd = joy_data->right_x / 127.0; //* scale;
+		m_curr_x_cmd = joy_data->left_x / 127.0; // * scale;
+		m_curr_y_cmd = joy_data->left_y / 127.0; // * scale;
+		m_curr_theta_cmd = joy_data->right_x / 127.0; // * scale;
 
 		m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(m_curr_x_cmd, m_curr_y_cmd, m_curr_theta_cmd);
 		m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
@@ -579,7 +577,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			}
 			else{
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
-				if(intake_up && !intake_command ){
+				if(intake_up && !intake_command){
 					rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 1000);
 					intake_voltage = -1.0;
 				}
@@ -628,7 +626,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 			else if(joy_data->btn_r1){
 				m_claw_open = true;
 			}
-		} else{
+		}
+		else{
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
 			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
 

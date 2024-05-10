@@ -5,7 +5,7 @@
 #include "rclcpp/rclcpp.hpp"
 
 // SyncActionNode (synchronous action) with an input port.
-class LoggingNode : public BT::SyncActionNode{
+class LoggingNode : public BT::SyncActionNode {
 public:
 	// If your Node has ports, you must use this constructor signature
 	LoggingNode(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr);

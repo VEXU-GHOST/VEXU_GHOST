@@ -1,6 +1,9 @@
 #pragma once
 
+#include <vector>
 #include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/Dense"
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include "ghost_motion_planner_core/motion_planner.hpp"
@@ -9,9 +12,6 @@
 #include "ghost_util/angle_util.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "tf2/LinearMath/Quaternion.h"
-#include <vector>
-#include "eigen3/Eigen/Core"
-#include "eigen3/Eigen/Dense"
 
 namespace ghost_swerve {
 
