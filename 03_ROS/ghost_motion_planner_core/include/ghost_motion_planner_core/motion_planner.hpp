@@ -13,10 +13,11 @@
 
 namespace ghost_motion_planner {
 
-class MotionPlanner : public rclcpp::Node {
+class MotionPlanner{
 public:
-	MotionPlanner() :
-		rclcpp::Node("motion_planner"){
+	MotionPlanner()
+		// rclcpp::Node("motion_planner")
+	{
 		// configure();
 	};
 	virtual ~MotionPlanner() = default;
@@ -53,11 +54,24 @@ public:
 	/**
 	 * @brief Called for all motion planner classes after construction. Calls user-defined intialize method internally.
 	 */
-	void configure();
+	void configure(std::string node_name);
+
+	/**
+	 * @brief Returns a shared pointer to the ROS node for this robot instance
+	 *
+	 * @return std::shared_ptr<rclcpp::Node>
+	 */
+	std::shared_ptr<rclcpp::Node> getROSNodePtr() const {
+		if(!configured_){
+			throw std::runtime_error("[motion_planner::getROSNodePtr] Error: This plugin has not been configured yet!");
+		}
+		return node_ptr_;
+	}
 
 protected:
 	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
 	rclcpp::Publisher<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_pub_;
+	std::shared_ptr<rclcpp::Node> node_ptr_;
 
 	double current_x_ = 0.0;
 	double current_y_ = 0.0;
@@ -72,7 +86,7 @@ private:
 	void setNewCommand(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd);
 	void odomCallback(nav_msgs::msg::Odometry::SharedPtr msg);
 
-	// bool configured_ = false;
+	bool configured_ = false;
 	std::atomic_bool planning_ = false;
 	rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_sub_;
 	rclcpp::Subscription<ghost_msgs::msg::DrivetrainCommand>::SharedPtr pose_command_sub_;

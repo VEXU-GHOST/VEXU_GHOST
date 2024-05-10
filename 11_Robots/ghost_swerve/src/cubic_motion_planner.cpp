@@ -8,12 +8,12 @@ using Eigen::MatrixXd;
 using Eigen::MatrixXf;
 
 void CubicMotionPlanner::initialize(){
-	RCLCPP_INFO(get_logger(), "initializing");
+	RCLCPP_INFO(node_ptr_->get_logger(), "initializing");
 }
 
 
 void CubicMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd){
-	RCLCPP_INFO(get_logger(), "Generating Swerve Motion Plan");
+	RCLCPP_INFO(node_ptr_->get_logger(), "Generating Swerve Motion Plan");
 
 	double theta_f = ghost_util::quaternionToYawRad(cmd->pose.pose.orientation.w,
 	                                                cmd->pose.pose.orientation.x,
@@ -32,12 +32,12 @@ void CubicMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCom
 	double pos_threshold = cmd->pose.pose.position.z;
 	double theta_threshold = cmd->twist.twist.angular.x;
 
-	RCLCPP_INFO(get_logger(), "current x: %f, current x_vel: %f", xpos0[0], xpos0[1]);
-	RCLCPP_INFO(get_logger(), "current y: %f, current x_vel: %f", ypos0[0], ypos0[1]);
-	RCLCPP_INFO(get_logger(), "current theta: %f, current theta_vel: %f", ang0[0], ang0[1]);
-	RCLCPP_INFO(get_logger(), "final x: %f, final x_vel: %f", xposf[0], xposf[1]);
-	RCLCPP_INFO(get_logger(), "final y: %f, final x_vel: %f", yposf[0], yposf[1]);
-	RCLCPP_INFO(get_logger(), "final theta: %f, final theta_vel: %f", angf[0], angf[1]);
+	RCLCPP_INFO(node_ptr_->get_logger(), "current x: %f, current x_vel: %f", xpos0[0], xpos0[1]);
+	RCLCPP_INFO(node_ptr_->get_logger(), "current y: %f, current x_vel: %f", ypos0[0], ypos0[1]);
+	RCLCPP_INFO(node_ptr_->get_logger(), "current theta: %f, current theta_vel: %f", ang0[0], ang0[1]);
+	RCLCPP_INFO(node_ptr_->get_logger(), "final x: %f, final x_vel: %f", xposf[0], xposf[1]);
+	RCLCPP_INFO(node_ptr_->get_logger(), "final y: %f, final x_vel: %f", yposf[0], yposf[1]);
+	RCLCPP_INFO(node_ptr_->get_logger(), "final theta: %f, final theta_vel: %f", angf[0], angf[1]);
 
 	// find final time
 	double v_max = cmd->speed;
@@ -71,7 +71,7 @@ void CubicMotionPlanner::generateMotionPlan(const ghost_msgs::msg::DrivetrainCom
 	trajectory_msg.y_trajectory = y_t;
 	trajectory_msg.theta_trajectory = theta_t;
 
-	RCLCPP_INFO(get_logger(), "Generated Swerve Motion Plan");
+	RCLCPP_INFO(node_ptr_->get_logger(), "Generated Swerve Motion Plan");
 	trajectory_pub_->publish(trajectory_msg);
 }
 
@@ -143,8 +143,9 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>> CubicM
 int main(int argc, char *argv[]){
 	rclcpp::init(argc, argv);
 
-	auto cubic_motion_planner_node = std::make_shared<ghost_swerve::CubicMotionPlanner>();
-	cubic_motion_planner_node->configure();
+	auto cubic_motion_planner = std::make_shared<ghost_swerve::CubicMotionPlanner>();
+	cubic_motion_planner->configure("cubic_motion_planner");
+	auto cubic_motion_planner_node = cubic_motion_planner->getROSNodePtr();
 	rclcpp::spin(cubic_motion_planner_node);
 	rclcpp::shutdown();
 	return 0;

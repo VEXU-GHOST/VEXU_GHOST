@@ -53,7 +53,7 @@ def generate_launch_description():
     cubic_motion_planner_node = Node(
         package='ghost_swerve',
         executable='cubic_motion_planner',
-        name='motion_planner',
+        name='cubic_motion_planner',
         output='screen',
         parameters=[ros_config_file, 
                     # {
