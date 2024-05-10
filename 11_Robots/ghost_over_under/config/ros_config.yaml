@@ -687,3 +687,13 @@ map_ekf_node:
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
     dynamic_process_noise_covariance: true
+
+cubic_motion_planner_node:
+  ros__parameters:
+    command_topic: /motion_planner/command
+
+    sensor_update_topic: /v5/sensor_update
+
+    trajectory_topic: /motion_planner/trajectory
+
+    odom_topic: /map_ekf/odometry

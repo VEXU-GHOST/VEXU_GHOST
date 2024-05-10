@@ -13,42 +13,44 @@ void MotionPlanner::configure(){
 	// std::cout << "Configuring Motion Planner" << std::endl;
 	// node_ptr_ = std::make_shared<rclcpp::Node>("motion_planner_node");
 
-	loadRobotHardwareInterface();
+	// loadRobotHardwareInterface();
+
+	declare_parameter("command_topic", "/motion_planner/command");
+	std::string command_topic = get_parameter("command_topic").as_string();
+
+	declare_parameter("sensor_update_topic", "/v5/sensor_update");
+	std::string sensor_update_topic = get_parameter("sensor_update_topic").as_string();
+
+	declare_parameter("trajectory_topic", "/motion_planner/trajectory");
+	std::string trajectory_topic = get_parameter("trajectory_topic").as_string();
+
+	declare_parameter("odom_topic", "/map_ekf/odometry");
+	std::string odom_topic = get_parameter("odom_topic").as_string();
 
 	sensor_update_sub_ = create_subscription<ghost_msgs::msg::V5SensorUpdate>(
-		"/v5/sensor_update",
+		sensor_update_topic,
 		10,
 		std::bind(&MotionPlanner::sensorUpdateCallback, this, _1)
 		);
 
 	pose_command_sub_ = create_subscription<ghost_msgs::msg::DrivetrainCommand>(
-		"/motion_planner/command",
+		command_topic,
 		10,
 		std::bind(&MotionPlanner::setNewCommand, this, _1)
 		);
 
 	trajectory_pub_ = create_publisher<ghost_msgs::msg::RobotTrajectory>(
-		"/motion_planner/trajectory",
+		trajectory_topic,
 		10);
 
-	// start_time_ = std::chrono::system_clock::now();
+	odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
+		odom_topic,
+		10,
+		std::bind(&MotionPlanner::odomCallback, this, _1)
+		);
 
 	initialize();
 	// configured_ = true;
-}
-
-void MotionPlanner::loadRobotHardwareInterface(){
-	// Get YAML path from ROS Param
-	declare_parameter("robot_config_yaml_path", "");
-	std::string robot_config_yaml_path = get_parameter("robot_config_yaml_path").as_string();
-
-	if(robot_config_yaml_path == ""){
-		throw std::runtime_error("[MotionPlanner::loadRobotHardwareInterface] Error: Robot Configuration required! Cannot proceed!");
-	}
-
-	// Load RobotHardwareInterface from YAML
-	auto device_config_map = loadRobotConfigFromYAMLFile(robot_config_yaml_path);
-	robot_hardware_interface_ptr_ = std::make_shared<RobotHardwareInterface>(device_config_map, hardware_type_e::COPROCESSOR);
 }
 
 void MotionPlanner::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg){
@@ -64,6 +66,16 @@ void MotionPlanner::setNewCommand(const ghost_msgs::msg::DrivetrainCommand::Shar
 	RCLCPP_INFO(this->get_logger(), "Received Pose");
 	generateMotionPlan(cmd);
 	planning_ = false;
+}
+
+void MotionPlanner::odomCallback(nav_msgs::msg::Odometry::SharedPtr msg){
+	current_x_ = msg->pose.pose.position.x;
+	current_y_ = msg->pose.pose.position.y;
+	current_x_vel_ = msg->twist.twist.linear.x;
+	current_y_vel_ = msg->twist.twist.linear.y;
+
+	current_theta_ = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+	current_theta_vel_ = msg->twist.twist.angular.z;
 }
 
 } // namespace ghost_motion_planner

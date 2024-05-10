@@ -99,15 +99,15 @@ TEST(TestDeviceInterfaces, testJoystickStateMsg){
 }
 
 
-TEST(TestDeviceInterfaces, testMotorTrajectoryMsg){
-	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
+TEST(TestDeviceInterfaces, testTrajectoryMsg){
+	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
 	mt_input->position_vector.push_back(0);
 
-	auto mt_output = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
+	auto mt_output = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
 	mt_output->position_vector.push_back(0);
 	std::cerr << "about to rosmsg\n";
 
-	auto msg = std::make_shared<ghost_msgs::msg::MotorTrajectory>();
+	auto msg = std::make_shared<ghost_msgs::msg::Trajectory>();
 
 	// Convert to ROS Msg
 	toROSMsg(*mt_input, *msg);
@@ -119,10 +119,10 @@ TEST(TestDeviceInterfaces, testMotorTrajectoryMsg){
 
 TEST(TestDeviceInterfaces, testRobotTrajectoryMsg){
 	auto rt_input = std::make_shared<ghost_planners::RobotTrajectory>();
-	rt_input->motor_names.push_back("motor");
-	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
+	// rt_input->motor_names.push_back("motor");
+	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
 	mt_input->position_vector.push_back(0);
-	rt_input->motor_trajectories.push_back(*mt_input);
+	rt_input->x_trajectory = *mt_input;
 
 
 	auto msg = std::make_shared<ghost_msgs::msg::RobotTrajectory>();
@@ -135,30 +135,28 @@ TEST(TestDeviceInterfaces, testRobotTrajectoryMsg){
 	EXPECT_EQ(*rt_input, *rt_output);
 }
 
-TEST(TestDeviceInterfaces, testRobotTrajectoryCallback){
-	auto rt_input = std::make_shared<ghost_planners::RobotTrajectory>();
-	rt_input->motor_names.push_back("motor");
-	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
-	mt_input->position_vector.push_back(0);
-	rt_input->motor_trajectories.push_back(*mt_input);
+// TEST(TestDeviceInterfaces, testRobotTrajectoryCallback){
+// 	auto rt_input = std::make_shared<ghost_planners::RobotTrajectory>();
+// 	// rt_input->motor_names.push_back("motor");
+// 	auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
+// 	mt_input->position_vector.push_back(0);
+// 	rt_input->x_trajectory = *mt_input;
 
-	auto msg = std::make_shared<ghost_msgs::msg::RobotTrajectory>();
+// 	auto msg = std::make_shared<ghost_msgs::msg::RobotTrajectory>();
 
-	std::unordered_map<std::string, ghost_planners::RobotTrajectory::MotorTrajectory> trajectory_motor_map_, expected_map;
-	expected_map["motor"] = *mt_input;
+// 	std::unordered_map<std::string, ghost_planners::RobotTrajectory::Trajectory> trajectory_motor_map_, expected_map;
+// 	expected_map["motor"] = *mt_input;
 
-	toROSMsg(*rt_input, *msg);
+// 	toROSMsg(*rt_input, *msg);
 
-	// trajectory_start_time_ = getTimeFromStart();
-	for(int i = 0; i < msg->motor_names.size(); i++){
-		auto motor_trajectory = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
-		fromROSMsg(*motor_trajectory, msg->trajectories[i]);
-		trajectory_motor_map_[msg->motor_names[i]] = *motor_trajectory;
-	}
+// 	// trajectory_start_time_ = getTimeFromStart();
+// 	auto motor_trajectory = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
+// 	fromROSMsg(*motor_trajectory, msg->x_trajectory);
+// 	// trajectory_motor_map_[msg->mo] = *motor_trajectory;
 
-	// Convert to ROS Msg
-	// toROSMsg(*rt_input, *msg);
-	// fromROSMsg(*rt_output, *msg);
+// 	// Convert to ROS Msg
+// 	// toROSMsg(*rt_input, *msg);
+// 	// fromROSMsg(*rt_output, *msg);
 
-	EXPECT_EQ(trajectory_motor_map_, expected_map);
-}
+// 	EXPECT_EQ(trajectory_motor_map_, expected_map);
+// }

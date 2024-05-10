@@ -101,14 +101,16 @@ public:
 protected:
 	std::shared_ptr<rclcpp::Node> node_ptr_;
 	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
-	std::unordered_map<std::string, ghost_planners::RobotTrajectory::MotorTrajectory> trajectory_motor_map_;
+	// std::unordered_map<std::string, ghost_planners::RobotTrajectory::Trajectory> trajectory_motor_map_;
+	std::shared_ptr<ghost_planners::RobotTrajectory> robot_trajectory_ptr_;
 	double trajectory_start_time_;
+
 	// Auton Button
 	double m_auton_start_time = 0.0;
 
 	double getTimeFromStart() const;
 	// void update_motor_commands(double time);
-	std::unordered_map<std::string, double> get_commands(double time) const;
+	std::unordered_map<std::string, double> get_drive_commands(double time) const;
 
 private:
 	void loadRobotHardwareInterface();

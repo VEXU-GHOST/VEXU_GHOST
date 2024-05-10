@@ -50,9 +50,9 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
-    swerve_motion_planner_node = Node(
+    cubic_motion_planner_node = Node(
         package='ghost_swerve',
-        executable='swerve_motion_planner',
+        executable='cubic_motion_planner',
         name='motion_planner',
         output='screen',
         parameters=[ros_config_file, 
@@ -142,6 +142,6 @@ def generate_launch_description():
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
-        swerve_motion_planner_node,
+        cubic_motion_planner_node,
         rplidar_node
     ])

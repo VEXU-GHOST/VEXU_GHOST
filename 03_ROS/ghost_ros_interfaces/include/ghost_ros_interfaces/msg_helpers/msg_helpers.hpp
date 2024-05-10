@@ -182,9 +182,9 @@ void fromROSMsg(ghost_v5_interfaces::RobotHardwareInterface& hardware_interface,
 //  * @param robot_trajectory_msg
 //  */
 void fromROSMsg(ghost_planners::RobotTrajectory& robot_trajectory, const ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg);
-void fromROSMsg(ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, const ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg);
+void fromROSMsg(ghost_planners::RobotTrajectory::Trajectory& trajectory, const ghost_msgs::msg::Trajectory& trajectory_msg);
 void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg);
-void toROSMsg(const ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg);
+void toROSMsg(const ghost_planners::RobotTrajectory::Trajectory& trajectory, ghost_msgs::msg::Trajectory& trajectory_msg);
 
 } // namespace msg_helpers
 

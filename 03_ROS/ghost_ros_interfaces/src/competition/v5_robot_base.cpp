@@ -145,49 +145,26 @@ double V5RobotBase::getTimeFromStart() const {
 void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg){
 	RCLCPP_INFO(node_ptr_->get_logger(), "Received Trajectory");
 	trajectory_start_time_ = getTimeFromStart();
-	// m_auton_start_time = getTimeFromStart();
-	for(int i = 0; i < msg->motor_names.size(); i++){
-		auto motor_trajectory = std::make_shared<RobotTrajectory::MotorTrajectory>();
-		fromROSMsg(*motor_trajectory, msg->trajectories[i]);
-		trajectory_motor_map_[msg->motor_names[i]] = *motor_trajectory;
-	}
+
+	fromROSMsg(*robot_trajectory_ptr_, *msg);
 }
 
-std::unordered_map<std::string, double> V5RobotBase::get_commands(double time) const {
-	std::unordered_map<std::string, double> map;
-	time -= trajectory_start_time_;
-	for(auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
-		const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
-		if(is_pos_command){
-			map[motor_name + "_pos"] = position;
-		}
-		const auto [is_velocity_command, velocity] = motor_trajectory.getVelocity(time);
-		if(is_velocity_command){
-			map[motor_name + "_vel"] = velocity;
-		}
-	}
-	return map;
-}
-
-// void V5RobotBase::update_motor_commands(double time){
-// 	for(auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
-// 		const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
-// 		if(is_pos_command){
-// 			rhi_ptr_->setMotorPositionCommand(motor_name, position);
-// 		}
-// 		const auto [is_torque_command, torque] = motor_trajectory.getTorque(time);
-// 		if(is_torque_command){
-// 			rhi_ptr_->setMotorTorqueCommandPercent(motor_name, torque);
-// 		}
-// 		const auto [is_velocity_command, velocity] = motor_trajectory.getVelocity(time);
-// 		if(is_velocity_command){
-// 			rhi_ptr_->setMotorVelocityCommandRPM(motor_name, velocity);
-// 		}
-// 		const auto [is_voltage_command, voltage] = motor_trajectory.getVoltage(time);
-// 		if(is_voltage_command){
-// 			rhi_ptr_->setMotorVoltageCommandPercent(motor_name, voltage);
-// 		}
-// 	}
+// std::unordered_map<std::string, double> V5RobotBase::get_drive_commands(double time) const {
+// 	std::unordered_map<std::string, double> map;
+// 	time -= trajectory_start_time_;
+// 	// for(auto& [motor_name, motor_trajectory] : trajectory_motor_map_){
+// 	// 	const auto [is_pos_command, position] = motor_trajectory.getPosition(time);
+// 	// 	if(is_pos_command){
+// 	// 		map[motor_name + "_pos"] = position;
+// 	// 	}
+// 	// 	const auto [is_velocity_command, velocity] = motor_trajectory.getVelocity(time);
+// 	// 	if(is_velocity_command){
+// 	// 		map[motor_name + "_vel"] = velocity;
+// 	// 	}
+// 	// }
+// 	// robot_trajectory_ptr_->x_trajectory;
+// 	// robot_trajectory_ptr_;
+// 	return map;
 // }
 
 } // namespace ghost_ros_interfaces
