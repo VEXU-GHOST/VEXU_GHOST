@@ -2,14 +2,14 @@
 
 namespace ghost_swerve {
 
-IntakeCmd::IntakeCmd(const std::string& name, const BT::NodeConfig& config,
-			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-			std::shared_ptr<SwerveModel> swerve_ptr,
-			double burnout_absolute_rpm_threshold,
-			double burnout_stall_duration_ms,
-			double burnout_cooldown_duration_ms) :
+IntakeCmd::IntakeCmd(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
+                     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+                     std::shared_ptr<SwerveModel> swerve_ptr,
+                     double burnout_absolute_rpm_threshold,
+                     double burnout_stall_duration_ms,
+                     double burnout_cooldown_duration_ms) :
 	BT::SyncActionNode(name, config),
-	rclcpp::Node("intake_cmd"),
+	node_ptr_(node_ptr),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr),
 	burnout_absolute_rpm_threshold_(burnout_absolute_rpm_threshold),
@@ -37,7 +37,6 @@ T IntakeCmd::get_input(std::string key){
 
 BT::NodeStatus IntakeCmd::tick() {
 	auto status = BT::NodeStatus::FAILURE;
-
 	bool in = get_input<bool>("in");
 
 	// Intake
@@ -89,10 +88,10 @@ BT::NodeStatus IntakeCmd::tick() {
 
 	// If INTAKE_MOTOR stalling, update state and timer
 	if((intake_command)
-		&& (std::fabs(rhi_ptr_->getMotorVelocityRPM("intake_motor")) < burnout_absolute_rpm_threshold_)){
+	   && (std::fabs(rhi_ptr_->getMotorVelocityRPM("intake_motor")) < burnout_absolute_rpm_threshold_)){
 		if(!intake_stalling_){
 			intake_stall_start_ = std::chrono::system_clock::now();
-			
+
 			intake_stalling_ = true;
 		}
 	}
@@ -102,7 +101,7 @@ BT::NodeStatus IntakeCmd::tick() {
 
 	// If INTAKE_MOTOR stalled for too long, start cooldown period
 	if(!intake_cooling_down_ && intake_stalling_
-		&& (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - intake_stall_start_).count() > burnout_stall_duration_ms_) ){
+	   && (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - intake_stall_start_).count() > burnout_stall_duration_ms_) ){
 		status = BT::NodeStatus::SUCCESS;
 		intake_voltage = 0;
 		rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
@@ -124,10 +123,9 @@ BT::NodeStatus IntakeCmd::tick() {
 
 
 	rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
-	RCLCPP_INFO(this->get_logger(), "intaking");
+	RCLCPP_INFO(node_ptr_->get_logger(), "intaking");
 
 	return status;
 }
-
 
 } // namespace ghost_swerve

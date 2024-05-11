@@ -135,6 +135,9 @@ competition_state_machine_node:
       burnout_absolute_velocity_threshold_rpm: 400.0
       burnout_stall_duration_ms: 500
       burnout_cooldown_duration_ms: 5000
+    
+    behavior_tree:
+      cubic_planner_topic: "/motion_planner/cubic_command"
 
 # If you are using the sweve model and you are tuning the k1-9 parameters,
 # the swerve model plugin has its own duplicate (11_Robots/ghost_over_under/config/ros_config.yaml) of the k1-9 parameters that must
@@ -687,3 +690,13 @@ map_ekf_node:
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,
                                   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
     dynamic_process_noise_covariance: true
+
+cubic_motion_planner:
+  ros__parameters:
+    command_topic: "/motion_planner/cubic_command"
+
+    sensor_update_topic: "/v5/sensor_update"
+
+    trajectory_topic: "/motion_planner/trajectory"
+
+    odom_topic: "/map_ekf/odometry"

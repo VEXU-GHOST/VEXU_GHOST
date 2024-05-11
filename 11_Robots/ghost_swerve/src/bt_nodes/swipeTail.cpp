@@ -2,11 +2,11 @@
 
 namespace ghost_swerve {
 
-SwipeTail::SwipeTail(const std::string& name, const BT::NodeConfig& config,
-			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-			std::shared_ptr<SwerveModel> swerve_ptr) :
+SwipeTail::SwipeTail(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
+                     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+                     std::shared_ptr<SwerveModel> swerve_ptr) :
 	BT::StatefulActionNode(name, config),
-	rclcpp::Node("swipe_tail"),
+	node_ptr_(node_ptr),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr){
 	started_ = false;
@@ -51,13 +51,11 @@ BT::NodeStatus SwipeTail::onRunning() {
 		{"left_wing", 2},
 		{"tail", 3}
 	};
-
 	auto status = BT::NodeStatus::RUNNING;
-
 	int num_swipes = get_input<int>("num_swipes");
 
 	if(num_swipes <= 0){
-		RCLCPP_ERROR(this->get_logger(), "NumSwipes: invalid input");
+		RCLCPP_ERROR(node_ptr_->get_logger(), "NumSwipes: invalid input");
 		return BT::NodeStatus::FAILURE;
 	}
 
@@ -103,6 +101,5 @@ BT::NodeStatus SwipeTail::onRunning() {
 	// rhi_ptr_->setDigitalIO(m_digital_io);
 	return status;
 }
-
 
 } // namespace ghost_swerve

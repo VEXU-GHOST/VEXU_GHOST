@@ -23,7 +23,6 @@
   <depend>ghost_common</depend>
   <depend>ghost_serial</depend>
   <depend>ghost_msgs</depend>
-  <depend>ghost_description</depend>
   <depend>ghost_estimation</depend>
   <depend>ghost_control</depend>
 

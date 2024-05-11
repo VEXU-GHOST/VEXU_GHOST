@@ -21,7 +21,7 @@ def generate_launch_description():
     plugin_type = "ghost_swerve::SwerveRobotPlugin"
     robot_name = "ghost_24"
 
-    ghost_swerve_share_dir = get_package_share_directory('ghost_swerve')
+    ghost_swerve_share_dir = get_package_share_directory("ghost_swerve")
     bt_path = os.path.join(ghost_swerve_share_dir, "config", "bt.xml")
     
 
@@ -50,15 +50,16 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
-    swerve_motion_planner_node = Node(
+    cubic_motion_planner_node = Node(
         package='ghost_swerve',
-        executable='swerve_motion_planner',
-        name='motion_planner',
+        executable='cubic_motion_planner',
+        name='cubic_motion_planner',
         output='screen',
         parameters=[ros_config_file, 
-                    {
-                        "robot_config_yaml_path": robot_config_yaml_path
-                    }],
+                    # {
+                    #     "robot_config_yaml_path": robot_config_yaml_path
+                    # }
+                    ],
         arguments=[plugin_type, robot_name]
         # arguments=["--ros-args", "--log-level", "debug"]
     )
@@ -142,6 +143,6 @@ def generate_launch_description():
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
-        swerve_motion_planner_node,
-        rplidar_node
+        cubic_motion_planner_node,
+        # rplidar_node
     ])

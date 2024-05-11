@@ -27,7 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/V5ActuatorCommand.msg"
   "msg/V5SensorUpdate.msg"
   "msg/DrivetrainCommand.msg"
-  "msg/MotorTrajectory.msg"
+  "msg/Trajectory.msg"
   "msg/RobotTrajectory.msg"
   "srv/BroadcastJacobian.srv"
   "srv/StartRecorder.srv"

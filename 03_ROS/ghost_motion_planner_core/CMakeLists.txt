@@ -17,6 +17,7 @@ set(DEPENDENCIES
   ghost_ros_interfaces
   # ghost_serial
   ghost_util
+  nav_msgs
   # pluginlib
   rclcpp
   # yaml-cpp

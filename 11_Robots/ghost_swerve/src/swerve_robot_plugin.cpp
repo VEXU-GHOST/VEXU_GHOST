@@ -217,7 +217,7 @@ void SwerveRobotPlugin::initialize(){
 		"/cmd_vel",
 		10);
 
-	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms, m_burnout_cooldown_duration_ms);
+	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, node_ptr_, m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms, m_burnout_cooldown_duration_ms);
 
 	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
 		"bag_recorder/start");
@@ -319,83 +319,80 @@ void SwerveRobotPlugin::autonomous(double current_time){
 
 	m_swerve_model_ptr->disableSwerveHeuristics();
 
-	if(!m_recording){
-		auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-		m_start_recorder_client->async_send_request(req);
-		m_recording = true;
-	}
-
-	// auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-	// m_start_recorder_client->async_send_request(req);
+	// if(!m_recording){
+	// 	auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+	// 	m_start_recorder_client->async_send_request(req);
+	// 	m_recording = true;
+	// }
 
 	bt_->tick_tree();
 	// publishTrajectoryVisualization();
 
-	auto command_map = get_commands(current_time);
-	double des_pos_x = (command_map.count("x_pos") != 0) ? command_map.at("x_pos") : 0.0;
-	double des_vel_x = (command_map.count("x_vel") != 0) ? command_map.at("x_vel") : 0.0;
-	double des_pos_y = (command_map.count("y_pos") != 0) ? command_map.at("y_pos") : 0.0;
-	double des_vel_y = (command_map.count("y_vel") != 0) ? command_map.at("y_vel") : 0.0;
-	double des_theta = (command_map.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
-	double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
-	double pos_threshold = (command_map.count("threshold_pos") != 0) ? command_map.at("threshold_pos") : 0.0;
-	double theta_threshold = (command_map.count("threshold_vel") != 0) ? command_map.at("threshold_vel") : 0.0;
-	auto command_map_final = get_commands(current_time + 100.0);
-	double final_pos_x = (command_map_final.count("x_pos") != 0) ? command_map_final.at("x_pos") : 0.0;
-	double final_pos_y = (command_map_final.count("y_pos") != 0) ? command_map_final.at("y_pos") : 0.0;
-	double final_pos_theta = (command_map_final.count("angle_pos") != 0) ? command_map_final.at("angle_pos") : 0.0;
+	double vel_cmd_x = 0;
+	double vel_cmd_y = 0;
+	double vel_cmd_theta = 0;
 
-	// std::cout << "final_pos_x: " << final_pos_x << std::endl;
+	// auto command_map = get_commands(current_time);
 
-	// Get best state estimate
-	auto curr_location = m_swerve_model_ptr->getWorldLocation();
-	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
-	auto curr_vel = m_swerve_model_ptr->getWorldTranslationalVelocity();
-	auto curr_vel_theta = m_swerve_model_ptr->getWorldAngularVelocity();
+	if(robot_trajectory_ptr_->isNotEmpty()){
+		double time = current_time - trajectory_start_time_;
+		double des_pos_x = robot_trajectory_ptr_->x_trajectory.getPosition(time);
+		double des_vel_x = robot_trajectory_ptr_->x_trajectory.getVelocity(time);
+		double des_pos_y = robot_trajectory_ptr_->y_trajectory.getPosition(time);
+		double des_vel_y = robot_trajectory_ptr_->y_trajectory.getVelocity(time);
+		double des_pos_theta = robot_trajectory_ptr_->theta_trajectory.getPosition(time);
+		double des_vel_theta = robot_trajectory_ptr_->theta_trajectory.getVelocity(time);
+		double pos_threshold = robot_trajectory_ptr_->x_trajectory.threshold;
+		double theta_threshold = robot_trajectory_ptr_->theta_trajectory.threshold;
+		double final_pos_x = robot_trajectory_ptr_->x_trajectory.getPosition(time + 100.0);
+		double final_pos_y = robot_trajectory_ptr_->y_trajectory.getPosition(time + 100.0);
+		double final_pos_theta = robot_trajectory_ptr_->theta_trajectory.getPosition(time + 100.0);
 
-	// if(m_is_field_oriented){
-	// Rotate velocity command to robot frame
-	// Eigen::Vector2d vel_odom(curr_vel.x(), curr_vel.y());
-	// auto rotate_world_to_base = Eigen::Rotation2D<double>(curr_theta).toRotationMatrix();
-	// vel_odom = rotate_world_to_base * vel_odom;
-	// }
-	auto curr_vel_x = curr_vel.x();
-	auto curr_vel_y = curr_vel.y();
+		// std::cout << "final_pos_x: " << final_pos_x << std::endl;
 
-	// Calculate velocity command from motion plan
-	double x_error = des_pos_x - curr_location.x();
-	double x_error_final = final_pos_x - curr_location.x();
-	double y_error = des_pos_y - curr_location.y();
-	double y_error_final = final_pos_y - curr_location.y();
-	double theta_error = ghost_util::SmallestAngleDistRad(des_theta, curr_theta);
-	double theta_error_final = ghost_util::SmallestAngleDistRad(final_pos_theta, curr_theta);
-	double vel_cmd_x = (abs(x_error_final) <= pos_threshold / 2.0) ? 0.0 : des_vel_x + (des_vel_x - curr_vel_x) * m_move_to_pose_kd_xy + (x_error) * m_move_to_pose_kp_xy;
-	double vel_cmd_y = (abs(y_error_final) <= pos_threshold / 2.0) ? 0.0 : des_vel_y + (des_vel_y - curr_vel_y) * m_move_to_pose_kd_xy + (y_error) * m_move_to_pose_kp_xy;
-	double vel_cmd_theta = (abs(theta_error_final) <= theta_threshold / 2.0) ? 0.0 : des_theta_vel + (des_theta_vel - curr_vel_theta) * m_move_to_pose_kd_theta + theta_error * m_move_to_pose_kp_theta;
+		// Get best state estimate
+		auto curr_location = m_swerve_model_ptr->getWorldLocation();
+		double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
+		auto curr_vel = m_swerve_model_ptr->getWorldTranslationalVelocity();
+		auto curr_vel_theta = m_swerve_model_ptr->getWorldAngularVelocity();
+		auto curr_vel_x = curr_vel.x();
+		auto curr_vel_y = curr_vel.y();
 
-	publishCurrentTwist(curr_vel_x, curr_vel_y, curr_vel_theta);
-	publishDesiredTwist(des_vel_x, des_vel_y, des_theta_vel);
-	publishDesiredPose(des_pos_x, des_pos_y, des_theta);
+		// Calculate velocity command from motion plan
+		double x_error = des_pos_x - curr_location.x();
+		double x_error_final = final_pos_x - curr_location.x();
+		double y_error = des_pos_y - curr_location.y();
+		double y_error_final = final_pos_y - curr_location.y();
+		double theta_error = ghost_util::SmallestAngleDistRad(des_pos_theta, curr_theta);
+		double theta_error_final = ghost_util::SmallestAngleDistRad(final_pos_theta, curr_theta);
+		vel_cmd_x = (abs(x_error_final) <= pos_threshold / 2.0) ? 0.0 : des_vel_x + (des_vel_x - curr_vel_x) * m_move_to_pose_kd_xy + (x_error) * m_move_to_pose_kp_xy;
+		vel_cmd_y = (abs(y_error_final) <= pos_threshold / 2.0) ? 0.0 : des_vel_y + (des_vel_y - curr_vel_y) * m_move_to_pose_kd_xy + (y_error) * m_move_to_pose_kp_xy;
+		vel_cmd_theta = (abs(theta_error_final) <= theta_threshold / 2.0) ? 0.0 : des_vel_theta + (des_vel_theta - curr_vel_theta) * m_move_to_pose_kd_theta + theta_error * m_move_to_pose_kp_theta;
 
-	// std::cout << "pos_threshold: " << pos_threshold << std::endl;
-	// std::cout << "theta_threshold: " << theta_threshold << std::endl;
+		publishCurrentTwist(curr_vel_x, curr_vel_y, curr_vel_theta);
+		publishDesiredTwist(des_vel_x, des_vel_y, des_vel_theta);
+		publishDesiredPose(des_pos_x, des_pos_y, des_pos_theta);
 
-	// std::cout << "des_pos_x: " << des_pos_x << std::endl;
-	// std::cout << "des_pos_y: " << des_pos_y << std::endl;
-	// std::cout << "x_error: " << x_error << std::endl;
-	// std::cout << "y_error: " << y_error << std::endl;
+		// std::cout << "pos_threshold: " << pos_threshold << std::endl;
+		// std::cout << "theta_threshold: " << theta_threshold << std::endl;
 
-	std::cout << "curr_location.x(): " << curr_location.x() << std::endl;
-	std::cout << "curr_location.y(): " << curr_location.y() << std::endl;
+		// std::cout << "des_pos_x: " << des_pos_x << std::endl;
+		// std::cout << "des_pos_y: " << des_pos_y << std::endl;
+		// std::cout << "x_error: " << x_error << std::endl;
+		// std::cout << "y_error: " << y_error << std::endl;
 
-	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
-	std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
+		// std::cout << "curr_location.x(): " << curr_location.x() << std::endl;
+		// std::cout << "curr_location.y(): " << curr_location.y() << std::endl;
 
-	if((des_pos_x == 0.0) && (des_pos_y == 0.0) || m_swerve_model_ptr->getAutoStatus()){
-		vel_cmd_x = 0.0;
-		vel_cmd_y = 0.0;
-		vel_cmd_theta = 0.0;
+		// std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
+		// std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
 	}
+
+	// if((des_pos_x == 0.0) && (des_pos_y == 0.0) || m_swerve_model_ptr->getAutoStatus()){
+	// 	vel_cmd_x = 0.0;
+	// 	vel_cmd_y = 0.0;
+	// 	vel_cmd_theta = 0.0;
+	// }
 
 	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(-vel_cmd_y, vel_cmd_x, -vel_cmd_theta);
 
@@ -525,9 +522,9 @@ void SwerveRobotPlugin::teleop(double current_time){
 		// else{
 		// double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
 
-		m_curr_x_cmd = joy_data->left_x / 127.0; //* scale;
-		m_curr_y_cmd = joy_data->left_y / 127.0; //* scale;
-		m_curr_theta_cmd = joy_data->right_x / 127.0; //* scale;
+		m_curr_x_cmd = joy_data->left_x / 127.0; // * scale;
+		m_curr_y_cmd = joy_data->left_y / 127.0; // * scale;
+		m_curr_theta_cmd = joy_data->right_x / 127.0; // * scale;
 
 		m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(m_curr_x_cmd, m_curr_y_cmd, m_curr_theta_cmd);
 		m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
@@ -580,7 +577,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			}
 			else{
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
-				if(intake_up && !intake_command ){
+				if(intake_up && !intake_command){
 					rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 1000);
 					intake_voltage = -1.0;
 				}
@@ -629,7 +626,8 @@ void SwerveRobotPlugin::teleop(double current_time){
 			else if(joy_data->btn_r1){
 				m_claw_open = true;
 			}
-		} else{
+		}
+		else{
 			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
 			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
 
@@ -952,26 +950,22 @@ void SwerveRobotPlugin::publishVisualization(){
 
 void SwerveRobotPlugin::publishTrajectoryVisualization(){
 	visualization_msgs::msg::MarkerArray viz_msg;
-	auto time = trajectory_motor_map_["x"].time_vector;
+	auto time = robot_trajectory_ptr_->x_trajectory.time_vector;
 
 	// RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory viz");
-	if(trajectory_motor_map_.size() == 0){
+	if(!robot_trajectory_ptr_){
 		RCLCPP_WARN(node_ptr_->get_logger(), "empty trajectory");
 		return;
 	}
-	if(trajectory_motor_map_["x"].time_vector.size() == 0){
-		RCLCPP_WARN(node_ptr_->get_logger(), "empty time vector");
-		return;
-	}
-	auto x = trajectory_motor_map_["x"].position_vector;
-	auto x_vel = trajectory_motor_map_["x"].velocity_vector;
-	auto y = trajectory_motor_map_["y"].position_vector;
-	auto y_vel = trajectory_motor_map_["y"].velocity_vector;
-	auto ang = trajectory_motor_map_["angle"].position_vector;
-	auto ang_vel = trajectory_motor_map_["angle"].velocity_vector;
+	auto x = robot_trajectory_ptr_->x_trajectory.position_vector;
+	auto x_vel = robot_trajectory_ptr_->x_trajectory.velocity_vector;
+	auto y = robot_trajectory_ptr_->y_trajectory.position_vector;
+	auto y_vel = robot_trajectory_ptr_->y_trajectory.velocity_vector;
+	auto theta = robot_trajectory_ptr_->theta_trajectory.position_vector;
+	auto theta_vel = robot_trajectory_ptr_->theta_trajectory.velocity_vector;
 	int j = 30;
 
-	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i += 50){
+	for(int i = 0; i < x.size(); i += 50){
 		auto marker_msg = visualization_msgs::msg::Marker{};
 
 		marker_msg.header.frame_id = "odom";
@@ -987,7 +981,7 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 		marker_msg.pose.position.y = y[i];
 		marker_msg.pose.position.z = 0;
 		double w, x, y, z;
-		ghost_util::yawToQuaternionRad(ang[i], w, x, y, z);
+		ghost_util::yawToQuaternionRad(theta[i], w, x, y, z);
 		marker_msg.pose.orientation.w = w;
 		marker_msg.pose.orientation.x = x;
 		marker_msg.pose.orientation.y = y;
