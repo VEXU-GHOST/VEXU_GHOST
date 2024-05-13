@@ -73,36 +73,45 @@ void TrapezoidMotionPlanner::generateMotionPlan(const ghost_msgs::msg::Drivetrai
 	trajectory_pub_->publish(trajectory_msg);
 }
 
-void TrapezoidMotionPlanner::computeTrapezoidFunction(double time, double accel, double v_max, std::vector<double> vec_q0, std::vector<double> vec_qf){
+void TrapezoidMotionPlanner::computeTrapezoidFunction(double accel, double v_max, std::vector<double> vec_q0, std::vector<double> vec_qf){
 	// vec_q0 = {position, velocity}
 	// Ax = B
 	// A = trapezoid function matrix
 	// x = coefficients
 	// B = initial and final values
-	if(accel <= 0){
-		throw"you suck";
-	}
-	if(time < 0){
-		throw"you suck";
-	}
-	if(v_max <= 0){
-		throw"you suck";
-	}
-
+	bool bad_case = false;
+	std::string error = "";
 	double pos_initial = vec_q0[0];
 	double pos_final = vec_qf[0];
 	double vel_initial = vec_q0[1];
 	double vel_final = vec_qf[1];
 
-	if(pos_final - pos_initial < 0){
-		throw"you suck";
+	if(accel <= 0){
+		error = "acceleration";
+		bad_case = true;
 	}
-	if((vel_final - vel_initial) / accel < 1002131){
-		vel_final = v_max;
+	else if(v_max <= 0){
+		error = "v_max";
+		bad_case = true;
 	}
+	else if(pos_final - pos_initial < 0){
+		error = "position";
+		bad_case = true;
+	}
+	else if(vel_final > v_max){
+		error = "vel_final";
+		bad_case = true;
+	}
+	if (bad_case){
+		badCase(vel_final, error);
+	}
+	// i think this case is handled below
+	// if((vel_final - vel_initial) / accel < 1002131){ //diff in velocity is too high?
+	// 	vel_final = v_max;
+	// }
 
-	double accel_start = (v_max - vel_initial > 0.0) ? accel : -accel;
-	double accel_end = (vel_final - v_max > 0.0) ? accel : -accel;
+	double accel_initial = (v_max - vel_initial > 0.0) ? accel : -accel;
+	double accel_final = (vel_final - v_max > 0.0) ? accel : -accel;
 	double dist = pos_final - pos_initial;
 	double time_accel_initial = abs(v_max - vel_initial) / accel;
 	double time_accel_final = abs(v_max - vel_final) / accel;
@@ -110,26 +119,80 @@ void TrapezoidMotionPlanner::computeTrapezoidFunction(double time, double accel,
 	double time_2 = ((v_max - vel_initial) * time_accel_initial / 2 - (vel_final + v_max) * time_accel_final / 2 + dist) / v_max;
 	double time_3 = time_2 + time_accel_final;
 
-	if(time_2 - time_1 < 0){// doesnt reach max velocity
+	if(time_2 < time_1){// doesnt reach max velocity
 		if(abs(time_accel_final) <= 0.01){// divide by zero
-			throw"use solver 3";
+			computeLinearFunction();
 		}
-		throw"use solver 2";
+		else{
+			computeTriangleFunction(accel, dist, vel_initial, vel_final, accel_initial, accel_final);
+		}
 	}
+	else{
+		trapezoidVelocityFunc_ = [time_1, time_2, time_3, accel_initial, accel_final, vel_initial, vel_final, v_max](double time){
+									 if(time <= time_1){
+										 return accel_initial * time + vel_initial;
+									 }
+									 else if(time <= time_2){
+										 return v_max;
+									 }
+									 else if(time <= time_3){
+										 return accel_final * (time - time_2) + v_max;
+									 }
+									 return vel_final;
+								 };
+	}
+}
 
-	trapezoidVelocityFunc_ = [time, time_1, time_2, time_3, accel_start, accel_end, vel_initial, vel_final, v_max]{							 
-		if(time <= time_1){
-			return accel_start * time + vel_initial;
-		}
-		else if(time <= time_2){
-			return v_max;
-		}
-		else if(time <= time_3){
-			return accel_end * (time - time_2) + v_max;
-		}
-		return vel_final;
-	};
+void TrapezoidMotionPlanner::computeTriangleFunction(double dist, double vel_initial, double vel_final, double accel_initial, double accel_final){
+	double vel_diff = (vel_final - vel_initial);
+	double accel_diff = (accel_final - accel_initial);
+	double a = accel_diff / 2.0 - accel_diff * accel_diff / (2.0 * accel_final);
+	double b = vel_initial * accel_diff / accel_final;
+	double c = vel_diff * vel_diff / (2.0 * accel_final) + vel_initial * vel_diff / accel_final - dist;
+	double determinant = b * b - 4.0 * a * c;
+	if(determinant < 0.0){
+		computeLinearFunction();
+	}
+	else{
+		double time_1 = (-b + sqrt(determinant)) / (2.0 * a);
+		double time_2 = (vel_diff + accel_diff * time_1) / accel_final;
 
+		trapezoidVelocityFunc_ = [time_1, time_2, accel_initial, accel_final, vel_initial, vel_final](double time){
+									 if(time <= time_1){
+										 return accel_initial * time + vel_initial;
+									 }
+									 else if(time <= time_2){
+										 return accel_final * (time - time_1) + accel_initial * time_1 + vel_final;
+									 }
+									 return vel_final;
+								 };
+	}
+}
+
+void TrapezoidMotionPlanner::computeLinearFunction(double dist, double vel_initial, double vel_final, double accel_initial){
+	double a = accel_initial / 2.0;
+	double b = vel_initial;
+	double c = -dist;
+	double determinant = b * b - 4.0 * a * c;
+	if(determinant < 0.0){
+		badCase(vel_final, "invalid motion");
+	}
+	else{
+		double time_final = (-b + sqrt(determinant)) / (2.0 * a);
+		trapezoidVelocityFunc_ = [time_final, accel_initial, vel_initial](double time){
+									 if(time <= time_final){
+										 return accel_initial * time + vel_initial;
+									 }
+									 return vel_final;
+								 };
+	}
+}
+
+void TrapezoidMotionPlanner::badCase(double vel_final, std::string error){
+	RCLCPP_WARN(node_ptr_->get_logger(), "Warning: Invalid Trajectory Parameters: %s", error.c_str());
+	trapezoidVelocityFunc_ = [vel_final](double time){
+								 return vel_final;
+							 };
 }
 
 RobotTrajectory::Trajectory TrapezoidMotionPlanner::getTrapezoidTraj(std::vector<double> vec_q0,
