@@ -700,3 +700,15 @@ cubic_motion_planner:
     trajectory_topic: "/motion_planner/trajectory"
 
     odom_topic: "/map_ekf/odometry"
+
+trapezoid_motion_planner:
+  ros__parameters:
+    command_topic: "/motion_planner/cubic_command"
+
+    sensor_update_topic: "/v5/sensor_update"
+
+    trajectory_topic: "/motion_planner/trajectory"
+
+    odom_topic: "/map_ekf/odometry"
+    
+    acceleration: 1.0

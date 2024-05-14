@@ -9,6 +9,11 @@ using std::placeholders::_1;
 
 void TrapezoidMotionPlanner::initialize(){
 	RCLCPP_INFO(node_ptr_->get_logger(), "initializing");
+
+	node_ptr_->declare_parameter("acceleration", "1.0");
+	acceleration_ = node_ptr_->get_parameter("acceleration").as_double();
+
+	final_time_ = 1.0;
 }
 
 
@@ -43,42 +48,24 @@ void TrapezoidMotionPlanner::generateMotionPlan(const ghost_msgs::msg::Drivetrai
 	double t0 = 0;
 	double tf = dist / v_max;
 	int n = tf * 100;
-	auto xpos_traj = getTrapezoidTraj(xpos0, xposf, t0, tf, n);
-	auto ypos_traj = getTrapezoidTraj(ypos0, yposf, t0, tf, n);
-	auto ang_traj = getTrapezoidTraj(ang0, angf, t0, tf, n);
+	auto trajectory = std::make_shared<RobotTrajectory>();
+	trajectory->x_trajectory = getTrapezoidTraj(acceleration_, v_max, xpos0, xposf);
+	trajectory->y_trajectory = getTrapezoidTraj(acceleration_, v_max, xpos0, xposf);
+	trajectory->theta_trajectory = getTrapezoidTraj(acceleration_, v_max, xpos0, xposf);
 
 	ghost_msgs::msg::RobotTrajectory trajectory_msg;
-	ghost_msgs::msg::Trajectory x_t;
-	ghost_msgs::msg::Trajectory y_t;
-	ghost_msgs::msg::Trajectory theta_t;
-	// x_t.time = std::get<0>(xpos_traj);
-	// x_t.position = std::get<1>(xpos_traj);
-	// x_t.velocity = std::get<2>(xpos_traj);
-	// y_t.time = std::get<0>(ypos_traj);
-	// y_t.position = std::get<1>(ypos_traj);
-	// y_t.velocity = std::get<2>(ypos_traj);
-	// theta_t.time = std::get<0>(ang_traj);
-	// theta_t.position = std::get<1>(ang_traj);
-	// theta_t.velocity = std::get<2>(ang_traj);
 
-	x_t.threshold = pos_threshold;
-	y_t.threshold = pos_threshold;
-	theta_t.threshold = theta_threshold;
+	toROSMsg(*trajectory, trajectory_msg);
 
-	trajectory_msg.x_trajectory = x_t;
-	trajectory_msg.y_trajectory = y_t;
-	trajectory_msg.theta_trajectory = theta_t;
+	trajectory_msg.x_trajectory.threshold = pos_threshold;
+	trajectory_msg.y_trajectory.threshold = pos_threshold;
+	trajectory_msg.theta_trajectory.threshold = theta_threshold;
 
 	RCLCPP_INFO(node_ptr_->get_logger(), "Generated Swerve Motion Plan");
 	trajectory_pub_->publish(trajectory_msg);
 }
 
 void TrapezoidMotionPlanner::computeTrapezoidFunction(double accel, double v_max, std::vector<double> vec_q0, std::vector<double> vec_qf){
-	// vec_q0 = {position, velocity}
-	// Ax = B
-	// A = trapezoid function matrix
-	// x = coefficients
-	// B = initial and final values
 	bool bad_case = false;
 	std::string error = "";
 	double pos_initial = vec_q0[0];
@@ -99,10 +86,11 @@ void TrapezoidMotionPlanner::computeTrapezoidFunction(double accel, double v_max
 		bad_case = true;
 	}
 	else if(vel_final > v_max){
-		error = "vel_final";
-		bad_case = true;
+		// error = "vel_final";
+		// bad_case = true;
+		vel_final = v_max;
 	}
-	if (bad_case){
+	if(bad_case){
 		badCase(vel_final, error);
 	}
 	// i think this case is handled below
@@ -121,10 +109,10 @@ void TrapezoidMotionPlanner::computeTrapezoidFunction(double accel, double v_max
 
 	if(time_2 < time_1){// doesnt reach max velocity
 		if(abs(time_accel_final) <= 0.01){// divide by zero
-			computeLinearFunction();
+			computeLinearFunction(dist, vel_initial, vel_final, accel_initial);
 		}
 		else{
-			computeTriangleFunction(accel, dist, vel_initial, vel_final, accel_initial, accel_final);
+			computeTriangleFunction(dist, vel_initial, vel_final, accel_initial, accel_final);
 		}
 	}
 	else{
@@ -140,6 +128,7 @@ void TrapezoidMotionPlanner::computeTrapezoidFunction(double accel, double v_max
 									 }
 									 return vel_final;
 								 };
+		final_time_ = time_3;
 	}
 }
 
@@ -151,7 +140,7 @@ void TrapezoidMotionPlanner::computeTriangleFunction(double dist, double vel_ini
 	double c = vel_diff * vel_diff / (2.0 * accel_final) + vel_initial * vel_diff / accel_final - dist;
 	double determinant = b * b - 4.0 * a * c;
 	if(determinant < 0.0){
-		computeLinearFunction();
+		computeLinearFunction(dist, vel_initial, vel_final, accel_initial);
 	}
 	else{
 		double time_1 = (-b + sqrt(determinant)) / (2.0 * a);
@@ -166,6 +155,7 @@ void TrapezoidMotionPlanner::computeTriangleFunction(double dist, double vel_ini
 									 }
 									 return vel_final;
 								 };
+		final_time_ = time_2;
 	}
 }
 
@@ -179,12 +169,13 @@ void TrapezoidMotionPlanner::computeLinearFunction(double dist, double vel_initi
 	}
 	else{
 		double time_final = (-b + sqrt(determinant)) / (2.0 * a);
-		trapezoidVelocityFunc_ = [time_final, accel_initial, vel_initial](double time){
+		trapezoidVelocityFunc_ = [time_final, accel_initial, vel_initial, vel_final](double time){
 									 if(time <= time_final){
 										 return accel_initial * time + vel_initial;
 									 }
 									 return vel_final;
 								 };
+		final_time_ = time_final;
 	}
 }
 
@@ -195,30 +186,24 @@ void TrapezoidMotionPlanner::badCase(double vel_final, std::string error){
 							 };
 }
 
-RobotTrajectory::Trajectory TrapezoidMotionPlanner::getTrapezoidTraj(std::vector<double> vec_q0,
-                                                                     std::vector<double> vec_qf,
-                                                                     double t0, double tf, int n){
-	// A = coefficients
-	// n = number of timesteps
-	// auto A = computeTrapezoidCoeff(t0, tf, vec_q0, vec_qf);
+RobotTrajectory::Trajectory TrapezoidMotionPlanner::getTrapezoidTraj(double accel, double v_max,
+                                                                     std::vector<double> vec_q0, 
+																	 std::vector<double> vec_qf){
+	computeTrapezoidFunction(accel, v_max, vec_q0, vec_qf);
 
-	// std::vector<double> a = {A(0, 0), A(1, 0), A(2, 0), A(3, 0)};
-
-	std::vector<double> qd;
-	std::vector<double> d_qd;
-	std::vector<double> dd_qd;
+	std::vector<double> position;
+	std::vector<double> velocity;
 	std::vector<double> time;
-	double step = (tf - t0) / n;
-	for(double t = t0; t < tf; t += step){
-		// double qdi = a[0] + a[1] * t + a[2] * std::pow(t, 2) + a[3] * std::pow(t, 3);
-		// double d_qdi = a[1] + 2 * a[2] * t + 3 * a[3] * std::pow(t, 2);
-
-		// qd.push_back(qdi);
-		// d_qd.push_back(d_qdi);
+	double step = 0.01;
+	for(double t = 0; t < final_time_; t += step){
+		position.push_back(trapezoidPositionFunc_(t));
+		velocity.push_back(trapezoidVelocityFunc_(t));
 		time.push_back(t);
 	}
 	auto trajectory = RobotTrajectory::Trajectory();
-	// return std::make_tuple(time, qd, d_qd);
+	trajectory.position_vector = position;
+	trajectory.velocity_vector = velocity;
+	trajectory.time_vector = time;
 	return trajectory;
 }
 

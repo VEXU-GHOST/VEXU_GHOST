@@ -25,13 +25,20 @@ private:
 	void computeTriangleFunction(double dist,
 	                             double vel_initial, double vel_final,
 	                             double accel_initial, double accel_final);
+	void computeLinearFunction(double dist,
+	                           double vel_initial,
+	                           double vel_final,
+	                           double accel_initial);
 	void badCase(double vel_final, std::string error);
 	std::function<double(double)> trapezoidVelocityFunc_;
 	std::function<double(double)> trapezoidPositionFunc_;
 
-	RobotTrajectory::Trajectory getTrapezoidTraj(std::vector<double> vec_q0,
-	                                             std::vector<double> vec_qf,
-	                                             double t0, double tf, int n);
+	RobotTrajectory::Trajectory getTrapezoidTraj(double accel, double v_max,
+	                                             std::vector<double> vec_q0,
+	                                             std::vector<double> vec_qf);
+
+	double acceleration_;
+	double final_time_;
 public:
 	void initialize() override;
 	void generateMotionPlan(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd) override;
