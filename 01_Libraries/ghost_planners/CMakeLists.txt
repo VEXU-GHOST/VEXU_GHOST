@@ -108,24 +108,23 @@ install(
 ######################
 ### Casadi Example ###
 ######################
-# add_executable(casadi_example_model_generation src/casadi_examples/casadi_example_model_generation.cpp)
-# ament_target_dependencies(casadi_example_model_generation
-#   ${DEPENDENCIES}
-#   )
-#   target_link_libraries(casadi_example_model_generation
-#   casadi_collocation_model
-#   casadi
-#   yaml-cpp
-#   matplotlib_cpp::matplotlib_cpp
-#   ${PYTHON_LIBRARIES}
-#   )
-# target_include_directories(casadi_example_model_generation
-#   PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# install(TARGETS
-#   casadi_example_model_generation
-#   DESTINATION lib/${PROJECT_NAME})
+add_executable(casadi_example_model_generation src/casadi_examples/casadi_example_model_generation.cpp)
+ament_target_dependencies(casadi_example_model_generation
+  ${DEPENDENCIES}
+  )
+  target_link_libraries(casadi_example_model_generation
+  casadi
+  yaml-cpp
+  matplotlib_cpp::matplotlib_cpp
+  ${PYTHON_LIBRARIES}
+  )
+target_include_directories(casadi_example_model_generation
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  casadi_example_model_generation
+  DESTINATION lib/${PROJECT_NAME})
 
 ###################
 ### Executables ###
