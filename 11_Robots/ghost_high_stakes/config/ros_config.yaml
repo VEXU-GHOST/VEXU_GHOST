@@ -1,0 +1,10 @@
+ghost_serial_node:
+  ros__parameters:
+    port_name: "/dev/ttyACM1"
+    backup_port_name: "/dev/ttyACM2"
+    verbose: false
+
+competition_state_machine_node:
+  ros__parameters:
+    odom_topic: "/sensors/wheel_odom"
+    pose_topic: "/estimation/robot_pose"
