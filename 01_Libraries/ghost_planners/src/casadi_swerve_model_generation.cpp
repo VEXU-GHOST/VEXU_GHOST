@@ -132,7 +132,7 @@ int main(int argc, char *argv[]){
 	////////////////////////////////////
 	const float TIME_HORIZON = 2.0;
 	const float DT = 0.01;
-	const int NUM_SWERVE_MODULES = 1;
+	const int NUM_SWERVE_MODULES = 4;
 
 	// Swerve Config
 	const double CHASSIS_WIDTH = 16.5 * ghost_util::INCHES_TO_METERS;
@@ -147,6 +147,27 @@ int main(int argc, char *argv[]){
 	const double M3_Y = -WHEEL_BASE_WIDTH / 2;
 	const double M4_X = WHEEL_BASE_WIDTH / 2;
 	const double M4_Y = -WHEEL_BASE_WIDTH / 2;
+
+	// Params
+	double mass = 10.0;
+	double inertia = 0.14868;
+	double init_pose_x = -1.0;
+	double init_pose_y = 0.0;
+	double init_pose_theta = 0.0;
+	double init_vel_x = 0.0;
+	double init_vel_y = 0.0;
+	double init_vel_theta = 0.0;
+	double des_vel_x = 0.5;
+	double des_vel_y = 0.0;
+	double des_vel_theta = 6.5;
+	double init_m1_steering_angle = -3.14159 / 4.0;
+	double init_m1_steering_vel = 0.0;
+	double init_m2_steering_angle = 3.14159 / 4.0;
+	double init_m2_steering_vel = 0.0;
+	double init_m3_steering_angle = -3.14159 / 4.0;
+	double init_m3_steering_vel = 0.0;
+	double init_m4_steering_angle = 3.14159 / 4.0;
+	double init_m4_steering_vel = 0.0;
 
 	std::vector<Eigen::Vector2d> module_positions{
 		Eigen::Vector2d(M1_X, M1_Y),
@@ -378,20 +399,6 @@ int main(int argc, char *argv[]){
 
 	// // Zero Lateral wheel velocity constraint
 	auto zero_lateral_wheel_vel_constraint = casadi::Matrix<casadi::SXElem>();
-	// for(int k = 0; k < NUM_KNOTS; k++){
-	// 	std::string curr_knot_prefix = get_knot_prefix(k);
-	// 	auto vel_x = get_state(curr_knot_prefix + "base_vel_x");
-	// 	auto vel_y = get_state(curr_knot_prefix + "base_vel_y");
-	// 	auto theta = get_state(curr_knot_prefix + "base_pose_theta");
-
-	// 	for(int m = 1; m < NUM_SWERVE_MODULES + 1; m++){
-	// 		std::string module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
-	// 		auto steering_angle = get_state(module_prefix + "steering_angle");
-	// 		// TODO: this is wrong, needs angular velocity resulting from offset swerve module
-	// 		auto vel_constraint = vel_y * cos(theta + steering_angle) - vel_x * sin(theta + steering_angle);
-	// 		// zero_lateral_wheel_vel_constraint = vertcat(zero_lateral_wheel_vel_constraint, vel_constraint);
-	// 	}
-	// }
 
 	// // Combine all constraints into single vector
 	// auto constraints = vertcat(
@@ -404,20 +411,22 @@ int main(int argc, char *argv[]){
 	// Optimization Variables Limits
 	auto lbx = DM::ones(NUM_OPT_VARS) * -DM::inf();
 	auto ubx = DM::ones(NUM_OPT_VARS) * DM::inf();
+	double translation_speed_limit = 3.0; // 1.389
+	double translation_accel_limit = 15.0; // 5.5755
 
 	for(int k = 0; k < NUM_KNOTS; k++){
 		std::string curr_knot_prefix = get_knot_prefix(k);
-		lbx(state_index_map[curr_knot_prefix + "base_vel_x"]) = -1.389;
-		ubx(state_index_map[curr_knot_prefix + "base_vel_x"]) = 1.389;
-		lbx(state_index_map[curr_knot_prefix + "base_vel_y"]) = -1.389;
-		ubx(state_index_map[curr_knot_prefix + "base_vel_y"]) = 1.389;
+		lbx(state_index_map[curr_knot_prefix + "base_vel_x"]) = -translation_speed_limit;
+		ubx(state_index_map[curr_knot_prefix + "base_vel_x"]) = translation_speed_limit;
+		lbx(state_index_map[curr_knot_prefix + "base_vel_y"]) = -translation_speed_limit;
+		ubx(state_index_map[curr_knot_prefix + "base_vel_y"]) = translation_speed_limit;
 		lbx(state_index_map[curr_knot_prefix + "base_vel_theta"]) = -7.0305;
 		ubx(state_index_map[curr_knot_prefix + "base_vel_theta"]) = 7.0305;
 
-		lbx(state_index_map[curr_knot_prefix + "base_accel_x"]) = -5.5755;
-		ubx(state_index_map[curr_knot_prefix + "base_accel_x"]) = 5.5755;
-		lbx(state_index_map[curr_knot_prefix + "base_accel_y"]) = -5.5755;
-		ubx(state_index_map[curr_knot_prefix + "base_accel_y"]) = 5.5755;
+		lbx(state_index_map[curr_knot_prefix + "base_accel_x"]) = -translation_accel_limit;
+		ubx(state_index_map[curr_knot_prefix + "base_accel_x"]) = translation_accel_limit;
+		lbx(state_index_map[curr_knot_prefix + "base_accel_y"]) = -translation_accel_limit;
+		ubx(state_index_map[curr_knot_prefix + "base_accel_y"]) = translation_accel_limit;
 		lbx(state_index_map[curr_knot_prefix + "base_accel_theta"]) = -45.97811;
 		ubx(state_index_map[curr_knot_prefix + "base_accel_theta"]) = 45.97811;
 
@@ -426,18 +435,13 @@ int main(int argc, char *argv[]){
 			lbx(state_index_map[module_prefix + "steering_accel"]) = -5000.0;
 			ubx(state_index_map[module_prefix + "steering_accel"]) = 5000.0;
 
-			lbx(state_index_map[module_prefix + "wheel_force"]) = -20.0;
-			ubx(state_index_map[module_prefix + "wheel_force"]) = 20.0;
+			lbx(state_index_map[module_prefix + "wheel_force"]) = -50.0;
+			ubx(state_index_map[module_prefix + "wheel_force"]) = 50.0;
+
+			lbx(state_index_map[module_prefix + "lateral_force"]) = -mass * 9.81 * 1.25;
+			ubx(state_index_map[module_prefix + "lateral_force"]) = mass * 9.81 * 1.25;
 		}
 	}
-
-	// for(int i = integration_constraints_vector.size1() + initial_state_constraint_vector.size1() +
-	//             acceleration_dynamics_constraint_vector.size1(); i < integration_constraints_vector.size1() +
-	//     initial_state_constraint_vector.size1() +
-	//     acceleration_dynamics_constraint_vector.size1() + zero_lateral_wheel_vel_constraint.size1(); i++){
-	// 	lbg(i) = -0.001;
-	// 	ubg(i) = 0.001;
-	// }
 
 	///////////////////////////
 	///// Formulate Costs /////
@@ -450,20 +454,20 @@ int main(int argc, char *argv[]){
 		std::string curr_knot_prefix = "k" + std::to_string(k) + "_";
 		std::string next_knot_prefix = "k" + std::to_string(k + 1) + "_";
 
-		// Normalize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
-		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_x"), 2) + pow(get_state(next_knot_prefix + "base_accel_x"), 2));
-		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_y"), 2) + pow(get_state(next_knot_prefix + "base_accel_y"), 2));
-		f += 1 / DT * (pow(get_state(curr_knot_prefix + "base_accel_theta"), 2) + pow(get_state(next_knot_prefix + "base_accel_theta"), 2));
+		// Regularize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
+		f += 0.000001 / DT * (pow(get_state(curr_knot_prefix + "base_accel_x"), 2) + pow(get_state(next_knot_prefix + "base_accel_x"), 2));
+		f += 0.000001 / DT * (pow(get_state(curr_knot_prefix + "base_accel_y"), 2) + pow(get_state(next_knot_prefix + "base_accel_y"), 2));
+		f += 0.000001 / DT * (pow(get_state(curr_knot_prefix + "base_accel_theta"), 2) + pow(get_state(next_knot_prefix + "base_accel_theta"), 2));
+
+		// Regularize Base Jerk
+		f += 0.01 / DT * (pow(get_state(curr_knot_prefix + "base_accel_x") - get_state(next_knot_prefix + "base_accel_x"), 2));
+		f += 0.01 / DT * (pow(get_state(curr_knot_prefix + "base_accel_y") - get_state(next_knot_prefix + "base_accel_y"), 2));
+		f += 0.01 / DT * (pow(get_state(curr_knot_prefix + "base_accel_theta") - get_state(next_knot_prefix + "base_accel_theta"), 2));
 
 		// Penalize Velocity Deviation
-		f += 500.0 * 1 / DT * (pow(get_param("des_vel_x") - get_state(curr_knot_prefix + "base_vel_x"), 2) + pow(get_param("des_vel_x") - get_state(next_knot_prefix + "base_vel_x"), 2));
-		f += 500.0 * 1 / DT * (pow(get_param("des_vel_y") - get_state(curr_knot_prefix + "base_vel_y"), 2) + pow(get_param("des_vel_y") - get_state(next_knot_prefix + "base_vel_y"), 2));
-		f += 500.0 * 1 / DT * (pow(get_param("des_vel_theta") - get_state(curr_knot_prefix + "base_vel_theta"), 2) + pow(get_param("des_vel_theta") - get_state(next_knot_prefix + "base_vel_theta"), 2));
-
-		// Minimize jerk via finite difference
-		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_x") - get_state(curr_knot_prefix + "base_accel_x"), 2));
-		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_y") - get_state(curr_knot_prefix + "base_accel_y"), 2));
-		f += 1 / DT * (pow(get_state(next_knot_prefix + "base_accel_theta") - get_state(curr_knot_prefix + "base_accel_theta"), 2));
+		f += 10000.0 * 1 / DT * (pow(get_param("des_vel_x") - get_state(curr_knot_prefix + "base_vel_x"), 2) + pow(get_param("des_vel_x") - get_state(next_knot_prefix + "base_vel_x"), 2));
+		f += 10000.0 * 1 / DT * (pow(get_param("des_vel_y") - get_state(curr_knot_prefix + "base_vel_y"), 2) + pow(get_param("des_vel_y") - get_state(next_knot_prefix + "base_vel_y"), 2));
+		f += 10000.0 * 1 / DT * (pow(get_param("des_vel_theta") - get_state(curr_knot_prefix + "base_vel_theta"), 2) + pow(get_param("des_vel_theta") - get_state(next_knot_prefix + "base_vel_theta"), 2));
 
 		auto vel_x = get_state(curr_knot_prefix + "base_vel_x");
 		auto vel_y = get_state(curr_knot_prefix + "base_vel_y");
@@ -473,23 +477,29 @@ int main(int argc, char *argv[]){
 		auto y_pos = get_state(curr_knot_prefix + "base_pose_y");
 
 		for(int m = 1; m < NUM_SWERVE_MODULES + 1; m++){
-			std::string module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
-			// f += 0.01 * 1 / DT * (pow(get_state(curr_knot_prefix + "m" + std::to_string(m) + "_steering_vel"), 2) + pow(get_state(next_knot_prefix + "m" + std::to_string(m) + "_steering_vel"), 2));
-			f += 0.01 * 1 / DT * (pow(get_state(module_prefix + "steering_accel"), 2) + pow(get_state(module_prefix + "steering_accel"), 2));
-			f += 0.01 * 1 / DT * (pow(get_state(module_prefix + "steering_accel"), 2) - pow(get_state(module_prefix + "steering_accel"), 2));
+			std::string curr_knot_module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
+			std::string next_knot_module_prefix = next_knot_prefix + "m" + std::to_string(m) + "_";
+			f += 0.00001 * 1 / DT * (pow(get_state(curr_knot_module_prefix + "steering_accel"), 2) + pow(get_state(next_knot_module_prefix + "steering_accel"), 2));
 
+			// Small Regularization
+			f += 0.00001 * 1 / DT * (pow(get_state(curr_knot_module_prefix + "steering_vel"), 2) + pow(get_state(next_knot_module_prefix + "steering_vel"), 2));
+			f += 0.00001 * 1 / DT * (pow(get_state(curr_knot_module_prefix + "lateral_force"), 2) + pow(get_state(next_knot_module_prefix + "lateral_force"), 2));
+			f += 0.001 * 1 / DT * (pow(get_state(curr_knot_module_prefix + "lateral_force") - get_state(next_knot_module_prefix + "lateral_force"), 2));
+			f += 0.00001 * 1 / DT * (pow(get_state(curr_knot_module_prefix + "wheel_force"), 2) + pow(get_state(next_knot_module_prefix + "wheel_force"), 2));
+			f += 0.01 * 1 / DT * (pow(get_state(curr_knot_module_prefix + "wheel_force") - get_state(next_knot_module_prefix + "wheel_force"), 2));
 
-			auto world_steering_angle = theta + get_state(module_prefix + "steering_angle");
-			auto base_steering_angle = get_state(module_prefix + "steering_angle");
-			auto module_position_world_x = x_pos + cos(theta) * module_positions[m - 1].x() - sin(theta)    * module_positions[m - 1].y();
-			auto module_position_world_y = y_pos + sin(theta) * module_positions[m - 1].x() + cos(theta) * module_positions[m - 1].y();
-			auto tan_vel = vel_theta * sqrt((pow(module_position_world_x - x_pos, 2) + pow(module_position_world_y - y_pos, 2)));
+			auto world_steering_angle = theta + get_state(curr_knot_module_prefix + "steering_angle");
+			auto base_steering_angle = get_state(curr_knot_module_prefix + "steering_angle");
+			auto module_position_world_x = cos(theta) * module_positions[m - 1].x() - sin(theta)    * module_positions[m - 1].y();
+			auto module_position_world_y = sin(theta) * module_positions[m - 1].x() + cos(theta) * module_positions[m - 1].y();
+			auto tan_vel = vel_theta * sqrt((pow(module_position_world_x, 2) + pow(module_position_world_y, 2)));
 			auto r_angle = atan2(module_positions[m - 1].y(), module_positions[m - 1].x()); // base_link
 			auto tan_vel_x = tan_vel * -sin(r_angle);
 			auto tan_vel_y = tan_vel * cos(r_angle);
 			auto world_tan_vel_x = tan_vel_x * cos(theta) - tan_vel_y * sin(theta);
 			auto world_tan_vel_y = tan_vel_x * sin(theta) + tan_vel_y * cos(theta);
-			auto lateral_velocity = (world_tan_vel_y + vel_y) * cos(world_steering_angle) - (world_tan_vel_x + vel_x) * sin(world_steering_angle);
+			auto forward_velocity = (world_tan_vel_y + vel_y) * cos(-world_steering_angle) - (world_tan_vel_x + vel_x) * sin(-world_steering_angle);
+			auto lateral_velocity = (world_tan_vel_x + vel_x) * sin(-world_steering_angle) + (world_tan_vel_y + vel_y) * cos(-world_steering_angle);
 			zero_lateral_wheel_vel_constraint = vertcat(zero_lateral_wheel_vel_constraint, lateral_velocity);
 			// auto module_offset_world_x = cos(theta) * module_positions[m - 1].x() - sin(theta) * module_positions[m - 1].y();
 			// auto module_offset_world_y = sin(theta) * module_positions[m - 1].x() + cos(theta) * module_positions[m - 1].y();
@@ -498,10 +508,9 @@ int main(int argc, char *argv[]){
 			// auto module_x_velocity_local = cos(world_steering_angle) * module_x_velocity_world + sin(world_steering_angle) * module_y_velocity_world;
 			// auto module_y_velocity_local = -sin(world_steering_angle) * module_x_velocity_world + cos(world_steering_angle) * module_y_velocity_world;
 			// zero_lateral_wheel_vel_constraint = vertcat(zero_lateral_wheel_vel_constraint, module_y_velocity_local);
-			// f += pow(lateral_velocity, 4);
+			f += 0.000001 * pow(lateral_velocity, 2);
 		}
 	}
-
 
 	// Combine all constraints into single vector
 	auto constraints = vertcat(
@@ -512,6 +521,14 @@ int main(int argc, char *argv[]){
 		);
 	auto lbg = DM::zeros(constraints.size1());
 	auto ubg = DM::zeros(constraints.size1());
+
+	for(int i = integration_constraints_vector.size1() + initial_state_constraint_vector.size1() +
+	            acceleration_dynamics_constraint_vector.size1(); i < integration_constraints_vector.size1() +
+	    initial_state_constraint_vector.size1() +
+	    acceleration_dynamics_constraint_vector.size1() + zero_lateral_wheel_vel_constraint.size1(); i++){
+		lbg(i) = -0.001;
+		ubg(i) = 0.001;
+	}
 
 	/////////////////////////
 	///// Create Solver /////
@@ -526,7 +543,7 @@ int main(int argc, char *argv[]){
 		{"p", param_vector}};
 	Dict solver_config{
 		{"verbose", false},
-		{"ipopt.print_level", 0},
+		{"ipopt.print_level", 5},
 		{"iteration_callback", iteration_callback},
 		{"ipopt.max_iter", 1000}
 	};
@@ -543,20 +560,6 @@ int main(int argc, char *argv[]){
 	solver_args["ubg"] = ubg;
 	solver_args["x0"] = DM::zeros(NUM_OPT_VARS);
 
-	double mass = 10.0;
-	double inertia = 0.14868;
-	double init_pose_x = 0.0;
-	double init_pose_y = 0.0;
-	double init_pose_theta = 0.0;
-	double init_vel_x = 0.0;
-	double init_vel_y = 0.0;
-	double init_vel_theta = 0.0;
-	double des_vel_x = 0.0;
-	double des_vel_y = 0.0;
-	double des_vel_theta = 6.0;
-	double init_m1_steering_angle = 3.14159 / 2.0;
-	double init_m1_steering_vel = 0.0;
-
 	solver_args["p"] = {mass,
 		                inertia,
 		                init_pose_x,
@@ -569,7 +572,14 @@ int main(int argc, char *argv[]){
 		                des_vel_y,
 		                des_vel_theta,
 		                init_m1_steering_angle,
-		                init_m1_steering_vel}; // , 3.14159 / 4.0, 0.0};
+		                init_m1_steering_vel, // , 3.14159 / 4.0, 0.0};
+		                init_m2_steering_angle,
+		                init_m2_steering_vel, // , 3.14159 / 4.0, 0.0};
+		                init_m3_steering_angle, // , 3.14159 / 4.0, 0.0};
+		                init_m3_steering_vel,
+		                init_m4_steering_angle, // , 3.14159 / 4.0, 0.0};
+		                init_m4_steering_vel
+	}; // , 3.14159 / 4.0, 0.0};
 
 	std::cout << "starting thread" << std::endl;
 	plt::figure();
@@ -710,8 +720,8 @@ int main(int argc, char *argv[]){
 		plotRectanglePoints(x, y, CHASSIS_WIDTH, CHASSIS_WIDTH, theta, chassis_x_points, chassis_y_points);
 
 		plt::axis("scaled");
-		plt::xlim(-48.0 * ghost_util::INCHES_TO_METERS, 48.0 * ghost_util::INCHES_TO_METERS);
-		plt::ylim(-48.0 * ghost_util::INCHES_TO_METERS, 48.0 * ghost_util::INCHES_TO_METERS);
+		plt::xlim(-24.0 * 3 * ghost_util::INCHES_TO_METERS, 3 * 24.0 * ghost_util::INCHES_TO_METERS);
+		plt::ylim(-24.0 * 1 * ghost_util::INCHES_TO_METERS, 1 * 24.0 * ghost_util::INCHES_TO_METERS);
 
 
 		plt::plot(
@@ -766,67 +776,68 @@ int main(int argc, char *argv[]){
 								 };
 
 		plot_wheel_module(Eigen::Vector2d(M1_X, M1_Y),"m1_");
-		// plot_wheel_module(Eigen::Vector2d(M2_X, M2_Y),"m2_");
-
+		plot_wheel_module(Eigen::Vector2d(M2_X, M2_Y),"m2_");
+		plot_wheel_module(Eigen::Vector2d(M3_X, M3_Y),"m3_");
+		plot_wheel_module(Eigen::Vector2d(M4_X, M4_Y),"m4_");
 		plt::pause(DT);
 	}
 
-	// plt::figure();
-	// plt::quiver(x_pos, y_pos, x_vel, y_vel, std::map<std::string, std::string>{{"color", "black"}});
-	// plt::quiver(x_pos, y_pos, wheel_force_x_components, wheel_force_y_components, std::map<std::string, std::string>{{"color", "red"}});
-	// plt::quiver(x_pos, y_pos, lateral_force_x_components, lateral_force_y_components, std::map<std::string, std::string>{{"color", "blue"}});
-	// plt::xlim(-1.0, 1.0);
-	// plt::ylim(-1.0, 1.0);
+	plt::figure();
+	plt::quiver(x_pos, y_pos, x_vel, y_vel, std::map<std::string, std::string>{{"color", "black"}});
+	plt::quiver(x_pos, y_pos, wheel_force_x_components, wheel_force_y_components, std::map<std::string, std::string>{{"color", "red"}});
+	plt::quiver(x_pos, y_pos, lateral_force_x_components, lateral_force_y_components, std::map<std::string, std::string>{{"color", "blue"}});
+	plt::xlim(-1.0, 1.0);
+	plt::ylim(-1.0, 1.0);
 
-	// plt::figure();
-	// plt::suptitle("X");
-	// plt::subplot(3, 1, 1);
-	// plt::plot(time_vector, state_solution_map["base_pose_x"]);
-	// plt::subplot(3, 1, 2);
-	// plt::plot(time_vector, state_solution_map["base_vel_x"]);
-	// plt::subplot(3, 1, 3);
-	// plt::plot(time_vector, state_solution_map["base_accel_x"]);
+	plt::figure();
+	plt::suptitle("X");
+	plt::subplot(3, 1, 1);
+	plt::plot(time_vector, state_solution_map["base_pose_x"]);
+	plt::subplot(3, 1, 2);
+	plt::plot(time_vector, state_solution_map["base_vel_x"]);
+	plt::subplot(3, 1, 3);
+	plt::plot(time_vector, state_solution_map["base_accel_x"]);
 
-	// plt::figure();
-	// plt::suptitle("Y");
-	// plt::subplot(3, 1, 1);
-	// plt::plot(time_vector, state_solution_map["base_pose_y"]);
-	// plt::subplot(3, 1, 2);
-	// plt::plot(time_vector, state_solution_map["base_vel_y"]);
-	// plt::subplot(3, 1, 3);
-	// plt::plot(time_vector, state_solution_map["base_accel_y"]);
+	plt::figure();
+	plt::suptitle("Y");
+	plt::subplot(3, 1, 1);
+	plt::plot(time_vector, state_solution_map["base_pose_y"]);
+	plt::subplot(3, 1, 2);
+	plt::plot(time_vector, state_solution_map["base_vel_y"]);
+	plt::subplot(3, 1, 3);
+	plt::plot(time_vector, state_solution_map["base_accel_y"]);
 
-	// plt::figure();
-	// plt::suptitle("Theta");
-	// plt::subplot(3, 1, 1);
-	// plt::plot(time_vector, state_solution_map["base_pose_theta"]);
-	// plt::subplot(3, 1, 2);
-	// plt::plot(time_vector, state_solution_map["base_vel_theta"]);
-	// plt::subplot(3, 1, 3);
-	// plt::plot(time_vector, state_solution_map["base_accel_theta"]);
+	plt::figure();
+	plt::suptitle("Theta");
+	plt::subplot(3, 1, 1);
+	plt::plot(time_vector, state_solution_map["base_pose_theta"]);
+	plt::subplot(3, 1, 2);
+	plt::plot(time_vector, state_solution_map["base_vel_theta"]);
+	plt::subplot(3, 1, 3);
+	plt::plot(time_vector, state_solution_map["base_accel_theta"]);
 
-	// plt::figure();
-	// plt::suptitle("Module 1 Steering");
-	// plt::subplot(3, 1, 1);
-	// plt::plot(time_vector, state_solution_map["m1_steering_angle"]);
-	// plt::subplot(3, 1, 2);
-	// plt::plot(time_vector, state_solution_map["m1_steering_vel"]);
-	// plt::subplot(3, 1, 3);
-	// plt::plot(time_vector, state_solution_map["m1_steering_accel"]);
+	plt::figure();
+	plt::suptitle("Module 1 Steering");
+	plt::subplot(3, 1, 1);
+	plt::plot(time_vector, state_solution_map["m1_steering_angle"]);
+	plt::subplot(3, 1, 2);
+	plt::plot(time_vector, state_solution_map["m1_steering_vel"]);
+	plt::subplot(3, 1, 3);
+	plt::plot(time_vector, state_solution_map["m1_steering_accel"]);
 
-	// plt::figure();
-	// plt::suptitle("Forces");
-	// plt::subplot(2, 1, 1);
-	// plt::plot(time_vector, state_solution_map["m1_wheel_force"]);
-	// plt::subplot(2, 1, 2);
-	// plt::plot(time_vector, state_solution_map["m1_lateral_force"]);
+	plt::figure();
+	plt::suptitle("Forces");
+	plt::subplot(2, 1, 1);
+	plt::plot(time_vector, state_solution_map["m1_wheel_force"]);
+	plt::subplot(2, 1, 2);
+	plt::plot(time_vector, state_solution_map["m1_lateral_force"]);
 
-	// plt::figure();
-	// plt::suptitle("Forces");
-	// plt::subplot(2, 1, 1);
-	// plt::plot(time_vector, state_solution_map["m2_wheel_force"]);
-	// plt::subplot(2, 1, 2);
-	// plt::plot(time_vector, state_solution_map["m2_lateral_force"]);
+	plt::figure();
+	plt::suptitle("Forces");
+	plt::subplot(2, 1, 1);
+	plt::plot(time_vector, state_solution_map["m2_wheel_force"]);
+	plt::subplot(2, 1, 2);
+	plt::plot(time_vector, state_solution_map["m2_lateral_force"]);
 
 	plt::show();
 
