@@ -147,24 +147,6 @@ install(TARGETS
 #   swerve_model_test_main
 #   DESTINATION lib/${PROJECT_NAME})
 
-# Main to generate Problem Formulation for MDS MPC
-add_executable(casadi_swerve_model_generation src/casadi_swerve_model_generation.cpp)
-ament_target_dependencies(casadi_swerve_model_generation
-  ${DEPENDENCIES}
-)
-target_link_libraries(casadi_swerve_model_generation
-  casadi
-  matplotlib_cpp::matplotlib_cpp
-  ${PYTHON_LIBRARIES}
-)
-target_include_directories(casadi_swerve_model_generation
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  casadi_swerve_model_generation
-  DESTINATION lib/${PROJECT_NAME})
-
 ###############
 ### Testing ###
 ###############

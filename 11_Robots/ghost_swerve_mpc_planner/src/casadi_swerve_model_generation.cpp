@@ -5,6 +5,11 @@
 
 #include <ghost_util/unit_conversion_utils.hpp>
 
+#include <ghost_msgs/msg/labeled_double.hpp>
+#include <ghost_msgs/msg/labeled_double_map.hpp>
+
+#include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
+
 #include <atomic>
 #include <mutex>
 #include <thread>
@@ -154,6 +159,7 @@ int main(int argc, char *argv[]){
 	rclcpp::init(argc, argv);
 
 	auto node_ptr = std::make_shared<rclcpp::Node>("swerve_mpc_node");
+	auto mpc_trajectory_publisher = node_ptr->create_publisher<ghost_msgs::msg::LabeledDoubleMap>("/swerve_mpc_trajectory", 10);
 
 	std::thread node_thread([&](){
 	                        rclcpp::spin(node_ptr);
@@ -299,6 +305,22 @@ int main(int argc, char *argv[]){
 	auto get_knot_prefix = [](int i){
 							   return "k" + std::to_string(i) + "_";
 						   };
+	auto generate_trajectory_map = [&](const std::vector<double>& solution_vector){
+									   std::unordered_map<std::string, std::vector<double> > solution_map;
+
+									   for(auto &name : STATE_NAMES){
+										   // Allocate timeseries vector for each state/input variable
+										   solution_map[name] = std::vector<double>(NUM_KNOTS);
+
+										   // Iterate through timeseries and add final state values to solution vector
+										   for(int k = 0; k < NUM_KNOTS; k++){
+											   std::string knot_prefix = get_knot_prefix(k);
+											   solution_map[name][k] = solution_vector[state_index_map.at(knot_prefix + name)];
+										   }
+									   }
+
+									   return solution_map;
+								   };
 
 	//////////////////////////////////////////////
 	///// Initialize Time, State, and Inputs /////
@@ -616,6 +638,7 @@ int main(int argc, char *argv[]){
 	std::cout << "starting thread" << std::endl;
 	plt::figure();
 	plt::Plot cost_plot("Cost");
+	std::vector<IterationCallback::IPOPTOutput> solver_iteration_data;
 	std::vector<double> iteration_vector{};
 	std::vector<double> cost_vector{};
 	std::atomic<bool> solving(true);
@@ -631,13 +654,22 @@ int main(int argc, char *argv[]){
 	while(solving){
 		std::unique_lock<std::mutex> lock(*data_mutex);
 		if(!data_buffer->empty()){
+			// Retrieve data from queue
 			IterationCallback::IPOPTOutput data(data_buffer->back());
 			data_buffer->pop_back();
-			plt::clf();
 
+			// Matplotlib
+			plt::clf();
+			solver_iteration_data.push_back(data);
 			iteration_vector.push_back(data.iteration);
 			cost_vector.push_back(data.f);
+
 			plt::plot(iteration_vector, cost_vector);
+
+			// Publish to RVIZ
+			ghost_msgs::msg::LabeledDoubleMap msg{};
+			// ghost_ros_interfaces::toROSMsg(, msg);
+			// mpc_trajectory_publisher->publish(msg);
 		}
 		lock.unlock();
 
@@ -655,17 +687,7 @@ int main(int argc, char *argv[]){
 	std::cout << "Objective: " << res.at("f") << std::endl;
 
 	// Unpack solution into individual time series
-	std::unordered_map<std::string, std::vector<double> > state_solution_map;
-	for(auto &name : STATE_NAMES){
-		// Allocate timeseries vector for each state/input variable
-		state_solution_map[name] = std::vector<double>(NUM_KNOTS);
-
-		// Iterate through timeseries and add final state values to solution vector
-		for(int k = 0; k < NUM_KNOTS; k++){
-			std::string knot_prefix = get_knot_prefix(k);
-			state_solution_map[name][k] = raw_solution_vector[state_index_map.at(knot_prefix + name)];
-		}
-	}
+	std::unordered_map<std::string, std::vector<double> > state_solution_map = generate_trajectory_map(raw_solution_vector);
 
 	//////////////////////////////
 	///// Animate Trajectory /////
@@ -874,10 +896,12 @@ int main(int argc, char *argv[]){
 	plt::subplot(2, 1, 2);
 	plt::plot(time_vector, state_solution_map["m2_lateral_force"]);
 
+	plt::pause(0.1);
 	plt::show();
-	// while(!EXIT_GLOBAL){
-	// 	std::this_thread::sleep_for(50ms);
-	// }
+
+	while(!EXIT_GLOBAL){
+		std::this_thread::sleep_for(50ms);
+	}
 
 	rclcpp::shutdown();
 
