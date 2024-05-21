@@ -712,3 +712,5 @@ trapezoid_motion_planner:
     odom_topic: "/map_ekf/odometry"
     
     acceleration: 1.0
+
+    badCase_timeout: 5.0

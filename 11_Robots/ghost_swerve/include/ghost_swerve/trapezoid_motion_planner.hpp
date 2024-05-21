@@ -22,14 +22,13 @@ class TrapezoidMotionPlanner : public ghost_motion_planner::MotionPlanner {
 private:
 	void computeTrapezoidFunction(double accel, double v_max,
 	                              std::vector<double> vec_q0, std::vector<double> vec_qf);
-	void computeTriangleFunction(double dist,
+	void computeTriangleFunction(double pos_initial, double pos_final,
 	                             double vel_initial, double vel_final,
 	                             double accel_initial, double accel_final);
-	void computeLinearFunction(double dist,
-	                           double vel_initial,
-	                           double vel_final,
+	void computeLinearFunction(double pos_initial, double pos_final,
+	                           double vel_initial, double vel_final,
 	                           double accel_initial);
-	void badCase(double vel_final, std::string error);
+	void badCase(double pos_final, double vel_final, std::string error);
 	std::function<double(double)> trapezoidVelocityFunc_;
 	std::function<double(double)> trapezoidPositionFunc_;
 
@@ -39,6 +38,7 @@ private:
 
 	double acceleration_;
 	double final_time_;
+	double badCase_timeout_;
 public:
 	void initialize() override;
 	void generateMotionPlan(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd) override;

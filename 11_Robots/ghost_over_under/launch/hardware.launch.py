@@ -56,11 +56,19 @@ def generate_launch_description():
         name='cubic_motion_planner',
         output='screen',
         parameters=[ros_config_file, 
-                    # {
-                    #     "robot_config_yaml_path": robot_config_yaml_path
-                    # }
                     ],
-        arguments=[plugin_type, robot_name]
+        # arguments=[plugin_type, robot_name]
+        # arguments=["--ros-args", "--log-level", "debug"]
+    )
+
+    trapezoid_motion_planner_node = Node(
+        package='ghost_swerve',
+        executable='trapezoid_motion_planner',
+        name='trapezoid_motion_planner',
+        output='screen',
+        parameters=[ros_config_file, 
+                    ],
+        # arguments=[plugin_type, robot_name]
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
@@ -144,5 +152,6 @@ def generate_launch_description():
         odom_ekf_node,
         map_ekf_node,
         cubic_motion_planner_node,
+        trapezoid_motion_planner_node,
         # rplidar_node
     ])
