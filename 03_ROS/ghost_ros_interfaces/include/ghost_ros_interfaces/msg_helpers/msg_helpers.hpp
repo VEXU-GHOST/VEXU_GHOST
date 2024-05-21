@@ -6,6 +6,8 @@
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
+#include <ghost_msgs/msg/labeled_vector.hpp>
+#include <ghost_msgs/msg/labeled_vector_map.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/msg/v5_actuator_command.hpp>
 #include <ghost_msgs/msg/v5_device_header.hpp>
@@ -185,6 +187,10 @@ void fromROSMsg(ghost_planners::RobotTrajectory& robot_trajectory, const ghost_m
 void fromROSMsg(ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, const ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg);
 void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg);
 void toROSMsg(const ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg);
+
+
+void fromROSMsg(std::unordered_map<std::string, std::vector<double> > &labeled_vector_map, const ghost_msgs::msg::LabeledVectorMap& msg);
+void toROSMsg(const std::unordered_map<std::string, std::vector<double> > &labeled_vector_map, ghost_msgs::msg::LabeledVectorMap& msg);
 
 } // namespace msg_helpers
 

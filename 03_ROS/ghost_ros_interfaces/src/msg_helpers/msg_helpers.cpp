@@ -347,6 +347,20 @@ void toROSMsg(const ghost_planners::RobotTrajectory::MotorTrajectory& motor_traj
 	std::cerr << "toROSMsg motor trajectory done\n";
 }
 
+void fromROSMsg(std::unordered_map<std::string, std::vector<double> > &labeled_vector_map, const ghost_msgs::msg::LabeledVectorMap& msg){
+	for(const auto& entry : msg.entries){
+		labeled_vector_map[entry.label] = entry.data_array;
+	}
+}
+void toROSMsg(const std::unordered_map<std::string, std::vector<double> > &labeled_vector_map, ghost_msgs::msg::LabeledVectorMap& msg){
+	for(const auto& [key, vector] : labeled_vector_map){
+		ghost_msgs::msg::LabeledVector entry{};
+		entry.label = key;
+		entry.data_array = vector;
+		msg.entries.push_back(entry);
+	}
+}
+
 } // namespace msg_helpers
 
 } // namespace ghost_ros_interfaces
