@@ -20,6 +20,8 @@ set(DEPENDENCIES
   ghost_estimation
   ghost_control
   ghost_util
+  rclcpp
+  ghost_msgs
   )
 
 foreach(pkg ${DEPENDENCIES})
