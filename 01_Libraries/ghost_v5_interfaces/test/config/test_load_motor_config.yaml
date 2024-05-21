@@ -1,0 +1,82 @@
+port_configuration:
+    use_partner_joystick: false
+    devices:
+        left_drive_motor:
+            port: 1
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        right_drive_motor:
+            port: 2
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        motor_empty_config:
+            port: 0
+            type: MOTOR
+            config: default_motor_config
+        motor_no_config:
+            port: 0
+            type: MOTOR
+        motor_no_port:
+            type: MOTOR
+        motor_no_type:
+            port: 0
+
+    device_configurations:
+        test_motor_config:
+            gearset: 200
+            brake_mode: COAST
+            encoder_units: COUNTS
+            filter:
+                cutoff_frequency: 62.0
+                damping_ratio: 0.10
+                timestep: 0.21
+            controller:
+                pos_gain: 8000.0
+                vel_gain: 118.0
+                ff_vel_gain: 400.0
+                ff_torque_gain: 2587.0
+                cmd_duration: 4
+            model:
+                free_speed: 1104.0
+                stall_torque: 52.25
+                free_current: 0.9090
+                stall_current: 21.58
+                nominal_voltage: 1200.0
+                gear_ratio: 2915.0
+            serial:
+                send_position_command: true
+                send_velocity_command: true
+                send_voltage_command: false
+                send_torque_command: true
+                send_current_data: true
+                send_power_data: false
+                send_temp_data: true
+
+        default_motor_config:
+
+        drive_motor_config:
+            gearset: 600
+            brake_mode: COAST
+            encoder_units: DEGREES
+            filter:
+                cutoff_frequency: 100.0
+                damping_ratio: 0.707
+                timestep: 0.01
+            controller:
+                pos_gain: 7.5
+                vel_gain: 10.0
+                ff_vel_gain: 1.0
+                ff_torque_gain: 0.0
+            model:
+                free_speed: 120.0
+                stall_torque: 3.6
+                free_current: 0.14
+                stall_current: 4.25
+                nominal_voltage: 12.0
+                gear_ratio: 1.0
+            serial:                
+                send_torque_command: true
+                send_temp_data: true
+

@@ -60,7 +60,7 @@ bool V5SerialBase::setSerialPortConfig(){
 	return true;
 }
 
-bool V5SerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len){
+bool V5SerialBase::readMsgFromSerial(std::vector<unsigned char> &msg_buffer, int & parsed_msg_len){
 	int max_read_bytes = read_msg_max_len_ + use_checksum_ + read_msg_start_seq.length() + 2;
 	if(port_open_){
 		try{
@@ -74,7 +74,8 @@ bool V5SerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parsed_ms
 
 			// Extract any msgs from serial stream and return if msg is found
 			if(num_bytes_read > 0){
-				return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer, parsed_msg_len);
+				checkReadMsgBufferLength(msg_buffer); // Throws if msg_buffer is misconfigured
+				return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer.data(), parsed_msg_len);
 			}
 			else if(num_bytes_read == -1){
 				// TODO: stdout is a no-go on this device. We need to add log files and SD card.

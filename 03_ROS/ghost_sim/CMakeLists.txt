@@ -19,6 +19,7 @@ add_compile_options(-Wno-dev)
 ########################
 set(DEPENDENCIES
   ament_cmake
+  ament_cmake_gtest
   Eigen3
   yaml-cpp
   rclcpp
@@ -33,7 +34,6 @@ set(DEPENDENCIES
   gazebo_ros
   gazebo_plugins
   ghost_msgs
-  ghost_common
   ghost_control
 )
 
@@ -48,27 +48,43 @@ include
 ${PYTHON_INCLUDE_DIRS}
 )
 
+##############################
+####   Bag Sim Time Node  ####
+# ##############################
+add_executable(bag_set_pose_time
+  src/bag_set_pose_time.cpp
+)
+ament_target_dependencies(bag_set_pose_time
+  rclcpp
+  geometry_msgs
+)
+install(TARGETS
+bag_set_pose_time
+  DESTINATION lib/${PROJECT_NAME})
+
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
-link_directories(${gazebo_dev_LIBRARY_DIRS})
+include_directories(${GTEST_INCLUDE_DIRS})
 
+link_directories(${gazebo_dev_LIBRARY_DIRS})
 
 ###################
 ##### TARGETS #####
 ###################
 # Gazebo Motor Plugin
-add_library(gazebo_motor_plugin SHARED src/gazebo_motor_plugin.cpp)
-ament_target_dependencies(gazebo_motor_plugin
-  ${DEPENDENCIES}
-)
-target_link_libraries(gazebo_motor_plugin
-  ghost_control::dc_motor_model)
-target_include_directories(gazebo_motor_plugin
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-ament_export_libraries(gazebo_motor_plugin)
+
+# add_library(gazebo_motor_plugin SHARED src/gazebo_motor_plugin.cpp)
+# ament_target_dependencies(gazebo_motor_plugin
+#   ${DEPENDENCIES}
+# )
+# target_link_libraries(gazebo_motor_plugin
+#   ghost_control::dc_motor_model)
+# target_include_directories(gazebo_motor_plugin
+#   PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>)
+# ament_export_libraries(gazebo_motor_plugin)
 
 
 # Gazebo Joint PID Plugin
@@ -92,42 +108,40 @@ ament_export_libraries(gazebo_motor_plugin)
 #     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 #     $<INSTALL_INTERFACE:include>)
 # ament_export_libraries(gazebo_joint_pid_plugin)
+enable_testing()
+ament_add_gtest(test_diff_drive test/test_diff_drive.cpp
+    # Long timeout because has to run gazebo several times
+    TIMEOUT
+    120)
+
+target_link_libraries(test_diff_drive
+  gazebo_test_fixture
+)
+
+ament_target_dependencies(test_diff_drive
+  "builtin_interfaces"
+  "gazebo_dev"
+  "gazebo_msgs"
+  "geometry_msgs"
+  "rclcpp"
+  "sensor_msgs"
+  "std_msgs"
+  "nav_msgs"
+)
 
 # Gazebo V5 Robot Plugin
-add_library(v5_robot_plugin SHARED src/v5_robot_plugin.cpp)
-ament_target_dependencies(v5_robot_plugin
-  ${DEPENDENCIES}
-)
-target_include_directories(v5_robot_plugin
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
-ament_export_libraries(v5_robot_plugin)
+# add_library(v5_robot_plugin SHARED src/v5_robot_plugin.cpp)
+# ament_target_dependencies(v5_robot_plugin
+#   ${DEPENDENCIES}
+# )
+# target_include_directories(v5_robot_plugin
+#   PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>)
+# ament_export_libraries(v5_robot_plugin)
 
-add_executable(ground_truth_pose_publisher
-  src/ground_truth_pose_publisher.cpp
-)
-ament_target_dependencies(ground_truth_pose_publisher
-  ${DEPENDENCIES}
-)
-install(TARGETS
-  ground_truth_pose_publisher
-  DESTINATION lib/${PROJECT_NAME})
 
-# Node to test new V5ActuactorCommand communication
-add_executable(test_publisher_v5_actuator_cmd
-  test/test_publisher_v5_actuator_cmd.cpp
-)
-ament_target_dependencies(test_publisher_v5_actuator_cmd
-  ${DEPENDENCIES}
-)
-install(TARGETS
-  test_publisher_v5_actuator_cmd
-  DESTINATION lib/${PROJECT_NAME})
 
-# ################
-# ### Install ####
-# ################
 install(
   DIRECTORY include/
   DESTINATION include
@@ -136,7 +150,12 @@ install(
 install(DIRECTORY
   launch
   urdf
+  worlds
+  rviz
   config
   DESTINATION share/${PROJECT_NAME})
+
+ament_export_include_directories(include)
+
 
 ament_package()

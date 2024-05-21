@@ -1,0 +1,26 @@
+port_configuration:
+    use_partner_joystick: false
+    devices:
+        rotation_sensor_1:
+            port: 4
+            type: ROTATION_SENSOR
+            reversed: true
+        inertial_sensor_1:
+            port: 7
+            type: INERTIAL_SENSOR
+        test_motor:
+            port: 2
+            type: MOTOR
+            reversed: true
+        left_drive_motor:
+            port: 1
+            type: MOTOR
+        default_motor:
+            port: 3
+            type: MOTOR
+        rotation_sensor_2:
+            port: 5
+            type: ROTATION_SENSOR
+
+    device_configurations:
+

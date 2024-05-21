@@ -5,50 +5,41 @@
     <xacro:include filename="$(find ghost_sim)/urdf/macros/sensor_macros.xacro"/>
     
     <!-- Import Primary Robot URDF -->
-    <xacro:include filename="$(find ghost_description)/urdf/ghost1.xacro"/>
+    <xacro:include filename="$(find ghost_over_under)/urdf/ghost1.xacro"/>
 
     <!-- Add Sensors -->
-    <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro>
+    <!-- <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro> -->
     <!-- <xacro:imu_macro parent_link="camera_view_link"></xacro:imu_macro> -->
 
     <!-- Joint State Publisher -->
     <gazebo>
-        <plugin name="gazebo_ros_joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-            <update_rate>100</update_rate>
-            <joint_name>steering_left</joint_name>
-            <joint_name>steering_right</joint_name>
-            <joint_name>steering_back</joint_name>
-            <joint_name>driveshaft_left</joint_name>
-            <joint_name>driveshaft_right</joint_name>
-            <joint_name>driveshaft_back</joint_name>
-        </plugin>
-
         <plugin name="v5_robot_plugin" filename="libv5_robot_plugin.so">
             <joint_names>
-                steering_left
-                steering_right
-                steering_back
-                driveshaft_left
-                driveshaft_right
-                driveshaft_back
+                steering_joint_left
+                steering_joint_right
+                steering_joint_back
+                wheel_joint_left
+                wheel_joint_right
+                wheel_joint_back
+                steering_top_test
+                wheel_top_test
             </joint_names>
             <!-- Motor names must be formatted in this manner in order to index actuator jacobian -->
             <motor_names>
                 DRIVE_LEFT_FRONT_LEFT_MOTOR
                 DRIVE_LEFT_FRONT_RIGHT_MOTOR
-                DRIVE_LEFT_BACK_LEFT_MOTOR
-                DRIVE_LEFT_BACK_RIGHT_MOTOR
                 DRIVE_RIGHT_FRONT_LEFT_MOTOR
                 DRIVE_RIGHT_FRONT_RIGHT_MOTOR
+                DRIVE_LEFT_BACK_LEFT_MOTOR
+                DRIVE_LEFT_BACK_RIGHT_MOTOR
                 DRIVE_RIGHT_BACK_LEFT_MOTOR
                 DRIVE_RIGHT_BACK_RIGHT_MOTOR
             </motor_names>
 
             <encoder_names>
-                STEERING_FRONT_LEFT_ENCODER
-                STEERING_FRONT_RIGHT_ENCODER
-                STEERING_BACK_LEFT_ENCODER
-                STEERING_BACK_RIGHT_ENCODER
+                STEERING_LEFT_ENCODER
+                STEERING_RIGHT_ENCODER
+                STEERING_BACK_ENCODER
             </encoder_names>
 
             <!-- System Jacobians -->
@@ -77,12 +68,14 @@
             <!-- This matrix describes the relationship between motor velocities and joint velocities -->
             <!-- Width = # Motors, Height = # Joints -->
             <actuator_jacobian>
-            0.5  0.5    0    0    0    0    0    0
-              0    0  0.5  0.5    0    0    0    0 
-              0    0    0    0  0.5  0.5    0    0
-              0    0    0    0    0    0  0.5  0.5
-            0.5  0.5    0    0    0    0    0    0
-              0    0  0.5  0.5    0    0    0    0
+                0.144     0.144       0           0           0           0           0           0
+                0         0           0.144       0.144       0           0           0           0
+                0         0           0           0           0.144       0.144       0           0
+                0.361     -0.361      0           0           0           0           0           0
+                0         0           0.361     -0.361        0           0           0           0
+                0         0           0           0           0.361     -0.361        0           0
+                0         0           0           0           0           0           0           0
+                0         0           0           0           0           0           0           0
             </actuator_jacobian>
 
             <!-- This matrix describes the relationship between the encoders and the joints -->
@@ -90,72 +83,15 @@
             joints is defined in the actuator_jacobian -->
             <!-- Width = # Encoders, Height = # Joints -->
             <sensor_jacobian>
-            1 0 0 0
-            0 1 0 0
-            0 0 1 0
-            0 0 0 1
-            0 0 0 0
-            0 0 0 0
+            1 0 0
+            0 1 0
+            0 0 1
+            0 0 0
+            0 0 0
+            0 0 0
+            0 0 0
+            0 0 0
             </sensor_jacobian>
         </plugin>
-    </gazebo>
-
-        <!-- Gazebo Plugins -->
-    <gazebo>
-        <!-- Motor Models -->
-        <!-- 0.05 Steering -->
-        <!-- <xacro:joint_pid_macro
-            joint_name="steering_left"
-            link_name="mod_left"
-            gear_ratio="2.0"
-            position_gain="0.05"
-            vel_gain="0.04"
-            accel_gain="0.0">
-        </xacro:joint_pid_macro> -->
-
-        <!-- <xacro:joint_pid_macro
-            joint_name="steering_right"
-            link_name="mod_right"
-            gear_ratio="2.0"
-            position_gain="0.05"
-            vel_gain="0.04"
-            accel_gain="0.0">
-        </xacro:joint_pid_macro>
-
-        <xacro:joint_pid_macro
-            joint_name="steering_back"
-            link_name="mod_back"
-            gear_ratio="2.0"
-            position_gain="0.05"
-            vel_gain="0.04"
-            accel_gain="0.0">
-        </xacro:joint_pid_macro>
-
-        <xacro:joint_pid_macro
-            joint_name="driveshaft_left"
-            link_name="wheel_left"
-            gear_ratio="5.0"
-            position_gain="0.0"
-            vel_gain="0.04"
-            accel_gain="0.0">
-        </xacro:joint_pid_macro>
-
-        <xacro:joint_pid_macro
-            joint_name="driveshaft_right"
-            link_name="wheel_right"
-            gear_ratio="5.0"
-            position_gain="0.0"
-            vel_gain="0.04"
-            accel_gain="0.0">
-        </xacro:joint_pid_macro>
-
-        <xacro:joint_pid_macro
-            joint_name="driveshaft_back"
-            link_name="wheel_back"
-            gear_ratio="5.0"
-            position_gain="0.0"
-            vel_gain="0.04"
-            accel_gain="0.0">
-        </xacro:joint_pid_macro>   -->
     </gazebo>
 </robot>

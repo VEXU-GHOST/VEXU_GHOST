@@ -1,0 +1,5 @@
+std_msgs/Header header
+
+ghost_msgs/Trajectory x_trajectory
+ghost_msgs/Trajectory y_trajectory
+ghost_msgs/Trajectory theta_trajectory

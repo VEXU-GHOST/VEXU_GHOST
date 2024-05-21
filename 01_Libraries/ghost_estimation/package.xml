@@ -17,6 +17,7 @@
   <build_depend>visualization_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>tf2_msgs</build_depend>
+  <build_depend>ghost_util</build_depend>
 
   <build_export_depend>ament_cmake</build_export_depend>
   <build_export_depend>ament_cmake_python</build_export_depend>

@@ -22,7 +22,8 @@ JetsonSerialBase::JetsonSerialBase(std::string write_msg_start_seq,
 		read_msg_start_seq,
 		read_msg_max_len,
 		use_checksum),
-	verbose_{verbose}{
+	verbose_{verbose},
+	bytes_received_{0}{
 }
 
 JetsonSerialBase::~JetsonSerialBase(){
@@ -119,7 +120,15 @@ bool JetsonSerialBase::trySerialInit(std::string port_name){
 	}
 }
 
-bool JetsonSerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parsed_msg_len){
+void JetsonSerialBase::printReadBufferDebugInfo(){
+	std::cout << "Read Buffer Size: " << read_buffer_.size() << std::endl;
+	for(const auto& byte : read_buffer_){
+		std::cout << "x" << std::setw(2) << std::setfill('0') << std::hex << (int) byte;
+	}
+	std::cout << std::dec << std::endl;
+}
+
+bool JetsonSerialBase::readMsgFromSerial(std::vector<unsigned char> &msg_buffer, int & parsed_msg_len){
 	if(port_open_){
 		// Block waiting for read or timeout (1s)
 		int ret = poll(&pollfd_read_, 1, 1000);
@@ -132,14 +141,22 @@ bool JetsonSerialBase::readMsgFromSerial(unsigned char msg_buffer[], int & parse
 			// Read available bytes, up to size of raw_serial_buffer (two msgs - one byte)
 			int bytes_to_read = std::min(getNumBytesAvailable(), (int)read_buffer_.size());
 			int num_bytes_read = read(serial_read_fd_, read_buffer_.data(), bytes_to_read);
+			bytes_received_ += num_bytes_read;
 			read_lock.unlock();
 
 			// Extract any msgs from serial stream and return if msg is found
 			if(num_bytes_read > 0){
 				if(verbose_){
 					std::cout << "Read " << num_bytes_read << " bytes" << std::endl;
+					printReadBufferDebugInfo();
 				}
-				return msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer, parsed_msg_len);
+
+				checkReadMsgBufferLength(msg_buffer); // Throws if msg_buffer is misconfigured
+				bool msg_found = msg_parser_->parseByteStream(read_buffer_.data(), num_bytes_read, msg_buffer.data(), parsed_msg_len);
+				if(!msg_found && (bytes_received_ > startup_junk_byte_count_)){
+					std::cout << "WARNING: Received " << num_bytes_read << " bytes but found no compatible message. Are both devices using the same robot config?" << std::endl;
+				}
+				return msg_found;
 			}
 			else if(num_bytes_read == -1){
 				perror("Error");

@@ -1,0 +1,5 @@
+string timer_name
+---
+bool valid
+bool expired
+uint64 elapsed_ns

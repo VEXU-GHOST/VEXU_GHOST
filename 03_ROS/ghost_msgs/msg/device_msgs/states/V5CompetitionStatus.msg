@@ -1,0 +1,5 @@
+ghost_msgs/V5DeviceHeader device_header
+
+bool is_autonomous
+bool is_connected
+bool is_disabled

@@ -20,6 +20,7 @@
 // ========================================================================
 
 #include "ghost_estimation/particle_filter/particle_filter.hpp"
+#include "ghost_util/angle_util.hpp"
 
 using Eigen::Vector2f;
 using Eigen::Vector2i;
@@ -174,7 +175,6 @@ void ParticleFilter::Update(const vector<float>& ranges,
 	// Get predicted point cloud
 	Particle &particle = *p_ptr;
 	vector<Vector2f> predicted_cloud; // map frame
-
 	GetPredictedPointCloud(particle.loc,
 	                       particle.angle,
 	                       ranges.size(),
@@ -187,7 +187,6 @@ void ParticleFilter::Update(const vector<float>& ranges,
 	// resize the ranges
 	vector<float> trimmed_ranges(predicted_cloud.size());
 	particle.weight = 0;
-
 	// Calculate the particle weight
 	for(std::size_t i = 0; i < predicted_cloud.size(); i++){
 		int laser_index = i * config_params_.resize_factor;
@@ -218,7 +217,6 @@ void ParticleFilter::Resample() {
 		new_particles[i] = particles_[new_particle_index];
 		new_particles[i].weight = 1 / ((double) particles_.size());
 	}
-
 	// After resampling:
 	particles_ = new_particles;
 }
@@ -233,6 +231,7 @@ void ParticleFilter::LowVarianceResample() {
 		new_particles[i] = particles_[new_particle_index];
 		new_particles[i].weight = 1 / ((double) particles_.size()); // rng_.UniformRandom(); good for testing
 	}
+
 	weight_sum_ = 1.0;
 
 	// After resampling:
@@ -252,7 +251,7 @@ void ParticleFilter::ObserveLaser(const vector<float>& ranges,
 	// Call the Update and Resample steps as necessary.
 	double delta_translation = (last_update_loc_ - prev_odom_loc_).norm();
 	double delta_angle = math_util::AngleDiff(last_update_angle_, prev_odom_angle_);
-	if((delta_translation > config_params_.min_update_dist) || (std::abs(delta_angle) > config_params_.min_update_angle) ){
+	if(((delta_translation > config_params_.min_update_dist) || (std::abs(delta_angle) > config_params_.min_update_angle)) && (std::abs(angular_velocity_curr_) < config_params_.max_update_angular_velocity)){
 		static int i = 0;
 		double start_time = GetMonotonicTime();
 		max_weight_log_ = -1e10; // Should be smaller than any
@@ -272,7 +271,7 @@ void ParticleFilter::ObserveLaser(const vector<float>& ranges,
 		}
 		double particle_update_diff = 1000 * (GetMonotonicTime() - particle_update_start);
 		p_update_diff_avg /= particles_.size();
-		// std::cout << "Particle Update (ms): " << particle_update_diff << " Avg (us): " << p_update_diff_avg << std::endl;
+		std::cout << "Particle Update (ms): " << particle_update_diff << " Avg (us): " << p_update_diff_avg << std::endl;
 
 		// Normalize log-likelihood weights by max log weight and transform back to linear scale
 		// Sum all linear weights and generate bins
@@ -403,25 +402,57 @@ void ParticleFilter::SortMap(){
 }
 
 void ParticleFilter::GetLocation(Eigen::Vector2f* loc_ptr,
-                                 float* angle_ptr) const {
+                                 float* angle_ptr,
+                                 std::array<double, 36>* cov_ptr) const {
 	Vector2f& loc = *loc_ptr;
 	float& angle = *angle_ptr;
+	std::array<double, 36>& cov = *cov_ptr;
+
 	// Compute the best estimate of the robot's location based on the current set
 	// of particles.
-
 	Eigen::Vector2f angle_point = Eigen::Vector2f(0, 0);
 	for(Particle particle : particles_){
 		loc += particle.loc * particle.weight;
 		angle_point += Eigen::Vector2f(cos(particle.angle), sin(particle.angle)) * particle.weight;
 	}
 
+	// Get Average
 	loc /= weight_sum_;
 	angle_point /= weight_sum_;
 	angle = atan2(angle_point[1], angle_point[0]);
+
+	Eigen::Vector3d sum_diff = Eigen::Vector3d(0.0, 0.0, 0.0);
+	Eigen::Vector3d cov_vector = Eigen::Vector3d(0.0, 0.0, 0.0);
+	for(Particle particle : particles_){
+		double weight = particle.weight;
+		double sum_diff_x = particle.weight * math_util::Pow(particle.loc(0) - loc(0), 2);
+		double sum_diff_y = particle.weight * math_util::Pow(particle.loc(1) - loc(1), 2);
+		double sum_diff_tht = particle.weight * math_util::Pow(ghost_util::SmallestAngleDistRad(particle.angle, angle), 2);
+
+		Eigen::Vector3d sum_data(sum_diff_x, sum_diff_y, sum_diff_tht);
+		sum_diff += sum_data;
+	}
+
+	cov_vector = sum_diff / particles_.size();
+	cov = {cov_vector(0), 0.0, 0.0, 0.0, 0.0, 0.0,
+		   0.0, cov_vector(1), 0.0, 0.0, 0.0, 0.0,
+		   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		   0.0, 0.0, 0.0, 0.0, 0.0, cov_vector(2)};
 }
 
+/**
+ * @brief Given location and angle of the robot, return the position of the sensor?
+ *
+ * @param loc
+ * @param angle
+ * @return Eigen::Vector2f
+ */
 Eigen::Vector2f ParticleFilter::BaseLinkToSensorFrame(const Eigen::Vector2f &loc, const float &angle){
-	return loc + Vector2f(config_params_.laser_offset * cos(angle), config_params_.laser_offset * sin(angle));
+	auto sensor_location_relative = Eigen::Vector2f(config_params_.laser_offset_x, config_params_.laser_offset_y);
+	auto rot = Eigen::Rotation2D<float>(angle).toRotationMatrix();
+	return loc + rot * sensor_location_relative;
 }
 
 }  // namespace particle_filter
