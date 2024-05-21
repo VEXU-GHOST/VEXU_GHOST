@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ~/VEXU_GHOST
+cd $VEXU_HOME
 if [[ $(pros --version) ]] 2> /dev/null; then
     echo
     echo -------------------------------------------------------
