@@ -189,16 +189,16 @@ int main(int argc, char *argv[]){
 	double init_vel_x = 0.0;
 	double init_vel_y = 0.0;
 	double init_vel_theta = 0.0;
-	double des_vel_x = 0.5;
+	double des_vel_x = 0.75;
 	double des_vel_y = 0.0;
 	double des_vel_theta = 6.5;
-	double init_m1_steering_angle = -3.14159 / 4.0;
+	double init_m1_steering_angle = 0.0; // -3.14159 / 4.0;
 	double init_m1_steering_vel = 0.0;
-	double init_m2_steering_angle = 3.14159 / 4.0;
+	double init_m2_steering_angle = 0.0; // 3.14159 / 4.0;
 	double init_m2_steering_vel = 0.0;
-	double init_m3_steering_angle = -3.14159 / 4.0;
+	double init_m3_steering_angle = 0.0; // -3.14159 / 4.0;
 	double init_m3_steering_vel = 0.0;
-	double init_m4_steering_angle = 3.14159 / 4.0;
+	double init_m4_steering_angle = 0.0; // 3.14159 / 4.0;
 	double init_m4_steering_vel = 0.0;
 
 	std::vector<Eigen::Vector2d> module_positions{
@@ -577,7 +577,7 @@ int main(int argc, char *argv[]){
 		{"verbose", false},
 		{"ipopt.print_level", 0},
 		{"iteration_callback", iteration_callback},
-		{"ipopt.max_iter", 100}
+		{"ipopt.max_iter", 750}
 	};
 	auto solver = nlpsol("example_trajectory_optimization", "ipopt", nlp_config, solver_config);
 
@@ -874,12 +874,10 @@ int main(int argc, char *argv[]){
 	plt::subplot(2, 1, 2);
 	plt::plot(time_vector, state_solution_map["m2_lateral_force"]);
 
-	plt::pause(0.01);
-
-	while(!EXIT_GLOBAL){
-		std::this_thread::sleep_for(5ms);
-	}
-	plt::close();
+	plt::show();
+	// while(!EXIT_GLOBAL){
+	// 	std::this_thread::sleep_for(50ms);
+	// }
 
 	rclcpp::shutdown();
 
