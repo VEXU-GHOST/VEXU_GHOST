@@ -17,8 +17,8 @@ jobs:
       VEXU_HOME: ${{github.workspace}}
 
     steps:
-      - name: Remove Conflicting Packages
-        run: sudo apt-get remove libunwind-14 libunwind-14-dev
+      - name: Prune System Packages
+        run: sudo apt-get remove libunwind-14 libunwind-14-dev *dotnet* *aspnet*
 
       - name: Update System Packages
         run: |
