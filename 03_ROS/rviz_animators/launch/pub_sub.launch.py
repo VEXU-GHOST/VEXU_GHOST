@@ -17,14 +17,14 @@ def generate_launch_description():
     yaml_path = os.path.join(rviz_animators_directory, "config", "test.yaml")
 
     publisher_node = launch_ros.actions.Node(
-        name = "publisher_node",
         package = 'rviz_animators',
         # This name is specified in the CmakeLists.txt file of this package 
         executable = 'publisher',
+        output='screen',
+        parameters=[yaml_path]
     )
 
     subscriber_node = launch_ros.actions.Node(
-        name='subscriber_node',
         package= 'rviz_animators',
         # This name is specified in the CmakeLists.txt file of this package 
         executable='main',

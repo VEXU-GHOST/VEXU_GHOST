@@ -1,5 +1,18 @@
-animation_subscriber:
+# animation_subscriber:
+#   ros__parameters:
+#     mode: playback
+#     bool_test: true
+
+marker_publisher:
   ros__parameters:
-    # mode: playback
-    mode_playback: false
-    mode_visualization: false
+<<<<<<< HEAD
+     mode: playback
+
+# parameter:
+#   mode: playback
+=======
+    mode: playback
+
+# parameter:
+#   mode: playback
+>>>>>>> 31c97f91329df1e15cf447daf160c8c4a164f002
