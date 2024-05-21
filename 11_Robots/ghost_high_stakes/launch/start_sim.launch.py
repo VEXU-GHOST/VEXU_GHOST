@@ -50,7 +50,7 @@ def launch_setup(context, *args, **kwargs):
     #     }.items()
     # )
 
-    # return [gazebo_ros, robot_state_publisher, joy_launch_description]
+    return [gazebo_ros, robot_state_publisher]
 
 
 def generate_launch_description():

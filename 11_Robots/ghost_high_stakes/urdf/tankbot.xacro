@@ -8,15 +8,19 @@
     <xacro:property name="com_radius" value="0.02"/>
     <xacro:property name="d2r" value="${3.14159/180}"/>
 
-    
-
-   
      <material name="white">
         <color rgba="1 1 1 1"/>
      </material>
    
-   
      <link name="base_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="5"/>
+        <inertia
+          ixx="0.105847" ixy="0.0" ixz="0.0"
+          iyy="0.105847" iyz="0.0"
+          izz="0.090726"/>
+      </inertial>
       <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
          <geometry>
@@ -25,8 +29,6 @@
          <material name="white"/>
        </visual>
      </link>
-   
-
 
      <link name="back_bar">
         <visual>
