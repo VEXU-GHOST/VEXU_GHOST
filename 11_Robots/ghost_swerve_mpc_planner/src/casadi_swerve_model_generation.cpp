@@ -5,8 +5,8 @@
 
 #include <ghost_util/unit_conversion_utils.hpp>
 
-#include <ghost_msgs/msg/labeled_double.hpp>
-#include <ghost_msgs/msg/labeled_double_map.hpp>
+#include <ghost_msgs/msg/labeled_vector.hpp>
+#include <ghost_msgs/msg/labeled_vector_map.hpp>
 
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 
@@ -153,13 +153,15 @@ public:
 
 int main(int argc, char *argv[]){
 	signal(SIGINT, siginthandler);
+
+	bool plot = true;
 	////////////////////////////////////
 	/////// Instantiate ROS Node ///////
 	////////////////////////////////////
 	rclcpp::init(argc, argv);
 
 	auto node_ptr = std::make_shared<rclcpp::Node>("swerve_mpc_node");
-	auto mpc_trajectory_publisher = node_ptr->create_publisher<ghost_msgs::msg::LabeledDoubleMap>("/swerve_mpc_trajectory", 10);
+	auto mpc_trajectory_publisher = node_ptr->create_publisher<ghost_msgs::msg::LabeledVectorMap>("/swerve_mpc_trajectory", 10);
 
 	std::thread node_thread([&](){
 	                        rclcpp::spin(node_ptr);
@@ -635,9 +637,11 @@ int main(int argc, char *argv[]){
 		                init_m4_steering_vel
 	}; // , 3.14159 / 4.0, 0.0};
 
-	std::cout << "starting thread" << std::endl;
-	plt::figure();
-	plt::Plot cost_plot("Cost");
+
+	if(plot){
+		plt::figure();
+		plt::plot(std::vector<double>{}, std::vector<double>{});
+	}
 	std::vector<IterationCallback::IPOPTOutput> solver_iteration_data;
 	std::vector<double> iteration_vector{};
 	std::vector<double> cost_vector{};
@@ -659,24 +663,35 @@ int main(int argc, char *argv[]){
 			data_buffer->pop_back();
 
 			// Matplotlib
-			plt::clf();
 			solver_iteration_data.push_back(data);
 			iteration_vector.push_back(data.iteration);
 			cost_vector.push_back(data.f);
 
-			plt::plot(iteration_vector, cost_vector);
+			if(plot){
+				plt::clf();
+				plt::plot(iteration_vector, cost_vector);
+			}
 
 			// Publish to RVIZ
-			ghost_msgs::msg::LabeledDoubleMap msg{};
-			// ghost_ros_interfaces::toROSMsg(, msg);
-			// mpc_trajectory_publisher->publish(msg);
+			ghost_msgs::msg::LabeledVectorMap msg{};
+			ghost_ros_interfaces::msg_helpers::toROSMsg(generate_trajectory_map(data.x), msg);
+			mpc_trajectory_publisher->publish(msg);
 		}
 		lock.unlock();
 
-		plt::pause(0.01);
+		if(plot){
+			plt::pause(0.01);
+		}
+		else{
+			std::this_thread::sleep_for(10ms);
+		}
 	}
 
+
 	auto raw_solution_vector = std::vector<double>(res.at("x"));
+	ghost_msgs::msg::LabeledVectorMap msg{};
+	ghost_ros_interfaces::msg_helpers::toROSMsg(generate_trajectory_map(raw_solution_vector), msg);
+	mpc_trajectory_publisher->publish(msg);
 
 	/////////////////////////////
 	///// Evaluate Solution /////
@@ -688,6 +703,10 @@ int main(int argc, char *argv[]){
 
 	// Unpack solution into individual time series
 	std::unordered_map<std::string, std::vector<double> > state_solution_map = generate_trajectory_map(raw_solution_vector);
+
+	if(!plot){
+		return 0;
+	}
 
 	//////////////////////////////
 	///// Animate Trajectory /////
