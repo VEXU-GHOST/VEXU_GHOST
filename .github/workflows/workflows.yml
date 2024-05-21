@@ -41,6 +41,8 @@ jobs:
           source /opt/ros/humble/setup.sh
           env > ~/temp_env_2
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+          env
+          $GITHUB_ENV
       
       - name: Update Dependencies
         run: ./scripts/update_dependencies.sh
@@ -51,6 +53,8 @@ jobs:
           ./scripts/setup_submodules.sh
           env > ~/temp_env_2
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+          env
+          $GITHUB_ENV
 
       - name: Build
         run: |
@@ -59,6 +63,8 @@ jobs:
           source $VEXU_HOME/install/setup.bash
           env > ~/temp_env_2
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+          env
+          $GITHUB_ENV
 
       - name: Test
         run: |
@@ -66,3 +72,5 @@ jobs:
           ./scripts/test_full.sh
           env > ~/temp_env_2
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+          env
+          $GITHUB_ENV
