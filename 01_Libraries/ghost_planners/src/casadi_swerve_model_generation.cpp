@@ -8,14 +8,23 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include <rclcpp/rclcpp.hpp>
 
+#include <signal.h>
 #include "matplotlibcpp.h"
 
-using namespace std::chrono_literals;
+#include <atomic>
 
+using namespace std::chrono_literals;
 namespace plt = matplotlibcpp;
 using namespace casadi;
 
+std::atomic_bool EXIT_GLOBAL = false;
+
+void siginthandler(int param){
+	std::cout << "Ctr-C Received, Aborting..." << std::endl;
+	EXIT_GLOBAL = true;
+}
 class IterationCallback : public casadi::Callback {
 public:
 	struct IPOPTOutput {
@@ -27,8 +36,10 @@ public:
 			f = rhs.f;
 			lam_x = rhs.lam_x;
 			lam_g = rhs.lam_g;
+			iteration = rhs.iteration;
 		}
 
+		int iteration;
 		std::vector<double> x;
 		std::vector<double> g;
 		double f = 0.0;
@@ -91,32 +102,40 @@ public:
 	int eval_buffer(const double **arg, const std::vector<casadi_int>& sizes_arg,
 	                double **res, const std::vector<casadi_int>& sizes_res) const override {
 		auto output_map = nlpsol_out();
-		IPOPTOutput iteration{};
+		IPOPTOutput data{};
 
-		iteration.x.resize(nx_);
-		iteration.g.resize(ng_);
-		iteration.lam_x.resize(nx_);
-		iteration.lam_g.resize(ng_);
+		data.x.resize(nx_);
+		data.g.resize(ng_);
+		data.lam_x.resize(nx_);
+		data.lam_g.resize(ng_);
 
 		for(int i = 0; i < sizes_arg[0]; i++){
-			iteration.x[i] = arg[0][i];
+			data.x[i] = arg[0][i];
 		}
-		iteration.f = arg[1][0];
+		data.f = arg[1][0];
 
 		for(int i = 0; i < sizes_arg[2]; i++){
-			iteration.g[i] = arg[2][i];
+			data.g[i] = arg[2][i];
 		}
 
 		for(int i = 0; i < sizes_arg[3]; i++){
-			iteration.lam_x[i] = arg[3][i];
+			data.lam_x[i] = arg[3][i];
 		}
 
 		for(int i = 0; i < sizes_arg[4]; i++){
-			iteration.lam_g[i] = arg[4][i];
+			data.lam_g[i] = arg[4][i];
 		}
 
+		data.iteration = iteration_count_;
+
 		std::unique_lock<std::mutex> lock(*data_mutex_);
-		data_buffer_->push_front(iteration);
+		data_buffer_->push_front(data);
+		iteration_count_++;
+
+		if(EXIT_GLOBAL){
+			*(res[0]) = 1.0;
+			EXIT_GLOBAL = false;
+		}
 		return {0};
 	};
 
@@ -124,9 +143,22 @@ public:
 	int ng_;
 	std::shared_ptr<std::deque<IPOPTOutput> > data_buffer_;
 	std::shared_ptr<std::mutex> data_mutex_;
+	mutable int iteration_count_ = 1;
 };
 
 int main(int argc, char *argv[]){
+	signal(SIGINT, siginthandler);
+	////////////////////////////////////
+	/////// Instantiate ROS Node ///////
+	////////////////////////////////////
+	rclcpp::init(argc, argv);
+
+	auto node_ptr = std::make_shared<rclcpp::Node>("swerve_mpc_node");
+
+	std::thread node_thread([&](){
+	                        rclcpp::spin(node_ptr);
+		});
+
 	////////////////////////////////////
 	///// User Input Configuration /////
 	////////////////////////////////////
@@ -543,9 +575,9 @@ int main(int argc, char *argv[]){
 		{"p", param_vector}};
 	Dict solver_config{
 		{"verbose", false},
-		{"ipopt.print_level", 5},
+		{"ipopt.print_level", 0},
 		{"iteration_callback", iteration_callback},
-		{"ipopt.max_iter", 1000}
+		{"ipopt.max_iter", 100}
 	};
 	auto solver = nlpsol("example_trajectory_optimization", "ipopt", nlp_config, solver_config);
 
@@ -583,8 +615,7 @@ int main(int argc, char *argv[]){
 
 	std::cout << "starting thread" << std::endl;
 	plt::figure();
-	plt::plot(std::vector<double>{1, 2, 3}, std::vector<double>{3, 2, 3});
-	int iteration = 1;
+	plt::Plot cost_plot("Cost");
 	std::vector<double> iteration_vector{};
 	std::vector<double> cost_vector{};
 	std::atomic<bool> solving(true);
@@ -594,6 +625,8 @@ int main(int argc, char *argv[]){
 	                          res = solver(solver_args);
 	                          solving = false;
 		});
+	plt::ion();
+	// plt::show();
 
 	while(solving){
 		std::unique_lock<std::mutex> lock(*data_mutex);
@@ -602,16 +635,13 @@ int main(int argc, char *argv[]){
 			data_buffer->pop_back();
 			plt::clf();
 
-			// plt::xlim(0, 1000);
-			// plt::ylim(0, 1000);
-
-			iteration_vector.push_back(iteration++);
+			iteration_vector.push_back(data.iteration);
 			cost_vector.push_back(data.f);
 			plt::plot(iteration_vector, cost_vector);
-			iteration++;
 		}
 		lock.unlock();
-		plt::pause(0.005);
+
+		plt::pause(0.01);
 	}
 
 	auto raw_solution_vector = std::vector<double>(res.at("x"));
@@ -780,6 +810,11 @@ int main(int argc, char *argv[]){
 		plot_wheel_module(Eigen::Vector2d(M3_X, M3_Y),"m3_");
 		plot_wheel_module(Eigen::Vector2d(M4_X, M4_Y),"m4_");
 		plt::pause(DT);
+
+		if(EXIT_GLOBAL){
+			EXIT_GLOBAL = false;
+			break;
+		}
 	}
 
 	plt::figure();
@@ -839,7 +874,14 @@ int main(int argc, char *argv[]){
 	plt::subplot(2, 1, 2);
 	plt::plot(time_vector, state_solution_map["m2_lateral_force"]);
 
-	plt::show();
+	plt::pause(0.01);
+
+	while(!EXIT_GLOBAL){
+		std::this_thread::sleep_for(5ms);
+	}
+	plt::close();
+
+	rclcpp::shutdown();
 
 	return 0;
 }
