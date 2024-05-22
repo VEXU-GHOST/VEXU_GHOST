@@ -5,7 +5,7 @@ project(ghost_autonomy)
 #   add_compile_options(-Wall -Wextra -Wpedantic)
 # endif()
 # Add Global CMake Config for Ghost Packages
-set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 find_package(Ghost CONFIG REQUIRED)
 
 # find dependencies
