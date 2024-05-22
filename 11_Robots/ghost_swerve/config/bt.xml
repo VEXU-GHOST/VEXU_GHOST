@@ -4,7 +4,7 @@
   <BehaviorTree ID="far_triball">
     <Sequence>
       <Logging message="started"/>
-      <!-- <MoveToPose posX="1.5"
+      <!-- <MoveToPoseCubic posX="1.5"
                   posY="-2.5"
                   theta="0"
                   velX="0.00"
@@ -14,7 +14,7 @@
                   angle_threshold="2.0"
                   timeout="1000"
                   speed="0.5"/> -->
-      <MoveToPose posX="2.0"
+      <MoveToPoseCubic posX="2.0"
                   posY="-2.0"
                   theta="135"
                   velX="0.00"
@@ -26,7 +26,7 @@
                   speed="0.5"/>
       <ReactiveFallback>
         <IntakeCmd in="true"/>
-        <MoveToPose posX="2.6"
+        <MoveToPoseCubic posX="2.6"
                     posY="-2.6"
                     theta="135"
                     velX="0.0"
@@ -37,7 +37,7 @@
                     timeout="-3000"
                     speed="0.5"/>
       </ReactiveFallback>
-      <MoveToPose posX="2.0"
+      <MoveToPoseCubic posX="2.0"
                   posY="-2.0"
                   theta="135"
                   velX="0.00"
@@ -56,7 +56,7 @@
   </BehaviorTree>
   <BehaviorTree ID="score">
     <Sequence>
-      <MoveToPose posX="2.0"
+      <MoveToPoseCubic posX="2.0"
                   posY="-2.0"
                   theta="-45"
                   velX="0.0"
@@ -66,7 +66,7 @@
                   angle_threshold="5.0"
                   timeout="-5000"
                   speed="0.3"/>
-      <MoveToPose posX="1.0"
+      <MoveToPoseCubic posX="1.0"
                   posY="-1.0"
                   theta="-45"
                   velX="0.0"
@@ -76,7 +76,7 @@
                   angle_threshold="5.0"
                   timeout="-5000"
                   speed="0.3"/>
-      <MoveToPose posX="1.0"
+      <MoveToPoseCubic posX="1.0"
                   posY="-0.5"
                   theta="-180"
                   velX="0.0"
@@ -88,7 +88,7 @@
                   speed="0.3"/>
       <ReactiveFallback>
         <IntakeCmd in="false"/>
-        <MoveToPose posX="2.0"
+        <MoveToPoseCubic posX="2.0"
                     posY="-0.5"
                     theta="-180"
                     velX="0.0"
@@ -99,7 +99,7 @@
                     timeout="-2000"
                     speed="0.5"/>
       </ReactiveFallback>
-      <MoveToPose posX="1.0"
+      <MoveToPoseCubic posX="1.0"
                   posY="-0.5"
                   theta="-180"
                   velX="0.0"
@@ -113,7 +113,7 @@
   </BehaviorTree>
   <BehaviorTree ID="score1">
     <Sequence>
-      <MoveToPose posX="2.0"
+      <MoveToPoseCubic posX="2.0"
                   posY="-2.0"
                   theta="-90"
                   velX="0.0"
@@ -123,7 +123,7 @@
                   angle_threshold="5.0"
                   timeout="1000"
                   speed="0.5"/>
-      <MoveToPose posX="2.4"
+      <MoveToPoseCubic posX="2.4"
                   posY="-1.6"
                   theta="-90"
                   velX="0.0"
@@ -133,7 +133,7 @@
                   angle_threshold="5.0"
                   timeout="1000"
                   speed="0.1"/>
-      <!-- <MoveToPose posX="2.2"
+      <!-- <MoveToPoseCubic posX="2.2"
                   posY="-1.8"
                   theta="-90"
                   velX="0.0"
@@ -143,7 +143,7 @@
                   angle_threshold="5.0"
                   timeout="2000"
                   speed="0.1"/> -->
-      <!-- <MoveToPose posX="2.5"
+      <!-- <MoveToPoseCubic posX="2.5"
                   posY="-1.8"
                   theta="-90"
                   velX="0.0"
@@ -155,7 +155,7 @@
                   speed="0.1"/> -->
       <ReactiveFallback>
         <IntakeCmd in="false"/>
-        <MoveToPose posX="2.4"
+        <MoveToPoseCubic posX="2.4"
                     posY="-1.0"
                     theta="-90"
                     velX="0.0"
@@ -166,7 +166,7 @@
                     timeout="-1000"
                     speed="0.3"/>
       </ReactiveFallback>
-      <MoveToPose posX="2.4"
+      <MoveToPoseCubic posX="2.4"
                   posY="-1.6"
                   theta="-90"
                   velX="0.0"
@@ -186,7 +186,7 @@
         <Delay delay_msec="5000">
           <AlwaysSuccess/>
         </Delay>
-        <!-- <MoveToPose posX="-2.6"
+        <!-- <MoveToPoseCubic posX="-2.6"
                     posY="-2.6"
                     theta="45"
                     velX="0.0"
@@ -197,7 +197,7 @@
                     timeout="-3000"
                     speed="0.5"/> -->
       </ReactiveFallback>
-      <MoveToPose posX="1.5"
+      <MoveToPoseCubic posX="1.5"
                   posY="-2.5"
                   theta="0"
                   velX="0.00"
@@ -207,7 +207,7 @@
                   angle_threshold="5.0"
                   timeout="-5000"
                   speed="0.3"/>
-      <!-- <MoveToPose posX="2.0"
+      <!-- <MoveToPoseCubic posX="2.0"
                   posY="-2.0"
                   theta="135"
                   velX="0.00"
@@ -232,7 +232,7 @@
     <Sequence>
       <SubTree ID="close_triball"
                _autoremap="false"/>
-      <MoveToPose posX="2.0"
+      <MoveToPoseCubic posX="2.0"
                   posY="-2.0"
                   theta="135"
                   velX="0.0"
@@ -252,7 +252,7 @@
 
   <BehaviorTree ID="test2">
     <Sequence>
-      <MoveToPose posX="1.27"
+      <MoveToPoseCubic posX="1.27"
                   posY="0.0"
                   theta="0"
                   velX="0.0"
@@ -262,7 +262,7 @@
                   angle_threshold="5.0"
                   timeout="2000"
                   speed="0.7"/>
-      <MoveToPose posX="1.27"
+      <MoveToPoseCubic posX="1.27"
                   posY="0.60"
                   theta="0"
                   velX="0.0"
@@ -272,7 +272,7 @@
                   angle_threshold="5.0"
                   timeout="1000"
                   speed="0.7"/>
-      <MoveToPose posX="0.87"
+      <MoveToPoseCubic posX="0.87"
                   posY="0.90"
                   theta="-45"
                   velX="0.0"
@@ -282,7 +282,7 @@
                   angle_threshold="5.0"
                   timeout="1000"
                   speed="0.3"/>
-      <MoveToPose posX="0.87"
+      <MoveToPoseCubic posX="0.87"
                   posY="1.36"
                   theta="-90"
                   velX="0.0"
@@ -292,7 +292,7 @@
                   angle_threshold="2.0"
                   timeout="200"
                   speed="0.3"/>
-      <MoveToPose posX="0.67"
+      <MoveToPoseCubic posX="0.67"
                   posY="1.36"
                   theta="0"
                   velX="0.0"
@@ -322,7 +322,7 @@
             editable="true">
       <input_port name="message"/>
     </Action>
-    <Action ID="MoveToPose"
+    <Action ID="MoveToPoseCubic"
             editable="true">
       <input_port name="posX">m</input_port>
       <input_port name="posY">m</input_port>

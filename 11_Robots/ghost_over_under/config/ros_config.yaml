@@ -138,6 +138,7 @@ competition_state_machine_node:
     
     behavior_tree:
       cubic_planner_topic: "/motion_planner/cubic_command"
+      trapezoid_planner_topic: "/motion_planner/trapezoid_command"
 
 # If you are using the sweve model and you are tuning the k1-9 parameters,
 # the swerve model plugin has its own duplicate (11_Robots/ghost_over_under/config/ros_config.yaml) of the k1-9 parameters that must

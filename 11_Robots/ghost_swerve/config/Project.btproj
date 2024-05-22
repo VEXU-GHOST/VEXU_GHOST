@@ -10,7 +10,7 @@
         <Action ID="Logging" editable="true">
             <input_port name="message"/>
         </Action>
-        <Action ID="MoveToPose" editable="true">
+        <Action ID="MoveToPoseCubic" editable="true">
             <input_port name="posX">m</input_port>
             <input_port name="posY">m</input_port>
             <input_port name="theta">deg</input_port>

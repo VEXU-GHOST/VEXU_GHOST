@@ -3,7 +3,7 @@
 #include "bt_nodes/checkForRestart.hpp"
 #include "bt_nodes/intakeCmd.hpp"
 #include "bt_nodes/loggingNode.hpp"
-#include "bt_nodes/moveToPose.hpp"
+#include "bt_nodes/moveToPoseCubic.hpp"
 #include "bt_nodes/swipeTail.hpp"
 // #include "bt_nodes/autoDone.hpp"
 #include "bt_nodes/climb.hpp"
@@ -23,10 +23,7 @@ public:
 	SwerveTree(std::string bt_path,
 	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
 	           std::shared_ptr<SwerveModel> swerve_ptr,
-	           std::shared_ptr<rclcpp::Node> node_ptr,
-	           double burnout_absolute_rpm_threshold,
-	           double burnout_stall_duration_ms,
-	           double burnout_cooldown_duration_ms);
+	           std::shared_ptr<rclcpp::Node> node_ptr);
 	void tick_tree();
 
 private:

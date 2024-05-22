@@ -34,28 +34,29 @@ void TrapezoidMotionPlanner::generateMotionPlan(const ghost_msgs::msg::Drivetrai
 	std::vector<double> xposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
 	std::vector<double> ypos0({current_y_, current_y_vel_});
 	std::vector<double> yposf({cmd->pose.pose.position.y, cmd->twist.twist.linear.y});
-	std::vector<double> ang0({current_theta_rad_, current_theta_vel_rad_});
-	std::vector<double> angf({current_theta_rad_ + ghost_util::SmallestAngleDistRad(theta_f, current_theta_rad_), cmd->twist.twist.angular.z});
+	std::vector<double> thetapos0({current_theta_rad_, current_theta_vel_rad_});
+	std::vector<double> thetaposf({current_theta_rad_ + ghost_util::SmallestAngleDistRad(theta_f, current_theta_rad_), cmd->twist.twist.angular.z});
 	double pos_threshold = cmd->pose.pose.position.z;
 	double theta_threshold = cmd->twist.twist.angular.x;
 
 	RCLCPP_INFO(node_ptr_->get_logger(), "current x: %f, current x_vel: %f", xpos0[0], xpos0[1]);
 	RCLCPP_INFO(node_ptr_->get_logger(), "current y: %f, current x_vel: %f", ypos0[0], ypos0[1]);
-	RCLCPP_INFO(node_ptr_->get_logger(), "current theta: %f, current theta_vel: %f", ang0[0], ang0[1]);
+	RCLCPP_INFO(node_ptr_->get_logger(), "current theta: %f, current theta_vel: %f", thetapos0[0], thetapos0[1]);
 	RCLCPP_INFO(node_ptr_->get_logger(), "final x: %f, final x_vel: %f", xposf[0], xposf[1]);
 	RCLCPP_INFO(node_ptr_->get_logger(), "final y: %f, final x_vel: %f", yposf[0], yposf[1]);
-	RCLCPP_INFO(node_ptr_->get_logger(), "final theta: %f, final theta_vel: %f", angf[0], angf[1]);
+	RCLCPP_INFO(node_ptr_->get_logger(), "final theta: %f, final theta_vel: %f", thetaposf[0], thetaposf[1]);
 
 	// find final time
 	double v_max = cmd->speed;
-	double dist = Eigen::Vector2d(xposf[0] - xpos0[0], yposf[0] - ypos0[0]).norm();
-	double t0 = 0;
-	double tf = dist / v_max;
-	int n = tf * 100;
+	auto dist_vector = Eigen::Vector2d(xposf[0] - xpos0[0], yposf[0] - ypos0[0]);
+	double dist = dist_vector.norm();
+	double theta = atan2(dist_vector.y(), dist_vector.x());
+	double v_max_x = cos(theta) * v_max;
+	double v_max_y = sin(theta) * v_max;
 	auto trajectory = std::make_shared<RobotTrajectory>();
-	trajectory->x_trajectory = getTrapezoidTraj(acceleration_, v_max, xpos0, xposf);
-	trajectory->y_trajectory = getTrapezoidTraj(acceleration_, v_max, xpos0, xposf);
-	trajectory->theta_trajectory = getTrapezoidTraj(acceleration_, v_max, xpos0, xposf);
+	trajectory->x_trajectory = getTrapezoidTraj(acceleration_, v_max_x, xpos0, xposf);
+	trajectory->y_trajectory = getTrapezoidTraj(acceleration_, v_max_y, ypos0, yposf);
+	trajectory->theta_trajectory = getTrapezoidTraj(acceleration_, v_max, thetapos0, thetaposf);
 
 	ghost_msgs::msg::RobotTrajectory trajectory_msg;
 

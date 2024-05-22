@@ -129,7 +129,8 @@ install(TARGETS
 set(NODES
   checkForRestart
   loggingNode
-  moveToPose
+  moveToPoseCubic
+  moveToPoseTrapezoid
   swipeTail
   intakeCmd
   climb
