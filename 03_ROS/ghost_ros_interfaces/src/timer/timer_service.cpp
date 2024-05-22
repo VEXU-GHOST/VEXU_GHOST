@@ -8,100 +8,119 @@ using ghost_msgs::srv::StartTimer;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-class TimerService : public rclcpp::Node {
+class TimerService : public rclcpp::Node
+{
 public:
-	TimerService() :
-		rclcpp::Node("timer_service") {
-		declare_parameter<int>("max_timers", 10);
-		max_timers_ = get_parameter("max_timers").as_int();
+  TimerService()
+  : rclcpp::Node("timer_service")
+  {
+    declare_parameter<int>("max_timers", 10);
+    max_timers_ = get_parameter("max_timers").as_int();
 
-		this->start_timer_service_ = this->create_service<StartTimer>("start_timer",
-		                                                              std::bind(&TimerService::StartTimerCallback, this, _1, _2));
-		this->check_timer_service_ = this->create_service<CheckTimer>("check_timer",
-		                                                              std::bind(&TimerService::CheckTimerCallback, this, _1, _2));
-	};
+    this->start_timer_service_ = this->create_service<StartTimer>(
+      "start_timer",
+      std::bind(&TimerService::StartTimerCallback, this, _1, _2));
+    this->check_timer_service_ = this->create_service<CheckTimer>(
+      "check_timer",
+      std::bind(&TimerService::CheckTimerCallback, this, _1, _2));
+  }
 
-	void StartTimerCallback(const std::shared_ptr<StartTimer::Request> req,
-	                        std::shared_ptr<StartTimer::Response>      res);
-	bool ClearExpiredTimers();
-	void CheckTimerCallback(const std::shared_ptr<CheckTimer::Request> req,
-	                        std::shared_ptr<CheckTimer::Response>      res);
+  void StartTimerCallback(
+    const std::shared_ptr<StartTimer::Request> req,
+    std::shared_ptr<StartTimer::Response> res);
+  bool ClearExpiredTimers();
+  void CheckTimerCallback(
+    const std::shared_ptr<CheckTimer::Request> req,
+    std::shared_ptr<CheckTimer::Response> res);
 
 private:
-	rclcpp::Service<StartTimer>::SharedPtr start_timer_service_;
-	rclcpp::Service<CheckTimer>::SharedPtr check_timer_service_;
-	unsigned int max_timers_;
-	std::unordered_map<std::string, std::pair<rclcpp::Time, uint64_t> > timers_;
+  rclcpp::Service<StartTimer>::SharedPtr start_timer_service_;
+  rclcpp::Service<CheckTimer>::SharedPtr check_timer_service_;
+  unsigned int max_timers_;
+  std::unordered_map<std::string, std::pair<rclcpp::Time, uint64_t>> timers_;
 };
 
-void TimerService::StartTimerCallback(const std::shared_ptr<StartTimer::Request> req,
-                                      std::shared_ptr<StartTimer::Response>      res) {
-	ClearExpiredTimers();
+void TimerService::StartTimerCallback(
+  const std::shared_ptr<StartTimer::Request> req,
+  std::shared_ptr<StartTimer::Response> res)
+{
+  ClearExpiredTimers();
 
-	if((timers_.size() >= max_timers_)){
-		res->success = false;
-		RCLCPP_WARN(rclcpp::get_logger("rclcpp"),
-		            std::string("Unable to create timer with name \"" + req->timer_name + "\".\n"
-		                        + "\tReason: Exceeds maximum timer limit.").c_str());
-		return;
-	}
+  if ((timers_.size() >= max_timers_)) {
+    res->success = false;
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      std::string(
+        "Unable to create timer with name \"" + req->timer_name + "\".\n" +
+        "\tReason: Exceeds maximum timer limit.").c_str());
+    return;
+  }
 
-	if(timers_.find(req->timer_name) != timers_.end()){
-		res->success = false;
-		RCLCPP_WARN(rclcpp::get_logger("rclcpp"),
-		            std::string("Unable to create timer with name \"" + req->timer_name + "\".\n"
-		                        + "\tReason: Duplicate timer name.").c_str());
-		return;
-	}
+  if (timers_.find(req->timer_name) != timers_.end()) {
+    res->success = false;
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      std::string(
+        "Unable to create timer with name \"" + req->timer_name + "\".\n" +
+        "\tReason: Duplicate timer name.").c_str());
+    return;
+  }
 
-	timers_[req->timer_name].first = this->get_clock()->now();
-	timers_[req->timer_name].second = req->duration_ns;
+  timers_[req->timer_name].first = this->get_clock()->now();
+  timers_[req->timer_name].second = req->duration_ns;
 
-	res->success = true;
-	RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"),
-	             std::string("Created new timer with name \"" + req->timer_name + "\".").c_str());
+  res->success = true;
+  RCLCPP_DEBUG(
+    rclcpp::get_logger("rclcpp"),
+    std::string("Created new timer with name \"" + req->timer_name + "\".").c_str());
 }
 
-bool TimerService::ClearExpiredTimers() {
-	bool madeSpace = false;
+bool TimerService::ClearExpiredTimers()
+{
+  bool madeSpace = false;
 
-	std::vector<std::string> to_remove{};
+  std::vector<std::string> to_remove{};
 
-	for(auto iter = timers_.begin(); iter != timers_.end(); iter++){
-		rclcpp::Time timer_start = iter->second.first;
-		uint64_t timer_duration_ns = iter->second.second;
+  for (auto iter = timers_.begin(); iter != timers_.end(); iter++) {
+    rclcpp::Time timer_start = iter->second.first;
+    uint64_t timer_duration_ns = iter->second.second;
 
-		if((now() - timer_start).nanoseconds() > timer_duration_ns){
-			madeSpace = true;
-			to_remove.push_back(iter->first);
-		}
-	}
+    if ((now() - timer_start).nanoseconds() > timer_duration_ns) {
+      madeSpace = true;
+      to_remove.push_back(iter->first);
+    }
+  }
 
-	for(auto key : to_remove){
-		RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), std::string("Deleted timer \"" + key + "\".").c_str());
-		timers_.erase(key);
-	}
+  for (auto key : to_remove) {
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("rclcpp"),
+      std::string("Deleted timer \"" + key + "\".").c_str());
+    timers_.erase(key);
+  }
 
-	return madeSpace;
+  return madeSpace;
 }
 
-void TimerService::CheckTimerCallback(const std::shared_ptr<CheckTimer::Request> req,
-                                      std::shared_ptr<CheckTimer::Response>      res) {
-	res->valid = (timers_.find(req->timer_name) != timers_.end());
+void TimerService::CheckTimerCallback(
+  const std::shared_ptr<CheckTimer::Request> req,
+  std::shared_ptr<CheckTimer::Response> res)
+{
+  res->valid = (timers_.find(req->timer_name) != timers_.end());
 
-	if(!res->valid){
-		return;
-	}
+  if (!res->valid) {
+    return;
+  }
 
-	res->elapsed_ns = (this->get_clock()->now() - timers_[req->timer_name].first).nanoseconds();
-	res->expired = (res->elapsed_ns > timers_[req->timer_name].second);
+  res->elapsed_ns = (this->get_clock()->now() - timers_[req->timer_name].first).nanoseconds();
+  res->expired = (res->elapsed_ns > timers_[req->timer_name].second);
 }
 
-int main(int argc, char **argv){
-	rclcpp::init(argc, argv);
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
 
-	std::shared_ptr<TimerService> node = std::make_shared<TimerService>();
+  std::shared_ptr<TimerService> node = std::make_shared<TimerService>();
 
-	rclcpp::spin(node);
-	rclcpp::shutdown();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
 }

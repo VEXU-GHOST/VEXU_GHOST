@@ -31,60 +31,61 @@
 
 #include "ghost_estimation/particle_filter/particle_filter.hpp"
 
-namespace ghost_localization {
+namespace ghost_localization
+{
 
-class EkfPfNode : public rclcpp::Node {
+class EkfPfNode : public rclcpp::Node
+{
 public:
-	EkfPfNode();
+  EkfPfNode();
 
 private:
+  void LoadROSParams();
 
-	void LoadROSParams();
+  // Subscribers
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ekf_odom_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr set_pose_sub_;
 
-	// Subscribers
-	rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ekf_odom_sub_;
-	rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
-	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr set_pose_sub_;
+  // Publishers
+  rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr cloud_viz_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr map_viz_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
+  rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr world_tf_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr robot_pose_pub_;
 
-	// Publishers
-	rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr cloud_viz_pub_;
-	rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr map_viz_pub_;
-	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr debug_viz_pub_;
-	rclcpp::Publisher<tf2_msgs::msg::TFMessage>::SharedPtr world_tf_pub_;
-	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr robot_pose_pub_;
+  // Callback functions
+  void EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
+  void InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
-	// Callback functions
-	void EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
-	void LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg);
-	void InitialPoseCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+  // Visualizations
+  void DrawParticles(geometry_msgs::msg::PoseArray & cloud_msg);
+  void PublishVisualization();
+  void PublishWorldTransform();
+  void DrawPredictedScan(visualization_msgs::msg::MarkerArray & viz_msg);
+  void PublishMapViz();
+  void PublishRobotPose();
 
-	// Visualizations
-	void DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg);
-	void PublishVisualization();
-	void PublishWorldTransform();
-	void DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg);
-	void PublishMapViz();
-	void PublishRobotPose();
+  // Particle Filter
+  particle_filter::ParticleFilter particle_filter_;
+  sensor_msgs::msg::LaserScan::SharedPtr last_laser_msg_;
 
-	// Particle Filter
-	particle_filter::ParticleFilter particle_filter_;
-	sensor_msgs::msg::LaserScan::SharedPtr last_laser_msg_;
+  // EKF
+  nav_msgs::msg::Odometry last_filtered_odom_msg_;
 
-	// EKF
-	nav_msgs::msg::Odometry last_filtered_odom_msg_;
+  // Configuration
+  YAML::Node config_yaml_;
+  particle_filter::ParticleFilterConfig config_params;
+  bool first_map_load_;
+  bool laser_msg_received_;
+  std::string rviz_set_pose_topic_;
+  bool publish_tf_;
 
-	// Configuration
-	YAML::Node config_yaml_;
-	particle_filter::ParticleFilterConfig config_params;
-	bool first_map_load_;
-	bool laser_msg_received_;
-	std::string rviz_set_pose_topic_;
-	bool publish_tf_;
-
-	Eigen::Vector2f odom_loc_;
-	float odom_angle_;
-	geometry_msgs::msg::PoseWithCovarianceStamped robot_pose_;
-	visualization_msgs::msg::MarkerArray viz_msg_;
+  Eigen::Vector2f odom_loc_;
+  float odom_angle_;
+  geometry_msgs::msg::PoseWithCovarianceStamped robot_pose_;
+  visualization_msgs::msg::MarkerArray viz_msg_;
 };
 
 }

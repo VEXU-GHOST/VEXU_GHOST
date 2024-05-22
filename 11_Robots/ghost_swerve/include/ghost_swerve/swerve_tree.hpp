@@ -16,24 +16,27 @@
 // #include "dummy_nodes.h"
 // using namespace DummyNodes;
 
-namespace ghost_swerve {
+namespace ghost_swerve
+{
 
-class SwerveTree {
+class SwerveTree
+{
 public:
-	SwerveTree(std::string bt_path,
-	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
-	           std::shared_ptr<SwerveModel> swerve_ptr,
-	           std::shared_ptr<rclcpp::Node> node_ptr,
-	           double burnout_absolute_rpm_threshold,
-	           double burnout_stall_duration_ms,
-	           double burnout_cooldown_duration_ms);
-	void tick_tree();
+  SwerveTree(
+    std::string bt_path,
+    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
+    std::shared_ptr<SwerveModel> swerve_ptr,
+    std::shared_ptr<rclcpp::Node> node_ptr,
+    double burnout_absolute_rpm_threshold,
+    double burnout_stall_duration_ms,
+    double burnout_cooldown_duration_ms);
+  void tick_tree();
 
 private:
-	std::string bt_path_;
-	BT::Tree tree_;
-	rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr bt_auton_sub_;
-	std::shared_ptr<rclcpp::Node> node_ptr_;
+  std::string bt_path_;
+  BT::Tree tree_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr bt_auton_sub_;
+  std::shared_ptr<rclcpp::Node> node_ptr_;
 };
 
 } // namespace ghost_swerve

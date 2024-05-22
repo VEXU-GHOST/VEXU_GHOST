@@ -5,9 +5,11 @@
 #include <ghost_v5_interfaces/util/device_type_helpers.hpp>
 #include "yaml-cpp/yaml.h"
 
-namespace ghost_v5_interfaces {
+namespace ghost_v5_interfaces
+{
 
-namespace util {
+namespace util
+{
 
 /**
  * @brief Given a YAML node of appropriate format, loads a DeviceConfigMap which represents a given V5 Robot's
@@ -16,7 +18,7 @@ namespace util {
  * YAML files must have the following form.
  *
  * port_configuration:
- * 		use_partner_joystick = false/true
+ *              use_partner_joystick = false/true
  *      devices:
  *          my_motor_name_here:
  *              port: 1
@@ -43,7 +45,9 @@ namespace util {
  * @param verbose
  * @return devices::DeviceConfigMap
  */
-std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool verbose = false);
+std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAML(
+  YAML::Node node,
+  bool verbose = false);
 
 /**
  * @brief Helper function which calls loadRobotConfigFromYAML after opening YAML from filepath.
@@ -52,7 +56,9 @@ std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node nod
  * @param verbose
  * @return std::shared_ptr<devices::DeviceConfigMap>
  */
-std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAMLFile(std::string filepath, bool verbose = false);
+std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAMLFile(
+  std::string filepath,
+  bool verbose = false);
 
 
 /**
@@ -62,7 +68,9 @@ std::shared_ptr<devices::DeviceConfigMap> loadRobotConfigFromYAMLFile(std::strin
  * @param config
  * @param output_filepath
  */
-void generateCodeFromRobotConfig(std::shared_ptr<devices::DeviceConfigMap> config_ptr, std::string output_filepath);
+void generateCodeFromRobotConfig(
+  std::shared_ptr<devices::DeviceConfigMap> config_ptr,
+  std::string output_filepath);
 
 } // namespace util
 

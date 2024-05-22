@@ -3,15 +3,18 @@
 
 using ghost_planners::RobotTrajectory;
 
-class RobotTrajectoryTestFixture : public ::testing::Test {
+class RobotTrajectoryTestFixture : public ::testing::Test
+{
 public:
-	RobotTrajectoryTestFixture(){
-	}
+  RobotTrajectoryTestFixture()
+  {
+  }
 
-	void SetUp() override {
-	}
+  void SetUp() override
+  {
+  }
 };
 
-TEST_F(RobotTrajectoryTestFixture, testConstructors){
-	EXPECT_NO_THROW(auto traj = RobotTrajectory());
+TEST_F(RobotTrajectoryTestFixture, testConstructors) {
+  EXPECT_NO_THROW(auto traj = RobotTrajectory());
 }

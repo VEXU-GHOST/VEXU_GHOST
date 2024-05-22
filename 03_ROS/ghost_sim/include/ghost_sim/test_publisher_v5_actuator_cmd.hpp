@@ -24,22 +24,24 @@
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
-namespace ghost_sim {
+namespace ghost_sim
+{
 
-class testPublisherV5ActuatorCmd : public rclcpp::Node {
+class testPublisherV5ActuatorCmd : public rclcpp::Node
+{
 public:
-	/// Constructor
-	testPublisherV5ActuatorCmd();
+  /// Constructor
+  testPublisherV5ActuatorCmd();
 
-	void publishData();
-	rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr output_pub_;
-	std::array<std::string, 8> motors_{"DRIVE_LEFT_FRONT_LEFT_MOTOR",
-		                               "DRIVE_LEFT_FRONT_RIGHT_MOTOR", "DRIVE_LEFT_BACK_LEFT_MOTOR", "DRIVE_LEFT_BACK_RIGHT_MOTOR",
-		                               "DRIVE_RIGHT_FRONT_LEFT_MOTOR", "DRIVE_RIGHT_FRONT_RIGHT_MOTOR", "DRIVE_RIGHT_BACK_LEFT_MOTOR",
-		                               "DRIVE_RIGHT_BACK_RIGHT_MOTOR"};
-	ghost_msgs::msg::V5MotorCommand populateMotorCmd(const int loop_index);
+  void publishData();
+  rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr output_pub_;
+  std::array<std::string, 8> motors_{"DRIVE_LEFT_FRONT_LEFT_MOTOR",
+    "DRIVE_LEFT_FRONT_RIGHT_MOTOR", "DRIVE_LEFT_BACK_LEFT_MOTOR", "DRIVE_LEFT_BACK_RIGHT_MOTOR",
+    "DRIVE_RIGHT_FRONT_LEFT_MOTOR", "DRIVE_RIGHT_FRONT_RIGHT_MOTOR", "DRIVE_RIGHT_BACK_LEFT_MOTOR",
+    "DRIVE_RIGHT_BACK_RIGHT_MOTOR"};
+  ghost_msgs::msg::V5MotorCommand populateMotorCmd(const int loop_index);
 
-	// private:
+  // private:
 };
 
 }  // namespace test_publisher_v5_actuator_cmd

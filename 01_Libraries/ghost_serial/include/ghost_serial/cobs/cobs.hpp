@@ -16,7 +16,8 @@
 #ifndef COBS_CPP
 #define COBS_CPP
 
-namespace COBS {
+namespace COBS
+{
 
 /** COBS encode data to buffer
         @param data Pointer to input data to encode
@@ -25,7 +26,7 @@ namespace COBS {
         @return Encoded buffer length in bytes
         @note Does not output delimiter byte
  */
-size_t cobsEncode(const void *data, size_t length, uint8_t *buffer);
+size_t cobsEncode(const void * data, size_t length, uint8_t * buffer);
 
 /** COBS decode data from buffer
         @param buffer Pointer to encoded input bytes
@@ -34,7 +35,7 @@ size_t cobsEncode(const void *data, size_t length, uint8_t *buffer);
         @return Number of bytes successfully decoded
         @note Stops decoding if delimiter byte is found
  */
-size_t cobsDecode(const uint8_t *buffer, size_t length, void *data);
+size_t cobsDecode(const uint8_t * buffer, size_t length, void * data);
 
 int test();
 

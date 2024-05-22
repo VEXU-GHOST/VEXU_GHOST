@@ -2,7 +2,8 @@
 
 #include <math.h>
 
-namespace ghost_util {
+namespace ghost_util
+{
 
 // Common conversions
 inline constexpr double RPM_TO_RAD_PER_SEC = M_PI / 30.0;
