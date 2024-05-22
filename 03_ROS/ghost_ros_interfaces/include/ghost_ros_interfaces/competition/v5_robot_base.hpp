@@ -6,12 +6,12 @@
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
 
+#include <ghost_msgs/srv/start_recorder.hpp>
+#include <ghost_msgs/srv/stop_recorder.hpp>
+#include "ghost_msgs/msg/robot_trajectory.hpp"
 #include "ghost_msgs/msg/robot_trajectory.hpp"
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
-#include "ghost_msgs/msg/robot_trajectory.hpp"
-#include <ghost_msgs/srv/start_recorder.hpp>
-#include <ghost_msgs/srv/stop_recorder.hpp>
 
 #include <ghost_planners/robot_trajectory.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>

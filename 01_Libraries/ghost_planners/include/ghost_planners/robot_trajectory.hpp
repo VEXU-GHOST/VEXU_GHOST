@@ -23,7 +23,7 @@ public:
 			return ghost_util::clampedLinearInterpolate(time_vector, position_vector, time);
 		}
 		double getVelocity(double time) const {
-			if (!time_vector.empty() && time > *time_vector.end()){
+			if(!time_vector.empty() && (time > *time_vector.end())){
 				return 0.5 * *velocity_vector.end();
 			}
 			return ghost_util::clampedLinearInterpolate(time_vector, velocity_vector, time);
@@ -39,7 +39,6 @@ public:
 		std::vector<double> time_vector;
 		std::vector<double> position_vector;
 		std::vector<double> velocity_vector;
-
 		double threshold;
 
 		bool operator==(const RobotTrajectory::Trajectory &rhs) const {
@@ -49,21 +48,20 @@ public:
 	};
 
 	RobotTrajectory();
-
 	Trajectory x_trajectory;
 	Trajectory y_trajectory;
 	Trajectory theta_trajectory;
 
 	bool operator==(const RobotTrajectory &rhs) const {
 		return (x_trajectory == rhs.x_trajectory) &&
-			   (y_trajectory == rhs.y_trajectory) &&
-			   (theta_trajectory == rhs.theta_trajectory);
+		       (y_trajectory == rhs.y_trajectory) &&
+		       (theta_trajectory == rhs.theta_trajectory);
 	}
 
-	bool isNotEmpty() const { 
+	bool isNotEmpty() const {
 		return !x_trajectory.time_vector.empty() &&
-			   !y_trajectory.time_vector.empty() &&
-			   !theta_trajectory.time_vector.empty(); 
+		       !y_trajectory.time_vector.empty() &&
+		       !theta_trajectory.time_vector.empty();
 	}
 };
 

@@ -56,9 +56,9 @@ uint8_t GenericSerialBase::calculateChecksum(const unsigned char buffer[], const
 void GenericSerialBase::checkReadMsgBufferLength(std::vector<unsigned char> &msg_buffer) const {
 	if(msg_buffer.size() < read_msg_max_len_){
 		throw std::runtime_error(
-			      std::string("msg_buffer size must be at least read_msg_max_len!") +
-			      std::string(" msg_buffer.size(): ") + std::to_string(msg_buffer.size()) +
-			      std::string(", read_msg_max_len: ") + std::to_string(read_msg_max_len_));
+				  std::string("msg_buffer size must be at least read_msg_max_len!") +
+				  std::string(" msg_buffer.size(): ") + std::to_string(msg_buffer.size()) +
+				  std::string(", read_msg_max_len: ") + std::to_string(read_msg_max_len_));
 	}
 }
 
@@ -99,9 +99,9 @@ bool GenericSerialBase::writeMsgToSerial(const unsigned char buffer[], const int
 		}
 		catch(std::exception &e){
 		#ifdef GHOST_DEBUG_VERBOSE
-		    #if GHOST_DEVICE == GHOST_JETSON
+			#if GHOST_DEVICE == GHOST_JETSON
 			std::cout << "Error writing to serial: " << e.what() << std::endl;
-		    #endif
+			#endif
 		#endif
 		}
 	}

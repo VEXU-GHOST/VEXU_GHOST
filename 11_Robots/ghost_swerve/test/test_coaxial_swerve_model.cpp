@@ -12,7 +12,7 @@ TEST_F(SwerveModelTestFixture, testCoaxialSwerveJacobians){
 		joint_vels[1] * m_config.steering_ratio);
 
 	EXPECT_TRUE(expected_output.isApprox(m_coax_model_ptr->getModuleJacobian() * joint_vels)) <<
-	        "[testCoaxialSwerveJacobians] Error: Calculation did not match expected output." <<
-	        " Expected: " << std::endl << expected_output << std::endl << " Calculated: " << std::endl <<
-	        m_coax_model_ptr->getModuleJacobian() * joint_vels << std::endl;
+	    "[testCoaxialSwerveJacobians] Error: Calculation did not match expected output." <<
+	    " Expected: " << std::endl << expected_output << std::endl << " Calculated: " << std::endl <<
+	    m_coax_model_ptr->getModuleJacobian() * joint_vels << std::endl;
 }

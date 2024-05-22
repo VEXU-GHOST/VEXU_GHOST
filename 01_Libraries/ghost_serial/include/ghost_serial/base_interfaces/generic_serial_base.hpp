@@ -9,13 +9,13 @@
 #include "../msg_parser/msg_parser.hpp"
 
 #if GHOST_DEVICE == GHOST_JETSON
-    #define CROSSPLATFORM_MUTEX_T std::mutex
+	#define CROSSPLATFORM_MUTEX_T std::mutex
 #elif GHOST_DEVICE == GHOST_V5_BRAIN
-    #include "api.h"
-    #include "pros/apix.h"
-    #define CROSSPLATFORM_MUTEX_T pros::Mutex
+	#include "api.h"
+	#include "pros/apix.h"
+	#define CROSSPLATFORM_MUTEX_T pros::Mutex
 #else
-    #error "Ghost Device compile flag is not set to valid value"
+	#error "Ghost Device compile flag is not set to valid value"
 #endif
 
 namespace ghost_serial {

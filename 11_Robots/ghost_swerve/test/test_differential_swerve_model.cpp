@@ -14,9 +14,9 @@ TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianPureSteering){
 		motor_vel * m_config.steering_ratio);
 
 	EXPECT_TRUE(expected_output.isApprox(m_diff_model_ptr->getModuleJacobian() * joint_vels)) <<
-	        "[testDifferentialSwerveJacobianPureSteering] Error: Calculation did not match expected output." <<
-	        " Expected: " << std::endl << expected_output << std::endl << " Calculated: " << std::endl <<
-	        m_diff_model_ptr->getModuleJacobian() * joint_vels << std::endl;
+	    "[testDifferentialSwerveJacobianPureSteering] Error: Calculation did not match expected output." <<
+	    " Expected: " << std::endl << expected_output << std::endl << " Calculated: " << std::endl <<
+	    m_diff_model_ptr->getModuleJacobian() * joint_vels << std::endl;
 }
 
 TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianPureWheelActuation){
@@ -28,9 +28,9 @@ TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianPureWheelActuation)
 		0.0);
 
 	EXPECT_TRUE(expected_output.isApprox(m_diff_model_ptr->getModuleJacobian() * joint_vels)) <<
-	        "[testDifferentialSwerveJacobianPureWheelActuation] Error: Calculation did not match expected output." <<
-	        " Expected: " << std::endl << expected_output << std::endl << " Calculated: " << std::endl <<
-	        m_diff_model_ptr->getModuleJacobian() * joint_vels << std::endl;
+	    "[testDifferentialSwerveJacobianPureWheelActuation] Error: Calculation did not match expected output." <<
+	    " Expected: " << std::endl << expected_output << std::endl << " Calculated: " << std::endl <<
+	    m_diff_model_ptr->getModuleJacobian() * joint_vels << std::endl;
 }
 
 TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianCombinedMotion){
@@ -43,7 +43,7 @@ TEST_F(SwerveModelTestFixture, testDifferentialSwerveJacobianCombinedMotion){
 		vel_avg * m_config.steering_ratio);
 
 	EXPECT_TRUE(expected_output.isApprox(m_diff_model_ptr->getModuleJacobian() * joint_vels)) <<
-	        "[testDifferentialSwerveJacobianCombinedMotion] Error: Calculation did not match expected output." <<
-	        " Expected: " << std::endl << expected_output << std::endl << " Calculated: " << std::endl <<
-	        m_diff_model_ptr->getModuleJacobian() * joint_vels << std::endl;
+	    "[testDifferentialSwerveJacobianCombinedMotion] Error: Calculation did not match expected output." <<
+	    " Expected: " << std::endl << expected_output << std::endl << " Calculated: " << std::endl <<
+	    m_diff_model_ptr->getModuleJacobian() * joint_vels << std::endl;
 }

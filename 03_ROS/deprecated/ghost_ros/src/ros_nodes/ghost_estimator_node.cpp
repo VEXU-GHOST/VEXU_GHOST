@@ -50,12 +50,12 @@ GhostEstimatorNode::GhostEstimatorNode() :
 	A_ = Eigen::MatrixXf (6, 3);
 
 	A_ <<
-	        1.0, 0.0, -left_wheel_link_.y(),
-	        0.0, 1.0, left_wheel_link_.x(),
-	        1.0, 0.0, -right_wheel_link_.y(),
-	        0.0, 1.0, right_wheel_link_.x(),
-	        1.0, 0.0, -back_wheel_link_.y(),
-	        0.0, 1.0, back_wheel_link_.x();
+	    1.0, 0.0, -left_wheel_link_.y(),
+	    0.0, 1.0, left_wheel_link_.x(),
+	    1.0, 0.0, -right_wheel_link_.y(),
+	    0.0, 1.0, right_wheel_link_.x(),
+	    1.0, 0.0, -back_wheel_link_.y(),
+	    0.0, 1.0, back_wheel_link_.x();
 
 	A_pinv_ = A_.completeOrthogonalDecomposition().pseudoInverse();
 
@@ -248,23 +248,23 @@ void GhostEstimatorNode::CalculateOdometry(const ghost_msgs::msg::V5SensorUpdate
 	diff_swerve_jacobian_inverse << 18.0 / 13.0, 45.0 / 13.0, -18.0 / 13.0, 45.0 / 13.0;
 
 	float left_wheel_speed = (diff_swerve_jacobian * Eigen::Vector2f(
-					  msg->encoders[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].velocity_rpm,
-					  msg->encoders[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].velocity_rpm))[0] * 2.75 * 3.14159 * 2.54 / 100.0 / 60.0;
+								  msg->encoders[ghost_v5_config::DRIVE_LEFT_FRONT_MOTOR].velocity_rpm,
+								  msg->encoders[ghost_v5_config::DRIVE_LEFT_BACK_MOTOR].velocity_rpm))[0] * 2.75 * 3.14159 * 2.54 / 100.0 / 60.0;
 	float right_wheel_speed = (diff_swerve_jacobian * Eigen::Vector2f(
-					   msg->encoders[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].velocity_rpm,
-					   msg->encoders[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].velocity_rpm))[0] * 2.75 * 3.14159 * 2.54 / 100.0 / 60.0;
+								   msg->encoders[ghost_v5_config::DRIVE_RIGHT_FRONT_MOTOR].velocity_rpm,
+								   msg->encoders[ghost_v5_config::DRIVE_RIGHT_BACK_MOTOR].velocity_rpm))[0] * 2.75 * 3.14159 * 2.54 / 100.0 / 60.0;
 	float rear_wheel_speed = (diff_swerve_jacobian * Eigen::Vector2f(
-					  msg->encoders[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].velocity_rpm,
-					  msg->encoders[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].velocity_rpm))[0] * 2.75 * 3.14159 * 2.54 / 100.0 / 60.0;
+								  msg->encoders[ghost_v5_config::DRIVE_BACK_RIGHT_REAR_MOTOR].velocity_rpm,
+								  msg->encoders[ghost_v5_config::DRIVE_BACK_LEFT_REAR_MOTOR].velocity_rpm))[0] * 2.75 * 3.14159 * 2.54 / 100.0 / 60.0;
 
 	Eigen::VectorXf vel_vectors(6);
 	vel_vectors <<
-	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].position_degrees) * M_PI / 180.0) * left_wheel_speed,
-	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].position_degrees) * M_PI / 180.0) * left_wheel_speed,
-	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].position_degrees) * M_PI / 180.0) * right_wheel_speed,
-	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].position_degrees) * M_PI / 180.0) * right_wheel_speed,
-	        cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].position_degrees) * M_PI / 180.0) * rear_wheel_speed,
-	        sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].position_degrees) * M_PI / 180.0) * rear_wheel_speed;
+	    cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].position_degrees) * M_PI / 180.0) * left_wheel_speed,
+	    sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_LEFT_ENCODER].position_degrees) * M_PI / 180.0) * left_wheel_speed,
+	    cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].position_degrees) * M_PI / 180.0) * right_wheel_speed,
+	    sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_RIGHT_ENCODER].position_degrees) * M_PI / 180.0) * right_wheel_speed,
+	    cos(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].position_degrees) * M_PI / 180.0) * rear_wheel_speed,
+	    sin(ghost_common::WrapAngle360(msg->encoders[ghost_v5_config::STEERING_BACK_ENCODER].position_degrees) * M_PI / 180.0) * rear_wheel_speed;
 
 	Eigen::Vector3f base_twist = A_pinv_ * vel_vectors;
 

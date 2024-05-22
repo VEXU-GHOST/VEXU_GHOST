@@ -31,10 +31,10 @@ TEST_F(TestMsgParser, testMsgBasic){
 	int parsed_msg_len;
 	unsigned char output_buffer[max_msg_len] = {0,};
 	ASSERT_TRUE(msg_parser.parseByteStream(
-			    encoded_input_buffer,
-			    sizeof(encoded_input_buffer) / sizeof(encoded_input_buffer[0]),
-			    output_buffer,
-			    parsed_msg_len)
+					encoded_input_buffer,
+					sizeof(encoded_input_buffer) / sizeof(encoded_input_buffer[0]),
+					output_buffer,
+					parsed_msg_len)
 	            );
 
 	// Check that msg is correctly parsed
@@ -128,10 +128,10 @@ TEST_F(TestMsgParser, testMsgLengthExceeded){
 	int parsed_msg_len;
 	unsigned char output_buffer[max_msg_len] = {0,};
 	ASSERT_FALSE(msg_parser.parseByteStream(
-			     input_buffer1,
-			     sizeof(input_buffer1) / sizeof(input_buffer1[0]),
-			     output_buffer,
-			     parsed_msg_len)
+					 input_buffer1,
+					 sizeof(input_buffer1) / sizeof(input_buffer1[0]),
+					 output_buffer,
+					 parsed_msg_len)
 	             );
 }
 
@@ -152,10 +152,10 @@ TEST_F(TestMsgParser, testMsgShortMsg){
 	int parsed_msg_len;
 	unsigned char output_buffer[max_msg_len] = {0,};
 	ASSERT_TRUE(msg_parser.parseByteStream(
-			    input_buffer,
-			    sizeof(input_buffer) / sizeof(input_buffer[0]),
-			    output_buffer,
-			    parsed_msg_len));
+					input_buffer,
+					sizeof(input_buffer) / sizeof(input_buffer[0]),
+					output_buffer,
+					parsed_msg_len));
 
 	ASSERT_EQ(parsed_msg_len, msg_len);
 
@@ -184,10 +184,10 @@ TEST_F(TestMsgParser, testChecksumValid){
 	int parsed_msg_len;
 	unsigned char output_buffer[msg_len] = {0,};
 	ASSERT_TRUE(msg_parser.parseByteStream(
-			    input_buffer,
-			    sizeof(input_buffer) / sizeof(input_buffer[0]),
-			    output_buffer,
-			    parsed_msg_len)
+					input_buffer,
+					sizeof(input_buffer) / sizeof(input_buffer[0]),
+					output_buffer,
+					parsed_msg_len)
 	            );
 
 	// Check that msg is correctly parsed
@@ -215,10 +215,10 @@ TEST_F(TestMsgParser, testChecksumInvalid){
 	int parsed_msg_len;
 	unsigned char output_buffer[msg_len] = {0,};
 	ASSERT_FALSE(msg_parser.parseByteStream(
-			     input_buffer,
-			     sizeof(input_buffer) / sizeof(input_buffer[0]),
-			     output_buffer,
-			     parsed_msg_len)
+					 input_buffer,
+					 sizeof(input_buffer) / sizeof(input_buffer[0]),
+					 output_buffer,
+					 parsed_msg_len)
 	             );
 }
 

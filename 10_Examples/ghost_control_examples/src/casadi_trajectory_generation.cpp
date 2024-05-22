@@ -53,18 +53,18 @@ int main(int argc, char *argv[]){
 	////////////////////////////
 	// Shorthand to get symbolic state variable by name
 	auto get_state = [&state_vector, &state_index_map](std::string name){
-				 return state_vector(state_index_map.at(name));
-			 };
+						 return state_vector(state_index_map.at(name));
+					 };
 
 	// Shorthand to get symbolic parameter by name
 	auto get_param = [&param_vector, &param_index_map](std::string name){
-				 return param_vector(param_index_map.at(name));
-			 };
+						 return param_vector(param_index_map.at(name));
+					 };
 
 	// Shorthand to get knot string prefix from knotpoint index
 	auto get_knot_prefix = [](int i){
-				       return "k" + std::to_string(i) + "_";
-			       };
+							   return "k" + std::to_string(i) + "_";
+						   };
 
 	//////////////////////////////////////////////
 	///// Initialize Time, State, and Inputs /////

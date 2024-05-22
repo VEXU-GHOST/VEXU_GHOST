@@ -147,7 +147,7 @@ void V5RobotBase::trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::Sha
 	RCLCPP_INFO(node_ptr_->get_logger(), "Received Trajectory");
 	trajectory_start_time_ = getTimeFromStart();
 
-	if (robot_trajectory_ptr_ == nullptr){
+	if(robot_trajectory_ptr_ == nullptr){
 		robot_trajectory_ptr_ = std::make_shared<RobotTrajectory>();
 	}
 	fromROSMsg(*robot_trajectory_ptr_, *msg);
