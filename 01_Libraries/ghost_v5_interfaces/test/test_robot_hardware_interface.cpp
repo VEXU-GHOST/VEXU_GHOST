@@ -20,7 +20,7 @@ using namespace ghost_v5_interfaces;
 class RobotHardwareInterfaceTestFixture : public ::testing::Test {
 public:
 	void SetUp() override {
-		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot_2.yaml";
+		std::string config_path = std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot_2.yaml";
 		config_yaml_ = YAML::LoadFile(config_path);
 
 		device_config_map_ptr_single_joy_ = loadRobotConfigFromYAML(config_yaml_, false);

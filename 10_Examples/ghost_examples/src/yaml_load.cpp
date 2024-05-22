@@ -12,7 +12,7 @@
 #include "yaml-cpp/yaml.h"
 
 int main(int argc, char* argv[]){
-	std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/10_Examples/ghost_examples/config/example.yaml";
+	std::string config_path = std::string(getenv("VEXU_HOME")) + "/10_Examples/ghost_examples/config/example.yaml";
 	YAML::Node config = YAML::LoadFile(config_path);
 	const std::string string_val = config["ns1"]["ns2"]["string_val"].as<std::string>();
 	const int an_integer = config["ns1"]["ns2"]["an_int"].as<int>();
