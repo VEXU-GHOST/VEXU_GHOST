@@ -86,27 +86,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-add_library(cubic_motion_planner SHARED src/cubic_motion_planner.cpp)
-target_include_directories(cubic_motion_planner
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(cubic_motion_planner
-  ${DEPENDENCIES}
-)
-ament_export_libraries(
-  cubic_motion_planner
-)
-ament_export_targets(cubic_motion_planner HAS_LIBRARY_TARGET)
-install(
-  TARGETS cubic_motion_planner
-  EXPORT cubic_motion_planner
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
 ######################
 ### Casadi Example ###
 ######################

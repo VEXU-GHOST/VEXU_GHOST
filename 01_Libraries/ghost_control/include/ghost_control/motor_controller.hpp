@@ -22,9 +22,12 @@ public:
 		float ff_vel_gain{1.0};
 		float ff_torque_gain{0.0};
 
+		// How many control loops should we use the last command before zeroing commands
+		int cmd_duration{2};
+
 		bool operator==(const Config& rhs) const {
 			return (pos_gain == rhs.pos_gain) && (vel_gain == rhs.vel_gain) &&
-			       (ff_vel_gain == rhs.ff_vel_gain) && (ff_torque_gain == rhs.ff_torque_gain);
+			       (ff_vel_gain == rhs.ff_vel_gain) && (ff_torque_gain == rhs.ff_torque_gain) && (cmd_duration == rhs.cmd_duration);
 		}
 	};
 
@@ -75,6 +78,7 @@ public:
 		des_vel_rpm_ = velocity;
 		des_voltage_norm_ = voltage;
 		des_torque_nm_ = torque;
+		loops_since_last_cmd_ = 0;
 	}
 
 	/**
@@ -92,6 +96,7 @@ public:
 		velocity_active_ = velocity_active;
 		voltage_active_ = voltage_active;
 		torque_active_ = torque_active;
+		loops_since_last_cmd_ = 0;
 	}
 
 	bool positionActive(){
@@ -132,6 +137,7 @@ protected:
 	float des_torque_nm_ = 0.0;
 	float des_voltage_norm_ = 0.0;
 	float cmd_voltage_mv_ = 0.0;
+	int loops_since_last_cmd_ = 0;
 	bool position_active_ = false;
 	bool velocity_active_ = false;
 	bool voltage_active_ = false;

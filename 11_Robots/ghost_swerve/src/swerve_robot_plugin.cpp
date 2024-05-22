@@ -14,10 +14,9 @@ namespace ghost_swerve {
 SwerveRobotPlugin::SwerveRobotPlugin(){
 	m_digital_io = std::vector<bool>(8, false);
 	m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-		{"claw", 0},
-		{"right_wing", 1},
-		{"left_wing", 2},
-		{"tail", 3}};
+		{"tail", 0},
+		{"claw", 1}
+	};
 }
 
 void SwerveRobotPlugin::initialize(){
@@ -31,6 +30,9 @@ void SwerveRobotPlugin::initialize(){
 
 	node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
 	std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
+
+	node_ptr_->declare_parameter("backup_pose_topic", "/odometry/filtered");
+	std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
 
 	node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
 	std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
@@ -68,9 +70,13 @@ void SwerveRobotPlugin::initialize(){
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_xy", 0.0);
 	m_move_to_pose_kp_xy = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_xy").as_double();
+	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kd_xy", 0.0);
+	m_move_to_pose_kd_xy = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kd_xy").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kp_theta", 0.0);
 	m_move_to_pose_kp_theta = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kp_theta").as_double();
+	node_ptr_->declare_parameter("swerve_robot_plugin.move_to_pose_kd_theta", 0.0);
+	m_move_to_pose_kd_theta = node_ptr_->get_parameter("swerve_robot_plugin.move_to_pose_kd_theta").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.joystick_slew_rate", 0.0);
 	m_joystick_slew_rate = node_ptr_->get_parameter("swerve_robot_plugin.joystick_slew_rate").as_double();
@@ -87,13 +93,45 @@ void SwerveRobotPlugin::initialize(){
 
 	swerve_model_config.move_to_pose_kp = m_move_to_pose_kp_xy;
 
-	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kp", 2.0);
+	// Swerve Steering Controller
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kp", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_kd", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_ki", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_ki_limit", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.controller_dt", 0.01);
+	node_ptr_->declare_parameter("swerve_robot_plugin.steering_control_deadzone", 0.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.angle_heuristic_start_angle", 0.01);
+	node_ptr_->declare_parameter("swerve_robot_plugin.angle_heuristic_end_angle", 0.0);
+	swerve_model_config.angle_heuristic_start_angle = node_ptr_->get_parameter("swerve_robot_plugin.angle_heuristic_start_angle").as_double();
+	swerve_model_config.angle_heuristic_end_angle = node_ptr_->get_parameter("swerve_robot_plugin.angle_heuristic_end_angle").as_double();
 	swerve_model_config.steering_kp = node_ptr_->get_parameter("swerve_robot_plugin.steering_kp").as_double();
+	swerve_model_config.steering_kd = node_ptr_->get_parameter("swerve_robot_plugin.steering_kd").as_double();
+	swerve_model_config.steering_ki = node_ptr_->get_parameter("swerve_robot_plugin.steering_ki").as_double();
+	swerve_model_config.steering_ki_limit = node_ptr_->get_parameter("swerve_robot_plugin.steering_ki_limit").as_double();
+	swerve_model_config.controller_dt = node_ptr_->get_parameter("swerve_robot_plugin.controller_dt").as_double();
+	swerve_model_config.steering_control_deadzone = node_ptr_->get_parameter("swerve_robot_plugin.steering_control_deadzone").as_double();
 
+	// Combined Motion Scaling
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_ratio", 1.0);
 	swerve_model_config.velocity_scaling_ratio = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_ratio").as_double();
 	node_ptr_->declare_parameter("swerve_robot_plugin.velocity_scaling_threshold", 0.7);
 	swerve_model_config.velocity_scaling_threshold = node_ptr_->get_parameter("swerve_robot_plugin.velocity_scaling_threshold").as_double();
+
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_world_x", m_init_world_x);
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_world_y", m_init_world_y);
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_world_theta", m_init_world_theta);
+
+	m_init_world_x = node_ptr_->get_parameter("swerve_robot_plugin.m_init_world_x").as_double();
+	m_init_world_y = node_ptr_->get_parameter("swerve_robot_plugin.m_init_world_y").as_double();
+	m_init_world_theta = node_ptr_->get_parameter("swerve_robot_plugin.m_init_world_theta").as_double();
+
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_sigma_x", m_init_sigma_x);
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_sigma_y", m_init_sigma_y);
+	node_ptr_->declare_parameter("swerve_robot_plugin.m_init_sigma_theta", m_init_sigma_theta);
+
+	m_init_sigma_x = node_ptr_->get_parameter("swerve_robot_plugin.m_init_sigma_x").as_double();
+	m_init_sigma_y = node_ptr_->get_parameter("swerve_robot_plugin.m_init_sigma_y").as_double();
+	m_init_sigma_theta = node_ptr_->get_parameter("swerve_robot_plugin.m_init_sigma_theta").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_gear_ratio", 1.);
 	node_ptr_->declare_parameter("swerve_robot_plugin.lift_up_angle_deg", 1.);
@@ -107,18 +145,20 @@ void SwerveRobotPlugin::initialize(){
 	swerve_model_config.lift_speed = node_ptr_->get_parameter("swerve_robot_plugin.lift_speed").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.stick_gear_ratio", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_upright_angle_deg", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_skills", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_normal", 1.);
-	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_start", 1.);
+	node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_kick", 1.);
+	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_normal", 1.);
+	// node_ptr_->declare_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset", 1.);
 	gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.stick_gear_ratio").as_double();
 
-	swerve_model_config.stick_upright_angle = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_upright_angle_deg").as_double();
-	swerve_model_config.stick_angle_skills = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_skills").as_double();
-	swerve_model_config.stick_angle_normal = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_normal").as_double();
-	swerve_model_config.stick_turn_offset = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset").as_double();
+	m_stick_angle_start = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_start").as_double();
+	m_stick_angle_kick = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_kick").as_double();
+	// swerve_model_config.stick_angle_normal = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_normal").as_double();
+	// swerve_model_config.stick_turn_offset = gear_ratio * node_ptr_->get_parameter("swerve_robot_plugin.stick_angle_soft_limit_offset").as_double();
 
-	swerve_model_config.max_wheel_actuator_vel = 625.0;
+	node_ptr_->declare_parameter("swerve_robot_plugin.max_wheel_actuator_vel", 625.0);
+	swerve_model_config.max_wheel_actuator_vel = node_ptr_->get_parameter("swerve_robot_plugin.max_wheel_actuator_vel").as_double();
+
 	auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
 	swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius * ghost_util::INCHES_TO_METERS;
 
@@ -127,19 +167,35 @@ void SwerveRobotPlugin::initialize(){
 	node_ptr_->declare_parameter("swerve_robot_plugin.max_lin_vel_slew", 0.);
 	swerve_model_config.max_lin_vel_slew = node_ptr_->get_parameter("swerve_robot_plugin.max_lin_vel_slew").as_double();
 
-	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.1143, 0.1143);
-	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.1143, -0.1143);
-	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.1143, 0.1143);
-	swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.1143, -0.1143);
+	swerve_model_config.module_positions["left_front"] = Eigen::Vector2d(0.15875, 0.15875);
+	swerve_model_config.module_positions["right_front"] = Eigen::Vector2d(0.15875, -0.15875);
+	swerve_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.15875, 0.15875);
+	swerve_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.15875, -0.15875);
 
 	m_swerve_model_ptr = std::make_shared<SwerveModel>(swerve_model_config);
 	m_swerve_model_ptr->setFieldOrientedControl(true);
+
+	node_ptr_->declare_parameter("swerve_robot_plugin.burnout_absolute_current_threshold_ma", 1000.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.burnout_absolute_velocity_threshold_rpm", 50.0);
+	node_ptr_->declare_parameter("swerve_robot_plugin.burnout_stall_duration_ms", 1000);
+	node_ptr_->declare_parameter("swerve_robot_plugin.burnout_cooldown_duration_ms", 1000);
+
+	m_burnout_absolute_current_threshold_ma = node_ptr_->get_parameter("swerve_robot_plugin.burnout_absolute_current_threshold_ma").as_double();
+	m_burnout_absolute_rpm_threshold        = node_ptr_->get_parameter("swerve_robot_plugin.burnout_absolute_velocity_threshold_rpm").as_double();
+	m_burnout_stall_duration_ms    = node_ptr_->get_parameter("swerve_robot_plugin.burnout_stall_duration_ms").as_int();
+	m_burnout_cooldown_duration_ms = node_ptr_->get_parameter("swerve_robot_plugin.burnout_cooldown_duration_ms").as_int();
 
 	// ROS Topics
 	m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
 		pose_topic,
 		10,
-		std::bind(&SwerveRobotPlugin::poseUpdateCallback, this, _1));
+		std::bind(&SwerveRobotPlugin::worldOdometryUpdateCallback, this, _1));
+
+	m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
+		backup_pose_topic,
+		10,
+		std::bind(&SwerveRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
+
 
 	m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
 		odom_topic,
@@ -157,13 +213,44 @@ void SwerveRobotPlugin::initialize(){
 		trajectory_marker_topic,
 		10);
 
-	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr);
+	m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
+		"/cmd_vel",
+		10);
+
+	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, node_ptr_, m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms, m_burnout_cooldown_duration_ms);
 
 	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
 		"bag_recorder/start");
 
 	m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
 		"bag_recorder/stop");
+
+	m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+		"/set_pose",
+		10);
+
+	imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
+		"/sensors/imu",
+		10);
+
+	m_des_vel_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
+		"/des_vel",
+		10);
+
+	m_cur_vel_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
+		"/cur_vel",
+		10);
+
+	m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
+		"/des_pos",
+		10);
+
+	// resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
+	if(!m_recording){
+		auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+		m_start_recorder_client->async_send_request(req);
+		m_recording = true;
+	}
 }
 
 void SwerveRobotPlugin::onNewSensorData(){
@@ -200,10 +287,25 @@ void SwerveRobotPlugin::onNewSensorData(){
 		m_swerve_model_ptr->setModuleState(module_name, new_state);
 	}
 
+	sensor_msgs::msg::Imu imu_msg{};
+	imu_msg.header.frame_id = "imu_link";
+	imu_msg.header.stamp = node_ptr_->get_clock()->now();
+	imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
+	imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
+	imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
+	imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
+	imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
+	imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+	double yaw = -rhi_ptr_->getInertialSensorHeading("imu");
+	ghost_util::yawToQuaternionDeg(yaw, imu_msg.orientation.w, imu_msg.orientation.x, imu_msg.orientation.y, imu_msg.orientation.z);
+	imu_pub->publish(imu_msg);
+
 	m_swerve_model_ptr->updateSwerveModel();
 
 	publishOdometry();
 	publishVisualization();
+	publishBaseTwist();
+	// publishTrajectoryVisualization();
 }
 
 void SwerveRobotPlugin::disabled(){
@@ -211,32 +313,88 @@ void SwerveRobotPlugin::disabled(){
 
 void SwerveRobotPlugin::autonomous(double current_time){
 	std::cout << "Autonomous: " << current_time << std::endl;
+	if(m_is_first_auton_loop){
+		m_is_first_auton_loop = false;
+	}
+
+	m_swerve_model_ptr->disableSwerveHeuristics();
+
+	// if(!m_recording){
+	// 	auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+	// 	m_start_recorder_client->async_send_request(req);
+	// 	m_recording = true;
+	// }
 
 	bt_->tick_tree();
+	// publishTrajectoryVisualization();
 
-	auto command_map = get_commands(current_time);
-	double des_pos_x = (command_map.count("x_pos") != 0) ? command_map.at("x_pos") : 0.0;
-	double des_vel_x = (command_map.count("x_vel") != 0) ? command_map.at("x_vel") : 0.0;
-	double des_pos_y = (command_map.count("y_pos") != 0) ? command_map.at("y_pos") : 0.0;
-	double des_vel_y = (command_map.count("y_vel") != 0) ? command_map.at("y_vel") : 0.0;
-	double des_theta = (command_map.count("angle_pos") != 0) ? command_map.at("angle_pos") : 0.0;
-	double des_theta_vel = (command_map.count("angle_vel") != 0) ? command_map.at("angle_vel") : 0.0;
+	double vel_cmd_x = 0;
+	double vel_cmd_y = 0;
+	double vel_cmd_theta = 0;
 
-	// Get best state estimate
-	auto curr_location = m_swerve_model_ptr->getWorldLocation();
-	double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
+	// auto command_map = get_commands(current_time);
 
-	// Calculate velocity command from motion plan
-	double vel_cmd_x = des_vel_x + (des_pos_x - curr_location.x()) * m_move_to_pose_kp_xy;
-	double vel_cmd_y = des_vel_y + (des_pos_y - curr_location.y()) * m_move_to_pose_kp_xy;
-	double vel_cmd_theta = des_theta_vel + ghost_util::SmallestAngleDistRad(des_theta, curr_theta) * m_move_to_pose_kp_theta;
+	if(robot_trajectory_ptr_->isNotEmpty()){
+		double time = current_time - trajectory_start_time_;
+		double des_pos_x = robot_trajectory_ptr_->x_trajectory.getPosition(time);
+		double des_vel_x = robot_trajectory_ptr_->x_trajectory.getVelocity(time);
+		double des_pos_y = robot_trajectory_ptr_->y_trajectory.getPosition(time);
+		double des_vel_y = robot_trajectory_ptr_->y_trajectory.getVelocity(time);
+		double des_pos_theta = robot_trajectory_ptr_->theta_trajectory.getPosition(time);
+		double des_vel_theta = robot_trajectory_ptr_->theta_trajectory.getVelocity(time);
+		double pos_threshold = robot_trajectory_ptr_->x_trajectory.threshold;
+		double theta_threshold = robot_trajectory_ptr_->theta_trajectory.threshold;
+		double final_pos_x = robot_trajectory_ptr_->x_trajectory.getPosition(time + 100.0);
+		double final_pos_y = robot_trajectory_ptr_->y_trajectory.getPosition(time + 100.0);
+		double final_pos_theta = robot_trajectory_ptr_->theta_trajectory.getPosition(time + 100.0);
 
-	std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
-	std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
+		// std::cout << "final_pos_x: " << final_pos_x << std::endl;
 
-	// calculateKinematicSwerveControllerVelocity(right_cmd * m_max_base_lin_vel, forward_cmd * m_max_base_lin_vel, clockwise_cmd * m_max_base_ang_vel);
+		// Get best state estimate
+		auto curr_location = m_swerve_model_ptr->getWorldLocation();
+		double curr_theta = m_swerve_model_ptr->getWorldAngleRad();
+		auto curr_vel = m_swerve_model_ptr->getWorldTranslationalVelocity();
+		auto curr_vel_theta = m_swerve_model_ptr->getWorldAngularVelocity();
+		auto curr_vel_x = curr_vel.x();
+		auto curr_vel_y = curr_vel.y();
+
+		// Calculate velocity command from motion plan
+		double x_error = des_pos_x - curr_location.x();
+		double x_error_final = final_pos_x - curr_location.x();
+		double y_error = des_pos_y - curr_location.y();
+		double y_error_final = final_pos_y - curr_location.y();
+		double theta_error = ghost_util::SmallestAngleDistRad(des_pos_theta, curr_theta);
+		double theta_error_final = ghost_util::SmallestAngleDistRad(final_pos_theta, curr_theta);
+		vel_cmd_x = (abs(x_error_final) <= pos_threshold / 2.0) ? 0.0 : des_vel_x + (des_vel_x - curr_vel_x) * m_move_to_pose_kd_xy + (x_error) * m_move_to_pose_kp_xy;
+		vel_cmd_y = (abs(y_error_final) <= pos_threshold / 2.0) ? 0.0 : des_vel_y + (des_vel_y - curr_vel_y) * m_move_to_pose_kd_xy + (y_error) * m_move_to_pose_kp_xy;
+		vel_cmd_theta = (abs(theta_error_final) <= theta_threshold / 2.0) ? 0.0 : des_vel_theta + (des_vel_theta - curr_vel_theta) * m_move_to_pose_kd_theta + theta_error * m_move_to_pose_kp_theta;
+
+		publishCurrentTwist(curr_vel_x, curr_vel_y, curr_vel_theta);
+		publishDesiredTwist(des_vel_x, des_vel_y, des_vel_theta);
+		publishDesiredPose(des_pos_x, des_pos_y, des_pos_theta);
+
+		// std::cout << "pos_threshold: " << pos_threshold << std::endl;
+		// std::cout << "theta_threshold: " << theta_threshold << std::endl;
+
+		// std::cout << "des_pos_x: " << des_pos_x << std::endl;
+		// std::cout << "des_pos_y: " << des_pos_y << std::endl;
+		// std::cout << "x_error: " << x_error << std::endl;
+		// std::cout << "y_error: " << y_error << std::endl;
+
+		// std::cout << "curr_location.x(): " << curr_location.x() << std::endl;
+		// std::cout << "curr_location.y(): " << curr_location.y() << std::endl;
+
+		// std::cout << "vel cmd x: " << vel_cmd_x << std::endl;
+		// std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
+	}
+
+	// if((des_pos_x == 0.0) && (des_pos_y == 0.0) || m_swerve_model_ptr->getAutoStatus()){
+	// 	vel_cmd_x = 0.0;
+	// 	vel_cmd_y = 0.0;
+	// 	vel_cmd_theta = 0.0;
+	// }
+
 	m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(-vel_cmd_y, vel_cmd_x, -vel_cmd_theta);
-	// m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(vel_cmd_x, vel_cmd_y, des_theta);
 
 	updateDrivetrainMotors();
 }
@@ -256,28 +414,53 @@ float tempPID(std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_p
 	return pos - pos_want;
 }
 
+void SwerveRobotPlugin::resetPose(double x, double y, double theta){
+	std::cout << "Resetting Pose!" << std::endl;
+	m_last_odom_loc = m_curr_odom_loc;
+	m_last_odom_angle = m_curr_odom_angle;
+
+	m_init_world_x = x;
+	m_init_world_y = y;
+	m_init_world_theta = theta;
+
+	geometry_msgs::msg::PoseWithCovarianceStamped msg{};
+
+	msg.header.frame_id = "odom";
+	msg.header.stamp = node_ptr_->get_clock()->now();
+
+	msg.pose.pose.position.x = x;
+	msg.pose.pose.position.y = y;
+	msg.pose.pose.position.z = 0;
+
+	ghost_util::yawToQuaternionRad(
+		theta,
+		msg.pose.pose.orientation.w,
+		msg.pose.pose.orientation.x,
+		msg.pose.pose.orientation.y,
+		msg.pose.pose.orientation.z);
+
+	msg.pose.covariance[0] = m_init_sigma_x * m_init_sigma_x;
+	msg.pose.covariance[7] = m_init_sigma_y * m_init_sigma_y;
+	msg.pose.covariance[35] = m_init_sigma_theta * m_init_sigma_theta;
+
+	m_set_pose_publisher->publish(msg);
+}
+
 void SwerveRobotPlugin::teleop(double current_time){
 	auto joy_data = rhi_ptr_->getMainJoystickData();
-	std::cout << "Teleop: " << current_time << std::endl;
+	m_swerve_model_ptr->enableSwerveHeuristics();
+	// std::cout << "Teleop: " << current_time << std::endl;
+	// m_swerve_model_ptr->setFieldOrientedControl(true);
 
 	if(joy_data->btn_u){
 		if(!m_auton_button_pressed){
 			m_auton_button_pressed = true;
-
-			// Reset Odometry or whatever for auton
-			m_last_odom_angle = ghost_util::DEG_TO_RAD * 0.0;
-			m_curr_odom_angle = m_last_odom_angle;
-			m_curr_odom_loc.x() = ghost_util::INCHES_TO_METERS * 0.0;
-			m_curr_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
-			m_last_odom_loc.x() = m_curr_odom_loc.x();
-			m_last_odom_loc.y() = m_last_odom_loc.y();
-			m_swerve_model_ptr->setOdometryLocation(m_curr_odom_loc.x(), m_curr_odom_loc.y());
-			m_swerve_model_ptr->setOdometryAngle(m_curr_odom_angle);
 		}
 		autonomous(current_time - m_auton_start_time);
 	}
 	else{
 		// Reset Auton Tester
+		m_is_first_auton_loop = true;
 		m_auton_start_time = current_time;
 		m_auton_button_pressed = false;
 		m_auton_index = 0;
@@ -291,20 +474,15 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_toggle_swerve_field_control_btn_pressed = false;
 		}
 
-		// Toggle Skills mode
-		if(joy_data->btn_d && !m_toggle_skills_control_btn_pressed){
-			m_skills_control ^= 1;
-			m_toggle_skills_control_btn_pressed = true;
+		static bool reset_pose_btn_pressed = false;
+		if(joy_data->btn_d && joy_data->btn_l && !reset_pose_btn_pressed && m_use_backup_estimator){
+			resetPose(0.0, 0.0, 0.0);
+			reset_pose_btn_pressed = true;
 		}
-		else if(!joy_data->btn_d){
-			m_toggle_skills_control_btn_pressed = false;
+		else if(!joy_data->btn_d && !joy_data->btn_l){
+			reset_pose_btn_pressed = false;
 		}
 
-		if(joy_data->btn_l){
-			m_last_odom_angle = 0.0;
-			m_curr_odom_angle = 0.0;
-			m_swerve_model_ptr->setOdometryAngle(0.0);
-		}
 		// Toggle Bag Recorder
 		if(joy_data->btn_y && !m_recording_btn_pressed){
 			m_recording_btn_pressed = true;
@@ -324,23 +502,33 @@ void SwerveRobotPlugin::teleop(double current_time){
 			m_recording_btn_pressed = false;
 		}
 
-		if(m_swerve_angle_control){
-			if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
-				m_angle_target = atan2(joy_data->right_y / 127.0, joy_data->right_x / 127.0) - M_PI / 2;
-			}
 
-			m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(joy_data->left_x, joy_data->left_y, m_angle_target);
+		static bool btn_r_pressed = false;
+		if(joy_data->btn_r && !btn_r_pressed){
+			btn_r_pressed = true;
+			m_use_backup_estimator = !m_use_backup_estimator;
 		}
-		else{
-			double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
-
-			m_curr_x_cmd = joy_data->left_x / 127.0 * scale;
-			m_curr_y_cmd = joy_data->left_y / 127.0 * scale;
-			m_curr_theta_cmd = joy_data->right_x / 127.0 * scale;
-
-			m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(m_curr_x_cmd, m_curr_y_cmd, m_curr_theta_cmd);
-			m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
+		else if(!joy_data->btn_r){
+			btn_r_pressed = false;
 		}
+
+		// if(m_swerve_angle_control){
+		// 	if(Eigen::Vector2d(joy_data->right_y / 127.0, joy_data->right_x / 127.0).norm() > m_joy_angle_control_threshold){
+		// 		m_angle_target = atan2(joy_data->right_y / 127.0, joy_data->right_x / 127.0) - M_PI / 2;
+		// 	}
+
+		// 	m_swerve_model_ptr->calculateKinematicSwerveControllerAngleControl(joy_data->left_x, joy_data->left_y, m_angle_target);
+		// }
+		// else{
+		// double scale = (joy_data->btn_r1) ? 0.5 : 1.0;
+
+		m_curr_x_cmd = joy_data->left_x / 127.0; // * scale;
+		m_curr_y_cmd = joy_data->left_y / 127.0; // * scale;
+		m_curr_theta_cmd = joy_data->right_x / 127.0; // * scale;
+
+		m_swerve_model_ptr->calculateKinematicSwerveControllerNormalized(m_curr_x_cmd, m_curr_y_cmd, m_curr_theta_cmd);
+		m_angle_target = m_swerve_model_ptr->getWorldAngleRad();
+		// }
 
 		m_last_x_cmd = m_curr_x_cmd;
 		m_last_y_cmd = m_curr_y_cmd;
@@ -348,106 +536,162 @@ void SwerveRobotPlugin::teleop(double current_time){
 
 		updateDrivetrainMotors();
 
-		// Set Wings
-		m_digital_io[m_digital_io_name_map.at("right_wing")] = !m_climb_mode && joy_data->btn_r2;
-		m_digital_io[m_digital_io_name_map.at("left_wing")] = !m_climb_mode && joy_data->btn_l2;
+		bool tail_mode = joy_data->btn_l2;
+		m_climb_mode = joy_data->btn_a && joy_data->btn_b;
+		bool intake_command = false;
 
-		// Toggle Climb Mode
-		if(joy_data->btn_a && !m_climb_mode_btn_pressed){
-			m_climb_mode = !m_climb_mode;
-			// only on first toggle
-			if(m_climb_mode){
-				lift_target = m_swerve_model_ptr->getConfig().lift_up_angle;
+		// Intake
+		double intake_voltage;
+		if(joy_data->btn_r1 && !tail_mode && !m_climb_mode){
+			intake_command = true;
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+			intake_voltage = -1.0;
+		}
+		else if(joy_data->btn_r2 && !tail_mode && !m_climb_mode){
+			intake_command = true;
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+			intake_voltage = 1.0;
+		}
+		else{
+			intake_command = false;
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
+			intake_voltage = 0.0;
+		}
+
+		bool intake_up = false;
+		double intake_lift_target;
+		if(!m_climb_mode){
+			if(joy_data->btn_l1){// intake lift
+				intake_up = true;
+				intake_lift_target = 0.0;
 			}
 			else{
-				lift_target = 0;
-				m_claw_open = false;
-				claw_auto_extended = false;
+				intake_up = false;
+				intake_lift_target = 7.0;
 			}
-			// m_claw_open = m_climb_mode;
-			m_climb_mode_btn_pressed = true;
-		}
-		else if(!joy_data->btn_a){
-			m_climb_mode_btn_pressed = false;
-		}
-		// Toggle Claw
-		if(m_climb_mode){
-			// std::cout << "liftmotors on now" << std::endl;
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
-			if(!m_claw_open){
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
-			}
-
-			if(joy_data->btn_r2 & !m_claw_btn_pressed){
-				m_claw_open = !m_claw_open;
-				m_claw_btn_pressed = true;
-			}
-			else if(!joy_data->btn_r2){
-				m_claw_btn_pressed = false;
-			}
-
-#define POS ((rhi_ptr_->getMotorPosition("lift_right") + rhi_ptr_->getMotorPosition("lift_left")) / 2)
-
-			if(joy_data->btn_l1){
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", -1);
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", -1);
-				lift_target = POS;
-			}
-			else if(joy_data->btn_l2){
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_right", 1);
-				rhi_ptr_->setMotorVoltageCommandPercent("lift_left", 1);
-				lift_target = POS;
+			if(std::fabs(rhi_ptr_->getMotorPosition("intake_lift_motor") - intake_lift_target) < 0.05){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
+				if(intake_up && !intake_command){
+					intake_voltage = 0.0;
+				}
 			}
 			else{
-				float err = tempPID(rhi_ptr_, "lift_right", "lift_left", lift_target, m_swerve_model_ptr->getConfig().lift_kP); // go to 90deg
-				if((fabs(err) < 30) && (fabs(lift_target) > 1) && !claw_auto_extended){
-					m_claw_open = true;
-					claw_auto_extended = true;
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
+				if(intake_up && !intake_command){
+					rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 1000);
+					intake_voltage = -1.0;
 				}
 			}
 		}
-		else if(fabs(rhi_ptr_->getMotorPosition("lift_right")) < 50){
-			// std::cout << "liftmotors off now" << std::endl;
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
-		}
+		rhi_ptr_->setMotorPositionCommand("intake_lift_motor", intake_lift_target);
 
-		m_digital_io[m_digital_io_name_map.at("claw")] = m_claw_open;
+		rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
 
-		// Enable Tail Mode
-		double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
-		double stick_turn_offset = m_swerve_model_ptr->getConfig().stick_turn_offset;
-#define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
+		// Climb Testing
+		if(m_climb_mode){
+			if(joy_data->btn_l2){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
 
-		if(!m_climb_mode && joy_data->btn_l1){
-			m_digital_io[m_digital_io_name_map.at("tail")] = true;
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-			if(joy_data->btn_r1){
-				double ang = m_skills_control ? m_swerve_model_ptr->getConfig().stick_angle_skills : m_swerve_model_ptr->getConfig().stick_angle_normal;
-				std::cout << "stick angle " << ang << std::endl;
-				rhi_ptr_->setMotorPositionCommand("tail_motor", ang);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
+
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
+			}
+			else if(joy_data->btn_l1){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
+
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
+
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
 			}
 			else{
-				// std::cout << "stick upright!" << std::endl;
-				rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
-			}
-		}
-		else if(m_climb_mode){
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
 
-			rhi_ptr_->setMotorPositionCommand("tail_motor", 0);
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
+
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+				rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
+			}
+
+			if(joy_data->btn_r2){
+				m_claw_open = false;
+			}
+			else if(joy_data->btn_r1){
+				m_claw_open = true;
+			}
 		}
 		else{
-			// std::cout << "stick upright!" << std::endl;
-			rhi_ptr_->setMotorPositionCommand("tail_motor", m_swerve_model_ptr->getConfig().stick_upright_angle);
-			if(MTR_CLOSE_TO(m_swerve_model_ptr->getConfig().stick_upright_angle)){ // within n degrees of upright
-				m_digital_io[m_digital_io_name_map.at("tail")] = false;
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 100); // i'm going to give it less but not none so it can hold itself centered
-			}
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
+
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
 		}
 
+		bool tail_down = false;
+		// tail left and intake up
+		if(tail_mode){
+			tail_down = true;
+			if(joy_data->btn_r2){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+				rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_kick);
+			}
+			else{
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+				rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
+			}
+		}
+		else{
+			tail_down = false;
+			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+			rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
+		}
+
+		m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
+		m_digital_io[m_digital_io_name_map["claw"]] = !m_claw_open;
+
 		rhi_ptr_->setDigitalIO(m_digital_io);
+
+		// If INTAKE_MOTOR stalling, update state and timer
+		if((intake_command)
+		   && (std::fabs(rhi_ptr_->getMotorVelocityRPM("intake_motor")) < m_burnout_absolute_rpm_threshold)){
+			if(!m_intake_stalling){
+				m_intake_stall_start = node_ptr_->now();
+				m_intake_stalling = true;
+			}
+		}
+		else{
+			m_intake_stalling = false;
+		}
+
+		// If INTAKE_MOTOR stalled for too long, start cooldown period
+		if(!m_intake_cooling_down && m_intake_stalling
+		   && ((node_ptr_->now() - m_intake_stall_start).nanoseconds() > m_burnout_stall_duration_ms * 1000000) ){
+			m_intake_stalling = false;
+			m_intake_cooling_down = true;
+			m_intake_cooldown_start = node_ptr_->now();
+		}
+
+		// Enforce INTAKE_MOTOR cooldown period
+		if(m_intake_cooling_down){
+			if(((node_ptr_->now() - m_intake_cooldown_start).nanoseconds() <= m_burnout_cooldown_duration_ms * 1000000) && intake_command){
+				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
+				rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
+			}
+			else{
+				m_intake_cooling_down = false;
+			}
+		}
 	}
 }
 
@@ -464,9 +708,9 @@ void SwerveRobotPlugin::updateDrivetrainMotors(){
 		auto command = m_swerve_model_ptr->getModuleCommand(module_name);
 
 		if(m_climb_mode && !m_claw_open){
-			// reduce current to drivetrain when in climb mode and hooked onto the pole
-			rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 750);
-			rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 750);
+			// Cut current to drivetrain when in climb mode and hooked onto the pole
+			rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 0);
+			rhi_ptr_->setMotorCurrentLimitMilliAmps(m2_name, 0);
 		}
 		else{
 			rhi_ptr_->setMotorCurrentLimitMilliAmps(m1_name, 2500);
@@ -482,10 +726,33 @@ void SwerveRobotPlugin::updateDrivetrainMotors(){
 }
 
 
-void SwerveRobotPlugin::poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
-	double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
-	m_swerve_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y);
-	m_swerve_model_ptr->setWorldAngle(theta);
+void SwerveRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
+	if(!m_use_backup_estimator){
+		double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+		m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
+		m_swerve_model_ptr->setWorldAngleRad(theta);
+		m_swerve_model_ptr->setWorldTranslationalVelocity(msg->twist.twist.linear.x, msg->twist.twist.linear.y);
+		m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
+	}
+}
+
+void SwerveRobotPlugin::worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg){
+	if(m_use_backup_estimator){
+		double theta = ghost_util::quaternionToYawRad(msg->pose.pose.orientation.w,msg->pose.pose.orientation.x,msg->pose.pose.orientation.y,msg->pose.pose.orientation.z);
+		m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
+		m_swerve_model_ptr->setWorldAngleRad(theta);
+		m_swerve_model_ptr->setWorldTranslationalVelocity(msg->twist.twist.linear.x, msg->twist.twist.linear.y);
+		m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
+	}
+}
+
+void SwerveRobotPlugin::publishBaseTwist(){
+	geometry_msgs::msg::Twist msg{};
+	auto base_vel_cmd = m_swerve_model_ptr->getBaseVelocityCommand();
+	msg.linear.x = base_vel_cmd.x();
+	msg.linear.y = base_vel_cmd.y();
+	msg.angular.z = base_vel_cmd.z();
+	m_base_twist_cmd_pub->publish(msg);
 }
 
 void SwerveRobotPlugin::publishOdometry(){
@@ -683,26 +950,22 @@ void SwerveRobotPlugin::publishVisualization(){
 
 void SwerveRobotPlugin::publishTrajectoryVisualization(){
 	visualization_msgs::msg::MarkerArray viz_msg;
-	auto time = trajectory_motor_map_["x"].time_vector;
+	auto time = robot_trajectory_ptr_->x_trajectory.time_vector;
 
-	RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory viz");
-	if(trajectory_motor_map_.size() == 0){
+	// RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory viz");
+	if(!robot_trajectory_ptr_){
 		RCLCPP_WARN(node_ptr_->get_logger(), "empty trajectory");
 		return;
 	}
-	if(trajectory_motor_map_["x"].time_vector.size() == 0){
-		RCLCPP_WARN(node_ptr_->get_logger(), "empty time vector");
-		return;
-	}
-	auto x = trajectory_motor_map_["x"].position_vector;
-	auto x_vel = trajectory_motor_map_["x"].velocity_vector;
-	auto y = trajectory_motor_map_["y"].position_vector;
-	auto y_vel = trajectory_motor_map_["y"].velocity_vector;
-	auto ang = trajectory_motor_map_["angle"].position_vector;
-	auto ang_vel = trajectory_motor_map_["angle"].velocity_vector;
+	auto x = robot_trajectory_ptr_->x_trajectory.position_vector;
+	auto x_vel = robot_trajectory_ptr_->x_trajectory.velocity_vector;
+	auto y = robot_trajectory_ptr_->y_trajectory.position_vector;
+	auto y_vel = robot_trajectory_ptr_->y_trajectory.velocity_vector;
+	auto theta = robot_trajectory_ptr_->theta_trajectory.position_vector;
+	auto theta_vel = robot_trajectory_ptr_->theta_trajectory.velocity_vector;
 	int j = 30;
 
-	for(int i = 0; i < trajectory_motor_map_["x"].time_vector.size(); i += 50){
+	for(int i = 0; i < x.size(); i += 50){
 		auto marker_msg = visualization_msgs::msg::Marker{};
 
 		marker_msg.header.frame_id = "odom";
@@ -718,7 +981,7 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 		marker_msg.pose.position.y = y[i];
 		marker_msg.pose.position.z = 0;
 		double w, x, y, z;
-		ghost_util::yawToQuaternionRad(ang[i], w, x, y, z);
+		ghost_util::yawToQuaternionRad(theta[i], w, x, y, z);
 		marker_msg.pose.orientation.w = w;
 		marker_msg.pose.orientation.x = x;
 		marker_msg.pose.orientation.y = y;
@@ -731,9 +994,38 @@ void SwerveRobotPlugin::publishTrajectoryVisualization(){
 		viz_msg.markers.push_back(marker_msg);
 	}
 
-	RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory arrows");
+	// RCLCPP_INFO(node_ptr_->get_logger(), "publishing trajectory arrows");
 
 	m_trajectory_viz_pub->publish(viz_msg);
+}
+
+void SwerveRobotPlugin::publishCurrentTwist(double curr_vel_x, double curr_vel_y, double curr_vel_theta){
+	geometry_msgs::msg::Twist msg{};
+	msg.linear.x = curr_vel_x;
+	msg.linear.y = curr_vel_y;
+	msg.angular.z = curr_vel_theta;
+	m_cur_vel_pub->publish(msg);
+}
+
+void SwerveRobotPlugin::publishDesiredTwist(double des_vel_x, double des_vel_y, double des_vel_theta){
+	geometry_msgs::msg::Twist msg{};
+	msg.linear.x = des_vel_x;
+	msg.linear.y = des_vel_y;
+	msg.angular.z = des_vel_theta;
+	m_des_vel_pub->publish(msg);
+}
+
+void SwerveRobotPlugin::publishDesiredPose(double des_x, double des_y, double des_theta){
+	geometry_msgs::msg::Pose msg{};
+	msg.position.x = des_x;
+	msg.position.y = des_y;
+	ghost_util::yawToQuaternionRad(
+		des_theta,
+		msg.orientation.w,
+		msg.orientation.x,
+		msg.orientation.y,
+		msg.orientation.z);
+	m_des_pos_pub->publish(msg);
 }
 
 } // namespace ghost_swerve

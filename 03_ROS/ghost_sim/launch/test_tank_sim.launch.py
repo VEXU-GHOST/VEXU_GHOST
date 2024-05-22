@@ -35,7 +35,9 @@ def launch_setup(context, *args, **kwargs):
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters=[{'use_sim_time': True}, {"robot_description": doc}])
+        parameters=[{'use_sim_time': True}, {"robot_description": doc}],
+        remappings=[('/sensors/wheel_odom', '/odom')]
+    )
 
     # Joystick (Only launched if joystick CLI arg is set to True)
     joy_launch_description = IncludeLaunchDescription(
@@ -67,7 +69,6 @@ def generate_launch_description():
 
     world_file = os.path.join(ghost_sim_share_dir, "worlds", "spin_up.world")
     rviz_config_path = os.path.join(ghost_localization_share_dir, 'rviz/ekf_pf.rviz')
-    print(rviz_config_path)
 
     # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
     simulation = IncludeLaunchDescription(
@@ -82,12 +83,15 @@ def generate_launch_description():
             }.items()
     )
 
-    ekf_pf_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(ghost_localization_share_dir,
-                         'launch', 'ekf_pf.launch.py')
-        ))
-    
+    ekf_pf_node = Node(
+        package='ghost_localization',
+        executable='ekf_pf_node',
+        name='ekf_pf_node',
+        output='screen',
+        parameters=[ghost_localization_share_dir + "/config/ekf_pf_node.yaml"],
+        remappings=[('/sensors/wheel_odom', '/odom')],
+    )
+
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
         package='rviz2',
@@ -101,7 +105,8 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_localization_node',
         output='screen',
-        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"]
+        parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"],
+        remappings=[('/sensors/wheel_odom', '/odom')]
     )
 
     plot_juggler_node = Node(
@@ -113,13 +118,12 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(name='use_joy', default_value='false'),
         DeclareLaunchArgument(name='channel_id', default_value='1'),
-        DeclareLaunchArgument('sim_gui', default_value='true'),
+        DeclareLaunchArgument('sim_gui', default_value='false'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        ekf_pf_launch,
+        ekf_pf_node,
         rviz_node,
-        # plot_juggler_node,
+        plot_juggler_node,
         robot_localization_node,
-        # state_machine_node,
         OpaqueFunction(function = launch_setup),
     ])

@@ -13,7 +13,7 @@
 //  If not, see <http://www.gnu.org/licenses/>.
 // ========================================================================
 /*!
-   \file    particle-filter-main.cc
+   \file    particle-filter-main.cc DO NOT USE
    \brief   Main entry point for particle filter based
          mobile robot localization
    \author  Joydeep Biswas, (C) 2019
@@ -44,7 +44,7 @@ PfEkfNode::PfEkfNode() :
 	Node("pf_ekf_node"){
 	// Subscribers
 	odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-		"/odom",
+		"/sensors/wheel_odom",
 		10,
 		std::bind(&PfEkfNode::OdomCallback, this, _1));
 
@@ -57,7 +57,7 @@ PfEkfNode::PfEkfNode() :
 	map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
 
 	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		"/initial_pose",
+		"/set_pose",
 		10,
 		std::bind(&PfEkfNode::InitialPoseCallback, this, _1)
 		);
@@ -67,7 +67,6 @@ PfEkfNode::PfEkfNode() :
 	cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
 	map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", map_qos);
 	world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
-	robot_state_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pf_robot_state", 10);
 	ekf_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pf_odometry", 10);
 
 	// Use simulated time in ROS TODO:!!!!
@@ -178,7 +177,6 @@ void PfEkfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 		laser_msg_received_ = true;
 	}
 	try{
-		std::cout << "Callback ObserveLaser" << std::endl;
 		last_laser_msg_ = msg;
 		particle_filter_.ObserveLaser(
 			msg->ranges,
@@ -187,7 +185,7 @@ void PfEkfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 			msg->angle_min + config_params.laser_angle_offset,
 			msg->angle_max + config_params.laser_angle_offset);
 
-		PublishRobotPose(msg->header.stamp);
+		PublishRobotPose();
 		PublishWorldTransform();
 		PublishVisualization();
 	}
@@ -226,14 +224,15 @@ void PfEkfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 void PfEkfNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	this->last_filtered_odom_msg_ = *msg;
 	odom_loc_(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
-	odom_angle_ += 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
+	odom_angle_ = 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
 	try{
 		Vector2f robot_loc(0, 0);
 		float robot_angle(0);
+		std::array<double,36> covariance;
 		particle_filter_.Predict(odom_loc_, odom_angle_);
-		particle_filter_.GetLocation(&robot_loc, &robot_angle);
+		particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
-		PublishRobotPose(last_filtered_odom_msg_.header.stamp);
+		PublishRobotPose();
 		PublishWorldTransform();
 		PublishVisualization();
 	}
@@ -242,25 +241,22 @@ void PfEkfNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	}
 }
 
-void PfEkfNode::PublishRobotPose(rclcpp::Time stamp){
+void PfEkfNode::PublishRobotPose(){
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 	auto robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
-	// covariance is row major form
-	std::array<double, 36> covariance = {config_params.k1, config_params.k4, 0.0, config_params.k7, 0.0, 0.0,
-		                             config_params.k2, config_params.k5, 0.0, config_params.k8, 0.0, 0.0,
-		                             config_params.k3, config_params.k6, 0.0, config_params.k9, 0.0, 0.0};
 
-	robot_pose_.header.stamp = stamp;
-	robot_pose_.header.frame_id = "base_link";
+	robot_pose_.header.stamp = this->get_clock()->now();
+	robot_pose_.header.frame_id = config_params.world_frame;
 
 	robot_pose_.pose.pose.position.x = robot_loc.x();
 	robot_pose_.pose.pose.position.y = robot_loc.y();
 	robot_pose_.pose.pose.position.z = 0.0; // TODO ??
 	robot_pose_.pose.covariance = covariance;
-	robot_state_pub_->publish(robot_pose_);
+	ekf_odom_pub_->publish(robot_pose_);
 }
 
 void PfEkfNode::PublishMapViz(){
@@ -305,19 +301,16 @@ void PfEkfNode::PublishWorldTransform(){
 
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 	world_to_base_tf.transform.translation.x = robot_loc.x();
 	world_to_base_tf.transform.translation.y = robot_loc.y();
-	// world_to_base_tf.transform.translation.x = odom_loc_.x();
-	// world_to_base_tf.transform.translation.y = odom_loc_.y();
 	world_to_base_tf.transform.translation.z = 0.0;
 	world_to_base_tf.transform.rotation.x = 0.0;
 	world_to_base_tf.transform.rotation.y = 0.0;
 	world_to_base_tf.transform.rotation.z = sin(robot_angle * 0.5);
 	world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
-	// world_to_base_tf.transform.rotation.z = sin(odom_angle_ * 0.5);
-	// world_to_base_tf.transform.rotation.w = cos(odom_angle_ * 0.5);
 
 	tf_msg.transforms.push_back(world_to_base_tf);
 	world_tf_pub_->publish(tf_msg);
@@ -353,9 +346,6 @@ void PfEkfNode::PublishVisualization(){
 void PfEkfNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg){
 	vector<particle_filter::Particle> particles;
 	particle_filter_.GetParticles(&particles);
-	RCLCPP_INFO(
-		this->get_logger(),
-		"DrawParticles");
 	for(const particle_filter::Particle &p : particles){
 		auto pose_msg = geometry_msgs::msg::Pose{};
 		pose_msg.position.x = p.loc.x();
@@ -372,7 +362,8 @@ void PfEkfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg)
 	}
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 	vector<Vector2f> predicted_scan;
 
 	particle_filter_.GetPredictedPointCloud(

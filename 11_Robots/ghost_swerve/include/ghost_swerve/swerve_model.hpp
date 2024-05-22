@@ -19,8 +19,8 @@ enum swerve_type_e {
 struct SwerveConfig {
 	// Maximum linear speed of robot base (or linear velocity of wheel surface).
 	double max_wheel_lin_vel;
-	double max_lin_vel_slew; // for each axis independently
-	double max_ang_vel_slew;
+	double max_lin_vel_slew = 1.0; // for each axis independently
+	double max_ang_vel_slew = 1.0;
 
 	// Module Config
 	swerve_type_e module_type;
@@ -31,8 +31,15 @@ struct SwerveConfig {
 
 	// Kinematic Controller
 	double steering_kp;
+	double steering_kd;
+	double steering_ki;
+	double steering_ki_limit;
+	double controller_dt;
+	double steering_control_deadzone;
 	double move_to_pose_kp;
 	double angle_control_kp;
+	double angle_heuristic_start_angle;
+	double angle_heuristic_end_angle;
 
 	// Velocity Scaling
 	double velocity_scaling_ratio;
@@ -300,6 +307,7 @@ public:
 		return m_ls_error_metric;
 	}
 
+	// Base States
 	const Eigen::Vector2d& getOdometryLocation(){
 		return m_odom_loc;
 	}
@@ -308,17 +316,13 @@ public:
 		return m_odom_angle;
 	}
 
-	void setWorldPose(const double x, const double y){
-		m_world_loc.x() = x;
-		m_world_loc.y() = y;
-	}
-
-	void setWorldAngle(const double theta){
-		m_world_angle = theta;
-	}
-
 	const Eigen::Vector2d& getWorldLocation(){
 		return m_world_loc;
+	}
+
+	void setWorldLocation(const double x, const double y){
+		m_world_loc.x() = x;
+		m_world_loc.y() = y;
 	}
 
 	double getWorldAngleDeg() const {
@@ -329,21 +333,49 @@ public:
 		return m_world_angle;
 	}
 
-	void setOdometryAngle(double angle) {
-		m_odom_angle = angle;
+	void setWorldAngleRad(const double theta){
+		m_world_angle = theta;
 	}
 
-	void setOdometryLocation(double x, double y) {
-		m_odom_loc.x() = x;
-		m_odom_loc.y() = y;
+	const Eigen::Vector2d& getWorldTranslationalVelocity(){
+		return m_world_vel;
+	}
+
+	void setWorldTranslationalVelocity(const double x, const double y){
+		m_world_vel.x() = x;
+		m_world_vel.y() = y;
+	}
+
+	const double getWorldAngularVelocity(){
+		return m_world_angle_vel;
+	}
+
+	void setWorldAngularVelocity(const double omega){
+		m_world_angle_vel = omega;
+	}
+
+
+	bool isFieldOrientedControl() const {
+		return m_is_field_oriented;
 	}
 
 	void setFieldOrientedControl(bool field_oriented_control){
 		m_is_field_oriented = field_oriented_control;
 	}
 
-	bool isFieldOrientedControl() const {
-		return m_is_field_oriented;
+	void setAutoStatus(bool state){
+		m_auto_status = state;
+	}
+	bool getAutoStatus(){
+		return m_auto_status;
+	}
+
+	void enableSwerveHeuristics(){
+		m_swerve_heuristics_enabled = true;
+	}
+
+	void disableSwerveHeuristics(){
+		m_swerve_heuristics_enabled = false;
 	}
 
 protected:
@@ -369,6 +401,7 @@ protected:
 	double m_lin_vel_slew;
 	double m_ang_slew;
 	double LIN_VEL_TO_RPM;
+	bool m_swerve_heuristics_enabled = true;
 
 	// Jacobians
 	Eigen::Matrix2d m_module_jacobian;                      // Maps actuator velocities to joint velocities
@@ -384,9 +417,16 @@ protected:
 
 	// Odometry
 	Eigen::Vector2d m_odom_loc;
-	Eigen::Vector2d m_world_loc;
 	double m_odom_angle;
+
+	Eigen::Vector2d m_world_loc;
 	double m_world_angle;
+
+	Eigen::Vector2d m_world_vel;
+	double m_world_angle_vel;
+
+	// Steering Integral
+	std::unordered_map<std::string, double> m_error_sum_map;
 
 	// Current centroidal states
 	double m_curr_angle;
@@ -410,6 +450,7 @@ protected:
 	double m_icr_quality = 0;
 	double m_icr_sse = 0;
 	double m_ls_error_metric = 0.0;
+	bool m_auto_status = false;
 };
 
 } // namespace ghost_swerve

@@ -11,17 +11,17 @@ set(DEPENDENCIES
   ghost_ros_interfaces
   ghost_util
   ghost_estimation
-  geometry_msgs
-  sensor_msgs
-  matplotlib_cpp
-  PythonLibs
-  visualization_msgs
-  nav_msgs
-  ghost_msgs
-  pluginlib
-  tf2
   ghost_planners
   ghost_motion_planner_core
+  geometry_msgs
+  sensor_msgs
+  nav_msgs
+  ghost_msgs
+  visualization_msgs
+  matplotlib_cpp
+  PythonLibs
+  pluginlib
+  tf2
   Eigen3
   behaviortree_cpp
   behaviortree_ros2
@@ -91,21 +91,21 @@ RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
-add_executable(swerve_motion_planner
-  src/swerve_motion_planner.cpp
+add_executable(cubic_motion_planner
+  src/cubic_motion_planner.cpp
 )
-ament_target_dependencies(swerve_motion_planner
+ament_target_dependencies(cubic_motion_planner
   ${DEPENDENCIES}
 )
-target_link_libraries(swerve_motion_planner
+target_link_libraries(cubic_motion_planner
   swerve_model
 )
-target_include_directories(swerve_motion_planner
+target_include_directories(cubic_motion_planner
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  swerve_motion_planner
+  cubic_motion_planner
   DESTINATION lib/${PROJECT_NAME})
 
 # bt node libraries
@@ -114,8 +114,9 @@ set(NODES
   loggingNode
   moveToPose
   swipeTail
-  setWing
+  intakeCmd
   climb
+  # autoDone
 )
 
 foreach(NODE ${NODES})

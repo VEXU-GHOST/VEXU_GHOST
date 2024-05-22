@@ -186,6 +186,9 @@ void toROSMsg(const RobotHardwareInterface& hardware_interface, V5ActuatorComman
 		else if(device_data_ptr->type == device_type_e::JOYSTICK){
 			continue;
 		}
+		else if(device_data_ptr->type == device_type_e::INERTIAL_SENSOR){
+			continue;
+		}
 		else{
 			std::string dev_type_str;
 			if(DEVICE_TYPE_TO_STRING_MAP.count(device_data_ptr->type) == 1){
@@ -308,43 +311,49 @@ void fromROSMsg(RobotHardwareInterface& hardware_interface, const V5SensorUpdate
 }
 
 void fromROSMsg(ghost_planners::RobotTrajectory& robot_trajectory, const ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg){
-	robot_trajectory.motor_names = robot_trajectory_msg.motor_names;
-	robot_trajectory.motor_trajectories.clear();
-	robot_trajectory.motor_trajectories.reserve(robot_trajectory_msg.trajectories.size());
-	for(const auto& motor_trajectory_msg : robot_trajectory_msg.trajectories){
-		auto motor_trajectory_ptr = std::make_shared<ghost_planners::RobotTrajectory::MotorTrajectory>();
-		fromROSMsg(*motor_trajectory_ptr, motor_trajectory_msg);
-		robot_trajectory.add_trajectory(motor_trajectory_ptr);
-	}
+	auto x_trajectory_ptr = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
+	fromROSMsg(*x_trajectory_ptr, robot_trajectory_msg.x_trajectory);
+	robot_trajectory.x_trajectory = *x_trajectory_ptr;
+
+	auto y_trajectory_ptr = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
+	fromROSMsg(*y_trajectory_ptr, robot_trajectory_msg.y_trajectory);
+	robot_trajectory.y_trajectory = *y_trajectory_ptr;
+
+	auto theta_trajectory_ptr = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
+	fromROSMsg(*theta_trajectory_ptr, robot_trajectory_msg.theta_trajectory);
+	robot_trajectory.theta_trajectory = *theta_trajectory_ptr;
 }
 
-void fromROSMsg(ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, const ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg){
-	motor_trajectory.time_vector = motor_trajectory_msg.time;
-	motor_trajectory.velocity_vector = motor_trajectory_msg.velocity;
-	motor_trajectory.voltage_vector = motor_trajectory_msg.voltage;
-	motor_trajectory.position_vector = motor_trajectory_msg.position;
-	motor_trajectory.torque_vector = motor_trajectory_msg.torque;
+void fromROSMsg(ghost_planners::RobotTrajectory::Trajectory& trajectory, const ghost_msgs::msg::Trajectory& trajectory_msg){
+	trajectory.time_vector = trajectory_msg.time;
+	trajectory.velocity_vector = trajectory_msg.velocity;
+	// trajectory.voltage_vector = trajectory_msg.voltage;
+	trajectory.position_vector = trajectory_msg.position;
+	// trajectory.torque_vector = trajectory_msg.torque;
+	trajectory.threshold = trajectory_msg.threshold;
 }
 
 void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg){
-	std::cerr << "toROSMsg robot trajectory\n";
-	robot_trajectory_msg.motor_names = robot_trajectory.motor_names;
-	for(const auto& motor_trajectory : robot_trajectory.motor_trajectories){
-		std::cerr << "getting motor trajectory msg\n";
-		auto motor_trajectory_msg = std::make_shared<ghost_msgs::msg::MotorTrajectory>();
-		toROSMsg(motor_trajectory, *motor_trajectory_msg);
-		robot_trajectory_msg.trajectories.push_back(*motor_trajectory_msg);
-	}
+	auto x_trajectory_msg_ptr = std::make_shared<ghost_msgs::msg::Trajectory>();
+	toROSMsg(robot_trajectory.x_trajectory, *x_trajectory_msg_ptr);
+	robot_trajectory_msg.x_trajectory = *x_trajectory_msg_ptr;
+
+	auto y_trajectory_msg_ptr = std::make_shared<ghost_msgs::msg::Trajectory>();
+	toROSMsg(robot_trajectory.x_trajectory, *y_trajectory_msg_ptr);
+	robot_trajectory_msg.x_trajectory = *y_trajectory_msg_ptr;
+
+	auto theta_trajectory_msg_ptr = std::make_shared<ghost_msgs::msg::Trajectory>();
+	toROSMsg(robot_trajectory.x_trajectory, *theta_trajectory_msg_ptr);
+	robot_trajectory_msg.x_trajectory = *theta_trajectory_msg_ptr;
 }
 
-void toROSMsg(const ghost_planners::RobotTrajectory::MotorTrajectory& motor_trajectory, ghost_msgs::msg::MotorTrajectory& motor_trajectory_msg){
-	std::cerr << "toROSMsg motor trajectory\n";
-	motor_trajectory_msg.position = motor_trajectory.position_vector;
-	motor_trajectory_msg.time = motor_trajectory.time_vector;
-	motor_trajectory_msg.torque = motor_trajectory.torque_vector;
-	motor_trajectory_msg.velocity = motor_trajectory.velocity_vector;
-	motor_trajectory_msg.voltage = motor_trajectory.voltage_vector;
-	std::cerr << "toROSMsg motor trajectory done\n";
+void toROSMsg(const ghost_planners::RobotTrajectory::Trajectory& trajectory, ghost_msgs::msg::Trajectory& trajectory_msg){
+	trajectory_msg.position = trajectory.position_vector;
+	trajectory_msg.time = trajectory.time_vector;
+	// trajectory_msg.torque = trajectory.torque_vector;
+	trajectory_msg.velocity = trajectory.velocity_vector;
+	// trajectory_msg.voltage = trajectory.voltage_vector;
+	trajectory_msg.threshold = trajectory.threshold;
 }
 
 void fromROSMsg(std::unordered_map<std::string, std::vector<double> > &labeled_vector_map, const ghost_msgs::msg::LabeledVectorMap& msg){

@@ -44,7 +44,7 @@ EkfPfNode::EkfPfNode() :
 	Node("ekf_pf_node"){
 	// Subscribers
 	ekf_odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-		"/odometry/filtered",
+		"/odom_ekf/odometry",
 		10,
 		std::bind(&EkfPfNode::EkfCallback, this, _1));
 
@@ -52,12 +52,6 @@ EkfPfNode::EkfPfNode() :
 		"/scan",
 		rclcpp::SensorDataQoS(),
 		std::bind(&EkfPfNode::LaserCallback, this, _1));
-
-	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-		"/initial_pose",
-		10,
-		std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
-		);
 
 	auto map_qos = rclcpp::QoS(10);
 	map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
@@ -70,10 +64,16 @@ EkfPfNode::EkfPfNode() :
 	robot_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("estimation/pose", 10);
 
 	// Use simulated time in ROS TODO:!!!!
-	rclcpp::Parameter use_sim_time_param("use_sim_time", true);
+	rclcpp::Parameter use_sim_time_param("use_sim_time", false);
 	this->set_parameter(use_sim_time_param);
 
 	LoadROSParams();
+
+	set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+		rviz_set_pose_topic_,
+		10,
+		std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
+		);
 
 	particle_filter_ = ParticleFilter(config_params);
 	first_map_load_ = true;
@@ -82,7 +82,7 @@ EkfPfNode::EkfPfNode() :
 	const Vector2f init_loc(config_params.init_x, config_params.init_y);
 	const float init_angle = config_params.init_r;
 
-	odom_loc_(config_params.init_x, config_params.init_y);
+	odom_loc_ = Eigen::Vector2f(config_params.init_x, config_params.init_y);
 	odom_angle_ = config_params.init_r;
 
 	particle_filter_.Initialize(config_params.map, init_loc, config_params.init_r);
@@ -93,6 +93,9 @@ void EkfPfNode::LoadROSParams(){
 
 	declare_parameter("particle_filter.world_frame", "");
 	config_params.world_frame = get_parameter("particle_filter.world_frame").as_string();
+
+	declare_parameter("particle_filter.rviz_set_pose_topic", "");
+	rviz_set_pose_topic_ = get_parameter("particle_filter.rviz_set_pose_topic").as_string();
 
 	declare_parameter("particle_filter.map", "");
 	config_params.map = get_parameter("particle_filter.map").as_string();
@@ -137,14 +140,18 @@ void EkfPfNode::LoadROSParams(){
 	config_params.k8 = get_parameter("particle_filter.k8").as_double();
 	config_params.k9 = get_parameter("particle_filter.k9").as_double();
 
-	declare_parameter("particle_filter.laser_offset", 0.0);
+	declare_parameter("particle_filter.laser_offset_x", 0.0);
+	declare_parameter("particle_filter.laser_offset_y", 0.0);
 	declare_parameter("particle_filter.laser_angle_offset", 0.0);
 	declare_parameter("particle_filter.min_update_dist", 0.0);
 	declare_parameter("particle_filter.min_update_angle", 0.0);
-	config_params.laser_offset = get_parameter("particle_filter.laser_offset").as_double();
+	declare_parameter("particle_filter.max_update_angular_velocity", 0.0);
+	config_params.laser_offset_x = get_parameter("particle_filter.laser_offset_x").as_double();
+	config_params.laser_offset_y = get_parameter("particle_filter.laser_offset_y").as_double();
 	config_params.laser_angle_offset = get_parameter("particle_filter.laser_angle_offset").as_double();
 	config_params.min_update_dist = get_parameter("particle_filter.min_update_dist").as_double();
 	config_params.min_update_angle = get_parameter("particle_filter.min_update_angle").as_double();
+	config_params.max_update_angular_velocity = get_parameter("particle_filter.max_update_angular_velocity").as_double();
 
 	declare_parameter("particle_filter.sigma_observation", 0.0);
 	declare_parameter("particle_filter.gamma", 0.0);
@@ -166,10 +173,12 @@ void EkfPfNode::LoadROSParams(){
 	declare_parameter("particle_filter.use_skip_range", false);
 	declare_parameter("particle_filter.skip_index_min", 0);
 	declare_parameter("particle_filter.skip_index_max", 0);
+	declare_parameter("particle_filter.publish_tf", false);
 
 	config_params.use_skip_range = get_parameter("particle_filter.use_skip_range").as_bool();
 	config_params.skip_index_min = get_parameter("particle_filter.skip_index_min").as_int();
 	config_params.skip_index_max = get_parameter("particle_filter.skip_index_max").as_int();
+	publish_tf_ = get_parameter("particle_filter.publish_tf").as_bool();
 }
 
 void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
@@ -185,9 +194,11 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg){
 			msg->angle_min + config_params.laser_angle_offset,
 			msg->angle_max + config_params.laser_angle_offset);
 
-		PublishRobotPose(msg->header.stamp);
-		PublishWorldTransform();
+		PublishRobotPose();
 		PublishVisualization();
+		if(publish_tf_){
+			PublishWorldTransform();
+		}
 	}
 	catch(std::exception e){
 		RCLCPP_ERROR(this->get_logger(), "Laser : % s ", e.what());
@@ -211,7 +222,9 @@ void EkfPfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 
 		particle_filter_.Initialize(config_params.map, init_loc, init_angle);
 
-		PublishWorldTransform();
+		if(publish_tf_){
+			PublishWorldTransform();
+		}
 		PublishVisualization();
 		PublishMapViz();
 	}
@@ -223,39 +236,51 @@ void EkfPfNode::InitialPoseCallback(const geometry_msgs::msg::PoseWithCovariance
 // Odometry
 void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg){
 	this->last_filtered_odom_msg_ = *msg;
-	odom_loc_(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
-	odom_angle_ += 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
-	try{
-		particle_filter_.Predict(odom_loc_, odom_angle_);
-		// PublishGhostRobotState(msg);
+	odom_loc_ = Eigen::Vector2f(last_filtered_odom_msg_.pose.pose.position.x, last_filtered_odom_msg_.pose.pose.position.y);
+	odom_angle_ = 2.0 * atan2(last_filtered_odom_msg_.pose.pose.orientation.z, last_filtered_odom_msg_.pose.pose.orientation.w);
 
-		// PublishJointStateMsg(msg);
-		PublishRobotPose(last_filtered_odom_msg_.header.stamp);
-		PublishWorldTransform();
+	particle_filter_.setAngularVelocity(msg->twist.twist.angular.z);
+
+	try{
+		Vector2f robot_loc(0, 0);
+		float robot_angle(0);
+		std::array<double,36> covariance;
+		particle_filter_.Predict(odom_loc_, odom_angle_);
+
+		particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
+		PublishRobotPose();
 		PublishVisualization();
+		if(publish_tf_){
+			PublishWorldTransform();
+		}
 	}
 	catch(std::exception e){
 		RCLCPP_ERROR(this->get_logger(), "Odom: %s", e.what());
 	}
 }
 
-void EkfPfNode::PublishRobotPose(rclcpp::Time stamp){
+void EkfPfNode::PublishRobotPose(){
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 	robot_pose_ = geometry_msgs::msg::PoseWithCovarianceStamped{};
-	// covariance is row major form
-	std::array<double, 36> covariance = {config_params.k1, config_params.k4, 0.0, config_params.k7, 0.0, 0.0,
-		                             config_params.k2, config_params.k5, 0.0, config_params.k8, 0.0, 0.0,
-		                             config_params.k3, config_params.k6, 0.0, config_params.k9, 0.0, 0.0};
 
-	robot_pose_.header.stamp = stamp;
-	robot_pose_.header.frame_id = "base_link";
+	robot_pose_.header.stamp = this->get_clock()->now();
+	robot_pose_.header.frame_id = config_params.world_frame;
 
 	robot_pose_.pose.pose.position.x = robot_loc.x();
 	robot_pose_.pose.pose.position.y = robot_loc.y();
-	robot_pose_.pose.pose.position.z = 0.0; // TODO ??
+	robot_pose_.pose.pose.position.z = 0.0;
+
+	ghost_util::yawToQuaternionRad(
+		robot_angle,
+		robot_pose_.pose.pose.orientation.w,
+		robot_pose_.pose.pose.orientation.x,
+		robot_pose_.pose.pose.orientation.y,
+		robot_pose_.pose.pose.orientation.z
+		);
 	robot_pose_.pose.covariance = covariance;
 	robot_pose_pub_->publish(robot_pose_);
 }
@@ -302,19 +327,16 @@ void EkfPfNode::PublishWorldTransform(){
 
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 
 	world_to_base_tf.transform.translation.x = robot_loc.x();
 	world_to_base_tf.transform.translation.y = robot_loc.y();
-	// world_to_base_tf.transform.translation.x = odom_loc_.x();
-	// world_to_base_tf.transform.translation.y = odom_loc_.y();
 	world_to_base_tf.transform.translation.z = 0.0;
 	world_to_base_tf.transform.rotation.x = 0.0;
 	world_to_base_tf.transform.rotation.y = 0.0;
 	world_to_base_tf.transform.rotation.z = sin(robot_angle * 0.5);
 	world_to_base_tf.transform.rotation.w = cos(robot_angle * 0.5);
-	// world_to_base_tf.transform.rotation.z = sin(odom_angle_ * 0.5);
-	// world_to_base_tf.transform.rotation.w = cos(odom_angle_ * 0.5);
 
 	tf_msg.transforms.push_back(world_to_base_tf);
 	world_tf_pub_->publish(tf_msg);
@@ -350,9 +372,6 @@ void EkfPfNode::PublishVisualization(){
 void EkfPfNode::DrawParticles(geometry_msgs::msg::PoseArray &cloud_msg){
 	vector<particle_filter::Particle> particles;
 	particle_filter_.GetParticles(&particles);
-	RCLCPP_INFO(
-		this->get_logger(),
-		"DrawParticles");
 	for(const particle_filter::Particle &p : particles){
 		auto pose_msg = geometry_msgs::msg::Pose{};
 		pose_msg.position.x = p.loc.x();
@@ -369,7 +388,8 @@ void EkfPfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg)
 	}
 	Vector2f robot_loc(0, 0);
 	float robot_angle(0);
-	particle_filter_.GetLocation(&robot_loc, &robot_angle);
+	std::array<double, 36> covariance;
+	particle_filter_.GetLocation(&robot_loc, &robot_angle, &covariance);
 	vector<Vector2f> predicted_scan;
 
 	particle_filter_.GetPredictedPointCloud(
@@ -424,7 +444,7 @@ void EkfPfNode::DrawPredictedScan(visualization_msgs::msg::MarkerArray &viz_msg)
 			if((range >= config_params.range_min) && (range <= config_params.range_max) ){
 				float angle = last_laser_msg_->angle_min + i * last_laser_msg_->angle_increment + config_params.laser_angle_offset + robot_angle;
 
-				Eigen::Vector2f p = Eigen::Vector2f(range * cos(angle), range * sin(angle)) + robot_loc + rot_bl_to_world * Eigen::Vector2f(config_params.laser_offset, 0.0);
+				Eigen::Vector2f p = Eigen::Vector2f(range * cos(angle), range * sin(angle)) + robot_loc + rot_bl_to_world * Eigen::Vector2f(config_params.laser_offset_x, config_params.laser_offset_y);
 				auto point_msg = geometry_msgs::msg::Point{};
 				point_msg.x = p.x();
 				point_msg.y = p.y();

@@ -19,6 +19,7 @@ public:
 		m_config.wheel_radius = 2.75 / 2.0;
 		m_config.steering_kp = 0.1;
 		m_config.max_wheel_actuator_vel = 600.0;
+		m_config.controller_dt = 0.01;
 
 		// Mobile robots use forward as X, left as Y, and up as Z so that travelling forward is zero degree heading.
 		// No, I don't like it either.

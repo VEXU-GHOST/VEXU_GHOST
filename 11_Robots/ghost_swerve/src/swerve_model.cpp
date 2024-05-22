@@ -15,16 +15,17 @@ SwerveModel::SwerveModel(SwerveConfig config){
 	calculateJacobians();
 	calculateMaxBaseTwist();
 
-	// Add each module to module_states map
+	// Initialize module specific data
 	for(const auto & [name, _] : m_config.module_positions){
 		m_current_module_states[name] = ModuleState();
 		m_previous_module_states[name] = ModuleState();
 		m_module_commands[name] = ModuleCommand();
+		m_error_sum_map[name] = 0.0;
 	}
 }
 
 void SwerveModel::validateConfig(){
-	std::unordered_map<std::string, double> double_params{
+	std::unordered_map<std::string, double> larger_than_zero_params{
 		{"max_wheel_lin_vel", m_config.max_wheel_lin_vel},
 		{"max_lin_vel_slew", m_config.max_lin_vel_slew},
 		{"max_ang_vel_slew", m_config.max_ang_vel_slew},
@@ -32,13 +33,31 @@ void SwerveModel::validateConfig(){
 		{"wheel_ratio", m_config.wheel_ratio},
 		{"wheel_radius", m_config.wheel_radius},
 		{"steering_kp", m_config.steering_kp},
+		{"controller_dt", m_config.controller_dt},
 		{"max_wheel_actuator_vel", m_config.max_wheel_actuator_vel}
 	};
 
-	for(const auto& [key, val] : double_params){
+	for(const auto& [key, val] : larger_than_zero_params){
 		if(val <= 0){
 			std::string err_string =
 				std::string("[SwerveModel::validateConfig] Error: ") + key + " must be non-zero and positive!";
+			throw std::runtime_error(err_string);
+		}
+	}
+
+	std::unordered_map<std::string, double> larger_or_equal_to_zero_params{
+		{"steering_kd", m_config.steering_kd},
+		{"steering_ki", m_config.steering_ki},
+		{"steering_ki_limit", m_config.steering_ki_limit},
+		{"steering_control_deadzone", m_config.steering_control_deadzone},
+		{"angle_heuristic_start_angle", m_config.angle_heuristic_start_angle},
+		{"angle_heuristic_end_angle", m_config.angle_heuristic_end_angle}
+	};
+
+	for(const auto& [key, val] : larger_or_equal_to_zero_params){
+		if(val < 0){
+			std::string err_string =
+				std::string("[SwerveModel::validateConfig] Error: ") + key + " must be positive!";
 			throw std::runtime_error(err_string);
 		}
 	}
@@ -54,14 +73,15 @@ void SwerveModel::validateConfig(){
 	m_lin_vel_slew = m_config.max_lin_vel_slew;
 	m_ang_slew = m_config.max_ang_vel_slew;
 
-	// Initialize Odometry
+	// Initialize Base States
 	m_odom_loc = Eigen::Vector2d::Zero();
-	m_odom_loc.x() = ghost_util::INCHES_TO_METERS * 0.0;
-	// m_odom_loc.x() = ghost_util::INCHES_TO_METERS * 10.0;
-	m_odom_loc.y() = ghost_util::INCHES_TO_METERS * 0.0;
-	// m_odom_loc.y() = ghost_util::INCHES_TO_METERS * 10.0;
-	// m_odom_angle = ghost_util::DEG_TO_RAD * 45.0;
-	m_odom_angle = ghost_util::DEG_TO_RAD * 0.0;
+	m_odom_angle = 0.0;
+
+	m_world_loc = Eigen::Vector2d::Zero();
+	m_world_angle = 0.0;
+
+	m_world_vel = Eigen::Vector2d::Zero();
+	m_world_angle_vel = 0.0;
 }
 
 void SwerveModel::calculateJacobians(){
@@ -236,7 +256,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 
 	if(m_is_field_oriented){
 		// Rotate velocity command to robot frame
-		auto rotate_world_to_base = Eigen::Rotation2D<double>(-m_odom_angle).toRotationMatrix();
+		auto rotate_world_to_base = Eigen::Rotation2D<double>(-m_world_angle).toRotationMatrix();
 		xy_vel_cmd_base_link = rotate_world_to_base * xy_vel_cmd_base_link;
 	}
 	double lin_vel_cmd = std::clamp<double>(xy_vel_cmd_base_link.norm(), -m_max_base_lin_vel, m_max_base_lin_vel);
@@ -253,10 +273,11 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 	// std::cout << "lin_vel_cmd: " << lin_vel_cmd << std::endl;
 
 	// For combined linear and angular velocities, we scale down angular velocity (which tends to dominate).
-	if((fabs(lin_vel_cmd) > m_max_base_lin_vel * m_config.velocity_scaling_threshold) && (fabs(ang_vel_cmd) > m_max_base_ang_vel * m_config.velocity_scaling_threshold)){
-		ang_vel_cmd *= m_config.velocity_scaling_ratio;
+	if(m_swerve_heuristics_enabled){
+		if((fabs(lin_vel_cmd) > m_max_base_lin_vel * m_config.velocity_scaling_threshold) && (fabs(ang_vel_cmd) > m_max_base_ang_vel * m_config.velocity_scaling_threshold)){
+			ang_vel_cmd *= m_config.velocity_scaling_ratio;
+		}
 	}
-
 	// Calculate Linear Velocity Direction w/ error checking
 	Eigen::Vector2d linear_vel_dir(0.0, 0.0);
 	if(xy_vel_cmd_base_link.norm() != 0){
@@ -287,6 +308,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 
 		double steering_angle = m_current_module_states.at(module_name).steering_angle;
 		double steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, steering_angle);
+		double steering_velocity = m_current_module_states.at(module_name).steering_velocity;
 
 		if(fabs(steering_error) > 90.0){
 			// Flip commands
@@ -296,21 +318,33 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(double right_cmd, d
 			// Recalculate error
 			steering_error = ghost_util::SmallestAngleDistDeg(module_command.steering_angle_command, steering_angle);
 		}
+
+		// Update error sum for integral control
+		m_error_sum_map[module_name] += steering_error * m_config.controller_dt;         // CHANGED
+		m_error_sum_map[module_name] = ghost_util::clamp<double>(m_error_sum_map[module_name], -m_config.steering_ki_limit, m_config.steering_ki_limit);         // CHANGED
 		max_steering_error = std::max(max_steering_error, std::fabs(steering_error));
 
 		// Set steering voltage using position control law
-		module_command.steering_velocity_command = steering_error * m_config.steering_kp;
+		module_command.steering_velocity_command = steering_error * m_config.steering_kp
+		                                           + m_error_sum_map[module_name] * m_config.steering_ki
+		                                           - steering_velocity * m_config.steering_kd;
+
+		// If steering is within a given tolerance, zero the steering command.
+		// In real system, steering error is never absolute zero, so this helps to maximize drivetrain power.
+		if(std::fabs(steering_error) < m_config.steering_control_deadzone){  // CHANGED
+			module_command.steering_velocity_command = 0.0;
+		}
 
 		// Update module command
 		m_module_commands[module_name] = module_command;
 	}
 
 	// TODO(maxxwilson) : FIX using the velocity based Least squares ICR norm
-	const double x1 = 50.0;
+	const double x1 = m_config.angle_heuristic_start_angle;
 	// Transient Misalignment Heuristic
 	if(max_steering_error > x1){
 		// Linear Interpolation past certain angle
-		const double x2 = 90.0;
+		const double x2 = m_config.angle_heuristic_end_angle;
 		const double y1 = 1.0;
 		const double y2 = 0.0;
 		const double slope = (y2 - y1) / (x2 - x1);

@@ -69,7 +69,9 @@ struct ParticleFilterConfig {
 	float k7;
 	float k8;
 	float k9;
-	float laser_offset;
+	float laser_offset_x;
+	float laser_offset_y;
+	float max_update_angular_velocity;
 	float laser_angle_offset;
 	float min_update_dist;
 	float min_update_angle;
@@ -114,7 +116,7 @@ public:
 	void GetParticles(std::vector<Particle>* particles) const;
 
 	// Get robot's current location.
-	void GetLocation(Eigen::Vector2f* loc, float* angle) const;
+	void GetLocation(Eigen::Vector2f* loc, float* angle, std::array<double, 36>* cov_ptr) const;
 
 	// Update particle weight based on laser.
 	void Update(const std::vector<float>& ranges,
@@ -153,6 +155,10 @@ public:
 		return map_;
 	}
 
+	void setAngularVelocity(float angular_velocity){
+		angular_velocity_curr_ = angular_velocity;
+	}
+
 private:
 
 	// Runtime Configuration Params
@@ -174,6 +180,7 @@ private:
 	Eigen::Vector2f prev_odom_loc_;
 	float prev_odom_angle_;
 	bool odom_initialized_;
+	float angular_velocity_curr_ = 0.0;
 
 	// Eigen::Vector2f first_odom_loc;
 	// float first_odom_angle;

@@ -5,11 +5,13 @@
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <ghost_msgs/msg/drivetrain_command.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/srv/start_recorder.hpp>
 #include <ghost_msgs/srv/stop_recorder.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
@@ -33,16 +35,33 @@ protected:
 	// Publishers
 	void publishVisualization();
 	void publishOdometry();
+	void publishBaseTwist();
 	void publishTrajectoryVisualization();
+	void resetPose(double x, double y, double theta);
 
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
 	rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_swerve_viz_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
+	rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_base_twist_cmd_pub;
+
+
+	// rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_pos_pub;
+	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_vel_pub;
+	rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_vel_pub;
+	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
+	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
+
+	void publishDesiredTwist(double des_vel_x, double des_vel_y, double des_theta_vel);
+	void publishCurrentTwist(double curr_vel_x, double curr_vel_y, double des_vel_theta);
+	void publishDesiredPose(double des_x, double des_y, double des_theta);
 
 	// Subscribers
-	void poseUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+	void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+	void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
 	rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
+	rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
 
 	// Service Clients
 	rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
@@ -58,7 +77,9 @@ protected:
 
 	// Motion Planner
 	double m_move_to_pose_kp_xy = 0.0;
+	double m_move_to_pose_kd_xy = 0.0;
 	double m_move_to_pose_kp_theta = 0.0;
+	double m_move_to_pose_kd_theta = 0.0;
 
 	// Odometry
 	Eigen::Vector2d m_last_odom_loc = Eigen::Vector2d::Zero();
@@ -79,13 +100,22 @@ protected:
 	double m_k8 = 0.0;
 	double m_k9 = 0.0;
 
+	// Pose Reset Covariances
+	double m_init_sigma_x = 0.2;        // 99% within +-24" (two tiles)
+	double m_init_sigma_y = 0.2;        // 99% within +-24" (two tiles)
+	double m_init_sigma_theta = 0.35;   // 99% within 60 degrees
+	double m_init_world_x = 0.0;
+	double m_init_world_y = 0.0;
+	double m_init_world_theta = 0.0;
+	bool m_use_backup_estimator = false;
+
 	// Digital IO
 	std::vector<bool> m_digital_io;
 	std::unordered_map<std::string, size_t> m_digital_io_name_map;
 
 	// Claw
 	bool m_claw_btn_pressed = false;
-	bool m_claw_open = false;
+	bool m_claw_open = true;
 	bool claw_auto_extended = false;
 
 	// Tail
@@ -93,10 +123,7 @@ protected:
 	bool m_tail_down = false;
 
 	// Climb Mode
-	bool m_climb_mode_btn_pressed = false;
 	bool m_climb_mode = false;
-	double lift_target;
-
 
 	// Stick Mode
 	bool m_tail_mode = false;
@@ -108,12 +135,8 @@ protected:
 	// Field vs Robot Oriented Control
 	bool m_toggle_swerve_field_control_btn_pressed = false;
 
-	// Auton Button
-	double m_auton_start_time = 0.0;
-
 	// Angle vs Velocity Control
 	bool m_toggle_swerve_angle_control_btn_pressed = false;
-	bool m_swerve_angle_control = false;
 	double m_angle_target = 0.0;
 	double m_joy_angle_control_threshold = 0.0;
 
@@ -126,12 +149,25 @@ protected:
 	double m_curr_y_cmd = 0.0;
 	double m_curr_theta_cmd = 0.0;
 
-	// Skills mode
-	bool m_toggle_skills_control_btn_pressed = false;
-	bool m_skills_control = false;
+	// Auton States
 	bool m_auton_button_pressed = false;
 	int m_auton_index = 0;
-	bool m_teleop_started = false;
+	bool m_is_first_auton_loop = true;
+
+	// stick
+	double m_stick_angle_start = 0;
+	double m_stick_angle_kick = 0;
+
+	// Burnout Prevention
+	float m_burnout_absolute_current_threshold_ma;
+	float m_burnout_absolute_rpm_threshold;
+	long m_burnout_stall_duration_ms;
+	long m_burnout_cooldown_duration_ms;
+
+	rclcpp::Time m_intake_stall_start;
+	rclcpp::Time m_intake_cooldown_start;
+	bool m_intake_stalling = false;
+	bool m_intake_cooling_down = false;
 };
 
 } // namespace ghost_swerve

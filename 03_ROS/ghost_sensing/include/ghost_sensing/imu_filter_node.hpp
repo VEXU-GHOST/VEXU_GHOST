@@ -41,10 +41,11 @@ private:
 	Eigen::Matrix3d m_imu_gyro_bias_covariance;
 	Eigen::Matrix3d m_imu_accel_bias_covariance_base_link;
 	Eigen::Matrix3d m_imu_gyro_bias_covariance_base_link;
+	double m_heading_covariance;
 
 	// Base Link Transform
-	Eigen::Matrix3d m_base_link_to_camera_rotation;
-	Eigen::Vector3d m_base_link_to_camera_translation;
+	Eigen::Matrix3d m_base_link_to_sensor_rotation;
+	Eigen::Vector3d m_base_link_to_sensor_translation;
 
 	// Filtered IMU Data
 	Eigen::Vector3d m_filtered_accel_vector_base_link;
@@ -57,6 +58,8 @@ private:
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_accel_viz_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_vel_filtered_viz_pub;
 	rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_accel_filtered_viz_pub;
+
+	sensor_msgs::msg::Imu::SharedPtr m_last_input_msg;
 };
 
 } // namespace ghost_sensing
