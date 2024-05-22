@@ -84,7 +84,7 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: intake_motor_config
-        intake_lift_motor:   
+        intake_lift_motor:
             port: 21
             type: MOTOR
             reversed: false
@@ -105,7 +105,7 @@ port_configuration:
             serial:
                 send_accel_data: true
                 send_gyro_data: true
-                send_heading_data: true    
+                send_heading_data: true
         drive_motor_config:
             gearset: 600
             brake_mode: COAST

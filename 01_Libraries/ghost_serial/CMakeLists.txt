@@ -12,7 +12,6 @@ find_package(Ghost CONFIG REQUIRED)
 set(DEPENDENCIES
   ament_cmake
   ament_cmake_gtest
-  ghost_msgs
   )
 
 foreach(pkg ${DEPENDENCIES})

@@ -31,36 +31,38 @@
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
-namespace gazebo_joint_pid_plugin {
+namespace gazebo_joint_pid_plugin
+{
 
 // Forward declaration of private data class.
 class GazeboJointPIDPluginPrivate;
 
-class GazeboJointPIDPlugin : public gazebo::ModelPlugin {
+class GazeboJointPIDPlugin : public gazebo::ModelPlugin
+{
 public:
-	/// Constructor
-	GazeboJointPIDPlugin();
+  /// Constructor
+  GazeboJointPIDPlugin();
 
-	/// Destructor
-	~GazeboJointPIDPlugin();
+  /// Destructor
+  ~GazeboJointPIDPlugin();
 
-	/// Gazebo calls this when the plugin is loaded.
-	/// \param[in] model Pointer to parent model. Other plugin types will expose different entities,
-	/// such as `gazebo::sensors::SensorPtr`, `gazebo::physics::WorldPtr`,
-	/// `gazebo::rendering::VisualPtr`, etc.
-	/// \param[in] sdf SDF element containing user-defined parameters.
-	void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
+  /// Gazebo calls this when the plugin is loaded.
+  /// \param[in] model Pointer to parent model. Other plugin types will expose different entities,
+  /// such as `gazebo::sensors::SensorPtr`, `gazebo::physics::WorldPtr`,
+  /// `gazebo::rendering::VisualPtr`, etc.
+  /// \param[in] sdf SDF element containing user-defined parameters.
+  void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
 
 protected:
-	/// Optional callback to be called at every simulation iteration.
-	void OnUpdate();
+  /// Optional callback to be called at every simulation iteration.
+  void OnUpdate();
 
 private:
-	void v5ActuatorCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
+  void v5ActuatorCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
 
-	/// Recommended PIMPL pattern. This variable should hold all private
-	/// data members.
-	std::unique_ptr<GazeboJointPIDPluginPrivate> impl_;
+  /// Recommended PIMPL pattern. This variable should hold all private
+  /// data members.
+  std::unique_ptr<GazeboJointPIDPluginPrivate> impl_;
 };
 
 }  // namespace gazebo_joint_pid_plugin

@@ -13,8 +13,8 @@ find_package(geometry_msgs REQUIRED)
 
 # Custom Msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/util/LabeledFloat.msg"
-  "msg/util/LabeledFloatMap.msg"
+  "msg/util/LabeledDouble.msg"
+  "msg/util/LabeledDoubleMap.msg"
   "msg/util/LabeledVector.msg"
   "msg/util/LabeledVectorMap.msg"
   "msg/device_msgs/V5DeviceHeader.msg"

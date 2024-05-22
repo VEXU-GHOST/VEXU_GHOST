@@ -2,38 +2,46 @@
 
 #include <math.h>
 
-namespace ghost_util {
+namespace ghost_util
+{
 
-bool getRandomBool(){
-	return (bool) (rand() % 2);
+bool getRandomBool()
+{
+  return (bool) (rand() % 2);
 }
 
-float getRandomFloat(){
-	float sign = (getRandomBool()) ? 1 : -1;
-	return ((float) rand() + 0.0001 * rand()) * sign;
+float getRandomFloat()
+{
+  float sign = (getRandomBool()) ? 1 : -1;
+  return ((float) rand() + 0.0001 * rand()) * sign;
 }
 
-float getRandomFloat(float max){
-	float sign = (getRandomBool()) ? 1 : -1;
-	return sign * std::fmod((float) rand() + 0.0001 * rand(), max);
+float getRandomFloat(float max)
+{
+  float sign = (getRandomBool()) ? 1 : -1;
+  return sign * std::fmod((float) rand() + 0.0001 * rand(), max);
 }
 
-float getRandomDouble(){
-	float sign = (getRandomBool()) ? 1 : -1;
-	return sign * ((double) rand() + 0.0001 * rand());
+float getRandomDouble()
+{
+  float sign = (getRandomBool()) ? 1 : -1;
+  return sign * ((double) rand() + 0.0001 * rand());
 }
 
-float getRandomDouble(double max){
-	float sign = (getRandomBool()) ? 1 : -1;
-	return sign * std::fmod((double) rand() + 0.0001 * rand(), max);
+float getRandomDouble(double max)
+{
+  float sign = (getRandomBool()) ? 1 : -1;
+  return sign * std::fmod((double) rand() + 0.0001 * rand(), max);
 }
 
-int getRandomInt(){
-	return (int) getRandomFloat();
+int getRandomInt()
+{
+  return (int) getRandomFloat();
 }
 
-int getRandomInt(int max){
-	return (int) getRandomFloat(max);
+int getRandomInt(int max)
+{
+  return (int) getRandomFloat(max);
 }
 
 }

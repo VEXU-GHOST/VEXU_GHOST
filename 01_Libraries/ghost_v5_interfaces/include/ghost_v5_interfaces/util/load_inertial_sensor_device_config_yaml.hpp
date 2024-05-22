@@ -6,16 +6,20 @@
 #include "ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp"
 #include "yaml-cpp/yaml.h"
 
-namespace ghost_v5_interfaces {
+namespace ghost_v5_interfaces
+{
 
-namespace util {
+namespace util
+{
 
-devices::InertialSensorDeviceData::SerialConfig loadInertialSensorSerialConfigFromYAML(YAML::Node node, bool verbose = false);
+devices::InertialSensorDeviceData::SerialConfig loadInertialSensorSerialConfigFromYAML(
+  YAML::Node node, bool verbose = false);
 
-void loadInertialSensorDeviceConfigFromYAML(YAML::Node node,
-                                            std::string sensor_name,
-                                            std::shared_ptr<devices::InertialSensorDeviceConfig> sensor_device_config_ptr,
-                                            bool verbose = false);
+void loadInertialSensorDeviceConfigFromYAML(
+  YAML::Node node,
+  std::string sensor_name,
+  std::shared_ptr<devices::InertialSensorDeviceConfig> sensor_device_config_ptr,
+  bool verbose = false);
 
 } // namespace util
 

@@ -6,6 +6,8 @@
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
+#include <ghost_msgs/msg/labeled_vector.hpp>
+#include <ghost_msgs/msg/labeled_vector_map.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/msg/v5_actuator_command.hpp>
 #include <ghost_msgs/msg/v5_device_header.hpp>
@@ -18,9 +20,11 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-namespace ghost_ros_interfaces {
+namespace ghost_ros_interfaces
+{
 
-namespace msg_helpers {
+namespace msg_helpers
+{
 
 // Device Header
 
@@ -30,7 +34,9 @@ namespace msg_helpers {
  * @param device_data
  * @param header_msg
  */
-void toROSMsg(const ghost_v5_interfaces::devices::DeviceData& device_data, ghost_msgs::msg::V5DeviceHeader& header_msg);
+void toROSMsg(
+  const ghost_v5_interfaces::devices::DeviceData & device_data,
+  ghost_msgs::msg::V5DeviceHeader & header_msg);
 
 /**
  * @brief Copies V5DeviceHeader msg data into DeviceData base attributes
@@ -38,7 +44,9 @@ void toROSMsg(const ghost_v5_interfaces::devices::DeviceData& device_data, ghost
  * @param device_data
  * @param header_msg
  */
-void fromROSMsg(ghost_v5_interfaces::devices::DeviceData& device_data, const ghost_msgs::msg::V5DeviceHeader& header_msg);
+void fromROSMsg(
+  ghost_v5_interfaces::devices::DeviceData & device_data,
+  const ghost_msgs::msg::V5DeviceHeader & header_msg);
 
 // Joystick
 
@@ -48,7 +56,9 @@ void fromROSMsg(ghost_v5_interfaces::devices::DeviceData& device_data, const gho
  * @param joy_data
  * @param joy_msg
  */
-void toROSMsg(const ghost_v5_interfaces::devices::JoystickDeviceData& joy_data, ghost_msgs::msg::V5JoystickState& joy_msg);
+void toROSMsg(
+  const ghost_v5_interfaces::devices::JoystickDeviceData & joy_data,
+  ghost_msgs::msg::V5JoystickState & joy_msg);
 
 /**
  * @brief Copies data from a V5JoystickState ROS Msg to a JoystickDeviceData object
@@ -56,7 +66,9 @@ void toROSMsg(const ghost_v5_interfaces::devices::JoystickDeviceData& joy_data, 
  * @param joy_data
  * @param joy_msg
  */
-void fromROSMsg(ghost_v5_interfaces::devices::JoystickDeviceData& joy_data, const ghost_msgs::msg::V5JoystickState& joy_msg);
+void fromROSMsg(
+  ghost_v5_interfaces::devices::JoystickDeviceData & joy_data,
+  const ghost_msgs::msg::V5JoystickState & joy_msg);
 
 // Motor State
 
@@ -66,7 +78,9 @@ void fromROSMsg(ghost_v5_interfaces::devices::JoystickDeviceData& joy_data, cons
  * @param motor_data
  * @param motor_msg
  */
-void toROSMsg(const ghost_v5_interfaces::devices::MotorDeviceData& motor_data, ghost_msgs::msg::V5MotorState& motor_msg);
+void toROSMsg(
+  const ghost_v5_interfaces::devices::MotorDeviceData & motor_data,
+  ghost_msgs::msg::V5MotorState & motor_msg);
 
 /**
  * @brief Copies motor state data from a V5MotorState msg into a MotorDeviceData object.
@@ -74,7 +88,9 @@ void toROSMsg(const ghost_v5_interfaces::devices::MotorDeviceData& motor_data, g
  * @param motor_data
  * @param motor_msg
  */
-void fromROSMsg(ghost_v5_interfaces::devices::MotorDeviceData& motor_data, const ghost_msgs::msg::V5MotorState& motor_msg);
+void fromROSMsg(
+  ghost_v5_interfaces::devices::MotorDeviceData & motor_data,
+  const ghost_msgs::msg::V5MotorState & motor_msg);
 
 // Motor Command
 
@@ -84,7 +100,9 @@ void fromROSMsg(ghost_v5_interfaces::devices::MotorDeviceData& motor_data, const
  * @param motor_data
  * @param motor_msg
  */
-void toROSMsg(const ghost_v5_interfaces::devices::MotorDeviceData& motor_data, ghost_msgs::msg::V5MotorCommand& motor_msg);
+void toROSMsg(
+  const ghost_v5_interfaces::devices::MotorDeviceData & motor_data,
+  ghost_msgs::msg::V5MotorCommand & motor_msg);
 
 /**
  * @brief Copies motor command data from a V5MotorCommand msg into a MotorDeviceData object.
@@ -92,7 +110,9 @@ void toROSMsg(const ghost_v5_interfaces::devices::MotorDeviceData& motor_data, g
  * @param motor_data
  * @param motor_msg
  */
-void fromROSMsg(ghost_v5_interfaces::devices::MotorDeviceData& motor_data, const ghost_msgs::msg::V5MotorCommand& motor_msg);
+void fromROSMsg(
+  ghost_v5_interfaces::devices::MotorDeviceData & motor_data,
+  const ghost_msgs::msg::V5MotorCommand & motor_msg);
 
 // Rotation Sensor
 
@@ -102,7 +122,9 @@ void fromROSMsg(ghost_v5_interfaces::devices::MotorDeviceData& motor_data, const
  * @param rotation_sensor_data
  * @param rotation_sensor_msg
  */
-void toROSMsg(const ghost_v5_interfaces::devices::RotationSensorDeviceData& rotation_sensor_data, ghost_msgs::msg::V5RotationSensorState& rotation_sensor_msg);
+void toROSMsg(
+  const ghost_v5_interfaces::devices::RotationSensorDeviceData & rotation_sensor_data,
+  ghost_msgs::msg::V5RotationSensorState & rotation_sensor_msg);
 
 /**
  * @brief Copies rotation sensor state data from a V5RotationSensorState msg into a RotationSensorDeviceData object.
@@ -110,7 +132,9 @@ void toROSMsg(const ghost_v5_interfaces::devices::RotationSensorDeviceData& rota
  * @param rotation_sensor_data
  * @param rotation_sensor_msg
  */
-void fromROSMsg(ghost_v5_interfaces::devices::RotationSensorDeviceData& rotation_sensor_data, const ghost_msgs::msg::V5RotationSensorState& rotation_sensor_msg);
+void fromROSMsg(
+  ghost_v5_interfaces::devices::RotationSensorDeviceData & rotation_sensor_data,
+  const ghost_msgs::msg::V5RotationSensorState & rotation_sensor_msg);
 
 // Inertial Sensor
 
@@ -120,7 +144,9 @@ void fromROSMsg(ghost_v5_interfaces::devices::RotationSensorDeviceData& rotation
  * @param inertial_sensor_data
  * @param inertial_sensor_msg
  */
-void toROSMsg(const ghost_v5_interfaces::devices::InertialSensorDeviceData& inertial_sensor_data, ghost_msgs::msg::V5InertialSensorState& inertial_sensor_msg);
+void toROSMsg(
+  const ghost_v5_interfaces::devices::InertialSensorDeviceData & inertial_sensor_data,
+  ghost_msgs::msg::V5InertialSensorState & inertial_sensor_msg);
 
 /**
  * @brief Copies inertial sensor state data from a V5InertialSensorState msg into a InertialSensorDeviceData object.
@@ -128,7 +154,9 @@ void toROSMsg(const ghost_v5_interfaces::devices::InertialSensorDeviceData& iner
  * @param inertial_sensor_data
  * @param inertial_sensor_msg
  */
-void fromROSMsg(ghost_v5_interfaces::devices::InertialSensorDeviceData& inertial_sensor_data, const ghost_msgs::msg::V5InertialSensorState& inertial_sensor_msg);
+void fromROSMsg(
+  ghost_v5_interfaces::devices::InertialSensorDeviceData & inertial_sensor_data,
+  const ghost_msgs::msg::V5InertialSensorState & inertial_sensor_msg);
 
 // Aggregate Actuator Command
 
@@ -138,7 +166,9 @@ void fromROSMsg(ghost_v5_interfaces::devices::InertialSensorDeviceData& inertial
  * @param hardware_interface
  * @param actuator_cmd_msg
  */
-void toROSMsg(const ghost_v5_interfaces::RobotHardwareInterface& hardware_interface, ghost_msgs::msg::V5ActuatorCommand& actuator_cmd_msg);
+void toROSMsg(
+  const ghost_v5_interfaces::RobotHardwareInterface & hardware_interface,
+  ghost_msgs::msg::V5ActuatorCommand & actuator_cmd_msg);
 
 /**
  * @brief Copies actuator command data from a V5ActuatorCommand msg into all listed devices within a RobotHardwareInterface object
@@ -146,7 +176,9 @@ void toROSMsg(const ghost_v5_interfaces::RobotHardwareInterface& hardware_interf
  * @param hardware_interface
  * @param actuator_cmd_msg
  */
-void fromROSMsg(ghost_v5_interfaces::RobotHardwareInterface& hardware_interface, const ghost_msgs::msg::V5ActuatorCommand& actuator_cmd_msg);
+void fromROSMsg(
+  ghost_v5_interfaces::RobotHardwareInterface & hardware_interface,
+  const ghost_msgs::msg::V5ActuatorCommand & actuator_cmd_msg);
 
 // Aggregate Sensor Update
 
@@ -159,7 +191,9 @@ void fromROSMsg(ghost_v5_interfaces::RobotHardwareInterface& hardware_interface,
  * @param hardware_interface
  * @param sensor_update_msg
  */
-void toROSMsg(const ghost_v5_interfaces::RobotHardwareInterface& hardware_interface, ghost_msgs::msg::V5SensorUpdate& sensor_update_msg);
+void toROSMsg(
+  const ghost_v5_interfaces::RobotHardwareInterface & hardware_interface,
+  ghost_msgs::msg::V5SensorUpdate & sensor_update_msg);
 
 /**
  * @brief Copies sensor update data from a V5SensorUpdate msg into all listed devices within a RobotHardwareInterface object
@@ -170,7 +204,9 @@ void toROSMsg(const ghost_v5_interfaces::RobotHardwareInterface& hardware_interf
  * @param hardware_interface
  * @param sensor_update_msg
  */
-void fromROSMsg(ghost_v5_interfaces::RobotHardwareInterface& hardware_interface, const ghost_msgs::msg::V5SensorUpdate& sensor_update_msg);
+void fromROSMsg(
+  ghost_v5_interfaces::RobotHardwareInterface & hardware_interface,
+  const ghost_msgs::msg::V5SensorUpdate & sensor_update_msg);
 
 // /**
 //  * @brief Copies trajectory data from a RobotTrajectory msg into all listed devices within a RobotTrajectory object
@@ -181,10 +217,26 @@ void fromROSMsg(ghost_v5_interfaces::RobotHardwareInterface& hardware_interface,
 //  * @param robot_trajectory
 //  * @param robot_trajectory_msg
 //  */
-void fromROSMsg(ghost_planners::RobotTrajectory& robot_trajectory, const ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg);
-void fromROSMsg(ghost_planners::RobotTrajectory::Trajectory& trajectory, const ghost_msgs::msg::Trajectory& trajectory_msg);
-void toROSMsg(const ghost_planners::RobotTrajectory& robot_trajectory, ghost_msgs::msg::RobotTrajectory& robot_trajectory_msg);
-void toROSMsg(const ghost_planners::RobotTrajectory::Trajectory& trajectory, ghost_msgs::msg::Trajectory& trajectory_msg);
+void fromROSMsg(
+  ghost_planners::RobotTrajectory & robot_trajectory,
+  const ghost_msgs::msg::RobotTrajectory & robot_trajectory_msg);
+void fromROSMsg(
+  ghost_planners::RobotTrajectory::Trajectory & trajectory,
+  const ghost_msgs::msg::Trajectory & trajectory_msg);
+void toROSMsg(
+  const ghost_planners::RobotTrajectory & robot_trajectory,
+  ghost_msgs::msg::RobotTrajectory & robot_trajectory_msg);
+void toROSMsg(
+  const ghost_planners::RobotTrajectory::Trajectory & trajectory,
+  ghost_msgs::msg::Trajectory & trajectory_msg);
+
+
+void fromROSMsg(
+  std::unordered_map<std::string, std::vector<double>> & labeled_vector_map,
+  const ghost_msgs::msg::LabeledVectorMap & msg);
+void toROSMsg(
+  const std::unordered_map<std::string, std::vector<double>> & labeled_vector_map,
+  ghost_msgs::msg::LabeledVectorMap & msg);
 
 } // namespace msg_helpers
 
