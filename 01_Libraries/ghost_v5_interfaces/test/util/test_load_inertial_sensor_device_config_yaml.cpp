@@ -10,7 +10,7 @@ class TestLoadInertialSensorDeviceConfigYAML : public ::testing::Test {
 protected:
 
 	void SetUp() override {
-		std::string config_path = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/test_load_inertial_sensor_config.yaml";
+		std::string config_path = std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/test_load_inertial_sensor_config.yaml";
 		config_yaml_ = YAML::LoadFile(config_path);
 
 		// Changed every param

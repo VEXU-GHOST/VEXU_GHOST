@@ -30,6 +30,9 @@ git submodule update --recursive
 ```
 #### Add Setup to ~/.bashrc (which "configures" a new terminal when you open it)
 ```sh
+echo "export VEXU_HOME=\"/home/$(whoami)/VEXU_GHOST\"" >> ~/.bashrc
+```
+```sh
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 ```
 ```
