@@ -48,15 +48,15 @@ jobs:
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
       
       - name: Update Dependencies
-        run: ./scripts/update_dependencies.sh
-
-      - name: Build Submodules
         run: |
           env > ~/temp_env_1
-          ./scripts/setup_submodules.sh
+          ./scripts/update_dependencies.sh
           env > ~/temp_env_2
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
           diff ~/temp_env_1 ~/temp_env_2
+
+      - name: Build Submodules
+        run: ./scripts/setup_submodules.sh
 
       - name: Build
         run: |
