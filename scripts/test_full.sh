@@ -8,4 +8,4 @@ then
 fi
 
 cd $VEXU_HOME
-colcon test --event-handlers console_direct+
+colcon test --return-code-on-test-failure --event-handlers console_direct+ || exit -1
