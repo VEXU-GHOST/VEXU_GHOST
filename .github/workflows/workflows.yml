@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Prune System Packages
-        run: sudo apt-get remove libunwind-14 libunwind-14-dev *dotnet* *aspnet* powershell *azure*
+        run: sudo apt-get remove libunwind-14 libunwind-14-dev *dotnet* *aspnet* powershell *azure* firefox
 
       - name: Update System Packages
         run: |
