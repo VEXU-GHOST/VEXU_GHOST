@@ -6,8 +6,10 @@ on:
       - master
       - develop
   pull_request:
-    types: [ready_for_review, synchronize]
-
+    branches:
+      - master
+      - develop
+    
 jobs:
   build-and-test:
     name: Build and Test
