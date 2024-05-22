@@ -111,7 +111,7 @@ protected:
  * @brief Test that we can load a DeviceConfigMap from YAML.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLFile){
-	auto example_robot_config_file = std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml";
+	auto example_robot_config_file = std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml";
 	auto device_config_ptr = loadRobotConfigFromYAMLFile(example_robot_config_file);
 	EXPECT_EQ(*device_config_ptr, *getExpectedRobotConfig(false));
 }
@@ -120,7 +120,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLFile){
  * @brief Test that we can load a DeviceConfigMap from YAML with secondary joystick set to true
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLSecondaryJoystick){
-	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["use_partner_joystick"] = true;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
 	EXPECT_EQ(*device_config_ptr, *getExpectedRobotConfig(true));
@@ -130,7 +130,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLSecondaryJoystick)
  * @brief Test that we can load a DeviceConfigMap from YAML and it mismatches if we change joystick settings.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
-	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["use_partner_joystick"] = true;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
 	EXPECT_FALSE(*device_config_ptr == *getExpectedRobotConfig(false));
@@ -140,7 +140,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML){
  * @brief Test that mismatched motor port will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig){
-	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["devices"]["left_drive_motor"]["port"] = 10;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
 	EXPECT_FALSE(*device_config_ptr == *getExpectedRobotConfig(false));
@@ -150,7 +150,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig
  * @brief Test that mismatched motor config will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchMotorConfig){
-	auto example_robot_config = YAML::LoadFile(std::string(getenv("HOME")) + "/VEXU_GHOST/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+	auto example_robot_config = YAML::LoadFile(std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
 	example_robot_config["port_configuration"]["device_configurations"]["test_motor_config"]["filter"]["timestep"] = 0.1;
 	auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
 	EXPECT_FALSE(*device_config_ptr == *getExpectedRobotConfig(false));
@@ -180,7 +180,7 @@ TEST_F(DeviceConfigMapTestFixture, testGenerateCodeFromRobotConfig){
 	}
 
 	// Generate code
-	std::string include_dir = std::string(getenv("HOME")) + "/VEXU_GHOST/install/";
+	std::string include_dir = std::string(getenv("VEXU_HOME")) + "/install/";
 	std::string src_dir = include_dir + "ghost_v5_interfaces/include/";
 	generateCodeFromRobotConfig(robot_config_ptr, src_dir + "test.cpp");
 
