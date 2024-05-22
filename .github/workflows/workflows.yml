@@ -35,10 +35,15 @@ jobs:
         with:
           required-ros-distributions: humble
 
-      - name: Set ROS2 Environment Variables
+      - name: Set Environment Variables
         run: |
           env > ~/temp_env_1
           source /opt/ros/humble/setup.sh
+          export GAZEBO_PLUGIN_PATH=$VEXU_HOME/build/ghost_sim:$GAZEBO_PLUGIN_PATH
+          export CUDA_PATH=/usr/local/cuda-12.2
+          export CUDA_HOME=/usr/local/cuda-12.2
+          export LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/cuda-12.2/lib64:$LD_LIBRARY_PATH
+          export PATH=/usr/local/cuda-12.2/bin${PATH:+:${PATH}}
           env > ~/temp_env_2
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
       
