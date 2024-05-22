@@ -14,7 +14,6 @@
   <build_depend>urdfdom</build_depend>
 
   <depend>rclcpp</depend>
-  <depend>ghost_msgs</depend>
   <depend>ghost_estimation</depend>
   <depend>ghost_control</depend>
   <depend>ghost_util</depend>

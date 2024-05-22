@@ -21,7 +21,6 @@ set(DEPENDENCIES
   ghost_control
   ghost_util
   rclcpp
-  ghost_msgs
   )
 
 foreach(pkg ${DEPENDENCIES})
