@@ -37,7 +37,7 @@ fi
 
 if [ "$1" != "-r" ];
 then
-  cd ~/VEXU_GHOST
+  cd $VEXU_HOME
   echo
   bash scripts/pros_upload.sh
 fi
