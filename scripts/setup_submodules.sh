@@ -10,6 +10,9 @@ fi
 cd $VEXU_HOME
 git submodule update --recursive
 
+# Get processor architecture to determine proper .deb source
+$arch=$(uname -p)
+
 # Build matplotlib-cpp
 echo "--------------- MATPLOTLIB_CPP ---------------"
 if [ ! -d "${VEXU_HOME}/09_External/matplotlib-cpp/build" ];
@@ -60,19 +63,33 @@ echo
 
 # Build Casadi
 echo "--------------- CASADI ---------------"
-if [ ! -d "${VEXU_HOME}/09_External/casadi/build" ];
-then
-	cd $VEXU_HOME/09_External/casadi
-	mkdir build && cd build
+# if [ ! -d "${VEXU_HOME}/09_External/casadi/build" ];
+# then
+# 	cd $VEXU_HOME/09_External/casadi
+# 	mkdir build && cd build
 
-	cmake -DWITH_PYTHON=ON -DWITH_IPOPT=ON -DWITH_OPENMP=ON -DWITH_THREAD=ON .. || exit -1
-	make                                                                        || exit -1
-	sudo make install                                                           || exit -1
+# 	cmake -DWITH_PYTHON=ON -DWITH_IPOPT=ON -DWITH_OPENMP=ON -DWITH_THREAD=ON .. || exit -1
+# 	make                                                                        || exit -1
+# 	sudo make install                                                           || exit -1
 
-	cd ../..
+# 	cd ../..
+# else
+#         echo "Build already exists"
+# fi
+
+if [ "$arch" == 'x86_64' ]; then
+    sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/22db13647a74e7911c249b5762ea3c6d12893aa4/deb/ghost-casadi-86.deb
+    sudo dpkg -i ~/Downloads/ghost-casadi-86.deb
+
+elif [ "$arch" == 'aarch64' ]; then
+    echo "TODO(xander): add arm debian link here"
+    echo "TODO(xander): add arm debian installation here"
+
 else
-        echo "Build already exists"
+    echo "Failure: Unexpected processure architecture."
+    exit -1
 fi
+
 
 echo
 echo
