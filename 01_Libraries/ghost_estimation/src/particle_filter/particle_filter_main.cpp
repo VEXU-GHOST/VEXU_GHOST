@@ -1,3 +1,6 @@
+// This file has been heavily modified for use by VEXU GHOST by Melissa Cruz,
+// (C) 2024.
+
 // ========================================================================
 //  This software is free: you can redistribute it and/or modify
 //  it under the terms of the GNU Lesser General Public License Version 3,

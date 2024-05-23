@@ -1,24 +1,22 @@
-// ========================================================================
-//  This software is free: you can redistribute it and/or modify
-//  it under the terms of the GNU Lesser General Public License Version 3,
-//  as published by the Free Software Foundation.
-//
-//  This software is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public License
-//  Version 3 in the file COPYING that came with this distribution.
-//  If not, see <http://www.gnu.org/licenses/>.
-// ========================================================================
-/*!
-   \file    particle-filter-main.cc DO NOT USE
-   \brief   Main entry point for particle filter based
-         mobile robot localization
-   \author  Joydeep Biswas, (C) 2019
+/*
+ * Copyright (C) 2024 Melissa Cruz
+ *
+ * This file was based on work developed by Joydeep Biswas and the Autonomous
+ * Mobile Robotics Lab (AMRL) for CS393R Autonomous Robots at UT Austin.
+ *
+ * This software is free: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License Version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * Version 3 in the file COPYING that came with this distribution.
+ * If not, see <http://www.gnu.org/licenses/>.
  */
-// ========================================================================
 
 #include "eigen3/Eigen/Geometry"
 #include "ghost_localization/pf_ekf_node.hpp"
