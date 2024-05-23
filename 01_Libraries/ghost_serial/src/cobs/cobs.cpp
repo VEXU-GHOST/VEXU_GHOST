@@ -1,9 +1,6 @@
 /**
- * All original serial library files reside under the ghost_serial ROS package.
- * Symlinks have been created in the ghost_pros project to compile the files to the V5 Brain from the same source files.
- * Relative paths in Symlinks mean it should work across machines via Github.
-
- * If I was more knowledgeable with Makefiles, this would be linked as a static library, but alas I am not. :(
+ * This entire file is pulled from https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing
+ * All credit goes to original authors.
  */
 
 #include "ghost_serial/cobs/cobs.hpp"
