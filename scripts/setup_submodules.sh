@@ -77,18 +77,25 @@ echo "--------------- CASADI ---------------"
 #         echo "Build already exists"
 # fi
 
-if [ "$arch" == 'x86_64' ]; then
-    sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/22db13647a74e7911c249b5762ea3c6d12893aa4/deb/ghost-casadi-86.deb || exit -1
-    sudo dpkg -i ~/Downloads/ghost-casadi-86.deb || exit -1
+cd $VEXU_HOME
 
-elif [ "$arch" == 'aarch64' ]; then
-    echo "TODO(xander): add arm debian link here"
-    echo "TODO(xander): add arm debian installation here"
+case $arch in
 
-else
-    echo "Failure: Unexpected processure architecture."
-    exit -1
-fi
+    'x86_64')
+        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/22db13647a74e7911c249b5762ea3c6d12893aa4/deb/ghost-casadi-86.deb || exit -1
+        sudo dpkg -i ghost-casadi-86.deb || exit -1
+        ;;
+    
+    'aarch64')
+        echo "TODO(xander): add arm debian link here"
+        echo "TODO(xander): add arm debian installation here"
+        ;;
+
+    *)
+        echo "Failure: Unexpected processure architecture."
+        exit -1
+        ;;
+esac
 
 
 echo
