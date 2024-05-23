@@ -21,7 +21,10 @@
  *   SOFTWARE.
  */
 
+#pragma once
+
 #include <iostream>
+#include <string>
 #include "yaml-cpp/yaml.h"
 
 namespace ghost_util

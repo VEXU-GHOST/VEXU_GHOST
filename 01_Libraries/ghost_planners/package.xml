@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Provides C++ Libraries for Trajectory Planning and Model Predictive Control for VEX V5 Robots</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
-  <license>GPLv3.0</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

@@ -24,6 +24,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include "search_node.hpp"
 
 namespace ghost_util

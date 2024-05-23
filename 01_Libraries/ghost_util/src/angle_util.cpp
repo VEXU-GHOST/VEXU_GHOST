@@ -24,8 +24,6 @@
 #include "ghost_util/angle_util.hpp"
 #include "ghost_util/unit_conversion_utils.hpp"
 
-#include <math.h>
-
 namespace ghost_util
 {
 
