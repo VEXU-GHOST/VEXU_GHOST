@@ -11,7 +11,7 @@ cd $VEXU_HOME
 git submodule update --recursive
 
 # Get processor architecture to determine proper .deb source
-arch=$(uname -p)
+arch=$(dpkg --print-architecture)
 
 cd $VEXU_HOME
 
@@ -21,12 +21,12 @@ echo "--------------- MATPLOTLIB_CPP ---------------"
 
 case $arch in
 
-    'x86_64')
-        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-matplotlibcpp-86.deb || exit -1
-        sudo dpkg -i ghost-matplotlibcpp-86.deb || exit -1
+    'amd64')
+        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-matplotlibcpp-amd64.deb || exit -1
+        sudo dpkg -i ghost-matplotlibcpp-amd64.deb || exit -1
         ;;
     
-    'aarch64')
+    'TODO(xander): figure out the jetson arch in dpkg terms')
         echo "TODO(xander): add arm debian link here"
         echo "TODO(xander): add arm debian installation here"
         ;;
@@ -50,12 +50,12 @@ export FC=$(which gfortran-10)
 
 case $arch in
 
-    'x86_64')
-        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-mumps-86.deb || exit -1
-        sudo dpkg -i ghost-mumps-86.deb || exit -1
+    'amd64')
+        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-mumps-amd64.deb || exit -1
+        sudo dpkg -i ghost-mumps-amd64.deb || exit -1
         ;;
     
-    'aarch64')
+    'TODO(xander): figure out the jetson arch in dpkg terms')
         echo "TODO(xander): add arm debian link here"
         echo "TODO(xander): add arm debian installation here"
         ;;
@@ -74,12 +74,12 @@ echo "--------------- IPOPT ---------------"
 
 case $arch in
 
-    'x86_64')
-        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-ipopt-86.deb || exit -1
-        sudo dpkg -i ghost-ipopt-86.deb || exit -1
+    'amd64')
+        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-ipopt-amd64.deb || exit -1
+        sudo dpkg -i ghost-ipopt-amd64.deb || exit -1
         ;;
     
-    'aarch64')
+    'TODO(xander): figure out the jetson arch in dpkg terms')
         echo "TODO(xander): add arm debian link here"
         echo "TODO(xander): add arm debian installation here"
         ;;
@@ -98,12 +98,12 @@ echo "--------------- CASADI ---------------"
 
 case $arch in
 
-    'x86_64')
-        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-casadi-86.deb || exit -1
-        sudo dpkg -i ghost-casadi-86.deb || exit -1
+    'amd64')
+        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-casadi-amd64.deb || exit -1
+        sudo dpkg -i ghost-casadi-amd64.deb || exit -1
         ;;
     
-    'aarch64')
+    'TODO(xander): figure out the jetson arch in dpkg terms')
         echo "TODO(xander): add arm debian link here"
         echo "TODO(xander): add arm debian installation here"
         ;;
