@@ -359,14 +359,6 @@ void EkfPfNode::PublishWorldTransform()
 
 void EkfPfNode::PublishVisualization()
 {
-  // static double t_last = 0;
-
-  // // if (GetMonotonicTime() - t_last < 1/30.0)
-  // // {
-  // //   // Rate-limit visualization.
-  // //   return;
-  // // }
-  // t_last = GetMonotonicTime();
   // Publish Particle Cloud
   auto cloud_msg = geometry_msgs::msg::PoseArray{};
   cloud_msg.header.frame_id = config_params.world_frame;
