@@ -78,8 +78,8 @@ echo "--------------- CASADI ---------------"
 # fi
 
 if [ "$arch" == 'x86_64' ]; then
-    sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/22db13647a74e7911c249b5762ea3c6d12893aa4/deb/ghost-casadi-86.deb
-    sudo dpkg -i ~/Downloads/ghost-casadi-86.deb
+    sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/22db13647a74e7911c249b5762ea3c6d12893aa4/deb/ghost-casadi-86.deb || exit -1
+    sudo dpkg -i ~/Downloads/ghost-casadi-86.deb || exit -1
 
 elif [ "$arch" == 'aarch64' ]; then
     echo "TODO(xander): add arm debian link here"
