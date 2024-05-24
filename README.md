@@ -44,7 +44,7 @@ echo 'export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH' >> ~/.bashrc
 ```
 echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_PATH' >> ~/.bashrc
 ```
-
+Close this terminal, and open a new one to laod new settings.
 #### Update Dependencies
 ```sh
 ./scripts/update_dependencies.sh
