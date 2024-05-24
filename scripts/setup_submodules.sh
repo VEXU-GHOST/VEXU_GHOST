@@ -13,8 +13,6 @@ git submodule update --recursive
 # Get processor architecture to determine proper .deb source
 arch=$(dpkg --print-architecture)
 
-cd $VEXU_HOME
-
 
 # Build matplotlib-cpp
 echo "--------------- MATPLOTLIB_CPP ---------------"
