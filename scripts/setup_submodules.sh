@@ -23,7 +23,7 @@ case $arch in
 
     'amd64')
         sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-matplotlibcpp-amd64.deb || exit -1
-        sudo dpkg -i ghost-matplotlibcpp-amd64.deb || exit -1
+        sudo --preserve-env=VEXU_HOME dpkg -i ghost-matplotlibcpp-amd64.deb || exit -1
         rm ghost-matplotlibcpp-amd64.deb
         ;;
     
@@ -54,7 +54,7 @@ case $arch in
 
     'amd64')
         sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-mumps-amd64.deb || exit -1
-        sudo dpkg -i ghost-mumps-amd64.deb || exit -1
+        sudo --preserve-env=VEXU_HOME dpkg -i ghost-mumps-amd64.deb || exit -1
         rm ghost-mumps-amd64.deb
         ;;
     
@@ -80,7 +80,7 @@ case $arch in
 
     'amd64')
         sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-ipopt-amd64.deb || exit -1
-        sudo dpkg -i ghost-ipopt-amd64.deb || exit -1
+        sudo --preserve-env=VEXU_HOME dpkg -i ghost-ipopt-amd64.deb || exit -1
         rm ghost-ipopt-amd64.deb
         ;;
     
@@ -106,7 +106,7 @@ case $arch in
 
     'amd64')
         sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-casadi-amd64.deb || exit -1
-        sudo dpkg -i ghost-casadi-amd64.deb || exit -1
+        sudo --preserve-env=VEXU_HOME dpkg -i ghost-casadi-amd64.deb || exit -1
         rm ghost-casadi-amd64.deb
         ;;
     
