@@ -1,8 +1,9 @@
 #!/bin/bash
 
-print_unsupported() {
+exit_unsupported() {
     echo "Failure: Unsupported processure architecture. Please notify maintainers of ghost_dependencies!"
     echo "https://github.com/VEXU-GHOST/ghost_dependencies"
+    exit -1
 }
 
 # Verify repo path is set
@@ -37,8 +38,7 @@ case $arch in
         ;;
 
     *)
-        print_unsupported
-        exit -1
+        exit_unsupported
         ;;
 esac
 
@@ -68,8 +68,7 @@ case $arch in
         ;;
 
     *)
-        print_unsupported
-        exit -1
+        exit_unsupported
         ;;
 esac
 
@@ -94,8 +93,7 @@ case $arch in
         ;;
 
     *)
-        print_unsupported
-        exit -1
+        exit_unsupported
         ;;
 esac
 
@@ -120,8 +118,7 @@ case $arch in
         ;;
 
     *)
-        print_unsupported
-        exit -1
+        exit_unsupported
         ;;
 esac
 
