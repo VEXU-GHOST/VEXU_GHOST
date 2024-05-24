@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <stdexcept>
 
 namespace ghost_planners
 {
@@ -34,9 +35,7 @@ class Trajectory
 
 public:
   Trajectory(
-    std::vector<std::string> state_names,
-    std::vector<double> init_times = std::vector<double>{},
-    std::vector<Node> init_nodes = std::vector<Node>{});
+    std::vector<std::string> state_names);
 
   /**
    * @brief Adds new state vector at the requested time.
@@ -60,19 +59,19 @@ public:
    * time bounds will return the respective bound (i.e. the initial or final state).
    *
    * @param time
-   * @param state_name
+   * @param name
    * @return double state
    */
-  double getState(const std::string & state_name, double time) const;
+  double getState(const std::string & name, double time) const;
 
   /**
    * @brief Returns the full trajectory for an individual state as a timeseries
    *
-   * @param component_name
+   * @param name
    * @return std::vector<double>
    */
   std::vector<double> getStateTrajectory(
-    const std::string & component_name,
+    const std::string & name,
     const std::vector<double> & time_vector) const;
 
   /**
@@ -93,6 +92,13 @@ public:
   size_t getStateVectorSize() const
   {
     return m_state_vector_size;
+  }
+
+  int getStateIndex(const std::string& name)const{
+    if(m_state_index_map.count(name) == 0){
+      throw std::runtime_error(std::string("[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
+    }
+    return m_state_index_map.at(name);
   }
 
 protected:

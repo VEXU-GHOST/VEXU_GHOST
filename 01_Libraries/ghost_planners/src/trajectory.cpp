@@ -23,16 +23,20 @@
 
 #include "ghost_planners/trajectory.hpp"
 
-using Node = std::vector<double>;
 
 namespace ghost_planners
 {
 
 Trajectory::Trajectory(
-  std::vector<std::string> state_names,
-  std::vector<double> init_times,
-  std::vector<Node> init_nodes)
+  std::vector<std::string> state_names) : 
+  m_state_names(state_names),
+  m_time_vector(),
+  m_state_trajectory(state_names.size(), Trajectory::Node{})
 {
+  // Populate state index
+  for(int i = 0; i < m_state_names.size(); i++){
+    m_state_index_map[m_state_names[i]] = i;
+  }
 
 }
 
@@ -41,20 +45,25 @@ void Trajectory::addNode(double time, Node node)
 
 }
 
-const Node & Trajectory::getNode(double time) const
+const Trajectory::Node & Trajectory::getNode(double time) const
 {
 
 }
 
-double Trajectory::getState(const std::string & state_name, double time) const
+double Trajectory::getState(const std::string & name, double time) const
 {
-
+    if(m_state_index_map.count(name) == 0){
+      throw std::runtime_error(std::string("[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
+    }
 }
 
 std::vector<double> Trajectory::getStateTrajectory(
-  const std::string & component_name,
+  const std::string & name,
   const std::vector<double> & time_vector) const
 {
+      if(m_state_index_map.count(name) == 0){
+      throw std::runtime_error(std::string("[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
+    }
 
 }
 

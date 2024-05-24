@@ -27,54 +27,8 @@
 using ghost_planners::Trajectory;
 
 TEST(TestTrajectory, testConstructors) {
-  // Basic Constructor
   EXPECT_NO_THROW(auto traj = Trajectory(std::vector<std::string>{}));
-
-  // Init Trajectory Constructor
-  EXPECT_NO_THROW(
-    auto traj = Trajectory(
-      std::vector<std::string>{"1"},
-      std::vector<double>{2.0},
-      std::vector<std::vector<double>>{{2.0}}
-  ));
-
-  // Throws if only one optional init arg is provided
-  EXPECT_THROW(
-    auto traj = Trajectory(
-      std::vector<std::string>{"1"},
-      std::vector<double>{1.0}),
-    std::runtime_error
-  );
-
-  // Throws if init vectors have mismatched sized
-  EXPECT_THROW(
-    auto traj =
-    Trajectory(
-      std::vector<std::string>{"1"},
-      std::vector<double>{1.0},
-      std::vector<double>{1.0, 2.0}),
-    std::runtime_error
-  );
-
-  EXPECT_THROW(
-    auto traj =
-    Trajectory(
-      std::vector<std::string>{"1"},
-      std::vector<double>{1.0, 2.0},
-      std::vector<double>{1.0, 2.0}),
-    std::runtime_error
-  );
-
-  EXPECT_THROW(
-    auto traj =
-    Trajectory(
-      std::vector<std::string>{"1"},
-      std::vector<double>{1.0, 2.0},
-      std::vector<double>{1.0, 2.0, 3.0}),
-    std::runtime_error
-  );
 }
-
 
 TEST(TestTrajectory, testGetStateVectorSize) {
   auto name_vector = std::vector<std::string>{"s1", "s2", "s3"};
@@ -85,6 +39,17 @@ TEST(TestTrajectory, testGetStateVectorSize) {
 TEST(TestTrajectory, testGetStateSize) {
   auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3"});
   EXPECT_EQ(trajectory.getStateVectorSize(), 3);
+}
+
+TEST(TestTrajectory, testGetStateIndex){
+  auto state_names = std::vector<std::string>{"s1", "s2", "s3"};
+  auto trajectory = Trajectory(state_names);
+
+  int i = 0;
+  for(const auto & name : state_names){
+    EXPECT_EQ(trajectory.getStateIndex(name), i);
+  }
+
 }
 
 TEST(TestTrajectory, testAddAndRetrieveNodes) {
@@ -117,3 +82,20 @@ TEST(TestTrajectory, testThrowsOnIncorrectNodeSize) {
   auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3"});
   EXPECT_THROW(trajectory.addNode(0.0, std::vector<double>{0.0, 1.0}), std::runtime_error);
 }
+
+TEST(TestTrajectory, testDuplicateTimeReplacesPreviousNode) {
+    auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3"});
+    trajectory.addNode(1.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
+
+    auto v1 = std::vector<double>{1.0, 2.0, -3.0, -7.0};
+    trajectory.addNode(1.0, v1);
+
+    EXPECT_EQ(trajectory.getNode(1.0), v1);
+}
+
+TEST(TestTrajectory, testInvalidStateNameThrows){
+  auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3"});
+  trajectory.addNode(0.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
+  EXPECT_THROW(trajectory.getStateIndex("not a state"), std::runtime_error);
+}
+
