@@ -34,8 +34,8 @@ void TrapezoidMotionPlanner::generateMotionPlan(const ghost_msgs::msg::Drivetrai
 	std::vector<double> xposf({cmd->pose.pose.position.x, cmd->twist.twist.linear.x});
 	std::vector<double> ypos0({current_y_, current_y_vel_});
 	std::vector<double> yposf({cmd->pose.pose.position.y, cmd->twist.twist.linear.y});
-	std::vector<double> thetapos0({current_theta_rad_, current_theta_vel_rad_});
-	std::vector<double> thetaposf({current_theta_rad_ + ghost_util::SmallestAngleDistRad(theta_f, current_theta_rad_), cmd->twist.twist.angular.z});
+	std::vector<double> thetapos0({current_theta_rad_, 0.0});
+	std::vector<double> thetaposf({current_theta_rad_ + ghost_util::SmallestAngleDistRad(theta_f, current_theta_rad_), 0.0});
 	double pos_threshold = cmd->pose.pose.position.z;
 	double theta_threshold = cmd->twist.twist.angular.x;
 
@@ -49,22 +49,47 @@ void TrapezoidMotionPlanner::generateMotionPlan(const ghost_msgs::msg::Drivetrai
 	// find final time
 	double v_max = cmd->speed;
 	auto dist_vector = Eigen::Vector2d(xposf[0] - xpos0[0], yposf[0] - ypos0[0]);
+	auto vel_vector0 = Eigen::Vector2d(xpos0[1], ypos0[1]);
+	auto vel_vectorf = Eigen::Vector2d(xposf[1], yposf[1]);
 	double dist = dist_vector.norm();
-	double theta = atan2(dist_vector.y(), dist_vector.x());
-	double v_max_x = cos(theta) * v_max;
-	double v_max_y = sin(theta) * v_max;
+	double vel0 = vel_vector0.norm();
+	double velf = vel_vectorf.norm();
+	double vel_direction = atan2(dist_vector.y(), dist_vector.x());
+
+	std::vector<double> pos0({0.0, vel0});
+	std::vector<double> posf({dist, velf});
 	auto trajectory = std::make_shared<RobotTrajectory>();
-	trajectory->x_trajectory = getTrapezoidTraj(acceleration_, v_max_x, xpos0, xposf);
-	trajectory->y_trajectory = getTrapezoidTraj(acceleration_, v_max_y, ypos0, yposf);
-	trajectory->theta_trajectory = getTrapezoidTraj(acceleration_, v_max, thetapos0, thetaposf);
+	auto pos_trajectory = getTrapezoidTraj(acceleration_, v_max, xpos0, xposf);
+
+	for(int i = 0; i < pos_trajectory.time_vector.size(); i++){
+		trajectory->x_trajectory.position_vector.push_back(pos_trajectory.position_vector[i] * cos(vel_direction) + xpos0[0]);
+		trajectory->x_trajectory.velocity_vector.push_back(pos_trajectory.velocity_vector[i] * cos(vel_direction));
+		trajectory->y_trajectory.position_vector.push_back(pos_trajectory.position_vector[i] * sin(vel_direction) + ypos0[0]);
+		trajectory->y_trajectory.velocity_vector.push_back(pos_trajectory.velocity_vector[i] * sin(vel_direction));
+	}
+	trajectory->x_trajectory.time_vector = pos_trajectory.time_vector;
+	trajectory->x_trajectory.threshold = pos_threshold;
+	trajectory->y_trajectory.time_vector = pos_trajectory.time_vector;
+	trajectory->y_trajectory.threshold = pos_threshold;
+
+	if(ghost_util::SmallestAngleDistRad(theta_f, current_theta_rad_) < 0.0){
+		thetapos0[0] = 0.0;
+		thetaposf[0] = -ghost_util::SmallestAngleDistRad(theta_f, current_theta_rad_);
+		trajectory->theta_trajectory = getTrapezoidTraj(acceleration_, v_max, thetapos0, thetaposf);
+		for(int i = 0; i < trajectory->theta_trajectory.time_vector.size(); i++){
+			double pos = trajectory->theta_trajectory.position_vector[i];
+			trajectory->theta_trajectory.position_vector[i] = current_theta_rad_ - pos;
+			trajectory->theta_trajectory.velocity_vector[i] *= -1;
+		}
+	}
+	else{
+		trajectory->theta_trajectory = getTrapezoidTraj(acceleration_, v_max, thetapos0, thetaposf);
+	}
+	trajectory->theta_trajectory.threshold = theta_threshold;
 
 	ghost_msgs::msg::RobotTrajectory trajectory_msg;
 
 	toROSMsg(*trajectory, trajectory_msg);
-
-	trajectory_msg.x_trajectory.threshold = pos_threshold;
-	trajectory_msg.y_trajectory.threshold = pos_threshold;
-	trajectory_msg.theta_trajectory.threshold = theta_threshold;
 
 	RCLCPP_INFO(node_ptr_->get_logger(), "Generated Swerve Motion Plan");
 	trajectory_pub_->publish(trajectory_msg);
