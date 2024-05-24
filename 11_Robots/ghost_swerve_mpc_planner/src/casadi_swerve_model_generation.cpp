@@ -238,15 +238,15 @@ int main(int argc, char * argv[])
   double init_vel_y = 0.0;
   double init_vel_theta = 0.0;
   double des_vel_x = 0.75;
-  double des_vel_y = 0.0;
-  double des_vel_theta = 6.5;
-  double init_m1_steering_angle = 0.0;       // -3.14159 / 4.0;
+  double des_vel_y = 0.75;
+  double des_vel_theta = 0.0;
+  double init_m1_steering_angle = 3.14159/4;       // -3.14159 / 4.0;
   double init_m1_steering_vel = 0.0;
-  double init_m2_steering_angle = 0.0;       // 3.14159 / 4.0;
+  double init_m2_steering_angle = 3.14159/4;       // 3.14159 / 4.0;
   double init_m2_steering_vel = 0.0;
-  double init_m3_steering_angle = 0.0;       // -3.14159 / 4.0;
+  double init_m3_steering_angle = 3.14159/4;       // -3.14159 / 4.0;
   double init_m3_steering_vel = 0.0;
-  double init_m4_steering_angle = 0.0;       // 3.14159 / 4.0;
+  double init_m4_steering_angle = -3.14159/4;       // 3.14159 / 4.0;
   double init_m4_steering_vel = 0.0;
 
   std::vector<Eigen::Vector2d> module_positions{
@@ -255,7 +255,6 @@ int main(int argc, char * argv[])
     Eigen::Vector2d(M3_X, M3_Y),
     Eigen::Vector2d(M4_X, M4_Y)
   };
-
   // 2D Point Mass model
   std::vector<std::string> STATE_NAMES = {
     "base_pose_x",
@@ -636,7 +635,7 @@ int main(int argc, char * argv[])
           2) + pow(get_state(next_knot_module_prefix + "steering_accel"), 2));
 
       // Small Regularization
-      f += 0.00001 * 1 / DT *
+      f += 0.01 * 1 / DT *
         (pow(
           get_state(curr_knot_module_prefix + "steering_vel"),
           2) + pow(get_state(next_knot_module_prefix + "steering_vel"), 2));

@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Jake Wendling
+ *   Copyright (c) 2024 Maxx Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,16 +21,41 @@
  *   SOFTWARE.
  */
 
-#include "ghost_planners/robot_trajectory.hpp"
+#include "ghost_planners/trajectory.hpp"
+
+using Node = std::vector<double>;
 
 namespace ghost_planners
 {
 
-RobotTrajectory::RobotTrajectory()
+Trajectory::Trajectory(
+  std::vector<std::string> state_names,
+  std::vector<double> init_times,
+  std::vector<Node> init_nodes)
 {
-  x_trajectory = Trajectory();
-  y_trajectory = Trajectory();
-  theta_trajectory = Trajectory();
+
+}
+
+void Trajectory::addNode(double time, Node node)
+{
+
+}
+
+const Node & Trajectory::getNode(double time) const
+{
+
+}
+
+double Trajectory::getState(const std::string & state_name, double time) const
+{
+
+}
+
+std::vector<double> Trajectory::getStateTrajectory(
+  const std::string & component_name,
+  const std::vector<double> & time_vector) const
+{
+
 }
 
 } // namespace ghost_planners
