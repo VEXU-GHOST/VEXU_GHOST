@@ -30,3 +30,9 @@
 [submodule "09_External/BehaviorTree.ROS2"]
 	path = 09_External/BehaviorTree.ROS2
 	url = https://github.com/JakeWendling/BehaviorTree.ROS2
+[submodule "09_External/plotjuggler"]
+	path = 09_External/plotjuggler
+	url = https://github.com/VEXU-GHOST/PlotJuggler.git
+[submodule "09_External/plotjuggler-ros-plugins"]
+	path = 09_External/plotjuggler-ros-plugins
+	url = https://github.com/VEXU-GHOST/plotjuggler-ros-plugins.git
