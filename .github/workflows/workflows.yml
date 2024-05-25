@@ -74,7 +74,8 @@ jobs:
         run: ./scripts/test_full.sh
 
       - name: Open TMate Session
-        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        if: ${{ failure() }} 
+      # && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         uses: mxschmitt/action-tmate@v3
         with:
           detached: true
