@@ -33,7 +33,7 @@ install_submodule() {
 
     supported_archs=(
         'amd64'
-        'TODO(xander): figure out the jetson arch in dpkg terms'
+        'arm64'
     )
 
     # Check if given pkg is supported
