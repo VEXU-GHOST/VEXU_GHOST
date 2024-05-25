@@ -43,151 +43,20 @@
 
 #include <atomic>
 
-using namespace std::chrono_literals;
-namespace plt = matplotlibcpp;
-using namespace casadi;
+#include "ghost_swerve_mpc_planner/ipopt_iteration_callback.hpp"
 
-std::atomic_bool EXIT_GLOBAL = false;
+using namespace std::chrono_literals;
+using namespace casadi;
+namespace plt = matplotlibcpp;
+using ghost_swerve_mpc_planner::IterationCallback;
+
+std::shared_ptr<std::atomic_bool> EXIT_GLOBAL_PTR = std::make_shared<std::atomic_bool>(false);
 
 void siginthandler(int param)
 {
   std::cout << "Ctr-C Received, Aborting..." << std::endl;
-  EXIT_GLOBAL = true;
+  *EXIT_GLOBAL_PTR = true;
 }
-class IterationCallback : public casadi::Callback
-{
-public:
-  struct IPOPTOutput
-  {
-    IPOPTOutput()
-    {
-    }
-    IPOPTOutput(const IPOPTOutput & rhs)
-    {
-      x = rhs.x;
-      g = rhs.g;
-      f = rhs.f;
-      lam_x = rhs.lam_x;
-      lam_g = rhs.lam_g;
-      iteration = rhs.iteration;
-    }
-
-    int iteration;
-    std::vector<double> x;
-    std::vector<double> g;
-    double f = 0.0;
-    std::vector<double> lam_x;
-    std::vector<double> lam_g;
-  };
-
-  IterationCallback(
-    int nx, int ng, std::shared_ptr<std::deque<IPOPTOutput>> data_buffer,
-    std::shared_ptr<std::mutex> data_mutex)
-  : nx_(nx),
-    ng_(ng),
-    data_buffer_(data_buffer),
-    data_mutex_(data_mutex),
-    casadi::Callback()
-  {
-    construct("iteration_callback");
-  }
-
-  bool has_eval_buffer() const override
-  {
-    return true;
-  }
-
-  void init() override
-  {
-  }
-
-  casadi_int get_n_in() override
-  {
-    return nlpsol_n_out();
-  }
-
-  casadi_int get_n_out() override
-  {
-    return 1;
-  }
-
-  std::string get_name_in(casadi_int i) override
-  {
-    return nlpsol_out(i);
-  }
-
-  Sparsity get_sparsity_in(casadi_int i) override
-  {
-    auto n = nlpsol_out(i);
-    if (n == "f") {
-      return Sparsity::scalar();
-    } else if ((n == "x") || (n == "lam_x") ) {
-      return Sparsity::dense(nx_);
-    } else if ((n == "g") || (n == "lam_g") ) {
-      return Sparsity::dense(ng_);
-    } else {
-      return Sparsity(0, 0);
-    }
-  }
-
-  std::string get_name_out(casadi_int i) override
-  {
-    return "ret";
-  }
-
-  std::vector<DM> eval(const std::vector<DM> & arg) const override
-  {
-    return {0};
-  }
-
-  int eval_buffer(
-    const double ** arg, const std::vector<casadi_int> & sizes_arg,
-    double ** res, const std::vector<casadi_int> & sizes_res) const override
-  {
-    auto output_map = nlpsol_out();
-    IPOPTOutput data{};
-
-    data.x.resize(nx_);
-    data.g.resize(ng_);
-    data.lam_x.resize(nx_);
-    data.lam_g.resize(ng_);
-
-    for (int i = 0; i < sizes_arg[0]; i++) {
-      data.x[i] = arg[0][i];
-    }
-    data.f = arg[1][0];
-
-    for (int i = 0; i < sizes_arg[2]; i++) {
-      data.g[i] = arg[2][i];
-    }
-
-    for (int i = 0; i < sizes_arg[3]; i++) {
-      data.lam_x[i] = arg[3][i];
-    }
-
-    for (int i = 0; i < sizes_arg[4]; i++) {
-      data.lam_g[i] = arg[4][i];
-    }
-
-    data.iteration = iteration_count_;
-
-    std::unique_lock<std::mutex> lock(*data_mutex_);
-    data_buffer_->push_front(data);
-    iteration_count_++;
-
-    if (EXIT_GLOBAL) {
-      *(res[0]) = 1.0;
-      EXIT_GLOBAL = false;
-    }
-    return {0};
-  }
-
-  int nx_;
-  int ng_;
-  std::shared_ptr<std::deque<IPOPTOutput>> data_buffer_;
-  std::shared_ptr<std::mutex> data_mutex_;
-  mutable int iteration_count_ = 1;
-};
 
 int main(int argc, char * argv[])
 {
@@ -240,13 +109,13 @@ int main(int argc, char * argv[])
   double des_vel_x = 0.75;
   double des_vel_y = 0.75;
   double des_vel_theta = 0.0;
-  double init_m1_steering_angle = 3.14159/4;       // -3.14159 / 4.0;
+  double init_m1_steering_angle = 3.14159 / 4;       // -3.14159 / 4.0;
   double init_m1_steering_vel = 0.0;
-  double init_m2_steering_angle = 3.14159/4;       // 3.14159 / 4.0;
+  double init_m2_steering_angle = 3.14159 / 4;       // 3.14159 / 4.0;
   double init_m2_steering_vel = 0.0;
-  double init_m3_steering_angle = 3.14159/4;       // -3.14159 / 4.0;
+  double init_m3_steering_angle = 3.14159 / 4;       // -3.14159 / 4.0;
   double init_m3_steering_vel = 0.0;
-  double init_m4_steering_angle = -3.14159/4;       // 3.14159 / 4.0;
+  double init_m4_steering_angle = -3.14159 / 4;       // 3.14159 / 4.0;
   double init_m4_steering_vel = 0.0;
 
   std::vector<Eigen::Vector2d> module_positions{
@@ -500,9 +369,11 @@ int main(int argc, char * argv[])
       x_accel_constraint -= x_force;
       y_accel_constraint -= y_force;
 
-      auto module_position_world_x = x_pos + cos(theta) * module_positions[m - 1].x() - sin(theta) *
+      auto module_position_world_x = x_pos + cos(theta) * module_positions[m - 1].x() -
+        sin(theta) *
         module_positions[m - 1].y();
-      auto module_position_world_y = y_pos + sin(theta) * module_positions[m - 1].x() + cos(theta) *
+      auto module_position_world_y = y_pos + sin(theta) * module_positions[m - 1].x() +
+        cos(theta) *
         module_positions[m - 1].y();
       auto base_torque = y_force * (module_position_world_x - x_pos) - x_force *
         (module_position_world_y - y_pos);
@@ -714,7 +585,7 @@ int main(int argc, char * argv[])
   auto data_mutex = std::make_shared<std::mutex>();
   auto iteration_callback = IterationCallback(
     NUM_OPT_VARS,
-    constraints.size1(), data_buffer, data_mutex);
+    constraints.size1(), data_buffer, data_mutex, EXIT_GLOBAL_PTR);
   SXDict nlp_config{
     {"x", state_vector},
     {"f", f},
@@ -824,7 +695,8 @@ int main(int argc, char * argv[])
   std::cout << "Objective: " << res.at("f") << std::endl;
 
   // Unpack solution into individual time series
-  std::unordered_map<std::string, std::vector<double>> state_solution_map = generate_trajectory_map(
+  std::unordered_map<std::string,
+    std::vector<double>> state_solution_map = generate_trajectory_map(
     raw_solution_vector);
 
   if (!plot) {
@@ -988,8 +860,8 @@ int main(int argc, char * argv[])
     plot_wheel_module(Eigen::Vector2d(M4_X, M4_Y), "m4_");
     plt::pause(DT);
 
-    if (EXIT_GLOBAL) {
-      EXIT_GLOBAL = false;
+    if (*EXIT_GLOBAL_PTR) {
+      *EXIT_GLOBAL_PTR = false;
       break;
     }
   }
@@ -1058,7 +930,7 @@ int main(int argc, char * argv[])
   plt::pause(0.1);
   plt::show();
 
-  while (!EXIT_GLOBAL) {
+  while (!(*EXIT_GLOBAL_PTR)) {
     std::this_thread::sleep_for(50ms);
   }
 

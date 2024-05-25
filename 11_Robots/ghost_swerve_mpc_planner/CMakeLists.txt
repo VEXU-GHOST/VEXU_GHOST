@@ -23,11 +23,12 @@ set(DEPENDENCIES
   ghost_util
   rclcpp
   ghost_msgs
-  )
+)
 
 foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
 endforeach()
+
 ament_export_dependencies(${DEPENDENCIES})
 
 # Set Include Directories
@@ -42,9 +43,26 @@ ament_export_include_directories(${INCLUDE})
 # set(CMAKE_BUILD_TYPE "DEBUG")
 # set(CMAKE_BUILD_TYPE "RELEASE")
 
-###################
-### Executables ###
-###################
+# ##################
+# ### Libraries ####
+# ##################
+add_library(ipopt_iteration_callback SHARED src/ipopt_iteration_callback.cpp)
+target_link_libraries(ipopt_iteration_callback
+  casadi
+)
+ament_export_targets(ipopt_iteration_callback HAS_LIBRARY_TARGET)
+install(
+  TARGETS ipopt_iteration_callback
+  EXPORT ipopt_iteration_callback
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+# ##################
+# ## Executables ###
+# ##################
 # Main to generate Problem Formulation for MDS MPC
 add_executable(casadi_swerve_model_generation src/casadi_swerve_model_generation.cpp)
 ament_target_dependencies(casadi_swerve_model_generation
@@ -54,6 +72,7 @@ target_link_libraries(casadi_swerve_model_generation
   casadi
   matplotlib_cpp::matplotlib_cpp
   ${PYTHON_LIBRARIES}
+  ipopt_iteration_callback
 )
 target_include_directories(casadi_swerve_model_generation
   PUBLIC
@@ -63,16 +82,15 @@ install(TARGETS
   casadi_swerve_model_generation
   DESTINATION lib/${PROJECT_NAME})
 
-###############
-### Testing ###
-###############
+# ##############
+# ## Testing ###
+# ##############
 
-###############
-### Install ###
-###############
+# ##############
+# ## Install ###
+# ##############
 # install(
-#  DIRECTORY include/
-#  DESTINATION include
+# DIRECTORY include/
+# DESTINATION include
 # )
-
 ament_package()
