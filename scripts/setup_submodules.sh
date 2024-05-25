@@ -24,6 +24,11 @@ install_submodule() {
         'ipopt'
         'matplotlibcpp'
         'mumps'
+        'plotjuggler'
+        'plotjuggler-ros'
+        'rplidar'
+        'bt-cpp'
+        'bt-ros'
     )
 
     supported_archs=(
@@ -104,5 +109,27 @@ then
 else
         echo "Build already exists"
 fi
+
+
+echo "------------ PLOTJUGGLER -------------"
+install_submodule plotjuggler
+echo; echo
+
+echo "----------- PLOTJUGGLER-ROS ----------"
+install_submodule plotjuggler-ros
+echo; echo
+
+echo "-------------- RPLIDAR ---------------"
+install_submodule rplidar
+echo; echo
+
+echo "--------------- BT-CPP ---------------"
+install_submodule bt-cpp
+echo; echo
+
+echo "--------------- BT-ROS ---------------"
+install_submodule bt-ros
+echo; echo
+
 
 echo; echo
