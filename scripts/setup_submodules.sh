@@ -60,6 +60,7 @@ then
 fi
 
 cd $VEXU_HOME
+git submodule init
 git submodule update --recursive
 
 # Get processor architecture to determine proper .deb source
