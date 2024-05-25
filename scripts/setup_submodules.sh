@@ -1,10 +1,51 @@
 #!/bin/bash
 
-exit_unsupported() {
-    echo "Failure: Unsupported processure architecture. Please notify maintainers of ghost_dependencies!"
+exit_unsupported_pkg() {
+    pkg=$1
+
+    echo "Failure: Unsupported package: $pkg. Please notify maintainers of ghost_dependencies!"
     echo "https://github.com/VEXU-GHOST/ghost_dependencies"
     exit -1
 }
+
+exit_unsupported_arch() {
+    arch=$1
+
+    echo "Failure: Unsupported processure architecture: $arch. Please notify maintainers of ghost_dependencies!"
+    echo "https://github.com/VEXU-GHOST/ghost_dependencies"
+    exit -1
+}
+
+install_submodule() {
+    pkg=$1
+
+    supported_pkgs=(
+        'casadi'
+        'ipopt'
+        'matplotlibcpp'
+        'mumps'
+    )
+
+    supported_archs=(
+        'amd64'
+        'TODO(xander): figure out the jetson arch in dpkg terms'
+    )
+
+    # Check if given pkg is supported
+    if [[ ! " ${supported_pkgs[*]} " =~ " $pkg " ]]; then
+        exit_unsupported_pkg $pkg
+    fi
+
+    # Check if given arch is supported 
+    if [[ ! " ${supported_archs[*]} " =~ " $arch " ]]; then
+        exit_unsupported_arch $arch
+    fi
+
+    sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-$pkg-$arch.deb || exit -1
+    sudo --preserve-env=VEXU_HOME dpkg -i ghost-$pkg-$arch.deb || exit -1
+    sudo rm ghost-$pkg-$arch.deb
+}
+
 
 # Verify repo path is set
 if [ -z "${VEXU_HOME}" ]
@@ -22,28 +63,9 @@ arch=$(dpkg --print-architecture)
 
 # Build matplotlib-cpp
 echo "--------------- MATPLOTLIB_CPP ---------------"
+install_submodule matplotlibcpp
+echo; echo
 
-case $arch in
-
-    'amd64')
-        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-matplotlibcpp-amd64.deb || exit -1
-        sudo --preserve-env=VEXU_HOME dpkg -i ghost-matplotlibcpp-amd64.deb || exit -1
-        sudo rm ghost-matplotlibcpp-amd64.deb
-        ;;
-    
-    'TODO(xander): figure out the jetson arch in dpkg terms')
-        echo "TODO(xander): add arm debian link here"
-        echo "TODO(xander): add arm debian installation here"
-        echo "TODO(xander): add arm debian removal here"
-        ;;
-
-    *)
-        exit_unsupported
-        ;;
-esac
-
-echo
-echo
 
 # Build Mumps
 echo "--------------- MUMPS ---------------"
@@ -53,77 +75,19 @@ sudo apt install swig -y                                                      ||
 
 export FC=$(which gfortran-10)
 
-case $arch in
+install_submodule mumps
+echo; echo
 
-    'amd64')
-        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-mumps-amd64.deb || exit -1
-        sudo --preserve-env=VEXU_HOME dpkg -i ghost-mumps-amd64.deb || exit -1
-        sudo rm ghost-mumps-amd64.deb
-        ;;
-    
-    'TODO(xander): figure out the jetson arch in dpkg terms')
-        echo "TODO(xander): add arm debian link here"
-        echo "TODO(xander): add arm debian installation here"
-        echo "TODO(xander): add arm debian removal here"
-        ;;
-
-    *)
-        exit_unsupported
-        ;;
-esac
-
-echo
-echo
 
 # Build IPOPT
 echo "--------------- IPOPT ---------------"
-
-case $arch in
-
-    'amd64')
-        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-ipopt-amd64.deb || exit -1
-        sudo --preserve-env=VEXU_HOME dpkg -i ghost-ipopt-amd64.deb || exit -1
-        sudo rm ghost-ipopt-amd64.deb
-        ;;
-    
-    'TODO(xander): figure out the jetson arch in dpkg terms')
-        echo "TODO(xander): add arm debian link here"
-        echo "TODO(xander): add arm debian installation here"
-        echo "TODO(xander): add arm debian removal here"
-        ;;
-
-    *)
-        exit_unsupported
-        ;;
-esac
-
-echo
-echo
+install_submodule ipopt
+echo; echo
 
 # Build Casadi
 echo "--------------- CASADI ---------------"
-
-case $arch in
-
-    'amd64')
-        sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-casadi-amd64.deb || exit -1
-        sudo --preserve-env=VEXU_HOME dpkg -i ghost-casadi-amd64.deb || exit -1
-        sudo rm ghost-casadi-amd64.deb
-        ;;
-    
-    'TODO(xander): figure out the jetson arch in dpkg terms')
-        echo "TODO(xander): add arm debian link here"
-        echo "TODO(xander): add arm debian installation here"
-        echo "TODO(xander): add arm debian removal here"
-        ;;
-
-    *)
-        exit_unsupported
-        ;;
-esac
-
-echo
-echo
+install_submodule casadi
+echo; echo
 
 # Build Casadi Tutorial CPP
 echo "--------------- CASADI_TUTORIAL_CPP ---------------"
@@ -141,5 +105,4 @@ else
         echo "Build already exists"
 fi
 
-echo
-echo
+echo; echo
