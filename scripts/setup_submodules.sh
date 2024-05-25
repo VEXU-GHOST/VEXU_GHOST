@@ -110,6 +110,7 @@ else
         echo "Build already exists"
 fi
 
+echo; echo
 
 echo "------------ PLOTJUGGLER -------------"
 install_submodule plotjuggler
@@ -129,7 +130,4 @@ echo; echo
 
 echo "--------------- BT-ROS ---------------"
 install_submodule bt-ros
-echo; echo
-
-
 echo; echo
