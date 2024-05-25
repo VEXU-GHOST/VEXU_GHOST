@@ -231,7 +231,7 @@
       <!-- <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>
-      <RetryUntilSuccessful num_attempts="-1">
+      <!-- <RetryUntilSuccessful num_attempts="-1">
         <AutoDone/>
       </RetryUntilSuccessful> -->
     </Sequence>
@@ -339,8 +339,8 @@
   <TreeNodesModel>
     <Action ID="CheckForRestart"
             editable="true"/>
-    <Action ID="AutoDone"
-            editable="true"/>
+    <!-- <Action ID="AutoDone"
+            editable="true"/> -->
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="in"/>

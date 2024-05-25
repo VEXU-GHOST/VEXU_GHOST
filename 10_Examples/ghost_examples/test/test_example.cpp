@@ -1,58 +1,84 @@
+/*
+ *   Copyright (c) 2024 Maxx Wilson
+ *   All rights reserved.
+
+ *   Permission is hereby granted, free of charge, to any person obtaining a copy
+ *   of this software and associated documentation files (the "Software"), to deal
+ *   in the Software without restriction, including without limitation the rights
+ *   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *   copies of the Software, and to permit persons to whom the Software is
+ *   furnished to do so, subject to the following conditions:
+
+ *   The above copyright notice and this permission notice shall be included in all
+ *   copies or substantial portions of the Software.
+
+ *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *   SOFTWARE.
+ */
+
 #include "ghost_examples/ros_subscriber_example.hpp"
 #include "gtest/gtest.h"
 
-class TestExample : public ::testing::Test {
+class TestExample : public ::testing::Test
+{
 protected:
+  TestExample()
+  {
+    subscriber_node_ = std::make_shared<ghost_examples::ROSSubscriberExample>();
+  }
 
-	TestExample(){
-		subscriber_node_ = std::make_shared<ghost_examples::ROSSubscriberExample>();
-	}
+  void SetUp() override
+  {
+  }
 
-	void SetUp() override {
-	}
-
-	void TearDown() override {
-	}
-	std::shared_ptr<ghost_examples::ROSSubscriberExample> subscriber_node_;
+  void TearDown() override
+  {
+  }
+  std::shared_ptr<ghost_examples::ROSSubscriberExample> subscriber_node_;
 };
 
-TEST_F(TestExample, testAddInts){
-	// A few ways to test the results of your code
-	EXPECT_EQ(subscriber_node_->add_ints(2, 3), 5);
-	EXPECT_TRUE(subscriber_node_->add_ints(2, 3) == 5);
-	EXPECT_FALSE(subscriber_node_->add_ints(2, 3) == 4);
+TEST_F(TestExample, testAddInts) {
+  // A few ways to test the results of your code
+  EXPECT_EQ(subscriber_node_->add_ints(2, 3), 5);
+  EXPECT_TRUE(subscriber_node_->add_ints(2, 3) == 5);
+  EXPECT_FALSE(subscriber_node_->add_ints(2, 3) == 4);
 }
 
-TEST_F(TestExample, testAddFloats){
-	// Sometimes floats are a tiny tiny bit off and dont evaluate equal because of how computers store them.
-	// Thus, it is usually safer to use a different equality check.
-	EXPECT_FLOAT_EQ(subscriber_node_->add_floats(2, 3), 5.0);
+TEST_F(TestExample, testAddFloats) {
+  // Sometimes floats are a tiny tiny bit off and dont evaluate equal because of how computers store them.
+  // Thus, it is usually safer to use a different equality check.
+  EXPECT_FLOAT_EQ(subscriber_node_->add_floats(2, 3), 5.0);
 }
 
-TEST_F(TestExample, testStrings){
-	// Remember that strings need a special equality check.
-	// ("test" == "test") may not be true!
-	EXPECT_STREQ("test", "test");
+TEST_F(TestExample, testStrings) {
+  // Remember that strings need a special equality check.
+  // ("test" == "test") may not be true!
+  EXPECT_STREQ("test", "test");
 }
 
-TEST_F(TestExample, testThrow){
-	// EXPECT_THROW(subscriber_node_->function_that_throws_error());
-	// EXPECT_NO_THROW(subscriber_node_->do_nothing());
+TEST_F(TestExample, testThrow) {
+  // EXPECT_THROW(subscriber_node_->function_that_throws_error());
+  // EXPECT_NO_THROW(subscriber_node_->do_nothing());
 
-	try{
-		subscriber_node_->function_that_throws_error();
-	}
-	catch(const std::runtime_error & e){
-		std::cout << "We caught the error: " << e.what() << std::endl;
-	}
+  try {
+    subscriber_node_->function_that_throws_error();
+  } catch (const std::runtime_error & e) {
+    std::cout << "We caught the error: " << e.what() << std::endl;
+  }
 }
 
-int main(int argc, char **argv) {
-	// This line is always required if you are going to instantiate a ROS node.
-	// For testing regular C++ libraries, it should be excluded.
-	rclcpp::init(argc, argv);
+int main(int argc, char ** argv)
+{
+  // This line is always required if you are going to instantiate a ROS node.
+  // For testing regular C++ libraries, it should be excluded.
+  rclcpp::init(argc, argv);
 
-	// Standard GTest main
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+  // Standard GTest main
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

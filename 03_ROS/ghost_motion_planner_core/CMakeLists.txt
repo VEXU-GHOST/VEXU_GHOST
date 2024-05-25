@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(ghost_motion_planner_core)
 
 # Add Global CMake Config for Ghost Packages
-set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 find_package(Ghost CONFIG REQUIRED)
 
 ######################
@@ -17,6 +17,7 @@ set(DEPENDENCIES
   ghost_ros_interfaces
   # ghost_serial
   ghost_util
+  nav_msgs
   # pluginlib
   rclcpp
   # yaml-cpp

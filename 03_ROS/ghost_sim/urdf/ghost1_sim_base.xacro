@@ -5,7 +5,7 @@
     <xacro:include filename="$(find ghost_sim)/urdf/macros/sensor_macros.xacro"/>
     
     <!-- Import Primary Robot URDF -->
-    <xacro:include filename="$(find ghost_description)/urdf/ghost1.xacro"/>
+    <xacro:include filename="$(find ghost_over_under)/urdf/ghost1.xacro"/>
 
     <!-- Add Sensors -->
     <!-- <xacro:lidar_macro link_name="lidar_link" topic_name="scan"></xacro:lidar_macro> -->

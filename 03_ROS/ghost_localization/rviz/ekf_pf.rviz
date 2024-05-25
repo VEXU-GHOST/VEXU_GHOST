@@ -119,10 +119,8 @@ Visualization Manager:
       Tree:
         odom:
           base_link:
-            imu_link:
-              {}
-            lidar_link:
-              {}
+            imu_link: {}
+            lidar_link: {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -149,8 +147,7 @@ Visualization Manager:
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Map
-      Namespaces:
-        {}
+      Namespaces: {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -196,8 +193,7 @@ Visualization Manager:
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: Swerve Kinematics
-      Namespaces:
-        {}
+      Namespaces: {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -208,8 +204,7 @@ Visualization Manager:
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: Predicted Scan
-      Namespaces:
-        {}
+      Namespaces: {}
       Topic:
         Depth: 5
         Durability Policy: Volatile

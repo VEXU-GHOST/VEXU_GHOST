@@ -82,7 +82,7 @@ port_configuration:
             serial:
                 send_angle_data: true
                 send_position_data: false
-                send_velocity_data: true                
+                send_velocity_data: true
         drive_motor_config:
             gearset: 600
             brake_mode: COAST

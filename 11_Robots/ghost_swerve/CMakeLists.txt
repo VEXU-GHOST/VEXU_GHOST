@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(ghost_swerve)
 
 # Add Global CMake Config for Ghost Packages
-set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 find_package(Ghost CONFIG REQUIRED)
 
 # Adds all our package dependencies to one list
@@ -11,17 +11,17 @@ set(DEPENDENCIES
   ghost_ros_interfaces
   ghost_util
   ghost_estimation
-  geometry_msgs
-  sensor_msgs
-  matplotlib_cpp
-  PythonLibs
-  visualization_msgs
-  nav_msgs
-  ghost_msgs
-  pluginlib
-  tf2
   ghost_planners
   ghost_motion_planner_core
+  geometry_msgs
+  sensor_msgs
+  nav_msgs
+  ghost_msgs
+  visualization_msgs
+  matplotlib_cpp
+  PythonLibs
+  pluginlib
+  tf2
   Eigen3
   behaviortree_cpp
   behaviortree_ros2
@@ -91,21 +91,21 @@ RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
-add_executable(swerve_motion_planner
-  src/swerve_motion_planner.cpp
+add_executable(cubic_motion_planner
+  src/cubic_motion_planner.cpp
 )
-ament_target_dependencies(swerve_motion_planner
+ament_target_dependencies(cubic_motion_planner
   ${DEPENDENCIES}
 )
-target_link_libraries(swerve_motion_planner
+target_link_libraries(cubic_motion_planner
   swerve_model
 )
-target_include_directories(swerve_motion_planner
+target_include_directories(cubic_motion_planner
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  swerve_motion_planner
+  cubic_motion_planner
   DESTINATION lib/${PROJECT_NAME})
 
 # bt node libraries
@@ -116,7 +116,7 @@ set(NODES
   swipeTail
   intakeCmd
   climb
-  autoDone
+  # autoDone
 )
 
 foreach(NODE ${NODES})

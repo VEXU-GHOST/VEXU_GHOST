@@ -1,4 +1,5 @@
 std_msgs/Header header
 
-string[] motor_names
-ghost_msgs/MotorTrajectory[] trajectories
+ghost_msgs/Trajectory x_trajectory
+ghost_msgs/Trajectory y_trajectory
+ghost_msgs/Trajectory theta_trajectory
