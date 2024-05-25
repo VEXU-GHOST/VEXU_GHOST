@@ -246,6 +246,26 @@ int main(int argc, char * argv[])
     return cost * pow(jerk, 2);
   };
 
+  auto rotate_vector_sym = [&](
+    const Matrix<SXElem>& angle,
+    const Matrix<SXElem>& x_in,
+    const Matrix<SXElem>& y_in,
+    Matrix<SXElem>& x_out,
+    Matrix<SXElem>& y_out){
+      x_out = x_in*cos(angle) - y_in*sin(angle);
+      y_out = x_in*sin(angle) + y_in*cos(angle);
+  };
+
+    auto rotate_vector_dbl = [&](
+    const Matrix<SXElem>& angle,
+    const double& x_in,
+    const double& y_in,
+    Matrix<SXElem>& x_out,
+    Matrix<SXElem>& y_out){
+      x_out = x_in*cos(angle) - y_in*sin(angle);
+      y_out = x_in*sin(angle) + y_in*cos(angle);
+  };
+
   auto generate_trajectory_map = [&](const std::vector<double> & solution_vector) {
       std::unordered_map<std::string, std::vector<double>> solution_map;
 
@@ -403,26 +423,36 @@ int main(int argc, char * argv[])
       auto wheel_force = get_state(kt1_mN_ + "wheel_torque") / WHEEL_RADIUS;
       auto lateral_force = get_state(kt1_mN_ + "lateral_force");
       auto world_steering_angle = theta + get_state(kt1_mN_ + "steering_angle");
-      auto x_force = cos(world_steering_angle) * wheel_force - sin(world_steering_angle) * lateral_force;
-      auto y_force = sin(world_steering_angle) * wheel_force + cos(world_steering_angle) * lateral_force;
+    
+      auto x_force = casadi::Matrix<casadi::SXElem>();
+      auto y_force = casadi::Matrix<casadi::SXElem>();
+      rotate_vector_sym(world_steering_angle, wheel_force, lateral_force, x_force, y_force);
       x_accel_constraint -= x_force;
       y_accel_constraint -= y_force;
 
-      auto module_position_world_x = cos(theta) * module_positions[m - 1].x() - sin(theta) * module_positions[m - 1].y();
-      auto module_position_world_y = sin(theta) * module_positions[m - 1].x() + cos(theta) * module_positions[m - 1].y();
-      auto base_torque = y_force * (module_position_world_x) - x_force * (module_position_world_y);
+      auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
+      auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
+      rotate_vector_dbl(theta, module_positions[m - 1].x(), module_positions[m - 1].y(), mod_offset_x, mod_offset_y);
+
+      auto base_torque = y_force * (mod_offset_x) - x_force * (mod_offset_y);
       theta_accel_constraint -= base_torque;
 
       // Lateral Wheel Velocity Constraint
       auto base_steering_angle = get_state(kt1_mN_ + "steering_angle");
-      auto tan_vel = vel_theta * sqrt((pow(module_position_world_x, 2) + pow(module_position_world_y, 2)));
+      auto tan_vel = vel_theta * sqrt((pow(mod_offset_x, 2) + pow(mod_offset_y, 2)));
       auto r_angle = atan2(module_positions[m - 1].y(), module_positions[m - 1].x());                   // base_link
       auto tan_vel_x = tan_vel * -sin(r_angle);
       auto tan_vel_y = tan_vel * cos(r_angle);
-      auto world_tan_vel_x = tan_vel_x * cos(theta) - tan_vel_y * sin(theta);
-      auto world_tan_vel_y = tan_vel_x * sin(theta) + tan_vel_y * cos(theta);
-      auto forward_velocity = (world_tan_vel_y + vel_y) * cos(-world_steering_angle) - (world_tan_vel_x + vel_x) * sin(-world_steering_angle);
-      auto lateral_velocity = (world_tan_vel_x + vel_x) * sin(-world_steering_angle) + (world_tan_vel_y + vel_y) * cos(-world_steering_angle);
+
+      auto world_vel_x = casadi::Matrix<casadi::SXElem>();
+      auto world_vel_y = casadi::Matrix<casadi::SXElem>();
+      rotate_vector_sym(theta, tan_vel_x, tan_vel_y, world_vel_x, world_vel_y);
+      world_vel_x += vel_x;
+      world_vel_y += vel_y;
+
+      auto forward_velocity = casadi::Matrix<casadi::SXElem>();
+      auto lateral_velocity = casadi::Matrix<casadi::SXElem>();
+      rotate_vector_sym(-world_steering_angle, world_vel_x, world_vel_y, forward_velocity, lateral_velocity);
         
       no_wheel_slip_constraints = vertcat(no_wheel_slip_constraints,lateral_velocity);
 
@@ -879,13 +909,15 @@ int main(int argc, char * argv[])
   plt::plot(time_vector, state_solution_map["base_accel_theta"]);
 
   plt::figure();
-  plt::suptitle("Module 1 Steering");
-  plt::subplot(3, 1, 1);
+  plt::suptitle("Wheel Steering");
+  plt::subplot(2, 2, 1);
   plt::plot(time_vector, state_solution_map["m1_steering_angle"]);
-  plt::subplot(3, 1, 2);
-  plt::plot(time_vector, state_solution_map["m1_steering_vel"]);
-  plt::subplot(3, 1, 3);
-  plt::plot(time_vector, state_solution_map["m1_steering_accel"]);
+  plt::subplot(2, 2, 2);
+  plt::plot(time_vector, state_solution_map["m2_steering_angle"]);
+  plt::subplot(2, 2, 3);
+  plt::plot(time_vector, state_solution_map["m3_steering_angle"]);
+  plt::subplot(2, 2, 4);
+  plt::plot(time_vector, state_solution_map["m4_steering_angle"]);
 
   plt::figure();
   plt::suptitle("m1_forces");
