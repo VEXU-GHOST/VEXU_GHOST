@@ -108,6 +108,12 @@ public:
     return m_state_vector_size;
   }
 
+  /**
+   * @brief Returns the corresponding index in the state vector given a state name.
+   *
+   * @param name
+   * @return int
+   */
   int getStateIndex(const std::string & name)const
   {
     if (m_state_index_map.count(name) == 0) {
@@ -126,7 +132,6 @@ protected:
   std::vector<std::string> m_state_names;
   std::unordered_map<std::string, int> m_state_index_map;
   size_t m_state_vector_size;
-
 };
 
 } // namespace ghost_planners
