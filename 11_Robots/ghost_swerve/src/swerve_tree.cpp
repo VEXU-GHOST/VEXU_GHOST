@@ -13,7 +13,8 @@ SwerveTree::SwerveTree(std::string bt_path,
 						std::shared_ptr<SwerveModel> swerve_ptr,
 						double burnout_absolute_rpm_threshold,
 						double burnout_stall_duration_ms,
-						double burnout_cooldown_duration_ms) :
+						double burnout_cooldown_duration_ms,
+						double lift_setpoint) :
 			bt_path_(bt_path)
 		{
 
@@ -27,7 +28,8 @@ SwerveTree::SwerveTree(std::string bt_path,
 		factory.registerNodeType<IntakeCmd>("IntakeCmd", robot_hardware_interface_ptr, swerve_ptr,
 					burnout_absolute_rpm_threshold,
 					burnout_stall_duration_ms,
-					burnout_cooldown_duration_ms);
+					burnout_cooldown_duration_ms,
+					lift_setpoint);
 		factory.registerNodeType<Climb>("Climb", robot_hardware_interface_ptr, swerve_ptr);
 		factory.registerNodeType<AutoDone>("AutoDone", robot_hardware_interface_ptr, swerve_ptr);
 

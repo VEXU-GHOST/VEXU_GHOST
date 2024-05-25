@@ -25,7 +25,8 @@ public:
 					std::shared_ptr<SwerveModel> swerve_ptr,
 					double burnout_absolute_rpm_threshold,
 					double burnout_stall_duration_ms,
-					double burnout_cooldown_duration_ms);
+					double burnout_cooldown_duration_ms,
+					double lift_setpoint);
 		void tick_tree();
 		
 private:

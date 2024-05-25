@@ -7,17 +7,13 @@
 
 namespace ghost_swerve {
     
-class IntakeCmd : public BT::SyncActionNode,
+class AutoDone : public BT::SyncActionNode,
 	              public rclcpp::Node {
 
 public:
-    IntakeCmd(const std::string& name, const BT::NodeConfig& config,
+    AutoDone(const std::string& name, const BT::NodeConfig& config,
 	           	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-	           	std::shared_ptr<SwerveModel> swerve_ptr,
-			   	double burnout_absolute_rpm_threshold,
-			   	double burnout_stall_duration_ms,
-				double burnout_cooldown_duration_ms,
-				double lift_setpoint);
+	           	std::shared_ptr<SwerveModel> swerve_ptr);
 
     // It is mandatory to define this STATIC method.
 	static BT::PortsList providedPorts();
@@ -28,15 +24,6 @@ private:
 	template <typename T>
 	T get_input(std::string key);
 	
-	bool intake_stalling_;
-	bool intake_cooling_down_;
-	double burnout_absolute_rpm_threshold_;
-	double burnout_stall_duration_ms_;
-	double burnout_cooldown_duration_ms_;
-	double lift_setpoint_;
-	std::chrono::time_point<std::chrono::system_clock> intake_stall_start_;
-	std::chrono::time_point<std::chrono::system_clock> intake_cooldown_start_;
-
     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 	std::shared_ptr<SwerveModel> swerve_ptr_;
 };

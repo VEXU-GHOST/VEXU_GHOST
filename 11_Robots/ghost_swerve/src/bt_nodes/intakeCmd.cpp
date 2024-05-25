@@ -7,14 +7,16 @@ IntakeCmd::IntakeCmd(const std::string& name, const BT::NodeConfig& config,
 			std::shared_ptr<SwerveModel> swerve_ptr,
 			double burnout_absolute_rpm_threshold,
 			double burnout_stall_duration_ms,
-			double burnout_cooldown_duration_ms) :
+			double burnout_cooldown_duration_ms,
+			double lift_setpoint) :
 	BT::SyncActionNode(name, config),
 	rclcpp::Node("intake_cmd"),
 	rhi_ptr_(rhi_ptr),
 	swerve_ptr_(swerve_ptr),
 	burnout_absolute_rpm_threshold_(burnout_absolute_rpm_threshold),
 	burnout_stall_duration_ms_(burnout_stall_duration_ms),
-	burnout_cooldown_duration_ms_(burnout_cooldown_duration_ms){
+	burnout_cooldown_duration_ms_(burnout_cooldown_duration_ms),
+	lift_setpoint_(lift_setpoint){
 }
 
 // It is mandatory to define this STATIC method.

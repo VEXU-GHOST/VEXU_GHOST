@@ -161,6 +161,9 @@ void SwerveRobotPlugin::initialize(){
 
 	auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC * swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
 	swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius * ghost_util::INCHES_TO_METERS;
+ 
+	node_ptr_->declare_parameter("swerve_robot_plugin.intake_setpoint", 7.0);
+	m_intake_setpoint = node_ptr_->get_parameter("swerve_robot_plugin.intake_setpoint").as_double();
 
 	node_ptr_->declare_parameter("swerve_robot_plugin.max_ang_vel_slew", 0.); // 0 should stop the robot from moving when the param is not set
 	swerve_model_config.max_ang_vel_slew = node_ptr_->get_parameter("swerve_robot_plugin.max_ang_vel_slew").as_double();
@@ -217,7 +220,7 @@ void SwerveRobotPlugin::initialize(){
 		"/cmd_vel",
 		10);
 
-	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms, m_burnout_cooldown_duration_ms);
+	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms, m_burnout_cooldown_duration_ms, m_intake_setpoint);
 
 	m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
 		"bag_recorder/start");
@@ -570,7 +573,7 @@ void SwerveRobotPlugin::teleop(double current_time){
 			}
 			else{
 				intake_up = false;
-				intake_lift_target = 7.0;
+				intake_lift_target = m_intake_setpoint;
 			}
 			if(std::fabs(rhi_ptr_->getMotorPosition("intake_lift_motor") - intake_lift_target) < 0.05){
 				rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
@@ -640,26 +643,26 @@ void SwerveRobotPlugin::teleop(double current_time){
 			rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
 		}
 
-		bool tail_down = false;
+		// bool tail_down = false;
 		// tail left and intake up
-		if(tail_mode){
-			tail_down = true;
-			if(joy_data->btn_r2){
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-				rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_kick);
-			}
-			else{
-				rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-				rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
-			}
-		}
-		else{
-			tail_down = false;
-			rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-			rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
-		}
+		// if(tail_mode){
+		// 	tail_down = true;
+		// 	if(joy_data->btn_r2){
+		// 		rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+		// 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_kick);
+		// 	}
+		// 	else{
+		// 		rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+		// 		rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
+		// 	}
+		// }
+		// else{
+		// 	tail_down = false;
+		// 	rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+		// 	rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
+		// }
 
-		m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
+		// m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
 		m_digital_io[m_digital_io_name_map["claw"]] = !m_claw_open;
 
 		rhi_ptr_->setDigitalIO(m_digital_io);
