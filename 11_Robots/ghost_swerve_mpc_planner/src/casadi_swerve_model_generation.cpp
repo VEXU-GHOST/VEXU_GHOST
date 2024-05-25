@@ -96,6 +96,7 @@ int main(int argc, char * argv[])
   const double M3_Y = -WHEEL_BASE_WIDTH / 2;
   const double M4_X = WHEEL_BASE_WIDTH / 2;
   const double M4_Y = -WHEEL_BASE_WIDTH / 2;
+  const double WHEEL_RADIUS = 2.75 / 2.0 * ghost_util::INCHES_TO_METERS;
 
   // Params
   double mass = 10.0;
@@ -109,14 +110,22 @@ int main(int argc, char * argv[])
   double des_vel_x = 0.75;
   double des_vel_y = 0.75;
   double des_vel_theta = 0.0;
+
   double init_m1_steering_angle = 3.14159 / 4;       // -3.14159 / 4.0;
   double init_m1_steering_vel = 0.0;
+  double init_m1_wheel_vel = 0.0;
+
   double init_m2_steering_angle = 3.14159 / 4;       // 3.14159 / 4.0;
   double init_m2_steering_vel = 0.0;
+  double init_m2_wheel_vel = 0.0;
+
   double init_m3_steering_angle = 3.14159 / 4;       // -3.14159 / 4.0;
   double init_m3_steering_vel = 0.0;
+  double init_m3_wheel_vel = 0.0;
+
   double init_m4_steering_angle = -3.14159 / 4;       // 3.14159 / 4.0;
   double init_m4_steering_vel = 0.0;
+  double init_m4_wheel_vel = 0.0;
 
   std::vector<Eigen::Vector2d> module_positions{
     Eigen::Vector2d(M1_X, M1_Y),
@@ -140,10 +149,10 @@ int main(int argc, char * argv[])
     "steering_angle",
     "steering_vel",
     "steering_accel",
+    "wheel_vel",
+    "wheel_accel",
     "wheel_force",
     "lateral_force"
-    // "wheel_vel",
-    // "wheel_accel",
     // "voltage_1",
     // "voltage_2",
   };
@@ -172,6 +181,7 @@ int main(int argc, char * argv[])
   for (int m = 1; m < NUM_SWERVE_MODULES + 1; m++) {
     PARAM_NAMES.push_back(std::string("init_m") + std::to_string(m) + "_steering_angle");
     PARAM_NAMES.push_back(std::string("init_m") + std::to_string(m) + "_steering_vel");
+    PARAM_NAMES.push_back(std::string("init_m") + std::to_string(m) + "_wheel_vel");
   }
 
   ////////////////////////////////////////////
@@ -292,6 +302,10 @@ int main(int argc, char * argv[])
       std::pair<std::string,
       std::string>{module_prefix + "steering_vel",
         module_prefix + "steering_accel"});
+    euler_integration_state_names.push_back(
+      std::pair<std::string,
+      std::string>{module_prefix + "wheel_vel",
+        module_prefix + "wheel_accel"});
   }
 
   // Populate euler integration constraints for state vector
@@ -335,6 +349,11 @@ int main(int argc, char * argv[])
       std::pair<std::string, std::string>{
       std::string("k0_m") + std::to_string(m) + "_steering_vel",
       std::string("init_m") + std::to_string(m) + "_steering_vel",
+    });
+    initial_state_constraint_param_pairs.push_back(
+      std::pair<std::string, std::string>{
+      std::string("k0_m") + std::to_string(m) + "_wheel_vel",
+      std::string("init_m") + std::to_string(m) + "_wheel_vel",
     });
   }
 
@@ -426,6 +445,9 @@ int main(int argc, char * argv[])
 
     for (int m = 1; m < NUM_SWERVE_MODULES + 1; m++) {
       std::string module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
+      
+      // TODO(maxxwilson): Add steering speed limits, and wheel velocity limits
+
       lbx(state_index_map[module_prefix + "steering_accel"]) = -5000.0;
       ubx(state_index_map[module_prefix + "steering_accel"]) = 5000.0;
 
@@ -463,32 +485,14 @@ int main(int argc, char * argv[])
         2) + pow(get_state(next_knot_prefix + "base_accel_theta"), 2));
 
     // Regularize Base Jerk
-    f += 0.01 / DT *
-      (pow(
-        get_state(curr_knot_prefix + "base_accel_x") -
-        get_state(next_knot_prefix + "base_accel_x"), 2));
-    f += 0.01 / DT *
-      (pow(
-        get_state(curr_knot_prefix + "base_accel_y") -
-        get_state(next_knot_prefix + "base_accel_y"), 2));
-    f += 0.01 / DT *
-      (pow(
-        get_state(curr_knot_prefix + "base_accel_theta") -
-        get_state(next_knot_prefix + "base_accel_theta"), 2));
+    f += 0.01 / DT *(pow(get_state(curr_knot_prefix + "base_accel_x") - get_state(next_knot_prefix + "base_accel_x"), 2));
+    f += 0.01 / DT *(pow(get_state(curr_knot_prefix + "base_accel_y") - get_state(next_knot_prefix + "base_accel_y"), 2));
+    f += 0.01 / DT *(pow(get_state(curr_knot_prefix + "base_accel_theta") - get_state(next_knot_prefix + "base_accel_theta"), 2));
 
     // Penalize Velocity Deviation
-    f += 10000.0 * 1 / DT *
-      (pow(
-        get_param("des_vel_x") - get_state(curr_knot_prefix + "base_vel_x"),
-        2) + pow(get_param("des_vel_x") - get_state(next_knot_prefix + "base_vel_x"), 2));
-    f += 10000.0 * 1 / DT *
-      (pow(
-        get_param("des_vel_y") - get_state(curr_knot_prefix + "base_vel_y"),
-        2) + pow(get_param("des_vel_y") - get_state(next_knot_prefix + "base_vel_y"), 2));
-    f += 10000.0 * 1 / DT *
-      (pow(
-        get_param("des_vel_theta") - get_state(curr_knot_prefix + "base_vel_theta"),
-        2) + pow(get_param("des_vel_theta") - get_state(next_knot_prefix + "base_vel_theta"), 2));
+    f += 10000.0 * 1 / DT *(pow(get_param("des_vel_x") - get_state(curr_knot_prefix + "base_vel_x"),2) + pow(get_param("des_vel_x") - get_state(next_knot_prefix + "base_vel_x"), 2));
+    f += 10000.0 * 1 / DT *(pow(get_param("des_vel_y") - get_state(curr_knot_prefix + "base_vel_y"),2) + pow(get_param("des_vel_y") - get_state(next_knot_prefix + "base_vel_y"), 2));
+    f += 10000.0 * 1 / DT *(pow(get_param("des_vel_theta") - get_state(curr_knot_prefix + "base_vel_theta"),2) + pow(get_param("des_vel_theta") - get_state(next_knot_prefix + "base_vel_theta"), 2));
 
     auto vel_x = get_state(curr_knot_prefix + "base_vel_x");
     auto vel_y = get_state(curr_knot_prefix + "base_vel_y");
@@ -500,32 +504,18 @@ int main(int argc, char * argv[])
     for (int m = 1; m < NUM_SWERVE_MODULES + 1; m++) {
       std::string curr_knot_module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
       std::string next_knot_module_prefix = next_knot_prefix + "m" + std::to_string(m) + "_";
-      f += 0.00001 * 1 / DT *
-        (pow(
-          get_state(curr_knot_module_prefix + "steering_accel"),
-          2) + pow(get_state(next_knot_module_prefix + "steering_accel"), 2));
+      f += 0.00001 * 1 / DT *(pow(get_state(curr_knot_module_prefix + "steering_accel"),2) + pow(get_state(next_knot_module_prefix + "steering_accel"), 2));
+
+      f += 0.00001 * 1 / DT *(pow(get_state(curr_knot_module_prefix + "wheel_accel"),2) + pow(get_state(next_knot_module_prefix + "wheel_accel"), 2));
 
       // Small Regularization
-      f += 0.01 * 1 / DT *
-        (pow(
-          get_state(curr_knot_module_prefix + "steering_vel"),
-          2) + pow(get_state(next_knot_module_prefix + "steering_vel"), 2));
-      f += 0.00001 * 1 / DT *
-        (pow(
-          get_state(curr_knot_module_prefix + "lateral_force"),
-          2) + pow(get_state(next_knot_module_prefix + "lateral_force"), 2));
-      f += 0.001 * 1 / DT *
-        (pow(
-          get_state(curr_knot_module_prefix + "lateral_force") -
-          get_state(next_knot_module_prefix + "lateral_force"), 2));
-      f += 0.00001 * 1 / DT *
-        (pow(
-          get_state(curr_knot_module_prefix + "wheel_force"),
-          2) + pow(get_state(next_knot_module_prefix + "wheel_force"), 2));
-      f += 0.01 * 1 / DT *
-        (pow(
-          get_state(curr_knot_module_prefix + "wheel_force") -
-          get_state(next_knot_module_prefix + "wheel_force"), 2));
+      f += 1.0 * 1 / DT *(pow(get_state(curr_knot_module_prefix + "steering_vel"),2) + pow(get_state(next_knot_module_prefix + "steering_vel"), 2));
+      f += 0.01 * 1 / DT *(pow(get_state(curr_knot_module_prefix + "wheel_vel"),2) + pow(get_state(next_knot_module_prefix + "wheel_vel"), 2));
+      f += 0.00001 * 1 / DT * (pow(get_state(curr_knot_module_prefix + "lateral_force"),2) + pow(get_state(next_knot_module_prefix + "lateral_force"), 2));
+      f += 0.00001 * 1 / DT * (pow(get_state(curr_knot_module_prefix + "wheel_force"),2) + pow(get_state(next_knot_module_prefix + "wheel_force"), 2));
+      
+      f += 0.001 * 1 / DT *(pow(get_state(curr_knot_module_prefix + "lateral_force") - get_state(next_knot_module_prefix + "lateral_force"), 2));
+      f += 0.01 * 1 / DT *(pow(get_state(curr_knot_module_prefix + "wheel_force") - get_state(next_knot_module_prefix + "wheel_force"), 2));
 
       auto world_steering_angle = theta + get_state(curr_knot_module_prefix + "steering_angle");
       auto base_steering_angle = get_state(curr_knot_module_prefix + "steering_angle");
@@ -623,12 +613,16 @@ int main(int argc, char * argv[])
     des_vel_theta,
     init_m1_steering_angle,
     init_m1_steering_vel,                             // , 3.14159 / 4.0, 0.0};
+    init_m1_wheel_vel,
     init_m2_steering_angle,
     init_m2_steering_vel,                             // , 3.14159 / 4.0, 0.0};
+    init_m2_wheel_vel,
     init_m3_steering_angle,                             // , 3.14159 / 4.0, 0.0};
     init_m3_steering_vel,
+    init_m3_wheel_vel,
     init_m4_steering_angle,                             // , 3.14159 / 4.0, 0.0};
-    init_m4_steering_vel
+    init_m4_steering_vel,
+    init_m4_wheel_vel
   };       // , 3.14159 / 4.0, 0.0};
 
 
@@ -914,18 +908,60 @@ int main(int argc, char * argv[])
   plt::plot(time_vector, state_solution_map["m1_steering_accel"]);
 
   plt::figure();
-  plt::suptitle("Forces");
+  plt::suptitle("m1_forces");
   plt::subplot(2, 1, 1);
   plt::plot(time_vector, state_solution_map["m1_wheel_force"]);
   plt::subplot(2, 1, 2);
   plt::plot(time_vector, state_solution_map["m1_lateral_force"]);
 
   plt::figure();
-  plt::suptitle("Forces");
+  plt::suptitle("m2_forces");
   plt::subplot(2, 1, 1);
   plt::plot(time_vector, state_solution_map["m2_wheel_force"]);
   plt::subplot(2, 1, 2);
   plt::plot(time_vector, state_solution_map["m2_lateral_force"]);
+
+  plt::figure();
+  plt::suptitle("m3_forces");
+  plt::subplot(2, 1, 1);
+  plt::plot(time_vector, state_solution_map["m3_wheel_force"]);
+  plt::subplot(2, 1, 2);
+  plt::plot(time_vector, state_solution_map["m3_lateral_force"]);
+
+  plt::figure();
+  plt::suptitle("m4_forces");
+  plt::subplot(2, 1, 1);
+  plt::plot(time_vector, state_solution_map["m4_wheel_force"]);
+  plt::subplot(2, 1, 2);
+  plt::plot(time_vector, state_solution_map["m4_lateral_force"]);
+
+  plt::figure();
+  plt::suptitle("m1_wheel");
+  plt::subplot(2, 1, 1);
+  plt::plot(time_vector, state_solution_map["m1_wheel_vel"]);
+  plt::subplot(2, 1, 2);
+  plt::plot(time_vector, state_solution_map["m1_wheel_accel"]);
+
+  plt::figure();
+  plt::suptitle("m2_wheel");
+  plt::subplot(2, 1, 1);
+  plt::plot(time_vector, state_solution_map["m2_wheel_vel"]);
+  plt::subplot(2, 1, 2);
+  plt::plot(time_vector, state_solution_map["m2_wheel_accel"]);
+
+  plt::figure();
+  plt::suptitle("m3_wheel");
+  plt::subplot(2, 1, 1);
+  plt::plot(time_vector, state_solution_map["m3_wheel_vel"]);
+  plt::subplot(2, 1, 2);
+  plt::plot(time_vector, state_solution_map["m3_wheel_accel"]);
+
+  plt::figure();
+  plt::suptitle("m4_wheel");
+  plt::subplot(2, 1, 1);
+  plt::plot(time_vector, state_solution_map["m4_wheel_vel"]);
+  plt::subplot(2, 1, 2);
+  plt::plot(time_vector, state_solution_map["m4_wheel_accel"]);
 
   plt::pause(0.1);
   plt::show();
