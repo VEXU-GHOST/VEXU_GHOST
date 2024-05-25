@@ -22,19 +22,28 @@
  */
 
 #include "ghost_planners/trajectory.hpp"
+#include <ghost_util/search_util.hpp>
+#include <ghost_util/math_util.hpp>
+
+#include <iostream>
+
+using ghost_util::clampedVectorInterpolate;
+using ghost_util::getInsertionIndexFromSortedVector;
+using ghost_util::insertValueIntoSortedVector;
 
 
 namespace ghost_planners
 {
 
 Trajectory::Trajectory(
-  std::vector<std::string> state_names) : 
-  m_state_names(state_names),
+  std::vector<std::string> state_names)
+: m_state_names(state_names),
   m_time_vector(),
-  m_state_trajectory(state_names.size(), Trajectory::Node{})
+  m_state_trajectory(),
+  m_state_vector_size(state_names.size())
 {
   // Populate state index
-  for(int i = 0; i < m_state_names.size(); i++){
+  for (int i = 0; i < m_state_names.size(); i++) {
     m_state_index_map[m_state_names[i]] = i;
   }
 
@@ -42,29 +51,67 @@ Trajectory::Trajectory(
 
 void Trajectory::addNode(double time, Node node)
 {
+  if (node.size() != m_state_vector_size) {
+    throw std::runtime_error(
+            std::string("[Trajectory::addNode] Error: Node size ") +
+            std::to_string(node.size()) + " does not match state_vector size " +
+            std::to_string(m_state_vector_size));
+  }
 
+  // Check if time already exists (within tolerance)
+  auto it = std::find_if(
+    m_time_vector.begin(), m_time_vector.end(), [time](double t2) {
+      return std::fabs(time - t2) < 1e-6;
+    });
+
+  if (it != m_time_vector.end()) {
+    m_state_trajectory[it - m_time_vector.begin()] = node;
+  } else {
+    int insertion_index = insertValueIntoSortedVector(time, m_time_vector);
+    m_state_trajectory.insert(m_state_trajectory.begin() + insertion_index, node);
+  }
 }
 
-const Trajectory::Node & Trajectory::getNode(double time) const
+Trajectory::Node Trajectory::getNode(double time) const
 {
-
+  int index = getInsertionIndexFromSortedVector(time, m_time_vector);
+  if (index == 0) {
+    return m_state_trajectory.front();
+  }
+  if (index == m_time_vector.size()) {
+    return m_state_trajectory.back();
+  }
+  return ghost_util::clampedVectorInterpolate(
+    time, m_time_vector[index - 1], m_time_vector[index],
+    m_state_trajectory[index - 1], m_state_trajectory[index]);
 }
 
 double Trajectory::getState(const std::string & name, double time) const
 {
-    if(m_state_index_map.count(name) == 0){
-      throw std::runtime_error(std::string("[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
-    }
+  if (m_state_index_map.count(name) == 0) {
+    throw std::runtime_error(
+            std::string(
+              "[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
+  }
+  return getNode(time)[getStateIndex(name)];
 }
 
 std::vector<double> Trajectory::getStateTrajectory(
   const std::string & name,
   const std::vector<double> & time_vector) const
 {
-      if(m_state_index_map.count(name) == 0){
-      throw std::runtime_error(std::string("[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
-    }
+  if (m_state_index_map.count(name) == 0) {
+    throw std::runtime_error(
+            std::string(
+              "[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
+  }
 
+  std::vector<double> state_trajectory;
+  state_trajectory.reserve(time_vector.size());
+
+  for (const auto & time : time_vector) {
+    state_trajectory.push_back(getState(name, time));
+  }
+  return state_trajectory;
 }
-
 } // namespace ghost_planners

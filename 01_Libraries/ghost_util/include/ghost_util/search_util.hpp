@@ -23,40 +23,27 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <stdexcept>
 #include <vector>
+#include <algorithm>
+#include <stdexcept>
 
 namespace ghost_util
 {
+template<typename T>
+int getInsertionIndexFromSortedVector(const T & val, const std::vector<T> & vector)
+{
+  if (!std::is_sorted(vector.begin(), vector.end())) {
+    throw std::runtime_error("[getInsertionIndexFromSortedVector] Error: vector is not sorted!");
+  }
+  return std::upper_bound(vector.begin(), vector.end(), val) - vector.begin();
+}
 
 template<typename T>
-T clamp(T val, T min, T max)
+int insertValueIntoSortedVector(T & val, std::vector<T> & vector)
 {
-  return std::max(min, std::min(val, max));
+  int index = getInsertionIndexFromSortedVector(val, vector);
+  vector.insert(vector.begin() + index, val);
+  return index;
 }
 
-
-double slewRate(double curr, double next, double limit);
-
-double sign(double val);
-
-bool isPositive(double val);
-
-std::vector<double> clampedVectorInterpolate(
-  double x_new, double x1, double x2,
-  const std::vector<double> & v1,
-  const std::vector<double> & v2);
-
-double linearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double clampedLinearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-}
+} // namespace ghost_util

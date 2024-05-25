@@ -28,7 +28,21 @@
 
 namespace ghost_planners
 {
-
+/**
+ * @brief This Trajectory class is comprised of a time vector, and a vector of state_vectors (where each element in the larger
+ * vector is a full state_vector corresponding to the respective time). This is represented as follows:
+ *
+ * times: [t1, t2, ... , tn]
+ *
+ * state_vector at t1: [s1, ... , sn]
+ * state_vector at t2: [s1, ... , sn]
+ * state_vector at t3: [s1, ... , sn]
+ * state_vector at t4: [s1, ... , sn]
+ *
+ * We can add "Nodes" to the trajectory, which represent a full state vector at that timestamp.
+ * Then, we can query for Nodes at arbitrary times and the trajectory will interpolate between the two closest Nodes.
+ * If queried before the earliest time, or after the last time, the trajectory returns the first/last node available.
+ */
 class Trajectory
 {
   using Node = std::vector<double>;
@@ -50,9 +64,9 @@ public:
    * bounds will return the respective bound (i.e. the initial or final state vector).
    *
    * @param time
-   * @return const Node& state vector
+   * @return Node state vector
    */
-  const Node & getNode(double time) const;
+  Node getNode(double time) const;
 
   /**
    * @brief Retrieves a state by name at requested time via linear interpolation. Querying time outside of the trajectory's
@@ -94,9 +108,12 @@ public:
     return m_state_vector_size;
   }
 
-  int getStateIndex(const std::string& name)const{
-    if(m_state_index_map.count(name) == 0){
-      throw std::runtime_error(std::string("[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
+  int getStateIndex(const std::string & name)const
+  {
+    if (m_state_index_map.count(name) == 0) {
+      throw std::runtime_error(
+              std::string(
+                "[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
     }
     return m_state_index_map.at(name);
   }

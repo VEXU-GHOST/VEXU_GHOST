@@ -41,15 +41,15 @@ TEST(TestTrajectory, testGetStateSize) {
   EXPECT_EQ(trajectory.getStateVectorSize(), 3);
 }
 
-TEST(TestTrajectory, testGetStateIndex){
+TEST(TestTrajectory, testGetStateIndex) {
   auto state_names = std::vector<std::string>{"s1", "s2", "s3"};
   auto trajectory = Trajectory(state_names);
 
   int i = 0;
-  for(const auto & name : state_names){
+  for (const auto & name : state_names) {
     EXPECT_EQ(trajectory.getStateIndex(name), i);
+    i++;
   }
-
 }
 
 TEST(TestTrajectory, testAddAndRetrieveNodes) {
@@ -75,7 +75,6 @@ TEST(TestTrajectory, testAddAndRetrieveNodes) {
       std::vector<double>{-10.0, 0.5, 10.0}),
     v4
   );
-
 }
 
 TEST(TestTrajectory, testThrowsOnIncorrectNodeSize) {
@@ -84,18 +83,17 @@ TEST(TestTrajectory, testThrowsOnIncorrectNodeSize) {
 }
 
 TEST(TestTrajectory, testDuplicateTimeReplacesPreviousNode) {
-    auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3"});
-    trajectory.addNode(1.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
+  auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3", "s4"});
+  trajectory.addNode(1.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
 
-    auto v1 = std::vector<double>{1.0, 2.0, -3.0, -7.0};
-    trajectory.addNode(1.0, v1);
+  auto v1 = std::vector<double>{1.0, 2.0, -3.0, -7.0};
+  trajectory.addNode(1.000000001, v1);
 
-    EXPECT_EQ(trajectory.getNode(1.0), v1);
+  EXPECT_EQ(trajectory.getNode(1.0), v1);
 }
 
-TEST(TestTrajectory, testInvalidStateNameThrows){
-  auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3"});
+TEST(TestTrajectory, testInvalidStateNameThrows) {
+  auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3", "s4"});
   trajectory.addNode(0.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
   EXPECT_THROW(trajectory.getStateIndex("not a state"), std::runtime_error);
 }
-
