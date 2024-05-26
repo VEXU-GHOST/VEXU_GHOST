@@ -83,12 +83,15 @@ int main(int argc, char * argv[])
   const int NUM_SWERVE_MODULES = 4;
 
   // Swerve Config
-  YAML::Node config = YAML::LoadFile("casadi_swerve_config.yaml");
-  const double CHASSIS_WIDTH = (config["chassis_width"]).as_double() * ghost_util::INCHES_TO_METERS;
-  const double WHEEL_BASE_WIDTH = (config["wheel_base_width"]).as_double() *
+  std::string home_dir = getenv("HOME");
+  YAML::Node config = YAML::LoadFile(
+    home_dir + "/VEXU_GHOST/11_Robots/ghost_swerve_mpc_planner/config/casadi_swerve_config.yaml");
+  const double CHASSIS_WIDTH = (config["chassis_width"]).as<double>() *
     ghost_util::INCHES_TO_METERS;
-  const double WHEEL_DIAM = (config["wheel_diam"]).as_double() * ghost_util::INCHES_TO_METERS;
-  const double WHEEL_WIDTH = (config["wheel_width"]).as_double() * ghost_util::INCHES_TO_METERS;
+  const double WHEEL_BASE_WIDTH = (config["wheel_base_width"]).as<double>() *
+    ghost_util::INCHES_TO_METERS;
+  const double WHEEL_DIAM = (config["wheel_diam"]).as<double>() * ghost_util::INCHES_TO_METERS;
+  const double WHEEL_WIDTH = (config["wheel_width"]).as<double>() * ghost_util::INCHES_TO_METERS;
   const double M1_X = WHEEL_BASE_WIDTH / 2;
   const double M1_Y = WHEEL_BASE_WIDTH / 2;
   const double M2_X = -WHEEL_BASE_WIDTH / 2;
@@ -97,9 +100,9 @@ int main(int argc, char * argv[])
   const double M3_Y = -WHEEL_BASE_WIDTH / 2;
   const double M4_X = WHEEL_BASE_WIDTH / 2;
   const double M4_Y = -WHEEL_BASE_WIDTH / 2;
-  const double WHEEL_RADIUS = (config["wheel_radius"]).as_double() * ghost_util::INCHES_TO_METERS;
-  const double MASS = (config["mass"]).as_double();
-  const double STEERING_INERTIA = (config["steering_inertia"]).as_double();
+  const double WHEEL_RADIUS = (config["wheel_radius"]).as<double>() * ghost_util::INCHES_TO_METERS;
+  const double MASS = (config["mass"]).as<double>();
+  const double STEERING_INERTIA = (config["steering_inertia"]).as<double>();
 
   // Dynamics Params
   double init_pose_x = -1.0;
