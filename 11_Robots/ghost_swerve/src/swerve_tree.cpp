@@ -64,7 +64,7 @@ SwerveTree::SwerveTree(
     burnout_cooldown_duration_ms,
 					lift_setpoint);
   factory.registerNodeType<Climb>("Climb", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
-  // factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
+  factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
 
   tree_ = factory.createTreeFromFile(bt_path_);
 }

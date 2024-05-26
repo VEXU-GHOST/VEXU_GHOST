@@ -231,7 +231,7 @@
       <!-- <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>
-      <!-- <RetryUntilSuccessful num_attempts="-1">
+      <RetryUntilSuccessful num_attempts="-1">
         <AutoDone/>
       </RetryUntilSuccessful> -->
     </Sequence>

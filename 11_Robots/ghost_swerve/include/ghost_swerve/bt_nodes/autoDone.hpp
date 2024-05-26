@@ -12,6 +12,7 @@ class AutoDone : public BT::SyncActionNode,
 
 public:
     AutoDone(const std::string& name, const BT::NodeConfig& config,
+				std::shared_ptr<rclcpp::Node> node_ptr,
 	           	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
 	           	std::shared_ptr<SwerveModel> swerve_ptr);
 
@@ -24,6 +25,7 @@ private:
 	template <typename T>
 	T get_input(std::string key);
 	
+ 	std::shared_ptr<rclcpp::Node> node_ptr_;
     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 	std::shared_ptr<SwerveModel> swerve_ptr_;
 };
