@@ -23,6 +23,11 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <atomic>
+#include <mutex>
+#include <thread>
+#include <csignal>
+
 #include "eigen3/Eigen/Geometry"
 #include <casadi/casadi.hpp>
 
@@ -32,16 +37,10 @@
 #include <ghost_msgs/msg/labeled_vector_map.hpp>
 
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
-
-#include <atomic>
-#include <mutex>
-#include <thread>
 #include <rclcpp/rclcpp.hpp>
 
-#include <signal.h>
 #include "matplotlibcpp.h"
-
-#include <atomic>
+#include "yaml.h"
 
 #include "ghost_swerve_mpc_planner/ipopt_iteration_callback.hpp"
 
@@ -84,10 +83,12 @@ int main(int argc, char * argv[])
   const int NUM_SWERVE_MODULES = 4;
 
   // Swerve Config
-  const double CHASSIS_WIDTH = 16.5 * ghost_util::INCHES_TO_METERS;
-  const double WHEEL_BASE_WIDTH = 12.5 * ghost_util::INCHES_TO_METERS;
-  const double WHEEL_DIAM = 2.75 * ghost_util::INCHES_TO_METERS;
-  const double WHEEL_WIDTH = 1 * ghost_util::INCHES_TO_METERS;
+  YAML::Node config = YAML::LoadFile("casadi_swerve_config.yaml");
+  const double CHASSIS_WIDTH = (config["chassis_width"]).as_double() * ghost_util::INCHES_TO_METERS;
+  const double WHEEL_BASE_WIDTH = (config["wheel_base_width"]).as_double() *
+    ghost_util::INCHES_TO_METERS;
+  const double WHEEL_DIAM = (config["wheel_diam"]).as_double() * ghost_util::INCHES_TO_METERS;
+  const double WHEEL_WIDTH = (config["wheel_width"]).as_double() * ghost_util::INCHES_TO_METERS;
   const double M1_X = WHEEL_BASE_WIDTH / 2;
   const double M1_Y = WHEEL_BASE_WIDTH / 2;
   const double M2_X = -WHEEL_BASE_WIDTH / 2;
@@ -96,11 +97,11 @@ int main(int argc, char * argv[])
   const double M3_Y = -WHEEL_BASE_WIDTH / 2;
   const double M4_X = WHEEL_BASE_WIDTH / 2;
   const double M4_Y = -WHEEL_BASE_WIDTH / 2;
-  const double WHEEL_RADIUS = 2.75 / 2.0 * ghost_util::INCHES_TO_METERS;
+  const double WHEEL_RADIUS = (config["wheel_radius"]).as_double() * ghost_util::INCHES_TO_METERS;
+  const double MASS = (config["mass"]).as_double();
+  const double STEERING_INERTIA = (config["steering_inertia"]).as_double();
 
-  // Params
-  double mass = 10.0;
-  double inertia = 0.14868;
+  // Dynamics Params
   double init_pose_x = -1.0;
   double init_pose_y = 0.0;
   double init_pose_theta = 0.0;
@@ -164,8 +165,6 @@ int main(int argc, char * argv[])
     }
   }
   std::vector<std::string> PARAM_NAMES = {
-    "mass",
-    "inertia",
     "init_pose_x",
     "init_pose_y",
     "init_pose_theta",
@@ -199,7 +198,7 @@ int main(int argc, char * argv[])
 
   ////////////////////////////
   ///// Helper Functions /////
-  //////////////////////////// 
+  ////////////////////////////
 
   // Shorthand to get symbolic state variable by name
   auto get_state = [&state_vector, &state_index_map](std::string name) {
@@ -223,48 +222,48 @@ int main(int argc, char * argv[])
   auto get_knot_prefix = [](int i) {
       return "k" + std::to_string(i) + "_";
     };
-    
+
   ////// Quadratic Cost Getters //////
-  auto get_quadratic_cost = [&](std::string state, int k, double cost){
-    std::string kt1_ = "k" + std::to_string(k + 1) + "_";
-    std::string kt2_ = "k" + std::to_string(k) + "_";
+  auto get_quadratic_cost = [&](std::string state, int k, double cost) {
+      std::string kt1_ = "k" + std::to_string(k + 1) + "_";
+      std::string kt2_ = "k" + std::to_string(k) + "_";
 
-    auto s1 = get_state(kt1_ + state);
-    auto s2 = get_state(kt2_ + state);
+      auto s1 = get_state(kt1_ + state);
+      auto s2 = get_state(kt2_ + state);
 
-    return cost * 0.5 * DT * (pow(s1,2) + pow(s2, 2));
-  };
+      return cost * 0.5 * DT * (pow(s1, 2) + pow(s2, 2));
+    };
 
-  auto get_jerk_cost = [&](std::string state, int k, double cost){
-    std::string kt1_ = "k" + std::to_string(k + 1) + "_";
-    std::string kt2_ = "k" + std::to_string(k) + "_";
+  auto get_jerk_cost = [&](std::string state, int k, double cost) {
+      std::string kt1_ = "k" + std::to_string(k + 1) + "_";
+      std::string kt2_ = "k" + std::to_string(k) + "_";
 
-    auto s1 = get_state(kt1_ + state);
-    auto s2 = get_state(kt2_ + state);
-    auto jerk = (s1 - s2)/DT;
+      auto s1 = get_state(kt1_ + state);
+      auto s2 = get_state(kt2_ + state);
+      auto jerk = (s1 - s2) / DT;
 
-    return cost * pow(jerk, 2);
-  };
+      return cost * pow(jerk, 2);
+    };
 
   auto rotate_vector_sym = [&](
-    const Matrix<SXElem>& angle,
-    const Matrix<SXElem>& x_in,
-    const Matrix<SXElem>& y_in,
-    Matrix<SXElem>& x_out,
-    Matrix<SXElem>& y_out){
-      x_out = x_in*cos(angle) - y_in*sin(angle);
-      y_out = x_in*sin(angle) + y_in*cos(angle);
-  };
+    const Matrix<SXElem> & angle,
+    const Matrix<SXElem> & x_in,
+    const Matrix<SXElem> & y_in,
+    Matrix<SXElem> & x_out,
+    Matrix<SXElem> & y_out) {
+      x_out = x_in * cos(angle) - y_in * sin(angle);
+      y_out = x_in * sin(angle) + y_in * cos(angle);
+    };
 
-    auto rotate_vector_dbl = [&](
-    const Matrix<SXElem>& angle,
-    const double& x_in,
-    const double& y_in,
-    Matrix<SXElem>& x_out,
-    Matrix<SXElem>& y_out){
-      x_out = x_in*cos(angle) - y_in*sin(angle);
-      y_out = x_in*sin(angle) + y_in*cos(angle);
-  };
+  auto rotate_vector_dbl = [&](
+    const Matrix<SXElem> & angle,
+    const double & x_in,
+    const double & y_in,
+    Matrix<SXElem> & x_out,
+    Matrix<SXElem> & y_out) {
+      x_out = x_in * cos(angle) - y_in * sin(angle);
+      y_out = x_in * sin(angle) + y_in * cos(angle);
+    };
 
   auto generate_trajectory_map = [&](const std::vector<double> & solution_vector) {
       std::unordered_map<std::string, std::vector<double>> solution_map;
@@ -408,9 +407,9 @@ int main(int argc, char * argv[])
   auto no_wheel_slip_constraints = casadi::Matrix<casadi::SXElem>();
   for (int k = 0; k < NUM_KNOTS; k++) {
     std::string kt1_ = get_knot_prefix(k);
-    auto x_accel_constraint = get_param("mass") * get_state(kt1_ + "base_accel_x");
-    auto y_accel_constraint = get_param("mass") * get_state(kt1_ + "base_accel_y");
-    auto theta_accel_constraint = get_param("inertia") * get_state(kt1_ + "base_accel_theta");
+    auto x_accel_constraint = MASS * get_state(kt1_ + "base_accel_x");
+    auto y_accel_constraint = MASS * get_state(kt1_ + "base_accel_y");
+    auto theta_accel_constraint = STEERING_INERTIA * get_state(kt1_ + "base_accel_theta");
     auto theta = get_state(kt1_ + "base_pose_theta");
     auto x_pos = get_state(kt1_ + "base_pose_x");
     auto y_pos = get_state(kt1_ + "base_pose_y");
@@ -423,7 +422,7 @@ int main(int argc, char * argv[])
       auto wheel_force = get_state(kt1_mN_ + "wheel_torque") / WHEEL_RADIUS;
       auto lateral_force = get_state(kt1_mN_ + "lateral_force");
       auto world_steering_angle = theta + get_state(kt1_mN_ + "steering_angle");
-    
+
       auto x_force = casadi::Matrix<casadi::SXElem>();
       auto y_force = casadi::Matrix<casadi::SXElem>();
       rotate_vector_sym(world_steering_angle, wheel_force, lateral_force, x_force, y_force);
@@ -432,7 +431,9 @@ int main(int argc, char * argv[])
 
       auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
       auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
-      rotate_vector_dbl(theta, module_positions[m - 1].x(), module_positions[m - 1].y(), mod_offset_x, mod_offset_y);
+      rotate_vector_dbl(
+        theta, module_positions[m - 1].x(),
+        module_positions[m - 1].y(), mod_offset_x, mod_offset_y);
 
       auto base_torque = y_force * (mod_offset_x) - x_force * (mod_offset_y);
       theta_accel_constraint -= base_torque;
@@ -452,13 +453,17 @@ int main(int argc, char * argv[])
 
       auto forward_velocity = casadi::Matrix<casadi::SXElem>();
       auto lateral_velocity = casadi::Matrix<casadi::SXElem>();
-      rotate_vector_sym(-world_steering_angle, world_vel_x, world_vel_y, forward_velocity, lateral_velocity);
-        
-      no_wheel_slip_constraints = vertcat(no_wheel_slip_constraints,lateral_velocity);
+      rotate_vector_sym(
+        -world_steering_angle, world_vel_x, world_vel_y, forward_velocity,
+        lateral_velocity);
+
+      no_wheel_slip_constraints = vertcat(no_wheel_slip_constraints, lateral_velocity);
 
 
       auto wheel_vel = get_state(kt1_mN_ + "wheel_vel");
-      no_wheel_slip_constraints = vertcat(no_wheel_slip_constraints, forward_velocity - wheel_vel*WHEEL_RADIUS);
+      no_wheel_slip_constraints = vertcat(
+        no_wheel_slip_constraints,
+        forward_velocity - wheel_vel * WHEEL_RADIUS);
     }
 
     acceleration_dynamics_constraint_vector = vertcat(
@@ -516,7 +521,7 @@ int main(int argc, char * argv[])
 
     for (int m = 1; m < NUM_SWERVE_MODULES + 1; m++) {
       std::string module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
-      
+
       // TODO(maxxwilson): Add steering speed limits, and wheel velocity limits
 
       lbx(state_index_map[module_prefix + "steering_accel"]) = -5000.0;
@@ -525,8 +530,8 @@ int main(int argc, char * argv[])
       lbx(state_index_map[module_prefix + "wheel_torque"]) = -50.0 * WHEEL_RADIUS;
       ubx(state_index_map[module_prefix + "wheel_torque"]) = 50.0 * WHEEL_RADIUS;
 
-      lbx(state_index_map[module_prefix + "lateral_force"]) = -mass * 9.81 * 1.25;
-      ubx(state_index_map[module_prefix + "lateral_force"]) = mass * 9.81 * 1.25;
+      lbx(state_index_map[module_prefix + "lateral_force"]) = -MASS * 9.81 * 1.25;
+      ubx(state_index_map[module_prefix + "lateral_force"]) = MASS * 9.81 * 1.25;
     }
   }
 
@@ -552,9 +557,18 @@ int main(int argc, char * argv[])
     f += get_jerk_cost("base_accel_theta", k, 0.01);
 
     // Penalize Velocity Deviation
-    f += 10000.0 * 0.5 * DT *(pow(get_param("des_vel_x") - get_state(kt1_ + "base_vel_x"),2) + pow(get_param("des_vel_x") - get_state(kt2_ + "base_vel_x"), 2));
-    f += 10000.0 * 0.5 * DT *(pow(get_param("des_vel_y") - get_state(kt1_ + "base_vel_y"),2) + pow(get_param("des_vel_y") - get_state(kt2_ + "base_vel_y"), 2));
-    f += 10000.0 * 0.5 * DT *(pow(get_param("des_vel_theta") - get_state(kt1_ + "base_vel_theta"),2) + pow(get_param("des_vel_theta") - get_state(kt2_ + "base_vel_theta"), 2));
+    f += 10000.0 * 0.5 * DT *
+      (pow(
+        get_param("des_vel_x") - get_state(kt1_ + "base_vel_x"),
+        2) + pow(get_param("des_vel_x") - get_state(kt2_ + "base_vel_x"), 2));
+    f += 10000.0 * 0.5 * DT *
+      (pow(
+        get_param("des_vel_y") - get_state(kt1_ + "base_vel_y"),
+        2) + pow(get_param("des_vel_y") - get_state(kt2_ + "base_vel_y"), 2));
+    f += 10000.0 * 0.5 * DT *
+      (pow(
+        get_param("des_vel_theta") - get_state(kt1_ + "base_vel_theta"),
+        2) + pow(get_param("des_vel_theta") - get_state(kt2_ + "base_vel_theta"), 2));
 
     auto vel_x = get_state(kt1_ + "base_vel_x");
     auto vel_y = get_state(kt1_ + "base_vel_y");
@@ -572,7 +586,7 @@ int main(int argc, char * argv[])
       f += get_quadratic_cost(mN_ + "wheel_vel", k, 0.01);
       f += get_quadratic_cost(mN_ + "lateral_force", k, 0.1);
       f += get_quadratic_cost(mN_ + "wheel_torque", k, 0.01);
-      
+
       f += get_jerk_cost(mN_ + "lateral_force", k, 0.001);
       f += get_jerk_cost(mN_ + "wheel_torque", k, 0.01);
     }
@@ -610,8 +624,7 @@ int main(int argc, char * argv[])
   solver_args["ubg"] = ubg;
   solver_args["x0"] = DM::zeros(NUM_OPT_VARS);
 
-  solver_args["p"] = {mass,
-    inertia,
+  solver_args["p"] = {
     init_pose_x,
     init_pose_y,
     init_pose_theta,

@@ -49,6 +49,31 @@ Trajectory::Trajectory(
 
 }
 
+void Trajectory::clearNodes()
+{
+  m_state_trajectory.clear();
+  m_time_vector.clear();
+}
+
+void Trajectory::reset(std::vector<std::string> state_names)
+{
+  m_state_trajectory.clear();
+  m_time_vector.clear();
+
+  m_state_names.clear();
+  m_state_names = state_names;
+
+  m_state_vector_size = state_names.size();
+
+  m_state_index_map.clear();
+
+  // Populate state index
+  for (int i = 0; i < m_state_names.size(); i++) {
+    m_state_index_map[m_state_names[i]] = i;
+  }
+
+}
+
 void Trajectory::addNode(double time, Node node)
 {
   if (node.size() != m_state_vector_size) {

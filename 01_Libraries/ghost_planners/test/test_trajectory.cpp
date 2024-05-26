@@ -77,6 +77,42 @@ TEST(TestTrajectory, testAddAndRetrieveNodes) {
   );
 }
 
+TEST(TestTrajectory, testGetTimeVector) {
+  auto trajectory = Trajectory(std::vector<std::string>{"s1"});
+  EXPECT_NO_THROW(trajectory.addNode(0.0, std::vector<double>{0.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.0, std::vector<double>{2.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.2, std::vector<double>{0.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.6, std::vector<double>{2.0}));
+
+  auto expected = std::vector<double>{0.0, 1.0, 1.2, 1.6};
+  EXPECT_EQ(trajectory.getTimeVector(), expected);
+}
+
+TEST(TestTrajectory, testClear) {
+  auto trajectory = Trajectory(std::vector<std::string>{"s1"});
+  EXPECT_NO_THROW(trajectory.addNode(0.0, std::vector<double>{0.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.0, std::vector<double>{2.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.2, std::vector<double>{0.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.6, std::vector<double>{2.0}));
+
+  trajectory.clearNodes();
+
+  EXPECT_EQ(trajectory.getTimeVector().size(), 0);
+}
+
+TEST(TestTrajectory, testReset) {
+  auto trajectory = Trajectory(std::vector<std::string>{"s1"});
+  EXPECT_NO_THROW(trajectory.addNode(0.0, std::vector<double>{0.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.0, std::vector<double>{2.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.2, std::vector<double>{0.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.6, std::vector<double>{2.0}));
+
+  trajectory.reset(std::vector<std::string>{"s2", "s3"});
+  auto expected = std::vector<std::string>{"s2", "s3"};
+  EXPECT_EQ(trajectory.getStateNames(), expected);
+  EXPECT_EQ(trajectory.getTimeVector().size(), 0);
+}
+
 TEST(TestTrajectory, testThrowsOnIncorrectNodeSize) {
   auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3"});
   EXPECT_THROW(trajectory.addNode(0.0, std::vector<double>{0.0, 1.0}), std::runtime_error);
@@ -96,4 +132,19 @@ TEST(TestTrajectory, testInvalidStateNameThrows) {
   auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2", "s3", "s4"});
   trajectory.addNode(0.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
   EXPECT_THROW(trajectory.getStateIndex("not a state"), std::runtime_error);
+}
+
+TEST(TestTrajectory, testEqualityOperator) {
+  auto t1 = Trajectory(std::vector<std::string>{"s1", "s2", "s3", "s4"});
+  t1.addNode(0.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
+  t1.addNode(1.0, std::vector<double>{0.0, 1.0, -2.0, -6.0});
+
+  auto t2 = Trajectory(std::vector<std::string>{"s1", "s2", "s3", "s4"});
+  t2.addNode(0.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
+  t2.addNode(1.0, std::vector<double>{0.0, 1.0, -2.0, -6.0});
+
+  EXPECT_EQ(t1, t2);
+
+  t2.addNode(1.0, std::vector<double>{0.0, 1.0, -2.0, -5.0});
+  EXPECT_FALSE(t1 == t2);
 }

@@ -1,0 +1,8 @@
+casadi_swerve_mpc:
+  chassis_width : 16.5
+  wheel_base_width : 12.5
+  wheel_diam : 2.75
+  wheel_width : 1
+  wheel_radius : 1.375
+  mass : 10.0
+  steering_inertia : 0.14868

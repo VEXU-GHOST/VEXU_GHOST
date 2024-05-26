@@ -22,6 +22,7 @@
  */
 
 #include <ghost_planners/robot_trajectory.hpp>
+#include <ghost_planners/trajectory.hpp>
 #include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
@@ -253,12 +254,18 @@ void toROSMsg(
   const ghost_planners::RobotTrajectory::Trajectory & trajectory,
   ghost_msgs::msg::Trajectory & trajectory_msg);
 
-
 void fromROSMsg(
   std::unordered_map<std::string, std::vector<double>> & labeled_vector_map,
   const ghost_msgs::msg::LabeledVectorMap & msg);
 void toROSMsg(
   const std::unordered_map<std::string, std::vector<double>> & labeled_vector_map,
+  ghost_msgs::msg::LabeledVectorMap & msg);
+
+void fromROSMsg(
+  ghost_planners::Trajectory & trajectory,
+  const ghost_msgs::msg::LabeledVectorMap & msg);
+void toROSMsg(
+  const ghost_planners::Trajectory & trajectory,
   ghost_msgs::msg::LabeledVectorMap & msg);
 
 } // namespace msg_helpers

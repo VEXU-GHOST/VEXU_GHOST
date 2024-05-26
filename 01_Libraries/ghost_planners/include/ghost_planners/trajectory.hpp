@@ -52,6 +52,16 @@ public:
     std::vector<std::string> state_names);
 
   /**
+   * @brief Removes all existing nodes and times
+   */
+  void clearNodes();
+
+  /**
+   * @brief Resets Trajectory class to post-construction
+   */
+  void reset(std::vector<std::string> state_names);
+
+  /**
    * @brief Adds new state vector at the requested time.
    *
    * @param time double representing node time
@@ -77,6 +87,16 @@ public:
    * @return double state
    */
   double getState(const std::string & name, double time) const;
+
+  /**
+   * @brief Returns the time vector corresponding to trajectory nodes
+   *
+   * @return const std::vector<double>&
+   */
+  const std::vector<double> & getTimeVector() const
+  {
+    return m_time_vector;
+  }
 
   /**
    * @brief Returns the full trajectory for an individual state as a timeseries
@@ -122,6 +142,24 @@ public:
                 "[Trajectory::getStateIndex] Error: state ") + name + " does not exist!");
     }
     return m_state_index_map.at(name);
+  }
+
+  bool operator==(const Trajectory & rhs) const
+  {
+    bool eq = true;
+    eq &= (m_state_names == rhs.m_state_names);
+    eq &= (m_state_vector_size == rhs.m_state_vector_size);
+    eq &= (m_time_vector == rhs.m_time_vector);
+    eq &= (m_state_trajectory == rhs.m_state_trajectory);
+    eq &= (m_state_index_map.size() == rhs.m_state_index_map.size());
+
+    for (const auto & [k, v] : m_state_index_map) {
+      eq &= (rhs.m_state_index_map.count(k) != 0);
+      if (eq) {
+        eq &= (v == rhs.m_state_index_map.at(k));
+      }
+    }
+    return eq;
   }
 
 protected:

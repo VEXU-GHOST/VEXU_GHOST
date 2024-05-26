@@ -107,7 +107,7 @@ TEST(TestDeviceInterfaces, testRobotTrajectoryMsg) {
   EXPECT_EQ(*rt_input, *rt_output);
 }
 
-TEST(TestMsgHelpers, testLabeledVectorMapConversion) {
+TEST(TestMsgHelpers, testLabeledVectorMapUnorderedMapConversion) {
   std::unordered_map<std::string, std::vector<double>> expected_map{
     {"1", std::vector<double>{0.0}},
     {"2", std::vector<double>{1.0, 2.5}},
@@ -152,4 +152,49 @@ TEST(TestMsgHelpers, testLabeledVectorMapConversion) {
 
   fromROSMsg(blank_map, expected_msg);
   EXPECT_EQ(expected_map, blank_map);
+}
+
+TEST(TestMsgHelpers, testLabeledVectorMapTrajectoryConversion) {
+
+  ghost_planners::Trajectory trajectory(std::vector<std::string>{"s1", "s2"});
+  trajectory.addNode(0.0, std::vector<double>{1.0, 2.0});
+  trajectory.addNode(1.0, std::vector<double>{2.0, 1.0});
+  trajectory.addNode(2.0, std::vector<double>{2.5, 1.5});
+
+  ghost_msgs::msg::LabeledVectorMap expected_msg;
+
+  ghost_msgs::msg::LabeledVector e1;
+  e1.label = "time";
+  e1.data_array = std::vector<double>{0.0, 1.0, 2.0};
+  expected_msg.entries.push_back(e1);
+
+  ghost_msgs::msg::LabeledVector e2;
+  e2.label = "s1";
+  e2.data_array = std::vector<double>{1.0, 2.0, 2.5};
+  expected_msg.entries.push_back(e2);
+
+  ghost_msgs::msg::LabeledVector e3;
+  e3.label = "s2";
+  e3.data_array = std::vector<double>{2.0, 1.0, 1.5};
+  expected_msg.entries.push_back(e3);
+
+  ghost_planners::Trajectory blank_trajectory(std::vector<std::string>{});
+  EXPECT_NO_THROW(fromROSMsg(blank_trajectory, expected_msg));
+  EXPECT_EQ(trajectory, blank_trajectory);
+
+  ghost_msgs::msg::LabeledVectorMap blank_msg;
+  toROSMsg(trajectory, blank_msg);
+
+  // Check msgs contain identical data
+  EXPECT_EQ(expected_msg.entries.size(), blank_msg.entries.size());
+  for (const auto & blank_entry : blank_msg.entries) {
+    bool found = false;
+    for (const auto & expected_entry : expected_msg.entries) {
+      if (expected_entry.label == blank_entry.label) {
+        found = true;
+        EXPECT_EQ(expected_entry.data_array, blank_entry.data_array);
+      }
+    }
+    EXPECT_TRUE(found);
+  }
 }
