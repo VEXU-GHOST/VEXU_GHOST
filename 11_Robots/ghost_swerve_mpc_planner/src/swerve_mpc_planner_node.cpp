@@ -82,6 +82,7 @@ public:
     populateParameters();
     addCosts();
     addConstraints();
+    setStateBounds();
 
     trajectory_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
       "/trajectory/swerve_mpc_trajectory", 10);
@@ -347,9 +348,8 @@ public:
     return solution_map;
   }
 
-  void addConstraints()
+  void addIntegrationConstraints()
   {
-    // EULER INTEGRATION CONSTRAINTS
     // List pairs of base state and derivative state
     std::vector<std::pair<std::string, std::string>> euler_integration_state_names = {
       std::pair<std::string, std::string>{"base_pose_x", "base_vel_x"},
@@ -374,9 +374,6 @@ public:
     }
 
     // Populate euler integration constraints for state vector
-    auto integration_constraints_vector =
-      SX::zeros(euler_integration_state_names.size() * (num_knots_ - 1));
-    int integration_constraint_index = 0;
     for (int k = 0; k < num_knots_ - 1; k++) {
       std::string curr_knot_prefix = getKnotPrefix(k);
       std::string next_knot_prefix = getKnotPrefix(k + 1);
@@ -388,12 +385,15 @@ public:
         auto dx1 = next_knot_prefix + pair.second;
 
         // X1 - X0 = 1/2 * DT * (dX1 + dX0)
-        integration_constraints_vector(integration_constraint_index) =
-          2 * (getState(x1) - getState(x0)) / config_.dt - getState(dx1) - getState(dx0);
-        integration_constraint_index++;
+        constraints_ = vertcat(
+          constraints_, 2 * (getState(x1) - getState(
+            x0)) / config_.dt - getState(dx1) - getState(dx0));
       }
     }
+  }
 
+  void addInitialStateConstraints()
+  {
     // Initial State Constraints
     std::vector<std::pair<std::string, std::string>> initial_state_constraint_param_pairs{
       std::pair<std::string, std::string>{"k0_base_pose_x", "init_pose_x"},
@@ -422,27 +422,22 @@ public:
       });
     }
 
-    auto initial_state_constraint_vector = casadi::Matrix<casadi::SXElem>();
     for (const auto & pair : initial_state_constraint_param_pairs) {
-      initial_state_constraint_vector = vertcat(
-        initial_state_constraint_vector, getState(
+      constraints_ = vertcat(
+        constraints_, getState(
           pair.first) - getParam(pair.second));
     }
+  }
 
+  void addAccelerationDynamicsConstraints()
+  {
     // acceleration dynamics constraints
-    auto acceleration_dynamics_constraint_vector = casadi::Matrix<casadi::SXElem>();
-    auto no_wheel_slip_constraints = casadi::Matrix<casadi::SXElem>();
     for (int k = 0; k < num_knots_; k++) {
       std::string kt1_ = getKnotPrefix(k);
       auto x_accel_constraint = config_.robot_mass * getState(kt1_ + "base_accel_x");
       auto y_accel_constraint = config_.robot_mass * getState(kt1_ + "base_accel_y");
       auto theta_accel_constraint = config_.steering_inertia * getState(kt1_ + "base_accel_theta");
       auto theta = getState(kt1_ + "base_pose_theta");
-      auto x_pos = getState(kt1_ + "base_pose_x");
-      auto y_pos = getState(kt1_ + "base_pose_y");
-      auto vel_x = getState(kt1_ + "base_vel_x");
-      auto vel_y = getState(kt1_ + "base_vel_y");
-      auto vel_theta = getState(kt1_ + "base_vel_theta");
 
       for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
         std::string kt1_mN_ = kt1_ + "m" + std::to_string(m) + "_";
@@ -464,6 +459,39 @@ public:
 
         auto base_torque = y_force * (mod_offset_x) - x_force * (mod_offset_y);
         theta_accel_constraint -= base_torque;
+      }
+
+      constraints_ = vertcat(
+        constraints_,
+        x_accel_constraint);
+      constraints_ = vertcat(
+        constraints_,
+        y_accel_constraint);
+      constraints_ = vertcat(
+        constraints_,
+        theta_accel_constraint);
+    }
+  }
+
+  void addNoWheelSlipConstraints()
+  {
+    // acceleration dynamics constraints
+    for (int k = 0; k < num_knots_; k++) {
+      std::string kt1_ = getKnotPrefix(k);
+      auto theta = getState(kt1_ + "base_pose_theta");
+      auto vel_x = getState(kt1_ + "base_vel_x");
+      auto vel_y = getState(kt1_ + "base_vel_y");
+      auto vel_theta = getState(kt1_ + "base_vel_theta");
+
+      for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+        std::string kt1_mN_ = kt1_ + "m" + std::to_string(m) + "_";
+        auto world_steering_angle = theta + getState(kt1_mN_ + "steering_angle");
+
+        auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
+        auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
+        rotateVectorDouble(
+          theta, module_positions_[m - 1].x(),
+          module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
 
         // Lateral Wheel Velocity Constraint
         auto base_steering_angle = getState(kt1_mN_ + "steering_angle");
@@ -484,36 +512,30 @@ public:
           -world_steering_angle, world_vel_x, world_vel_y, forward_velocity,
           lateral_velocity);
 
-        no_wheel_slip_constraints = vertcat(no_wheel_slip_constraints, lateral_velocity);
-
+        constraints_ = vertcat(constraints_, lateral_velocity);
 
         auto wheel_vel = getState(kt1_mN_ + "wheel_vel");
-        no_wheel_slip_constraints = vertcat(
-          no_wheel_slip_constraints,
+        constraints_ = vertcat(
+          constraints_,
           forward_velocity - wheel_vel * config_.wheel_radius);
       }
-
-      acceleration_dynamics_constraint_vector = vertcat(
-        acceleration_dynamics_constraint_vector,
-        x_accel_constraint);
-      acceleration_dynamics_constraint_vector = vertcat(
-        acceleration_dynamics_constraint_vector,
-        y_accel_constraint);
-      acceleration_dynamics_constraint_vector = vertcat(
-        acceleration_dynamics_constraint_vector,
-        theta_accel_constraint);
     }
+  }
 
-    // Combine all constraints into single vector
-    constraints_ = vertcat(
-      integration_constraints_vector,
-      initial_state_constraint_vector,
-      acceleration_dynamics_constraint_vector,
-      no_wheel_slip_constraints
-    );
+
+  void addConstraints()
+  {
+
+    constraints_ = casadi::Matrix<casadi::SXElem>();
+
+    addIntegrationConstraints();
+    addInitialStateConstraints();
+    addAccelerationDynamicsConstraints();
+    addNoWheelSlipConstraints();
 
     lbg_ = DM::zeros(constraints_.size1());
     ubg_ = DM::zeros(constraints_.size1());
+
 
     for (int i =
       integration_constraints_vector.size1() + initial_state_constraint_vector.size1() +
@@ -526,7 +548,10 @@ public:
       lbg_(i) = -0.001;
       ubg_(i) = 0.001;
     }
+  }
 
+  void setStateBounds()
+  {
     // Optimization Variables Limits
     lbx_ = DM::ones(num_opt_vars_) * -DM::inf();
     ubx_ = DM::ones(num_opt_vars_) * DM::inf();
