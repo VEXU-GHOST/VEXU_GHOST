@@ -48,6 +48,7 @@ using namespace std::chrono_literals;
 using namespace casadi;
 namespace plt = matplotlibcpp;
 using ghost_swerve_mpc_planner::IterationCallback;
+using ghost_planners::Trajectory;
 
 std::shared_ptr<std::atomic_bool> EXIT_GLOBAL_PTR = std::make_shared<std::atomic_bool>(false);
 
@@ -71,22 +72,28 @@ public:
     double wheel_radius;
     double robot_mass;
     double steering_inertia;
+    double wheel_constraint_tolerance;
   };
 
   SwerveMPCPlanner()
   : rclcpp::Node("swerve_mpc_planner_node")
   {
+    // Load and validate config params
     loadConfig();
     validateConfig();
+
+    // Init ROS interfaces
+    initROS();
+
+    // create empty vectors for states, parameters, cost, constraints, and problem bounds
     populateStates();
     populateParameters();
+    populateContainers();
+
+    // Set costs, constraints, and state bounds for swerve drive optimization
     addCosts();
     addConstraints();
     setStateBounds();
-
-    trajectory_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
-      "/trajectory/swerve_mpc_trajectory", 10);
-
   }
 
   void loadConfig()
@@ -117,6 +124,12 @@ public:
 
     declare_parameter("steering_inertia", 0.0);
     config_.steering_inertia = get_parameter("steering_inertia").as_double();
+
+    declare_parameter("wheel_constraint_tolerance", 0.0);
+    config_.wheel_constraint_tolerance = get_parameter("wheel_constraint_tolerance").as_double();
+
+
+    config_.wheel_constraint_tolerance = get_parameter("weights").as_double_array();
 
     module_positions_ = std::vector<Eigen::Vector2d>{
       Eigen::Vector2d(config_.wheel_base_width / 2, config_.wheel_base_width / 2),
@@ -163,6 +176,11 @@ public:
     }
   }
 
+  void initROS()
+  {
+    trajectory_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
+      "/trajectory/swerve_mpc_trajectory", 10);
+  }
 
   void populateStates()
   {
@@ -250,6 +268,16 @@ public:
       param_vector_(param_index) = SX::sym(param_name);
       param_index++;
     }
+  }
+
+  void populateContainers()
+  {
+    cost_ = SX::zeros(1);
+    lbx_ = DM::ones(num_opt_vars_) * -DM::inf();
+    ubx_ = DM::ones(num_opt_vars_) * DM::inf();
+    constraints_ = casadi::Matrix<casadi::SXElem>();
+    lbg_ = DM::zeros(0);
+    ubg_ = DM::zeros(0);
   }
 
   // Shorthand to get symbolic state variable by name
@@ -385,9 +413,11 @@ public:
         auto dx1 = next_knot_prefix + pair.second;
 
         // X1 - X0 = 1/2 * DT * (dX1 + dX0)
-        constraints_ = vertcat(
-          constraints_, 2 * (getState(x1) - getState(
-            x0)) / config_.dt - getState(dx1) - getState(dx0));
+        auto c = 2 * (getState(x1) - getState(x0)) / config_.dt - getState(dx1) - getState(dx0);
+        constraints_ = vertcat(constraints_, c);
+        lbg_ = vertcat(lbg_, DM(0));
+        ubg_ = vertcat(ubg_, DM(0));
+
       }
     }
   }
@@ -423,9 +453,10 @@ public:
     }
 
     for (const auto & pair : initial_state_constraint_param_pairs) {
-      constraints_ = vertcat(
-        constraints_, getState(
-          pair.first) - getParam(pair.second));
+      auto c = getState(pair.first) - getParam(pair.second);
+      constraints_ = vertcat(constraints_, c);
+      lbg_ = vertcat(lbg_, DM(0));
+      ubg_ = vertcat(ubg_, DM(0));
     }
   }
 
@@ -461,15 +492,12 @@ public:
         theta_accel_constraint -= base_torque;
       }
 
-      constraints_ = vertcat(
-        constraints_,
-        x_accel_constraint);
-      constraints_ = vertcat(
-        constraints_,
-        y_accel_constraint);
-      constraints_ = vertcat(
-        constraints_,
-        theta_accel_constraint);
+      constraints_ = vertcat(constraints_, x_accel_constraint);
+      constraints_ = vertcat(constraints_, y_accel_constraint);
+      constraints_ = vertcat(constraints_, theta_accel_constraint);
+
+      lbg_ = vertcat(lbg_, DM::zeros(3));
+      ubg_ = vertcat(ubg_, DM::zeros(3));
     }
   }
 
@@ -512,12 +540,13 @@ public:
           -world_steering_angle, world_vel_x, world_vel_y, forward_velocity,
           lateral_velocity);
 
-        constraints_ = vertcat(constraints_, lateral_velocity);
 
         auto wheel_vel = getState(kt1_mN_ + "wheel_vel");
-        constraints_ = vertcat(
-          constraints_,
-          forward_velocity - wheel_vel * config_.wheel_radius);
+        constraints_ = vertcat(constraints_, lateral_velocity);
+        constraints_ = vertcat(constraints_, forward_velocity - wheel_vel * config_.wheel_radius);
+
+        lbg_ = vertcat(lbg_, -DM::ones(2) * config_.wheel_constraint_tolerance);
+        ubg_ = vertcat(ubg_, DM::ones(2) * config_.wheel_constraint_tolerance);
       }
     }
   }
@@ -526,27 +555,19 @@ public:
   void addConstraints()
   {
 
-    constraints_ = casadi::Matrix<casadi::SXElem>();
-
     addIntegrationConstraints();
     addInitialStateConstraints();
     addAccelerationDynamicsConstraints();
     addNoWheelSlipConstraints();
 
-    lbg_ = DM::zeros(constraints_.size1());
-    ubg_ = DM::zeros(constraints_.size1());
+    if (lbg_.size1() != ubg_.size1()) {
+      throw std::runtime_error(
+              "[SwerveMPCPlanner::addConstraints] Error: lbg and ubg are not the same size!");
+    }
 
-
-    for (int i =
-      integration_constraints_vector.size1() + initial_state_constraint_vector.size1() +
-      acceleration_dynamics_constraint_vector.size1();
-      i < integration_constraints_vector.size1() +
-      initial_state_constraint_vector.size1() +
-      acceleration_dynamics_constraint_vector.size1() + no_wheel_slip_constraints.size1();
-      i++)
-    {
-      lbg_(i) = -0.001;
-      ubg_(i) = 0.001;
+    if (lbg_.size1() != constraints_.size1()) {
+      throw std::runtime_error(
+              "[SwerveMPCPlanner::addConstraints] Error: constraint bounds and constraint vector are not the same size!");
     }
   }
 
@@ -593,9 +614,6 @@ public:
 
   void addCosts()
   {
-    // Initialize empty cost function
-    cost_ = SX::zeros(1);
-
     // Apply Quadratic costs
     for (int k = 0; k < num_knots_ - 1; k++) {
       std::string kt1_ = "k" + std::to_string(k) + "_";
@@ -673,21 +691,21 @@ public:
     return constraints_;
   }
 
-  const casadi::Matrix<casadi::SXElem> & getStateLowerBounds()
+  const casadi::DM & getStateLowerBounds()
   {
     return lbx_;
   }
 
-  const casadi::Matrix<casadi::SXElem> & getStateUpperBounds()
+  const casadi::DM & getStateUpperBounds()
   {
     return ubx_;
   }
-  const casadi::Matrix<casadi::SXElem> & getConstraintLowerBounds()
+  const casadi::DM & getConstraintLowerBounds()
   {
     return lbg_;
   }
 
-  const casadi::Matrix<casadi::SXElem> & getConstraintUpperBounds()
+  const casadi::DM & getConstraintUpperBounds()
   {
     return ubg_;
   }
@@ -741,14 +759,16 @@ private:
   casadi::Matrix<casadi::SXElem> param_vector_;
 
   casadi::Matrix<casadi::SXElem> cost_;
-  casadi::Matrix<casadi::SXElem> lbx_;
-  casadi::Matrix<casadi::SXElem> ubx_;
+  casadi::DM lbx_;
+  casadi::DM ubx_;
 
   casadi::Matrix<casadi::SXElem> constraints_;
-  casadi::Matrix<casadi::SXElem> lbg_;
-  casadi::Matrix<casadi::SXElem> ubg_;
+  casadi::DM lbg_;
+  casadi::DM ubg_;
 
   std::vector<std::string> state_names_;
+
+  ghost_planners::Trajectory
 
 };
 
@@ -1026,7 +1046,6 @@ int main(int argc, char * argv[])
     plt::xlim(-24.0 * 3 * ghost_util::INCHES_TO_METERS, 3 * 24.0 * ghost_util::INCHES_TO_METERS);
     plt::ylim(-24.0 * 3 * ghost_util::INCHES_TO_METERS, 3 * 24.0 * ghost_util::INCHES_TO_METERS);
 
-
     plt::plot(
       chassis_x_points,
       chassis_y_points,
@@ -1091,13 +1110,13 @@ int main(int argc, char * argv[])
     plot_wheel_module(node_ptr->getModulePosition(2), "m2_");
     plot_wheel_module(node_ptr->getModulePosition(3), "m3_");
     plot_wheel_module(node_ptr->getModulePosition(4), "m4_");
-    plt::pause(DT);
 
     if (*EXIT_GLOBAL_PTR) {
       *EXIT_GLOBAL_PTR = false;
       break;
     }
   }
+
 
   plt::figure();
   plt::quiver(x_pos, y_pos, x_vel, y_vel, std::map<std::string, std::string>{{"color", "black"}});
@@ -1109,6 +1128,7 @@ int main(int argc, char * argv[])
     std::map<std::string, std::string>{{"color", "blue"}});
   plt::xlim(-1.0, 1.0);
   plt::ylim(-1.0, 1.0);
+
 
   plt::figure();
   plt::suptitle("X");

@@ -10,3 +10,4 @@ swerve_mpc_planner_node:
     wheel_width: 1.0
     robot_mass: 10.0
     steering_inertia: 0.14868
+    wheel_constraint_tolerance: 0.001
