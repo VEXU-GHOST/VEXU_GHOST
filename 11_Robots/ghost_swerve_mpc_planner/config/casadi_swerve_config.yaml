@@ -1,7 +1,12 @@
-chassis_width: 16.5
-wheel_base_width: 12.5
-wheel_diam: 2.75
-wheel_width: 1.0
-wheel_radius: 1.375
-mass: 10.0
-steering_inertia: 0.14868
+swerve_mpc_planner_node:
+  ros__parameters:
+    time_horizon: 2.0
+    dt: 0.01
+    num_swerve_modules: 4
+
+    chassis_width: 16.5
+    wheel_base_width: 12.5
+    wheel_diam: 2.75
+    wheel_width: 1.0
+    robot_mass: 10.0
+    steering_inertia: 0.14868

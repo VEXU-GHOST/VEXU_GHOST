@@ -64,33 +64,39 @@ install(
 # ## Executables ###
 # ##################
 # Main to generate Problem Formulation for MDS MPC
-add_executable(casadi_swerve_model_generation src/casadi_swerve_model_generation.cpp)
-ament_target_dependencies(casadi_swerve_model_generation
+add_executable(swerve_mpc_planner_node src/swerve_mpc_planner_node.cpp)
+ament_target_dependencies(swerve_mpc_planner_node
   ${DEPENDENCIES}
 )
-target_link_libraries(casadi_swerve_model_generation
+target_link_libraries(swerve_mpc_planner_node
   casadi
   matplotlib_cpp::matplotlib_cpp
   ${PYTHON_LIBRARIES}
   ipopt_iteration_callback
 )
-target_include_directories(casadi_swerve_model_generation
+target_include_directories(swerve_mpc_planner_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  casadi_swerve_model_generation
+  swerve_mpc_planner_node
   DESTINATION lib/${PROJECT_NAME})
 
 # ##############
 # ## Testing ###
 # ##############
 
-# ##############
-# ## Install ###
-# ##############
-# install(
-# DIRECTORY include/
-# DESTINATION include
-# )
+##############
+## Install ###
+##############
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+install(DIRECTORY
+  config
+  launch
+  DESTINATION share/${PROJECT_NAME})
+
 ament_package()
