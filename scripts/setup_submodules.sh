@@ -121,7 +121,7 @@ install_submodule btcpp
 echo; echo
 
 echo "--------------- BTROS2 ---------------"
-install_submodule btros
+install_submodule btros2
 echo; echo
 
 echo "--------------- BTROS2-INTERFACES ---------------"
