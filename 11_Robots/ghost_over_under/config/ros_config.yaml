@@ -22,15 +22,20 @@ imu_filter_node:
     gyro_bias_y: 0.0
     gyro_bias_z: 0.0
 
-    accel_covariance: [
-      1.64868e-06, 1.95563e-07, 8.17889e-08,
-      1.95563e-07, 5.70874e-06, 5.11217e-08,
-      8.17889e-08, 5.11217e-08, 1.22049e-06]
+    accel_covariance:
+      [
+        1.64868e-06,
+        1.95563e-07,
+        8.17889e-08,
+        1.95563e-07,
+        5.70874e-06,
+        5.11217e-08,
+        8.17889e-08,
+        5.11217e-08,
+        1.22049e-06,
+      ]
 
-    gyro_covariance: [
-      1.0e-5, 0.0, 0.0,
-      0.0, 1.0e-05, 0.0,
-      0.0, 0.0, 1.0e-5]
+    gyro_covariance: [1.0e-5, 0.0, 0.0, 0.0, 1.0e-05, 0.0, 0.0, 0.0, 1.0e-5]
 
     # This is a ZYX rotation from base link to imu!
     sensor_roll: 90.0
@@ -45,7 +50,7 @@ bag_recorder_service:
 covariance_2d_publisher:
   ros__parameters:
     input_topic_names:
-    - /odom_ekf/odometry
+      - /odom_ekf/odometry
 
 competition_state_machine_node:
   ros__parameters:
@@ -75,17 +80,17 @@ competition_state_machine_node:
       # Too generous though, and you are either losing resolution or wasting computation.
 
       # MAKE SURE THESE MATCH IN THE PARTICLE FILTER
-      k1: 0.25   # x error from x motion      # 25% error in primary direction
-      k2: 0.05   # x error from y motion      # Assume 5% drift via steering errors (hard to drive straight w swerve)       
+      k1: 0.25 # x error from x motion      # 25% error in primary direction
+      k2: 0.05 # x error from y motion      # Assume 5% drift via steering errors (hard to drive straight w swerve)
       k3: 0.02 # x error from rotation        # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
-      k4: 0.05   # y error from x motion      # Assume 5% drift via steering errors (hard to drive straight w swerve)  
-      k5: 0.25   # y error from y motion      # 25% error in primary direction           
+      k4: 0.05 # y error from x motion      # Assume 5% drift via steering errors (hard to drive straight w swerve)
+      k5: 0.25 # y error from y motion      # 25% error in primary direction
       k6: 0.02 # y error from rotation        # Pure rotation should be causing very little motion, 99% within 5" for 360°
-      
-      k7: 0.2  # theta error from x motion    # After 2ft of travel, 99% are within by 20°   
-      k8: 0.2  # theta error from y motion    # After 2ft of travel, 99% are within by 20° 
-      k9: 0.5   # theta error from rotation   # 25% error in primary direction  
+
+      k7: 0.2 # theta error from x motion    # After 2ft of travel, 99% are within by 20°
+      k8: 0.2 # theta error from y motion    # After 2ft of travel, 99% are within by 20°
+      k9: 0.5 # theta error from rotation   # 25% error in primary direction
 
       # motion planning
       move_to_pose_kp_xy: 2.0
@@ -101,7 +106,7 @@ competition_state_machine_node:
       steering_control_deadzone: 1.0 # Degrees
       angle_heuristic_start_angle: 20.0
       angle_heuristic_end_angle: 90.0
-      
+
       controller_dt: 0.01 # 100 Hz
       angle_control_kp: 0.75
       velocity_scaling_ratio: 1.0
@@ -123,7 +128,7 @@ competition_state_machine_node:
       # stick_upright_angle_deg: 55.
       # in degrees
       stick_angle_start: 0.
-      stick_angle_kick: 165. 
+      stick_angle_kick: 165.
       # stick_angle_soft_limit_offset: 5.
       # switch directions at angle_min + offset or angle_max - offset
 
@@ -135,7 +140,7 @@ competition_state_machine_node:
       burnout_absolute_velocity_threshold_rpm: 400.0
       burnout_stall_duration_ms: 500
       burnout_cooldown_duration_ms: 5000
-    
+
     behavior_tree:
       cubic_planner_topic: "/motion_planner/cubic_command"
       trapezoid_planner_topic: "/motion_planner/trapezoid_command"
@@ -157,9 +162,9 @@ ekf_pf_node:
       init_r: 0.0
 
       # Initial cloud distribution
-      init_x_sigma: 0.05         #
-      init_y_sigma: 0.05         #
-      init_r_sigma: 0.2        #
+      init_x_sigma: 0.05 #
+      init_y_sigma: 0.05 #
+      init_r_sigma: 0.2 #
 
       # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
       # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
@@ -169,7 +174,7 @@ ekf_pf_node:
       laser_offset_x: 0.1651
       laser_offset_y: -0.1651
       laser_angle_offset: 3.14159
-      
+
       # RPLidar A1 datasheet
       range_min: 0.15
       range_max: 5.0
@@ -178,7 +183,7 @@ ekf_pf_node:
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
       # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
-      
+
       # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
       # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
 
@@ -186,27 +191,27 @@ ekf_pf_node:
       # Too generous though, and you are either losing resolution or wasting computation.
 
       # MAKE SURE THESE MATCH IN THE SWERVE MODEL
-      k1: 0.4  # x error from x motion         # 50% error in primary direction
-      k2: 0.1   # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)       
+      k1: 0.4 # x error from x motion         # 50% error in primary direction
+      k2: 0.1 # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
       k3: 0.05 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
-      k4: 0.1   # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)  
-      k5: 0.4  # y error from y motion         # 50% error in primary direction           
+      k4: 0.1 # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k5: 0.4 # y error from y motion         # 50% error in primary direction
       k6: 0.05 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-            
-      k7: 0.2  # theta error from x motion     # After 2ft of travel, 99% are within by 5°   
-      k8: 0.2  # theta error from y motion     # After 2ft of travel, 99% are within by 5° 
-      k9: 0.5   # theta error from rotation     # 50% error in primary direction  
+
+      k7: 0.2 # theta error from x motion     # After 2ft of travel, 99% are within by 5°
+      k8: 0.2 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
+      k9: 0.5 # theta error from rotation     # 50% error in primary direction
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
-      min_update_dist:  0.05 #0.05
+      min_update_dist: 0.05 #0.05
       min_update_angle: 10.0 #0.005
       max_update_angular_velocity: 1.0
 
       # Computation Factors
-      num_particles: 200        # Increase until computation runs out
-      resize_factor: 10.0       # num_points / resize_factor = num_rays
-      resample_frequency: 4     # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
+      num_particles: 200 # Increase until computation runs out
+      resize_factor: 10.0 # num_points / resize_factor = num_rays
+      resample_frequency: 4 # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
 
       # Statistical gain for lidar scan confidence (Requires experimental tuning)
       # Technically speaking, this is the statisical correlation between all the scans of the lidar. They aren't independent, because many scans
@@ -214,7 +219,7 @@ ekf_pf_node:
       # Max is gamma = 1,  all lidar rays are totally uncorrelated. Minimum is gamma = 1/n means they are perfectly correlated.
 
       # In practice, this is a tunable param which will increase or decrease overall LIDAR confidence.
-      # One good way to tune is to look at how different the particle weights are from each other. 
+      # One good way to tune is to look at how different the particle weights are from each other.
       # Decreasing gamma should decrease confidence in lidar observation and weight particles less harshly, IIRC?
       gamma: 0.05
 
@@ -222,8 +227,8 @@ ekf_pf_node:
       # Increasing these makes it harsher on short/long errors for scan
       # Short scans are very common for other robots and dynamic obstacles
       # Long scans are extremely unlikely for comp (you see through walls?). Doorways make this viable in buildings and when glass is present.
-      dist_short: 0.2          # 1 std from sensor 68.2%
-      dist_long: 0.25           # 2 std from sensor 95%
+      dist_short: 0.2 # 1 std from sensor 68.2%
+      dist_long: 0.25 # 2 std from sensor 95%
 
       # Some robots can't place a LIDAR with 360° view. These parameters allow you to permanently ignore the obscured range of the scan.
       use_skip_range: false
@@ -239,11 +244,24 @@ odom_ekf_node:
     # See: https://answers.ros.org/question/362875/set_pose-breaks-robot_localization
     # set_pose_time_topc: "/set_pose"
 
-    initial_state: [0.0, 0.0, 0.0,
-                    0.0, 0.0,  0.0,
-                    0.0, 0.0,  0.0,
-                    0.0, 0.0,  0.0,
-                    0.0, 0.0,  0.0]
+    initial_state:
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+      ]
 
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
     # computation until it receives at least one message from one of the inputs. It will then run continuously at the
@@ -303,9 +321,9 @@ odom_ekf_node:
     #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
     #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
     # map_frame: map              # Defaults to "map" if unspecified
-    odom_frame: odom              # Defaults to "odom" if unspecified
-    base_link_frame: base_link    # Defaults to "base_link" if unspecified
-    world_frame: odom             # Defaults to the value of odom_frame if unspecified
+    odom_frame: odom # Defaults to "odom" if unspecified
+    base_link_frame: base_link # Defaults to "base_link" if unspecified
+    world_frame: odom # Defaults to the value of odom_frame if unspecified
 
     # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
     # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
@@ -321,11 +339,24 @@ odom_ekf_node:
     # do not provide some of the state variables estimated by the filter. For example, a TwistWithCovarianceStamped message
     # has no pose information, so the first six values would be meaningless in that case. Each vector defaults to all false
     # if unspecified, effectively making this parameter required for each sensor.
-    odom0_config: [false, false,  false,
-              false, false, false,
-              true, true, true,
-              false, false, false,
-              false, false, false]
+    odom0_config:
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+      ]
 
     # If you have high-frequency data or are running with a low frequency parameter value, then you may want to increase
     # the size of the subscription queue so that more measurements are fused.
@@ -347,7 +378,6 @@ odom_ekf_node:
     # odom0_differential: false
     odom0_differential: false
 
-
     # [ADVANCED] When the node starts, if this parameter is true, then the first measurement is treated as a "zero point"
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key
     # difference is that the relative parameter doesn't cause the measurement to be converted to a velocity before
@@ -362,11 +392,24 @@ odom_ekf_node:
     # the thresholds.
 
     imu0: /estimation/imu/filtered
-    imu0_config: [false, false, false,
-                  false,  false,  true,
-                  false, false, false,
-                  false,  false,  true,
-                  false,  false,  false]
+    imu0_config:
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+      ]
     imu0_differential: false
     imu0_relative: true
     imu0_queue_size: 5
@@ -419,21 +462,234 @@ odom_ekf_node:
     # process_noise_covariance: [0.5, 0.5, 1e-3, 1e-3, 1e-3, 0.5, 0.025, 0.025, 1e-3, 1e-3, 1e-3, 0.05, 0.01, 0.01, 1e-3]
     # process_noise_covariance: [0.5, 0.5, 1e-3, 1e-3, 1e-3, 0.5, 0.025, 0.025, 1e-3, 1e-3, 1e-3, 0.05, 0.01, 0.01, 1e-3]
 
-    process_noise_covariance: [0.001,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.001,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    1e-6,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.01,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.5,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.5,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1e-6,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.05,   0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.01,   0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.01,   0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-6]
+    process_noise_covariance:
+      [
+        0.001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+      ]
 
     # [ADVANCED] This represents the initial value for the state estimate error covariance matrix. Setting a diagonal
     # value (variance) to a large value will result in rapid convergence for initial measurements of the variable in
@@ -441,21 +697,234 @@ odom_ekf_node:
     # are ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below
     #if unspecified.
     # initial_estimate_covariance: [0.075, 0.075, 1e-9, 1e-9, 1e-9, 0.125, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9]
-    initial_estimate_covariance: [0.0025,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0025,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0625,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     1e-9,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
+    initial_estimate_covariance:
+      [
+        0.0025,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0025,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0625,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+      ]
     dynamic_process_noise_covariance: true
 
 map_ekf_node:
@@ -464,11 +933,24 @@ map_ekf_node:
     # See: https://answers.ros.org/question/362875/set_pose-breaks-robot_localization
     # set_pose_time_topic: "/set_pose"
 
-    initial_state: [-0.3048, -1.524, 0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0,
-                  0.0,     0.0,  0.0]
+    initial_state:
+      [
+        -0.3048,
+        -1.524,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+      ]
 
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin
     # computation until it receives at least one message from one of the inputs. It will then run continuously at the
@@ -527,17 +1009,30 @@ map_ekf_node:
     #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
     #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
     # map_frame: map              # Defaults to "map" if unspecified
-    odom_frame: odom              # Defaults to "odom" if unspecified
-    base_link_frame: base_link    # Defaults to "base_link" if unspecified
-    world_frame: map             # Defaults to the value of odom_frame if unspecified
+    odom_frame: odom # Defaults to "odom" if unspecified
+    base_link_frame: base_link # Defaults to "base_link" if unspecified
+    world_frame: map # Defaults to the value of odom_frame if unspecified
 
     pose0: /estimation/pose
 
-    pose0_config: [true, true,  false,
-                  false, false, true,
-                  false, false, false,
-                  false, false, false,
-                  false, false, false]
+    pose0_config:
+      [
+        true,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+      ]
 
     pose0_differential: false
     pose0_relative: false
@@ -557,11 +1052,24 @@ map_ekf_node:
     # do not provide some of the state variables estimated by the filter. For example, a TwistWithCovarianceStamped message
     # has no pose information, so the first six values would be meaningless in that case. Each vector defaults to all false
     # if unspecified, effectively making this parameter required for each sensor.
-    odom0_config: [false, false,  false,
-              false, false, false,
-              true, true, true,
-              false, false, false,
-              false, false, false]
+    odom0_config:
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+      ]
 
     # If you have high-frequency data or are running with a low frequency parameter value, then you may want to increase
     # the size of the subscription queue so that more measurements are fused.
@@ -583,7 +1091,6 @@ map_ekf_node:
     # odom0_differential: false
     odom0_differential: true
 
-
     # [ADVANCED] When the node starts, if this parameter is true, then the first measurement is treated as a "zero point"
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key
     # difference is that the relative parameter doesn't cause the measurement to be converted to a velocity before
@@ -598,11 +1105,24 @@ map_ekf_node:
     # the thresholds.
 
     imu0: /estimation/imu/filtered
-    imu0_config: [false, false, false,
-                  false,  false,  false,
-                  false, false, false,
-                  false,  false,  true,
-                  false,  false,  false]
+    imu0_config:
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+      ]
     imu0_differential: false
     imu0_relative: true
     imu0_queue_size: 5
@@ -653,21 +1173,234 @@ map_ekf_node:
     # ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below if
     # unspecified.
 
-    process_noise_covariance: [0.001,  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.001,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    1e-6,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.05,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.5,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.5,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1e-6,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    1e-6,   0.0,    0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.05,   0.0,    0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.01,   0.0,    0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.01,   0.0,
-                              0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-6]
+    process_noise_covariance:
+      [
+        0.001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.01,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-6,
+      ]
 
     # [ADVANCED] This represents the initial value for the state estimate error covariance matrix. Setting a diagonal
     # value (variance) to a large value will result in rapid convergence for initial measurements of the variable in
@@ -675,21 +1408,234 @@ map_ekf_node:
     # are ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the matrix below
     #if unspecified.
     # initial_estimate_covariance: [0.075, 0.075, 1e-9, 1e-9, 1e-9, 0.125, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9]
-    initial_estimate_covariance: [0.05,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.05,   0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.1,   0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,    0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     1e-9,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    1e-9,   0.0,    0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,    0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    1e-5,   0.0,
-                                  0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    1e-9]
+    initial_estimate_covariance:
+      [
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.05,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1e-9,
+      ]
     dynamic_process_noise_covariance: true
 
 cubic_motion_planner:

@@ -1,8 +1,32 @@
+/*
+ *   Copyright (c) 2024 Jake Wendling
+ *   All rights reserved.
+
+ *   Permission is hereby granted, free of charge, to any person obtaining a copy
+ *   of this software and associated documentation files (the "Software"), to deal
+ *   in the Software without restriction, including without limitation the rights
+ *   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *   copies of the Software, and to permit persons to whom the Software is
+ *   furnished to do so, subject to the following conditions:
+
+ *   The above copyright notice and this permission notice shall be included in all
+ *   copies or substantial portions of the Software.
+
+ *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *   SOFTWARE.
+ */
+
 #include "ghost_swerve/bt_nodes/moveToPoseCubic.hpp"
 
 using std::placeholders::_1;
 
-namespace ghost_swerve {
+namespace ghost_swerve
+{
 
 // If your Node has ports, you must use this constructor signature
 MoveToPoseCubic::MoveToPoseCubic(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
@@ -15,10 +39,10 @@ MoveToPoseCubic::MoveToPoseCubic(const std::string& name, const BT::NodeConfig& 
 	node_ptr_->declare_parameter("behavior_tree.cubic_planner_topic", "/motion_planner/cubic_command");
 	std::string cubic_planner_topic = node_ptr_->get_parameter("behavior_tree.cubic_planner_topic").as_string();
 
-	command_pub_ = node_ptr_->create_publisher<ghost_msgs::msg::DrivetrainCommand>(
-		cubic_planner_topic,
-		10);
-	started_ = false;
+  command_pub_ = node_ptr_->create_publisher<ghost_msgs::msg::DrivetrainCommand>(
+    cubic_planner_topic,
+    10);
+  started_ = false;
 }
 
 // It is mandatory to define this STATIC method.
@@ -77,28 +101,26 @@ BT::NodeStatus MoveToPoseCubic::onRunning() {
 	posX *= tile_to_meters;
 	posY *= tile_to_meters;
 
-	theta *= ghost_util::DEG_TO_RAD;
-	angle_threshold *= ghost_util::DEG_TO_RAD;
+  theta *= ghost_util::DEG_TO_RAD;
+  angle_threshold *= ghost_util::DEG_TO_RAD;
 
-	// swerve_ptr_->calculateKinematicSwerveControllerMoveToPoseCubicWorld(posX, posY, theta);
+  double w, x, y, z;
+  ghost_util::yawToQuaternionRad(theta, w, x, y, z);
+  ghost_msgs::msg::DrivetrainCommand msg{};
+  msg.pose.pose.position.x = posX;
+  msg.pose.pose.position.y = posY;
+  msg.pose.pose.orientation.x = x;
+  msg.pose.pose.orientation.y = y;
+  msg.pose.pose.orientation.z = z;
+  msg.pose.pose.orientation.w = w;
+  msg.pose.pose.position.z = threshold;
+  msg.twist.twist.angular.x = angle_threshold;
+  msg.speed = speed;
 
-	double w,x,y,z;
-	ghost_util::yawToQuaternionRad(theta, w, x, y, z);
-	ghost_msgs::msg::DrivetrainCommand msg{};
-	msg.pose.pose.position.x = posX;
-	msg.pose.pose.position.y = posY;
-	msg.pose.pose.orientation.x = x;
-	msg.pose.pose.orientation.y = y;
-	msg.pose.pose.orientation.z = z;
-	msg.pose.pose.orientation.w = w;
-	msg.pose.pose.position.z = threshold;
-	msg.twist.twist.angular.x = angle_threshold;
-	msg.speed = speed;
-
-	// geometry_msgs::msg::TwistStamped twist{};
-	msg.twist.twist.linear.x = velX;
-	msg.twist.twist.linear.y = velY;
-	msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
+  // geometry_msgs::msg::TwistStamped twist{};
+  msg.twist.twist.linear.x = velX;
+  msg.twist.twist.linear.y = velY;
+  msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
 
 	if( (abs(posX - swerve_ptr_->getWorldLocation().x()) < threshold) &&
 	    (abs(posY - swerve_ptr_->getWorldLocation().y()) < threshold) &&
@@ -136,15 +158,15 @@ BT::NodeStatus MoveToPoseCubic::onRunning() {
 		started_ = true;
 		command_pub_->publish(msg);
 
-		RCLCPP_INFO(node_ptr_->get_logger(), "posX: %f", posX);
-		RCLCPP_INFO(node_ptr_->get_logger(), "posY: %f", posY);
-		RCLCPP_INFO(node_ptr_->get_logger(), "theta: %f", theta);
-		RCLCPP_INFO(node_ptr_->get_logger(), "velX: %f", velX);
-		RCLCPP_INFO(node_ptr_->get_logger(), "velY: %f", velY);
-		RCLCPP_INFO(node_ptr_->get_logger(), "omega: %f", omega);
-	}
+    RCLCPP_INFO(node_ptr_->get_logger(), "posX: %f", posX);
+    RCLCPP_INFO(node_ptr_->get_logger(), "posY: %f", posY);
+    RCLCPP_INFO(node_ptr_->get_logger(), "theta: %f", theta);
+    RCLCPP_INFO(node_ptr_->get_logger(), "velX: %f", velX);
+    RCLCPP_INFO(node_ptr_->get_logger(), "velY: %f", velY);
+    RCLCPP_INFO(node_ptr_->get_logger(), "omega: %f", omega);
+  }
 
-	return BT::NodeStatus::RUNNING;
+  return BT::NodeStatus::RUNNING;
 }
 
 } // namespace ghost_swerve

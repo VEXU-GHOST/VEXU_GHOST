@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(ghost_serial)
 
 # Add Global CMake Config for Ghost Packages
-set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 find_package(Ghost CONFIG REQUIRED)
 
 ######################
@@ -12,7 +12,6 @@ find_package(Ghost CONFIG REQUIRED)
 set(DEPENDENCIES
   ament_cmake
   ament_cmake_gtest
-  ghost_msgs
   )
 
 foreach(pkg ${DEPENDENCIES})
