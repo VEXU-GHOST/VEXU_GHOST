@@ -28,7 +28,7 @@
 #include "bt_nodes/loggingNode.hpp"
 #include "bt_nodes/moveToPoseCubic.hpp"
 #include "bt_nodes/swipeTail.hpp"
-// #include "bt_nodes/autoDone.hpp"
+#include "bt_nodes/autoDone.hpp"
 #include "bt_nodes/climb.hpp"
 #include "ghost_swerve/swerve_model.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
