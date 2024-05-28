@@ -82,18 +82,20 @@ public:
     loadConfig();
     validateConfig();
 
-    // Init ROS interfaces
-    initROS();
+    // Set state and parameter names
+    generateStateNames();
+    generateParameterNames();
 
     // create empty vectors for states, parameters, cost, constraints, and problem bounds
-    populateStates();
-    populateParameters();
     populateContainers();
 
     // Set costs, constraints, and state bounds for swerve drive optimization
     addCosts();
     addConstraints();
     setStateBounds();
+
+    // Init ROS interfaces
+    initROS();
   }
 
   void loadConfig()
@@ -128,9 +130,21 @@ public:
     declare_parameter("wheel_constraint_tolerance", 0.0);
     config_.wheel_constraint_tolerance = get_parameter("wheel_constraint_tolerance").as_double();
 
+    declare_parameter("default_state_weights", std::vector<double>{});
+    auto default_state_weights = get_parameter("default_state_weights").as_double_array();
 
-    config_.wheel_constraint_tolerance = get_parameter("weights").as_double_array();
+    declare_parameter("default_joint_weights", std::vector<double>{});
+    auto default_joint_weights = get_parameter("default_joint_weights").as_double_array();
 
+    // Weights
+    weights_ = std::vector<double>{};
+    weights_.insert(weights_.end(), default_state_weights.begin(), default_state_weights.end());
+    weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
+    weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
+    weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
+    weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
+
+    // Module Positions
     module_positions_ = std::vector<Eigen::Vector2d>{
       Eigen::Vector2d(config_.wheel_base_width / 2, config_.wheel_base_width / 2),
       Eigen::Vector2d(-config_.wheel_base_width / 2, config_.wheel_base_width / 2),
@@ -151,7 +165,8 @@ public:
       {"wheel_width", config_.wheel_width},
       {"wheel_diam", config_.wheel_radius * 2.0},
       {"robot_mass", config_.robot_mass},
-      {"steering_inertia", config_.steering_inertia}
+      {"steering_inertia", config_.steering_inertia},
+      {"wheel_constraint_tolerance", config_.wheel_constraint_tolerance},
     };
 
     for (const auto & [key, val] : double_params) {
@@ -182,14 +197,8 @@ public:
       "/trajectory/swerve_mpc_trajectory", 10);
   }
 
-  void populateStates()
+  void generateStateNames()
   {
-    // Populate time vector
-    time_vector_ = std::vector<double>(num_knots_);
-    for (int i = 0; i < num_knots_; i++) {
-      time_vector_[i] = i * config_.dt;
-    }
-
     // Populate state vector
     state_names_ = std::vector<std::string> {
       "base_pose_x",
@@ -224,23 +233,17 @@ public:
     // Set total number of optimization variables
     num_opt_vars_ = state_names_.size() * num_knots_;
 
-    // Generate optimization variables and populate state_vector and state_index_map
-    state_vector_ = casadi::SX::zeros(num_opt_vars_);
-    int state_index = 0;
-    for (int i = 0; i < num_knots_; i++) {
-      std::string knot_prefix = getKnotPrefix(i);
-      for (auto name : state_names_) {
-        state_index_map_[knot_prefix + name] = state_index;
-        state_vector_(state_index) = SX::sym(knot_prefix + name);
-        state_index++;
-      }
+    // Error Checking
+    if (weights_.size() != state_names_.size()) {
+      throw std::runtime_error(
+              "[SwerveMPCPlanner::populateContainers] Error: weights_ must be the same length as the state vector!");
     }
   }
 
-  void populateParameters()
+  void generateParameterNames()
   {
     // Add initial state params
-    std::vector<std::string> param_names = {
+    param_names_ = {
       "init_pose_x",
       "init_pose_y",
       "init_pose_theta",
@@ -250,23 +253,9 @@ public:
     };
 
     for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
-      param_names.push_back(std::string("init_m") + std::to_string(m) + "_steering_angle");
-      param_names.push_back(std::string("init_m") + std::to_string(m) + "_steering_vel");
-      param_names.push_back(std::string("init_m") + std::to_string(m) + "_wheel_vel");
-    }
-
-    // Add reference states at each knot point
-    param_names.push_back("des_vel_x");
-    param_names.push_back("des_vel_y");
-    param_names.push_back("des_vel_theta");
-
-    // Generate optimization parameters and populate param_vector and param_index_map
-    param_vector_ = casadi::SX::zeros(param_names.size());
-    int param_index = 0;
-    for (auto & param_name : param_names) {
-      param_index_map_[param_name] = param_index;
-      param_vector_(param_index) = SX::sym(param_name);
-      param_index++;
+      param_names_.push_back(std::string("init_m") + std::to_string(m) + "_steering_angle");
+      param_names_.push_back(std::string("init_m") + std::to_string(m) + "_steering_vel");
+      param_names_.push_back(std::string("init_m") + std::to_string(m) + "_wheel_vel");
     }
   }
 
@@ -278,6 +267,66 @@ public:
     constraints_ = casadi::Matrix<casadi::SXElem>();
     lbg_ = DM::zeros(0);
     ubg_ = DM::zeros(0);
+
+    // Populate time vector
+    time_vector_ = std::vector<double>(num_knots_);
+    for (int i = 0; i < num_knots_; i++) {
+      time_vector_[i] = i * config_.dt;
+    }
+
+    // Generate optimization variables and populate state_vector and state_index_map
+    state_vector_ = casadi::SX::zeros(num_opt_vars_);
+    int state_index = 0;
+    for (int i = 0; i < num_knots_; i++) {
+      std::string knot_prefix = getKnotPrefix(i);
+      for (auto name : state_names_) {
+        state_index_map_[knot_prefix + name] = state_index;
+        state_vector_(state_index) = SX::sym(knot_prefix + name);
+        state_index++;
+      }
+    }
+
+    // Generate optimization parameters and populate param_vector and param_index_map
+    param_vector_ = casadi::SX::zeros(param_names_.size());
+    int param_index = 0;
+    for (auto & param_name : param_names_) {
+      param_index_map_[param_name] = param_index;
+      param_vector_(param_index) = SX::sym(param_name);
+      param_index++;
+    }
+
+    int weight_index = 0;
+    for (auto & name : state_names_) {
+      weight_index_map_[name] = weight_index;
+      weight_index++;
+    }
+
+    // Instantiate reference trajectory
+    std::vector<std::string> reference_names;
+    for (const auto & name : state_names_) {
+      reference_names.push_back(name + "_ref");
+    }
+    reference_trajectory_ptr_ = std::make_shared<Trajectory>(reference_names);
+  }
+
+  double getWeight(std::string name)
+  {
+    if (weight_index_map_.count(name) != 0) {
+      return weights_[weight_index_map_.at(name)];
+    } else {
+      throw std::runtime_error("[getWeight] No state with name " + name);
+    }
+  }
+
+  // Shorthand to get symbolic state variable by name
+  casadi::Matrix<casadi::SXElem> getState(std::string name, int k)
+  {
+    auto state_name = "k" + std::to_string(k) + "_" + name;
+    if (state_index_map_.count(state_name) != 0) {
+      return state_vector_(state_index_map_.at(state_name));
+    } else {
+      throw std::runtime_error("[getState] No state with name " + state_name);
+    }
   }
 
   // Shorthand to get symbolic state variable by name
@@ -286,7 +335,7 @@ public:
     if (state_index_map_.count(name) != 0) {
       return state_vector_(state_index_map_.at(name));
     } else {
-      throw std::runtime_error("[get_state] No state with name " + name);
+      throw std::runtime_error("[getState] No state with name " + name);
     }
   }
 
@@ -295,7 +344,7 @@ public:
     if (param_index_map_.count(name) != 0) {
       return param_vector_(param_index_map_.at(name));
     } else {
-      throw std::runtime_error("[get_param] No param with name " + name);
+      throw std::runtime_error("[getParam] No param with name " + name);
     }
   }
 
@@ -304,15 +353,19 @@ public:
     return "k" + std::to_string(i) + "_";
   }
 
-  casadi::Matrix<casadi::SXElem> getQuadraticCost(std::string state, int k, double cost)
+  casadi::Matrix<casadi::SXElem> getQuadraticTrackingCost(std::string state, int k)
   {
-    std::string kt1_ = "k" + std::to_string(k + 1) + "_";
-    std::string kt2_ = "k" + std::to_string(k) + "_";
+    std::string kt1_ = "k" + std::to_string(k) + "_";
+    std::string kt2_ = "k" + std::to_string(k + 1) + "_";
 
     auto s1 = getState(kt1_ + state);
     auto s2 = getState(kt2_ + state);
 
-    return cost * 0.5 * config_.dt * (pow(s1, 2) + pow(s2, 2));
+    double r1 = reference_trajectory_ptr_->getState(state + "_ref", config_.dt * k);
+    double r2 = reference_trajectory_ptr_->getState(state + "_ref", config_.dt * (k + 1));
+    double weight = getWeight(state);
+
+    return weight * 0.5 * config_.dt * (pow(s1 - r1, 2) + pow(s2 - r2, 2));
   }
 
   casadi::Matrix<casadi::SXElem> getJerkCost(std::string state, int k, double cost)
@@ -551,10 +604,8 @@ public:
     }
   }
 
-
   void addConstraints()
   {
-
     addIntegrationConstraints();
     addInitialStateConstraints();
     addAccelerationDynamicsConstraints();
@@ -620,9 +671,9 @@ public:
       std::string kt2_ = "k" + std::to_string(k + 1) + "_";
 
       // Regularize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
-      cost_ += getQuadraticCost("base_accel_x", k, 0.000001);
-      cost_ += getQuadraticCost("base_accel_y", k, 0.000001);
-      cost_ += getQuadraticCost("base_accel_theta", k, 0.000001);
+      cost_ += getQuadraticTrackingCost("base_accel_x", k);
+      cost_ += getQuadraticTrackingCost("base_accel_y", k);
+      cost_ += getQuadraticTrackingCost("base_accel_theta", k);
 
       // Regularize Base Jerk
       cost_ += getJerkCost("base_accel_x", k, 0.01);
@@ -630,18 +681,9 @@ public:
       cost_ += getJerkCost("base_accel_theta", k, 0.01);
 
       // Penalize Velocity Deviation
-      cost_ += 10000.0 * 0.5 * config_.dt *
-        (pow(
-          getParam("des_vel_x") - getState(kt1_ + "base_vel_x"),
-          2) + pow(getParam("des_vel_x") - getState(kt2_ + "base_vel_x"), 2));
-      cost_ += 10000.0 * 0.5 * config_.dt *
-        (pow(
-          getParam("des_vel_y") - getState(kt1_ + "base_vel_y"),
-          2) + pow(getParam("des_vel_y") - getState(kt2_ + "base_vel_y"), 2));
-      cost_ += 10000.0 * 0.5 * config_.dt *
-        (pow(
-          getParam("des_vel_theta") - getState(kt1_ + "base_vel_theta"),
-          2) + pow(getParam("des_vel_theta") - getState(kt2_ + "base_vel_theta"), 2));
+      cost_ + getQuadraticTrackingCost("base_vel_x", k);
+      cost_ + getQuadraticTrackingCost("base_vel_y", k);
+      cost_ + getQuadraticTrackingCost("base_vel_theta", k);
 
       auto vel_x = getState(kt1_ + "base_vel_x");
       auto vel_y = getState(kt1_ + "base_vel_y");
@@ -654,16 +696,151 @@ public:
         std::string mN_ = "m" + std::to_string(m) + "_";
 
         // Small Regularization
-        cost_ += getQuadraticCost(mN_ + "steering_accel", k, 0.00001);
-        cost_ += getQuadraticCost(mN_ + "steering_vel", k, 1.0);
-        cost_ += getQuadraticCost(mN_ + "wheel_vel", k, 0.01);
-        cost_ += getQuadraticCost(mN_ + "lateral_force", k, 0.1);
-        cost_ += getQuadraticCost(mN_ + "wheel_torque", k, 0.01);
+        cost_ += getQuadraticTrackingCost(mN_ + "steering_accel", k);
+        cost_ += getQuadraticTrackingCost(mN_ + "steering_vel", k);
+        cost_ += getQuadraticTrackingCost(mN_ + "wheel_vel", k);
+        cost_ += getQuadraticTrackingCost(mN_ + "wheel_torque", k);
+        cost_ += getQuadraticTrackingCost(mN_ + "lateral_force", k);
 
         cost_ += getJerkCost(mN_ + "lateral_force", k, 0.001);
         cost_ += getJerkCost(mN_ + "wheel_torque", k, 0.01);
       }
     }
+  }
+
+  void initSolver(std::shared_ptr<std::atomic_bool> exit_flag_ptr = nullptr)
+  {
+    callback_data_buffer_ = std::make_shared<std::deque<IterationCallback::IPOPTOutput>>();
+    callback_data_mutex_ = std::make_shared<std::mutex>();
+
+    if (!exit_flag_ptr) {
+      exit_flag_ptr = std::make_shared<std::atomic_bool>(false);
+    }
+
+    iteration_callback_ = std::make_shared<IterationCallback>(
+      num_opt_vars_,
+      constraints_.size1(),
+      callback_data_buffer_,
+      callback_data_mutex_,
+      exit_flag_ptr);
+
+    Dict solver_config{
+      {"verbose", false},
+      {"ipopt.print_level", 5},
+      {"iteration_callback", *iteration_callback_},
+      {"ipopt.max_iter", 750}
+    };
+
+    SXDict nlp_config{
+      {"x", getStateVector()},
+      {"f", getCost()},
+      {"g", getConstraints()},
+      {"p", getParamVector()}};
+
+    solver_ = nlpsol("swerve_mpc_planner", "ipopt", nlp_config, solver_config);
+  }
+
+  std::map<std::string, DM> runSolver()
+  {
+
+    double init_pose_x = -1.0;
+    double init_pose_y = 0.0;
+    double init_pose_theta = 0.0;
+    double init_vel_x = 0.0;
+    double init_vel_y = 0.0;
+    double init_vel_theta = 0.0;
+
+
+    double init_m1_steering_angle = 3.14159 / 4;     // -3.14159 / 4.0;
+    double init_m1_steering_vel = 0.0;
+    double init_m1_wheel_vel = 0.0;
+
+    double init_m2_steering_angle = 3.14159 / 4;     // 3.14159 / 4.0;
+    double init_m2_steering_vel = 0.0;
+    double init_m2_wheel_vel = 0.0;
+
+    double init_m3_steering_angle = 3.14159 / 4;     // -3.14159 / 4.0;
+    double init_m3_steering_vel = 0.0;
+    double init_m3_wheel_vel = 0.0;
+
+    double init_m4_steering_angle = -3.14159 / 4;     // 3.14159 / 4.0;
+    double init_m4_steering_vel = 0.0;
+    double init_m4_wheel_vel = 0.0;
+
+    std::map<std::string, DM> solver_args, res;
+    solver_args["lbx"] = getStateLowerBounds();
+    solver_args["ubx"] = getStateUpperBounds();
+    solver_args["lbg"] = getConstraintLowerBounds();
+    solver_args["ubg"] = getConstraintUpperBounds();
+    solver_args["x0"] = DM::zeros(getNumOptVars());
+
+    solver_args["p"] = {
+      init_pose_x,
+      init_pose_y,
+      init_pose_theta,
+      init_vel_x,
+      init_vel_y,
+      init_vel_theta,
+      init_m1_steering_angle,
+      init_m1_steering_vel,                           // , 3.14159 / 4.0, 0.0};
+      init_m1_wheel_vel,
+      init_m2_steering_angle,
+      init_m2_steering_vel,                           // , 3.14159 / 4.0, 0.0};
+      init_m2_wheel_vel,
+      init_m3_steering_angle,                           // , 3.14159 / 4.0, 0.0};
+      init_m3_steering_vel,
+      init_m3_wheel_vel,
+      init_m4_steering_angle,                           // , 3.14159 / 4.0, 0.0};
+      init_m4_steering_vel,
+      init_m4_wheel_vel,
+    };     // , 3.14159 / 4.0, 0.0};
+
+
+    plt::figure();
+    plt::plot(std::vector<double>{}, std::vector<double>{});
+    std::vector<IterationCallback::IPOPTOutput> solver_iteration_data;
+    std::vector<double> iteration_vector{};
+    std::vector<double> cost_vector{};
+    std::atomic<bool> solving(true);
+
+    std::thread solver_thread([&]() {
+        std::cout << "Starting Solve" << std::endl;
+        res = solver_(solver_args);
+        solving = false;
+      });
+    plt::ion();
+    // plt::show();
+
+    while (solving) {
+      std::unique_lock<std::mutex> lock(*callback_data_mutex_);
+      if (!callback_data_buffer_->empty()) {
+        // Retrieve data from queue
+        IterationCallback::IPOPTOutput data(callback_data_buffer_->back());
+        callback_data_buffer_->pop_back();
+
+        // Matplotlib
+        solver_iteration_data.push_back(data);
+        iteration_vector.push_back(data.iteration);
+        cost_vector.push_back(data.f);
+
+        plt::clf();
+        plt::plot(iteration_vector, cost_vector);
+
+        // Publish to RVIZ
+        ghost_msgs::msg::LabeledVectorMap msg{};
+        ghost_ros_interfaces::msg_helpers::toROSMsg(generateTrajectoryMap(data.x), msg);
+        publishMPCTrajectory(msg);
+
+      }
+      lock.unlock();
+
+      if (true) { // plot
+        plt::pause(0.01);
+      } else {
+        std::this_thread::sleep_for(10ms);
+      }
+    }
+    return res;
   }
 
   void publishMPCTrajectory(const ghost_msgs::msg::LabeledVectorMap & msg)
@@ -741,6 +918,15 @@ public:
     return time_vector_;
   }
 
+  std::shared_ptr<std::deque<IterationCallback::IPOPTOutput>> getCallbackDataBuffer()
+  {
+    return callback_data_buffer_;
+  }
+  std::shared_ptr<std::mutex> getCallbackDataMutex()
+  {
+    return callback_data_mutex_;
+  }
+
 private:
   const double I2M = ghost_util::INCHES_TO_METERS;
 
@@ -757,6 +943,8 @@ private:
   casadi::Matrix<casadi::SXElem> state_vector_;
   std::unordered_map<std::string, int> param_index_map_;
   casadi::Matrix<casadi::SXElem> param_vector_;
+  std::unordered_map<std::string, int> weight_index_map_;
+  std::vector<double> weights_;
 
   casadi::Matrix<casadi::SXElem> cost_;
   casadi::DM lbx_;
@@ -767,8 +955,16 @@ private:
   casadi::DM ubg_;
 
   std::vector<std::string> state_names_;
+  std::vector<std::string> param_names_;
 
-  ghost_planners::Trajectory
+  std::shared_ptr<ghost_planners::Trajectory> reference_trajectory_ptr_;
+
+  casadi::Function solver_;
+
+  std::shared_ptr<std::deque<IterationCallback::IPOPTOutput>> callback_data_buffer_;
+  std::shared_ptr<std::mutex> callback_data_mutex_;
+  std::shared_ptr<IterationCallback> iteration_callback_;
+
 
 };
 
@@ -787,142 +983,10 @@ int main(int argc, char * argv[])
       rclcpp::spin(node_ptr);
     });
 
-  ////////////////////////////////////
-  ///// User Input Configuration /////
-  ////////////////////////////////////
-  double init_pose_x = -1.0;
-  double init_pose_y = 0.0;
-  double init_pose_theta = 0.0;
-  double init_vel_x = 0.0;
-  double init_vel_y = 0.0;
-  double init_vel_theta = 0.0;
+  node_ptr->initSolver();
+  auto res = node_ptr->runSolver();
 
-
-  double init_m1_steering_angle = 3.14159 / 4;       // -3.14159 / 4.0;
-  double init_m1_steering_vel = 0.0;
-  double init_m1_wheel_vel = 0.0;
-
-  double init_m2_steering_angle = 3.14159 / 4;       // 3.14159 / 4.0;
-  double init_m2_steering_vel = 0.0;
-  double init_m2_wheel_vel = 0.0;
-
-  double init_m3_steering_angle = 3.14159 / 4;       // -3.14159 / 4.0;
-  double init_m3_steering_vel = 0.0;
-  double init_m3_wheel_vel = 0.0;
-
-  double init_m4_steering_angle = -3.14159 / 4;       // 3.14159 / 4.0;
-  double init_m4_steering_vel = 0.0;
-  double init_m4_wheel_vel = 0.0;
-
-  double des_vel_x = 0.75;
-  double des_vel_y = 0.75;
-  double des_vel_theta = 0.0;
-
-  /////////////////////////
-  ///// Create Solver /////
-  /////////////////////////
-  auto data_buffer = std::make_shared<std::deque<IterationCallback::IPOPTOutput>>();
-  auto data_mutex = std::make_shared<std::mutex>();
-  auto iteration_callback = IterationCallback(
-    node_ptr->getNumOptVars(),
-    node_ptr->getConstraints().size1(), data_buffer, data_mutex, EXIT_GLOBAL_PTR);
-  SXDict nlp_config{
-    {"x", node_ptr->getStateVector()},
-    {"f", node_ptr->getCost()},
-    {"g", node_ptr->getConstraints()},
-    {"p", node_ptr->getParamVector()}};
-  Dict solver_config{
-    {"verbose", false},
-    {"ipopt.print_level", 0},
-    {"iteration_callback", iteration_callback},
-    {"ipopt.max_iter", 750}
-  };
-  auto solver = nlpsol("example_trajectory_optimization", "ipopt", nlp_config, solver_config);
-
-
-  //////////////////////
-  ///// Test Solve /////
-  //////////////////////
-  std::map<std::string, DM> solver_args, res;
-  solver_args["lbx"] = node_ptr->getStateLowerBounds();
-  solver_args["ubx"] = node_ptr->getStateUpperBounds();
-  solver_args["lbg"] = node_ptr->getConstraintLowerBounds();
-  solver_args["ubg"] = node_ptr->getConstraintUpperBounds();
-  solver_args["x0"] = DM::zeros(node_ptr->getNumOptVars());
-
-  solver_args["p"] = {
-    init_pose_x,
-    init_pose_y,
-    init_pose_theta,
-    init_vel_x,
-    init_vel_y,
-    init_vel_theta,
-    init_m1_steering_angle,
-    init_m1_steering_vel,                             // , 3.14159 / 4.0, 0.0};
-    init_m1_wheel_vel,
-    init_m2_steering_angle,
-    init_m2_steering_vel,                             // , 3.14159 / 4.0, 0.0};
-    init_m2_wheel_vel,
-    init_m3_steering_angle,                             // , 3.14159 / 4.0, 0.0};
-    init_m3_steering_vel,
-    init_m3_wheel_vel,
-    init_m4_steering_angle,                             // , 3.14159 / 4.0, 0.0};
-    init_m4_steering_vel,
-    init_m4_wheel_vel,
-    des_vel_x,
-    des_vel_y,
-    des_vel_theta,
-  };       // , 3.14159 / 4.0, 0.0};
-
-
-  if (plot) {
-    plt::figure();
-    plt::plot(std::vector<double>{}, std::vector<double>{});
-  }
-  std::vector<IterationCallback::IPOPTOutput> solver_iteration_data;
-  std::vector<double> iteration_vector{};
-  std::vector<double> cost_vector{};
-  std::atomic<bool> solving(true);
-
-  std::thread solver_thread([&]() {
-      std::cout << "Starting Solve" << std::endl;
-      res = solver(solver_args);
-      solving = false;
-    });
-  plt::ion();
-  // plt::show();
-
-  while (solving) {
-    std::unique_lock<std::mutex> lock(*data_mutex);
-    if (!data_buffer->empty()) {
-      // Retrieve data from queue
-      IterationCallback::IPOPTOutput data(data_buffer->back());
-      data_buffer->pop_back();
-
-      // Matplotlib
-      solver_iteration_data.push_back(data);
-      iteration_vector.push_back(data.iteration);
-      cost_vector.push_back(data.f);
-
-      if (plot) {
-        plt::clf();
-        plt::plot(iteration_vector, cost_vector);
-      }
-
-      // Publish to RVIZ
-      ghost_msgs::msg::LabeledVectorMap msg{};
-      ghost_ros_interfaces::msg_helpers::toROSMsg(node_ptr->generateTrajectoryMap(data.x), msg);
-      node_ptr->publishMPCTrajectory(msg);
-
-    }
-    lock.unlock();
-
-    if (plot) {
-      plt::pause(0.01);
-    } else {
-      std::this_thread::sleep_for(10ms);
-    }
-  }
+  std::cout << "Does this work" << std::endl;
 
   auto raw_solution_vector = std::vector<double>(res.at("x"));
   ghost_msgs::msg::LabeledVectorMap msg{};
@@ -936,7 +1000,6 @@ int main(int argc, char * argv[])
   /////////////////////////////
   // Print the solution
   std::cout << "-----" << std::endl;
-  std::cout << "Optimal solution for p = " << solver_args.at("p") << ":" << std::endl;
   std::cout << "Objective: " << res.at("f") << std::endl;
 
   // Unpack solution into individual time series
