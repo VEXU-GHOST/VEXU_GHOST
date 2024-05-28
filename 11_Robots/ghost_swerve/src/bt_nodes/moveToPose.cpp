@@ -38,9 +38,11 @@ MoveToPose::MoveToPose(
   node_ptr_(node_ptr),
   swerve_ptr_(swerve_ptr)
 {
-  node_ptr_->declare_parameter(
-    "behavior_tree.cubic_planner_topic",
-    "/motion_planner/cubic_command");
+  if(!node_ptr_->has_parameter("behavior_tree.cubic_planner_topic")){
+    node_ptr_->declare_parameter(
+      "behavior_tree.cubic_planner_topic",
+      "/motion_planner/cubic_command");
+  }
   std::string cubic_planner_topic =
     node_ptr_->get_parameter("behavior_tree.cubic_planner_topic").as_string();
 

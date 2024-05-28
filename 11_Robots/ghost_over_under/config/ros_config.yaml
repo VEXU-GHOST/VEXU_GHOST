@@ -93,9 +93,9 @@ competition_state_machine_node:
       k9: 0.5 # theta error from rotation   # 25% error in primary direction
 
       # motion planning
-      move_to_pose_kp_xy: 2.0
+      move_to_pose_kp_xy: 1.0
       move_to_pose_kd_xy: 0.7
-      move_to_pose_kp_theta: 0.9
+      move_to_pose_kp_theta: 0.6
       move_to_pose_kd_theta: 0.7
 
       # Steering Controller
@@ -121,6 +121,8 @@ competition_state_machine_node:
       # degree per second of actual lift
       lift_kP: .05
       lift_speed: -10. #TODO
+
+      intake_setpoint: 7.0
 
       # TODO MAXX ALL OF THESE
       stick_gear_ratio: 3.
