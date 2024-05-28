@@ -24,7 +24,6 @@
                   threshold="0.05"
                   angle_threshold="5.0"
                   timeout="-1000"
-                  timeout="-1000"
                   speed="0.5"/>
       <ReactiveFallback>
         <IntakeCmd in="true"/>
