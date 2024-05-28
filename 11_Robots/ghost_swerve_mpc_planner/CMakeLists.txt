@@ -32,14 +32,13 @@ endforeach()
 
 ament_export_dependencies(${DEPENDENCIES})
 
-# Set Include Directories
-set(INCLUDE
-  include
-  ${PYTHON_INCLUDE_DIRS}
-)
+# # Set Include Directories
+# set(INCLUDE
+#   include
+# )
 
-include_directories(${INCLUDE})
-ament_export_include_directories(${INCLUDE})
+# include_directories(${INCLUDE})
+# ament_export_include_directories(${INCLUDE})
 
 
 # ##################
@@ -70,11 +69,6 @@ install(TARGETS
 ##############
 ## Install ###
 ##############
-install(
-  DIRECTORY include/
-  DESTINATION include
-)
-
 install(DIRECTORY
   config
   launch

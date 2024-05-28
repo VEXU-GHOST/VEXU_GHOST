@@ -687,13 +687,6 @@ public:
       cost_ + getQuadraticTrackingCost("base_vel_y", k);
       cost_ + getQuadraticTrackingCost("base_vel_theta", k);
 
-      auto vel_x = getState(kt1_ + "base_vel_x");
-      auto vel_y = getState(kt1_ + "base_vel_y");
-      auto vel_theta = getState(kt1_ + "base_vel_theta");
-      auto theta = getState(kt1_ + "base_pose_theta");
-      auto x_pos = getState(kt1_ + "base_pose_x");
-      auto y_pos = getState(kt1_ + "base_pose_y");
-
       for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
         std::string mN_ = "m" + std::to_string(m) + "_";
 
