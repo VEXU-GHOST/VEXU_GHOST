@@ -99,7 +99,12 @@ void Trajectory::addNode(double time, Node node)
 
 Trajectory::Node Trajectory::getNode(double time) const
 {
+  if (m_state_trajectory.empty()) {
+    return std::vector<double>(m_state_vector_size, 0.0);
+  }
+
   int index = getInsertionIndexFromSortedVector(time, m_time_vector);
+
   if (index == 0) {
     return m_state_trajectory.front();
   }

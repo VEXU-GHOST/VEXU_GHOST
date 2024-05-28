@@ -52,6 +52,17 @@ public:
     std::vector<std::string> state_names);
 
   /**
+   * @brief Returns true if there are no nodes in the trajectory
+   *
+   * @return true
+   * @return false
+   */
+  bool empty()
+  {
+    return m_time_vector.empty();
+  }
+
+  /**
    * @brief Removes all existing nodes and times
    */
   void clearNodes();

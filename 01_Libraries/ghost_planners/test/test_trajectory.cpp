@@ -30,6 +30,13 @@ TEST(TestTrajectory, testConstructors) {
   EXPECT_NO_THROW(auto traj = Trajectory(std::vector<std::string>{}));
 }
 
+TEST(TestTrajectory, testEmpty) {
+  auto trajectory = Trajectory(std::vector<std::string>{"s1"});
+  EXPECT_TRUE(trajectory.empty());
+  EXPECT_NO_THROW(trajectory.addNode(1.0, std::vector<double>{2.0}));
+  EXPECT_FALSE(trajectory.empty());
+}
+
 TEST(TestTrajectory, testGetStateVectorSize) {
   auto name_vector = std::vector<std::string>{"s1", "s2", "s3"};
   auto trajectory = Trajectory(name_vector);
