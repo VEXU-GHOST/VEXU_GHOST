@@ -127,23 +127,3 @@ echo; echo
 echo "--------------- BTROS2-INTERFACES ---------------"
 install_submodule btros2-interfaces
 echo; echo
-
-echo "--------------- PLOTJUGGLER ---------------"
-if [ ! -d "${VEXU_HOME}/09_External/plotjuggler/build" ];
-then
-	cd $VEXU_HOME/09_External/plotjuggler
-
-    cmake -S . -B build/ -DCMAKE_INSTALL_PREFIX=install || exit -1
-    cmake --build build/ --config RelWithDebInfo --target install || exit -1
-else
-        echo "Build already exists"
-fi
-
-echo "--------------- PLOTJUGGLER-ROS ---------------"
-if [ ! -d "${VEXU_HOME}/09_External/plotjuggler-ros-plugins/build" ];
-then
-	cd $VEXU_HOME/09_External/plotjuggler-ros-plugins
-    colcon build
-else
-        echo "Build already exists"
-fi
