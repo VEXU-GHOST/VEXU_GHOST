@@ -50,12 +50,6 @@ void MotionPlanner::configure(std::string node_name)
   node_ptr_->declare_parameter("odom_topic", "/map_ekf/odometry");
   std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
 
-  sensor_update_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::V5SensorUpdate>(
-    sensor_update_topic,
-    10,
-    std::bind(&MotionPlanner::sensorUpdateCallback, this, _1)
-  );
-
   pose_command_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::DrivetrainCommand>(
     command_topic,
     10,
@@ -74,15 +68,6 @@ void MotionPlanner::configure(std::string node_name)
 
   initialize();
   configured_ = true;
-}
-
-void MotionPlanner::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg)
-{
-  if (!planning_) {
-    // fromROSMsg(*robot_hardware_interface_ptr_, *msg);
-    // make sure it doesnt overwrite values during trajectory calculation
-  }
-  // update values for trajectory calculation
 }
 
 void MotionPlanner::setNewCommand(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd)
