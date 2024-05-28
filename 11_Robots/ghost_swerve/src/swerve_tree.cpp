@@ -39,7 +39,8 @@ SwerveTree::SwerveTree(
   std::shared_ptr<rclcpp::Node> node_ptr,
   double burnout_absolute_rpm_threshold,
   double burnout_stall_duration_ms,
-  double burnout_cooldown_duration_ms)
+  double burnout_cooldown_duration_ms,
+						double lift_setpoint)
 : bt_path_(bt_path),
   node_ptr_(node_ptr)
 {
@@ -60,9 +61,10 @@ SwerveTree::SwerveTree(
     "IntakeCmd", node_ptr_, robot_hardware_interface_ptr, swerve_ptr,
     burnout_absolute_rpm_threshold,
     burnout_stall_duration_ms,
-    burnout_cooldown_duration_ms);
+    burnout_cooldown_duration_ms,
+					lift_setpoint);
   factory.registerNodeType<Climb>("Climb", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
-  // factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
+  factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
 
   tree_ = factory.createTreeFromFile(bt_path_);
 }

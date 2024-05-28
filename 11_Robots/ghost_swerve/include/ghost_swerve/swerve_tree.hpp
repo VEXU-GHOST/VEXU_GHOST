@@ -28,7 +28,7 @@
 #include "bt_nodes/loggingNode.hpp"
 #include "bt_nodes/moveToPose.hpp"
 #include "bt_nodes/swipeTail.hpp"
-// #include "bt_nodes/autoDone.hpp"
+#include "bt_nodes/autoDone.hpp"
 #include "bt_nodes/climb.hpp"
 #include "ghost_swerve/swerve_model.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
@@ -52,7 +52,8 @@ public:
     std::shared_ptr<rclcpp::Node> node_ptr,
     double burnout_absolute_rpm_threshold,
     double burnout_stall_duration_ms,
-    double burnout_cooldown_duration_ms);
+    double burnout_cooldown_duration_ms,
+    double lift_setpoint);
   void tick_tree();
 
 private:
