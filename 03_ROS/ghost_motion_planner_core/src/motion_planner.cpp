@@ -79,7 +79,7 @@ void MotionPlanner::configure(std::string node_name)
 void MotionPlanner::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg)
 {
   if (!planning_) {
-    fromROSMsg(*robot_hardware_interface_ptr_, *msg);
+    // fromROSMsg(*robot_hardware_interface_ptr_, *msg);
     // make sure it doesnt overwrite values during trajectory calculation
   }
   // update values for trajectory calculation

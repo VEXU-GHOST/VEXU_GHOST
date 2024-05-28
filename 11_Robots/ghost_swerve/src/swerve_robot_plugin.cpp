@@ -312,11 +312,11 @@ void SwerveRobotPlugin::initialize()
     10);
 
   // resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
-  if (!m_recording) {
-    auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-    m_start_recorder_client->async_send_request(req);
-    m_recording = true;
-  }
+  // if (!m_recording) {
+  //   auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+  //   m_start_recorder_client->async_send_request(req);
+  //   m_recording = true;
+  // }
 }
 
 void SwerveRobotPlugin::onNewSensorData()
