@@ -24,12 +24,14 @@
 #include <gtest/gtest.h>
 #include "ghost_ros_interfaces/msg_helpers/msg_helpers.hpp"
 #include "ghost_v5_interfaces/test/device_test_utils.hpp"
+#include "ghost_util/test_util.hpp"
 
 using namespace ghost_ros_interfaces::msg_helpers;
 using namespace ghost_ros_interfaces;
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::test_util;
 using namespace ghost_v5_interfaces;
+using namespace ghost_util;
 
 
 TEST(TestMsgHelpers, testMotorStateMsg) {
@@ -197,4 +199,44 @@ TEST(TestMsgHelpers, testLabeledVectorMapTrajectoryConversion) {
     }
     EXPECT_TRUE(found);
   }
+}
+
+TEST(TestMsgHelpers, testIPOPTOutputConversion) {
+  ghost_planners::IterationCallback::IPOPTOutput expected_solver_output{};
+  ghost_msgs::msg::IPOPTOutput expected_msg{};
+
+  auto cost = getRandomDouble();
+  expected_solver_output.cost = cost;
+  expected_msg.cost = cost;
+
+  auto iteration = getRandomInt(3000);
+  expected_solver_output.iteration = iteration;
+  expected_msg.iteration = iteration;
+
+  for (int i = 0; i < 5; i++) {
+    auto x = getRandomDouble();
+    expected_solver_output.state_vector.push_back(x);
+    expected_msg.state_vector.push_back(x);
+
+    auto g = getRandomDouble();
+    expected_solver_output.constraint_vector.push_back(g);
+    expected_msg.constraint_vector.push_back(g);
+
+    auto lambda_x = getRandomDouble();
+    expected_solver_output.state_lagrange_multipliers.push_back(lambda_x);
+    expected_msg.state_lagrange_multipliers.push_back(lambda_x);
+
+    auto lambda_g = getRandomDouble();
+    expected_solver_output.constraint_lagrange_multipliers.push_back(lambda_g);
+    expected_msg.constraint_lagrange_multipliers.push_back(lambda_g);
+  }
+
+  ghost_planners::IterationCallback::IPOPTOutput blank_solver_output{};
+  ghost_msgs::msg::IPOPTOutput blank_msg{};
+
+  toROSMsg(expected_solver_output, blank_msg);
+  EXPECT_EQ(expected_msg, blank_msg);
+
+  fromROSMsg(blank_solver_output, expected_msg);
+  EXPECT_EQ(expected_solver_output, blank_solver_output);
 }

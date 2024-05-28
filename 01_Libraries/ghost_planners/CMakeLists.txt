@@ -12,6 +12,7 @@ set(DEPENDENCIES
   ament_index_cpp
   eigen3_cmake_module
   Eigen3
+  casadi
   ghost_estimation
   ghost_control
   ghost_util
@@ -26,7 +27,6 @@ ament_export_dependencies(${DEPENDENCIES})
 # Set Include Directories
 set(INCLUDE
   include
-  ${PYTHON_INCLUDE_DIRS}
 )
 
 include_directories(${INCLUDE})
@@ -59,9 +59,6 @@ install(
 
 # robot trajectory class
 add_library(robot_trajectory SHARED src/robot_trajectory.cpp)
-# target_link_libraries(robot_trajectory
-#   DEPENDENCIES
-#   )
 target_include_directories(robot_trajectory
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -73,6 +70,27 @@ ament_export_targets(robot_trajectory HAS_LIBRARY_TARGET)
 install(
   TARGETS robot_trajectory
   EXPORT robot_trajectory
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+add_library(ipopt_iteration_callback SHARED src/ipopt_iteration_callback.cpp)
+ament_target_dependencies(ipopt_iteration_callback
+  ${DEPENDENCIES}
+  )
+target_link_libraries(ipopt_iteration_callback
+  casadi
+)
+target_include_directories(ipopt_iteration_callback
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(ipopt_iteration_callback HAS_LIBRARY_TARGET)
+install(
+  TARGETS ipopt_iteration_callback
+  EXPORT ipopt_iteration_callback
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin

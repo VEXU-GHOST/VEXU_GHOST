@@ -508,6 +508,29 @@ void toROSMsg(
   msg.entries.push_back(entry_msg);
 }
 
+void fromROSMsg(
+  ghost_planners::IterationCallback::IPOPTOutput & solver_output,
+  const ghost_msgs::msg::IPOPTOutput & msg)
+{
+  solver_output.iteration = msg.iteration;
+  solver_output.cost = msg.cost;
+  solver_output.state_vector = msg.state_vector;
+  solver_output.constraint_vector = msg.constraint_vector;
+  solver_output.state_lagrange_multipliers = msg.state_lagrange_multipliers;
+  solver_output.constraint_lagrange_multipliers = msg.constraint_lagrange_multipliers;
+}
+
+void toROSMsg(
+  const ghost_planners::IterationCallback::IPOPTOutput & solver_output,
+  ghost_msgs::msg::IPOPTOutput & msg)
+{
+  msg.iteration = solver_output.iteration;
+  msg.cost = solver_output.cost;
+  msg.state_vector = solver_output.state_vector;
+  msg.constraint_vector = solver_output.constraint_vector;
+  msg.state_lagrange_multipliers = solver_output.state_lagrange_multipliers;
+  msg.constraint_lagrange_multipliers = solver_output.constraint_lagrange_multipliers;
+}
 
 } // namespace msg_helpers
 

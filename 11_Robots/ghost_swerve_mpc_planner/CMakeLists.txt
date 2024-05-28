@@ -20,6 +20,7 @@ set(DEPENDENCIES
   ghost_estimation
   ghost_control
   ghost_ros_interfaces
+  ghost_planners
   ghost_util
   rclcpp
   ghost_msgs
@@ -40,25 +41,6 @@ set(INCLUDE
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
-# set(CMAKE_BUILD_TYPE "DEBUG")
-# set(CMAKE_BUILD_TYPE "RELEASE")
-
-# ##################
-# ### Libraries ####
-# ##################
-add_library(ipopt_iteration_callback SHARED src/ipopt_iteration_callback.cpp)
-target_link_libraries(ipopt_iteration_callback
-  casadi
-)
-ament_export_targets(ipopt_iteration_callback HAS_LIBRARY_TARGET)
-install(
-  TARGETS ipopt_iteration_callback
-  EXPORT ipopt_iteration_callback
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
 
 # ##################
 # ## Executables ###
@@ -72,7 +54,6 @@ target_link_libraries(swerve_mpc_planner_node
   casadi
   matplotlib_cpp::matplotlib_cpp
   ${PYTHON_LIBRARIES}
-  ipopt_iteration_callback
 )
 target_include_directories(swerve_mpc_planner_node
   PUBLIC

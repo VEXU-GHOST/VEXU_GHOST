@@ -23,6 +23,7 @@
 
 #include <ghost_planners/robot_trajectory.hpp>
 #include <ghost_planners/trajectory.hpp>
+#include <ghost_planners/ipopt_iteration_callback.hpp>
 #include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
@@ -41,6 +42,7 @@
 #include <ghost_msgs/msg/v5_motor_state.hpp>
 #include <ghost_msgs/msg/v5_rotation_sensor_state.hpp>
 #include <ghost_msgs/msg/v5_sensor_update.hpp>
+#include <ghost_msgs/msg/ipopt_output.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -267,6 +269,14 @@ void fromROSMsg(
 void toROSMsg(
   const ghost_planners::Trajectory & trajectory,
   ghost_msgs::msg::LabeledVectorMap & msg);
+
+void fromROSMsg(
+  ghost_planners::IterationCallback::IPOPTOutput & solver_output,
+  const ghost_msgs::msg::IPOPTOutput & msg);
+
+void toROSMsg(
+  const ghost_planners::IterationCallback::IPOPTOutput & solver_output,
+  ghost_msgs::msg::IPOPTOutput & msg);
 
 } // namespace msg_helpers
 

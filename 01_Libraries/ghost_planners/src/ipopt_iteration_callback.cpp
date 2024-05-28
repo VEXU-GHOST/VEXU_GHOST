@@ -21,11 +21,11 @@
  *   SOFTWARE.
  */
 
-#include "ghost_swerve_mpc_planner/ipopt_iteration_callback.hpp"
+#include "ghost_planners/ipopt_iteration_callback.hpp"
 
 using namespace casadi;
 
-namespace ghost_swerve_mpc_planner
+namespace ghost_planners
 {
 
 IterationCallback::IterationCallback(
@@ -97,26 +97,26 @@ int IterationCallback::eval_buffer(
   auto output_map = nlpsol_out();
   IPOPTOutput data{};
 
-  data.x.resize(nx_);
-  data.g.resize(ng_);
-  data.lam_x.resize(nx_);
-  data.lam_g.resize(ng_);
+  data.state_vector.resize(nx_);
+  data.constraint_vector.resize(ng_);
+  data.state_lagrange_multipliers.resize(nx_);
+  data.constraint_lagrange_multipliers.resize(ng_);
 
   for (int i = 0; i < sizes_arg[0]; i++) {
-    data.x[i] = arg[0][i];
+    data.state_vector[i] = arg[0][i];
   }
-  data.f = arg[1][0];
+  data.cost = arg[1][0];
 
   for (int i = 0; i < sizes_arg[2]; i++) {
-    data.g[i] = arg[2][i];
+    data.constraint_vector[i] = arg[2][i];
   }
 
   for (int i = 0; i < sizes_arg[3]; i++) {
-    data.lam_x[i] = arg[3][i];
+    data.state_lagrange_multipliers[i] = arg[3][i];
   }
 
   for (int i = 0; i < sizes_arg[4]; i++) {
-    data.lam_g[i] = arg[4][i];
+    data.constraint_lagrange_multipliers[i] = arg[4][i];
   }
 
   data.iteration = iteration_count_;
@@ -132,4 +132,4 @@ int IterationCallback::eval_buffer(
   return {0};
 }
 
-} // namespace ghost_swerve_mpc_planner
+} // namespace ghost_planners

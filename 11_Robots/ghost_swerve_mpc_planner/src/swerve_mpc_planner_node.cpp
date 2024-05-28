@@ -42,12 +42,12 @@
 #include "matplotlibcpp.h"
 #include "yaml.h"
 
-#include "ghost_swerve_mpc_planner/ipopt_iteration_callback.hpp"
+#include "ghost_planners/ipopt_iteration_callback.hpp"
 
 using namespace std::chrono_literals;
 using namespace casadi;
 namespace plt = matplotlibcpp;
-using ghost_swerve_mpc_planner::IterationCallback;
+using ghost_planners::IterationCallback;
 using ghost_planners::Trajectory;
 
 std::shared_ptr<std::atomic_bool> EXIT_GLOBAL_PTR = std::make_shared<std::atomic_bool>(false);
@@ -96,6 +96,8 @@ public:
 
     // Init ROS interfaces
     initROS();
+
+    initSolver();
   }
 
   void loadConfig()
@@ -795,51 +797,10 @@ public:
       init_m4_wheel_vel,
     };     // , 3.14159 / 4.0, 0.0};
 
+    std::cout << "Starting Solve" << std::endl;
+    res = solver_(solver_args);
+    // solving = false;
 
-    plt::figure();
-    plt::plot(std::vector<double>{}, std::vector<double>{});
-    std::vector<IterationCallback::IPOPTOutput> solver_iteration_data;
-    std::vector<double> iteration_vector{};
-    std::vector<double> cost_vector{};
-    std::atomic<bool> solving(true);
-
-    std::thread solver_thread([&]() {
-        std::cout << "Starting Solve" << std::endl;
-        res = solver_(solver_args);
-        solving = false;
-      });
-    plt::ion();
-    // plt::show();
-
-    while (solving) {
-      std::unique_lock<std::mutex> lock(*callback_data_mutex_);
-      if (!callback_data_buffer_->empty()) {
-        // Retrieve data from queue
-        IterationCallback::IPOPTOutput data(callback_data_buffer_->back());
-        callback_data_buffer_->pop_back();
-
-        // Matplotlib
-        solver_iteration_data.push_back(data);
-        iteration_vector.push_back(data.iteration);
-        cost_vector.push_back(data.f);
-
-        plt::clf();
-        plt::plot(iteration_vector, cost_vector);
-
-        // Publish to RVIZ
-        ghost_msgs::msg::LabeledVectorMap msg{};
-        ghost_ros_interfaces::msg_helpers::toROSMsg(generateTrajectoryMap(data.x), msg);
-        publishMPCTrajectory(msg);
-
-      }
-      lock.unlock();
-
-      if (true) { // plot
-        plt::pause(0.01);
-      } else {
-        std::this_thread::sleep_for(10ms);
-      }
-    }
     return res;
   }
 
@@ -983,10 +944,47 @@ int main(int argc, char * argv[])
       rclcpp::spin(node_ptr);
     });
 
-  node_ptr->initSolver();
-  auto res = node_ptr->runSolver();
+  plt::figure();
+  plt::plot(std::vector<double>{}, std::vector<double>{});
+  std::vector<IterationCallback::IPOPTOutput> solver_iteration_data;
+  std::vector<double> iteration_vector{};
+  std::vector<double> cost_vector{};
+  std::atomic<bool> solving(true);
 
-  std::cout << "Does this work" << std::endl;
+  // plt::ion();
+  // plt::show();
+
+  // while (solving) {
+  //   std::unique_lock<std::mutex> lock(*callback_data_mutex_);
+  //   if (!callback_data_buffer_->empty()) {
+  //     // Retrieve data from queue
+  //     IterationCallback::IPOPTOutput data(callback_data_buffer_->back());
+  //     callback_data_buffer_->pop_back();
+
+  //     // Matplotlib
+  //     solver_iteration_data.push_back(data);
+  //     iteration_vector.push_back(data.iteration);
+  //     cost_vector.push_back(data.f);
+
+  //     plt::clf();
+  //     plt::plot(iteration_vector, cost_vector);
+
+  //     // Publish to RVIZ
+  //     ghost_msgs::msg::LabeledVectorMap msg{};
+  //     ghost_ros_interfaces::msg_helpers::toROSMsg(generateTrajectoryMap(data.x), msg);
+  //     publishMPCTrajectory(msg);
+
+  //   }
+  //   lock.unlock();
+
+  //   if (true) {   // plot
+  //     plt::pause(0.01);
+  //   } else {
+  //     std::this_thread::sleep_for(10ms);
+  //   }
+  // }
+
+  auto res = node_ptr->runSolver();
 
   auto raw_solution_vector = std::vector<double>(res.at("x"));
   ghost_msgs::msg::LabeledVectorMap msg{};
@@ -1093,6 +1091,7 @@ int main(int argc, char * argv[])
 
   plt::figure();
   for (int k = 0; k < NUM_KNOTS; k++) {
+    break;
     plt::clf();
     double x = state_solution_map["base_pose_x"][k];
     double y = state_solution_map["base_pose_y"][k];
@@ -1270,6 +1269,7 @@ int main(int argc, char * argv[])
   plt::subplot(2, 2, 4);
   plt::plot(time_vector, state_solution_map["m4_wheel_vel"]);
 
+  plt::ion();
   plt::pause(0.1);
   plt::show();
 

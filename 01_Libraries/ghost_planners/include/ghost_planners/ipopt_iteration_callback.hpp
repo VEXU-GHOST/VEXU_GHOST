@@ -24,6 +24,8 @@
 #pragma once
 
 #include <atomic>
+#include <deque>
+#include <vector>
 #include <mutex>
 #include <memory>
 
@@ -31,7 +33,7 @@
 
 using namespace casadi;
 
-namespace ghost_swerve_mpc_planner
+namespace ghost_planners
 {
 class IterationCallback : public casadi::Callback
 {
@@ -41,22 +43,35 @@ public:
     IPOPTOutput()
     {
     }
+
     IPOPTOutput(const IPOPTOutput & rhs)
     {
-      x = rhs.x;
-      g = rhs.g;
-      f = rhs.f;
-      lam_x = rhs.lam_x;
-      lam_g = rhs.lam_g;
+      state_vector = rhs.state_vector;
+      constraint_vector = rhs.constraint_vector;
+      cost = rhs.cost;
+      state_lagrange_multipliers = rhs.state_lagrange_multipliers;
+      constraint_lagrange_multipliers = rhs.constraint_lagrange_multipliers;
       iteration = rhs.iteration;
     }
 
+    bool operator==(const IPOPTOutput & rhs) const
+    {
+      bool eq = true;
+      eq &= (iteration == rhs.iteration);
+      eq &= (std::fabs(cost - rhs.cost) < 2 * std::numeric_limits<double>::epsilon());
+      eq &= (state_vector == rhs.state_vector);
+      eq &= (constraint_vector == rhs.constraint_vector);
+      eq &= (state_lagrange_multipliers == rhs.state_lagrange_multipliers);
+      eq &= (constraint_lagrange_multipliers == rhs.constraint_lagrange_multipliers);
+      return eq;
+    }
+
     int iteration;
-    std::vector<double> x;
-    std::vector<double> g;
-    double f = 0.0;
-    std::vector<double> lam_x;
-    std::vector<double> lam_g;
+    double cost = 0.0;
+    std::vector<double> state_vector;
+    std::vector<double> constraint_vector;
+    std::vector<double> state_lagrange_multipliers;
+    std::vector<double> constraint_lagrange_multipliers;
   };
 
   IterationCallback(
@@ -94,4 +109,4 @@ public:
   mutable int iteration_count_ = 1;
 };
 
-} // namespace ghost_swerve_mpc_planner
+} // namespace ghost_planners
