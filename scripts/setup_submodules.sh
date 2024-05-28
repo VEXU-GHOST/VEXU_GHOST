@@ -24,11 +24,10 @@ install_submodule() {
         'ipopt'
         'matplotlibcpp'
         'mumps'
-        'plotjuggler'
-        'plotjuggler-ros'
         'rplidar'
-        'bt-cpp'
-        'bt-ros'
+        'btcpp'
+        'btros2'
+        'btros2-interfaces'
     )
 
     supported_archs=(
@@ -113,22 +112,18 @@ fi
 
 echo; echo
 
-echo "------------ PLOTJUGGLER -------------"
-install_submodule plotjuggler
-echo; echo
-
-echo "----------- PLOTJUGGLER-ROS ----------"
-install_submodule plotjuggler-ros
-echo; echo
-
-echo "-------------- RPLIDAR ---------------"
+echo "--------------- RPLIDAR ---------------"
 install_submodule rplidar
 echo; echo
 
-echo "--------------- BT-CPP ---------------"
-install_submodule bt-cpp
+echo "--------------- BTCPP ---------------"
+install_submodule btcpp
 echo; echo
 
-echo "--------------- BT-ROS ---------------"
-install_submodule bt-ros
+echo "--------------- BTROS2 ---------------"
+install_submodule btros
+echo; echo
+
+echo "--------------- BTROS2-INTERFACES ---------------"
+install_submodule btros-interfaces
 echo; echo
