@@ -531,7 +531,5 @@ void toROSMsg(
   msg.state_lagrange_multipliers = solver_output.state_lagrange_multipliers;
   msg.constraint_lagrange_multipliers = solver_output.constraint_lagrange_multipliers;
 }
-
 } // namespace msg_helpers
-
 } // namespace ghost_ros_interfaces
