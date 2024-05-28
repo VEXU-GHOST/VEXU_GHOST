@@ -36,13 +36,18 @@ MoveToPoseCubic::MoveToPoseCubic(const std::string& name, const BT::NodeConfig& 
 	rhi_ptr_(rhi_ptr),
 	node_ptr_(node_ptr),
 	swerve_ptr_(swerve_ptr){
-	node_ptr_->declare_parameter("behavior_tree.cubic_planner_topic", "/motion_planner/cubic_command");
-	std::string cubic_planner_topic = node_ptr_->get_parameter("behavior_tree.cubic_planner_topic").as_string();
+	if(!node_ptr_->has_parameter("behavior_tree.cubic_planner_topic")){
+		node_ptr_->declare_parameter(
+		"behavior_tree.cubic_planner_topic",
+		"/motion_planner/cubic_command");
+	}
+	std::string cubic_planner_topic =
+		node_ptr_->get_parameter("behavior_tree.cubic_planner_topic").as_string();
 
-  command_pub_ = node_ptr_->create_publisher<ghost_msgs::msg::DrivetrainCommand>(
-    cubic_planner_topic,
-    10);
-  started_ = false;
+	command_pub_ = node_ptr_->create_publisher<ghost_msgs::msg::DrivetrainCommand>(
+		cubic_planner_topic,
+		10);
+	started_ = false;
 }
 
 // It is mandatory to define this STATIC method.
