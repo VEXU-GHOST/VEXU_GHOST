@@ -125,5 +125,5 @@ install_submodule btros2
 echo; echo
 
 echo "--------------- BTROS2-INTERFACES ---------------"
-install_submodule btros-interfaces
+install_submodule btros2-interfaces
 echo; echo
