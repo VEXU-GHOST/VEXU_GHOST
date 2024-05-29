@@ -12,24 +12,45 @@
         <color rgba="1 1 1 1"/>
      </material>
    
-     <link name="base_link">
-      <inertial>
+    <link name="base_link">
+        <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="5"/>
-        <inertia
-          ixx="0.105847" ixy="0.0" ixz="0.0"
-          iyy="0.105847" iyz="0.0"
-          izz="0.090726"/>
-      </inertial>
-      <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-         <geometry>
-           <box size= "0 0 0" />
-         </geometry>
-         <material name="white"/>
-       </visual>
-     </link>
+        <geometry>
+            <box size="0 0 0"/>
+        </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+        </visual>
+        <collision>
+        <geometry>
+            <box size="0 0 0"/>
+        </geometry>
+          <surface>
+        <friction>
+          <ode>
+         <mu>0.01</mu>
+            <mu2>1.0</mu2> 
+          </ode>
+        </friction>
+      </surface>
+        </collision>
 
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="5"/>
+            <inertia
+                ixx="0.0" ixy="0.0" ixz="0.0"
+                iyy="0.094839" iyz="0.0"
+                izz="0.182903"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
+    </link>
+
+   
      <link name="back_bar">
         <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -40,6 +61,18 @@
                 <color rgba="0.9 0.9 0.9 1.0"/>
             </material>
         </visual>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="10"/>
+            <inertia
+                ixx="0.0914" ixy="0.0" ixz="0.0"
+                iyy="0.000672" iyz="0.0"
+                izz="0.0910"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
     </link>    
 
     <joint name="back_bar_joint" type="fixed">
@@ -59,6 +92,18 @@
                 <color rgba="0.9 0.9 0.9 1.0"/>
             </material>
         </visual>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="10"/>
+            <inertia
+                ixx="0.0914" ixy="0.0" ixz="0.0"
+                iyy="0.000672" iyz="0.0"
+                izz="0.0910"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
     </link>
 
     <joint name="left_bar_joint" type="fixed">
@@ -78,6 +123,18 @@
                 <color rgba="0.9 0.9 0.9 1.0"/>
             </material>
     </visual>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="10"/>
+            <inertia
+                ixx="0.0914" ixy="0.0" ixz="0.0"
+                iyy="0.000672" iyz="0.0"
+                izz="0.0910"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
     </link>
 
     <joint name="right_bar_joint" type="fixed">
@@ -88,60 +145,128 @@
     </joint>
 
  <!--Wheel Modules-->   
-    <xacro:wheel_macro id="front_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  roller_width="${roller_width}" roller_radius="${roller_radius}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="front_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  roller_width="${roller_width}" roller_radius="${roller_radius}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="back_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}" roller_width="${roller_width}" roller_radius="${roller_radius}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="back_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  roller_width="${roller_width}" roller_radius="${roller_radius}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="middle_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  roller_width="${roller_width}" roller_radius="${roller_radius}" collision_factor="8"></xacro:wheel_macro>
-    <xacro:wheel_macro id="middle_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  roller_width="${roller_width}" roller_radius="${roller_radius}" collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="front_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="front_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="middle_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8"></xacro:wheel_macro>
+    <xacro:wheel_macro id="middle_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8"></xacro:wheel_macro>
 
-    <joint name="wheel_joint_back_left" type="continuous">
+    <joint name="wheel_joint_back_left" type="fixed">
         <parent link="left_bar"/>
         <child link="wheel_link_back_left"/>
         <origin xyz="-0.0254 -0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/> 
-        <dynamics damping="0.0" friction="0.0"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="wheel_joint_back_right" type="continuous">
+    <joint name="wheel_joint_back_right" type="fixed">
         <parent link="right_bar"/>
         <child link="wheel_link_back_right"/>
         <origin xyz="0.0254 -0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <dynamics damping="0.0" friction="0.0"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="wheel_joint_front_left" type="continuous">
+    <joint name="wheel_joint_front_left" type="fixed">
         <parent link="left_bar"/>
         <child link="wheel_link_front_left"/>
         <origin xyz="-0.0254 0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <dynamics damping="0.0" friction="0.0"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="wheel_joint_front_right" type="continuous">
+    <joint name="wheel_joint_front_right" type="fixed">
         <parent link="right_bar"/>
         <child link="wheel_link_front_right"/>
         <origin xyz="0.0254 0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <dynamics damping="0.0" friction="0.0"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
-        <joint name="wheel_joint_middle_left" type="continuous">
+        <joint name="wheel_joint_middle_left" type="fixed">
         <parent link="left_bar"/>
         <child link="wheel_link_middle_left"/>
         <origin xyz="-0.0254 0 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <dynamics damping="0.0" friction="0.0"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
-    <joint name="wheel_joint_middle_right" type="continuous">
+    <joint name="wheel_joint_middle_right" type="fixed">
         <parent link="right_bar"/>
         <child link="wheel_link_middle_right"/>
         <origin xyz="0.0254 0 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <dynamics damping="0.0" friction="0.0"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
+<gazebo reference= "base_link">
+      <collision>
+      <geometry>
+        <box size= "0 0 0" />
+      </geometry>
+          <surface>
+        <friction>
+          <ode>
+        <mu>0.5</mu>
+        <mu2>0.01</mu2> 
+        <fdir1>1 0 0</fdir1>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+  <!-- <gazebo reference= "back_bar">
+      <collision>
+      <geometry>
+        <box size= "0.0127 0.3302 0.0254" />
+      </geometry>
+          <surface>
+        <friction>
+          <ode>
+        <mu>0.01</mu>
+        <mu2>1.0</mu2> 
+        <fdir1>1 0 0</fdir1>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+  <gazebo reference= "left_bar">
+      <collision>
+      <geometry>
+        <box size= "0.0127 0.3302 0.0254" />
+      </geometry>
+          <surface>
+        <friction>
+          <ode>
+        <mu>0.01</mu>
+        <mu2>1.0</mu2> 
+        <fdir1>1 0 0</fdir1>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+    <gazebo reference= "right_bar">
+      <collision>
+      <geometry>
+        <box size= "0.0127 0.3302 0.0254" />
+      </geometry>
+          <surface>
+        <friction>
+          <ode>
+        <mu>0.01</mu>
+        <mu2>1.0</mu2> 
+        <fdir1>1 0 0</fdir1>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo> -->
+  
 
 </robot>
