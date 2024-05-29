@@ -9,6 +9,13 @@ on:
     branches:
       - master
       - develop
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Host tmate session on failure for debugging.'
+        required: false
+        default: false
     
 jobs:
   build-and-test:
@@ -54,7 +61,7 @@ jobs:
 
       - name: Build Submodules
         run: ./scripts/setup_submodules.sh
-
+        
       - name: Build
         run: |
           env > ~/temp_env_1
@@ -62,6 +69,13 @@ jobs:
           source $VEXU_HOME/install/setup.bash
           env > ~/temp_env_2
           diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
-
+        
       - name: Test
         run: ./scripts/test_full.sh
+
+      - name: Open TMate Session
+        if: ${{ failure() }} 
+      # && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true

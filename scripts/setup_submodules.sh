@@ -1,5 +1,56 @@
 #!/bin/bash
 
+exit_unsupported_pkg() {
+    pkg=$1
+
+    echo "Failure: Unsupported package: $pkg. Please notify maintainers of ghost_dependencies!"
+    echo "https://github.com/VEXU-GHOST/ghost_dependencies"
+    exit -1
+}
+
+exit_unsupported_arch() {
+    arch=$1
+
+    echo "Failure: Unsupported processure architecture: $arch. Please notify maintainers of ghost_dependencies!"
+    echo "https://github.com/VEXU-GHOST/ghost_dependencies"
+    exit -1
+}
+
+install_submodule() {
+    pkg=$1
+
+    supported_pkgs=(
+        'casadi'
+        'ipopt'
+        'matplotlibcpp'
+        'mumps'
+        'rplidar'
+        'btcpp'
+        'btros2'
+        'btros2-interfaces'
+    )
+
+    supported_archs=(
+        'amd64'
+        'arm64'
+    )
+
+    # Check if given pkg is supported
+    if [[ ! " ${supported_pkgs[*]} " =~ " $pkg " ]]; then
+        exit_unsupported_pkg $pkg
+    fi
+
+    # Check if given arch is supported 
+    if [[ ! " ${supported_archs[*]} " =~ " $arch " ]]; then
+        exit_unsupported_arch $arch
+    fi
+
+    sudo wget https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/ghost-$pkg-$arch.deb || exit -1
+    sudo --preserve-env=VEXU_HOME dpkg -i ghost-$pkg-$arch.deb || exit -1
+    sudo rm ghost-$pkg-$arch.deb
+}
+
+
 # Verify repo path is set
 if [ -z "${VEXU_HOME}" ]
 then
@@ -8,74 +59,40 @@ then
 fi
 
 cd $VEXU_HOME
+git submodule init
 git submodule update --recursive
+
+# Get processor architecture to determine proper .deb source
+arch=$(dpkg --print-architecture)
+
 
 # Build matplotlib-cpp
 echo "--------------- MATPLOTLIB_CPP ---------------"
-if [ ! -d "${VEXU_HOME}/09_External/matplotlib-cpp/build" ];
-then
-	cd $VEXU_HOME/09_External/matplotlib-cpp
-	mkdir build && cd build
+install_submodule matplotlibcpp
+echo; echo
 
-	cmake ..          || exit -1
-	make              || exit -1
-	sudo make install || exit -1
-
-	cd ../..
-else
-	echo "Build already exists"
-fi
-echo
-echo
 
 # Build Mumps
 echo "--------------- MUMPS ---------------"
-cd $VEXU_HOME/09_External/ThirdParty-Mumps
 
 sudo apt install gfortran-10 liblapack-dev pkg-config --install-recommends -y || exit -1
 sudo apt install swig -y                                                      || exit -1
 
 export FC=$(which gfortran-10)
 
-./configure       || exit -1
-make              || exit -1
-sudo make install || exit -1
+install_submodule mumps
+echo; echo
 
-cd ..
-
-echo
-echo
 
 # Build IPOPT
 echo "--------------- IPOPT ---------------"
-cd Ipopt
-
-./configure       || exit -1
-make              || exit -1
-make test         || exit -1
-sudo make install || exit -1
-
-echo
-echo
+install_submodule ipopt
+echo; echo
 
 # Build Casadi
 echo "--------------- CASADI ---------------"
-if [ ! -d "${VEXU_HOME}/09_External/casadi/build" ];
-then
-	cd $VEXU_HOME/09_External/casadi
-	mkdir build && cd build
-
-	cmake -DWITH_PYTHON=ON -DWITH_IPOPT=ON -DWITH_OPENMP=ON -DWITH_THREAD=ON .. || exit -1
-	make                                                                        || exit -1
-	sudo make install                                                           || exit -1
-
-	cd ../..
-else
-        echo "Build already exists"
-fi
-
-echo
-echo
+install_submodule casadi
+echo; echo
 
 # Build Casadi Tutorial CPP
 echo "--------------- CASADI_TUTORIAL_CPP ---------------"
@@ -93,5 +110,20 @@ else
         echo "Build already exists"
 fi
 
-echo
-echo
+echo; echo
+
+echo "--------------- RPLIDAR ---------------"
+install_submodule rplidar
+echo; echo
+
+echo "--------------- BTCPP ---------------"
+install_submodule btcpp
+echo; echo
+
+echo "--------------- BTROS2 ---------------"
+install_submodule btros2
+echo; echo
+
+echo "--------------- BTROS2-INTERFACES ---------------"
+install_submodule btros2-interfaces
+echo; echo
