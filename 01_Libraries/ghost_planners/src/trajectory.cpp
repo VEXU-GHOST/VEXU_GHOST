@@ -144,4 +144,17 @@ std::vector<double> Trajectory::getStateTrajectory(
   }
   return state_trajectory;
 }
+
+std::vector<double> Trajectory::getFlattenedTrajectory(
+  const std::vector<double> & time_vector) const
+{
+  std::vector<double> flattened_trajectory;
+  flattened_trajectory.reserve(m_state_vector_size * time_vector.size());
+
+  for (const auto & t : time_vector) {
+    auto node = getNode(t);
+    flattened_trajectory.insert(flattened_trajectory.end(), node.begin(), node.end());
+  }
+  return flattened_trajectory;
+}
 } // namespace ghost_planners

@@ -120,6 +120,22 @@ public:
     const std::vector<double> & time_vector) const;
 
   /**
+   * @brief Returns Nodes sampled at each timestep flattened as a single vector.
+   *
+   * Example:
+   *
+   * time = [1.0, 2.0, 3.0]
+   * x1 =   [5.0, 5.5, 6.0]
+   * x2 =   [2.0, 2.5, 2.0]
+   *
+   * returns [5.0, 2.0, 5.5, 2.5, 6.0, 2.0]
+   *
+   * @param time_vector
+   * @return std::vector<double>
+   */
+  std::vector<double> getFlattenedTrajectory(const std::vector<double> & time_vector) const;
+
+  /**
    * @brief Get vector of state names
    *
    * @return const std::vector<std::string>&
