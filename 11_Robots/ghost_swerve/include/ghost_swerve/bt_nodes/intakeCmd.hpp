@@ -40,7 +40,8 @@ public:
     std::shared_ptr<SwerveModel> swerve_ptr,
     double burnout_absolute_rpm_threshold,
     double burnout_stall_duration_ms,
-    double burnout_cooldown_duration_ms);
+    double burnout_cooldown_duration_ms,
+				double lift_setpoint);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -56,6 +57,7 @@ private:
   double burnout_absolute_rpm_threshold_;
   double burnout_stall_duration_ms_;
   double burnout_cooldown_duration_ms_;
+	double lift_setpoint_;
   std::chrono::time_point<std::chrono::system_clock> intake_stall_start_;
   std::chrono::time_point<std::chrono::system_clock> intake_cooldown_start_;
 
