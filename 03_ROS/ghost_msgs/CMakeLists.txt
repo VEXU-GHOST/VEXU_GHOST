@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(ghost_msgs)
 
 # Add Global CMake Config for Ghost Packages
-set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 find_package(Ghost CONFIG REQUIRED)
 
 # find dependencies
@@ -13,8 +13,8 @@ find_package(geometry_msgs REQUIRED)
 
 # Custom Msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/util/LabeledFloat.msg"
-  "msg/util/LabeledFloatMap.msg"
+  "msg/util/LabeledDouble.msg"
+  "msg/util/LabeledDoubleMap.msg"
   "msg/util/LabeledVector.msg"
   "msg/util/LabeledVectorMap.msg"
   "msg/device_msgs/V5DeviceHeader.msg"

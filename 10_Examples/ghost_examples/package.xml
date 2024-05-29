@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Provides example code for new VEXU team members</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
-  <license>GPLv3.0</license>
+  <license>MIT</license>
 
   <!--
     In a ROS Package, the package.xml and CMakeLists.txt are what tell the compiler how to build the code in the package.

@@ -76,7 +76,6 @@ port_configuration:
                 stall_current: 4.25
                 nominal_voltage: 12.0
                 gear_ratio: 1.0
-            serial:                
+            serial:
                 send_torque_command: true
                 send_temp_data: true
-

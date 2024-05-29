@@ -5,13 +5,11 @@
   <version>0.0.0</version>
   <description>Provides libraries for msg handling over serial interfaces</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
-  <license>GPLv3.0</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>ament_cmake_gtest</build_depend>
   
-  <build_depend>ghost_msgs</build_depend>
-
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
