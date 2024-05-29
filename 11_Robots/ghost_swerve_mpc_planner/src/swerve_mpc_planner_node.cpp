@@ -197,6 +197,9 @@ public:
   {
     trajectory_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
       "/trajectory/swerve_mpc_trajectory", 10);
+
+    ipopt_output_publisher_ = create_publisher<ghost_msgs::msg::IPOPTOutput>(
+      "/ipopt_output", 10);
   }
 
   void generateStateNames()
@@ -703,25 +706,22 @@ public:
     }
   }
 
-  void initSolver(std::shared_ptr<std::atomic_bool> exit_flag_ptr = nullptr)
+  void initSolver()
   {
     callback_data_buffer_ = std::make_shared<std::deque<IterationCallback::IPOPTOutput>>();
     callback_data_mutex_ = std::make_shared<std::mutex>();
-
-    if (!exit_flag_ptr) {
-      exit_flag_ptr = std::make_shared<std::atomic_bool>(false);
-    }
+    exit_flag_ptr_ = std::make_shared<std::atomic_bool>(false);
 
     iteration_callback_ = std::make_shared<IterationCallback>(
       num_opt_vars_,
       constraints_.size1(),
       callback_data_buffer_,
       callback_data_mutex_,
-      exit_flag_ptr);
+      exit_flag_ptr_);
 
     Dict solver_config{
       {"verbose", false},
-      {"ipopt.print_level", 5},
+      {"ipopt.print_level", 0},
       {"iteration_callback", *iteration_callback_},
       {"ipopt.max_iter", 750}
     };
@@ -737,6 +737,8 @@ public:
 
   std::map<std::string, DM> runSolver()
   {
+
+    *exit_flag_ptr_ = false;
 
     double init_pose_x = -1.0;
     double init_pose_y = 0.0;
@@ -790,9 +792,7 @@ public:
       init_m4_wheel_vel,
     };     // , 3.14159 / 4.0, 0.0};
 
-    std::cout << "Starting Solve" << std::endl;
     res = solver_(solver_args);
-    // solving = false;
 
     return res;
   }
@@ -810,6 +810,11 @@ public:
       throw std::runtime_error(
               "[SwerveMPCPlanner::getModulePosition] Module index cannot exceed the number of swerve modules!");
     }
+  }
+
+  void exitEarly()
+  {
+    *exit_flag_ptr_ = true;
   }
 
   const casadi::Matrix<casadi::SXElem> & getCost()
@@ -882,22 +887,29 @@ public:
   }
 
 private:
+  // Constants
   const double I2M = ghost_util::INCHES_TO_METERS;
+  std::vector<Eigen::Vector2d> module_positions_;
+  std::vector<std::string> state_names_;
+  std::vector<std::string> param_names_;
 
+  // Config
   Config config_;
   int num_knots_;
   int num_opt_vars_;
 
+  // ROS Publishers
   rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr trajectory_publisher_;
-  std::vector<Eigen::Vector2d> module_positions_;
-  std::vector<double> time_vector_;
+  rclcpp::Publisher<ghost_msgs::msg::IPOPTOutput>::SharedPtr ipopt_output_publisher_;
 
-  // Initialize containers for optimization variables
+  // Index Helpers
   std::unordered_map<std::string, int> state_index_map_;
-  casadi::Matrix<casadi::SXElem> state_vector_;
   std::unordered_map<std::string, int> param_index_map_;
-  casadi::Matrix<casadi::SXElem> param_vector_;
   std::unordered_map<std::string, int> weight_index_map_;
+
+  // Containers
+  casadi::Matrix<casadi::SXElem> state_vector_;
+  casadi::Matrix<casadi::SXElem> param_vector_;
   std::vector<double> weights_;
 
   casadi::Matrix<casadi::SXElem> cost_;
@@ -908,18 +920,17 @@ private:
   casadi::DM lbg_;
   casadi::DM ubg_;
 
-  std::vector<std::string> state_names_;
-  std::vector<std::string> param_names_;
-
+  std::vector<double> time_vector_;
   std::shared_ptr<ghost_planners::Trajectory> reference_trajectory_ptr_;
 
+  // Solver
   casadi::Function solver_;
+  std::shared_ptr<std::atomic_bool> exit_flag_ptr_;
 
+  // Callback
   std::shared_ptr<std::deque<IterationCallback::IPOPTOutput>> callback_data_buffer_;
   std::shared_ptr<std::mutex> callback_data_mutex_;
   std::shared_ptr<IterationCallback> iteration_callback_;
-
-
 };
 
 int main(int argc, char * argv[])
