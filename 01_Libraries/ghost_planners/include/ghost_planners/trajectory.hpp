@@ -21,6 +21,8 @@
  *   SOFTWARE.
  */
 
+#pragma once
+
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -112,12 +114,15 @@ public:
   /**
    * @brief Returns the full trajectory for an individual state as a timeseries
    *
-   * @param name
+   * @param name        name of relevant state
+   * @param time_vector times to sample
+   * @param time_offset shifts time vector by constant offset
    * @return std::vector<double>
    */
   std::vector<double> getStateTrajectory(
     const std::string & name,
-    const std::vector<double> & time_vector) const;
+    const std::vector<double> & time_vector,
+    double time_offset = 0.0) const;
 
   /**
    * @brief Returns Nodes sampled at each timestep flattened as a single vector.
@@ -130,10 +135,13 @@ public:
    *
    * returns [5.0, 2.0, 5.5, 2.5, 6.0, 2.0]
    *
-   * @param time_vector
+   * @param time_vector times to sample
+   * @param time_offset shifts time vector by constant offset
    * @return std::vector<double>
    */
-  std::vector<double> getFlattenedTrajectory(const std::vector<double> & time_vector) const;
+  std::vector<double> getFlattenedTrajectory(
+    const std::vector<double> & time_vector,
+    double time_offset = 0.0) const;
 
   /**
    * @brief Get vector of state names
@@ -154,6 +162,13 @@ public:
   {
     return m_state_vector_size;
   }
+
+  /**
+   * @brief Returns map with time series for each state variable
+   *
+   * @return std::unordered_map<std::string, std::vector<double>>
+   */
+  std::unordered_map<std::string, std::vector<double>> getStateTrajectoryMap();
 
   /**
    * @brief Returns the corresponding index in the state vector given a state name.

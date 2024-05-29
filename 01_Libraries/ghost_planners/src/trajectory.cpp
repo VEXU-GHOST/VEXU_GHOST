@@ -128,7 +128,8 @@ double Trajectory::getState(const std::string & name, double time) const
 
 std::vector<double> Trajectory::getStateTrajectory(
   const std::string & name,
-  const std::vector<double> & time_vector) const
+  const std::vector<double> & time_vector,
+  double time_offset) const
 {
   if (m_state_index_map.count(name) == 0) {
     throw std::runtime_error(
@@ -140,19 +141,19 @@ std::vector<double> Trajectory::getStateTrajectory(
   state_trajectory.reserve(time_vector.size());
 
   for (const auto & time : time_vector) {
-    state_trajectory.push_back(getState(name, time));
+    state_trajectory.push_back(getState(name, time + time_offset));
   }
   return state_trajectory;
 }
 
 std::vector<double> Trajectory::getFlattenedTrajectory(
-  const std::vector<double> & time_vector) const
+  const std::vector<double> & time_vector, double time_offset) const
 {
   std::vector<double> flattened_trajectory;
   flattened_trajectory.reserve(m_state_vector_size * time_vector.size());
 
   for (const auto & t : time_vector) {
-    auto node = getNode(t);
+    auto node = getNode(t + time_offset);
     flattened_trajectory.insert(flattened_trajectory.end(), node.begin(), node.end());
   }
   return flattened_trajectory;

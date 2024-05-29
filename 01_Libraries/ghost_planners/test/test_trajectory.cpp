@@ -82,6 +82,15 @@ TEST(TestTrajectory, testAddAndRetrieveNodes) {
       std::vector<double>{-10.0, 0.5, 10.0}),
     v4
   );
+
+  auto v5 = std::vector<double>{1.0, 0.75, 0.25, 0.0};
+  EXPECT_EQ(
+    trajectory.getStateTrajectory(
+      "s2",
+      std::vector<double>{-10.0, -0.25, 0.25, 10.0},
+      0.5),
+    v5
+  );
 }
 
 TEST(TestTrajectory, testGetTimeVector) {
@@ -166,6 +175,22 @@ TEST(TestTrajectory, testGetFlattenedTrajectory) {
   EXPECT_NO_THROW(
     flattened_trajectory =
     trajectory.getFlattenedTrajectory(std::vector<double>{0.5, 1.5}));
+
+  std::vector<double> expected_trajectory{5.25, 2.25, 5.75, 2.75};
+
+  EXPECT_EQ(flattened_trajectory, expected_trajectory);
+}
+
+TEST(TestTrajectory, testGetFlattenedTrajectoryTimeOffset) {
+  auto trajectory = Trajectory(std::vector<std::string>{"s1", "s2"});
+  EXPECT_NO_THROW(trajectory.addNode(0.0, std::vector<double>{5.0, 2.0}));
+  EXPECT_NO_THROW(trajectory.addNode(1.0, std::vector<double>{5.5, 2.5}));
+  EXPECT_NO_THROW(trajectory.addNode(2.0, std::vector<double>{6.0, 3.0}));
+
+  std::vector<double> flattened_trajectory;
+  EXPECT_NO_THROW(
+    flattened_trajectory =
+    trajectory.getFlattenedTrajectory(std::vector<double>{0.0, 1.0}, 0.5));
 
   std::vector<double> expected_trajectory{5.25, 2.25, 5.75, 2.75};
 
