@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- Wheel Macro -->
-    <xacro:macro name="wheel_macro" params="id r_wheel width_wheel collision_factor">
+    <xacro:macro name="wheel_macro" params="id r_wheel width_wheel collision_factor mu mu2 izz">
     <link name="wheel_link_${id}">
             <visual>
                 <geometry>
@@ -17,15 +17,7 @@
                 <origin xyz="0 0 0" rpy="0 0 0"/>
                 <geometry>
                     <cylinder radius="${r_wheel}" length="${width_wheel/collision_factor}"/>
-                </geometry>
-          <surface>
-        <friction>
-          <ode>
-         <mu>0.01</mu>
-            <mu2>1.0</mu2> 
-          </ode>
-        </friction>
-      </surface>                
+                </geometry>              
             </collision>
 
             <!--Inertia estimated for solid cylinder of radius 2.5" and height 1" with mass 1 lb-->
@@ -35,32 +27,9 @@
                 <inertia
                     ixx="0.000482" ixy="0.0" ixz="0.0"
                     iyy="0.000482" iyz="0.0"
-                    izz="0.000914"/>
+                    izz="${izz}"/>
             </inertial>
     </link>
-
-    <gazebo reference="wheel_${id}">
-        <collision>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <geometry>
-                <cylinder>
-                    <radius>${r_wheel}</radius>
-                    <length>${width_wheel/collision_factor}</length>
-                </cylinder>
-            </geometry>
-
-            <surface>
-                <friction>               
-                    <torsional>
-                        <coefficient>1.0</coefficient>
-                        <patch_radius>0.01</patch_radius>
-                    </torsional>
-                </friction>
-            </surface>
-        </collision>
-
-        <material>Gazebo/White</material>
-    </gazebo>
 
     <gazebo reference="wheel_link_${id}">
         <collision>
@@ -74,15 +43,11 @@
 
             <surface>
                 <friction>
-          <ode>
-        <mu>0.5</mu>
-        <mu2>0.01</mu2> 
-        <fdir1>1 0 0</fdir1>
-          </ode>                 
-                    <!-- <torsional>
-                        <coefficient>1.0</coefficient>
-                        <patch_radius>0.01</patch_radius>
-                    </torsional> -->
+                <ode>
+                    <mu>"${mu}"</mu>
+                    <mu2>"${mu2}"</mu2> 
+                    <fdir1>1 0 0</fdir1>
+                </ode>                 
                 </friction>
             </surface>
         </collision>
