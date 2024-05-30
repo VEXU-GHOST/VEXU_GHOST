@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ghost_high_stakes)
+project(ghost_sim_examples)
 
 		
 # Add Global CMake Config for Ghost Packages

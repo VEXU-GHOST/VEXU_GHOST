@@ -5,7 +5,7 @@ import os
 import xacro
 
 def generate_launch_description():
-    pkg_share = launch_ros.substitutions.FindPackageShare(package='ghost_high_stakes').find('ghost_high_stakes')
+    pkg_share = launch_ros.substitutions.FindPackageShare(package='ghost_sim_examples').find('ghost_sim_examples')
     xacro_path = os.path.join(pkg_share, 'urdf/tankbot.xacro')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
 

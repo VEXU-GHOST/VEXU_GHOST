@@ -11,7 +11,7 @@ from launch_ros.actions import Node
 
 # Opaque Function hack to allow for better CLI arg parsing
 def launch_setup(context, *args, **kwargs):
-    ghost_sim_share_dir = get_package_share_directory('ghost_high_stakes')
+    ghost_sim_share_dir = get_package_share_directory('ghost_sim_examples')
     filename = "tankbot.xacro"
 
     # Load URDF and process to text
@@ -57,7 +57,7 @@ def generate_launch_description():
     # Load relevant filepaths
     gazebo_ros_share_dir = get_package_share_directory('gazebo_ros')
     # ghost_ros_share_dir = get_package_share_directory('ghost_ros')
-    ghost_sim_share_dir = get_package_share_directory('ghost_high_stakes')
+    ghost_sim_share_dir = get_package_share_directory('ghost_sim_examples')
 
     home_dir = os.path.expanduser('~')
     # ghost_ros_base_dir = os.path.join(home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros")
@@ -78,17 +78,6 @@ def generate_launch_description():
             }.items()
     )
 
-    ground_truth_publisher = Node(
-        package='ghost_high_stakes',
-        executable='ground_truth_pose_publisher',
-        name='ground_truth_pose_publisher',
-    )
-
-    v5_actuator_cmd_publisher = Node(
-        package='ghost_high_stakes',
-        executable = 'test_publisher_v5_actuator_cmd',
-        name = 'test_publisher_v5_actuator_cmd',
-    )
 
 
     # rviz_node = Node(

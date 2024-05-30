@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot name="tankbot" xmlns:xacro="http://ros.org/wiki/xacro">
-    <xacro:include filename="$(find ghost_high_stakes)/urdf/tank_macros.xacro"/>
+    <xacro:include filename="$(find ghost_sim_examples)/urdf/tank_macros.xacro"/>
     <xacro:property name="r_wheel" value="0.034925"/> 
     <xacro:property name="width_wheel" value="0.0254"/> 
     <xacro:property name="roller_radius" value="0.00635"/>
