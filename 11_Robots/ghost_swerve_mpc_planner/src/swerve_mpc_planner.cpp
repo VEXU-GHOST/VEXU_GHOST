@@ -59,6 +59,9 @@ SwerveMPCPlanner::SwerveMPCPlanner()
 
 void SwerveMPCPlanner::loadConfig()
 {
+  declare_parameter("publish_intermediate_solutions", false);
+  publish_intermediate_solutions_ = get_parameter("publish_intermediate_solutions").as_bool();
+
   declare_parameter("time_horizon", 0.0);
   config_.time_horizon = get_parameter("time_horizon").as_double();
 
@@ -692,6 +695,19 @@ void SwerveMPCPlanner::initSolver()
     {"p", getParamVector()}};
 
   solver_ = nlpsol("swerve_mpc_planner", "ipopt", nlp_config, solver_config);
+
+  startSolverThread();
+}
+
+void SwerveMPCPlanner::startSolverThread()
+{
+  while (!*exit_flag_ptr_) {
+    if (solver_active_) {
+
+    } else {
+      std::this_thread::sleep_for(1ms);
+    }
+  }
 }
 
 DM SwerveMPCPlanner::convertVectorToDM(std::vector<double> vector)

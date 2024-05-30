@@ -249,6 +249,8 @@ public:
   }
 
 private:
+  void startSolverThread();
+
   // Constants
   const double I2M = ghost_util::INCHES_TO_METERS;
   std::vector<Eigen::Vector2d> module_positions_;
@@ -263,6 +265,7 @@ private:
   // ROS Publishers
   rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr trajectory_publisher_;
   rclcpp::Publisher<ghost_msgs::msg::IPOPTOutput>::SharedPtr ipopt_output_publisher_;
+  bool publish_intermediate_solutions_ = false;
 
   // Index Helpers
   std::unordered_map<std::string, int> state_index_map_;

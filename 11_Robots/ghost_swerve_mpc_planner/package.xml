@@ -20,6 +20,7 @@
   <depend>ghost_util</depend>
   <depend>ghost_planners</depend>
   <depend>ghost_ros_interfaces</depend>
+  <exec_depend>ghost_viz</exec_depend>
 
   <build_export_depend>ament_cmake</build_export_depend>
   <build_export_depend>ament_cmake_gtest</build_export_depend>

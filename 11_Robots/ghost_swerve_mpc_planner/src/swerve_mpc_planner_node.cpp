@@ -44,9 +44,6 @@ int main(int argc, char * argv[])
   signal(SIGINT, siginthandler);
 
   bool plot = true;
-  ////////////////////////////////////
-  /////// Instantiate ROS Node ///////
-  ////////////////////////////////////
   rclcpp::init(argc, argv);
 
   auto node_ptr = std::make_shared<SwerveMPCPlanner>();
@@ -321,100 +318,6 @@ int main(int argc, char * argv[])
       break;
     }
   }
-
-
-  plt::figure();
-  plt::quiver(x_pos, y_pos, x_vel, y_vel, std::map<std::string, std::string>{{"color", "black"}});
-  plt::quiver(
-    x_pos, y_pos, wheel_force_x_components, wheel_force_y_components,
-    std::map<std::string, std::string>{{"color", "red"}});
-  plt::quiver(
-    x_pos, y_pos, lateral_force_x_components, lateral_force_y_components,
-    std::map<std::string, std::string>{{"color", "blue"}});
-  plt::xlim(-1.0, 1.0);
-  plt::ylim(-1.0, 1.0);
-
-
-  plt::figure();
-  plt::suptitle("X");
-  plt::subplot(3, 1, 1);
-  plt::plot(time_vector, state_solution_map["base_pose_x"]);
-  plt::subplot(3, 1, 2);
-  plt::plot(time_vector, state_solution_map["base_vel_x"]);
-  plt::subplot(3, 1, 3);
-  plt::plot(time_vector, state_solution_map["base_accel_x"]);
-
-  plt::figure();
-  plt::suptitle("Y");
-  plt::subplot(3, 1, 1);
-  plt::plot(time_vector, state_solution_map["base_pose_y"]);
-  plt::subplot(3, 1, 2);
-  plt::plot(time_vector, state_solution_map["base_vel_y"]);
-  plt::subplot(3, 1, 3);
-  plt::plot(time_vector, state_solution_map["base_accel_y"]);
-
-  plt::figure();
-  plt::suptitle("Theta");
-  plt::subplot(3, 1, 1);
-  plt::plot(time_vector, state_solution_map["base_pose_theta"]);
-  plt::subplot(3, 1, 2);
-  plt::plot(time_vector, state_solution_map["base_vel_theta"]);
-  plt::subplot(3, 1, 3);
-  plt::plot(time_vector, state_solution_map["base_accel_theta"]);
-
-  plt::figure();
-  plt::suptitle("Wheel Steering");
-  plt::subplot(2, 2, 1);
-  plt::plot(time_vector, state_solution_map["m1_steering_angle"]);
-  plt::subplot(2, 2, 2);
-  plt::plot(time_vector, state_solution_map["m2_steering_angle"]);
-  plt::subplot(2, 2, 3);
-  plt::plot(time_vector, state_solution_map["m3_steering_angle"]);
-  plt::subplot(2, 2, 4);
-  plt::plot(time_vector, state_solution_map["m4_steering_angle"]);
-
-  plt::figure();
-  plt::suptitle("m1_forces");
-  plt::subplot(2, 1, 1);
-  plt::plot(time_vector, state_solution_map["m1_wheel_torque"]);
-  plt::subplot(2, 1, 2);
-  plt::plot(time_vector, state_solution_map["m1_lateral_force"]);
-
-  plt::figure();
-  plt::suptitle("m2_forces");
-  plt::subplot(2, 1, 1);
-  plt::plot(time_vector, state_solution_map["m2_wheel_torque"]);
-  plt::subplot(2, 1, 2);
-  plt::plot(time_vector, state_solution_map["m2_lateral_force"]);
-
-  plt::figure();
-  plt::suptitle("m3_forces");
-  plt::subplot(2, 1, 1);
-  plt::plot(time_vector, state_solution_map["m3_wheel_torque"]);
-  plt::subplot(2, 1, 2);
-  plt::plot(time_vector, state_solution_map["m3_lateral_force"]);
-
-  plt::figure();
-  plt::suptitle("m4_forces");
-  plt::subplot(2, 1, 1);
-  plt::plot(time_vector, state_solution_map["m4_wheel_torque"]);
-  plt::subplot(2, 1, 2);
-  plt::plot(time_vector, state_solution_map["m4_lateral_force"]);
-
-  plt::figure();
-  plt::suptitle("Wheel Velocities");
-  plt::subplot(2, 2, 1);
-  plt::plot(time_vector, state_solution_map["m1_wheel_vel"]);
-  plt::subplot(2, 2, 2);
-  plt::plot(time_vector, state_solution_map["m2_wheel_vel"]);
-  plt::subplot(2, 2, 3);
-  plt::plot(time_vector, state_solution_map["m3_wheel_vel"]);
-  plt::subplot(2, 2, 4);
-  plt::plot(time_vector, state_solution_map["m4_wheel_vel"]);
-
-  plt::ion();
-  plt::pause(0.1);
-  // plt::show();
 
   while (!(*EXIT_GLOBAL_PTR)) {
     std::this_thread::sleep_for(50ms);
