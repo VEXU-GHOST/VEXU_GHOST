@@ -72,7 +72,6 @@ def generate_launch_description():
             #     "robot_config_yaml_path": robot_config_yaml_path
             # }
         ],
-        arguments=[plugin_type, robot_name],
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 

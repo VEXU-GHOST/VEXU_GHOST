@@ -27,7 +27,6 @@
 
 #include "ghost_msgs/msg/drivetrain_command.hpp"
 #include "ghost_msgs/msg/robot_trajectory.hpp"
-#include "ghost_msgs/msg/v5_sensor_update.hpp"
 #include "ghost_util/angle_util.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 
@@ -92,7 +91,6 @@ public:
   }
 
 protected:
-  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
   rclcpp::Publisher<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_pub_;
   std::shared_ptr<rclcpp::Node> node_ptr_;
   double current_x_ = 0.0;
@@ -103,14 +101,11 @@ protected:
   double current_theta_vel_rad_ = 0.0;
 
 private:
-  void sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg);
-  void loadRobotHardwareInterface();
   void setNewCommand(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd);
   void odomCallback(nav_msgs::msg::Odometry::SharedPtr msg);
 
   bool configured_ = false;
   std::atomic_bool planning_ = false;
-  rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_sub_;
   rclcpp::Subscription<ghost_msgs::msg::DrivetrainCommand>::SharedPtr pose_command_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 };

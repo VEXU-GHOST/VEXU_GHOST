@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="close_triball">
+      main_tree_to_execute="both_triballs">
   <BehaviorTree ID="far_triball">
     <Sequence>
       <Logging message="started"/>
@@ -22,7 +22,7 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="-3000"
+                  timeout="-1000"
                   speed="0.5"/>
       <ReactiveFallback>
         <IntakeCmd in="true"/>
@@ -45,70 +45,80 @@
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="-2000"
+                  timeout="-1000"
                   speed="0.5"/>
       <SubTree ID="score"
                _autoremap="false"/>
-      <KeepRunningUntilFailure>
+      <!-- <KeepRunningUntilFailure>
         <CheckForRestart/>
-      </KeepRunningUntilFailure>
+      </KeepRunningUntilFailure> -->
     </Sequence>
   </BehaviorTree>
   <BehaviorTree ID="score">
     <Sequence>
       <MoveToPose posX="2.0"
-                  posY="-2.0"
-                  theta="-45"
+                  posY="-1.8"
+                  theta="135"
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
                   threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-5000"
-                  speed="0.3"/>
+                  timeout="-2000"
+                  speed="0.5"/>
       <MoveToPose posX="1.0"
-                  posY="-1.0"
-                  theta="-45"
+                  posY="-1.2"
+                  theta="135"
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
                   threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-5000"
-                  speed="0.3"/>
+                  timeout="-1500"
+                  speed="0.5"/>
       <MoveToPose posX="1.0"
-                  posY="-0.5"
-                  theta="-180"
+                  posY="-0.4"
+                  theta="180"
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
                   threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-5000"
-                  speed="0.3"/>
+                  timeout="-2000"
+                  speed="0.5"/>
       <ReactiveFallback>
         <IntakeCmd in="false"/>
         <MoveToPose posX="2.0"
-                    posY="-0.5"
-                    theta="-180"
+                    posY="-0.4"
+                    theta="180"
                     velX="0.0"
                     velY="0.0"
                     omega="0.0"
                     threshold="0.10"
                     angle_threshold="5.0"
-                    timeout="-2000"
+                    timeout="-1500"
                     speed="0.5"/>
       </ReactiveFallback>
       <MoveToPose posX="1.0"
-                  posY="-0.5"
-                  theta="-180"
+                  posY="-0.4"
+                  theta="180"
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
                   threshold="0.10"
                   angle_threshold="5.0"
-                  timeout="-5000"
-                  speed="0.3"/>
+                  timeout="-1000"
+                  speed="0.5"/>
+      <MoveToPose posX="1.0"
+                  posY="-1.2"
+                  theta="135"
+                  velX="0.0"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.10"
+                  angle_threshold="5.0"
+                  timeout="-1500"
+                  speed="0.5"/>
     </Sequence>
   </BehaviorTree>
   <BehaviorTree ID="score1">
@@ -183,7 +193,93 @@
       <Logging message="close triball"/>
       <ReactiveFallback>
         <IntakeCmd in="true"/>
-        <Delay delay_msec="5000">
+        <Delay delay_msec="3000">
+          <MoveToPose posX="-1.0"
+                      posY="-2.5"
+                      theta="0"
+                      velX="0.0"
+                      velY="0.0"
+                      omega="0.0"
+                      threshold="0.05"
+                      angle_threshold="5.0"
+                      timeout="-1000"
+                      speed="0.5"/>
+        </Delay>
+      </ReactiveFallback>
+      <MoveToPose posX="1.5"
+                  posY="-2.5"
+                  theta="0"
+                  velX="0.00"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.10"
+                  angle_threshold="5.0"
+                  timeout="-3000"
+                  speed="0.5"/>
+      <MoveToPose posX="2.2"
+                  posY="-1.8"
+                  theta="45"
+                  velX="0.00"
+                  velY="0.0"
+                  omega="0"
+                  threshold="0.08"
+                  angle_threshold="2.0"
+                  timeout="-1000"
+                  speed="0.5"/>
+      <SubTree ID="score"
+               _autoremap="false"/>
+      <!-- <KeepRunningUntilFailure>
+        <CheckForRestart/>
+      </KeepRunningUntilFailure>
+      <RetryUntilSuccessful num_attempts="-1">
+        <AutoDone/>
+      </RetryUntilSuccessful> -->
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="both_triballs">
+    <Sequence>
+      <SubTree ID="close_triball"
+               _autoremap="false"/>
+      <MoveToPose posX="2.0"
+                  posY="-1.8"
+                  theta="135"
+                  velX="0.0"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.05"
+                  angle_threshold="5.0"
+                  timeout="-1500"
+                  speed="0.5"/>
+      <SubTree ID="far_triball"
+               _autoremap="false"/>
+      <ReactiveFallback>
+        <IntakeCmd in="true"/>
+        <MoveToPose posX="0.3"
+                    posY="-1.7"
+                    theta="10"
+                    velX="0.0"
+                    velY="0.0"
+                    omega="0.0"
+                    threshold="0.05"
+                    angle_threshold="5.0"
+                    timeout="-2000"
+                    speed="0.5"/>
+      </ReactiveFallback>
+      <KeepRunningUntilFailure>
+        <CheckForRestart/>
+      </KeepRunningUntilFailure>
+      <RetryUntilSuccessful num_attempts="-1">
+        <AutoDone/>
+      </RetryUntilSuccessful>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test1">
+    <Sequence>
+      <ReactiveFallback>
+        <IntakeCmd in="true"/>
+        <Delay delay_msec="1000">
           <AlwaysSuccess/>
         </Delay>
         <!-- <MoveToPose posX="-2.6"
@@ -200,108 +296,39 @@
       <MoveToPose posX="1.5"
                   posY="-2.5"
                   theta="0"
-                  velX="0.00"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.10"
-                  angle_threshold="5.0"
-                  timeout="-5000"
-                  speed="0.3"/>
-      <!-- <MoveToPose posX="2.0"
-                  posY="-2.0"
-                  theta="135"
-                  velX="0.00"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.08"
-                  angle_threshold="2.0"
-                  timeout="1000"
-                  speed="0.5"/> -->
-      <!-- <SubTree ID="score"
-               _autoremap="false"/> -->
-      <KeepRunningUntilFailure>
-        <CheckForRestart/>
-      </KeepRunningUntilFailure>
-      <!-- <RetryUntilSuccessful num_attempts="-1">
-        <AutoDone/>
-      </RetryUntilSuccessful> -->
-    </Sequence>
-  </BehaviorTree>
-
-  <BehaviorTree ID="both_triballs">
-    <Sequence>
-      <SubTree ID="close_triball"
-               _autoremap="false"/>
-      <MoveToPose posX="2.0"
-                  posY="-2.0"
-                  theta="135"
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="-3000"
-                  speed="0.3"/>
-      <SubTree ID="far_triball"
-               _autoremap="false"/>
-      <KeepRunningUntilFailure>
-        <CheckForRestart/>
-      </KeepRunningUntilFailure>
-    </Sequence>
-  </BehaviorTree>
-
-  <BehaviorTree ID="test2">
-    <Sequence>
-      <MoveToPose posX="1.27"
-                  posY="0.0"
-                  theta="0"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="2000"
+                  timeout="-2000"
                   speed="0.7"/>
-      <MoveToPose posX="1.27"
-                  posY="0.60"
+      <ReactiveFallback>
+        <IntakeCmd in="false"/>
+        <Delay delay_msec="3000">
+          <AlwaysSuccess/>
+        </Delay>
+        <!-- <MoveToPose posX="-2.6"
+                    posY="-2.6"
+                    theta="45"
+                    velX="0.0"
+                    velY="0.0"
+                    omega="0.0"
+                    threshold="0.05"
+                    angle_threshold="5.0"
+                    timeout="-3000"
+                    speed="0.5"/> -->
+      </ReactiveFallback>
+      <MoveToPose posX="0.5"
+                  posY="-2.5"
                   theta="0"
                   velX="0.0"
                   velY="0.0"
                   omega="0.0"
                   threshold="0.05"
                   angle_threshold="5.0"
-                  timeout="1000"
+                  timeout="-2000"
                   speed="0.7"/>
-      <MoveToPose posX="0.87"
-                  posY="0.90"
-                  theta="-45"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="1000"
-                  speed="0.3"/>
-      <MoveToPose posX="0.87"
-                  posY="1.36"
-                  theta="-90"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.04"
-                  angle_threshold="2.0"
-                  timeout="200"
-                  speed="0.3"/>
-      <MoveToPose posX="0.67"
-                  posY="1.36"
-                  theta="0"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="1000"
-                  speed="0.5"/>
       <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>
