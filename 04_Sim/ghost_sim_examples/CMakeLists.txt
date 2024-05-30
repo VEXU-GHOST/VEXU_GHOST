@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(ghost_sim_examples)
 
-set(Ghost_DIR "$ENV{HOME}/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
   add_compile_options(-Wall -Wextra -Wpedantic)
 find_package(Ghost CONFIG REQUIRED)
 
