@@ -122,73 +122,7 @@
                   speed="0.5"/>
     </Sequence>
   </BehaviorTree>
-  <BehaviorTree ID="score1">
-    <Sequence>
-      <MoveToPoseCubic posX="2.0"
-                  posY="-2.0"
-                  theta="-90"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="1000"
-                  speed="0.5"/>
-      <MoveToPoseCubic posX="2.4"
-                  posY="-1.6"
-                  theta="-90"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="1000"
-                  speed="0.1"/>
-      <!-- <MoveToPoseCubic posX="2.2"
-                  posY="-1.8"
-                  theta="-90"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="2000"
-                  speed="0.1"/> -->
-      <!-- <MoveToPoseCubic posX="2.5"
-                  posY="-1.8"
-                  theta="-90"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="2000"
-                  speed="0.1"/> -->
-      <ReactiveFallback>
-        <IntakeCmd in="false"/>
-        <MoveToPoseCubic posX="2.4"
-                    posY="-1.0"
-                    theta="-90"
-                    velX="0.0"
-                    velY="0.0"
-                    omega="0.0"
-                    threshold="0.10"
-                    angle_threshold="5.0"
-                    timeout="-1000"
-                    speed="0.3"/>
-      </ReactiveFallback>
-      <MoveToPoseCubic posX="2.4"
-                  posY="-1.6"
-                  theta="-90"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="1000"
-                  speed="0.3"/>
-    </Sequence>
-  </BehaviorTree>
+ 
   <BehaviorTree ID="close_triball">
     <Sequence>
       <Logging message="close triball"/>
@@ -333,6 +267,65 @@
       <KeepRunningUntilFailure>
         <CheckForRestart/>
       </KeepRunningUntilFailure>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="search_and_destroy">
+    <KeepRunningUntilFailure>
+      <Sequence>
+        <ReactiveFallback>
+          <IntakeCmd in="true"/>
+          <KeepRunningUntilFailure>
+            <SubTree ID="loop_goal"/>
+          </KeepRunningUntilFailure>
+        </ReactiveFallback>
+        <SubTree ID="score"/>
+      </Sequence>
+    </KeepRunningUntilFailure>
+  </BehaviorTree>
+
+  <BehaviorTree ID="loop_goal">
+    <Sequence>
+      <MoveToPoseCubic posX="0.5"
+                       posY="-1.5"
+                       theta="90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-5000"
+                       speed="0.3"/>
+      <MoveToPoseCubic posX="1.3"
+                       posY="-1.5"
+                       theta="180"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-2000"
+                       speed="0.1"/>
+      <MoveToPoseCubic posX="1.3"
+                       posY="1.5"
+                       theta="270"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-2000"
+                       speed="0.3"/>
+      <MoveToPoseCubic posX="0.5"
+                       posY="1.5"
+                       theta="0"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-5000"
+                       speed="0.1"/>
     </Sequence>
   </BehaviorTree>
 
