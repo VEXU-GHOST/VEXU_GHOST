@@ -90,8 +90,7 @@ int main(int argc, char * argv[])
   plt::figure();
   plt::plot();
 
-  int curr_iteration = 0;
-  int iteration_counter = 0;
+  int curr_iteration = -1;
 
   while (!(*EXIT_GLOBAL_PTR)) {
     if (!traj_map_buffer_ptr->empty()) {
@@ -99,12 +98,12 @@ int main(int argc, char * argv[])
       std::unique_lock<std::mutex> lock(*callback_mutex_ptr);
       auto latest_msg = traj_map_buffer_ptr->back();
       traj_map_buffer_ptr->pop_back();
-      iteration_counter++;
-      for (int i = 0; i < skip_factor - 1; i++) {
-        traj_map_buffer_ptr->pop_back();
-        iteration_counter++;
-      }
+      curr_iteration++;
       lock.unlock();
+
+      if (curr_iteration % skip_factor != 0) {
+        continue;
+      }
 
       std::unordered_map<std::string, std::vector<double>> trajectory_map;
       fromROSMsg(trajectory_map, latest_msg);
@@ -284,7 +283,6 @@ int main(int argc, char * argv[])
         plt::title(std::string("Iteration ") + std::to_string(curr_iteration));
         plt::pause(DT);
       }
-      curr_iteration = iteration_counter;
     }
     std::this_thread::sleep_for(1ms);
   }
