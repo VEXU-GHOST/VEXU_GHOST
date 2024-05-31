@@ -54,8 +54,6 @@ public:
   void onHalted();
 
 private:
-  double lift_target;
-  bool claw_auto_extended;
   template<typename T>
   T get_input(std::string key);
   float tempPID(
@@ -66,6 +64,10 @@ private:
   std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
   std::shared_ptr<SwerveModel> swerve_ptr_;
   std::chrono::time_point<std::chrono::system_clock> start_time_;
+
+  double lift_target;
+  bool climbing_ = false;
+  bool reaching_ = false;
 };
 
 } // namespace ghost_swerve

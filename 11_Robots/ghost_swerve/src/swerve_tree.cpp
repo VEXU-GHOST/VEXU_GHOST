@@ -49,7 +49,7 @@ SwerveTree::SwerveTree(std::string bt_path,
 	factory.registerNodeType<Climb>("Climb", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
 	factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, swerve_ptr);
 
-  tree_ = factory.createTreeFromFile(bt_path_);
+    tree_ = factory.createTreeFromFile(bt_path_);
 }
 
 void SwerveTree::tick_tree()

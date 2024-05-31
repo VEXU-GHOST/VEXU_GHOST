@@ -294,9 +294,9 @@
                        omega="0.0"
                        threshold="0.05"
                        angle_threshold="5.0"
-                       timeout="-5000"
+                       timeout="-3000"
                        speed="0.3"/>
-      <MoveToPoseCubic posX="1.3"
+      <MoveToPoseCubic posX="0.7"
                        posY="-1.5"
                        theta="180"
                        velX="0.0"
@@ -304,34 +304,102 @@
                        omega="0.0"
                        threshold="0.05"
                        angle_threshold="5.0"
-                       timeout="-2000"
-                       speed="0.1"/>
-      <MoveToPoseCubic posX="1.3"
-                       posY="1.5"
+                       timeout="-3000"
+                       speed="0.3"/>
+      <MoveToPoseCubic posX="1.0"
+                       posY="-1.5"
+                       theta="180"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="0.3"/>
+      <MoveToPoseCubic posX="1.0"
+                       posY="-0.5"
                        theta="270"
                        velX="0.0"
                        velY="0.0"
                        omega="0.0"
                        threshold="0.05"
                        angle_threshold="5.0"
-                       timeout="-2000"
+                       timeout="-3000"
                        speed="0.3"/>
-      <MoveToPoseCubic posX="0.5"
-                       posY="1.5"
-                       theta="0"
+      <MoveToPoseCubic posX="1.0"
+                       posY="0.0"
+                       theta="270"
                        velX="0.0"
                        velY="0.0"
                        omega="0.0"
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-5000"
+                       speed="0.3"/>
+      <MoveToPoseCubic posX="0.8"
+                       posY="0.0"
+                       theta="0"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="0.3"/>
+      <MoveToPoseCubic posX="0.5"
+                       posY="0.0"
+                       theta="0"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="0.3"/>
+      <MoveToPoseCubic posX="0.5"
+                       posY="-0.5"
+                       theta="90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="0.3"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="climb">
+    <Sequence>
+      <MoveToPoseCubic posX="1.5"
+                       posY="-2.0"
+                       theta="180"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="0.3"/>
+      <MoveToPoseCubic posX="0.5"
+                       posY="-2.0"
+                       theta="180"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
                        speed="0.1"/>
+      <Climb/>
     </Sequence>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
     <Action ID="CheckForRestart"
+            editable="true"/>
+    <Action ID="Climb"
             editable="true"/>
     <!-- <Action ID="AutoDone"
             editable="true"/> -->
