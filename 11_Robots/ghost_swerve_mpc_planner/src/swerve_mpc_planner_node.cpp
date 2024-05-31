@@ -51,6 +51,13 @@ int main(int argc, char * argv[])
       rclcpp::spin(node_ptr);
     });
 
+  std::thread exit_thread([&]() {
+      while (!(*EXIT_GLOBAL_PTR)) {
+        std::this_thread::sleep_for(50ms);
+      }
+      node_ptr->exitEarly();
+    });
+
   plt::figure();
   plt::plot(std::vector<double>{}, std::vector<double>{});
   std::vector<IterationCallback::IPOPTOutput> solver_iteration_data;

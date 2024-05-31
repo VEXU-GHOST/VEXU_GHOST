@@ -733,10 +733,10 @@ void SwerveMPCPlanner::initSolver()
     {"g", getConstraints()},
     {"p", getParamVector()}};
 
-  solver_args["lbx"] = getStateLowerBounds();
-  solver_args["ubx"] = getStateUpperBounds();
-  solver_args["lbg"] = getConstraintLowerBounds();
-  solver_args["ubg"] = getConstraintUpperBounds();
+  solver_args_["lbx"] = getStateLowerBounds();
+  solver_args_["ubx"] = getStateUpperBounds();
+  solver_args_["lbg"] = getConstraintLowerBounds();
+  solver_args_["ubg"] = getConstraintUpperBounds();
 
   solver_ = nlpsol("swerve_mpc_planner", "ipopt", nlp_config, solver_config);
 }
@@ -750,48 +750,50 @@ DM SwerveMPCPlanner::convertVectorToDM(std::vector<double> vector)
   return dm;
 }
 
-
-void SwerveMPCPlanner::runSolver(
-  double current_time,
-  const std::vector<double> & current_state,
-  const Trajectory & x0,
-  const Trajectory & reference_trajectory,
-  bool track_pose)
+void SwerveMPCPlanner::shiftTimeVectorToPresent(double current_time)
 {
-  solver_active_ = true;
-  *exit_flag_ptr_ = false;
-
-  std::map<std::string, DM> res;
-
   double offset = current_time - time_vector_[0];
   for (int i = 0; i < time_vector_.size(); i++) {
     time_vector_[i] += offset;
   }
+}
 
+void SwerveMPCPlanner::updateInitialSolution(const ghost_planners::Trajectory & x0)
+{
   auto x0_flat = x0.getFlattenedTrajectory(time_vector_);
-  auto ref_flat = reference_trajectory.getFlattenedTrajectory(time_vector_);
 
   if (x0_flat.size() != getNumOptVars()) {
     throw std::runtime_error(
             "[SwerveMPCPlanner::runSolver] Error: x0 size must match number of optimization variables!");
+
+    solver_args_["x0"] = convertVectorToDM(x0_flat);
+
   }
+}
+
+void SwerveMPCPlanner::updateReferenceTrajectory(
+  const std::vector<double> & current_state,
+  const Trajectory & reference_trajectory,
+  bool track_pose)
+{
+  auto ref_flat = reference_trajectory.getFlattenedTrajectory(time_vector_);
+
 
   if (ref_flat.size() != getNumOptVars()) {
     throw std::runtime_error(
             "[SwerveMPCPlanner::runSolver] Error: reference trajectory size must match number of optimization variables!");
-  }
 
-  solver_args["x0"] = convertVectorToDM(x0_flat);
+  }
 
   DM pose_tracking = (track_pose) ? DM(1.0) : DM(0.0);
   auto initial_state_params = convertVectorToDM(current_state);
   auto reference_trajectory_params = convertVectorToDM(ref_flat);
 
-  solver_args["p"] = vertcat(pose_tracking, initial_state_params, reference_trajectory_params);
+  solver_args_["p"] = vertcat(pose_tracking, initial_state_params, reference_trajectory_params);
+}
 
-  res = solver_(solver_args);
-
-  latest_solution_vector_ = std::vector<double>(res.at("x"));
+void SwerveMPCPlanner::convertSolutionToTrajectory()
+{
 
   std::unique_lock<std::mutex> lock(latest_solution_mutex_);
   latest_solution_ptr_->clearNodes();
@@ -802,8 +804,26 @@ void SwerveMPCPlanner::runSolver(
       latest_solution_vector_.begin() + (k + 1) * state_names_.size());
     latest_solution_ptr_->addNode(time, Node);
   }
+}
 
-  solver_active_ = false;
+void SwerveMPCPlanner::runSolver(
+  double current_time,
+  const std::vector<double> & current_state,
+  const Trajectory & x0,
+  const Trajectory & reference_trajectory,
+  bool track_pose)
+{
+  solver_active_ = true;
+
+  shiftTimeVectorToPresent(current_time);
+
+  updateInitialSolution(x0);
+  updateReferenceTrajectory(current_state, reference_trajectory, track_pose);
+
+  std::map<std::string, DM> res = solver_(solver_args_);
+  latest_solution_vector_ = std::vector<double>(res.at("x"));
+
+  convertSolutionToTrajectory();
 
   // Publish Map of State Trajectories
   ghost_msgs::msg::LabeledVectorMap traj_map_msg{};
@@ -811,6 +831,8 @@ void SwerveMPCPlanner::runSolver(
     generateTrajectoryMap(latest_solution_vector_),
     traj_map_msg);
   trajectory_publisher_->publish(traj_map_msg);
+
+  solver_active_ = false;
 }
 
 } // namespace ghost_swerve_mpc_planner

@@ -245,6 +245,16 @@ public:
 
 private:
   void startSolverThread();
+  void shiftTimeVectorToPresent(double current_time);
+
+  void updateInitialSolution(const ghost_planners::Trajectory & x0);
+
+  void updateReferenceTrajectory(
+    const std::vector<double> & current_state,
+    const ghost_planners::Trajectory & reference_trajectory,
+    bool track_pose);
+
+  void convertSolutionToTrajectory();
 
   // Constants
   const double I2M = ghost_util::INCHES_TO_METERS;
@@ -259,7 +269,8 @@ private:
 
   // ROS Publishers
   rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr trajectory_publisher_;
-  rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr intermediate_trajectory_publisher_;
+  rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr
+    intermediate_trajectory_publisher_;
   rclcpp::Publisher<ghost_msgs::msg::IPOPTOutput>::SharedPtr ipopt_output_publisher_;
   bool publish_intermediate_solutions_ = false;
 
@@ -290,10 +301,11 @@ private:
   std::vector<double> latest_solution_vector_;
   std::mutex latest_solution_mutex_;
   std::atomic_bool solver_active_;
-  std::map<std::string, DM> solver_args;
+  std::map<std::string, DM> solver_args_;
 
   // Callback
-  std::shared_ptr<std::deque<ghost_planners::IterationCallback::IPOPTOutput>> callback_data_buffer_;
+  std::shared_ptr<std::deque<ghost_planners::IterationCallback::IPOPTOutput>>
+  callback_data_buffer_;
   std::shared_ptr<std::mutex> callback_data_mutex_;
   std::shared_ptr<ghost_planners::IterationCallback> iteration_callback_;
   std::thread callback_thread_;
