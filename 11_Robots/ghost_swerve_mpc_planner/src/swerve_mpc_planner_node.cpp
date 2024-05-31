@@ -43,7 +43,7 @@ int main(int argc, char * argv[])
 {
   signal(SIGINT, siginthandler);
 
-  bool plot = true;
+  bool plot = false;
   rclcpp::init(argc, argv);
 
   auto node_ptr = std::make_shared<SwerveMPCPlanner>();
@@ -138,9 +138,6 @@ int main(int argc, char * argv[])
   /////////////////////////////
   ///// Evaluate Solution /////
   /////////////////////////////
-  // Print the solution
-  std::cout << "-----" << std::endl;
-
   // Unpack solution into individual time series
   std::unordered_map<std::string,
     std::vector<double>> state_solution_map = node_ptr->generateTrajectoryMap(

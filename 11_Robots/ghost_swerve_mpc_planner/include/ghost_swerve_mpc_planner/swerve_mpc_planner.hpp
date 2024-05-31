@@ -69,72 +69,20 @@ public:
 
   SwerveMPCPlanner();
 
-  void loadConfig();
-
-  void validateConfig();
-
-  void initROS();
-
-  void generateStateNames();
-
-  void generateParameterNames();
-
-  void populateContainers();
-
-  double getWeight(std::string name);
-
-  // Shorthand to get symbolic state variable by name
-  casadi::Matrix<casadi::SXElem> getState(std::string name, int k);
-
-  // Shorthand to get symbolic state variable by name
-  casadi::Matrix<casadi::SXElem> getState(std::string name);
-
-  casadi::Matrix<casadi::SXElem> getParam(std::string name);
-
-  static std::string getKnotPrefix(int i)
+  template<typename INPUT_T, typename OUTPUT_T>
+  static void rotateVector(
+    const Matrix<SXElem> & angle,
+    const INPUT_T & x_in,
+    const INPUT_T & y_in,
+    OUTPUT_T & x_out,
+    OUTPUT_T & y_out)
   {
-    return "k" + std::to_string(i) + "_";
+    x_out = x_in * cos(angle) - y_in * sin(angle);
+    y_out = x_in * sin(angle) + y_in * cos(angle);
   }
 
-  static casadi::DM convertVectorToDM(std::vector<double> vector);
-
-  casadi::Matrix<casadi::SXElem> getQuadraticTrackingCost(std::string state, int k);
-
-  casadi::Matrix<casadi::SXElem> getJerkCost(std::string state, int k, double cost);
-
-  void rotateVectorSymbolic(
-    const Matrix<SXElem> & angle,
-    const Matrix<SXElem> & x_in,
-    const Matrix<SXElem> & y_in,
-    Matrix<SXElem> & x_out,
-    Matrix<SXElem> & y_out);
-
-  void rotateVectorDouble(
-
-    const Matrix<SXElem> & angle,
-    const double & x_in,
-    const double & y_in,
-    Matrix<SXElem> & x_out,
-    Matrix<SXElem> & y_out);
-
   std::unordered_map<std::string, std::vector<double>> generateTrajectoryMap(
-    const std::vector<double> & solution_vector);
-
-  void addIntegrationConstraints();
-
-  void addInitialStateConstraints();
-
-  void addAccelerationDynamicsConstraints();
-
-  void addNoWheelSlipConstraints();
-
-  void addConstraints();
-
-  void setStateBounds();
-
-  void addCosts();
-
-  void initSolver();
+    const std::vector<double> & solution_vector) const;
 
   void runSolver(
     double current_time,
@@ -143,15 +91,7 @@ public:
     const ghost_planners::Trajectory & reference_trajectory,
     bool pose_tracking = false);
 
-  const Eigen::Vector2d & getModulePosition(int m)
-  {
-    if (m <= config_.num_swerve_modules) {
-      return module_positions_[m - 1];
-    } else {
-      throw std::runtime_error(
-              "[SwerveMPCPlanner::getModulePosition] Module index cannot exceed the number of swerve modules!");
-    }
-  }
+  const Eigen::Vector2d & getModulePosition(int m) const;
 
   void exitEarly()
   {
@@ -244,17 +184,49 @@ public:
   }
 
 private:
-  void startSolverThread();
+  // Init
+  void loadConfig();
+  void validateConfig();
+
+  void generateStateNames();
+  void generateParameterNames();
+  void populateContainers();
+
+  void initSolver();
+  void initROS();
+
+  // Symbolic Helpers
+  double getWeight(std::string name);
+  casadi::Matrix<casadi::SXElem> getState(std::string name, int k);
+  casadi::Matrix<casadi::SXElem> getState(std::string name);
+  casadi::Matrix<casadi::SXElem> getParam(std::string name);
+  static casadi::DM convertVectorToDM(std::vector<double> vector);
+  static std::string getKnotPrefix(int i);
+
+  // Swerve Constraints
+  void addIntegrationConstraints();
+  void addInitialStateConstraints();
+  void addAccelerationDynamicsConstraints();
+  void addNoWheelSlipConstraints();
+  void addConstraints();
+
+  // Costs
+  casadi::Matrix<casadi::SXElem> getQuadraticTrackingCost(std::string state, int k);
+  casadi::Matrix<casadi::SXElem> getJerkCost(std::string state, int k, double cost);
+  void addCosts();
+
+  // Bounds
+  void setStateBounds();
+
+  // Solver methods
   void shiftTimeVectorToPresent(double current_time);
-
   void updateInitialSolution(const ghost_planners::Trajectory & x0);
-
   void updateReferenceTrajectory(
     const std::vector<double> & current_state,
     const ghost_planners::Trajectory & reference_trajectory,
     bool track_pose);
-
   void convertSolutionToTrajectory();
+  void publishStateTrajectoryMap() const;
 
   // Constants
   const double I2M = ghost_util::INCHES_TO_METERS;
@@ -266,6 +238,8 @@ private:
   Config config_;
   int num_knots_;
   int num_opt_vars_;
+  int ipopt_verbosity_;
+  int max_iterations_;
 
   // ROS Publishers
   rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr trajectory_publisher_;

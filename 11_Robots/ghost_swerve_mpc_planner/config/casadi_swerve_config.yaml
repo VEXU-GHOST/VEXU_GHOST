@@ -1,6 +1,8 @@
 swerve_mpc_planner_node:
   ros__parameters:
     publish_intermediate_solutions: true
+    ipopt_verbosity: 5
+    max_iterations: 750
 
     time_horizon: 5.0
     dt: 0.05

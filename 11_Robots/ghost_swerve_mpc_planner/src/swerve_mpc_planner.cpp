@@ -59,9 +59,17 @@ SwerveMPCPlanner::SwerveMPCPlanner()
 
 void SwerveMPCPlanner::loadConfig()
 {
+  // Solver Args
   declare_parameter("publish_intermediate_solutions", false);
   publish_intermediate_solutions_ = get_parameter("publish_intermediate_solutions").as_bool();
 
+  declare_parameter("ipopt_verbosity", 0);
+  ipopt_verbosity_ = get_parameter("ipopt_verbosity").as_int();
+
+  declare_parameter("max_iterations", 10);
+  max_iterations_ = get_parameter("max_iterations").as_int();
+
+  // MPC Config
   declare_parameter("time_horizon", 0.0);
   config_.time_horizon = get_parameter("time_horizon").as_double();
 
@@ -92,13 +100,13 @@ void SwerveMPCPlanner::loadConfig()
   declare_parameter("wheel_constraint_tolerance", 0.0);
   config_.wheel_constraint_tolerance = get_parameter("wheel_constraint_tolerance").as_double();
 
+  // Weights
   declare_parameter("default_state_weights", std::vector<double>{});
   auto default_state_weights = get_parameter("default_state_weights").as_double_array();
 
   declare_parameter("default_joint_weights", std::vector<double>{});
   auto default_joint_weights = get_parameter("default_joint_weights").as_double_array();
 
-  // Weights
   weights_ = std::vector<double>{};
   weights_.insert(weights_.end(), default_state_weights.begin(), default_state_weights.end());
   weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
@@ -315,6 +323,16 @@ void SwerveMPCPlanner::populateContainers()
   }
 }
 
+const Eigen::Vector2d & SwerveMPCPlanner::getModulePosition(int m) const
+{
+  if (m <= config_.num_swerve_modules) {
+    return module_positions_[m - 1];
+  } else {
+    throw std::runtime_error(
+            "[SwerveMPCPlanner::getModulePosition] Module index cannot exceed the number of swerve modules!");
+  }
+}
+
 double SwerveMPCPlanner::getWeight(std::string name)
 {
   if (weight_index_map_.count(name) != 0) {
@@ -381,31 +399,8 @@ casadi::Matrix<casadi::SXElem> SwerveMPCPlanner::getJerkCost(std::string state, 
   return cost * pow(jerk, 2);
 }
 
-void SwerveMPCPlanner::rotateVectorSymbolic(
-  const Matrix<SXElem> & angle,
-  const Matrix<SXElem> & x_in,
-  const Matrix<SXElem> & y_in,
-  Matrix<SXElem> & x_out,
-  Matrix<SXElem> & y_out)
-{
-  x_out = x_in * cos(angle) - y_in * sin(angle);
-  y_out = x_in * sin(angle) + y_in * cos(angle);
-}
-
-void SwerveMPCPlanner::rotateVectorDouble(
-
-  const Matrix<SXElem> & angle,
-  const double & x_in,
-  const double & y_in,
-  Matrix<SXElem> & x_out,
-  Matrix<SXElem> & y_out)
-{
-  x_out = x_in * cos(angle) - y_in * sin(angle);
-  y_out = x_in * sin(angle) + y_in * cos(angle);
-}
-
 std::unordered_map<std::string, std::vector<double>> SwerveMPCPlanner::generateTrajectoryMap(
-  const std::vector<double> & solution_vector)
+  const std::vector<double> & solution_vector) const
 {
   std::unordered_map<std::string, std::vector<double>> solution_map;
 
@@ -532,13 +527,13 @@ void SwerveMPCPlanner::addAccelerationDynamicsConstraints()
 
       auto x_force = casadi::Matrix<casadi::SXElem>();
       auto y_force = casadi::Matrix<casadi::SXElem>();
-      rotateVectorSymbolic(world_steering_angle, wheel_force, lateral_force, x_force, y_force);
+      rotateVector(world_steering_angle, wheel_force, lateral_force, x_force, y_force);
       x_accel_constraint -= x_force;
       y_accel_constraint -= y_force;
 
       auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
       auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
-      rotateVectorDouble(
+      rotateVector(
         theta, module_positions_[m - 1].x(),
         module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
 
@@ -571,7 +566,7 @@ void SwerveMPCPlanner::addNoWheelSlipConstraints()
 
       auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
       auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
-      rotateVectorDouble(
+      rotateVector(
         theta, module_positions_[m - 1].x(),
         module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
 
@@ -584,13 +579,13 @@ void SwerveMPCPlanner::addNoWheelSlipConstraints()
 
       auto world_vel_x = casadi::Matrix<casadi::SXElem>();
       auto world_vel_y = casadi::Matrix<casadi::SXElem>();
-      rotateVectorSymbolic(theta, tan_vel_x, tan_vel_y, world_vel_x, world_vel_y);
+      rotateVector(theta, tan_vel_x, tan_vel_y, world_vel_x, world_vel_y);
       world_vel_x += vel_x;
       world_vel_y += vel_y;
 
       auto forward_velocity = casadi::Matrix<casadi::SXElem>();
       auto lateral_velocity = casadi::Matrix<casadi::SXElem>();
-      rotateVectorSymbolic(
+      rotateVector(
         -world_steering_angle, world_vel_x, world_vel_y, forward_velocity,
         lateral_velocity);
 
@@ -722,9 +717,9 @@ void SwerveMPCPlanner::initSolver()
 
   Dict solver_config{
     {"verbose", false},
-    {"ipopt.print_level", 5},
+    {"ipopt.print_level", ipopt_verbosity_},
     {"iteration_callback", *iteration_callback_},
-    {"ipopt.max_iter", 750}
+    {"ipopt.max_iter", max_iterations_}
   };
 
   SXDict nlp_config{
@@ -748,6 +743,11 @@ DM SwerveMPCPlanner::convertVectorToDM(std::vector<double> vector)
     dm(i) = vector[i];
   }
   return dm;
+}
+
+std::string SwerveMPCPlanner::getKnotPrefix(int i)
+{
+  return "k" + std::to_string(i) + "_";
 }
 
 void SwerveMPCPlanner::shiftTimeVectorToPresent(double current_time)
@@ -806,6 +806,15 @@ void SwerveMPCPlanner::convertSolutionToTrajectory()
   }
 }
 
+void SwerveMPCPlanner::publishStateTrajectoryMap() const
+{
+  ghost_msgs::msg::LabeledVectorMap traj_map_msg{};
+  ghost_ros_interfaces::msg_helpers::toROSMsg(
+    generateTrajectoryMap(latest_solution_vector_),
+    traj_map_msg);
+  trajectory_publisher_->publish(traj_map_msg);
+}
+
 void SwerveMPCPlanner::runSolver(
   double current_time,
   const std::vector<double> & current_state,
@@ -824,13 +833,7 @@ void SwerveMPCPlanner::runSolver(
   latest_solution_vector_ = std::vector<double>(res.at("x"));
 
   convertSolutionToTrajectory();
-
-  // Publish Map of State Trajectories
-  ghost_msgs::msg::LabeledVectorMap traj_map_msg{};
-  ghost_ros_interfaces::msg_helpers::toROSMsg(
-    generateTrajectoryMap(latest_solution_vector_),
-    traj_map_msg);
-  trajectory_publisher_->publish(traj_map_msg);
+  publishStateTrajectoryMap();
 
   solver_active_ = false;
 }
