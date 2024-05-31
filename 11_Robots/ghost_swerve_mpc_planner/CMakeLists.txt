@@ -72,19 +72,19 @@ install(
 ### Executables ###
 ###################
 # Main to generate Problem Formulation for MDS MPC
-add_executable(swerve_mpc_planner_node src/swerve_mpc_planner_node.cpp)
-ament_target_dependencies(swerve_mpc_planner_node
+add_executable(swerve_trajectory_optimization_node src/swerve_trajectory_optimization_node.cpp)
+ament_target_dependencies(swerve_trajectory_optimization_node
   ${DEPENDENCIES}
 )
-target_link_libraries(swerve_mpc_planner_node
+target_link_libraries(swerve_trajectory_optimization_node
   swerve_mpc_planner
 )
-target_include_directories(swerve_mpc_planner_node
+target_include_directories(swerve_trajectory_optimization_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  swerve_mpc_planner_node
+  swerve_trajectory_optimization_node
   DESTINATION lib/${PROJECT_NAME})
 
 # ##############

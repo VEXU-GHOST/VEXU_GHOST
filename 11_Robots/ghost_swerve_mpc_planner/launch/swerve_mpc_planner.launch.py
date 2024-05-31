@@ -24,8 +24,7 @@ def generate_launch_description():
     ########################
     swerve_mpc_planner_node = Node(
         package="ghost_swerve_mpc_planner",
-        executable="swerve_mpc_planner_node",
-        name="swerve_mpc_planner_node",
+        executable="swerve_trajectory_optimization_node",
         output="screen",
         parameters=[config_file],
     )
