@@ -1,10 +1,15 @@
+swerve_animator_node:
+  ros__parameters:
+    skip_factor: 10
+    speedup_factor: 2.0
+
 swerve_mpc_planner_node:
   ros__parameters:
     publish_intermediate_solutions: true
     ipopt_verbosity: 5
     max_iterations: 750
 
-    time_horizon: 5.0
+    time_horizon: 2.0
     dt: 0.05
     num_swerve_modules: 4
 

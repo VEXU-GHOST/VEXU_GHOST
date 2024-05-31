@@ -16,7 +16,7 @@ def generate_launch_description():
         "11_Robots",
         "ghost_swerve_mpc_planner",
         "config",
-        "casadi_swerve_config.yaml",
+        "swerve_mpc_config.yaml",
     )
 
     ########################
@@ -28,4 +28,11 @@ def generate_launch_description():
         output="screen",
         parameters=[config_file],
     )
-    return LaunchDescription([swerve_mpc_planner_node])
+
+    swerve_animator_node = Node(
+        package="ghost_swerve_mpc_planner",
+        executable="swerve_animator_node",
+        output="screen",
+        parameters=[config_file],
+    )
+    return LaunchDescription([swerve_mpc_planner_node, swerve_animator_node])

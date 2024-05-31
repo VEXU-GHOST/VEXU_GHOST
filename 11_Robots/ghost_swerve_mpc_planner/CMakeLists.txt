@@ -87,6 +87,22 @@ install(TARGETS
   swerve_trajectory_optimization_node
   DESTINATION lib/${PROJECT_NAME})
 
+# Main to animate swerve trajectories
+add_executable(swerve_animator_node src/swerve_animator_node.cpp)
+ament_target_dependencies(swerve_animator_node
+  ${DEPENDENCIES}
+)
+target_link_libraries(swerve_animator_node
+  swerve_mpc_planner
+)
+target_include_directories(swerve_animator_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+swerve_animator_node
+  DESTINATION lib/${PROJECT_NAME})
+
 # ##############
 # ## Testing ###
 # ##############
