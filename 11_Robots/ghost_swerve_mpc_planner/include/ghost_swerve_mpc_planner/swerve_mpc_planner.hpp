@@ -63,7 +63,7 @@ public:
     double wheel_width;
     double wheel_radius;
     double robot_mass;
-    double steering_inertia;
+    double robot_inertia;
     double wheel_constraint_tolerance;
   };
 
@@ -142,11 +142,6 @@ public:
     const ghost_planners::Trajectory & x0,
     const ghost_planners::Trajectory & reference_trajectory,
     bool pose_tracking = false);
-
-  void publishMPCTrajectory(const ghost_msgs::msg::LabeledVectorMap & msg)
-  {
-    trajectory_publisher_->publish(msg);
-  }
 
   const Eigen::Vector2d & getModulePosition(int m)
   {
@@ -264,6 +259,7 @@ private:
 
   // ROS Publishers
   rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr trajectory_publisher_;
+  rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr intermediate_trajectory_publisher_;
   rclcpp::Publisher<ghost_msgs::msg::IPOPTOutput>::SharedPtr ipopt_output_publisher_;
   bool publish_intermediate_solutions_ = false;
 
@@ -294,11 +290,13 @@ private:
   std::vector<double> latest_solution_vector_;
   std::mutex latest_solution_mutex_;
   std::atomic_bool solver_active_;
+  std::map<std::string, DM> solver_args;
 
   // Callback
   std::shared_ptr<std::deque<ghost_planners::IterationCallback::IPOPTOutput>> callback_data_buffer_;
   std::shared_ptr<std::mutex> callback_data_mutex_;
   std::shared_ptr<ghost_planners::IterationCallback> iteration_callback_;
+  std::thread callback_thread_;
 };
 
 } // namespace ghost_swerve_mpc_planner

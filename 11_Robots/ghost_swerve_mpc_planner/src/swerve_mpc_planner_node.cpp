@@ -127,11 +127,6 @@ int main(int argc, char * argv[])
 
   auto solution = node_ptr->getLatestSolution();
   auto raw_solution_vector = solution.getFlattenedTrajectory(node_ptr->getTimeVector());
-  ghost_msgs::msg::LabeledVectorMap msg{};
-  ghost_ros_interfaces::msg_helpers::toROSMsg(
-    node_ptr->generateTrajectoryMap(
-      raw_solution_vector), msg);
-  node_ptr->publishMPCTrajectory(msg);
 
   /////////////////////////////
   ///// Evaluate Solution /////

@@ -51,10 +51,10 @@ SwerveMPCPlanner::SwerveMPCPlanner()
   addConstraints();
   setStateBounds();
 
+  initSolver();
+
   // Init ROS interfaces
   initROS();
-
-  initSolver();
 }
 
 void SwerveMPCPlanner::loadConfig()
@@ -86,8 +86,8 @@ void SwerveMPCPlanner::loadConfig()
   declare_parameter("robot_mass", 0.0);
   config_.robot_mass = get_parameter("robot_mass").as_double();
 
-  declare_parameter("steering_inertia", 0.0);
-  config_.steering_inertia = get_parameter("steering_inertia").as_double();
+  declare_parameter("robot_inertia", 0.0);
+  config_.robot_inertia = get_parameter("robot_inertia").as_double();
 
   declare_parameter("wheel_constraint_tolerance", 0.0);
   config_.wheel_constraint_tolerance = get_parameter("wheel_constraint_tolerance").as_double();
@@ -127,7 +127,7 @@ void SwerveMPCPlanner::validateConfig()
     {"wheel_width", config_.wheel_width},
     {"wheel_diam", config_.wheel_radius * 2.0},
     {"robot_mass", config_.robot_mass},
-    {"steering_inertia", config_.steering_inertia},
+    {"robot_inertia", config_.robot_inertia},
     {"wheel_constraint_tolerance", config_.wheel_constraint_tolerance},
   };
 
@@ -155,11 +155,50 @@ void SwerveMPCPlanner::validateConfig()
 
 void SwerveMPCPlanner::initROS()
 {
+  intermediate_trajectory_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
+    "/trajectory/swerve_mpc_trajectory_intermediates", 10);
+
   trajectory_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
     "/trajectory/swerve_mpc_trajectory", 10);
 
   ipopt_output_publisher_ = create_publisher<ghost_msgs::msg::IPOPTOutput>(
     "/ipopt_output", 10);
+
+  if (publish_intermediate_solutions_) {
+    if (!callback_data_buffer_) {
+      throw std::runtime_error(
+              "[SwerveMPCPlanner::initROS]  Error: callback_data_buffer is nullptr!");
+    }
+    if (!callback_data_mutex_) {
+      throw std::runtime_error(
+              "[SwerveMPCPlanner::initROS] Error: callback_data_mutex is nullptr!");
+    }
+    callback_thread_ = std::thread(
+      [&]() {
+        while (!(*exit_flag_ptr_)) {
+          if (!callback_data_buffer_->empty()) {
+            // Retrieve data from queue
+            std::unique_lock<std::mutex> lock(*callback_data_mutex_);
+            IterationCallback::IPOPTOutput data(callback_data_buffer_->back());
+            callback_data_buffer_->pop_back();
+            lock.unlock();
+
+            // Publish IPOPT Output for visualization
+            ghost_msgs::msg::IPOPTOutput ipopt_msg{};
+            ghost_ros_interfaces::msg_helpers::toROSMsg(data, ipopt_msg);
+            ipopt_output_publisher_->publish(ipopt_msg);
+
+            // Publish Map of State Trajectories
+            ghost_msgs::msg::LabeledVectorMap traj_map_msg{};
+            ghost_ros_interfaces::msg_helpers::toROSMsg(
+              generateTrajectoryMap(data.state_vector),
+              traj_map_msg);
+            intermediate_trajectory_publisher_->publish(traj_map_msg);
+          }
+          std::this_thread::sleep_for(5ms);
+        }
+      });
+  }
 }
 
 void SwerveMPCPlanner::generateStateNames()
@@ -482,7 +521,7 @@ void SwerveMPCPlanner::addAccelerationDynamicsConstraints()
     std::string kt1_ = getKnotPrefix(k);
     auto x_accel_constraint = config_.robot_mass * getState(kt1_ + "base_accel_x");
     auto y_accel_constraint = config_.robot_mass * getState(kt1_ + "base_accel_y");
-    auto theta_accel_constraint = config_.steering_inertia * getState(kt1_ + "base_accel_theta");
+    auto theta_accel_constraint = config_.robot_inertia * getState(kt1_ + "base_accel_theta");
     auto theta = getState(kt1_ + "base_pose_theta");
 
     for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
@@ -694,20 +733,12 @@ void SwerveMPCPlanner::initSolver()
     {"g", getConstraints()},
     {"p", getParamVector()}};
 
+  solver_args["lbx"] = getStateLowerBounds();
+  solver_args["ubx"] = getStateUpperBounds();
+  solver_args["lbg"] = getConstraintLowerBounds();
+  solver_args["ubg"] = getConstraintUpperBounds();
+
   solver_ = nlpsol("swerve_mpc_planner", "ipopt", nlp_config, solver_config);
-
-  startSolverThread();
-}
-
-void SwerveMPCPlanner::startSolverThread()
-{
-  while (!*exit_flag_ptr_) {
-    if (solver_active_) {
-
-    } else {
-      std::this_thread::sleep_for(1ms);
-    }
-  }
 }
 
 DM SwerveMPCPlanner::convertVectorToDM(std::vector<double> vector)
@@ -730,11 +761,7 @@ void SwerveMPCPlanner::runSolver(
   solver_active_ = true;
   *exit_flag_ptr_ = false;
 
-  std::map<std::string, DM> solver_args, res;
-  solver_args["lbx"] = getStateLowerBounds();
-  solver_args["ubx"] = getStateUpperBounds();
-  solver_args["lbg"] = getConstraintLowerBounds();
-  solver_args["ubg"] = getConstraintUpperBounds();
+  std::map<std::string, DM> res;
 
   double offset = current_time - time_vector_[0];
   for (int i = 0; i < time_vector_.size(); i++) {
@@ -755,7 +782,6 @@ void SwerveMPCPlanner::runSolver(
   }
 
   solver_args["x0"] = convertVectorToDM(x0_flat);
-
 
   DM pose_tracking = (track_pose) ? DM(1.0) : DM(0.0);
   auto initial_state_params = convertVectorToDM(current_state);
@@ -778,6 +804,13 @@ void SwerveMPCPlanner::runSolver(
   }
 
   solver_active_ = false;
+
+  // Publish Map of State Trajectories
+  ghost_msgs::msg::LabeledVectorMap traj_map_msg{};
+  ghost_ros_interfaces::msg_helpers::toROSMsg(
+    generateTrajectoryMap(latest_solution_vector_),
+    traj_map_msg);
+  trajectory_publisher_->publish(traj_map_msg);
 }
 
 } // namespace ghost_swerve_mpc_planner

@@ -106,7 +106,7 @@ public:
   std::shared_ptr<std::deque<IPOPTOutput>> data_buffer_;
   std::shared_ptr<std::mutex> data_mutex_;
   std::shared_ptr<std::atomic_bool> exit_flag_ptr_;
-  mutable int iteration_count_ = 1;
+  mutable int iteration_count_ = 0;
 };
 
 } // namespace ghost_planners
