@@ -103,11 +103,20 @@ void SwerveMPCPlanner::loadConfig()
   declare_parameter("motor_speed_limit_rpm", 0.0);
   config_.motor_speed_limit_rpm = get_parameter("motor_speed_limit_rpm").as_double();
 
+  declare_parameter("motor_model_stall_torque_nm", 0.0);
+  config_.motor_model_stall_torque_nm = get_parameter("motor_model_stall_torque_nm").as_double();
+
+  declare_parameter("motor_torque_limit_nm", 0.0);
+  config_.motor_torque_limit_nm = get_parameter("motor_torque_limit_nm").as_double();
+
   declare_parameter("robot_mass", 0.0);
   config_.robot_mass = get_parameter("robot_mass").as_double();
 
   declare_parameter("robot_inertia", 0.0);
   config_.robot_inertia = get_parameter("robot_inertia").as_double();
+
+  declare_parameter("steering_inertia", 0.0);
+  config_.steering_inertia = get_parameter("steering_inertia").as_double();
 
   declare_parameter("wheel_constraint_tolerance", 0.0);
   config_.wheel_constraint_tolerance = get_parameter("wheel_constraint_tolerance").as_double();
@@ -148,11 +157,14 @@ void SwerveMPCPlanner::validateConfig()
     {"wheel_diam", config_.wheel_radius * 2.0},
     {"robot_mass", config_.robot_mass},
     {"robot_inertia", config_.robot_inertia},
+    {"steering_inertia", config_.steering_inertia},
     {"wheel_ratio", config_.wheel_ratio},
     {"steering_ratio", config_.steering_ratio},
     {"wheel_constraint_tolerance", config_.wheel_constraint_tolerance},
     {"motor_model_free_speed_rpm", config_.motor_model_free_speed_rpm},
     {"motor_speed_limit_rpm", config_.motor_speed_limit_rpm},
+    {"motor_model_stall_torque_nm", config_.motor_model_stall_torque_nm},
+    {"motor_torque_limit_nm", config_.motor_torque_limit_nm}
   };
 
   for (const auto & [key, val] : double_params) {
@@ -249,9 +261,9 @@ void SwerveMPCPlanner::generateStateNames()
     "m1_velocity",
     "m2_velocity",
     "m1_torque",
-    "m2_torque"
-    // "voltage_1",
-    // "voltage_2",
+    "m2_torque",
+    "m1_voltage",
+    "m2_voltage"
   };
 
   // Add joint states to state name vector
@@ -620,7 +632,7 @@ void SwerveMPCPlanner::addNoWheelSlipConstraints()
   }
 }
 
-void SwerveMPCPlanner::addDifferentialContraints()
+void SwerveMPCPlanner::addDifferentialConstraints()
 {
   double s_ratio = config_.steering_ratio;
   double w_ratio = config_.wheel_ratio;
@@ -647,7 +659,7 @@ void SwerveMPCPlanner::addDifferentialContraints()
       auto m1_torque = getState(kt1_mN_ + "m1_torque");
       auto m2_torque = getState(kt1_mN_ + "m2_torque");
       auto wheel_torque = getState(kt1_mN_ + "wheel_torque");
-      auto steering_torque = config_.robot_inertia * getState(kt1_mN_ + "steering_accel");
+      auto steering_torque = config_.steering_inertia * getState(kt1_mN_ + "steering_accel");
 
       auto c3 = wheel_torque / w_ratio + steering_torque / s_ratio - m1_torque;
       auto c4 = -wheel_torque / w_ratio + steering_torque / s_ratio - m2_torque;
@@ -662,13 +674,42 @@ void SwerveMPCPlanner::addDifferentialContraints()
 
 }
 
+void SwerveMPCPlanner::addMotorModelConstraints()
+{
+  double t_stall = config_.motor_model_stall_torque_nm;
+  double w_free = config_.motor_model_free_speed_rpm;
+  for (int k = 0; k < num_knots_; k++) {
+    std::string kt1_ = getKnotPrefix(k);
+    for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+      // Velocity Constraints
+      std::string kt1_mN_ = kt1_ + "m" + std::to_string(m) + "_";
+      auto m1_velocity = getState(kt1_mN_ + "m1_velocity");
+      auto m2_velocity = getState(kt1_mN_ + "m2_velocity");
+      auto m1_voltage = getState(kt1_mN_ + "m1_voltage");
+      auto m2_voltage = getState(kt1_mN_ + "m2_voltage");
+      auto m1_torque = getState(kt1_mN_ + "m1_torque");
+      auto m2_torque = getState(kt1_mN_ + "m2_torque");
+
+      auto c1 = t_stall * (m1_voltage / 12000.0 - m1_velocity / w_free) - m1_torque;
+      auto c2 = t_stall * (m2_voltage / 12000.0 - m2_velocity / w_free) - m2_torque;
+
+      constraints_ = vertcat(constraints_, c1);
+      constraints_ = vertcat(constraints_, c2);
+
+      lbg_ = vertcat(lbg_, DM::zeros(2));
+      ubg_ = vertcat(ubg_, DM::zeros(2));
+    }
+  }
+}
+
 void SwerveMPCPlanner::addConstraints()
 {
   addIntegrationConstraints();
   addInitialStateConstraints();
   addAccelerationDynamicsConstraints();
   addNoWheelSlipConstraints();
-  addDifferentialContraints();
+  addDifferentialConstraints();
+  addMotorModelConstraints();
 
   if (lbg_.size1() != ubg_.size1()) {
     throw std::runtime_error(
@@ -708,25 +749,26 @@ void SwerveMPCPlanner::setStateBounds()
     for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
       std::string module_prefix = curr_knot_prefix + "m" + std::to_string(m) + "_";
 
-      // TODO(maxxwilson): Add steering speed limits, and wheel velocity limits
-
-      lbx_(state_index_map_[module_prefix + "steering_accel"]) = -5000.0;
-      ubx_(state_index_map_[module_prefix + "steering_accel"]) = 5000.0;
-
-      lbx_(state_index_map_[module_prefix + "wheel_torque"]) = -50.0 * config_.wheel_radius;
-      ubx_(state_index_map_[module_prefix + "wheel_torque"]) = 50.0 * config_.wheel_radius;
-
       lbx_(state_index_map_[module_prefix + "lateral_force"]) = -config_.robot_mass * 9.81 * 1.25;
       ubx_(state_index_map_[module_prefix + "lateral_force"]) = config_.robot_mass * 9.81 * 1.25;
 
-      lbx_(
-        state_index_map_[curr_knot_prefix +
-        "m1_velocity"]) = -config_.motor_model_free_speed_rpm;
-      ubx_(state_index_map_[curr_knot_prefix + "m1_velocity"]) = config_.motor_model_free_speed_rpm;
-      lbx_(
-        state_index_map_[curr_knot_prefix +
-        "m2_velocity"]) = -config_.motor_model_free_speed_rpm;
-      ubx_(state_index_map_[curr_knot_prefix + "m2_velocity"]) = config_.motor_model_free_speed_rpm;
+      lbx_(state_index_map_[module_prefix + "m1_velocity"]) = -config_.motor_speed_limit_rpm;
+      ubx_(state_index_map_[module_prefix + "m1_velocity"]) = config_.motor_speed_limit_rpm;
+
+      lbx_(state_index_map_[module_prefix + "m2_velocity"]) = -config_.motor_speed_limit_rpm;
+      ubx_(state_index_map_[module_prefix + "m2_velocity"]) = config_.motor_speed_limit_rpm;
+
+      lbx_(state_index_map_[module_prefix + "m1_torque"]) = -config_.motor_torque_limit_nm;
+      ubx_(state_index_map_[module_prefix + "m1_torque"]) = config_.motor_torque_limit_nm;
+
+      lbx_(state_index_map_[module_prefix + "m2_torque"]) = -config_.motor_torque_limit_nm;
+      ubx_(state_index_map_[module_prefix + "m2_torque"]) = config_.motor_torque_limit_nm;
+
+      lbx_(state_index_map_[module_prefix + "m1_voltage"]) = -12000.0;
+      ubx_(state_index_map_[module_prefix + "m1_voltage"]) = 12000.0;
+
+      lbx_(state_index_map_[module_prefix + "m2_voltage"]) = -12000.0;
+      ubx_(state_index_map_[module_prefix + "m2_voltage"]) = 12000.0;
     }
   }
 }

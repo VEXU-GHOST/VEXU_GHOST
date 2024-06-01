@@ -67,20 +67,22 @@ int main(int argc, char * argv[])
   std::vector<double> reference(state_names.size(), 0.0);
   reference[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
   reference[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
-  reference[reference_trajectory.getStateIndex("base_vel_theta")] = 1.0;
-  reference_trajectory.addNode(1.25, reference);
+  reference[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 4;
+  reference_trajectory.addNode(1.75, reference);
 
   reference[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
   reference[reference_trajectory.getStateIndex("base_pose_y")] = -1.0;
-  reference_trajectory.addNode(2.5, reference);
+  reference[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 2;
+  reference_trajectory.addNode(3.25, reference);
 
   reference[reference_trajectory.getStateIndex("base_pose_x")] = 1.0;
   reference[reference_trajectory.getStateIndex("base_pose_y")] = -1.0;
-  reference_trajectory.addNode(3.75, reference);
-
-  reference[reference_trajectory.getStateIndex("base_pose_x")] = 1.0;
-  reference[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  reference[reference_trajectory.getStateIndex("base_pose_theta")] = 3 * 3.14159 / 4;
   reference_trajectory.addNode(5.0, reference);
+
+  // reference[reference_trajectory.getStateIndex("base_pose_x")] = 1.0;
+  // reference[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  // reference_trajectory.addNode(5.0, reference);
 
   double current_time = 0.0;
   std::vector<double> current_state{

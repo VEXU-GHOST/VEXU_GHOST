@@ -64,12 +64,15 @@ public:
     double wheel_radius;
     double robot_mass;
     double robot_inertia;
+    double steering_inertia;
     double wheel_constraint_tolerance;
 
     double steering_ratio;
     double wheel_ratio;
     double motor_model_free_speed_rpm;
     double motor_speed_limit_rpm;
+    double motor_model_stall_torque_nm;
+    double motor_torque_limit_nm;
   };
 
   SwerveMPCPlanner();
@@ -213,7 +216,8 @@ private:
   void addInitialStateConstraints();
   void addAccelerationDynamicsConstraints();
   void addNoWheelSlipConstraints();
-  void addDifferentialContraints();
+  void addDifferentialConstraints();
+  void addMotorModelConstraints();
   void addConstraints();
 
   // Costs

@@ -1,7 +1,7 @@
 swerve_animator_node:
   ros__parameters:
     skip_factor: 20
-    speedup_factor: 2.0
+    speedup_factor: 1.5
 
 swerve_mpc_planner_node:
   ros__parameters:
@@ -19,32 +19,37 @@ swerve_mpc_planner_node:
     wheel_width: 1.0
     robot_mass: 10.0
     robot_inertia: 0.14868
+    steering_inertia: 0.00005
     wheel_constraint_tolerance: 0.001
 
     steering_ratio: 0.295454545
     wheel_ratio: 0.633116883
     motor_model_free_speed_rpm: 700.0
+    motor_model_stall_torque_nm: 0.6
+    motor_torque_limit_nm: 0.35
     motor_speed_limit_rpm: 650.0
 
     default_state_weights:
-      - 10000.0 # base_pose_x
-      - 10000.0 # base_pose_y
-      - 0.0 # base_pose_theta
+      - 100000.0 # base_pose_x
+      - 100000.0 # base_pose_y
+      - 100000.0 # base_pose_theta
       - 0.0 # base_vel_x
       - 0.0 # base_vel_y
-      - 10000.0 # base_vel_theta
+      - 0.0 # base_vel_theta
       - 0.0 # base_accel_x
       - 0.0 # base_accel_y
       - 0.0 # base_accel_theta
 
     default_joint_weights:
       - 0.0 # steering_angle
-      - 1.0 # steering_vel
+      - 0.5 # steering_vel
       - 0.00001 # steering_accel
       - 0.01 # wheel_vel
-      - 0.1 # wheel_torque
-      - 0.1 # lateral_force
+      - 0.5 # wheel_torque
+      - 0.5 # lateral_force
       - 0.00001 # m1_velocity
       - 0.00001 # m2_velocity
       - 0.00001 # m1_torque
       - 0.00001 # m2_torque
+      - 0.00001 # m1_voltage
+      - 0.00001 # m2_voltage
