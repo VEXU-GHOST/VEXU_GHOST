@@ -280,6 +280,10 @@ int main(int argc, char * argv[])
         plot_wheel_module(Eigen::Vector2d(-WHEELBASE_WIDTH / 2.0, -WHEELBASE_WIDTH / 2.0), "m3_");
         plot_wheel_module(Eigen::Vector2d(WHEELBASE_WIDTH / 2.0, -WHEELBASE_WIDTH / 2.0), "m4_");
 
+        if (*EXIT_GLOBAL_PTR) {
+          break;
+        }
+
         plt::title(std::string("Iteration ") + std::to_string(curr_iteration));
         plt::pause(DT);
       }
