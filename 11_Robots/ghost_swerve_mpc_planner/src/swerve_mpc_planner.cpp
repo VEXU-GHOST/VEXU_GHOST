@@ -243,7 +243,6 @@ void SwerveMPCPlanner::generateStateNames()
     "steering_angle",
     "steering_vel",
     "steering_accel",
-    "steering_torque",
     "wheel_vel",
     "wheel_torque",
     "lateral_force",
@@ -560,15 +559,6 @@ void SwerveMPCPlanner::addAccelerationDynamicsConstraints()
 
       auto base_torque = y_force * (mod_offset_x) - x_force * (mod_offset_y);
       theta_accel_constraint -= base_torque;
-
-      // Steering Dynamics
-      auto steering_accel_constraint = config_.robot_inertia *
-        getState(kt1_mN_ + "steering_accel") - getState(kt1_mN_ + "steering_torque");
-
-      constraints_ = vertcat(constraints_, steering_accel_constraint);
-      lbg_ = vertcat(lbg_, DM::zeros(1));
-      ubg_ = vertcat(ubg_, DM::zeros(1));
-
     }
 
     constraints_ = vertcat(constraints_, x_accel_constraint);
@@ -657,7 +647,7 @@ void SwerveMPCPlanner::addDifferentialContraints()
       auto m1_torque = getState(kt1_mN_ + "m1_torque");
       auto m2_torque = getState(kt1_mN_ + "m2_torque");
       auto wheel_torque = getState(kt1_mN_ + "wheel_torque");
-      auto steering_torque = getState(kt1_mN_ + "steering_torque");
+      auto steering_torque = config_.robot_inertia * getState(kt1_mN_ + "steering_accel");
 
       auto c3 = wheel_torque / w_ratio + steering_torque / s_ratio - m1_torque;
       auto c4 = -wheel_torque / w_ratio + steering_torque / s_ratio - m2_torque;

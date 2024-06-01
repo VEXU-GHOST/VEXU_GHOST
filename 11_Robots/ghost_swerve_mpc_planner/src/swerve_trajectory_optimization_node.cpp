@@ -67,6 +67,7 @@ int main(int argc, char * argv[])
   std::vector<double> reference(state_names.size(), 0.0);
   reference[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
   reference[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  reference[reference_trajectory.getStateIndex("base_vel_theta")] = 1.0;
   reference_trajectory.addNode(1.25, reference);
 
   reference[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
