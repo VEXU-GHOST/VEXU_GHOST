@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,6 +46,7 @@ enum device_type_e
   GPS_SENSOR,            // Unsupported
   RADIO,                 // Unsupported
   JOYSTICK,
+  DIGITAL_IO,
   INVALID
 };
 
