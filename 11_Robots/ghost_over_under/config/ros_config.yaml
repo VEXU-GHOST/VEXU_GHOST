@@ -95,7 +95,7 @@ competition_state_machine_node:
       # motion planning
       move_to_pose_kp_xy: 1.0
       move_to_pose_kd_xy: 0.7
-      move_to_pose_kp_theta: 0.6
+      move_to_pose_kp_theta: 1.0
       move_to_pose_kd_theta: 0.7
 
       # Steering Controller
@@ -116,8 +116,8 @@ competition_state_machine_node:
 
       lift_gear_ratio: 30.
 
-      lift_up_angle_deg: -90.
-      lift_climbed_angle_deg: -150.
+      lift_up_angle_deg: 360.
+      lift_climbed_angle_deg: 0.
       # degree per second of actual lift
       lift_kP: .05
       lift_speed: -10. #TODO
@@ -159,6 +159,9 @@ ekf_pf_node:
       map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # Initial position
+      # init_x: 0.5
+      # init_y: 0.0
+      # init_r: 1.57
       init_x: -0.3048
       init_y: -1.524
       init_r: 0.0
@@ -937,8 +940,11 @@ map_ekf_node:
 
     initial_state:
       [
+        # 0.5,
         -0.3048,
+        # 0.0,
         -1.524,
+        # 1.57,
         0.0,
         0.0,
         0.0,
@@ -1644,17 +1650,13 @@ cubic_motion_planner:
   ros__parameters:
     command_topic: "/motion_planner/cubic_command"
 
-    sensor_update_topic: "/v5/sensor_update"
-
     trajectory_topic: "/motion_planner/trajectory"
 
     odom_topic: "/map_ekf/odometry"
 
 trapezoid_motion_planner:
   ros__parameters:
-    command_topic: "/motion_planner/cubic_command"
-
-    sensor_update_topic: "/v5/sensor_update"
+    command_topic: "/motion_planner/trapezoid_command"
 
     trajectory_topic: "/motion_planner/trajectory"
 

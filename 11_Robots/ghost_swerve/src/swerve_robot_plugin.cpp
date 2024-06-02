@@ -674,6 +674,9 @@ void SwerveRobotPlugin::teleop(double current_time)
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
 
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+        rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", -1.0);
+
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
 
@@ -683,6 +686,9 @@ void SwerveRobotPlugin::teleop(double current_time)
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
 
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+        rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 1.0);
+
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
 
@@ -691,6 +697,9 @@ void SwerveRobotPlugin::teleop(double current_time)
       } else {
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
+        rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 0);
 
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
@@ -707,6 +716,9 @@ void SwerveRobotPlugin::teleop(double current_time)
     } else {
       rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
       rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
+      rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 0);
 
       rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
       rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);

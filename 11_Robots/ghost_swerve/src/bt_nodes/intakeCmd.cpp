@@ -135,25 +135,10 @@ BT::NodeStatus IntakeCmd::tick()
     status = BT::NodeStatus::SUCCESS;
     intake_voltage = 0;
     rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
-    // intake_stalling_ = false;
-    // intake_cooling_down_ = true;
-    // intake_cooldown_start_ = std::chrono::system_clock::now();
   }
 
-  // Enforce INTAKE_MOTOR cooldown period
-  // if(intake_cooling_down_){
-  //    if((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - intake_cooldown_start_).count() <= burnout_cooldown_duration_ms_) && intake_command){
-  //            rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
-  //            rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
-  //    }
-  //    else{
-  //            intake_cooling_down_ = false;
-  //    }
-  // }
-
-
   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
-  RCLCPP_INFO(node_ptr_->get_logger(), "intaking");
+  // RCLCPP_INFO(node_ptr_->get_logger(), "intaking");
 
   return status;
 }

@@ -70,29 +70,13 @@ BT::NodeStatus Climb::onStart()
 /// This is a convenient place todo a cleanup, if needed.
 void Climb::onHalted()
 {
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
 
   resetStatus();
 }
-
-// float Climb::tempPID(
-//   std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_,
-//   const std::string & motor1, const std::string & motor2, float pos_want,
-//   double kP)
-// {
-//   float pos1 = rhi_ptr_->getMotorPosition(motor1);
-//   float pos2 = rhi_ptr_->getMotorPosition(motor2);
-//   float pos = (pos1 + pos2) / 2;
-//   float action = std::clamp((pos_want - pos) * kP, -100., 100.);       // TODO ???
-//   if (fabs(action) < 1.5) {
-//     action = 0;
-//   }
-//   rhi_ptr_->setMotorVoltageCommandPercent(motor1, action);
-//   rhi_ptr_->setMotorVoltageCommandPercent(motor2, action);
-//   // std::cout << "pos1: " << pos1 << " pos2: " << pos2 << " want: " << pos_want << " kP " << kP << " error " << (pos_want - pos) << " action " << action << std::endl;
-//   return pos - pos_want;
-// }
 
 BT::NodeStatus Climb::onRunning()
 {
@@ -141,6 +125,9 @@ BT::NodeStatus Climb::onRunning()
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
 
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", -1.0);
+
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
 
@@ -150,6 +137,9 @@ BT::NodeStatus Climb::onRunning()
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
 
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 1.0);
+
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
 
@@ -158,6 +148,9 @@ BT::NodeStatus Climb::onRunning()
   } else {
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 0);
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
