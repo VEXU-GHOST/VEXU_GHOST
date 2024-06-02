@@ -1,8 +1,7 @@
 #!/bin/bash
 logger "RUNNING launch_hardware.sh"
-cd $VEXU_HOME
 source ~/.bashrc
-
+cd $VEXU_HOME
 # idk if we need to double it given it's already in bashrc but it works so don't touch it
 source /opt/ros/humble/setup.bash
 source $VEXU_HOME/install/setup.bash
