@@ -124,17 +124,17 @@ public:
   }
 };
 
-class DigitalIODeviceConfig : public DeviceConfig
+class DigitalIOConfig : public DeviceConfig
 {
 public:
   std::shared_ptr<DeviceBase> clone() const override
   {
-    return std::make_shared<DigitalIODeviceConfig>(*this);
+    return std::make_shared<DigitalIOConfig>(*this);
   }
 
   bool operator==(const DeviceBase & rhs) const override
   {
-    const DigitalIODeviceConfig * d_rhs = dynamic_cast<const DigitalIODeviceConfig *>(&rhs);
+    const DigitalIOConfig * d_rhs = dynamic_cast<const DigitalIOConfig *>(&rhs);
     return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) &&
            (type == d_rhs->type);
   }
