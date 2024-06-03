@@ -29,10 +29,35 @@ swerve_mpc_planner_node:
     motor_torque_limit_nm: 0.35
     motor_speed_limit_rpm: 650.0
 
-    default_state_weights:
-      - 100000.0 # base_pose_x
-      - 100000.0 # base_pose_y
-      - 100000.0 # base_pose_theta
+    state_normalization:
+      - 3.6576 # base_pose_x
+      - 3.6576 # base_pose_y
+      - 3.14159 # base_pose_theta
+      - 1.50481 # base_vel_x
+      - 1.50481 # base_vel_y
+      - 6.7029 # base_vel_theta
+      - 12.83 # base_accel_x
+      - 12.83 # base_accel_y
+      - 28.8108 # base_accel_theta
+
+    joint_normalization:
+      - 3.14159 # steering_angle
+      - 20.11 # steering_vel
+      - 500.0 # steering_accel
+      - 43.095 # wheel_vel
+      - 1.10564 # wheel_torque
+      - 122.625 # lateral_force
+      - 650.0 # m1_velocity
+      - 650.0 # m2_velocity
+      - 0.35 # m1_torque
+      - 0.35 # m2_torque
+      - 12000.0 # m1_voltage
+      - 12000.0 # m2_voltage
+
+    state_weights:
+      - 1.0e+6 # base_pose_x
+      - 1.0e+6 # base_pose_y
+      - 1.0e+6 # base_pose_theta
       - 0.0 # base_vel_x
       - 0.0 # base_vel_y
       - 0.0 # base_vel_theta
@@ -40,13 +65,13 @@ swerve_mpc_planner_node:
       - 0.0 # base_accel_y
       - 0.0 # base_accel_theta
 
-    default_joint_weights:
+    joint_weights:
       - 0.0 # steering_angle
-      - 0.5 # steering_vel
+      - 1.0 # steering_vel
       - 0.00001 # steering_accel
-      - 0.01 # wheel_vel
-      - 0.5 # wheel_torque
-      - 0.5 # lateral_force
+      - 0.0 # wheel_vel
+      - 0.01 # wheel_torque
+      - 100.0 # lateral_force
       - 0.00001 # m1_velocity
       - 0.00001 # m2_velocity
       - 0.00001 # m1_torque

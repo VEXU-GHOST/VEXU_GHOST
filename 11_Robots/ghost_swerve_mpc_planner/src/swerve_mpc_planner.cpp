@@ -121,19 +121,32 @@ void SwerveMPCPlanner::loadConfig()
   declare_parameter("wheel_constraint_tolerance", 0.0);
   config_.wheel_constraint_tolerance = get_parameter("wheel_constraint_tolerance").as_double();
 
-  // Weights
-  declare_parameter("default_state_weights", std::vector<double>{});
-  auto default_state_weights = get_parameter("default_state_weights").as_double_array();
+  declare_parameter("state_normalization", std::vector<double>{});
+  auto state_norms = get_parameter("state_normalization").as_double_array();
 
-  declare_parameter("default_joint_weights", std::vector<double>{});
-  auto default_joint_weights = get_parameter("default_joint_weights").as_double_array();
+  declare_parameter("joint_normalization", std::vector<double>{});
+  auto joint_norms = get_parameter("joint_normalization").as_double_array();
+
+  norms_ = std::vector<double>{};
+  norms_.insert(norms_.end(), state_norms.begin(), state_norms.end());
+  norms_.insert(norms_.end(), joint_norms.begin(), joint_norms.end());
+  norms_.insert(norms_.end(), joint_norms.begin(), joint_norms.end());
+  norms_.insert(norms_.end(), joint_norms.begin(), joint_norms.end());
+  norms_.insert(norms_.end(), joint_norms.begin(), joint_norms.end());
+
+  // Weights
+  declare_parameter("state_weights", std::vector<double>{});
+  auto state_weights = get_parameter("state_weights").as_double_array();
+
+  declare_parameter("joint_weights", std::vector<double>{});
+  auto joint_weights = get_parameter("joint_weights").as_double_array();
 
   weights_ = std::vector<double>{};
-  weights_.insert(weights_.end(), default_state_weights.begin(), default_state_weights.end());
-  weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
-  weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
-  weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
-  weights_.insert(weights_.end(), default_joint_weights.begin(), default_joint_weights.end());
+  weights_.insert(weights_.end(), state_weights.begin(), state_weights.end());
+  weights_.insert(weights_.end(), joint_weights.begin(), joint_weights.end());
+  weights_.insert(weights_.end(), joint_weights.begin(), joint_weights.end());
+  weights_.insert(weights_.end(), joint_weights.begin(), joint_weights.end());
+  weights_.insert(weights_.end(), joint_weights.begin(), joint_weights.end());
 
   // Module Positions
   module_positions_ = std::vector<Eigen::Vector2d>{
@@ -282,6 +295,11 @@ void SwerveMPCPlanner::generateStateNames()
     throw std::runtime_error(
             "[SwerveMPCPlanner::populateContainers] Error: weights must be the same length as the state vector!");
   }
+
+  if (norms_.size() != state_names_.size()) {
+    throw std::runtime_error(
+            "[SwerveMPCPlanner::populateContainers] Error: norms must be the same length as the state vector!");
+  }
 }
 
 void SwerveMPCPlanner::generateParameterNames()
@@ -350,7 +368,7 @@ void SwerveMPCPlanner::populateContainers()
 
   int weight_index = 0;
   for (auto & name : state_names_) {
-    weight_index_map_[name] = weight_index;
+    weight_norm_index_map_[name] = weight_index;
     weight_index++;
   }
 }
@@ -367,10 +385,19 @@ const Eigen::Vector2d & SwerveMPCPlanner::getModulePosition(int m) const
 
 double SwerveMPCPlanner::getWeight(std::string name)
 {
-  if (weight_index_map_.count(name) != 0) {
-    return weights_[weight_index_map_.at(name)];
+  if (weight_norm_index_map_.count(name) != 0) {
+    return weights_[weight_norm_index_map_.at(name)];
   } else {
     throw std::runtime_error("[getWeight] No state with name " + name);
+  }
+}
+
+double SwerveMPCPlanner::getNormalization(std::string name)
+{
+  if (weight_norm_index_map_.count(name) != 0) {
+    return norms_[weight_norm_index_map_.at(name)];
+  } else {
+    throw std::runtime_error("[getNormalization] No state with name " + name);
   }
 }
 
@@ -415,11 +442,14 @@ casadi::Matrix<casadi::SXElem> SwerveMPCPlanner::getQuadraticTrackingCost(std::s
   auto r1 = getParam(kt1_ + state + "_ref");
   auto r2 = getParam(kt2_ + state + "_ref");
   double weight = getWeight(state);
+  double norm = getNormalization(state);
 
-  return weight * 0.5 * config_.dt * (pow(s1 - r1, 2) + pow(s2 - r2, 2));
+  return weight * 0.5 * config_.dt * (pow((s1 - r1) / norm, 2) + pow((s2 - r2) / norm, 2));
 }
 
-casadi::Matrix<casadi::SXElem> SwerveMPCPlanner::getJerkCost(std::string state, int k, double cost)
+casadi::Matrix<casadi::SXElem> SwerveMPCPlanner::getJerkCost(
+  std::string state, int k,
+  double weight)
 {
   std::string kt1_ = "k" + std::to_string(k + 1) + "_";
   std::string kt2_ = "k" + std::to_string(k) + "_";
@@ -427,8 +457,9 @@ casadi::Matrix<casadi::SXElem> SwerveMPCPlanner::getJerkCost(std::string state, 
   auto s1 = getState(kt1_ + state);
   auto s2 = getState(kt2_ + state);
   auto jerk = (s1 - s2) / config_.dt;
+  double norm = getNormalization(state) * config_.dt;
 
-  return cost * pow(jerk, 2);
+  return weight * pow(jerk / norm, 2);
 }
 
 std::unordered_map<std::string, std::vector<double>> SwerveMPCPlanner::generateTrajectoryMap(
@@ -773,47 +804,59 @@ void SwerveMPCPlanner::setStateBounds()
   }
 }
 
-void SwerveMPCPlanner::addCosts()
+void SwerveMPCPlanner::addStateTrackingCosts()
 {
   // Apply Quadratic costs
   for (int k = 0; k < num_knots_ - 1; k++) {
-    std::string kt1_ = "k" + std::to_string(k) + "_";
-    std::string kt2_ = "k" + std::to_string(k + 1) + "_";
-
-    // Regularize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
-    cost_ += getQuadraticTrackingCost("base_accel_x", k);
-    cost_ += getQuadraticTrackingCost("base_accel_y", k);
-    cost_ += getQuadraticTrackingCost("base_accel_theta", k);
-
-    // Regularize Base Jerk
-    cost_ += getJerkCost("base_accel_x", k, 0.01);
-    cost_ += getJerkCost("base_accel_y", k, 0.01);
-    cost_ += getJerkCost("base_accel_theta", k, 0.01);
-
-    // Penalize Pose Deviation
     cost_ += getParam("pose_tracking_mode") * getQuadraticTrackingCost("base_pose_x", k);
     cost_ += getParam("pose_tracking_mode") * getQuadraticTrackingCost("base_pose_y", k);
     cost_ += getParam("pose_tracking_mode") * getQuadraticTrackingCost("base_pose_theta", k);
 
-    // Penalize Velocity Deviation
     cost_ += getQuadraticTrackingCost("base_vel_x", k);
     cost_ += getQuadraticTrackingCost("base_vel_y", k);
     cost_ += getQuadraticTrackingCost("base_vel_theta", k);
 
+    cost_ += getQuadraticTrackingCost("base_accel_x", k);
+    cost_ += getQuadraticTrackingCost("base_accel_y", k);
+    cost_ += getQuadraticTrackingCost("base_accel_theta", k);
+
     for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
       std::string mN_ = "m" + std::to_string(m) + "_";
 
-      // Small Regularization
-      cost_ += getQuadraticTrackingCost(mN_ + "steering_accel", k);
-      cost_ += getQuadraticTrackingCost(mN_ + "steering_vel", k);
-      cost_ += getQuadraticTrackingCost(mN_ + "wheel_vel", k);
-      cost_ += getQuadraticTrackingCost(mN_ + "wheel_torque", k);
       cost_ += getQuadraticTrackingCost(mN_ + "lateral_force", k);
+      cost_ += getQuadraticTrackingCost(mN_ + "steering_vel", k);
 
+      // Motor States
+      cost_ += getQuadraticTrackingCost(mN_ + "m1_velocity", k);
+      cost_ += getQuadraticTrackingCost(mN_ + "m2_velocity", k);
+      cost_ += getQuadraticTrackingCost(mN_ + "m1_torque", k);
+      cost_ += getQuadraticTrackingCost(mN_ + "m2_torque", k);
+      cost_ += getQuadraticTrackingCost(mN_ + "m1_voltage", k);
+      cost_ += getQuadraticTrackingCost(mN_ + "m2_voltage", k);
+    }
+  }
+}
+
+void SwerveMPCPlanner::addJerkCosts()
+{
+  for (int k = 0; k < num_knots_ - 1; k++) {
+    cost_ += getJerkCost("base_accel_x", k, 0.01);
+    cost_ += getJerkCost("base_accel_y", k, 0.01);
+    cost_ += getJerkCost("base_accel_theta", k, 0.01);
+
+    for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+      std::string mN_ = "m" + std::to_string(m) + "_";
       cost_ += getJerkCost(mN_ + "lateral_force", k, 0.001);
       cost_ += getJerkCost(mN_ + "wheel_torque", k, 0.01);
     }
   }
+}
+
+
+void SwerveMPCPlanner::addCosts()
+{
+  addStateTrackingCosts();
+  addJerkCosts();
 }
 
 void SwerveMPCPlanner::initSolver()

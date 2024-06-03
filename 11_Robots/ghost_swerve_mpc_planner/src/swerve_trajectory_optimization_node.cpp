@@ -106,10 +106,6 @@ int main(int argc, char * argv[])
     std::vector<double>> state_solution_map = node_ptr->generateTrajectoryMap(
     raw_solution_vector);
 
-  if (!plot) {
-    return 0;
-  }
-
   while (!(*EXIT_GLOBAL_PTR)) {
     std::this_thread::sleep_for(50ms);
   }

@@ -205,6 +205,7 @@ private:
 
   // Symbolic Helpers
   double getWeight(std::string name);
+  double getNormalization(std::string name);
   casadi::Matrix<casadi::SXElem> getState(std::string name, int k);
   casadi::Matrix<casadi::SXElem> getState(std::string name);
   casadi::Matrix<casadi::SXElem> getParam(std::string name);
@@ -222,7 +223,9 @@ private:
 
   // Costs
   casadi::Matrix<casadi::SXElem> getQuadraticTrackingCost(std::string state, int k);
-  casadi::Matrix<casadi::SXElem> getJerkCost(std::string state, int k, double cost);
+  casadi::Matrix<casadi::SXElem> getJerkCost(std::string state, int k, double weight);
+  void addStateTrackingCosts();
+  void addJerkCosts();
   void addCosts();
 
   // Bounds
@@ -261,12 +264,13 @@ private:
   // Index Helpers
   std::unordered_map<std::string, int> state_index_map_;
   std::unordered_map<std::string, int> param_index_map_;
-  std::unordered_map<std::string, int> weight_index_map_;
+  std::unordered_map<std::string, int> weight_norm_index_map_;
 
   // Containers
   casadi::Matrix<casadi::SXElem> state_vector_;
   casadi::Matrix<casadi::SXElem> param_vector_;
   std::vector<double> weights_;
+  std::vector<double> norms_;
 
   casadi::Matrix<casadi::SXElem> cost_;
   casadi::DM lbx_;
