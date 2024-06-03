@@ -116,7 +116,11 @@ public:
     }
 
     memcpy(&byte_pack, msg_data, 1);
-    ports = unpackByte(byte_pack & read_mask);
+    auto byte_vector = unpackByte(byte_pack & read_mask);
+    
+    for (int i = 0; i < byte_vector.size(); i++) {
+        ports[i] = ports[i] || byte_vector[i];
+    }
   }
 };
 
