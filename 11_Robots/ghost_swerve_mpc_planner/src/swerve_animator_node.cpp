@@ -120,46 +120,8 @@ int main(int argc, char * argv[])
       const double WHEELBASE_WIDTH = 12.5 * ghost_util::INCHES_TO_METERS;
       const double WHEEL_WIDTH = 1.0 * ghost_util::INCHES_TO_METERS;
       const double WHEEL_RADIUS = 2.75 / 2.0 * ghost_util::INCHES_TO_METERS;
-
-      std::vector<double> x_pos;
-      std::vector<double> y_pos;
-      std::vector<double> x_vel;
-      std::vector<double> y_vel;
-      std::vector<double> x_angle_components;
-      std::vector<double> y_angle_components;
-      std::vector<double> wheel_force_x_components;
-      std::vector<double> wheel_force_y_components;
-      std::vector<double> lateral_force_x_components;
-      std::vector<double> lateral_force_y_components;
-
-      x_pos.reserve(NUM_KNOTS);
-      y_pos.reserve(NUM_KNOTS);
-      x_vel.reserve(NUM_KNOTS);
-      y_vel.reserve(NUM_KNOTS);
-      x_angle_components.reserve(NUM_KNOTS);
-      y_angle_components.reserve(NUM_KNOTS);
-      wheel_force_x_components.reserve(NUM_KNOTS);
-      wheel_force_y_components.reserve(NUM_KNOTS);
-      lateral_force_x_components.reserve(NUM_KNOTS);
-      lateral_force_y_components.reserve(NUM_KNOTS);
-
-      for (int k = 0; k < NUM_KNOTS; k++) {
-        x_pos.push_back(trajectory_map["base_pose_x"][k]);
-        y_pos.push_back(trajectory_map["base_pose_y"][k]);
-        x_vel.push_back(trajectory_map["base_vel_x"][k]);
-        y_vel.push_back(trajectory_map["base_vel_y"][k]);
-
-        x_angle_components.push_back(cos(trajectory_map["base_pose_theta"][k]));
-        y_angle_components.push_back(sin(trajectory_map["base_pose_theta"][k]));
-
-        auto angle = trajectory_map["m1_steering_angle"][k];
-        auto wheel_force = trajectory_map["m1_wheel_torque"][k] / WHEEL_RADIUS;
-        auto lateral_force = trajectory_map["m1_lateral_force"][k];
-        wheel_force_x_components.push_back(wheel_force * cos(angle));
-        wheel_force_y_components.push_back(wheel_force * sin(angle));
-        lateral_force_x_components.push_back(-lateral_force * sin(angle));
-        lateral_force_y_components.push_back(lateral_force * cos(angle));
-      }
+      const double STEERING_RATIO = 0.295454545;
+      const double WHEEL_RATIO = 0.633116883;
 
       auto plotRectanglePoints =
         [&](double x, double y, double width, double height, double angle,
@@ -257,7 +219,9 @@ int main(int argc, char * argv[])
 
             // Extract and plot forces
             auto angle = trajectory_map[module_prefix + "steering_angle"][k] + theta;
-            auto wheel_force = trajectory_map[module_prefix + "wheel_torque"][k] / WHEEL_RADIUS;
+            auto wheel_force =
+              (trajectory_map[module_prefix + "m1_torque"][k] -
+              trajectory_map[module_prefix + "m2_torque"][k]) / WHEEL_RADIUS;
             auto lateral_force = trajectory_map[module_prefix + "lateral_force"][k];
 
             plt::plot(

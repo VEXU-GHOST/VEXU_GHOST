@@ -43,9 +43,6 @@ swerve_mpc_planner_node:
     joint_normalization:
       - 3.14159 # steering_angle
       - 20.11 # steering_vel
-      - 500.0 # steering_accel
-      - 43.095 # wheel_vel
-      - 1.10564 # wheel_torque
       - 122.625 # lateral_force
       - 650.0 # m1_velocity
       - 650.0 # m2_velocity
@@ -67,14 +64,11 @@ swerve_mpc_planner_node:
 
     joint_weights:
       - 0.0 # steering_angle
-      - 1.0 # steering_vel
-      - 0.00001 # steering_accel
-      - 0.0 # wheel_vel
-      - 0.01 # wheel_torque
-      - 100.0 # lateral_force
-      - 0.00001 # m1_velocity
-      - 0.00001 # m2_velocity
-      - 0.00001 # m1_torque
-      - 0.00001 # m2_torque
-      - 0.00001 # m1_voltage
-      - 0.00001 # m2_voltage
+      - 0.01 # steering_vel
+      - 1.0e+6 # lateral_force
+      - 0.0 # m1_velocity
+      - 0.0 # m2_velocity
+      - 0.0 # m1_torque
+      - 0.0 # m2_torque
+      - 0.0 # m1_voltage
+      - 0.0 # m2_voltage
