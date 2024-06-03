@@ -105,21 +105,14 @@ public:
     checkMsgSize(msg, getActuatorPacketSize());
     auto msg_data = msg.data();
     unsigned char byte_pack;
-    unsigned char read_mask;
-
-    //TODO(xander): change packByte(is_actuator) and ~packByte(is_actuator) into field variables
-    if (hardware_type == hardware_type_e::V5_BRAIN) {
-        read_mask = packByte(is_actuator);
-    }
-    else if (hardware_type == hardware_type_e::COPROCESSOR) {
-        read_mask = ~packByte(is_actuator);
-    }
 
     memcpy(&byte_pack, msg_data, 1);
-    auto byte_vector = unpackByte(byte_pack & read_mask);
+    auto byte_vector = unpackByte(byte_pack);
     
     for (int i = 0; i < byte_vector.size(); i++) {
-        ports[i] = ports[i] || byte_vector[i];
+        if (hardware_type == hardware_type_e::V5_BRAIN && !is_actuator[i]) continue;
+        else if (hardware_type == hardware_type_e::COPROCESSOR && is_actuator[i]) continue;
+        ports[i] = byte_vector[i];
     }
   }
 };
