@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,181 +36,103 @@ namespace ghost_v5_interfaces
 namespace devices
 {
 
-const std::string MAIN_JOYSTICK_NAME = "joy_master";
-const std::string PARTNER_JOYSTICK_NAME = "joy_partner";
-
-class JoystickDeviceData : public DeviceData
+class DigitalIODeviceData : public DeviceData
 {
 public:
-  JoystickDeviceData(std::string name)
-  : DeviceData(name, device_type_e::JOYSTICK)
+  DigitalIODeviceData(std::string name)
+  : DeviceData(name, device_type_e::DIGITAL_IO)
   {
   }
 
   int getActuatorPacketSize() const override
   {
-    return 0;
+    return 1;
   }
 
   int getSensorPacketSize() const override
   {
-    return 4 * 4 + 2;
+    return 1;
   }
 
-  // Joystick State
-  float left_x = 0.0;
-  float left_y = 0.0;
-  float right_x = 0.0;
-  float right_y = 0.0;
-  bool btn_a = false;
-  bool btn_b = false;
-  bool btn_x = false;
-  bool btn_y = false;
-  bool btn_r1 = false;
-  bool btn_r2 = false;
-  bool btn_l1 = false;
-  bool btn_l2 = false;
-  bool btn_u = false;
-  bool btn_l = false;
-  bool btn_r = false;
-  bool btn_d = false;
+  // Digital IO State
+  std::vector<bool> ports;
+  std::vector<bool> is_actuator;
 
   void update(std::shared_ptr<DeviceData> data_ptr) override
   {
-    auto joy_data_ptr = data_ptr->as<JoystickDeviceData>();
-    left_x = joy_data_ptr->left_x;
-    left_y = joy_data_ptr->left_y;
-    right_x = joy_data_ptr->right_x;
-    right_y = joy_data_ptr->right_y;
-    btn_a = joy_data_ptr->btn_a;
-    btn_b = joy_data_ptr->btn_b;
-    btn_x = joy_data_ptr->btn_x;
-    btn_y = joy_data_ptr->btn_y;
-    btn_u = joy_data_ptr->btn_u;
-    btn_l = joy_data_ptr->btn_l;
-    btn_r = joy_data_ptr->btn_r;
-    btn_d = joy_data_ptr->btn_d;
-    btn_r1 = joy_data_ptr->btn_r1;
-    btn_r2 = joy_data_ptr->btn_r2;
-    btn_l1 = joy_data_ptr->btn_l1;
-    btn_l2 = joy_data_ptr->btn_l2;
+    auto digital_data_ptr = data_ptr->as<DigitalIODeviceData>();
+    ports = digital_data_ptr->ports;
   }
 
   std::shared_ptr<DeviceBase> clone() const override
   {
-    return std::make_shared<JoystickDeviceData>(*this);
+    return std::make_shared<DigitalIODeviceData>(*this);
   }
 
   bool operator==(const DeviceBase & rhs) const override
   {
-    const JoystickDeviceData * d_rhs = dynamic_cast<const JoystickDeviceData *>(&rhs);
-    return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) &&
-           (left_x == d_rhs->left_x) && (left_y == d_rhs->left_y) && (right_x == d_rhs->right_x) &&
-           (right_y == d_rhs->right_y) && (btn_a == d_rhs->btn_a) && (btn_b == d_rhs->btn_b) &&
-           (btn_x == d_rhs->btn_x) && (btn_y == d_rhs->btn_y) && (btn_r1 == d_rhs->btn_r1) &&
-           (btn_r2 == d_rhs->btn_r2) && (btn_l1 == d_rhs->btn_l1) && (btn_l2 == d_rhs->btn_l2) &&
-           (btn_u == d_rhs->btn_u) && (btn_l == d_rhs->btn_l) && (btn_r == d_rhs->btn_r) &&
-           (btn_d == d_rhs->btn_d);
+    const DigitalIODeviceData * d_rhs = dynamic_cast<const DigitalIODeviceData *>(&rhs);
+    if (d_rhs == nullptr || ports.size() != d_rhs->ports.size()) return false;
+    for (int i = 0; i < ports.size(); i++) {
+        if (ports[i] != d_rhs->ports[i]) return false;
+        if (is_actuator[i] != d_rhs->is_actuator[i]) return false;
+    }
+    return true;
   }
 
   std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
   {
-    std::vector<unsigned char> msg;
-    int byte_offset = 0;
-    if ((hardware_type == hardware_type_e::V5_BRAIN)) {
-      msg.resize(getSensorPacketSize(), 0);
-      auto msg_data = msg.data();
-      memcpy(msg_data + byte_offset, &left_x, 4);
-      byte_offset += 4;
-      memcpy(msg_data + byte_offset, &left_y, 4);
-      byte_offset += 4;
-      memcpy(msg_data + byte_offset, &right_x, 4);
-      byte_offset += 4;
-      memcpy(msg_data + byte_offset, &right_y, 4);
-      byte_offset += 4;
+    std::vector<unsigned char> msg(getActuatorPacketSize());
+    unsigned char byte_pack = packByte(ports);
+    unsigned char write_mask;
 
-      auto byte_pack_1 = packByte(
-        std::vector<bool>{
-            btn_a, btn_b, btn_x, btn_y, btn_u, btn_l, btn_r, btn_d
-          });
-      memcpy(msg_data + byte_offset, &byte_pack_1, 1);
-      byte_offset += 1;
-
-      auto byte_pack_2 = packByte(
-        std::vector<bool>{
-            btn_r1, btn_r2, btn_l1, btn_l2, 0, 0, 0, 0
-          });
-      memcpy(msg_data + byte_offset, &byte_pack_2, 1);
-      byte_offset += 1;
+    //TODO(xander): change packByte(is_actuator) and ~packByte(is_actuator) into field variables
+    if (hardware_type == hardware_type_e::V5_BRAIN) {
+      write_mask = ~packByte(is_actuator);
+    }
+    else if (hardware_type == hardware_type_e::COPROCESSOR) {
+      write_mask = packByte(is_actuator);
     }
 
-    int msg_size =
-      (hardware_type ==
-      hardware_type_e::V5_BRAIN) ? getSensorPacketSize() : getActuatorPacketSize();
-    checkMsgSize(msg, msg_size);
+    *(msg.data()) = byte_pack & write_mask;
+
+    checkMsgSize(msg, getActuatorPacketSize());
     return msg;
   }
 
   void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
   {
-    int msg_size =
-      (hardware_type ==
-      hardware_type_e::V5_BRAIN) ? getActuatorPacketSize() : getSensorPacketSize();
-    checkMsgSize(msg, msg_size);
-
+    checkMsgSize(msg, getActuatorPacketSize());
     auto msg_data = msg.data();
-    int byte_offset = 0;
-    if (hardware_type == hardware_type_e::COPROCESSOR) {
-      memcpy(&left_x, msg_data + byte_offset, 4);
-      byte_offset += 4;
-      memcpy(&left_y, msg_data + byte_offset, 4);
-      byte_offset += 4;
-      memcpy(&right_x, msg_data + byte_offset, 4);
-      byte_offset += 4;
-      memcpy(&right_y, msg_data + byte_offset, 4);
-      byte_offset += 4;
+    unsigned char byte_pack;
+    unsigned char read_mask;
 
-      unsigned char byte_pack_1, byte_pack_2;
-      memcpy(&byte_pack_1, msg_data + byte_offset, 1);
-      byte_offset += 1;
-      memcpy(&byte_pack_2, msg_data + byte_offset, 1);
-      byte_offset += 1;
-
-      auto byte_vector_1 = unpackByte(byte_pack_1);
-      auto byte_vector_2 = unpackByte(byte_pack_2);
-
-      btn_a = byte_vector_1[0];
-      btn_b = byte_vector_1[1];
-      btn_x = byte_vector_1[2];
-      btn_y = byte_vector_1[3];
-      btn_u = byte_vector_1[4];
-      btn_l = byte_vector_1[5];
-      btn_r = byte_vector_1[6];
-      btn_d = byte_vector_1[7];
-      btn_r1 = byte_vector_2[0];
-      btn_r2 = byte_vector_2[1];
-      btn_l1 = byte_vector_2[2];
-      btn_l2 = byte_vector_2[3];
+    //TODO(xander): change packByte(is_actuator) and ~packByte(is_actuator) into field variables
+    if (hardware_type == hardware_type_e::V5_BRAIN) {
+        read_mask = packByte(is_actuator);
     }
+    else if (hardware_type == hardware_type_e::COPROCESSOR) {
+        read_mask = ~packByte(is_actuator);
+    }
+
+    memcpy(&byte_pack, msg_data, 1);
+    ports = unpackByte(byte_pack & read_mask);
   }
 };
 
-class JoystickDeviceConfig : public DeviceConfig
+class DigitalIODeviceConfig : public DeviceConfig
 {
 public:
-  bool is_partner = false;
-
   std::shared_ptr<DeviceBase> clone() const override
   {
-    return std::make_shared<JoystickDeviceConfig>(*this);
+    return std::make_shared<DigitalIODeviceConfig>(*this);
   }
 
   bool operator==(const DeviceBase & rhs) const override
   {
-    const JoystickDeviceConfig * d_rhs = dynamic_cast<const JoystickDeviceConfig *>(&rhs);
+    const DigitalIODeviceConfig * d_rhs = dynamic_cast<const DigitalIODeviceConfig *>(&rhs);
     return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) &&
-           (type == d_rhs->type) &&
-           (is_partner == d_rhs->is_partner);
+           (type == d_rhs->type);
   }
 };
 
