@@ -32,69 +32,82 @@ namespace ghost_v5_interfaces
 namespace devices
 {
 
-class DigitalActuatorDeviceData : public DeviceData
+class DigitalDeviceData : public DeviceData
 {
 public:
-  DigitalActuatorDeviceData(std::string name)
-  : DeviceData(name, device_type_e::DIGITAL_ACTUATOR)
+  DigitalDeviceData(std::string name)
+  : DeviceData(name, device_type_e::DIGITAL)
   {
   }
 
   int getActuatorPacketSize() const override
   {
-    return 1;
+    return (io_type == ACTUATOR) ? 1 : 0;
   }
 
   int getSensorPacketSize() const override
   {
-    return 0;
+    return (io_type == SENSOR) ? 1 : 0;
   }
 
+  digital_io_type_e io_type;
   bool value;
 
   void update(std::shared_ptr<DeviceData> data_ptr) override
   {
-    auto digital_data_ptr = data_ptr->as<DigitalActuatorDeviceData>();
+    auto digital_data_ptr = data_ptr->as<DigitalDeviceData>();
     value = digital_data_ptr->value;
   }
 
   std::shared_ptr<DeviceBase> clone() const override
   {
-    return std::make_shared<DigitalActuatorDeviceData>(*this);
+    return std::make_shared<DigitalDeviceData>(*this);
   }
 
   bool operator==(const DeviceBase & rhs) const override
   {
-    const DigitalActuatorDeviceData * d_rhs = dynamic_cast<const DigitalActuatorDeviceData *>(&rhs);
+    const DigitalDeviceData * d_rhs = dynamic_cast<const DigitalDeviceData *>(&rhs);
     return (d_rhs != nullptr && value == d_rhs->value);
   }
 
   std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
   {
-    return {(unsigned char) ((hardware_type == COPROCESSOR && value) ? 0x1 : 0x0)};
+    std::vector<unsigned char> msg(1);
+    bool valid = hardware_type == V5_BRAIN && io_type == SENSOR
+              || hardware_type == COPROCESSOR && io_type == ACTUATOR;
+    if (valid) {
+        msg.push_back((unsigned char) value);
+    }
+    return msg;
   }
 
   void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
   {
-    if (hardware_type == COPROCESSOR) return;
-    value = (msg.data()[0] == 0x1);
+    bool valid = hardware_type == V5_BRAIN && io_type == SENSOR
+              || hardware_type == COPROCESSOR && io_type == ACTUATOR;
+    if (!valid) {
+        return;
+    }
+    value = ((bool) msg.data()[0]);
   }
 };
 
-class DigitalActuatorDeviceConfig : public DeviceConfig
+class DigitalDeviceConfig : public DeviceConfig
 {
 public:
   std::shared_ptr<DeviceBase> clone() const override
   {
-    return std::make_shared<DigitalActuatorDeviceConfig>(*this);
+    return std::make_shared<DigitalDeviceConfig>(*this);
   }
 
   bool operator==(const DeviceBase & rhs) const override
   {
-    const DigitalActuatorDeviceConfig * d_rhs = dynamic_cast<const DigitalActuatorDeviceConfig *>(&rhs);
+    const DigitalDeviceConfig * d_rhs = dynamic_cast<const DigitalDeviceConfig *>(&rhs);
     return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) &&
            (type == d_rhs->type);
   }
+
+  digital_io_type_e io_type;
 };
 
 } // namespace devices
