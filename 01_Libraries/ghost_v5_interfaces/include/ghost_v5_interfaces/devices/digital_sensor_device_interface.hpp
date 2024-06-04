@@ -24,11 +24,7 @@
 #pragma once
 
 #include <cstring>
-#include "ghost_util/byte_utils.hpp"
 #include "ghost_v5_interfaces/devices/device_interfaces.hpp"
-
-using ghost_util::packByte;
-using ghost_util::unpackByte;
 
 namespace ghost_v5_interfaces
 {
@@ -36,17 +32,17 @@ namespace ghost_v5_interfaces
 namespace devices
 {
 
-class DigitalIODeviceData : public DeviceData
+class DigitalSensorDeviceData : public DeviceData
 {
 public:
-  DigitalIODeviceData(std::string name)
-  : DeviceData(name, device_type_e::DIGITAL_IO)
+  DigitalSensorDeviceData(std::string name)
+  : DeviceData(name, device_type_e::DIGITAL_SENSOR)
   {
   }
 
   int getActuatorPacketSize() const override
   {
-    return 1;
+    return 0;
   }
 
   int getSensorPacketSize() const override
@@ -54,80 +50,48 @@ public:
     return 1;
   }
 
-  // Digital IO State
-  std::vector<bool> ports;
-  std::vector<bool> is_actuator;
+  bool value;
 
   void update(std::shared_ptr<DeviceData> data_ptr) override
   {
-    auto digital_data_ptr = data_ptr->as<DigitalIODeviceData>();
-    ports = digital_data_ptr->ports;
+    auto digital_data_ptr = data_ptr->as<DigitalSensorDeviceData>();
+    value = digital_data_ptr->value;
   }
 
   std::shared_ptr<DeviceBase> clone() const override
   {
-    return std::make_shared<DigitalIODeviceData>(*this);
+    return std::make_shared<DigitalSensorDeviceData>(*this);
   }
 
   bool operator==(const DeviceBase & rhs) const override
   {
-    const DigitalIODeviceData * d_rhs = dynamic_cast<const DigitalIODeviceData *>(&rhs);
-    if (d_rhs == nullptr || ports.size() != d_rhs->ports.size()) return false;
-    for (int i = 0; i < ports.size(); i++) {
-        if (ports[i] != d_rhs->ports[i]) return false;
-        if (is_actuator[i] != d_rhs->is_actuator[i]) return false;
-    }
-    return true;
+    const DigitalSensorDeviceData * d_rhs = dynamic_cast<const DigitalSensorDeviceData *>(&rhs);
+    return (d_rhs != nullptr && value == d_rhs->value);
   }
 
   std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
   {
-    std::vector<unsigned char> msg(getActuatorPacketSize());
-    unsigned char byte_pack = packByte(ports);
-    unsigned char write_mask;
-
-    //TODO(xander): change packByte(is_actuator) and ~packByte(is_actuator) into field variables
-    if (hardware_type == hardware_type_e::V5_BRAIN) {
-      write_mask = ~packByte(is_actuator);
-    }
-    else if (hardware_type == hardware_type_e::COPROCESSOR) {
-      write_mask = packByte(is_actuator);
-    }
-
-    *(msg.data()) = byte_pack & write_mask;
-
-    checkMsgSize(msg, getActuatorPacketSize());
-    return msg;
+    return {(unsigned char) ((hardware_type == V5_BRAIN && value) ? 0x1 : 0x0)};
   }
 
   void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
   {
-    checkMsgSize(msg, getActuatorPacketSize());
-    auto msg_data = msg.data();
-    unsigned char byte_pack;
-
-    memcpy(&byte_pack, msg_data, 1);
-    auto byte_vector = unpackByte(byte_pack);
-    
-    for (int i = 0; i < byte_vector.size(); i++) {
-        if (hardware_type == hardware_type_e::V5_BRAIN && !is_actuator[i]) continue;
-        else if (hardware_type == hardware_type_e::COPROCESSOR && is_actuator[i]) continue;
-        ports[i] = byte_vector[i];
-    }
+    if (hardware_type == V5_BRAIN) return;
+    value = (msg.data()[0] == 0x1);
   }
 };
 
-class DigitalIOConfig : public DeviceConfig
+class DigitalSensorDeviceConfig : public DeviceConfig
 {
 public:
   std::shared_ptr<DeviceBase> clone() const override
   {
-    return std::make_shared<DigitalIOConfig>(*this);
+    return std::make_shared<DigitalSensorDeviceConfig>(*this);
   }
 
   bool operator==(const DeviceBase & rhs) const override
   {
-    const DigitalIOConfig * d_rhs = dynamic_cast<const DigitalIOConfig *>(&rhs);
+    const DigitalSensorDeviceConfig * d_rhs = dynamic_cast<const DigitalSensorDeviceConfig *>(&rhs);
     return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) &&
            (type == d_rhs->type);
   }
