@@ -210,22 +210,15 @@ private:
   casadi::Matrix<casadi::SXElem> getState(std::string name);
   casadi::Matrix<casadi::SXElem> getParam(std::string name);
   static casadi::DM convertVectorToDM(std::vector<double> vector);
-  static std::string getKnotPrefix(int knot_point);
-  std::string getModulePrefix(int knot_point, int module);
-
-  casadi::Matrix<casadi::SXElem> getWheelVelSym(int knot_point, int module);
-  casadi::Matrix<casadi::SXElem> getWheelTorqueSym(int knot_point, int module);
-  casadi::Matrix<casadi::SXElem> getSteeringVelSym(int knot_point, int module);
-  casadi::Matrix<casadi::SXElem> getSteeringTorqueSym(int knot_point, int module);
-
+  static std::string getKnotPrefix(int i);
 
   // Swerve Constraints
   void addIntegrationConstraints();
   void addInitialStateConstraints();
   void addAccelerationDynamicsConstraints();
   void addNoWheelSlipConstraints();
-  void addMotorModelConstraints();
   void addDifferentialConstraints();
+  void addMotorModelConstraints();
   void addConstraints();
 
   // Costs
