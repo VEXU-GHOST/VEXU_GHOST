@@ -26,7 +26,7 @@
 #include <iostream>
 #include <memory>
 #include "ghost_v5_interfaces/devices/device_interfaces.hpp"
-#include "ghost_v5_interfaces/devices/digital_io_interface.hpp"
+#include "ghost_v5_interfaces/devices/digital_device_interface.hpp"
 #include "yaml-cpp/yaml.h"
 
 namespace ghost_v5_interfaces
@@ -35,9 +35,10 @@ namespace ghost_v5_interfaces
 namespace util
 {
 
-void loadDigitalIOConfigFromYAML(
+void loadDigitalDeviceConfigFromYAML(
   YAML::Node node,
-  std::shared_ptr<devices::DigitalIOConfig> device_io_config_ptr,
+  std::string device_name,
+  std::shared_ptr<devices::DigitalDeviceConfig> device_config_ptr,
   bool verbose = false);
 
 } // namespace util

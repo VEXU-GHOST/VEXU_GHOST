@@ -22,7 +22,7 @@
  */
 
 #include <ghost_util/yaml_utils.hpp>
-#include <ghost_v5_interfaces/util/load_digital_io_config_yaml.hpp>
+#include <ghost_v5_interfaces/util/load_digital_device_config_yaml.hpp>
 
 using ghost_util::loadYAMLParam;
 using namespace ghost_v5_interfaces::devices;
@@ -32,9 +32,10 @@ namespace ghost_v5_interfaces
 namespace util
 {
 
-void loadDigitalIOConfigFromYAML(
+void loadDigitalDeviceConfigFromYAML(
   YAML::Node node,
-  std::shared_ptr<DigitalIOConfig> digital_io_config_ptr,
+  std::string device_name,
+  std::shared_ptr<DigitalDeviceConfig> device_config_ptr,
   bool verbose)
 {
   // Get ADI node
@@ -54,7 +55,7 @@ void loadDigitalIOConfigFromYAML(
   // example of param loading process
   if (!loadYAMLParam(adi_node, "port", digital_io_config_ptr->port, verbose)) {
     throw std::runtime_error(
-            "[loadDigitalIOConfigFromYAML] Error: Port not specified for Rotation Sensor " + sensor_name +
+            "[loadDigitalDeviceConfigFromYAML] Error: Port not specified for Rotation Sensor " + sensor_name +
             "!");
   }
 }
