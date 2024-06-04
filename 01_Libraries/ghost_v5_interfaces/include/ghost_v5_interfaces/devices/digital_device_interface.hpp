@@ -35,22 +35,34 @@ namespace devices
 class DigitalDeviceData : public DeviceData
 {
 public:
-  DigitalDeviceData(std::string name)
+  struct SerialConfig
+  {
+    SerialConfig()
+    {
+    }
+
+    bool operator== (const SerialConfig &rhs) const {
+        return io_type == rhs.io_type;
+    }
+
+    digital_io_type_e io_type;
+  };
+
+  DigitalDeviceData(std::string name, SerialConfig serial_config = SerialConfig())
   : DeviceData(name, device_type_e::DIGITAL)
   {
   }
 
   int getActuatorPacketSize() const override
   {
-    return (io_type == ACTUATOR) ? 1 : 0;
+    return 1;
   }
 
   int getSensorPacketSize() const override
   {
-    return (io_type == SENSOR) ? 1 : 0;
+    return 1;
   }
 
-  digital_io_type_e io_type;
   bool value;
 
   void update(std::shared_ptr<DeviceData> data_ptr) override
@@ -73,8 +85,8 @@ public:
   std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
   {
     std::vector<unsigned char> msg(1);
-    bool valid = hardware_type == V5_BRAIN && io_type == SENSOR
-              || hardware_type == COPROCESSOR && io_type == ACTUATOR;
+    bool valid = hardware_type == V5_BRAIN && serial_config_.io_type == SENSOR
+              || hardware_type == COPROCESSOR && serial_config_.io_type == ACTUATOR;
     if (valid) {
         msg.push_back((unsigned char) value);
     }
@@ -83,13 +95,15 @@ public:
 
   void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
   {
-    bool valid = hardware_type == V5_BRAIN && io_type == SENSOR
-              || hardware_type == COPROCESSOR && io_type == ACTUATOR;
+    bool valid = hardware_type == V5_BRAIN && serial_config_.io_type == SENSOR
+              || hardware_type == COPROCESSOR && serial_config_.io_type == ACTUATOR;
     if (!valid) {
         return;
     }
     value = ((bool) msg.data()[0]);
   }
+
+  SerialConfig serial_config_;
 };
 
 class DigitalDeviceConfig : public DeviceConfig
@@ -107,7 +121,7 @@ public:
            (type == d_rhs->type);
   }
 
-  digital_io_type_e io_type;
+  DigitalDeviceData::SerialConfig serial_config;
 };
 
 } // namespace devices
