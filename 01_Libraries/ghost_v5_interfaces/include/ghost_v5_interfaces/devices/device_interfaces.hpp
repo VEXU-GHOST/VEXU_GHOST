@@ -170,7 +170,7 @@ public:
   /**
    * @brief Converts device data to byte stream.
    *
-   * @param to_v5	set to true when the data is going from coprocessor -> V5 Brain
+   * @param hardware_type current hardware type
    * @return std::vector<unsigned char> byte stream
    */
   virtual std::vector<unsigned char> serialize(hardware_type_e hardware_type) const = 0;
@@ -179,7 +179,7 @@ public:
    * @brief Updates device data from byte stream.
    *
    * @param data byte stream as unsigned char vector
-   * @param from_coprocessor set to true when the data is going from coprocesspr -> V5 Brain
+   * @param hardware_type current hardware type
    */
   virtual void deserialize(
     const std::vector<unsigned char> & data,
