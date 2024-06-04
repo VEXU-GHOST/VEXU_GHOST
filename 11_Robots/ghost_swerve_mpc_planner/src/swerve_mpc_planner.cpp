@@ -905,8 +905,8 @@ void SwerveMPCPlanner::addModuleVelocityComponentsTrackingCost()
       auto des_mod_vel_x = vel_x - vel_theta * mod_offset_y;
       auto des_mod_vel_y = vel_y + vel_theta * mod_offset_x;
 
-      auto curr_mod_vel_x = wheel_vel * cos(world_steering_angle);
-      auto curr_mod_vel_y = wheel_vel * sin(world_steering_angle);
+      auto curr_mod_vel_x = wheel_vel * config_.wheel_radius * cos(world_steering_angle);
+      auto curr_mod_vel_y = wheel_vel * config_.wheel_radius * sin(world_steering_angle);
 
       auto weight = vel_components_tracking_weight_;
       auto norm = vel_components_tracking_norm_;
