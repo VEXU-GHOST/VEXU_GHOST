@@ -50,6 +50,11 @@ enum device_type_e
   INVALID
 };
 
+enum digital_io_type_e {
+  ACTUATOR,
+  SENSOR
+};
+
 enum hardware_type_e
 {
   COPROCESSOR,
