@@ -35,7 +35,7 @@ swerve_mpc_planner_node:
     state_normalization:
       - 3.6576 # base_pose_x
       - 3.6576 # base_pose_y
-      - 3.14159 # base_pose_theta
+      - 6.28318 # 3.14159 # base_pose_theta
       - 1.50481 # base_vel_x
       - 1.50481 # base_vel_y
       - 6.7029 # base_vel_theta
@@ -44,7 +44,7 @@ swerve_mpc_planner_node:
       - 28.8108 # base_accel_theta
 
     joint_normalization:
-      - 3.14159 # steering_angle
+      - 6.28318 # 3.14159 # steering_angle
       - 20.11 # steering_vel
       - 500.0 # steering_accel
       - 43.095 # wheel_vel

@@ -887,9 +887,9 @@ void SwerveMPCPlanner::addModuleVelocityComponentsTrackingCost()
   for (int k = 0; k < num_knots_; k++) {
     std::string kt1_ = getKnotPrefix(k);
     auto theta = getState(kt1_ + "base_pose_theta");
-    auto vel_x = getState(kt1_ + "base_vel_x");
-    auto vel_y = getState(kt1_ + "base_vel_y");
-    auto vel_theta = getState(kt1_ + "base_vel_theta");
+    auto vel_x = getParam(kt1_ + "base_vel_x_ref");
+    auto vel_y = getParam(kt1_ + "base_vel_y_ref");
+    auto vel_theta = getParam(kt1_ + "base_vel_theta_ref");
 
     for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
       std::string kt1_mN_ = getModulePrefix(k, m);
