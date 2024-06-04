@@ -53,6 +53,10 @@ namespace util
  *              type: ROTATION_SENSOR
  *              reversed: true/false
  *              data_rate: 5
+ *          limit_switch_1:
+ *              port: A
+ *              type: DIGITAL
+ *              io_type: SENSOR
  *          ...
  *      device_configurations:
  *          my_motor_config_name:
