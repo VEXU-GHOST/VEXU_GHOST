@@ -699,26 +699,19 @@ void SwerveMPCPlanner::addDifferentialConstraints()
       std::string kt1_mN_ = kt1_ + "m" + std::to_string(m) + "_";
       auto steering_vel = getState(kt1_mN_ + "steering_vel");
       auto wheel_vel = getState(kt1_mN_ + "wheel_vel");
-      auto m1_velocity_rad = getState(kt1_mN_ + "m1_velocity") * ghost_util::RPM_TO_RAD_PER_SEC;
-      auto m2_velocity_rad = getState(kt1_mN_ + "m2_velocity") * ghost_util::RPM_TO_RAD_PER_SEC;
 
-      auto c1 = 0.5 * (m1_velocity_rad - m2_velocity_rad) * w_ratio - wheel_vel;
-      auto c2 = 0.5 * (m1_velocity_rad + m2_velocity_rad) * s_ratio - steering_vel;
-
-      constraints_ = vertcat(constraints_, c1);
-      constraints_ = vertcat(constraints_, c2);
+      constraints_ = vertcat(constraints_, getWheelVelSym(k, m) - wheel_vel);
+      constraints_ = vertcat(constraints_, getSteeringVelSym(k, m) - steering_vel);
 
       lbg_ = vertcat(lbg_, DM::zeros(2));
       ubg_ = vertcat(ubg_, DM::zeros(2));
 
       // Torque Constraints
-      auto m1_torque = getState(kt1_mN_ + "m1_torque");
-      auto m2_torque = getState(kt1_mN_ + "m2_torque");
       auto wheel_torque = getState(kt1_mN_ + "wheel_torque");
       auto steering_torque = config_.steering_inertia * getState(kt1_mN_ + "steering_accel");
 
-      auto c3 = wheel_torque / w_ratio + steering_torque / s_ratio - m1_torque;
-      auto c4 = -wheel_torque / w_ratio + steering_torque / s_ratio - m2_torque;
+      auto c3 = getWheelTorqueSym(k, m) - wheel_torque;
+      auto c4 = getSteeringTorqueSym(k, m) - steering_torque;
 
       constraints_ = vertcat(constraints_, c3);
       constraints_ = vertcat(constraints_, c4);
