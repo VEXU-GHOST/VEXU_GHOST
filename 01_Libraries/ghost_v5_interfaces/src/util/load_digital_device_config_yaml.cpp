@@ -75,7 +75,7 @@ void loadDigitalDeviceConfigFromYAML(
 
   // Load IO type
   std::string type;
-  if (!loadYAMLParam(device_node, "type", type, verbose)) {
+  if (!loadYAMLParam(device_node, "io_type", type, verbose)) {
     throw std::runtime_error(
             "[loadDigitalDeviceConfigFromYAML] Error: Type not specified for Digital Device " +
             device_name + "!");
