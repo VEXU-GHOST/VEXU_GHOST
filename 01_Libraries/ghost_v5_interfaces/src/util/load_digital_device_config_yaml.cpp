@@ -38,26 +38,58 @@ void loadDigitalDeviceConfigFromYAML(
   std::shared_ptr<DigitalDeviceConfig> device_config_ptr,
   bool verbose)
 {
-  // Get ADI node
-  auto adi_node = node["ADI"];
-  if (!adi_node || !adi_node.IsMap()) {
-    //TODO(xander): set digital_io_config_ptr to default values and return
-  }
-
-  for (const auto &device_node : adi_node) {
-    //set ports and is_actuator mask
+  // Get device node
+  auto device_node = node["devices"][device_name];
+  if (!device_node) {
+    throw std::runtime_error(
+            "[loadDigitalDeviceConfigFromYAML] Error: Device Sensor " + device_name +
+            " not found!");
   }
 
   // Set base attributes
-  digital_io_config_ptr->type = device_type_e::DIGITAL_IO;
+  device_config_ptr->name = device_name;
+  device_config_ptr->type = device_type_e::DIGITAL;
 
-
-  // example of param loading process
-  if (!loadYAMLParam(adi_node, "port", digital_io_config_ptr->port, verbose)) {
+  // Get port
+  char port;
+  if (!loadYAMLParam(device_node, "port", port, verbose)) {
     throw std::runtime_error(
-            "[loadDigitalDeviceConfigFromYAML] Error: Port not specified for Rotation Sensor " + sensor_name +
-            "!");
+            "[loadDigitalDeviceConfigFromYAML] Error: Port not specified for Digital Device " +
+            device_name + "!");
   }
+
+  // Validate port
+  const std::vector<char> valid_ports = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+  if (std::count(valid_ports.begin(), valid_ports.end(), port) == 0) {
+    throw std::runtime_error(
+            "[loadDigitalDeviceConfigFromYAML] Error: Invalid port specified for Digital Device " +
+            device_name + "!");
+  }
+
+  // Convert port from A-H to 21-28 (for compatibility with existing interfaces)
+  port -= 'A';
+  port += 21;
+
+  // Set port in device config
+  device_config_ptr->port = (int) port;
+
+  // Load IO type
+  std::string type;
+  if (!loadYAMLParam(device_node, "type", type, verbose)) {
+    throw std::runtime_error(
+            "[loadDigitalDeviceConfigFromYAML] Error: Type not specified for Digital Device " +
+            device_name + "!");
+  }
+
+  // Validate IO type
+  if (type != "SENSOR" && type != "ACTUATOR") {
+    throw std::runtime_error(
+            "[loadDigitalDeviceConfigFromYAML] Error: Invalid type specified for Digital Device " +
+            device_name + "!");
+  }
+
+  // Set IO type in device config
+  device_config_ptr->serial_config.io_type = (type == "SENSOR") ? SENSOR : ACTUATOR;
 }
 
 } // namespace util
