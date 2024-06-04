@@ -218,7 +218,6 @@ private:
   casadi::Matrix<casadi::SXElem> getSteeringVelSym(int knot_point, int module);
   casadi::Matrix<casadi::SXElem> getSteeringTorqueSym(int knot_point, int module);
 
-
   // Swerve Constraints
   void addIntegrationConstraints();
   void addInitialStateConstraints();
@@ -233,6 +232,7 @@ private:
   casadi::Matrix<casadi::SXElem> getJerkCost(std::string state, int k, double weight);
   void addStateTrackingCosts();
   void addJerkCosts();
+  void addModuleVelocityComponentsTrackingCost();
   void addCosts();
 
   // Bounds
@@ -272,6 +272,10 @@ private:
   std::unordered_map<std::string, int> state_index_map_;
   std::unordered_map<std::string, int> param_index_map_;
   std::unordered_map<std::string, int> weight_norm_index_map_;
+
+  // Additional Weights
+  double vel_components_tracking_weight_;
+  double vel_components_tracking_norm_;
 
   // Containers
   casadi::Matrix<casadi::SXElem> state_vector_;

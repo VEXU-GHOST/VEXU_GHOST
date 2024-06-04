@@ -1,7 +1,7 @@
 swerve_animator_node:
   ros__parameters:
-    skip_factor: 20
-    speedup_factor: 1.5
+    skip_factor: 50
+    speedup_factor: 2.0
 
 swerve_mpc_planner_node:
   ros__parameters:
@@ -9,7 +9,7 @@ swerve_mpc_planner_node:
     ipopt_verbosity: 5
     max_iterations: 750
 
-    time_horizon: 5.0
+    time_horizon: 6.0
     dt: 0.05
     num_swerve_modules: 4
 
@@ -28,6 +28,9 @@ swerve_mpc_planner_node:
     motor_model_stall_torque_nm: 0.6
     motor_torque_limit_nm: 0.35
     motor_speed_limit_rpm: 650.0
+
+    vel_components_tracking_weight: 10.0
+    vel_components_tracking_norm: 1.50481
 
     state_normalization:
       - 3.6576 # base_pose_x
@@ -55,12 +58,12 @@ swerve_mpc_planner_node:
       - 12000.0 # m2_voltage
 
     state_weights:
-      - 1.0e+6 # base_pose_x
-      - 1.0e+6 # base_pose_y
-      - 1.0e+6 # base_pose_theta
-      - 0.0 # base_vel_x
-      - 0.0 # base_vel_y
-      - 0.0 # base_vel_theta
+      - 1.0e+8 # base_pose_x
+      - 1.0e+8 # base_pose_y
+      - 1.0e+8 # base_pose_theta
+      - 100.0 # base_vel_x
+      - 100.0 # base_vel_y
+      - 100.0 # base_vel_theta
       - 0.0 # base_accel_x
       - 0.0 # base_accel_y
       - 0.0 # base_accel_theta

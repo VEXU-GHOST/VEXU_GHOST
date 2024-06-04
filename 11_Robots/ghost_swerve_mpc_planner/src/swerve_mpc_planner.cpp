@@ -121,6 +121,12 @@ void SwerveMPCPlanner::loadConfig()
   declare_parameter("wheel_constraint_tolerance", 0.0);
   config_.wheel_constraint_tolerance = get_parameter("wheel_constraint_tolerance").as_double();
 
+  declare_parameter("vel_components_tracking_weight", 0.0);
+  vel_components_tracking_weight_ = get_parameter("vel_components_tracking_weight").as_double();
+
+  declare_parameter("vel_components_tracking_norm", 0.0);
+  vel_components_tracking_norm_ = get_parameter("vel_components_tracking_norm").as_double();
+
   declare_parameter("state_normalization", std::vector<double>{});
   auto state_norms = get_parameter("state_normalization").as_double_array();
 
@@ -533,19 +539,6 @@ void SwerveMPCPlanner::addIntegrationConstraints()
       ubg_ = vertcat(ubg_, DM(0));
     }
 
-    // // Steering Velocity
-    // for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
-    //   auto x0 = getModulePrefix(k, m) + "steering_vel";
-    //   auto x1 = getModulePrefix(k + 1, m) + "steering_vel";
-    //   auto dx0 = getSteeringTorqueSym(k, m) / config_.steering_inertia;
-    //   auto dx1 = getSteeringTorqueSym(k + 1, m) / config_.steering_inertia;
-
-    //   // X1 - X0 = 1/2 * DT * (dX1 + dX0)
-    //   auto c = 2 * (getState(x1) - getState(x0)) / config_.dt - dx1 - dx0;
-    //   constraints_ = vertcat(constraints_, c);
-    //   lbg_ = vertcat(lbg_, DM(0));
-    //   ubg_ = vertcat(ubg_, DM(0));
-    // }
   }
 }
 
@@ -661,7 +654,7 @@ void SwerveMPCPlanner::addNoWheelSlipConstraints()
       // Lateral Wheel Velocity Constraint
       auto base_steering_angle = getState(kt1_mN_ + "steering_angle");
       auto tan_vel = vel_theta * sqrt((pow(mod_offset_x, 2) + pow(mod_offset_y, 2)));
-      auto r_angle = atan2(module_positions_[m - 1].y(), module_positions_[m - 1].x());                   // base_link
+      auto r_angle = atan2(module_positions_[m - 1].y(), module_positions_[m - 1].x());
       auto tan_vel_x = tan_vel * -sin(r_angle);
       auto tan_vel_y = tan_vel * cos(r_angle);
 
@@ -889,6 +882,41 @@ void SwerveMPCPlanner::addStateTrackingCosts()
   }
 }
 
+void SwerveMPCPlanner::addModuleVelocityComponentsTrackingCost()
+{
+  for (int k = 0; k < num_knots_; k++) {
+    std::string kt1_ = getKnotPrefix(k);
+    auto theta = getState(kt1_ + "base_pose_theta");
+    auto vel_x = getState(kt1_ + "base_vel_x");
+    auto vel_y = getState(kt1_ + "base_vel_y");
+    auto vel_theta = getState(kt1_ + "base_vel_theta");
+
+    for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+      std::string kt1_mN_ = getModulePrefix(k, m);
+      auto world_steering_angle = theta + getState(kt1_mN_ + "steering_angle");
+      auto wheel_vel = getState(kt1_mN_ + "wheel_vel");
+
+      auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
+      auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
+      rotateVector(
+        theta, module_positions_[m - 1].x(),
+        module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
+
+      auto des_mod_vel_x = vel_x - vel_theta * mod_offset_y;
+      auto des_mod_vel_y = vel_y + vel_theta * mod_offset_x;
+
+      auto curr_mod_vel_x = wheel_vel * cos(world_steering_angle);
+      auto curr_mod_vel_y = wheel_vel * sin(world_steering_angle);
+
+      auto weight = vel_components_tracking_weight_;
+      auto norm = vel_components_tracking_norm_;
+
+      cost_ += weight * config_.dt * pow((curr_mod_vel_x - des_mod_vel_x) / norm, 2);
+      cost_ += weight * config_.dt * pow((curr_mod_vel_y - des_mod_vel_y) / norm, 2);
+    }
+  }
+}
+
 void SwerveMPCPlanner::addJerkCosts()
 {
   for (int k = 0; k < num_knots_ - 1; k++) {
@@ -909,6 +937,7 @@ void SwerveMPCPlanner::addJerkCosts()
 
 void SwerveMPCPlanner::addCosts()
 {
+  addModuleVelocityComponentsTrackingCost();
   addStateTrackingCosts();
   addJerkCosts();
 }

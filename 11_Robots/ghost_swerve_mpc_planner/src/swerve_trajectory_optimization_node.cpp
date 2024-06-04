@@ -60,29 +60,85 @@ int main(int argc, char * argv[])
 
   auto state_names = node_ptr->getStateNames();
   ghost_planners::Trajectory init_trajectory(state_names);
-  init_trajectory.addNode(0.0, std::vector<double>(state_names.size(), 0.0));
+  auto init_node = std::vector<double>(state_names.size(), 0.0);
+  init_node[init_trajectory.getStateIndex("base_pose_x")] = 1.0;
+  init_node[init_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  init_trajectory.addNode(0.0, init_node);
 
-  ghost_planners::Trajectory reference_trajectory(node_ptr->getStateNames());
+  ghost_planners::Trajectory reference_trajectory(state_names);
 
-  std::vector<double> reference(state_names.size(), 0.0);
-  reference[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
-  reference[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
-  reference[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 4;
-  reference_trajectory.addNode(1.75, reference);
+  std::vector<double> reference_node(state_names.size(), 0.0);
+  reference_node[reference_trajectory.getStateIndex("base_pose_x")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 8;
+  reference_node[reference_trajectory.getStateIndex("base_vel_x")] = -2 * 2.0 / 1.5;
+  reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = 2 * 3.14159 / 4 / 1.5;
+  reference_trajectory.addNode(0.75, reference_node);
+  init_trajectory.addNode(0.75, reference_node);
 
-  reference[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
-  reference[reference_trajectory.getStateIndex("base_pose_y")] = -1.0;
-  reference[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 2;
-  reference_trajectory.addNode(3.25, reference);
+  reference_node[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 4;
+  reference_node[reference_trajectory.getStateIndex("base_vel_x")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = 0.0;
+  reference_trajectory.addNode(1.5, reference_node);
+  init_trajectory.addNode(1.5, reference_node);
 
-  reference[reference_trajectory.getStateIndex("base_pose_x")] = 1.0;
-  reference[reference_trajectory.getStateIndex("base_pose_y")] = -1.0;
-  reference[reference_trajectory.getStateIndex("base_pose_theta")] = 3 * 3.14159 / 4;
-  reference_trajectory.addNode(5.0, reference);
+  reference_node[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_y")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 3 * 3.14159 / 8;
+  reference_node[reference_trajectory.getStateIndex("base_vel_x")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_y")] = -2 * 2.0 / 1.5;
+  reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = 2 * 3.14159 / 4 / 1.5;
+  reference_trajectory.addNode(2.25, reference_node);
+  init_trajectory.addNode(2.25, reference_node);
 
-  // reference[reference_trajectory.getStateIndex("base_pose_x")] = 1.0;
-  // reference[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
-  // reference_trajectory.addNode(5.0, reference);
+  reference_node[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_y")] = -1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 2;
+  reference_node[reference_trajectory.getStateIndex("base_vel_x")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = 0.0;
+  reference_trajectory.addNode(3.0, reference_node);
+  init_trajectory.addNode(3.0, reference_node);
+
+  reference_node[reference_trajectory.getStateIndex("base_pose_x")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_y")] = -1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 5 * 3.14159 / 8;
+  reference_node[reference_trajectory.getStateIndex("base_vel_x")] = 2 * 2.0 / 1.5;
+  reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = 2 * 3.14159 / 4 / 1.5;
+  reference_trajectory.addNode(3.75, reference_node);
+  init_trajectory.addNode(3.75, reference_node);
+
+  reference_node[reference_trajectory.getStateIndex("base_pose_x")] = 1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_y")] = -1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 3 * 3.14159 / 4;
+  reference_node[reference_trajectory.getStateIndex("base_vel_x")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = 0.0;
+  reference_trajectory.addNode(4.5, reference_node);
+  init_trajectory.addNode(4.5, reference_node);
+
+  reference_node[reference_trajectory.getStateIndex("base_pose_x")] = 1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_y")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 5 * 3.14159 / 8;
+  reference_node[reference_trajectory.getStateIndex("base_vel_x")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 2 * 2.0 / 1.5;
+  reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = -2 * 3.14159 / 4 / 1.5;
+  reference_trajectory.addNode(5.25, reference_node);
+  init_trajectory.addNode(5.25, reference_node);
+
+  reference_node[reference_trajectory.getStateIndex("base_pose_x")] = 1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 2.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_x")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 0.0;
+  reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = 0.0;
+  reference_trajectory.addNode(6.0, reference_node);
+  init_trajectory.addNode(6.0, reference_node);
 
   double current_time = 0.0;
   std::vector<double> current_state{
