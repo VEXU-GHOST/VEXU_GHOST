@@ -466,6 +466,26 @@ float RobotHardwareInterface::getInertialSensorHeading(const std::string & senso
   }
 }
 
+bool RobotHardwareInterface::getDigitalDeviceValue(const std::string & sensor_name){
+  return getDeviceData<DigitalDeviceData>(sensor_name)->value;
+}
+
+bool RobotHardwareInterface::setDigitalDeviceValue(const std::string & device_name, bool value){
+
+  auto io_type = getDeviceConfig<DigitalDeviceConfig>(device_name)->serial_config.io_type;
+  if (io_type == SENSOR && hardware_type_ != V5_BRAIN) {
+      throw std::runtime_error("[RobotHardwareInterface::setDigitalDeviceValue] Error: Attempted to set Digital Sensor value from Coprocessor.");
+  }
+  if (io_type == ACTUATOR && hardware_type_ != COPROCESSOR) {
+      throw std::runtime_error("[RobotHardwareInterface::setDigitalDeviceValue] Error: Attempted to set Digital Actuator value from V5 Brain.");
+  }
+
+  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+  auto device_data_ptr = getDeviceData<DigitalDeviceData>(device_name);
+  device_data_ptr->value = value;
+  setDeviceDataNoLock(device_data_ptr);
+}
+
 std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getMainJoystickData()
 {
   return getDeviceData<JoystickDeviceData>(MAIN_JOYSTICK_NAME);
