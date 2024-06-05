@@ -249,14 +249,17 @@ float RobotHardwareInterface::getMotorPosition(const std::string & motor_name)
 {
   return getDeviceData<MotorDeviceData>(motor_name)->curr_position;
 }
+
 float RobotHardwareInterface::getMotorCurrentMA(const std::string & motor_name)
 {
   return getDeviceData<MotorDeviceData>(motor_name)->curr_current_ma;
 }
+
 float RobotHardwareInterface::getMotorVelocityRPM(const std::string & motor_name)
 {
   return getDeviceData<MotorDeviceData>(motor_name)->curr_velocity_rpm;
 }
+
 void RobotHardwareInterface::setMotorPositionCommand(
   const std::string & motor_name,
   float position_cmd)
@@ -267,6 +270,7 @@ void RobotHardwareInterface::setMotorPositionCommand(
   motor_data_ptr->position_control = true;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorVelocityCommandRPM(
   const std::string & motor_name,
   float velocity_cmd)
@@ -277,6 +281,7 @@ void RobotHardwareInterface::setMotorVelocityCommandRPM(
   motor_data_ptr->velocity_control = true;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorVoltageCommandPercent(
   const std::string & motor_name,
   float voltage_cmd)
@@ -287,6 +292,7 @@ void RobotHardwareInterface::setMotorVoltageCommandPercent(
   motor_data_ptr->voltage_control = true;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorTorqueCommandPercent(
   const std::string & motor_name,
   float torque_cmd)
@@ -297,6 +303,7 @@ void RobotHardwareInterface::setMotorTorqueCommandPercent(
   motor_data_ptr->torque_control = true;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorCommand(
   const std::string & motor_name,
   float position_cmd,
@@ -312,6 +319,7 @@ void RobotHardwareInterface::setMotorCommand(
   motor_data_ptr->torque_command = torque_cmd;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorControlMode(
   const std::string & motor_name,
   bool position_control,
@@ -327,6 +335,7 @@ void RobotHardwareInterface::setMotorControlMode(
   motor_data_ptr->torque_control = torque_control;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorCurrentLimitMilliAmps(
   const std::string & motor_name,
   int32_t current_limit_ma)
@@ -384,6 +393,7 @@ float RobotHardwareInterface::getInertialSensorXRate(const std::string & sensor_
             " is not configured to send gyro data!");
   }
 }
+
 float RobotHardwareInterface::getInertialSensorYRate(const std::string & sensor_name)
 {
   if (getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data) {
@@ -395,6 +405,7 @@ float RobotHardwareInterface::getInertialSensorYRate(const std::string & sensor_
             " is not configured to send gyro data!");
   }
 }
+
 float RobotHardwareInterface::getInertialSensorZRate(const std::string & sensor_name)
 {
   if (getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data) {
