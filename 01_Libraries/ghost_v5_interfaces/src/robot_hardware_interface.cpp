@@ -203,9 +203,6 @@ bool RobotHardwareInterface::isDataEqual(const RobotHardwareInterface & rhs) con
   eq &= (actuator_command_msg_length_ == rhs.actuator_command_msg_length_);
   eq &= (sensor_update_msg_length_ == rhs.sensor_update_msg_length_);
 
-  // ADI Ports
-  eq &= (digital_io_ == rhs.digital_io_);
-
   for (const auto & [key, val] : device_pair_name_map_) {
     if (rhs.device_pair_name_map_.count(key) == 0) {
       return false;
@@ -456,17 +453,6 @@ float RobotHardwareInterface::getInertialSensorHeading(const std::string & senso
               "[RobotHardwareInterface::getInertialSensorHeading] Error: ") + sensor_name +
             " is not configured to send heading data!");
   }
-}
-
-void RobotHardwareInterface::setDigitalIO(const std::vector<bool> & digital_io)
-{
-  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-  digital_io_ = digital_io;
-}
-
-const std::vector<bool> & RobotHardwareInterface::getDigitalIO() const
-{
-  return digital_io_;
 }
 
 std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getMainJoystickData()
