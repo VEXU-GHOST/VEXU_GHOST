@@ -27,11 +27,13 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include "ghost_util/byte_utils.hpp"
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/digital_device_interface.hpp"
 
 
 #if GHOST_DEVICE == GHOST_JETSON

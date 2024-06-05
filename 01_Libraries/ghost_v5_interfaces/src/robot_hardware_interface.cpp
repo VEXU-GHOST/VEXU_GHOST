@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -57,6 +57,10 @@ RobotHardwareInterface::RobotHardwareInterface(
     } else if (pair.config_ptr->type == device_type_e::JOYSTICK) {
       pair.data_ptr = std::make_shared<JoystickDeviceData>(
         val->name);
+    } else if (pair.config_ptr->type == device_type_e::DIGITAL) {
+      pair.data_ptr = std::make_shared<DigitalDeviceData>(
+        val->name,
+        pair.config_ptr->as<const DigitalDeviceConfig>()->serial_config);
     } else {
       throw std::runtime_error(
               "[RobotHardwareInterface::RobotHardwareInterface()] Device type " + std::to_string(
@@ -67,21 +71,20 @@ RobotHardwareInterface::RobotHardwareInterface(
     device_pair_port_map_[pair.config_ptr->port] = pair;
     port_to_device_name_map_.emplace(pair.config_ptr->port, val->name);
 
-    // Update msg lengths based on each device
-    sensor_update_msg_length_ += pair.data_ptr->getSensorPacketSize();
-    actuator_command_msg_length_ += pair.data_ptr->getActuatorPacketSize();
+    // Update msg lengths based on each non-digital device
+    if (pair.config_ptr->type != device_type_e::DIGITAL) {
+        sensor_update_msg_length_ += pair.data_ptr->getSensorPacketSize();
+        actuator_command_msg_length_ += pair.data_ptr->getActuatorPacketSize();
+    }
   }
 
   for (const auto & [key, val] : port_to_device_name_map_) {
     device_names_ordered_by_port_.emplace_back(val);
   }
 
-  // Add Digital IO to actuator command msg
-  actuator_command_msg_length_ += 1;
-  digital_io_ = std::vector<bool>(8, false);
-
-  // Add Competition State to sensor update msg
-  sensor_update_msg_length_ += 1;
+  // Add Competiton State and Digital IO to each command msg
+  actuator_command_msg_length_ += 2;
+  sensor_update_msg_length_ += 2;
 }
 
 std::vector<unsigned char> RobotHardwareInterface::serialize() const
@@ -89,7 +92,6 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
   std::vector<unsigned char> serial_data;
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 
-  // Only send competition state and joystick info from V5 Brain to Coprocessor
   if (hardware_type_ == hardware_type_e::V5_BRAIN) {
     serial_data.push_back(
       packByte(
@@ -97,13 +99,20 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
         is_disabled_, is_autonomous_, is_connected_, 0, 0, 0, 0, 0
       }));
   } else if (hardware_type_ == hardware_type_e::COPROCESSOR) {
-    // Send state of all Digital IO Ports
-    serial_data.push_back(packByte(digital_io_));
+    serial_data.push_back((unsigned char) 0);
   }
+
+  // Reserve empty byte for all Digital IO Ports
+  serial_data.push_back((unsigned char) 0);
 
   for (const auto & [key, val] : device_pair_port_map_) {
     auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
-    serial_data.insert(serial_data.end(), device_serial_msg.begin(), device_serial_msg.end());
+    if (val.config_ptr->type == device_type_e::DIGITAL) {
+        setBit(serial_data[1], (val.config_ptr->port - 22), (device_serial_msg[0] == 1));
+    }
+    else {
+      serial_data.insert(serial_data.end(), device_serial_msg.begin(), device_serial_msg.end());
+    }
   }
 
   // Error Checking
@@ -143,23 +152,17 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
   }
 
   // Deserialize
-  int byte_offset = 0;
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-
-  if (hardware_type_ == hardware_type_e::V5_BRAIN) {
-    // Unpack Digital IO
-    digital_io_ = unpackByte(msg[byte_offset]);
-    byte_offset++;
-  }
 
   if (hardware_type_ == hardware_type_e::COPROCESSOR) {
     // Unpack competition state
-    auto packet_start_byte = unpackByte(msg[byte_offset]);
+    auto packet_start_byte = unpackByte(msg[0]);
     is_disabled_ = packet_start_byte[0];
     is_autonomous_ = packet_start_byte[1];
     is_connected_ = packet_start_byte[2];
-    byte_offset++;
   }
+
+  int byte_offset = 2;
 
   // Unpack each device in device tree
   for (const auto & [key, val] : device_pair_port_map_) {
@@ -173,12 +176,17 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
               "[RobotHardwareInterface::deserialize] Error: Attempted to deserialize with unsupported hardware type.");
     }
 
-    auto start_itr = msg.begin() + byte_offset;
-    val.data_ptr->deserialize(
+    if (val.config_ptr->type == device_type_e::DIGITAL) {
+      val.data_ptr->deserialize({getBit(msg[1], (val.config_ptr->port - 22))}, hardware_type_);
+    }
+    else {
+      auto start_itr = msg.begin() + byte_offset;
+      val.data_ptr->deserialize(
       std::vector<unsigned char>(
-        start_itr,
-        start_itr + msg_len), hardware_type_);
-    byte_offset += msg_len;
+          start_itr,
+          start_itr + msg_len), hardware_type_);
+      byte_offset += msg_len;
+    }
   }
   return byte_offset;
 }
