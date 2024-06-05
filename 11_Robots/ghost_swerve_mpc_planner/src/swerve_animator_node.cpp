@@ -258,7 +258,15 @@ int main(int argc, char * argv[])
             // Extract and plot forces
             auto angle = trajectory_map[module_prefix + "steering_angle"][k] + theta;
             auto wheel_force = trajectory_map[module_prefix + "wheel_torque"][k] / WHEEL_RADIUS;
+            auto wheel_trans_vel = trajectory_map[module_prefix + "wheel_vel"][k] * WHEEL_RADIUS;
             auto lateral_force = trajectory_map[module_prefix + "lateral_force"][k];
+
+            plt::plot(
+              std::vector<double>{steering_center.x(), steering_center.x() + wheel_trans_vel * cos(
+                  angle) / 10.0},
+              std::vector<double>{steering_center.y(), steering_center.y() + wheel_trans_vel * sin(
+                  angle) / 10.0},
+              std::map<std::string, std::string>{{"color", "green"}});
 
             plt::plot(
               std::vector<double>{steering_center.x(), steering_center.x() + wheel_force * cos(

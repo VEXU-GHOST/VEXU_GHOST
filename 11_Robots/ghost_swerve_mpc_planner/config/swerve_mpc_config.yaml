@@ -29,9 +29,8 @@ swerve_mpc_planner_node:
     motor_torque_limit_nm: 0.35
     motor_speed_limit_rpm: 650.0
 
-    vel_components_tracking_weight: 0.0
+    # Normalization
     vel_components_tracking_norm: 1.50481
-
     state_normalization:
       - 3.6576 # base_pose_x
       - 3.6576 # base_pose_y
@@ -57,6 +56,9 @@ swerve_mpc_planner_node:
       - 12000.0 # m1_voltage
       - 12000.0 # m2_voltage
 
+    # Weights
+    weight_sum_max: 0.0
+    vel_components_tracking_weight: 0.0
     state_weights:
       - 1.0e+8 # base_pose_x
       - 1.0e+8 # base_pose_y

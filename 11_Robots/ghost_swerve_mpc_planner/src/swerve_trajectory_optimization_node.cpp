@@ -68,6 +68,25 @@ int main(int argc, char * argv[])
   ghost_planners::Trajectory reference_trajectory(state_names);
 
   std::vector<double> reference_node(state_names.size(), 0.0);
+
+  // reference_node[reference_trajectory.getStateIndex("base_pose_x")] = 0.0;
+  // reference_node[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  // reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = -3.14159;
+  // reference_node[reference_trajectory.getStateIndex("base_vel_x")] = -2 * 2.0 / 6.0;
+  // reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 0.0;
+  // reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = -2 * 2 * 3.14159 / 6.0;
+  // reference_trajectory.addNode(3.0, reference_node);
+  // init_trajectory.addNode(3.0, reference_node);
+
+  // reference_node[reference_trajectory.getStateIndex("base_pose_x")] = -1.0;
+  // reference_node[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
+  // reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = -2 * 3.14159;
+  // reference_node[reference_trajectory.getStateIndex("base_vel_x")] = 0.0;
+  // reference_node[reference_trajectory.getStateIndex("base_vel_y")] = 0.0;
+  // reference_node[reference_trajectory.getStateIndex("base_vel_theta")] = 0.0;
+  // reference_trajectory.addNode(6.0, reference_node);
+  // init_trajectory.addNode(6.0, reference_node);
+
   reference_node[reference_trajectory.getStateIndex("base_pose_x")] = 0.0;
   reference_node[reference_trajectory.getStateIndex("base_pose_y")] = 1.0;
   reference_node[reference_trajectory.getStateIndex("base_pose_theta")] = 3.14159 / 8;
@@ -149,10 +168,11 @@ int main(int argc, char * argv[])
     3.14159 / 4, 0.0, 0.0};
 
   bool track_pose = true;
+  bool generate_dense_trajectory = false;
 
   node_ptr->runSolver(
     current_time, current_state, init_trajectory, reference_trajectory,
-    track_pose);
+    track_pose, generate_dense_trajectory);
 
   auto solution = node_ptr->getLatestSolution();
   auto raw_solution_vector = solution.getFlattenedTrajectory(node_ptr->getTimeVector());

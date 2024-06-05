@@ -22,6 +22,7 @@
  */
 
 #include "ghost_swerve_mpc_planner/swerve_mpc_planner.hpp"
+#include <ghost_util/angle_util.hpp>
 
 using namespace std::chrono_literals;
 using namespace casadi;
@@ -153,6 +154,20 @@ void SwerveMPCPlanner::loadConfig()
   weights_.insert(weights_.end(), joint_weights.begin(), joint_weights.end());
   weights_.insert(weights_.end(), joint_weights.begin(), joint_weights.end());
   weights_.insert(weights_.end(), joint_weights.begin(), joint_weights.end());
+
+  // declare_parameter("weight_sum_max", 1.0);
+  // auto weight_sum_max = get_parameter("weight_sum_max").as_double();
+
+  // double weight_sum = vel_components_tracking_weight_;
+  // for (int i = 0; i < weights_.size(); i++) {
+  //   weight_sum += weights_[i];
+  // }
+
+  // for (int i = 0; i < weights_.size(); i++) {
+  //   weights_[i] *= weight_sum_max / weight_sum;
+  // }
+
+  // vel_components_tracking_weight_ *= weight_sum_max / weight_sum;
 
   // Module Positions
   module_positions_ = std::vector<Eigen::Vector2d>{
@@ -1006,13 +1021,109 @@ void SwerveMPCPlanner::shiftTimeVectorToPresent(double current_time)
   }
 }
 
-void SwerveMPCPlanner::updateInitialSolution(const ghost_planners::Trajectory & x0)
+void SwerveMPCPlanner::generateInitialSolution(
+  const ghost_planners::Trajectory & x0)
+{
+  if (x0.getStateNames().size() != state_names_.size()) {
+    throw std::runtime_error(
+            "[SwerveMPCPlanner::updateInitialSolution] Error: x0 state vector size is incorrect!");
+  }
+
+  auto unwrapAngle = [](double current_angle, double last_angle) {
+      double curr_err = fabs(current_angle - last_angle);
+      double new_angle = current_angle;
+      if (fabs(current_angle + 2 * M_PI - last_angle) < curr_err) {
+        curr_err = fabs(current_angle + 2 * M_PI - last_angle);
+        new_angle = current_angle + 2 * M_PI;
+      } else if (fabs(current_angle - 2 * M_PI - last_angle) < curr_err) {
+        curr_err = fabs(current_angle - 2 * M_PI - last_angle);
+        new_angle = current_angle - 2 * M_PI;
+      }
+      return new_angle;
+    };
+
+  auto init_traj = DM::zeros(num_opt_vars_);
+  auto num_states = state_names_.size();
+  std::vector<double> prev_angles{0.0, 0.0, 0.0, 0.0};
+  double last_base_theta = 0.0;
+
+  for (int k = 0; k < num_knots_; k++) {
+    auto time = time_vector_[k];
+    auto node = x0.getNode(time);
+    int k_off = num_states * k;
+
+    // Set these states directly
+    for (const auto & name : std::vector<std::string>{
+        "base_pose_x",
+        "base_pose_y",
+        "base_vel_x",
+        "base_vel_y",
+        "base_vel_theta"
+      })
+    {
+      init_traj(k_off + x0.getStateIndex(name)) = node[x0.getStateIndex(name)];
+    }
+
+    // Unwrap Euler Discontinuity for base angle
+    double base_pose_theta = node[x0.getStateIndex("base_pose_theta")];
+    double new_theta = base_pose_theta;
+    if (k != 0) {
+      new_theta = unwrapAngle(new_theta, last_base_theta);
+    }
+    init_traj(k_off + x0.getStateIndex("base_pose_theta")) = new_theta;
+    last_base_theta = new_theta;
+
+
+    auto base_vel_x = node[x0.getStateIndex("base_vel_x")];
+    auto base_vel_y = node[x0.getStateIndex("base_vel_y")];
+    auto base_vel_theta = node[x0.getStateIndex("base_vel_theta")];
+
+    for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+      std::string mN_ = std::string("m") + std::to_string(m) + "_";
+
+      // Set Wheel Velocity and Steering based on base vel
+      double mod_offset_x = 0.0;
+      double mod_offset_y = 0.0;
+      rotateVector(
+        base_pose_theta, module_positions_[m - 1].x(),
+        module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
+
+      double mod_vel_x = base_vel_x - base_vel_theta * mod_offset_y;
+      double mod_vel_y = base_vel_y + base_vel_theta * mod_offset_x;
+
+      if (std::fabs(mod_vel_x) < 0.0001 && std::fabs(mod_vel_y) < 0.0001) {
+        // Handle zero velocity singularity
+        init_traj(num_states * k + x0.getStateIndex(mN_ + "steering_angle")) = prev_angles[m - 1];
+        init_traj(num_states * k + x0.getStateIndex(mN_ + "wheel_vel")) = 0.0;
+      } else {
+        double steering_angle = atan2(mod_vel_y, mod_vel_x) - base_pose_theta;
+        double new_angle = steering_angle;
+
+        // Filter for euler discontinuity
+        if (k != 0) {
+          new_angle = unwrapAngle(steering_angle, prev_angles[m - 1]);
+        }
+
+        // Set wheel velocity and steering angle setpoints
+        auto wheel_vel = sqrt(mod_vel_x * mod_vel_x + mod_vel_y * mod_vel_y) / config_.wheel_radius;
+        init_traj(num_states * k + x0.getStateIndex(mN_ + "steering_angle")) = new_angle;
+        init_traj(num_states * k + x0.getStateIndex(mN_ + "wheel_vel")) = wheel_vel;
+        prev_angles[m - 1] = new_angle;
+      }
+    }
+  }
+
+  solver_args_["x0"] = init_traj;
+}
+
+void SwerveMPCPlanner::updateInitialSolution(
+  const ghost_planners::Trajectory & x0)
 {
   auto x0_flat = x0.getFlattenedTrajectory(time_vector_);
 
   if (x0_flat.size() != getNumOptVars()) {
     throw std::runtime_error(
-            "[SwerveMPCPlanner::runSolver] Error: x0 size must match number of optimization variables!");
+            "[SwerveMPCPlanner::updateInitialSolution] Error: x0 size must match number of optimization variables!");
   }
   solver_args_["x0"] = convertVectorToDM(x0_flat);
 }
@@ -1022,23 +1133,18 @@ void SwerveMPCPlanner::updateReferenceTrajectory(
   const Trajectory & reference_trajectory,
   bool track_pose)
 {
+  DM pose_tracking = (track_pose) ? DM(1.0) : DM(0.0);
+
+  auto initial_state_params = convertVectorToDM(current_state);
+
   auto ref_flat = reference_trajectory.getFlattenedTrajectory(time_vector_);
-
-
   if (ref_flat.size() != getNumOptVars()) {
     throw std::runtime_error(
-            "[SwerveMPCPlanner::runSolver] Error: reference trajectory size must match number of optimization variables!");
+            "[SwerveMPCPlanner::updateReferenceTrajectory] Error: reference trajectory size must match number of optimization variables!");
 
   }
-
-  DM pose_tracking = (track_pose) ? DM(1.0) : DM(0.0);
-  auto initial_state_params = convertVectorToDM(current_state);
-  auto reference_trajectory_params = convertVectorToDM(ref_flat);
-
-  // if (initial_state_params.size1() != 6 + config_.num_swerve_modules * 4) {
-  //   throw std::runtime_error(
-  //           "[SwerveMPCPlanner::updateReferenceTrajectory] Error: Initial State Params must be ");
-  // }
+  DM reference_trajectory_params;
+  reference_trajectory_params = convertVectorToDM(ref_flat);
 
   solver_args_["p"] = vertcat(pose_tracking, initial_state_params, reference_trajectory_params);
 }
@@ -1071,14 +1177,22 @@ void SwerveMPCPlanner::runSolver(
   const std::vector<double> & current_state,
   const Trajectory & x0,
   const Trajectory & reference_trajectory,
-  bool track_pose)
+  bool track_pose,
+  bool generate_dense_trajectory)
 {
   solver_active_ = true;
 
   shiftTimeVectorToPresent(current_time);
 
-  updateInitialSolution(x0);
-  updateReferenceTrajectory(current_state, reference_trajectory, track_pose);
+  if (generate_dense_trajectory) {
+    generateInitialSolution(x0);
+  } else {
+    updateInitialSolution(x0);
+  }
+
+  updateReferenceTrajectory(
+    current_state, reference_trajectory,
+    track_pose);
 
   std::map<std::string, DM> res = solver_(solver_args_);
   latest_solution_vector_ = std::vector<double>(res.at("x"));

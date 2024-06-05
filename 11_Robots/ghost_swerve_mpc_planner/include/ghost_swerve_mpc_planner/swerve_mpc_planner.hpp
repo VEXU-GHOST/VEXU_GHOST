@@ -77,9 +77,9 @@ public:
 
   SwerveMPCPlanner();
 
-  template<typename INPUT_T, typename OUTPUT_T>
+  template<typename ANGLE_T, typename INPUT_T, typename OUTPUT_T>
   static void rotateVector(
-    const Matrix<SXElem> & angle,
+    const ANGLE_T & angle,
     const INPUT_T & x_in,
     const INPUT_T & y_in,
     OUTPUT_T & x_out,
@@ -97,7 +97,8 @@ public:
     const std::vector<double> & current_state,
     const ghost_planners::Trajectory & x0,
     const ghost_planners::Trajectory & reference_trajectory,
-    bool pose_tracking = false);
+    bool pose_tracking = false,
+    bool generate_dense_trajectory = true);
 
   const Eigen::Vector2d & getModulePosition(int m) const;
 
@@ -240,7 +241,10 @@ private:
 
   // Solver methods
   void shiftTimeVectorToPresent(double current_time);
-  void updateInitialSolution(const ghost_planners::Trajectory & x0);
+  void generateInitialSolution(
+    const ghost_planners::Trajectory & x0);
+  void updateInitialSolution(
+    const ghost_planners::Trajectory & x0);
   void updateReferenceTrajectory(
     const std::vector<double> & current_state,
     const ghost_planners::Trajectory & reference_trajectory,
