@@ -1,10 +1,10 @@
 port_configuration:
     use_partner_joystick: false
-    digital:
-        limit_switch_1:
+    adi:
+        digital_in:
             port: A
             type: DIGITAL_INPUT
-        arm_solenoid:
+        digital_out:
             port: B
             type: DIGITAL_OUTPUT
     devices:
