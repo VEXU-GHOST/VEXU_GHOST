@@ -199,16 +199,17 @@ void initialize(){
 				}
 				break;
 
-                case device_type_e::DIGITAL:
+                case device_type_e::DIGITAL_INPUT:
                 {
                     auto digital_device_config_ptr = config_ptr->as<const DigitalDeviceConfig>();
-                    auto io_type = digital_device_config_ptr->serial_config.io_type;
-                    if (io_type == SENSOR) {
-                        v5_globals::digital_sensors[device_name] = std::make_shared<pros::ADIDigitalIn>(digital_device_config_ptr->port - 21);
-                    }
-                    else if (io_type == ACTUATOR) {
-                        v5_globals::digital_actuators[device_name] = std::make_shared<pros::V5DigitalActuatorInterface>(digital_device_config_ptr);
-                    }
+                    v5_globals::digital_sensors[device_name] = std::make_shared<pros::ADIDigitalIn>(digital_device_config_ptr->port - 21);
+                }
+                break;
+
+                case device_type_e::DIGITAL_OUTPUT:
+                {
+                    auto digital_device_config_ptr = config_ptr->as<const DigitalDeviceConfig>();
+                    v5_globals::digital_actuators[device_name] = std::make_shared<pros::V5DigitalActuatorInterface>(digital_device_config_ptr);
                 }
                 break;
 
