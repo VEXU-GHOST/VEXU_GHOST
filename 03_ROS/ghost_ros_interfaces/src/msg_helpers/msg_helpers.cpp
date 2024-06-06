@@ -212,6 +212,23 @@ void fromROSMsg(
   inertial_sensor_data.heading = inertial_sensor_msg.heading;
 }
 
+void toROSMsg(
+  const ghost_v5_interfaces::devices::DigitalDeviceData & digital_device_data,
+  ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg)
+{
+  toROSMsg(digital_device_data, digital_device_msg.device_header);       // Set device header
+  digital_device_msg.value = digital_device_data.value;
+  digital_device_msg.value = digital_device_data.serial_config.io_type;
+}
+
+void fromROSMsg(
+  const ghost_v5_interfaces::devices::DigitalDeviceData & digital_device_data,
+  ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg)
+{
+  fromROSMsg(digital_device_data, digital_device_msg.device_header);       // Set base attributes
+  digital_device_data.value = digital_device_msg.value;
+  digital_device_data.serial_config.io_type = digital_device_msg.value;
+}
 
 void toROSMsg(
   const RobotHardwareInterface & hardware_interface,
