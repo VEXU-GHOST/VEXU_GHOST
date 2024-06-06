@@ -118,7 +118,7 @@ public:
   {
     const DigitalDeviceConfig * d_rhs = dynamic_cast<const DigitalDeviceConfig *>(&rhs);
     return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) &&
-           (type == d_rhs->type);
+           (type == d_rhs->type) && (serial_config == d_rhs->serial_config);
   }
 
   DigitalDeviceData::SerialConfig serial_config;
