@@ -79,7 +79,7 @@ public:
   bool operator==(const DeviceBase & rhs) const override
   {
     const DigitalDeviceData * d_rhs = dynamic_cast<const DigitalDeviceData *>(&rhs);
-    return (d_rhs != nullptr && value == d_rhs->value);
+    return (d_rhs != nullptr && value == d_rhs->value && serial_config_ == d_rhs->serial_config_);
   }
 
   std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
