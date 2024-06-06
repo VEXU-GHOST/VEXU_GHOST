@@ -42,6 +42,11 @@ namespace util
  *
  * port_configuration:
  *              use_partner_joystick = false/true
+ *      adi:
+ *          limit_switch_1:
+ *              port: A
+ *              type: DIGITAL
+ *              io_type: SENSOR
  *      devices:
  *          my_motor_name_here:
  *              port: 1
@@ -53,10 +58,6 @@ namespace util
  *              type: ROTATION_SENSOR
  *              reversed: true/false
  *              data_rate: 5
- *          limit_switch_1:
- *              port: A
- *              type: DIGITAL
- *              io_type: SENSOR
  *          ...
  *      device_configurations:
  *          my_motor_config_name:
