@@ -1,5 +1,14 @@
 port_configuration:
     use_partner_joystick: false
+    digital:
+        limit_switch_1:
+            port: A
+            type: DIGITAL
+            io_type: SENSOR
+        arm_solenoid:
+            port: B
+            type: DIGITAL
+            io_type: ACTUATOR
     devices:
         rotation_sensor_1:
             port: 4
