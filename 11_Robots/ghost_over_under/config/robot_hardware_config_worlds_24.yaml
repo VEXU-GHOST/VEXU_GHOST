@@ -1,4 +1,21 @@
 port_configuration:
+    adi:
+        tail:
+            port: A
+            type: DIGITAL
+            io_type: ACTUATOR
+        claw:
+            port: B
+            type: DIGITAL
+            io_type: ACTUATOR
+        claw_inner:
+            port: C
+            type: DIGITAL
+            io_type: SENSOR
+        claw_outer:
+            port: D
+            type: DIGITAL
+            io_type: SENSOR
     devices:
         steering_front_left:
             port: 1
