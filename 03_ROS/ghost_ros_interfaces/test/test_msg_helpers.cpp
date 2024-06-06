@@ -90,6 +90,28 @@ TEST(TestMsgHelpers, testJoystickStateMsg) {
   EXPECT_EQ(*joy_input, *joy_output);
 }
 
+TEST(TestMsgHelpers, testDigitalInputDeviceStateMsg) {
+  auto digital_state_input = getRandomDigitalInputDeviceData();
+  auto msg = std::make_shared<ghost_msgs::msg::V5DigitalDeviceState>();
+  auto digital_state_output = std::make_shared<DigitalInputDeviceData>();
+
+  toROSMsg(*digital_state_input, *msg);
+  fromROSMsg(*digital_state_output, *msg);
+
+  EXPECT_EQ(*digital_state_input, *digital_state_output);
+}
+
+TEST(TestMsgHelpers, testDigitalOutputDeviceStateMsg) {
+  auto digital_state_input = getRandomDigitalOutputDeviceData();
+  auto msg = std::make_shared<ghost_msgs::msg::V5DigitalDeviceState>();
+  auto digital_state_output = std::make_shared<DigitalOutputDeviceData>();
+
+  toROSMsg(*digital_state_input, *msg);
+  fromROSMsg(*digital_state_output, *msg);
+
+  EXPECT_EQ(*digital_state_input, *digital_state_output);
+}
+
 TEST(TestDeviceInterfaces, testRobotTrajectoryMsg) {
   auto rt_input = std::make_shared<ghost_planners::RobotTrajectory>();
   auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
