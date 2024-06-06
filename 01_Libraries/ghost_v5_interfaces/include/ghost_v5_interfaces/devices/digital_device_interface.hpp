@@ -32,12 +32,11 @@ namespace ghost_v5_interfaces
 namespace devices
 {
 
-class DigitalDeviceData : public DeviceData
+class DigitalInputDeviceData : public DeviceData
 {
-public:
-
-  DigitalDeviceData(std::string name, device_type_e type)
-  : DeviceData(name, type)
+  public:
+  DigitalInputDeviceData(std::string name)
+  : DeviceData(name, DIGITAL_INPUT)
   {
   }
 
@@ -45,80 +44,100 @@ public:
   {
     return 0;
   }
+ 
+  int getSensorPacketSize() const override
+  {
+    return 1;
+  }
+
+  std::shared_ptr<DeviceBase> clone() const override
+  {
+    return std::make_shared<DigitalInputDeviceData>(*this);
+  }
+
+  std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
+  {
+    std::vector<unsigned char> msg(1);
+    if (hardware_type == V5_BRAIN) {
+        msg.push_back((unsigned char) value);
+    }
+    return msg;
+  }
+
+  void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
+  {
+    if (hardware_type == COPROCESSOR) {
+        value = ((bool) msg.data()[0]);
+    }
+  }
+
+  void update(std::shared_ptr<DeviceData> data_ptr) override
+  {
+    auto digital_data_ptr = data_ptr->as<DigitalInputDeviceData>();
+    value = digital_data_ptr->value;
+  }
+
+  bool operator==(const DeviceBase & rhs) const override
+  {
+    const DigitalInputDeviceData * d_rhs = dynamic_cast<const DigitalInputDeviceData *>(&rhs);
+    return (d_rhs != nullptr) && (value == d_rhs->value);
+  }
+
+  bool value;
+};
+
+class DigitalOutputDeviceData : public DeviceData
+{
+  public:
+  DigitalOutputDeviceData(std::string name)
+  : DeviceData(name, DIGITAL_OUTPUT)
+  {
+  }
+
+  int getActuatorPacketSize() const override
+  {
+    return 1;
+  }
 
   int getSensorPacketSize() const override
   {
     return 0;
   }
 
-  bool value;
+  std::shared_ptr<DeviceBase> clone() const override
+  {
+    return std::make_shared<DigitalOutputDeviceData>(*this);
+  }
+
+  std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
+  {
+    std::vector<unsigned char> msg(1);
+    if (hardware_type == COPROCESSOR) {
+        msg.push_back((unsigned char) value);
+    }
+    return msg;
+  }
+
+  void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
+  {
+    if (hardware_type == V5_BRAIN) {
+        value = ((bool) msg.data()[0]);
+    }
+  }
 
   void update(std::shared_ptr<DeviceData> data_ptr) override
   {
-    auto digital_data_ptr = data_ptr->as<DigitalDeviceData>();
+    auto digital_data_ptr = data_ptr->as<DigitalOutputDeviceData>();
     value = digital_data_ptr->value;
-  }
-
-  std::shared_ptr<DeviceBase> clone() const override
-  {
-    return std::make_shared<DigitalDeviceData>(*this);
   }
 
   bool operator==(const DeviceBase & rhs) const override
   {
-    const DigitalDeviceData * d_rhs = dynamic_cast<const DigitalDeviceData *>(&rhs);
-    return (d_rhs != nullptr && value == d_rhs->value);
-  }
-};
-
-class DigitalInputDeviceData : public DigitalDeviceData
-{
-  public:
-  DigitalInputDeviceData(std::string name)
-  : DigitalDeviceData(name, DIGITAL_INPUT)
-  {
+    const DigitalOutputDeviceData * d_rhs = dynamic_cast<const DigitalOutputDeviceData *>(&rhs);
+    return (d_rhs != nullptr) && (value == d_rhs->value);
   }
 
-  std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
-  {
-    std::vector<unsigned char> msg(1);
-    if (hardware_type == V5_BRAIN) {
-        msg.push_back((unsigned char) value);
-    }
-    return msg;
-  }
-
-  void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
-  {
-    if (hardware_type == COPROCESSOR) {
-        value = ((bool) msg.data()[0]);
-    }
-  }
-};
-
-class DigitalOutputDeviceData : public DigitalDeviceData
-{
-  public:
-  DigitalOutputDeviceData(std::string name)
-  : DigitalDeviceData(name, DIGITAL_OUTPUT)
-  {
-  }
-
-  std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
-  {
-    std::vector<unsigned char> msg(1);
-    if (hardware_type == COPROCESSOR) {
-        msg.push_back((unsigned char) value);
-    }
-    return msg;
-  }
-
-  void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
-  {
-    if (hardware_type == V5_BRAIN) {
-        value = ((bool) msg.data()[0]);
-    }
-  }
+  bool value;
 };
 
 class DigitalDeviceConfig : public DeviceConfig
