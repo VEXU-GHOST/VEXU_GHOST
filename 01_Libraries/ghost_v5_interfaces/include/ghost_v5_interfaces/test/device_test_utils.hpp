@@ -26,6 +26,7 @@
 #include <memory>
 #include <ghost_util/test_util.hpp>
 #include "ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/digital_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
@@ -66,6 +67,13 @@ devices::InertialSensorDeviceData::SerialConfig getRandomInertialSensorSerialCon
   config.send_accel_data = ghost_util::getRandomBool();
   config.send_gyro_data = ghost_util::getRandomBool();
   config.send_heading_data = ghost_util::getRandomBool();
+  return config;
+}
+
+devices::DigitalDeviceData::SerialConfig getRandomDigitalDeviceSerialConfig()
+{
+  devices::DigitalDeviceData::SerialConfig config;
+  config.io_type = ghost_util::getRandomBool() ? SENSOR : ACTUATOR;
   return config;
 }
 
@@ -182,6 +190,17 @@ std::shared_ptr<devices::InertialSensorDeviceData> getRandomInertialSensorData(
 
   return inertial_sensor_ptr;
 }
+
+std::shared_ptr<devices::DigitalDeviceData> getRandomDigitalDeviceData(
+  devices::DigitalDeviceData::SerialConfig serial_config = devices::DigitalDeviceData::SerialConfig())
+{
+  auto digital_device_ptr = std::make_shared<devices::DigitalDeviceData>(
+    "test",
+    serial_config);
+  digital_device_ptr->value = ghost_util::getRandomBool();
+  return digital_device_ptr;
+}
+
 
 }
 
