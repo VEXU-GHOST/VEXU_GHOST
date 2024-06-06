@@ -261,6 +261,8 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineCoprocessorTo
   auto motor_data_3 = getRandomMotorData(true);
   motor_data_3->name = "default_motor";
   hw_interface.setDeviceData(motor_data_3);
+  auto digital_data_1 = getRandomDigitalDeviceData(ACTUATOR);
+  hw_interface.setDeviceData(digital_data_1);
 
   RobotHardwareInterface hw_interface_copy(device_config_map_ptr_single_joy_,
     hardware_type_e::V5_BRAIN);
@@ -297,6 +299,11 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
   auto inertial_sensor_1 = getRandomInertialSensorData();
   inertial_sensor_1->name = "inertial_sensor_1";
   hw_interface.setDeviceData(inertial_sensor_1);
+
+  // Update Digital Sensor
+  auto digital_sensor_1 = getRandomDigitalDeviceData(SENSOR);
+  digital_sensor_1->name = "digital_sensor_1";
+  hw_interface.setDeviceData(digital_sensor_1);
 
   // Update Competition State
   hw_interface.setDisabledStatus(getRandomBool());
@@ -342,6 +349,11 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
   auto inertial_sensor_1 = getRandomInertialSensorData();
   inertial_sensor_1->name = "inertial_sensor_1";
   hw_interface.setDeviceData(inertial_sensor_1);
+
+  // Update Digital Sensor
+  auto digital_sensor_1 = getRandomDigitalDeviceData(SENSOR);
+  digital_sensor_1->name = "digital_sensor_1";
+  hw_interface.setDeviceData(digital_sensor_1);
 
   // Update Competition State
   hw_interface.setDisabledStatus(getRandomBool());
@@ -441,6 +453,8 @@ TEST_F(RobotHardwareInterfaceTestFixture, testInertialSensorStateGetters) {
   EXPECT_EQ(hw_interface.getInertialSensorZRate("inertial_sensor_1"), sensor_data_ptr->z_rate);
   EXPECT_EQ(hw_interface.getInertialSensorHeading("inertial_sensor_1"), sensor_data_ptr->heading);
 }
+
+//TODO(xander): testDigitalDeviceStateGetters
 
 TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorPositionCommand) {
   RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_,
