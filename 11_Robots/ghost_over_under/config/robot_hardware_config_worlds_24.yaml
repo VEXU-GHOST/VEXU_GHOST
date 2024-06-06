@@ -137,7 +137,7 @@ port_configuration:
             brake_mode: BRAKE
             encoder_units: DEGREES
             controller:
-                pos_gain: 0.0
+                pos_gain: 10.0
                 vel_gain: 0.0
                 ff_vel_gain: 1.0
                 ff_torque_gain: 0.0
