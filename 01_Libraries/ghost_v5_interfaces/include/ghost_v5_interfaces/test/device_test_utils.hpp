@@ -192,12 +192,14 @@ std::shared_ptr<devices::InertialSensorDeviceData> getRandomInertialSensorData(
 }
 
 std::shared_ptr<devices::DigitalDeviceData> getRandomDigitalDeviceData(
+  devices::digital_io_type_e io_type,
   devices::DigitalDeviceData::SerialConfig serial_config = devices::DigitalDeviceData::SerialConfig())
 {
   auto digital_device_ptr = std::make_shared<devices::DigitalDeviceData>(
     "test",
     serial_config);
   digital_device_ptr->value = ghost_util::getRandomBool();
+  digital_device_ptr->serial_config_.io_type = io_type;
   return digital_device_ptr;
 }
 
