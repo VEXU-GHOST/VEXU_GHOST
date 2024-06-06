@@ -156,6 +156,7 @@ foreach(TEST ${UTIL_LIBS})
     load_motor_device_config_yaml
     load_rotation_sensor_device_config_yaml
     load_inertial_sensor_device_config_yaml
+    load_digital_device_config_yaml
     device_config_factory_utils
     yaml-cpp
   )
@@ -171,12 +172,20 @@ target_link_libraries(test_device_config_factory_utils
 )
 
 # Hardware Interface Tests
+ament_add_gtest(test_rhi_serialization test/test_rhi_serialization.cpp)
+ament_target_dependencies(test_rhi_serialization ${DEPENDENCIES})
+target_link_libraries(test_rhi_serialization
+ gtest_main
+ device_config_factory_utils
+ robot_hardware_interface
+)
+
 ament_add_gtest(test_robot_hardware_interface test/test_robot_hardware_interface.cpp)
 ament_target_dependencies(test_robot_hardware_interface ${DEPENDENCIES})
 target_link_libraries(test_robot_hardware_interface
-  gtest_main
-  device_config_factory_utils
-  robot_hardware_interface
+ gtest_main
+ device_config_factory_utils
+ robot_hardware_interface
 )
 
 ament_package()
