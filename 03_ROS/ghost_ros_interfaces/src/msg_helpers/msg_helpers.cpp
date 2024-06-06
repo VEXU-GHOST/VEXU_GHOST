@@ -430,6 +430,7 @@ void fromROSMsg(
     labeled_vector_map[entry.label] = entry.data_array;
   }
 }
+
 void toROSMsg(
   const std::unordered_map<std::string, std::vector<double>> & labeled_vector_map,
   ghost_msgs::msg::LabeledVectorMap & msg)
