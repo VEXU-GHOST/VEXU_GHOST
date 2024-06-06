@@ -119,12 +119,16 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 			}
 			break;
 
-            case device_type_e::DIGITAL:
+            case device_type_e::DIGITAL_INPUT:
             {
-				auto digital_device_data_ptr = device_data_ptr->as<DigitalDeviceData>();
-                if (digital_device_data_ptr->serial_config_.io_type == ACTUATOR) {
-                    v5_globals::digital_actuators.at(name)->setValue(digital_device_data_ptr->value);
-                }
+                continue;
+            }
+            break;
+
+            case device_type_e::DIGITAL_OUTPUT:
+            {
+				auto digital_device_data_ptr = device_data_ptr->as<DigitalOutputDeviceData>();
+                v5_globals::digital_actuators.at(name)->setValue(digital_device_data_ptr->value);
             }
             break;
 
@@ -243,7 +247,7 @@ void V5SerialNode::writeV5StateUpdate(){
 
     // Digital Sensors
     for (const auto& [name, device] : v5_globals::digital_sensors){
-        auto digital_device_data_ptr = hardware_interface_ptr_->getDeviceData<DigitalDeviceData>(name);
+        auto digital_device_data_ptr = hardware_interface_ptr_->getDeviceData<DigitalInputDeviceData>(name);
         digital_device_data_ptr->value = device->get_value();
     }
 
