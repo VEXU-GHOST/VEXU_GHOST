@@ -185,9 +185,9 @@ void SwerveRobotPlugin::initialize()
   node_ptr_->declare_parameter("swerve_robot_plugin.lift_kP", 1.);
   node_ptr_->declare_parameter("swerve_robot_plugin.lift_speed", 1.);
   double gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.lift_gear_ratio").as_double();
-  swerve_model_config.lift_up_angle = gear_ratio * node_ptr_->get_parameter(
+  swerve_model_config.lift_up_angle = node_ptr_->get_parameter(
     "swerve_robot_plugin.lift_up_angle_deg").as_double();
-  swerve_model_config.lift_climbed_angle = gear_ratio * node_ptr_->get_parameter(
+  swerve_model_config.lift_climbed_angle = node_ptr_->get_parameter(
     "swerve_robot_plugin.lift_climbed_angle_deg").as_double();
   swerve_model_config.lift_kP = node_ptr_->get_parameter("swerve_robot_plugin.lift_kP").as_double();
   swerve_model_config.lift_speed =
@@ -729,20 +729,20 @@ void SwerveRobotPlugin::teleop(double current_time)
 
     bool tail_down = false;
     // tail left and intake up
-    if (tail_mode) {
-      tail_down = true;
-      if (joy_data->btn_r2) {
-        rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-        rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_kick);
-      } else {
-        rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-        rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
-      }
-    } else {
-      tail_down = false;
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-      rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
-    }
+    // if (tail_mode) {
+    //   tail_down = true;
+    //   if (joy_data->btn_r2) {
+    //     rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+    //     rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_kick);
+    //   } else {
+    //     rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+    //     rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
+    //   }
+    // } else {
+    //   tail_down = false;
+    //   rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+    //   rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
+    // }
 
     m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
     m_digital_io[m_digital_io_name_map["claw"]] = !m_claw_open;
@@ -782,6 +782,11 @@ void SwerveRobotPlugin::teleop(double current_time)
         m_intake_cooling_down = false;
       }
     }
+
+    double posR = rhi_ptr_->getMotorPosition("lift_r1");
+    double posL = rhi_ptr_->getMotorPosition("lift_l1");
+    std::cout << "right: " << posR << std::endl;
+    std::cout << "left: " << posL << std::endl;
   }
 }
 

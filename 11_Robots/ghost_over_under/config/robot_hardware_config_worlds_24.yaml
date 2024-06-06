@@ -142,7 +142,7 @@ port_configuration:
                 ff_vel_gain: 1.0
                 ff_torque_gain: 0.0
             serial:
-                send_position_command: false
+                send_position_command: true
                 send_velocity_command: false
                 send_voltage_command: true
         intake_lift_motor_config:

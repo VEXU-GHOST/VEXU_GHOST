@@ -116,7 +116,7 @@ competition_state_machine_node:
 
       lift_gear_ratio: 30.
 
-      lift_up_angle_deg: 360.
+      lift_up_angle_deg: 4000.
       lift_climbed_angle_deg: 0.
       # degree per second of actual lift
       lift_kP: .05

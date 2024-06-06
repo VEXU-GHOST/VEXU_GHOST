@@ -94,58 +94,67 @@ BT::NodeStatus Climb::onRunning()
 
   double posR = rhi_ptr_->getMotorPosition("lift_r1");
   double posL = rhi_ptr_->getMotorPosition("lift_l1");
-  if (abs(posL - lift_target_up) < 30)
+  RCLCPP_INFO(node_ptr_->get_logger(), "up: %f", lift_target_up);
+  
+
+  if (posL > (lift_target_up - 10))
   {
     reaching_ = false;
     climbing_ = true;
-  }
-  if (abs(posL - lift_target_down) < 30)
+  } else if (posL < (lift_target_down - 10))
   {
     climbing_ = false;
     reaching_ = false;
   }
 
   if (reaching_) {
-    lift_target = lift_target_up;
+    lift_target_ = lift_target_up;
     claw_open = true;
   } else if (climbing_) {
-    lift_target = lift_target_down;
+    lift_target_ = lift_target_down;
     claw_open = false;
   } else {
+    // lift_target_ = lift_target_down;
     claw_open = false;
   }
 
-  RCLCPP_INFO(node_ptr_->get_logger(), "Climbing");
+  RCLCPP_INFO(node_ptr_->get_logger(), "target: %f", lift_target_);
 
   m_digital_io[m_digital_io_name_map.at("claw")] = !claw_open;
 
   rhi_ptr_->setDigitalIO(m_digital_io);
 
-  if (reaching_) {
+  if (reaching_ || climbing_) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Reaching");
+
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
+    rhi_ptr_->setMotorPositionCommand("lift_l1", lift_target_);
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", -1.0);
+    rhi_ptr_->setMotorPositionCommand("lift_l2", lift_target_);
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
+    rhi_ptr_->setMotorPositionCommand("lift_r1", lift_target_);
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
-  } else if (climbing_) {
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
+    rhi_ptr_->setMotorPositionCommand("lift_r2", lift_target_);
+  // } else if (climbing_) {
+  //   RCLCPP_INFO(node_ptr_->get_logger(), "Climbing");
 
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 1.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
 
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 1.0);
 
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
+
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
   } else {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Done climbing");
+
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
 

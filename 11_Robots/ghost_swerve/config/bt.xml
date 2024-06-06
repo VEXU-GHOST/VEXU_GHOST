@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="full_auton">
-      <!-- main_tree_to_execute="search_and_destroy"> -->
+      main_tree_to_execute="climb">
+      <!-- main_tree_to_execute="full_auton"> -->
   <BehaviorTree ID="far_triball">
     <Sequence>
       <Logging message="started"/>

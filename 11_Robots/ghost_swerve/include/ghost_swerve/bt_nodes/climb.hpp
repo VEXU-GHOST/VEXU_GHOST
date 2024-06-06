@@ -65,7 +65,7 @@ private:
   std::shared_ptr<SwerveModel> swerve_ptr_;
   std::chrono::time_point<std::chrono::system_clock> start_time_;
 
-  double lift_target;
+  double lift_target_;
   bool climbing_ = false;
   bool reaching_ = false;
 };
