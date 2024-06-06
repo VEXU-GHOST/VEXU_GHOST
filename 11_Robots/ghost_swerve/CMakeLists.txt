@@ -135,6 +135,7 @@ set(NODES
   intakeCmd
   climb
   autoDone
+  autonTimer
 )
 
 foreach(NODE ${NODES})

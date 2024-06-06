@@ -221,7 +221,7 @@
 
   <BehaviorTree ID="search_and_destroy">
     <Fallback>
-      <Timeout msec="20000">
+      <AutonTimer seconds="20000">
         <Repeat num_cycles="4">
           <Fallback>
             <ReactiveSequence>
@@ -233,7 +233,7 @@
             <SubTree ID="score"/>
           </Fallback>
         </Repeat>
-      </Timeout>
+      </AutonTimer>
       <KeepRunningUntilFailure>
         <Sequence>
           <ReactiveFallback>
@@ -422,6 +422,10 @@
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <Decorator ID="AutonTimer"
+            editable="true">
+      <input_port name="seconds"/>
+    </Decorator>
     <Action ID="CheckForRestart"
             editable="true"/>
     <Action ID="Climb"
