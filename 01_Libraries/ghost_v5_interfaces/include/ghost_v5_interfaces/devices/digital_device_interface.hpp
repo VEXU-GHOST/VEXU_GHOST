@@ -69,13 +69,20 @@ public:
     const DigitalDeviceData * d_rhs = dynamic_cast<const DigitalDeviceData *>(&rhs);
     return (d_rhs != nullptr && value == d_rhs->value);
   }
+};
+
+class DigitalInputDeviceData : public DigitalDeviceData
+{
+  public:
+  DigitalInputDeviceData(std::string name)
+  : DigitalDeviceData(name, DIGITAL_INPUT)
+  {
+  }
 
   std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
   {
     std::vector<unsigned char> msg(1);
-    bool valid = hardware_type == V5_BRAIN && type == DIGITAL_INPUT
-              || hardware_type == COPROCESSOR && type == DIGITAL_OUTPUT;
-    if (valid) {
+    if (hardware_type == V5_BRAIN) {
         msg.push_back((unsigned char) value);
     }
     return msg;
@@ -83,12 +90,34 @@ public:
 
   void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
   {
-    bool valid = hardware_type == V5_BRAIN && type == DIGITAL_INPUT
-              || hardware_type == COPROCESSOR && type == DIGITAL_OUTPUT;
-    if (!valid) {
-        return;
+    if (hardware_type == COPROCESSOR) {
+        value = ((bool) msg.data()[0]);
     }
-    value = ((bool) msg.data()[0]);
+  }
+};
+
+class DigitalOutputDeviceData : public DigitalDeviceData
+{
+  public:
+  DigitalOutputDeviceData(std::string name)
+  : DigitalDeviceData(name, DIGITAL_OUTPUT)
+  {
+  }
+
+  std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
+  {
+    std::vector<unsigned char> msg(1);
+    if (hardware_type == COPROCESSOR) {
+        msg.push_back((unsigned char) value);
+    }
+    return msg;
+  }
+
+  void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
+  {
+    if (hardware_type == V5_BRAIN) {
+        value = ((bool) msg.data()[0]);
+    }
   }
 };
 
