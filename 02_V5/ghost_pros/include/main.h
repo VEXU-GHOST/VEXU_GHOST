@@ -40,6 +40,7 @@ uint32_t loop_frequency = 10;
 std::atomic<bool> run = true;
 std::string error_str;
 pros::Mutex actuator_update_lock;
+pros::Mutex digital_actuator_update_lock;
 
 pros::Controller controller_main(pros::E_CONTROLLER_MASTER);
 pros::Controller controller_partner(pros::E_CONTROLLER_PARTNER);
