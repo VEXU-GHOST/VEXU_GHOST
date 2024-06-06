@@ -80,7 +80,7 @@ class DigitalInputDeviceData : public DeviceData
   bool operator==(const DeviceBase & rhs) const override
   {
     const DigitalInputDeviceData * d_rhs = dynamic_cast<const DigitalInputDeviceData *>(&rhs);
-    return (d_rhs != nullptr) && (value == d_rhs->value);
+    return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) && (value == d_rhs->value);
   }
 
   bool value;
@@ -111,7 +111,7 @@ class DigitalOutputDeviceData : public DeviceData
 
   std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
   {
-    std::vector<unsigned char> msg(1);
+    std::vector<unsigned char> msg;
     if (hardware_type == COPROCESSOR) {
         msg.push_back((unsigned char) value);
     }
@@ -134,7 +134,7 @@ class DigitalOutputDeviceData : public DeviceData
   bool operator==(const DeviceBase & rhs) const override
   {
     const DigitalOutputDeviceData * d_rhs = dynamic_cast<const DigitalOutputDeviceData *>(&rhs);
-    return (d_rhs != nullptr) && (value == d_rhs->value);
+    return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) && (value == d_rhs->value);
   }
 
   bool value;
