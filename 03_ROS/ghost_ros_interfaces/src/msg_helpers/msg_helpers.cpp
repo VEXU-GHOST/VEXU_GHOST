@@ -213,21 +213,35 @@ void fromROSMsg(
 }
 
 void toROSMsg(
-  const ghost_v5_interfaces::devices::DigitalDeviceData & digital_device_data,
+  const ghost_v5_interfaces::devices::DigitalInputDeviceData & digital_device_data,
   ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg)
 {
   toROSMsg(digital_device_data, digital_device_msg.device_header);       // Set device header
   digital_device_msg.value = digital_device_data.value;
-  digital_device_msg.io_type = DIGITAL_IO_TYPE_TO_STRING_MAP.at(digital_device_data.serial_config_.io_type);
 }
 
 void fromROSMsg(
-  ghost_v5_interfaces::devices::DigitalDeviceData & digital_device_data,
+  ghost_v5_interfaces::devices::DigitalInputDeviceData & digital_device_data,
   const ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg)
 {
   fromROSMsg(digital_device_data, digital_device_msg.device_header);       // Set base attributes
   digital_device_data.value = digital_device_msg.value;
-  digital_device_data.serial_config_.io_type = STRING_TO_DIGITAL_IO_TYPE_MAP.at(digital_device_msg.io_type);
+}
+
+void toROSMsg(
+  const ghost_v5_interfaces::devices::DigitalOutputDeviceData & digital_device_data,
+  ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg)
+{
+  toROSMsg(digital_device_data, digital_device_msg.device_header);       // Set device header
+  digital_device_msg.value = digital_device_data.value;
+}
+
+void fromROSMsg(
+  ghost_v5_interfaces::devices::DigitalOutputDeviceData & digital_device_data,
+  const ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg)
+{
+  fromROSMsg(digital_device_data, digital_device_msg.device_header);       // Set base attributes
+  digital_device_data.value = digital_device_msg.value;
 }
 
 void toROSMsg(
@@ -250,13 +264,13 @@ void toROSMsg(
       continue;
     } else if (device_data_ptr->type == device_type_e::INERTIAL_SENSOR) {
       continue;
-    } else if (device_data_ptr->type == device_type_e::DIGITAL) {
-      auto digital_device_data_ptr = device_data_ptr->as<DigitalDeviceData>();
-      if (digital_device_data_ptr->serial_config_.io_type == digital_io_type_e::ACTUATOR) {
-        V5DigitalDeviceState msg{};
-        toROSMsg(*digital_device_data_ptr, msg);
-        actuator_cmd_msg.digital_devices.push_back(msg);
-      }
+    } else if (device_data_ptr->type == device_type_e::DIGITAL_INPUT) {
+      continue;
+    } else if (device_data_ptr->type == device_type_e::DIGITAL_OUTPUT) {
+      auto digital_device_data_ptr = device_data_ptr->as<DigitalOutputDeviceData>();
+      V5DigitalDeviceState msg{};
+      toROSMsg(*digital_device_data_ptr, msg);
+      actuator_cmd_msg.digital_devices.push_back(msg);
     } else {
       std::string dev_type_str;
       if (DEVICE_TYPE_TO_STRING_MAP.count(device_data_ptr->type) == 1) {
@@ -287,12 +301,10 @@ void fromROSMsg(
 
   // Digital Devices
   for (const auto & digital_device_msg : actuator_cmd_msg.digital_devices) {
-    auto digital_device_data_ptr = hardware_interface.getDeviceData<DigitalDeviceData>(
+    auto digital_device_data_ptr = hardware_interface.getDeviceData<DigitalOutputDeviceData>(
       digital_device_msg.device_header.name);
-    if (digital_device_data_ptr->serial_config_.io_type == ACTUATOR) {
       fromROSMsg(*digital_device_data_ptr, digital_device_msg);
       hardware_interface.setDeviceData(digital_device_data_ptr);
-    }
   }
 }
 
@@ -328,13 +340,13 @@ void toROSMsg(const RobotHardwareInterface & hardware_interface, V5SensorUpdate 
       auto joy_data_ptr = device_data_ptr->as<JoystickDeviceData>();
       toROSMsg(*joy_data_ptr, msg);
       sensor_update_msg.joysticks.push_back(msg);
-    } else if (device_data_ptr->type == device_type_e::DIGITAL) {
-      auto digital_device_data_ptr = device_data_ptr->as<DigitalDeviceData>();
-      if (digital_device_data_ptr->serial_config_.io_type == digital_io_type_e::SENSOR) {
-        V5DigitalDeviceState msg{};
-        toROSMsg(*digital_device_data_ptr, msg);
-        sensor_update_msg.digital_devices.push_back(msg);
-      }
+    } else if (device_data_ptr->type == device_type_e::DIGITAL_INPUT) {
+      auto digital_device_data_ptr = device_data_ptr->as<DigitalInputDeviceData>();
+      V5DigitalDeviceState msg{};
+      toROSMsg(*digital_device_data_ptr, msg);
+      sensor_update_msg.digital_devices.push_back(msg);
+    } else if (device_data_ptr->type == device_type_e::DIGITAL_OUTPUT) {
+        continue;
     } else {
       std::string dev_type_str;
       if (DEVICE_TYPE_TO_STRING_MAP.count(device_data_ptr->type) == 1) {
@@ -394,12 +406,10 @@ void fromROSMsg(
 
   // Digital Devices
   for (const auto & digital_device_msg : sensor_update_msg.digital_devices) {
-    auto digital_device_data_ptr = hardware_interface.getDeviceData<DigitalDeviceData>(
-      digital_device_msg.device_header.name);
-    if (digital_device_data_ptr->serial_config_.io_type == SENSOR) {
-      fromROSMsg(*digital_device_data_ptr, digital_device_msg);
-      hardware_interface.setDeviceData(digital_device_data_ptr);
-    }
+    auto digital_device_data_ptr = hardware_interface.getDeviceData<DigitalInputDeviceData>(
+    digital_device_msg.device_header.name);
+    fromROSMsg(*digital_device_data_ptr, digital_device_msg);
+    hardware_interface.setDeviceData(digital_device_data_ptr);
   }
 }
 
