@@ -73,7 +73,7 @@ devices::InertialSensorDeviceData::SerialConfig getRandomInertialSensorSerialCon
 devices::DigitalDeviceData::SerialConfig getRandomDigitalDeviceSerialConfig()
 {
   devices::DigitalDeviceData::SerialConfig config;
-  config.io_type = ghost_util::getRandomBool() ? SENSOR : ACTUATOR;
+  config.io_type = ghost_util::getRandomBool() ? devices::digital_io_type_e::SENSOR : devices::digital_io_type_e::ACTUATOR;
   return config;
 }
 
