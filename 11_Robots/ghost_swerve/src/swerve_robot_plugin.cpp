@@ -386,6 +386,8 @@ void SwerveRobotPlugin::disabled()
 void SwerveRobotPlugin::autonomous(double current_time)
 {
   std::cout << "Autonomous: " << current_time << std::endl;
+  m_swerve_model_ptr->setAutonTime(current_time);
+  
   if (m_is_first_auton_loop) {
     m_is_first_auton_loop = false;
   }
@@ -404,6 +406,8 @@ void SwerveRobotPlugin::autonomous(double current_time)
   double vel_cmd_x = 0;
   double vel_cmd_y = 0;
   double vel_cmd_theta = 0;
+  double des_pos_x = 0;
+  double des_pos_y = 0;
 
   // auto command_map = get_commands(current_time);
 
@@ -470,11 +474,11 @@ void SwerveRobotPlugin::autonomous(double current_time)
     // std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
   }
 
-  // if((des_pos_x == 0.0) && (des_pos_y == 0.0) || m_swerve_model_ptr->getAutoStatus()){
-  //    vel_cmd_x = 0.0;
-  //    vel_cmd_y = 0.0;
-  //    vel_cmd_theta = 0.0;
-  // }
+  if((des_pos_x == 0.0) && (des_pos_y == 0.0) || m_swerve_model_ptr->getAutoStatus()){
+     vel_cmd_x = 0.0;
+     vel_cmd_y = 0.0;
+     vel_cmd_theta = 0.0;
+  }
 
   m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(
     -vel_cmd_y, vel_cmd_x,
