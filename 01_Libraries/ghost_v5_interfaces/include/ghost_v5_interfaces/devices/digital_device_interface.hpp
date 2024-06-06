@@ -35,32 +35,20 @@ namespace devices
 class DigitalDeviceData : public DeviceData
 {
 public:
-  struct SerialConfig
-  {
-    SerialConfig()
-    {
-    }
 
-    bool operator== (const SerialConfig &rhs) const {
-        return io_type == rhs.io_type;
-    }
-
-    digital_io_type_e io_type;
-  };
-
-  DigitalDeviceData(std::string name, SerialConfig serial_config = SerialConfig())
-  : DeviceData(name, device_type_e::DIGITAL)
+  DigitalDeviceData(std::string name, device_type_e type)
+  : DeviceData(name, type)
   {
   }
 
   int getActuatorPacketSize() const override
   {
-    return 1;
+    return 0;
   }
 
   int getSensorPacketSize() const override
   {
-    return 1;
+    return 0;
   }
 
   bool value;
@@ -79,14 +67,14 @@ public:
   bool operator==(const DeviceBase & rhs) const override
   {
     const DigitalDeviceData * d_rhs = dynamic_cast<const DigitalDeviceData *>(&rhs);
-    return (d_rhs != nullptr && value == d_rhs->value && serial_config_ == d_rhs->serial_config_);
+    return (d_rhs != nullptr && value == d_rhs->value);
   }
 
   std::vector<unsigned char> serialize(hardware_type_e hardware_type) const override
   {
     std::vector<unsigned char> msg(1);
-    bool valid = hardware_type == V5_BRAIN && serial_config_.io_type == SENSOR
-              || hardware_type == COPROCESSOR && serial_config_.io_type == ACTUATOR;
+    bool valid = hardware_type == V5_BRAIN && type == DIGITAL_INPUT
+              || hardware_type == COPROCESSOR && type == DIGITAL_OUTPUT;
     if (valid) {
         msg.push_back((unsigned char) value);
     }
@@ -95,15 +83,13 @@ public:
 
   void deserialize(const std::vector<unsigned char> & msg, hardware_type_e hardware_type) override
   {
-    bool valid = hardware_type == V5_BRAIN && serial_config_.io_type == SENSOR
-              || hardware_type == COPROCESSOR && serial_config_.io_type == ACTUATOR;
+    bool valid = hardware_type == V5_BRAIN && type == DIGITAL_INPUT
+              || hardware_type == COPROCESSOR && type == DIGITAL_OUTPUT;
     if (!valid) {
         return;
     }
     value = ((bool) msg.data()[0]);
   }
-
-  SerialConfig serial_config_;
 };
 
 class DigitalDeviceConfig : public DeviceConfig
@@ -118,10 +104,8 @@ public:
   {
     const DigitalDeviceConfig * d_rhs = dynamic_cast<const DigitalDeviceConfig *>(&rhs);
     return (d_rhs != nullptr) && (port == d_rhs->port) && (name == d_rhs->name) &&
-           (type == d_rhs->type) && (serial_config == d_rhs->serial_config);
+           (type == d_rhs->type);
   }
-
-  DigitalDeviceData::SerialConfig serial_config;
 };
 
 } // namespace devices

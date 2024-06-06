@@ -46,13 +46,9 @@ enum device_type_e
   GPS_SENSOR,            // Unsupported
   RADIO,                 // Unsupported
   JOYSTICK,
-  DIGITAL,
+  DIGITAL_INPUT,
+  DIGITAL_OUTPUT,
   INVALID
-};
-
-enum digital_io_type_e {
-  ACTUATOR,
-  SENSOR
 };
 
 enum hardware_type_e

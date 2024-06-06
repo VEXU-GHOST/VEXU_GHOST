@@ -45,8 +45,7 @@ namespace util
  *      adi:
  *          limit_switch_1:
  *              port: A
- *              type: DIGITAL
- *              io_type: SENSOR
+ *              type: DIGITAL_INPUT
  *      devices:
  *          my_motor_name_here:
  *              port: 1

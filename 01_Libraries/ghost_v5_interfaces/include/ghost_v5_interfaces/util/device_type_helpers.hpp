@@ -42,7 +42,8 @@ const std::unordered_map<std::string, devices::device_type_e> STRING_TO_DEVICE_T
   {"VISION_SENSOR", devices::device_type_e::VISION_SENSOR},
   {"GPS_SENSOR", devices::device_type_e::GPS_SENSOR},
   {"RADIO", devices::device_type_e::RADIO},
-  {"DIGITAL", devices::device_type_e::DIGITAL},
+  {"DIGITAL_INPUT", devices::device_type_e::DIGITAL_INPUT},
+  {"DIGITAL_OUTPUT", devices::device_type_e::DIGITAL_OUTPUT},
   {"INVALID", devices::device_type_e::INVALID},
 };
 const std::unordered_map<devices::device_type_e, std::string> DEVICE_TYPE_TO_STRING_MAP{
@@ -55,16 +56,9 @@ const std::unordered_map<devices::device_type_e, std::string> DEVICE_TYPE_TO_STR
   {devices::device_type_e::VISION_SENSOR, "VISION_SENSOR"},
   {devices::device_type_e::GPS_SENSOR, "GPS_SENSOR"},
   {devices::device_type_e::RADIO, "RADIO"},
-  {devices::device_type_e::DIGITAL, "DIGITAL"},
+  {devices::device_type_e::DIGITAL_INPUT, "DIGITAL_INPUT"},
+  {devices::device_type_e::DIGITAL_OUTPUT, "DIGITAL_OUTPUT"},
   {devices::device_type_e::INVALID, "INVALID"}
-};
-const std::unordered_map<devices::digital_io_type_e, std::string> DIGITAL_IO_TYPE_TO_STRING_MAP{
-  {devices::digital_io_type_e::SENSOR, "SENSOR"},
-  {devices::digital_io_type_e::ACTUATOR, "ACTUATOR"}
-};
-const std::unordered_map<std::string, devices::digital_io_type_e> STRING_TO_DIGITAL_IO_TYPE_MAP{
-  {"SENSOR", devices::digital_io_type_e::SENSOR},
-  {"ACTUATOR", devices::digital_io_type_e::ACTUATOR}
 };
 
 } // namespace ghost_v5_interfaces

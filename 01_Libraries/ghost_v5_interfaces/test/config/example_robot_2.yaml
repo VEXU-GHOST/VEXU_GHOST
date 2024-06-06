@@ -3,12 +3,10 @@ port_configuration:
     digital:
         limit_switch_1:
             port: A
-            type: DIGITAL
-            io_type: SENSOR
+            type: DIGITAL_INPUT
         arm_solenoid:
             port: B
-            type: DIGITAL
-            io_type: ACTUATOR
+            type: DIGITAL_OUTPUT
     devices:
         rotation_sensor_1:
             port: 4
