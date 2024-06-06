@@ -95,13 +95,6 @@ float Climb::tempPID(
 
 BT::NodeStatus Climb::onRunning()
 {
-  auto m_digital_io = std::vector<bool>(8, false);
-  auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-    {"claw", 0},
-    {"right_wing", 1},
-    {"left_wing", 2},
-    {"tail", 3}
-  };
   bool claw_open;
   auto status = BT::NodeStatus::RUNNING;
   bool climbed = get_input<bool>("climbed");
@@ -125,9 +118,7 @@ BT::NodeStatus Climb::onRunning()
     swerve_ptr_->getConfig().lift_kP);                                                                           // go to 90deg
   // ignore err
 
-  m_digital_io[m_digital_io_name_map.at("claw")] = claw_open;
-
-  rhi_ptr_->setDigitalIO(m_digital_io);
+  rhi_ptr_->setDigitalDeviceValue("claw", claw_open);
 
   // do not return any status but RUNNING
   // so it keeps the state at the end of the auton
