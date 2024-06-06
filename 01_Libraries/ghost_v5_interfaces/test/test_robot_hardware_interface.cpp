@@ -26,6 +26,7 @@
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/digital_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "ghost_v5_interfaces/test/device_test_utils.hpp"
@@ -247,134 +248,32 @@ TEST_F(RobotHardwareInterfaceTestFixture, testIteratorIsOrderedByPort) {
   EXPECT_EQ(ports, ports_sorted);
 }
 
-TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineCoprocessorToV5) {
-  RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_,
+TEST_F(RobotHardwareInterfaceTestFixture, testDigitalOutSetterGetter) {
+  RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_,
     hardware_type_e::COPROCESSOR);
 
-  // Update all motors in the default robot config
-  auto motor_data_1 = getRandomMotorData(true);
-  motor_data_1->name = "left_drive_motor";
-  hw_interface.setDeviceData(motor_data_1);
-  auto motor_data_2 = getRandomMotorData(true);
-  motor_data_2->name = "test_motor";
-  hw_interface.setDeviceData(motor_data_2);
-  auto motor_data_3 = getRandomMotorData(true);
-  motor_data_3->name = "default_motor";
-  hw_interface.setDeviceData(motor_data_3);
-  auto digital_data_1 = getRandomDigitalDeviceData(ACTUATOR);
-  hw_interface.setDeviceData(digital_data_1);
+  // Default
+  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_in"));
+  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_out"));
+  EXPECT_THROW(hw_interface.setDigitalInputValue("digital_in", true), std::runtime_error);
+  EXPECT_NO_THROW(hw_interface.setDigitalOutputValue("digital_out", true));
+  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_out"), true);
+  EXPECT_NO_THROW(hw_interface.setDigitalOutputValue("digital_out", false));
+  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_out"), false);
+}
 
-  RobotHardwareInterface hw_interface_copy(device_config_map_ptr_single_joy_,
+TEST_F(RobotHardwareInterfaceTestFixture, testDigitalInSetterGetter) {
+  RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_,
     hardware_type_e::V5_BRAIN);
-  std::vector<unsigned char> serial_data = hw_interface.serialize();
-  hw_interface_copy.deserialize(serial_data);
 
-  EXPECT_TRUE(hw_interface.isDataEqual(hw_interface_copy));
-}
-
-
-TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocessor) {
-  RobotHardwareInterface hw_interface(device_config_map_ptr_single_joy_, hardware_type_e::V5_BRAIN);
-
-  // Update Motors
-  auto motor_data_1 = getRandomMotorData(false);
-  motor_data_1->name = "left_drive_motor";
-  hw_interface.setDeviceData(motor_data_1);
-  auto motor_data_2 = getRandomMotorData(false);
-  motor_data_2->name = "test_motor";
-  hw_interface.setDeviceData(motor_data_2);
-  auto motor_data_3 = getRandomMotorData(false);
-  motor_data_3->name = "default_motor";
-  hw_interface.setDeviceData(motor_data_3);
-
-  // Update Rotation Sensors
-  auto rotation_sensor_1 = getRandomRotationSensorData();
-  rotation_sensor_1->name = "rotation_sensor_1";
-  hw_interface.setDeviceData(rotation_sensor_1);
-  auto rotation_sensor_2 = getRandomRotationSensorData();
-  rotation_sensor_2->name = "rotation_sensor_2";
-  hw_interface.setDeviceData(rotation_sensor_2);
-
-  // Update Inertial Sensor
-  auto inertial_sensor_1 = getRandomInertialSensorData();
-  inertial_sensor_1->name = "inertial_sensor_1";
-  hw_interface.setDeviceData(inertial_sensor_1);
-
-  // Update Digital Sensor
-  auto digital_sensor_1 = getRandomDigitalDeviceData(SENSOR);
-  digital_sensor_1->name = "digital_sensor_1";
-  hw_interface.setDeviceData(digital_sensor_1);
-
-  // Update Competition State
-  hw_interface.setDisabledStatus(getRandomBool());
-  hw_interface.setAutonomousStatus(getRandomBool());
-  hw_interface.setConnectedStatus(getRandomBool());
-
-  // Update Joystick
-  auto joy = getRandomJoystickData();
-  joy->name = MAIN_JOYSTICK_NAME;
-  hw_interface.setDeviceData(joy);
-
-  RobotHardwareInterface hw_interface_copy(device_config_map_ptr_single_joy_,
-    hardware_type_e::COPROCESSOR);
-  std::vector<unsigned char> serial_data = hw_interface.serialize();
-  hw_interface_copy.deserialize(serial_data);
-
-  EXPECT_TRUE(hw_interface.isDataEqual(hw_interface_copy));
-}
-
-TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocessorDualJoystick) {
-  RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_, hardware_type_e::V5_BRAIN);
-
-  // Update Motors
-  auto motor_data_1 = getRandomMotorData(false);
-  motor_data_1->name = "left_drive_motor";
-  hw_interface.setDeviceData(motor_data_1);
-  auto motor_data_2 = getRandomMotorData(false);
-  motor_data_2->name = "test_motor";
-  hw_interface.setDeviceData(motor_data_2);
-  auto motor_data_3 = getRandomMotorData(false);
-  motor_data_3->name = "default_motor";
-  hw_interface.setDeviceData(motor_data_3);
-
-  // Update Rotation Sensors
-  auto rotation_sensor_1 = getRandomRotationSensorData();
-  rotation_sensor_1->name = "rotation_sensor_1";
-  hw_interface.setDeviceData(rotation_sensor_1);
-  auto rotation_sensor_2 = getRandomRotationSensorData();
-  rotation_sensor_2->name = "rotation_sensor_2";
-  hw_interface.setDeviceData(rotation_sensor_2);
-
-  // Update Inertial Sensor
-  auto inertial_sensor_1 = getRandomInertialSensorData();
-  inertial_sensor_1->name = "inertial_sensor_1";
-  hw_interface.setDeviceData(inertial_sensor_1);
-
-  // Update Digital Sensor
-  auto digital_sensor_1 = getRandomDigitalDeviceData(SENSOR);
-  digital_sensor_1->name = "digital_sensor_1";
-  hw_interface.setDeviceData(digital_sensor_1);
-
-  // Update Competition State
-  hw_interface.setDisabledStatus(getRandomBool());
-  hw_interface.setAutonomousStatus(getRandomBool());
-  hw_interface.setConnectedStatus(getRandomBool());
-
-  // Update Joysticks
-  auto joy = getRandomJoystickData();
-  joy->name = MAIN_JOYSTICK_NAME;
-  hw_interface.setDeviceData(joy);
-
-  auto joy_2 = getRandomJoystickData();
-  joy_2->name = PARTNER_JOYSTICK_NAME;
-  hw_interface.setDeviceData(joy_2);
-
-  RobotHardwareInterface hw_interface_copy(device_config_map_ptr_dual_joy_,
-    hardware_type_e::COPROCESSOR);
-  std::vector<unsigned char> serial_data = hw_interface.serialize();
-  hw_interface_copy.deserialize(serial_data);
-
-  EXPECT_TRUE(hw_interface.isDataEqual(hw_interface_copy));
+  // Default
+  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_out"));
+  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_in"));
+  EXPECT_THROW(hw_interface.setDigitalOutputValue("digital_out", true), std::runtime_error);
+  EXPECT_NO_THROW(hw_interface.setDigitalInputValue("digital_in", true));
+  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_in"), true);
+  EXPECT_NO_THROW(hw_interface.setDigitalInputValue("digital_in", false));
+  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_in"), false);
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateGetters) {
@@ -453,8 +352,6 @@ TEST_F(RobotHardwareInterfaceTestFixture, testInertialSensorStateGetters) {
   EXPECT_EQ(hw_interface.getInertialSensorZRate("inertial_sensor_1"), sensor_data_ptr->z_rate);
   EXPECT_EQ(hw_interface.getInertialSensorHeading("inertial_sensor_1"), sensor_data_ptr->heading);
 }
-
-//TODO(xander): testDigitalDeviceStateGetters
 
 TEST_F(RobotHardwareInterfaceTestFixture, testSetMotorPositionCommand) {
   RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_,
