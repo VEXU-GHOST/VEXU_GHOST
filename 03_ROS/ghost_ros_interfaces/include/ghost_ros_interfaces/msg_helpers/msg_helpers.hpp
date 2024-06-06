@@ -187,24 +187,44 @@ void fromROSMsg(
 // Digital Device
 
 /**
- * @brief Copies digital device state data from a DigitalDeviceData object into a V5DigitalDeviceState msg.
+ * @brief Copies digital device state data from a DigitalInputDeviceData object into a V5DigitalDeviceState msg.
  *
  * @param digital_device_data
  * @param digital_device_msg
  */
 void toROSMsg(
-  const ghost_v5_interfaces::devices::DigitalDeviceData & digital_device_data,
+  const ghost_v5_interfaces::devices::DigitalInputDeviceData & digital_device_data,
   ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg);
 
 /**
- * @brief Copies digital device state data from a V5DigitalDeviceState msg into a DigitalDeviceData object.
+ * @brief Copies digital device state data from a V5DigitalDeviceState msg into a DigitalInputDeviceData object.
  *
  * @param digital_device_data
  * @param digital_device_msg
  */
 void fromROSMsg(
-  const ghost_v5_interfaces::devices::DigitalDeviceData & digital_device_data,
+  ghost_v5_interfaces::devices::DigitalInputDeviceData & digital_device_data,
+  const ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg);
+
+/**
+ * @brief Copies digital device state data from a DigitalOutputDeviceData object into a V5DigitalDeviceState msg.
+ *
+ * @param digital_device_data
+ * @param digital_device_msg
+ */
+void toROSMsg(
+  const ghost_v5_interfaces::devices::DigitalOutputDeviceData & digital_device_data,
   ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg);
+
+/**
+ * @brief Copies digital device state data from a V5DigitalDeviceState msg into a DigitalOutputDeviceData object.
+ *
+ * @param digital_device_data
+ * @param digital_device_msg
+ */
+void fromROSMsg(
+  ghost_v5_interfaces::devices::DigitalOutputDeviceData & digital_device_data,
+  const ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg);
 
 // Aggregate Actuator Command
 
