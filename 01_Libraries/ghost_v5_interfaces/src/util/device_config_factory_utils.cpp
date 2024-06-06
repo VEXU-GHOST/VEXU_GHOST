@@ -70,7 +70,7 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
   }
 
   // Iterate through Digital IO Ports
-  if (node["adi"]) {
+  if (node["port_configuration"]["adi"]) {
   for (auto it = node["port_configuration"]["adi"].begin();
     it != node["port_configuration"]["adi"].end(); it++)
   {
@@ -238,6 +238,7 @@ void generateCodeFromRobotConfig(
   output_file << "#include \"ghost_v5_interfaces/devices/motor_device_interface.hpp\"\n";
   output_file << "#include \"ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp\"\n";
   output_file << "#include \"ghost_v5_interfaces/devices/joystick_device_interface.hpp\"\n";
+  output_file << "#include \"ghost_v5_interfaces/devices/digital_device_interface.hpp\"\n";
   output_file << "\n";
   output_file <<
     "// This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.\n";
@@ -400,7 +401,7 @@ void generateCodeFromRobotConfig(
         "type = ghost_v5_interfaces::devices::device_type_e::DIGITAL_INPUT;\n";
       output_file << "\trobot_config->addDeviceConfig(" + device_name + ");\n";
       output_file << "\n";
-    } else if (val->type == device_type_e::DIGITAL_INPUT) {
+    } else if (val->type == device_type_e::DIGITAL_OUTPUT) {
       auto config_ptr = val->as<const DigitalDeviceConfig>();
       std::string device_name = config_ptr->name;
 
