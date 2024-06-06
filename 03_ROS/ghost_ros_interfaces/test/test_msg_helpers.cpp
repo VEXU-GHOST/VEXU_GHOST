@@ -93,7 +93,7 @@ TEST(TestMsgHelpers, testJoystickStateMsg) {
 TEST(TestMsgHelpers, testDigitalInputDeviceStateMsg) {
   auto digital_state_input = getRandomDigitalInputDeviceData();
   auto msg = std::make_shared<ghost_msgs::msg::V5DigitalDeviceState>();
-  auto digital_state_output = std::make_shared<DigitalInputDeviceData>();
+  auto digital_state_output = std::make_shared<DigitalInputDeviceData>("");
 
   toROSMsg(*digital_state_input, *msg);
   fromROSMsg(*digital_state_output, *msg);
@@ -104,7 +104,7 @@ TEST(TestMsgHelpers, testDigitalInputDeviceStateMsg) {
 TEST(TestMsgHelpers, testDigitalOutputDeviceStateMsg) {
   auto digital_state_input = getRandomDigitalOutputDeviceData();
   auto msg = std::make_shared<ghost_msgs::msg::V5DigitalDeviceState>();
-  auto digital_state_output = std::make_shared<DigitalOutputDeviceData>();
+  auto digital_state_output = std::make_shared<DigitalOutputDeviceData>("");
 
   toROSMsg(*digital_state_input, *msg);
   fromROSMsg(*digital_state_output, *msg);
