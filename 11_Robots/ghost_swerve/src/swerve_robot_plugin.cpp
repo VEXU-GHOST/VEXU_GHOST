@@ -734,8 +734,8 @@ void SwerveRobotPlugin::teleop(double current_time)
       rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
     }
 
-    rhi_ptr_->setDigitalDeviceValue("tail", tail_down);
-    rhi_ptr_->setDigitalDeviceValue("claw", !m_claw_open);
+    rhi_ptr_->setDigitalInputValue("tail", tail_down);
+    rhi_ptr_->setDigitalInputValue("claw", !m_claw_open);
 
     // If INTAKE_MOTOR stalling, update state and timer
     if ((intake_command) &&

@@ -118,7 +118,7 @@ BT::NodeStatus Climb::onRunning()
     swerve_ptr_->getConfig().lift_kP);                                                                           // go to 90deg
   // ignore err
 
-  rhi_ptr_->setDigitalDeviceValue("claw", claw_open);
+  rhi_ptr_->setDigitalInputValue("claw", claw_open);
 
   // do not return any status but RUNNING
   // so it keeps the state at the end of the auton

@@ -118,9 +118,9 @@ BT::NodeStatus SwipeTail::onRunning()
   // }
 
   // if(status == BT::NodeStatus::SUCCESS){
-  //    rhi_ptr_->setDigitalDeviceValue("tail", false);
+  //    rhi_ptr_->setDigitalInputValue("tail", false);
   // } else {
-  //    rhi_ptr_->setDigitalDeviceValue("tail", true);
+  //    rhi_ptr_->setDigitalInputValue("tail", true);
   // }
 
   return status;
