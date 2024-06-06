@@ -399,9 +399,6 @@ private:
   bool is_autonomous_ = false;
   bool is_connected_ = false;
 
-  // Digital IO
-  std::vector<bool> digital_io_;
-
   // Serialization
   int msg_id_ = 0;
   int sensor_update_msg_length_;
