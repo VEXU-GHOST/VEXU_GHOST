@@ -101,7 +101,7 @@ BT::NodeStatus Climb::onRunning()
   {
     reaching_ = false;
     climbing_ = true;
-  } else if (posL < lift_target_down)
+  } else if (posL < lift_target_down && climbing_)
   {
     climbing_ = false;
     reaching_ = false;

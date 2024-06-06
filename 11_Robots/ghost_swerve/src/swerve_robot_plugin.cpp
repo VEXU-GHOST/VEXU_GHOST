@@ -782,11 +782,6 @@ void SwerveRobotPlugin::teleop(double current_time)
         m_intake_cooling_down = false;
       }
     }
-
-    double posR = rhi_ptr_->getMotorPosition("lift_r1");
-    double posL = rhi_ptr_->getMotorPosition("lift_l1");
-    std::cout << "right: " << posR << std::endl;
-    std::cout << "left: " << posL << std::endl;
   }
 }
 
