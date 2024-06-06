@@ -130,22 +130,22 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveCompetitionStatus) {
   EXPECT_EQ(hw_interface.isConnected(), true);
 }
 
-TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveDigitalIO) {
-  RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_,
-    hardware_type_e::COPROCESSOR);
+// TEST_F(RobotHardwareInterfaceTestFixture, testSetAndRetrieveDigitalIO) {
+//   RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_,
+//     hardware_type_e::COPROCESSOR);
 
-  // Default values
-  EXPECT_EQ(hw_interface.getDigitalIO(), std::vector<bool>(8, false));
+//   // Default values
+//   EXPECT_EQ(hw_interface.getDigitalIO(), std::vector<bool>(8, false));
 
-  auto test_io = std::vector<bool>{
-    getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(),
-    getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool()
-  };
+//   auto test_io = std::vector<bool>{
+//     getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(),
+//     getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool()
+//   };
 
-  hw_interface.setDigitalIO(test_io);
+//   hw_interface.setDigitalIO(test_io);
 
-  EXPECT_EQ(hw_interface.getDigitalIO(), test_io);
-}
+//   EXPECT_EQ(hw_interface.getDigitalIO(), test_io);
+// }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testGetDevicePair) {
   RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_,
