@@ -219,9 +219,9 @@ public:
   /////////////////////////////////////////////////////////////
   ///////////////// Digital Device Interfaces /////////////////
   /////////////////////////////////////////////////////////////
-  bool getDigitalDeviceValue(const std::string & sensor_name);
-  bool setDigitalDeviceValue(const std::string & sensor_name, bool value);
-
+  bool getDigitalDeviceValue(const std::string & device_name);
+  void setDigitalOutputValue(const std::string & device_name, bool value);
+  void setDigitalInputValue(const std::string & device_name, bool value);
 
   //////////////////////////////////////////////////////////////
   ///////////////// Joystick Device Interfaces /////////////////

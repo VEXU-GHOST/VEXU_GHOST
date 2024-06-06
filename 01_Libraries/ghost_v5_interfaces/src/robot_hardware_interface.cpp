@@ -57,11 +57,11 @@ RobotHardwareInterface::RobotHardwareInterface(
     } else if (pair.config_ptr->type == device_type_e::JOYSTICK) {
       pair.data_ptr = std::make_shared<JoystickDeviceData>(
         val->name);
-    } else if (pair.config_ptr->type == device_type_e::DIGITAL) {
-      pair.data_ptr = std::make_shared<DigitalDeviceData>(
-        val->name,
-        pair.config_ptr->as<const DigitalDeviceConfig>()->serial_config);
-    } else {
+    } else if (pair.config_ptr->type == device_type_e::DIGITAL_INPUT) {
+      pair.data_ptr = std::make_shared<DigitalInputDeviceData>(val->name);
+    } else if (pair.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
+      pair.data_ptr = std::make_shared<DigitalOutputDeviceData>(val->name);
+    }else {
       throw std::runtime_error(
               "[RobotHardwareInterface::RobotHardwareInterface()] Device type " + std::to_string(
                 pair.config_ptr->type) + " is unsupported!");
@@ -72,7 +72,7 @@ RobotHardwareInterface::RobotHardwareInterface(
     port_to_device_name_map_.emplace(pair.config_ptr->port, val->name);
 
     // Update msg lengths based on each non-digital device
-    if (pair.config_ptr->type != device_type_e::DIGITAL) {
+    if (pair.config_ptr->type != device_type_e::DIGITAL_INPUT|| pair.config_ptr->type != device_type_e::DIGITAL_OUTPUT) {
         sensor_update_msg_length_ += pair.data_ptr->getSensorPacketSize();
         actuator_command_msg_length_ += pair.data_ptr->getActuatorPacketSize();
     }
@@ -107,7 +107,7 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
 
   for (const auto & [key, val] : device_pair_port_map_) {
     auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
-    if (val.config_ptr->type == device_type_e::DIGITAL) {
+    if (val.config_ptr->type == device_type_e::DIGITAL_INPUT || val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
         setBit(serial_data[1], (val.config_ptr->port - 22), (device_serial_msg[0] == 1));
     }
     else {
@@ -176,7 +176,7 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
               "[RobotHardwareInterface::deserialize] Error: Attempted to deserialize with unsupported hardware type.");
     }
 
-    if (val.config_ptr->type == device_type_e::DIGITAL) {
+    if (val.config_ptr->type == device_type_e::DIGITAL_INPUT || val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
       val.data_ptr->deserialize({getBit(msg[1], (val.config_ptr->port - 22))}, hardware_type_);
     }
     else {
@@ -466,22 +466,38 @@ float RobotHardwareInterface::getInertialSensorHeading(const std::string & senso
   }
 }
 
-bool RobotHardwareInterface::getDigitalDeviceValue(const std::string & sensor_name){
-  return getDeviceData<DigitalDeviceData>(sensor_name)->value;
+bool RobotHardwareInterface::getDigitalDeviceValue(const std::string & device_name){
+  if(getDeviceData<DeviceData>(device_name)->type == DIGITAL_INPUT){
+    return getDeviceData<DigitalInputDeviceData>(device_name)->value;
+  }
+  else if(getDeviceData<DeviceData>(device_name)->type == DIGITAL_OUTPUT){
+    return getDeviceData<DigitalOutputDeviceData>(device_name)->value;
+  }
+  else{
+    throw std::runtime_error(std::string("[RobotHardwareInterface::getDigitalDeviceValue] Error: ") + device_name + " is not a digital device!");
+  }
 }
 
-bool RobotHardwareInterface::setDigitalDeviceValue(const std::string & device_name, bool value){
+void RobotHardwareInterface::setDigitalInputValue(const std::string & device_name, bool value){
 
-  auto io_type = getDeviceConfig<DigitalDeviceConfig>(device_name)->serial_config.io_type;
-  if (io_type == SENSOR && hardware_type_ != V5_BRAIN) {
+  if (hardware_type_ != V5_BRAIN) {
       throw std::runtime_error("[RobotHardwareInterface::setDigitalDeviceValue] Error: Attempted to set Digital Sensor value from Coprocessor.");
   }
-  if (io_type == ACTUATOR && hardware_type_ != COPROCESSOR) {
+
+  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+  auto device_data_ptr = getDeviceData<DigitalInputDeviceData>(device_name);
+  device_data_ptr->value = value;
+  setDeviceDataNoLock(device_data_ptr);
+}
+
+void RobotHardwareInterface::setDigitalOutputValue(const std::string & device_name, bool value){
+
+  if (hardware_type_ != COPROCESSOR) {
       throw std::runtime_error("[RobotHardwareInterface::setDigitalDeviceValue] Error: Attempted to set Digital Actuator value from V5 Brain.");
   }
 
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-  auto device_data_ptr = getDeviceData<DigitalDeviceData>(device_name);
+  auto device_data_ptr = getDeviceData<DigitalOutputDeviceData>(device_name);
   device_data_ptr->value = value;
   setDeviceDataNoLock(device_data_ptr);
 }
