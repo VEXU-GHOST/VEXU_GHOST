@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Jake Wendling
+ *   Copyright (c) 2024 Maxx Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,16 +21,29 @@
  *   SOFTWARE.
  */
 
-#include "ghost_planners/robot_trajectory.hpp"
+#pragma once
 
-namespace ghost_planners
-{
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
 
-RobotTrajectory::RobotTrajectory()
+namespace ghost_util
 {
-  x_trajectory = Trajectory();
-  y_trajectory = Trajectory();
-  theta_trajectory = Trajectory();
+template<typename T>
+int getInsertionIndexFromSortedVector(const T & val, const std::vector<T> & vector)
+{
+  if (!std::is_sorted(vector.begin(), vector.end())) {
+    throw std::runtime_error("[getInsertionIndexFromSortedVector] Error: vector is not sorted!");
+  }
+  return std::upper_bound(vector.begin(), vector.end(), val) - vector.begin();
 }
 
-} // namespace ghost_planners
+template<typename T>
+int insertValueIntoSortedVector(T & val, std::vector<T> & vector)
+{
+  int index = getInsertionIndexFromSortedVector(val, vector);
+  vector.insert(vector.begin() + index, val);
+  return index;
+}
+
+} // namespace ghost_util

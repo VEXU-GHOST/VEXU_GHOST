@@ -44,6 +44,11 @@ double sign(double val);
 
 bool isPositive(double val);
 
+std::vector<double> clampedVectorInterpolate(
+  double x_new, double x1, double x2,
+  const std::vector<double> & v1,
+  const std::vector<double> & v2);
+
 double linearInterpolate(
   const std::vector<double> & x_data,
   const std::vector<double> & y_data,

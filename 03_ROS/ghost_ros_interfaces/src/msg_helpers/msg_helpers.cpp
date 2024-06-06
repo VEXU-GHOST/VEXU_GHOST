@@ -430,6 +430,7 @@ void fromROSMsg(
     labeled_vector_map[entry.label] = entry.data_array;
   }
 }
+
 void toROSMsg(
   const std::unordered_map<std::string, std::vector<double>> & labeled_vector_map,
   ghost_msgs::msg::LabeledVectorMap & msg)
@@ -442,6 +443,93 @@ void toROSMsg(
   }
 }
 
-} // namespace msg_helpers
+void fromROSMsg(
+  ghost_planners::Trajectory & trajectory,
+  const ghost_msgs::msg::LabeledVectorMap & msg)
+{
+  // Find time vector
+  std::vector<double> time_vector;
+  std::vector<std::string> names_vector;
+  bool found = false;
+  for (const auto & entry : msg.entries) {
+    if (entry.label == "time") {
+      time_vector = entry.data_array;
+      found = true;
+    } else {
+      names_vector.push_back(entry.label);
+    }
+  }
 
+  // Error handling
+  if (!found) {
+    throw std::runtime_error(
+            "[fromROSMsg] Error: Cannot convert LabeledVectorMap msg to ghost_planners::Trajectory, no time vector found!");
+  }
+
+  for (const auto & entry : msg.entries) {
+    if (entry.data_array.size() != time_vector.size()) {
+      throw std::runtime_error(
+              std::string(
+                "[fromROSMsg] Error: Cannot convert LabeledVectorMap msg to ghost_planners::Trajectory, state ") + entry.label +
+              " has different length than time vector!");
+    }
+  }
+
+  // Reset Trajectory and load data
+  trajectory.reset(names_vector);
+  for (int t = 0; t < time_vector.size(); t++) {
+    auto state_vector = std::vector<double>{};
+    for (const auto & name : names_vector) {
+      for (const auto & entry : msg.entries) {
+        if (entry.label == name) {
+          state_vector.push_back(entry.data_array[t]);
+        }
+      }
+    }
+    trajectory.addNode(time_vector[t], state_vector);
+  }
+}
+
+void toROSMsg(
+  const ghost_planners::Trajectory & trajectory,
+  ghost_msgs::msg::LabeledVectorMap & msg)
+{
+  auto time_vector = trajectory.getTimeVector();
+  for (const auto & name : trajectory.getStateNames()) {
+    LabeledVector entry_msg{};
+    entry_msg.label = name;
+    entry_msg.data_array = trajectory.getStateTrajectory(name, time_vector);
+    msg.entries.push_back(entry_msg);
+  }
+
+  LabeledVector entry_msg{};
+  entry_msg.label = "time";
+  entry_msg.data_array = time_vector;
+  msg.entries.push_back(entry_msg);
+}
+
+void fromROSMsg(
+  ghost_planners::IterationCallback::IPOPTOutput & solver_output,
+  const ghost_msgs::msg::IPOPTOutput & msg)
+{
+  solver_output.iteration = msg.iteration;
+  solver_output.cost = msg.cost;
+  solver_output.state_vector = msg.state_vector;
+  solver_output.constraint_vector = msg.constraint_vector;
+  solver_output.state_lagrange_multipliers = msg.state_lagrange_multipliers;
+  solver_output.constraint_lagrange_multipliers = msg.constraint_lagrange_multipliers;
+}
+
+void toROSMsg(
+  const ghost_planners::IterationCallback::IPOPTOutput & solver_output,
+  ghost_msgs::msg::IPOPTOutput & msg)
+{
+  msg.iteration = solver_output.iteration;
+  msg.cost = solver_output.cost;
+  msg.state_vector = solver_output.state_vector;
+  msg.constraint_vector = solver_output.constraint_vector;
+  msg.state_lagrange_multipliers = solver_output.state_lagrange_multipliers;
+  msg.constraint_lagrange_multipliers = solver_output.constraint_lagrange_multipliers;
+}
+} // namespace msg_helpers
 } // namespace ghost_ros_interfaces

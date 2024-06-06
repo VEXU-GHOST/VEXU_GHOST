@@ -20,59 +20,99 @@ set(DEPENDENCIES
   ghost_estimation
   ghost_control
   ghost_ros_interfaces
+  ghost_planners
   ghost_util
   rclcpp
   ghost_msgs
-  )
+)
 
 foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
 endforeach()
+
 ament_export_dependencies(${DEPENDENCIES})
 
 # Set Include Directories
 set(INCLUDE
   include
-  ${PYTHON_INCLUDE_DIRS}
 )
 
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
-# set(CMAKE_BUILD_TYPE "DEBUG")
-# set(CMAKE_BUILD_TYPE "RELEASE")
+###################
+#### Libraries ####
+###################
+add_library(swerve_mpc_planner SHARED
+  src/swerve_mpc_planner.cpp
+)
+target_include_directories(swerve_mpc_planner
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(swerve_mpc_planner
+  ${DEPENDENCIES}
+)
+target_link_libraries(swerve_mpc_planner
+  casadi
+  matplotlib_cpp::matplotlib_cpp
+  ${PYTHON_LIBRARIES}
+)
+ament_export_targets(swerve_mpc_planner HAS_LIBRARY_TARGET)
+install(
+  TARGETS swerve_mpc_planner
+  EXPORT swerve_mpc_planner
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 ###################
 ### Executables ###
 ###################
 # Main to generate Problem Formulation for MDS MPC
-add_executable(casadi_swerve_model_generation src/casadi_swerve_model_generation.cpp)
-ament_target_dependencies(casadi_swerve_model_generation
+add_executable(swerve_trajectory_optimization_node src/swerve_trajectory_optimization_node.cpp)
+ament_target_dependencies(swerve_trajectory_optimization_node
   ${DEPENDENCIES}
 )
-target_link_libraries(casadi_swerve_model_generation
-  casadi
-  matplotlib_cpp::matplotlib_cpp
-  ${PYTHON_LIBRARIES}
+target_link_libraries(swerve_trajectory_optimization_node
+  swerve_mpc_planner
 )
-target_include_directories(casadi_swerve_model_generation
+target_include_directories(swerve_trajectory_optimization_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  casadi_swerve_model_generation
+  swerve_trajectory_optimization_node
   DESTINATION lib/${PROJECT_NAME})
 
-###############
-### Testing ###
-###############
+# Main to animate swerve trajectories
+add_executable(swerve_animator_node src/swerve_animator_node.cpp)
+ament_target_dependencies(swerve_animator_node
+  ${DEPENDENCIES}
+)
+target_link_libraries(swerve_animator_node
+  swerve_mpc_planner
+)
+target_include_directories(swerve_animator_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+swerve_animator_node
+  DESTINATION lib/${PROJECT_NAME})
 
-###############
-### Install ###
-###############
-# install(
-#  DIRECTORY include/
-#  DESTINATION include
-# )
+# ##############
+# ## Testing ###
+# ##############
+
+##############
+## Install ###
+##############
+install(DIRECTORY
+  config
+  launch
+  DESTINATION share/${PROJECT_NAME})
 
 ament_package()

@@ -11,7 +11,7 @@ find_package(Ghost CONFIG REQUIRED)
 set(DEPENDENCIES
   ament_cmake
   ament_cmake_gtest
-  )
+)
 
 foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
@@ -111,6 +111,11 @@ ament_add_gtest(test_math_util test/test_math_util.cpp)
 target_link_libraries(test_math_util
   gtest
   math_util
+)
+
+ament_add_gtest(test_search_util test/test_search_util.cpp)
+target_link_libraries(test_search_util
+  gtest
 )
 
 ament_package()

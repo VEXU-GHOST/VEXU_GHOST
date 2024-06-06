@@ -90,6 +90,36 @@ TEST_F(TestMathUtil, testSlewRate) {
   EXPECT_DOUBLE_EQ(slewRate(-2, -1000, 1), -3.0);
 }
 
+TEST(TestClampedVectorInterpolate, testThrowsOnSizeMismatch) {
+  EXPECT_THROW(
+    clampedVectorInterpolate(
+      0.5, 0.0, 1.0,
+      std::vector<double>{1.0, 0.1},
+      std::vector<double>{1.0}),
+    std::runtime_error);
+}
+
+TEST(TestClampedVectorInterpolate, testThrowsOnEmptyVectors) {
+  EXPECT_THROW(
+    clampedVectorInterpolate(
+      0.5, 0.0, 1.0,
+      std::vector<double>{},
+      std::vector<double>{}),
+    std::runtime_error);
+}
+
+TEST(TestClampedVectorInterpolate, testVectorInterpolate) {
+  std::vector<double> v1{1.0, 2.0, 4.0};
+  std::vector<double> v2{-1.0, 1.0, 8.0};
+  std::vector<double> expected_1{0.0, 1.5, 6.0};
+  std::vector<double> expected_2{0.5, 1.75, 5.0};
+
+  EXPECT_EQ(clampedVectorInterpolate(-10.0, 0.0, 1.0, v1, v2), v1);
+  EXPECT_EQ(clampedVectorInterpolate(10.0, 0.0, 1.0, v1, v2), v2);
+  EXPECT_EQ(clampedVectorInterpolate(0.5, 0.0, 1.0, v1, v2), expected_1);
+  EXPECT_EQ(clampedVectorInterpolate(0.25, 0.0, 1.0, v1, v2), expected_2);
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

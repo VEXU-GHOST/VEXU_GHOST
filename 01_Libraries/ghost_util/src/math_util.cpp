@@ -48,6 +48,38 @@ double sign(double val)
   return isPositive(val) ? 1.0 : -1.0;
 }
 
+std::vector<double> clampedVectorInterpolate(
+  double x_new, double x1, double x2,
+  const std::vector<double> & v1,
+  const std::vector<double> & v2)
+{
+  // Check sizes
+  if (v1.size() != v2.size()) {
+    throw std::runtime_error(
+            "[clampedVectorInterpolate] Error: Vectors must be the same size!");
+  }
+
+  if (v1.empty()) {
+    throw std::runtime_error(
+            "[clampedVectorInterpolate] Error: Vectors cannot be empty!");
+  }
+
+  std::vector<double> v_new;
+  if (x_new <= x1) {
+    v_new = v1;
+  } else if (x_new >= x2) {
+    v_new = v2;
+  } else {
+    double frac = (x_new - x1) / (x2 - x1);
+    v_new.reserve(v1.size());
+
+    for (int i = 0; i < v1.size(); i++) {
+      v_new.push_back((1 - frac) * v1[i] + frac * v2[i]);
+    }
+  }
+  return v_new;
+}
+
 double linearInterpolate(
   const std::vector<double> & x_data,
   const std::vector<double> & y_data,

@@ -12,10 +12,6 @@ set(DEPENDENCIES
   ament_index_cpp
   eigen3_cmake_module
   Eigen3
-  urdf
-  matplotlib_cpp
-  yaml-cpp
-  PythonLibs
   casadi
   ghost_estimation
   ghost_control
@@ -31,7 +27,6 @@ ament_export_dependencies(${DEPENDENCIES})
 # Set Include Directories
 set(INCLUDE
   include
-  ${PYTHON_INCLUDE_DIRS}
 )
 
 include_directories(${INCLUDE})
@@ -43,31 +38,27 @@ ament_export_include_directories(${INCLUDE})
 #################
 ### Libraries ###
 #################
-# # Casadi Collocation Model
-# add_library(casadi_collocation_model SHARED src/models/casadi_collocation_model.cpp)
-# target_link_libraries(casadi_collocation_model
-#   yaml-cpp
-#   )
-# target_include_directories(casadi_collocation_model
-#   PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# ament_export_targets(casadi_collocation_model HAS_LIBRARY_TARGET)
-
-# install(
-#   TARGETS casadi_collocation_model
-#   EXPORT casadi_collocation_model
-#   LIBRARY DESTINATION lib
-#   ARCHIVE DESTINATION lib
-#   RUNTIME DESTINATION bin
-#   INCLUDES DESTINATION include
-# )
+# Trajectory class
+add_library(trajectory SHARED src/trajectory.cpp)
+target_include_directories(trajectory
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(trajectory
+  ${DEPENDENCIES}
+  )
+ament_export_targets(trajectory HAS_LIBRARY_TARGET)
+install(
+  TARGETS trajectory
+  EXPORT trajectory
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 # robot trajectory class
 add_library(robot_trajectory SHARED src/robot_trajectory.cpp)
-# target_link_libraries(robot_trajectory
-#   DEPENDENCIES
-#   )
 target_include_directories(robot_trajectory
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -85,62 +76,46 @@ install(
   INCLUDES DESTINATION include
 )
 
-######################
-### Casadi Example ###
-######################
-add_executable(casadi_example_model_generation src/casadi_examples/casadi_example_model_generation.cpp)
-ament_target_dependencies(casadi_example_model_generation
+add_library(ipopt_iteration_callback SHARED src/ipopt_iteration_callback.cpp)
+ament_target_dependencies(ipopt_iteration_callback
   ${DEPENDENCIES}
   )
-  target_link_libraries(casadi_example_model_generation
+target_link_libraries(ipopt_iteration_callback
   casadi
-  yaml-cpp
-  matplotlib_cpp::matplotlib_cpp
-  ${PYTHON_LIBRARIES}
-  )
-target_include_directories(casadi_example_model_generation
+)
+target_include_directories(ipopt_iteration_callback
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  casadi_example_model_generation
-  DESTINATION lib/${PROJECT_NAME})
-
-###################
-### Executables ###
-###################
-# # Main to test Diff Swerve State Space Modeling for MPC
-# add_executable(swerve_model_test_main src/swerve_model_test_main.cpp)
-# ament_target_dependencies(swerve_model_test_main
-#   ${DEPENDENCIES}
-# )
-# target_link_libraries(swerve_model_test_main
-#   casadi
-# )
-# target_include_directories(swerve_model_test_main
-#   PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# install(TARGETS
-#   swerve_model_test_main
-#   DESTINATION lib/${PROJECT_NAME})
+ament_export_targets(ipopt_iteration_callback HAS_LIBRARY_TARGET)
+install(
+  TARGETS ipopt_iteration_callback
+  EXPORT ipopt_iteration_callback
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 ###############
 ### Testing ###
 ###############
 
-# Robot Trajectory Tests
-set(DEVICE_TESTS
-  test_robot_trajectory
+# Trajectory Tests
+ament_add_gtest(test_trajectory test/test_trajectory.cpp)
+ament_target_dependencies(test_trajectory ${DEPENDENCIES})
+target_link_libraries(test_trajectory
+  gtest_main
+  trajectory
 )
-foreach(TEST ${DEVICE_TESTS})
-  ament_add_gtest(${TEST} test/${TEST}.cpp)
-  ament_target_dependencies(${TEST} ${DEPENDENCIES})
-  target_link_libraries(${TEST}
-    gtest_main
-    robot_trajectory
-  )
-endforeach()
+
+# Robot Trajectory Tests
+ament_add_gtest(test_robot_trajectory test/test_robot_trajectory.cpp)
+ament_target_dependencies(test_robot_trajectory ${DEPENDENCIES})
+target_link_libraries(test_robot_trajectory
+  gtest_main
+  robot_trajectory
+)
 
 ###############
 ### Install ###
