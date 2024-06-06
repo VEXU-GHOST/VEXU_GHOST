@@ -128,20 +128,6 @@ BT::NodeStatus Climb::onRunning()
     RCLCPP_INFO(node_ptr_->get_logger(), "Reaching");
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", -1.0);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
-  } else if (climbing_) {
-    RCLCPP_INFO(node_ptr_->get_logger(), "Climbing");
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
@@ -152,6 +138,20 @@ BT::NodeStatus Climb::onRunning()
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
     rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
+  } else if (climbing_) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Climbing");
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
   } else {
     RCLCPP_INFO(node_ptr_->get_logger(), "Done climbing");
 
