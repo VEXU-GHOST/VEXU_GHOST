@@ -39,7 +39,7 @@ void loadDigitalDeviceConfigFromYAML(
   bool verbose)
 {
   // Get device node
-  auto device_node = node["devices"][device_name];
+  auto device_node = node["adi"][device_name];
   if (!device_node) {
     throw std::runtime_error(
             "[loadDigitalDeviceConfigFromYAML] Error: Device Sensor " + device_name +
