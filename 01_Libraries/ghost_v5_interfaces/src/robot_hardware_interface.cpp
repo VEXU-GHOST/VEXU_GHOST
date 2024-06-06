@@ -484,7 +484,7 @@ bool RobotHardwareInterface::getDigitalDeviceValue(const std::string & device_na
 void RobotHardwareInterface::setDigitalInputValue(const std::string & device_name, bool value){
 
   if (hardware_type_ != V5_BRAIN) {
-      throw std::runtime_error("[RobotHardwareInterface::setDigitalDeviceValue] Error: Attempted to set Digital Sensor value from Coprocessor.");
+      throw std::runtime_error("[RobotHardwareInterface::setDigitalInputValue] Error: Attempted to set Digital Sensor value from Coprocessor.");
   }
 
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
@@ -496,7 +496,7 @@ void RobotHardwareInterface::setDigitalInputValue(const std::string & device_nam
 void RobotHardwareInterface::setDigitalOutputValue(const std::string & device_name, bool value){
 
   if (hardware_type_ != COPROCESSOR) {
-      throw std::runtime_error("[RobotHardwareInterface::setDigitalDeviceValue] Error: Attempted to set Digital Actuator value from V5 Brain.");
+      throw std::runtime_error("[RobotHardwareInterface::setDigitalOutputValue] Error: Attempted to set Digital Actuator value from V5 Brain.");
   }
 
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
