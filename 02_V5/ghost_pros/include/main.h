@@ -50,6 +50,8 @@ std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_inte
 std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motor_interfaces;
 std::unordered_map<std::string, std::shared_ptr<pros::Rotation> > encoders;
 std::unordered_map<std::string, std::shared_ptr<pros::Imu> > imus;
+std::unordered_map<std::string, std::shared_ptr<pros::ADIDigitalIn> > digital_sensors;
+std::unordered_map<std::string, std::shared_ptr<pros::ADIDigitalOut> > digital_actuators;
 
 const pros::controller_analog_e_t joy_channels[4] = {
 	ANALOG_LEFT_X,
@@ -71,19 +73,6 @@ const pros::controller_digital_e_t joy_btns[12] = {
 	DIGITAL_R1,
 	DIGITAL_R2,
 };
-
-pros::ADIDigitalOut adi_ports[8] = {
-	pros::ADIDigitalOut('A', false),
-	pros::ADIDigitalOut('B', false),
-	pros::ADIDigitalOut('C', false),
-	pros::ADIDigitalOut('D', false),
-	pros::ADIDigitalOut('E', false),
-	pros::ADIDigitalOut('F', false),
-	pros::ADIDigitalOut('G', false),
-	pros::ADIDigitalOut('H', false),
-};
-
-std::vector<bool> digital_out_cmds(8, false);
 
 // Serial Port
 std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;
