@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -67,13 +67,6 @@ devices::InertialSensorDeviceData::SerialConfig getRandomInertialSensorSerialCon
   config.send_accel_data = ghost_util::getRandomBool();
   config.send_gyro_data = ghost_util::getRandomBool();
   config.send_heading_data = ghost_util::getRandomBool();
-  return config;
-}
-
-devices::DigitalDeviceData::SerialConfig getRandomDigitalDeviceSerialConfig()
-{
-  devices::DigitalDeviceData::SerialConfig config;
-  config.io_type = ghost_util::getRandomBool() ? devices::digital_io_type_e::SENSOR : devices::digital_io_type_e::ACTUATOR;
   return config;
 }
 
@@ -191,19 +184,18 @@ std::shared_ptr<devices::InertialSensorDeviceData> getRandomInertialSensorData(
   return inertial_sensor_ptr;
 }
 
-std::shared_ptr<devices::DigitalDeviceData> getRandomDigitalDeviceData(
-  devices::digital_io_type_e io_type,
-  devices::DigitalDeviceData::SerialConfig serial_config = devices::DigitalDeviceData::SerialConfig())
-{
-  auto digital_device_ptr = std::make_shared<devices::DigitalDeviceData>(
-    "test",
-    serial_config);
-  digital_device_ptr->value = ghost_util::getRandomBool();
-  digital_device_ptr->serial_config_.io_type = io_type;
-  return digital_device_ptr;
+
+std::shared_ptr<devices::DigitalOutputDeviceData> getRandomDigitalOutputDeviceData(){
+  auto digital_output_ptr = std::make_shared<devices::DigitalOutputDeviceData>("test");
+  digital_output_ptr->value = ghost_util::getRandomBool();
+  return digital_output_ptr;
 }
 
-
+std::shared_ptr<devices::DigitalInputDeviceData> getRandomDigitalInputDeviceData(){
+  auto digital_input_ptr = std::make_shared<devices::DigitalInputDeviceData>("test");
+  digital_input_ptr->value = ghost_util::getRandomBool();
+  return digital_input_ptr;
+}
 }
 
 }
