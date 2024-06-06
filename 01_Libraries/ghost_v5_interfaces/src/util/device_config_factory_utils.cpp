@@ -70,17 +70,15 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
   }
 
   // Iterate through Digital IO Ports
-  if (node["digital"]) {
-
-
-  for (auto it = node["port_configuration"]["digital"].begin();
-    it != node["port_configuration"]["digital"].end(); it++)
+  if (node["adi"]) {
+  for (auto it = node["port_configuration"]["adi"].begin();
+    it != node["port_configuration"]["adi"].end(); it++)
   {
     std::string device_name = it->first.as<std::string>();
     YAML::Node device_yaml_node = it->second;
 
     auto device_config_base_ptr = std::make_shared<DigitalDeviceConfig>();
-    loadDigitalDeviceConfigFromYAML(device_yaml_node, device_name, device_config_base_ptr, verbose);
+    loadDigitalDeviceConfigFromYAML(node["port_configuration"], device_name, device_config_base_ptr, verbose);
     device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
   }
   }
