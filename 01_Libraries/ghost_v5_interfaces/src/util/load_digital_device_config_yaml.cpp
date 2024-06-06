@@ -51,12 +51,14 @@ void loadDigitalDeviceConfigFromYAML(
   device_config_ptr->type = device_type_e::DIGITAL;
 
   // Get port
-  char port;
-  if (!loadYAMLParam(device_node, "port", port, verbose)) {
+  std::string port_string;
+  if (!loadYAMLParam(device_node, "port", port_string, verbose)) {
     throw std::runtime_error(
             "[loadDigitalDeviceConfigFromYAML] Error: Port not specified for Digital Device " +
             device_name + "!");
   }
+  char port = port_string[0];
+
 
   // Validate port
   const std::vector<char> valid_ports = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
