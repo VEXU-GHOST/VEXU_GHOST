@@ -169,6 +169,34 @@ int main(int argc, char * argv[])
 
   bool track_pose = true;
   bool generate_dense_trajectory = false;
+  bool show_sparsity = false;
+
+  if (show_sparsity) {
+    auto j = node_ptr->getConstraintJacobian();
+
+    std::cout << j.size1() << std::endl;
+    std::cout << j.size2() << std::endl;
+
+    std::vector<std::vector<double>> j_sparsity_image(j.size1(),
+      std::vector<double>(j.size2(), 0.0));
+
+    for (int r = 0; r < j.size1(); r++) {
+      for (int c = 0; c < j.size2(); c++) {
+        if (j(r, c).is_zero()) {
+          j_sparsity_image[r][c] = 0.0;
+        } else {
+          j_sparsity_image[r][c] = 255.0;
+        }
+      }
+    }
+
+    plt::figure();
+    plt::spy(j_sparsity_image);
+
+    plt::show();
+
+    return 0;
+  }
 
   node_ptr->runSolver(
     current_time, current_state, init_trajectory, reference_trajectory,

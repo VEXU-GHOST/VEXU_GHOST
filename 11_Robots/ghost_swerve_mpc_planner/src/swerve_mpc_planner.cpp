@@ -48,8 +48,8 @@ SwerveMPCPlanner::SwerveMPCPlanner()
   populateContainers();
 
   // Set costs, constraints, and state bounds for swerve drive optimization
-  addCosts();
-  addConstraints();
+  populateCosts();
+  populateConstraints();
   setStateBounds();
 
   initSolver();
@@ -228,6 +228,9 @@ void SwerveMPCPlanner::initROS()
   intermediate_trajectory_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
     "/trajectory/swerve_mpc_trajectory_intermediates", 10);
 
+  constraint_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
+    "/trajectory/swerve_mpc_constraints", 10);
+
   trajectory_publisher_ = create_publisher<ghost_msgs::msg::LabeledVectorMap>(
     "/trajectory/swerve_mpc_trajectory", 10);
 
@@ -358,6 +361,7 @@ void SwerveMPCPlanner::populateContainers()
   lbx_ = DM::ones(num_opt_vars_) * -DM::inf();
   ubx_ = DM::ones(num_opt_vars_) * DM::inf();
   constraints_ = casadi::Matrix<casadi::SXElem>();
+  constraint_structure_map_ = std::unordered_map<std::string, std::vector<int>>();
   lbg_ = DM::zeros(0);
   ubg_ = DM::zeros(0);
   latest_solution_ptr_ = std::make_shared<ghost_planners::Trajectory>(state_names_);
@@ -511,7 +515,7 @@ std::unordered_map<std::string, std::vector<double>> SwerveMPCPlanner::generateT
   return solution_map;
 }
 
-void SwerveMPCPlanner::addIntegrationConstraints()
+void SwerveMPCPlanner::addIntegrationConstraints(int knot_point)
 {
   // List pairs of base state and derivative state
   std::vector<std::pair<std::string, std::string>> euler_integration_state_names = {
@@ -537,9 +541,10 @@ void SwerveMPCPlanner::addIntegrationConstraints()
   }
 
   // Populate euler integration constraints for state vector
-  for (int k = 0; k < num_knots_ - 1; k++) {
-    std::string curr_knot_prefix = getKnotPrefix(k);
-    std::string next_knot_prefix = getKnotPrefix(k + 1);
+  if (knot_point != num_knots_ - 1) {
+
+    std::string curr_knot_prefix = getKnotPrefix(knot_point);
+    std::string next_knot_prefix = getKnotPrefix(knot_point + 1);
 
     for (auto & pair : euler_integration_state_names) {
       auto x0 = curr_knot_prefix + pair.first;
@@ -549,12 +554,42 @@ void SwerveMPCPlanner::addIntegrationConstraints()
 
       // X1 - X0 = 1/2 * DT * (dX1 + dX0)
       auto c = 2 * (getState(x1) - getState(x0)) / config_.dt - getState(dx1) - getState(dx0);
-      constraints_ = vertcat(constraints_, c);
-      lbg_ = vertcat(lbg_, DM(0));
-      ubg_ = vertcat(ubg_, DM(0));
+      addConstraint(knot_point, pair.first + "_integration_constraint", c, DM(0), DM(0));
     }
-
   }
+}
+
+void SwerveMPCPlanner::addConstraint(
+  int knot_point,
+  std::string name,
+  casadi::Matrix<casadi::SXElem> constraint,
+  casadi::DM lbg,
+  casadi::DM ubg)
+{
+
+  if (constraint.size1() != 1) {
+    throw std::runtime_error(
+            "[SwerveMPCPlanner::addConstraintGroup] Error: Constraint must be size 1!");
+  }
+
+  if (lbg.size1() != 1) {
+    throw std::runtime_error(
+            "[SwerveMPCPlanner::addConstraintGroup] Error: Lower Bound must be size 1!");
+  }
+
+  if (ubg.size1() != 1) {
+    throw std::runtime_error(
+            "[SwerveMPCPlanner::addConstraintGroup] Error: Upper Bound must be size 1!");
+  }
+
+  constraints_ = vertcat(constraints_, constraint);
+  lbg_ = vertcat(lbg_, lbg);
+  ubg_ = vertcat(ubg_, ubg);
+
+  if (constraint_structure_map_.count(name) != 1) {
+    constraint_structure_map_[name] = std::vector<int>(num_knots_, -1);
+  }
+  constraint_structure_map_[name][knot_point] = constraints_.size1() - 1;
 }
 
 void SwerveMPCPlanner::addInitialStateConstraints()
@@ -605,177 +640,205 @@ void SwerveMPCPlanner::addInitialStateConstraints()
   }
 }
 
-void SwerveMPCPlanner::addAccelerationDynamicsConstraints()
+void SwerveMPCPlanner::addAccelerationDynamicsConstraints(int knot_point)
 {
   // acceleration dynamics constraints
-  for (int k = 0; k < num_knots_; k++) {
-    auto kt1_ = getKnotPrefix(k);
-    auto x_accel_constraint = config_.robot_mass * getState(kt1_ + "base_accel_x");
-    auto y_accel_constraint = config_.robot_mass * getState(kt1_ + "base_accel_y");
-    auto theta_accel_constraint = config_.robot_inertia * getState(kt1_ + "base_accel_theta");
-    auto theta = getState(kt1_ + "base_pose_theta");
+  auto kt1_ = getKnotPrefix(knot_point);
+  auto x_accel_constraint = config_.robot_mass * getState(kt1_ + "base_accel_x");
+  auto y_accel_constraint = config_.robot_mass * getState(kt1_ + "base_accel_y");
+  auto theta_accel_constraint = config_.robot_inertia * getState(kt1_ + "base_accel_theta");
+  auto theta = getState(kt1_ + "base_pose_theta");
 
-    for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
-      auto kt1_mN_ = getModulePrefix(k, m);
-      auto wheel_force = getState(kt1_mN_ + "wheel_torque") / config_.wheel_radius;
-      auto lateral_force = getState(kt1_mN_ + "lateral_force");
-      auto world_steering_angle = theta + getState(kt1_mN_ + "steering_angle");
+  for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+    auto kt1_mN_ = getModulePrefix(knot_point, m);
+    auto wheel_force = getState(kt1_mN_ + "wheel_torque") / config_.wheel_radius;
+    auto lateral_force = getState(kt1_mN_ + "lateral_force");
+    auto world_steering_angle = theta + getState(kt1_mN_ + "steering_angle");
 
-      auto x_force = casadi::Matrix<casadi::SXElem>();
-      auto y_force = casadi::Matrix<casadi::SXElem>();
-      rotateVector(world_steering_angle, wheel_force, lateral_force, x_force, y_force);
-      x_accel_constraint -= x_force;
-      y_accel_constraint -= y_force;
+    auto x_force = casadi::Matrix<casadi::SXElem>();
+    auto y_force = casadi::Matrix<casadi::SXElem>();
+    rotateVector(world_steering_angle, wheel_force, lateral_force, x_force, y_force);
+    x_accel_constraint -= x_force;
+    y_accel_constraint -= y_force;
 
-      auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
-      auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
-      rotateVector(
-        theta, module_positions_[m - 1].x(),
-        module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
+    auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
+    auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
+    rotateVector(
+      theta, module_positions_[m - 1].x(),
+      module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
 
-      auto base_torque = y_force * (mod_offset_x) - x_force * (mod_offset_y);
-      theta_accel_constraint -= base_torque;
-    }
+    auto base_torque = y_force * (mod_offset_x) - x_force * (mod_offset_y);
+    theta_accel_constraint -= base_torque;
+  }
+  addConstraint(knot_point, "x_accel_constraints", x_accel_constraint, DM(0), DM(0));
+  addConstraint(knot_point, "y_accel_constraints", y_accel_constraint, DM(0), DM(0));
+  addConstraint(knot_point, "theta_accel_constraints", theta_accel_constraint, DM(0), DM(0));
+}
 
-    constraints_ = vertcat(constraints_, x_accel_constraint);
-    constraints_ = vertcat(constraints_, y_accel_constraint);
-    constraints_ = vertcat(constraints_, theta_accel_constraint);
+void SwerveMPCPlanner::addNoWheelSlipConstraints(int knot_point)
+{
+  std::string kt1_ = getKnotPrefix(knot_point);
+  auto theta = getState(kt1_ + "base_pose_theta");
+  auto vel_x = getState(kt1_ + "base_vel_x");
+  auto vel_y = getState(kt1_ + "base_vel_y");
+  auto vel_theta = getState(kt1_ + "base_vel_theta");
 
-    lbg_ = vertcat(lbg_, DM::zeros(3));
-    ubg_ = vertcat(ubg_, DM::zeros(3));
+  for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+    std::string kt1_mN_ = getModulePrefix(knot_point, m);
+    auto world_steering_angle = theta + getState(kt1_mN_ + "steering_angle");
+
+    auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
+    auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
+    rotateVector(
+      theta, module_positions_[m - 1].x(),
+      module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
+
+    // Lateral Wheel Velocity Constraint
+    auto base_steering_angle = getState(kt1_mN_ + "steering_angle");
+    auto tan_vel = vel_theta * sqrt((pow(mod_offset_x, 2) + pow(mod_offset_y, 2)));
+    auto r_angle = atan2(module_positions_[m - 1].y(), module_positions_[m - 1].x());
+    auto tan_vel_x = tan_vel * -sin(r_angle);
+    auto tan_vel_y = tan_vel * cos(r_angle);
+
+    auto world_vel_x = casadi::Matrix<casadi::SXElem>();
+    auto world_vel_y = casadi::Matrix<casadi::SXElem>();
+    rotateVector(theta, tan_vel_x, tan_vel_y, world_vel_x, world_vel_y);
+    world_vel_x += vel_x;
+    world_vel_y += vel_y;
+
+    auto forward_velocity = casadi::Matrix<casadi::SXElem>();
+    auto lateral_velocity = casadi::Matrix<casadi::SXElem>();
+    rotateVector(
+      -world_steering_angle, world_vel_x, world_vel_y, forward_velocity,
+      lateral_velocity);
+
+    auto wheel_vel = getState(kt1_mN_ + "wheel_vel");
+
+    auto module_prefix = std::string("m") + std::to_string(m);
+    auto c1 = lateral_velocity;
+    auto c2 = forward_velocity - wheel_vel * config_.wheel_radius;
+    addConstraint(
+      knot_point, module_prefix + "_no_wheel_slip_constraint", c1,
+      -config_.wheel_constraint_tolerance, config_.wheel_constraint_tolerance);
+    addConstraint(
+      knot_point, module_prefix + "_no_lateral_slip_constraint", c2,
+      -config_.wheel_constraint_tolerance, config_.wheel_constraint_tolerance);
   }
 }
 
-void SwerveMPCPlanner::addNoWheelSlipConstraints()
-{
-  // acceleration dynamics constraints
-  for (int k = 0; k < num_knots_; k++) {
-    std::string kt1_ = getKnotPrefix(k);
-    auto theta = getState(kt1_ + "base_pose_theta");
-    auto vel_x = getState(kt1_ + "base_vel_x");
-    auto vel_y = getState(kt1_ + "base_vel_y");
-    auto vel_theta = getState(kt1_ + "base_vel_theta");
-
-    for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
-      std::string kt1_mN_ = getModulePrefix(k, m);
-      auto world_steering_angle = theta + getState(kt1_mN_ + "steering_angle");
-
-      auto mod_offset_x = casadi::Matrix<casadi::SXElem>();
-      auto mod_offset_y = casadi::Matrix<casadi::SXElem>();
-      rotateVector(
-        theta, module_positions_[m - 1].x(),
-        module_positions_[m - 1].y(), mod_offset_x, mod_offset_y);
-
-      // Lateral Wheel Velocity Constraint
-      auto base_steering_angle = getState(kt1_mN_ + "steering_angle");
-      auto tan_vel = vel_theta * sqrt((pow(mod_offset_x, 2) + pow(mod_offset_y, 2)));
-      auto r_angle = atan2(module_positions_[m - 1].y(), module_positions_[m - 1].x());
-      auto tan_vel_x = tan_vel * -sin(r_angle);
-      auto tan_vel_y = tan_vel * cos(r_angle);
-
-      auto world_vel_x = casadi::Matrix<casadi::SXElem>();
-      auto world_vel_y = casadi::Matrix<casadi::SXElem>();
-      rotateVector(theta, tan_vel_x, tan_vel_y, world_vel_x, world_vel_y);
-      world_vel_x += vel_x;
-      world_vel_y += vel_y;
-
-      auto forward_velocity = casadi::Matrix<casadi::SXElem>();
-      auto lateral_velocity = casadi::Matrix<casadi::SXElem>();
-      rotateVector(
-        -world_steering_angle, world_vel_x, world_vel_y, forward_velocity,
-        lateral_velocity);
-
-
-      auto wheel_vel = getState(kt1_mN_ + "wheel_vel");
-      constraints_ = vertcat(constraints_, lateral_velocity);
-      constraints_ = vertcat(constraints_, forward_velocity - wheel_vel * config_.wheel_radius);
-
-      lbg_ = vertcat(lbg_, -DM::ones(2) * config_.wheel_constraint_tolerance);
-      ubg_ = vertcat(ubg_, DM::ones(2) * config_.wheel_constraint_tolerance);
-    }
-  }
-}
-
-void SwerveMPCPlanner::addDifferentialConstraints()
+void SwerveMPCPlanner::addDifferentialConstraints(int knot_point)
 {
   double s_ratio = config_.steering_ratio;
   double w_ratio = config_.wheel_ratio;
-  for (int k = 0; k < num_knots_; k++) {
-    std::string kt1_ = getKnotPrefix(k);
-    for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
-      // Velocity Constraints
-      std::string kt1_mN_ = kt1_ + "m" + std::to_string(m) + "_";
-      auto steering_vel = getState(kt1_mN_ + "steering_vel");
-      auto wheel_vel = getState(kt1_mN_ + "wheel_vel");
+  std::string kt1_ = getKnotPrefix(knot_point);
+  for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+    // Velocity Constraints
+    std::string kt1_mN_ = kt1_ + "m" + std::to_string(m) + "_";
 
-      constraints_ = vertcat(constraints_, getWheelVelSym(k, m) - wheel_vel);
-      constraints_ = vertcat(constraints_, getSteeringVelSym(k, m) - steering_vel);
+    auto wheel_vel = getState(kt1_mN_ + "wheel_vel");
+    auto c1 = getWheelVelSym(knot_point, m) - wheel_vel;
+    addConstraint(
+      knot_point,
+      std::string("m") + std::to_string(m) + "_wheel_speed_differential_constraint",
+      c1,
+      DM(0),
+      DM(0));
 
-      lbg_ = vertcat(lbg_, DM::zeros(2));
-      ubg_ = vertcat(ubg_, DM::zeros(2));
+    auto steering_vel = getState(kt1_mN_ + "steering_vel");
+    auto c2 = getSteeringVelSym(knot_point, m) - steering_vel;
+    addConstraint(
+      knot_point,
+      std::string("m") + std::to_string(m) + "_steering_speed_differential_constraint",
+      c2,
+      DM(0),
+      DM(0));
 
-      // Torque Constraints
-      auto wheel_torque = getState(kt1_mN_ + "wheel_torque");
-      auto steering_torque = config_.steering_inertia * getState(kt1_mN_ + "steering_accel");
+    // Torque Constraints
+    auto wheel_torque = getState(kt1_mN_ + "wheel_torque");
+    auto c3 = getWheelTorqueSym(knot_point, m) - wheel_torque;
+    addConstraint(
+      knot_point,
+      std::string("m") + std::to_string(m) + "_wheel_torque_differential_constraint",
+      c3,
+      DM(0),
+      DM(0));
 
-      auto c3 = getWheelTorqueSym(k, m) - wheel_torque;
-      auto c4 = getSteeringTorqueSym(k, m) - steering_torque;
-
-      constraints_ = vertcat(constraints_, c3);
-      constraints_ = vertcat(constraints_, c4);
-
-      lbg_ = vertcat(lbg_, DM::zeros(2));
-      ubg_ = vertcat(ubg_, DM::zeros(2));
-    }
+    auto steering_torque = config_.steering_inertia * getState(kt1_mN_ + "steering_accel");
+    auto c4 = getSteeringTorqueSym(knot_point, m) - steering_torque;
+    addConstraint(
+      knot_point,
+      std::string("m") + std::to_string(m) + "_steering_torque_differential_constraint",
+      c4,
+      DM(0),
+      DM(0));
   }
-
 }
 
-void SwerveMPCPlanner::addMotorModelConstraints()
+void SwerveMPCPlanner::addMotorModelConstraints(int knot_point)
 {
+  auto num_mods = config_.num_swerve_modules;
+
+  auto m1_container = std::vector<Matrix<SXElem>>(num_mods, Matrix<SXElem>());
+  auto m1_lbg_vectors = std::vector<DM>(num_mods, DM::zeros(0));
+  auto m1_ubg_vectors = std::vector<DM>(num_mods, DM::zeros(0));
+
+  auto m2_container = std::vector<Matrix<SXElem>>(num_mods, Matrix<SXElem>());
+  auto m2_lbg_vectors = std::vector<DM>(num_mods, DM::zeros(0));
+  auto m2_ubg_vectors = std::vector<DM>(num_mods, DM::zeros(0));
+
   double t_stall = config_.motor_model_stall_torque_nm;
   double w_free = config_.motor_model_free_speed_rpm;
-  for (int k = 0; k < num_knots_; k++) {
-    std::string kt1_ = getKnotPrefix(k);
-    for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
-      // Velocity Constraints
-      std::string kt1_mN_ = getModulePrefix(k, m);
-      auto m1_velocity = getState(kt1_mN_ + "m1_velocity");
-      auto m2_velocity = getState(kt1_mN_ + "m2_velocity");
-      auto m1_voltage = getState(kt1_mN_ + "m1_voltage");
-      auto m2_voltage = getState(kt1_mN_ + "m2_voltage");
-      auto m1_torque = getState(kt1_mN_ + "m1_torque");
-      auto m2_torque = getState(kt1_mN_ + "m2_torque");
+  std::string kt1_ = getKnotPrefix(knot_point);
+  for (int m = 1; m < config_.num_swerve_modules + 1; m++) {
+    // Velocity Constraints
+    std::string kt1_mN_ = getModulePrefix(knot_point, m);
+    auto m1_velocity = getState(kt1_mN_ + "m1_velocity");
+    auto m2_velocity = getState(kt1_mN_ + "m2_velocity");
+    auto m1_voltage = getState(kt1_mN_ + "m1_voltage");
+    auto m2_voltage = getState(kt1_mN_ + "m2_voltage");
+    auto m1_torque = getState(kt1_mN_ + "m1_torque");
+    auto m2_torque = getState(kt1_mN_ + "m2_torque");
 
-      auto c1 = t_stall * (m1_voltage / 12000.0 - m1_velocity / w_free) - m1_torque;
-      auto c2 = t_stall * (m2_voltage / 12000.0 - m2_velocity / w_free) - m2_torque;
+    auto c1 = t_stall * (m1_voltage / 12000.0 - m1_velocity / w_free) - m1_torque;
+    auto c2 = t_stall * (m2_voltage / 12000.0 - m2_velocity / w_free) - m2_torque;
 
-      constraints_ = vertcat(constraints_, c1);
-      constraints_ = vertcat(constraints_, c2);
+    addConstraint(
+      knot_point,
+      std::string("m") + std::to_string(m) + "_m1_motor_model_constraint",
+      c1,
+      DM(0),
+      DM(0)
+    );
 
-      lbg_ = vertcat(lbg_, DM::zeros(2));
-      ubg_ = vertcat(ubg_, DM::zeros(2));
-    }
+    addConstraint(
+      knot_point,
+      std::string("m") + std::to_string(m) + "_m2_motor_model_constraint",
+      c2,
+      DM(0),
+      DM(0)
+    );
   }
 }
 
-void SwerveMPCPlanner::addConstraints()
+void SwerveMPCPlanner::populateConstraints()
 {
-  addIntegrationConstraints();
   addInitialStateConstraints();
-  addAccelerationDynamicsConstraints();
-  addNoWheelSlipConstraints();
-  addDifferentialConstraints();
-  addMotorModelConstraints();
+  for (int k = 0; k < num_knots_; k++) {
+    addIntegrationConstraints(k);
+    addAccelerationDynamicsConstraints(k);
+    addNoWheelSlipConstraints(k);
+    addDifferentialConstraints(k);
+    addMotorModelConstraints(k);
+  }
 
   if (lbg_.size1() != ubg_.size1()) {
     throw std::runtime_error(
-            "[SwerveMPCPlanner::addConstraints] Error: lbg and ubg are not the same size!");
+            "[SwerveMPCPlanner::populateConstraints] Error: lbg and ubg are not the same size!");
   }
 
   if (lbg_.size1() != constraints_.size1()) {
     throw std::runtime_error(
-            "[SwerveMPCPlanner::addConstraints] Error: constraint bounds and constraint vector are not the same size!");
+            "[SwerveMPCPlanner::populateConstraints] Error: constraint bounds and constraint vector are not the same size!");
   }
 }
 
@@ -949,8 +1012,7 @@ void SwerveMPCPlanner::addJerkCosts()
   }
 }
 
-
-void SwerveMPCPlanner::addCosts()
+void SwerveMPCPlanner::populateCosts()
 {
   addModuleVelocityComponentsTrackingCost();
   addStateTrackingCosts();

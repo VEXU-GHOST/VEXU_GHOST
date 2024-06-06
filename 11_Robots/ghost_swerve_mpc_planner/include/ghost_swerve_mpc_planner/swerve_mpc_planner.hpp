@@ -192,6 +192,11 @@ public:
     return *latest_solution_ptr_;
   }
 
+  casadi::Matrix<casadi::SXElem> getConstraintJacobian() const
+  {
+    return jacobian(constraints_, state_vector_);
+  }
+
 private:
   // Init
   void loadConfig();
@@ -220,13 +225,19 @@ private:
   casadi::Matrix<casadi::SXElem> getSteeringTorqueSym(int knot_point, int module);
 
   // Swerve Constraints
-  void addIntegrationConstraints();
   void addInitialStateConstraints();
-  void addAccelerationDynamicsConstraints();
-  void addNoWheelSlipConstraints();
-  void addMotorModelConstraints();
-  void addDifferentialConstraints();
-  void addConstraints();
+  void addIntegrationConstraints(int knot_point);
+  void addAccelerationDynamicsConstraints(int knot_point);
+  void addNoWheelSlipConstraints(int knot_point);
+  void addMotorModelConstraints(int knot_point);
+  void addDifferentialConstraints(int knot_point);
+  void addConstraint(
+    int knot_point,
+    std::string name,
+    casadi::Matrix<casadi::SXElem> constraint,
+    casadi::DM lbg,
+    casadi::DM ubg);
+  void populateConstraints();
 
   // Costs
   casadi::Matrix<casadi::SXElem> getQuadraticTrackingCost(std::string state, int k);
@@ -234,7 +245,7 @@ private:
   void addStateTrackingCosts();
   void addJerkCosts();
   void addModuleVelocityComponentsTrackingCost();
-  void addCosts();
+  void populateCosts();
 
   // Bounds
   void setStateBounds();
@@ -267,6 +278,7 @@ private:
 
   // ROS Publishers
   rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr trajectory_publisher_;
+  rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr constraint_publisher_;
   rclcpp::Publisher<ghost_msgs::msg::LabeledVectorMap>::SharedPtr
     intermediate_trajectory_publisher_;
   rclcpp::Publisher<ghost_msgs::msg::IPOPTOutput>::SharedPtr ipopt_output_publisher_;
@@ -294,6 +306,8 @@ private:
   casadi::Matrix<casadi::SXElem> constraints_;
   casadi::DM lbg_;
   casadi::DM ubg_;
+
+  std::unordered_map<std::string, std::vector<int>> constraint_structure_map_;
 
   std::vector<double> time_vector_;
 
