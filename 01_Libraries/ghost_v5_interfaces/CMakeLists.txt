@@ -61,6 +61,7 @@ set(UTIL_LIBS
   load_motor_device_config_yaml
   load_rotation_sensor_device_config_yaml
   load_inertial_sensor_device_config_yaml
+  load_digital_device_config_yaml
 )
 
 foreach(UTIL ${UTIL_LIBS})
