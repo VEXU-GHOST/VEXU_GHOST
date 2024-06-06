@@ -22,11 +22,13 @@
  */
 
 #include <ghost_util/yaml_utils.hpp>
+#include <ghost_v5_interfaces/devices/digital_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
+#include <ghost_v5_interfaces/util/load_digital_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_inertial_sensor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_motor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_rotation_sensor_device_config_yaml.hpp>
@@ -68,7 +70,7 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
     device_config_map_ptr->addDeviceConfig(joy_partner);
   }
 
-  // Iterate through each device defined in the YAML file
+  // Iterate through each smart device defined in the YAML file
   for (auto it = node["port_configuration"]["devices"].begin();
     it != node["port_configuration"]["devices"].end(); it++)
   {
@@ -149,6 +151,61 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 
     device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
   }
+
+  // Iterate through each ADI device defined in the YAML file
+  for (auto it = node["port_configuration"]["adi"].begin();
+    it != node["port_configuration"]["adi"].end(); it++)
+  {
+    // Unpack Device Name and associated YAML Node
+    std::string device_name = it->first.as<std::string>();
+    YAML::Node device_yaml_node = it->second;
+
+    // Load device type and device_config (if it exists)
+    std::string device_type;
+    loadYAMLParam(device_yaml_node, "type", device_type, verbose);
+
+    std::shared_ptr<DeviceConfig> device_config_base_ptr;
+    // Custom initialization based on device type
+    switch (STRING_TO_DEVICE_TYPE_MAP.at(device_type)) {
+      case device_type_e::DIGITAL:
+        {
+          // Load digital device config
+          auto digital_device_config_ptr = std::make_shared<DigitalDeviceConfig>();
+          std::string device_config_name;
+          if (loadYAMLParam(device_yaml_node, "config", device_config_name, verbose)) {
+            loadDigitalDeviceConfigFromYAML(
+              node["port_configuration"], device_name,
+              digital_device_config_ptr);
+          }
+          device_config_base_ptr = digital_device_config_ptr;
+        }
+        break;
+
+      case device_type_e::INVALID:
+        {
+          throw std::runtime_error(
+                  "[loadDeviceInterfaceMapFromYAML] Error: Device name " + device_name +
+                  " has invalid type.");
+        }
+        break;
+
+      default:
+        {
+          throw std::runtime_error(
+                  "[loadDeviceInterfaceMapFromYAML] Error: Device type " + device_type +
+                  " is not currently supported.");
+        }
+        break;
+    }
+
+    // Set device base attributes
+    device_config_base_ptr->name = device_name;
+    loadYAMLParam(device_yaml_node, "port", device_config_base_ptr->port, verbose);
+    device_config_base_ptr->type = STRING_TO_DEVICE_TYPE_MAP.at(device_type);
+
+    device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
+  }
+
   return device_config_map_ptr;
 }
 
@@ -367,6 +424,24 @@ void generateCodeFromRobotConfig(
         "\t" + sensor_name + "->" + "serial_config.send_heading_data = " + std::to_string(
         config_ptr->serial_config.send_heading_data) + ";\n";
       output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
+      output_file << "\n";
+    } else if (val->type == device_type_e::DIGITAL) {
+      auto config_ptr = val->as<const DigitalDeviceConfig>();
+      std::string device_name = config_ptr->name;
+
+      output_file <<
+        "\tstd::shared_ptr<ghost_v5_interfaces::devices::DigitalDeviceConfig> " +
+        device_name +
+        " = std::make_shared<ghost_v5_interfaces::devices::DigitalDeviceConfig>();\n";
+      output_file <<
+        "\t" + device_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+      output_file << "\t" + device_name + "->" + "name = \"" + device_name + "\";\n";
+      output_file <<
+        "\t" + device_name + "->" +
+        "type = ghost_v5_interfaces::devices::device_type_e::DIGITAL;\n";
+      output_file <<
+        "\t" + device_name + "->" + "serial_config.send_heading_data = " + ((config_ptr->serial_config.io_type == SENSOR) ? "SENSOR" : "ACTUATOR") + ";\n";
+      output_file << "\trobot_config->addDeviceConfig(" + device_name + ");\n";
       output_file << "\n";
     } else if (val->type == device_type_e::JOYSTICK) {
       auto config_ptr = val->as<const JoystickDeviceConfig>();
