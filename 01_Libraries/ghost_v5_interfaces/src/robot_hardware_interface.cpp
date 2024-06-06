@@ -72,7 +72,7 @@ RobotHardwareInterface::RobotHardwareInterface(
     port_to_device_name_map_.emplace(pair.config_ptr->port, val->name);
 
     // Update msg lengths based on each non-digital device
-    if (pair.config_ptr->type != device_type_e::DIGITAL_INPUT|| pair.config_ptr->type != device_type_e::DIGITAL_OUTPUT) {
+    if (pair.config_ptr->type != device_type_e::DIGITAL_INPUT && pair.config_ptr->type != device_type_e::DIGITAL_OUTPUT) {
         sensor_update_msg_length_ += pair.data_ptr->getSensorPacketSize();
         actuator_command_msg_length_ += pair.data_ptr->getActuatorPacketSize();
     }
@@ -106,11 +106,14 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
   serial_data.push_back((unsigned char) 0);
 
   for (const auto & [key, val] : device_pair_port_map_) {
-    auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
-    if (val.config_ptr->type == device_type_e::DIGITAL_INPUT || val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
-        setBit(serial_data[1], (val.config_ptr->port - 22), (device_serial_msg[0] == 1));
+    if (val.config_ptr->type == device_type_e::DIGITAL_INPUT) {
+        setBit(serial_data[1], (val.config_ptr->port - 22), val.data_ptr->as<DigitalInputDeviceData>()->value);
+    }
+    else if (val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
+        setBit(serial_data[1], (val.config_ptr->port - 22), val.data_ptr->as<DigitalOutputDeviceData>()->value);
     }
     else {
+      auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
       serial_data.insert(serial_data.end(), device_serial_msg.begin(), device_serial_msg.end());
     }
   }
