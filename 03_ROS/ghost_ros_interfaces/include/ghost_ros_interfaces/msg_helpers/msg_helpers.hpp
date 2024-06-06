@@ -28,6 +28,7 @@
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
+#include <ghost_v5_interfaces/util/device_type_helpers.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
 #include <ghost_msgs/msg/labeled_vector.hpp>

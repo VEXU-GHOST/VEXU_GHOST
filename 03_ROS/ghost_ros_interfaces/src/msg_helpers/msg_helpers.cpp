@@ -218,16 +218,16 @@ void toROSMsg(
 {
   toROSMsg(digital_device_data, digital_device_msg.device_header);       // Set device header
   digital_device_msg.value = digital_device_data.value;
-  digital_device_msg.value = digital_device_data.serial_config.io_type;
+  digital_device_msg.io_type = DIGITAL_IO_TYPE_TO_STRING_MAP.at(digital_device_data.serial_config_.io_type);
 }
 
 void fromROSMsg(
-  const ghost_v5_interfaces::devices::DigitalDeviceData & digital_device_data,
-  ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg)
+  ghost_v5_interfaces::devices::DigitalDeviceData & digital_device_data,
+  const ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg)
 {
   fromROSMsg(digital_device_data, digital_device_msg.device_header);       // Set base attributes
   digital_device_data.value = digital_device_msg.value;
-  digital_device_data.serial_config.io_type = digital_device_msg.value;
+  digital_device_data.serial_config_.io_type = STRING_TO_DIGITAL_IO_TYPE_MAP.at(digital_device_msg.io_type);
 }
 
 void toROSMsg(
@@ -250,6 +250,13 @@ void toROSMsg(
       continue;
     } else if (device_data_ptr->type == device_type_e::INERTIAL_SENSOR) {
       continue;
+    } else if (device_data_ptr->type == device_type_e::DIGITAL) {
+      auto digital_device_data_ptr = device_data_ptr->as<DigitalDeviceData>();
+      if (digital_device_data_ptr->serial_config_.io_type == digital_io_type_e::ACTUATOR) {
+        V5DigitalDeviceState msg{};
+        toROSMsg(*digital_device_data_ptr, msg);
+        actuator_cmd_msg.digital_devices.push_back(msg);
+      }
     } else {
       std::string dev_type_str;
       if (DEVICE_TYPE_TO_STRING_MAP.count(device_data_ptr->type) == 1) {
@@ -262,9 +269,6 @@ void toROSMsg(
               dev_type_str);
     }
   }
-
-  // Digital IO
-  actuator_cmd_msg.digital_io = hardware_interface.getDigitalIO();
 }
 
 void fromROSMsg(
@@ -281,8 +285,15 @@ void fromROSMsg(
     hardware_interface.setDeviceData(motor_data_ptr);
   }
 
-  // Digital IO
-  hardware_interface.setDigitalIO(actuator_cmd_msg.digital_io);
+  // Digital Devices
+  for (const auto & digital_device_msg : actuator_cmd_msg.digital_devices) {
+    auto digital_device_data_ptr = hardware_interface.getDeviceData<DigitalDeviceData>(
+      digital_device_msg.device_header.name);
+    if (digital_device_data_ptr->serial_config_.io_type == ACTUATOR) {
+      fromROSMsg(*digital_device_data_ptr, digital_device_msg);
+      hardware_interface.setDeviceData(digital_device_data_ptr);
+    }
+  }
 }
 
 void toROSMsg(const RobotHardwareInterface & hardware_interface, V5SensorUpdate & sensor_update_msg)
@@ -317,6 +328,13 @@ void toROSMsg(const RobotHardwareInterface & hardware_interface, V5SensorUpdate 
       auto joy_data_ptr = device_data_ptr->as<JoystickDeviceData>();
       toROSMsg(*joy_data_ptr, msg);
       sensor_update_msg.joysticks.push_back(msg);
+    } else if (device_data_ptr->type == device_type_e::DIGITAL) {
+      auto digital_device_data_ptr = device_data_ptr->as<DigitalDeviceData>();
+      if (digital_device_data_ptr->serial_config_.io_type == digital_io_type_e::SENSOR) {
+        V5DigitalDeviceState msg{};
+        toROSMsg(*digital_device_data_ptr, msg);
+        sensor_update_msg.digital_devices.push_back(msg);
+      }
     } else {
       std::string dev_type_str;
       if (DEVICE_TYPE_TO_STRING_MAP.count(device_data_ptr->type) == 1) {
@@ -329,9 +347,6 @@ void toROSMsg(const RobotHardwareInterface & hardware_interface, V5SensorUpdate 
               dev_type_str);
     }
   }
-
-  // Digital IO
-  sensor_update_msg.digital_io = hardware_interface.getDigitalIO();
 }
 
 void fromROSMsg(
@@ -377,8 +392,15 @@ void fromROSMsg(
     hardware_interface.setDeviceData(inertial_sensor_data_ptr);
   }
 
-  // Digital IO
-  hardware_interface.setDigitalIO(sensor_update_msg.digital_io);
+  // Digital Devices
+  for (const auto & digital_device_msg : sensor_update_msg.digital_devices) {
+    auto digital_device_data_ptr = hardware_interface.getDeviceData<DigitalDeviceData>(
+      digital_device_msg.device_header.name);
+    if (digital_device_data_ptr->serial_config_.io_type == SENSOR) {
+      fromROSMsg(*digital_device_data_ptr, digital_device_msg);
+      hardware_interface.setDeviceData(digital_device_data_ptr);
+    }
+  }
 }
 
 void fromROSMsg(

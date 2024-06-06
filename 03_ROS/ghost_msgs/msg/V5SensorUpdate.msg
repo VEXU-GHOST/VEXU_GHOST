@@ -17,6 +17,5 @@ ghost_msgs/V5InertialSensorState[] inertial_sensors
 # Motor States
 ghost_msgs/V5MotorState[] motors
 
-# Digital Inputs
-bool[] digital_io
-
+# Digital Devices
+ghost_msgs/V5DigitalDeviceState[] digital_devices
