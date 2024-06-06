@@ -83,7 +83,7 @@ class DigitalInputDeviceData : public DeviceData
     return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) && (value == d_rhs->value);
   }
 
-  bool value;
+  bool value = false;
 };
 
 class DigitalOutputDeviceData : public DeviceData
@@ -137,7 +137,7 @@ class DigitalOutputDeviceData : public DeviceData
     return (d_rhs != nullptr) && (name == d_rhs->name) && (type == d_rhs->type) && (value == d_rhs->value);
   }
 
-  bool value;
+  bool value = false;
 };
 
 class DigitalDeviceConfig : public DeviceConfig
