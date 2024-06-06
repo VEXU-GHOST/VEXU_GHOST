@@ -37,11 +37,6 @@ namespace ghost_swerve
 
 SwerveRobotPlugin::SwerveRobotPlugin()
 {
-  m_digital_io = std::vector<bool>(8, false);
-  m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-    {"tail", 0},
-    {"claw", 1}
-  };
 }
 
 void SwerveRobotPlugin::initialize()
@@ -739,10 +734,8 @@ void SwerveRobotPlugin::teleop(double current_time)
       rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
     }
 
-    m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
-    m_digital_io[m_digital_io_name_map["claw"]] = !m_claw_open;
-
-    rhi_ptr_->setDigitalIO(m_digital_io);
+    rhi_ptr_->setDigitalDeviceValue("tail", tail_down);
+    rhi_ptr_->setDigitalDeviceValue("claw", !m_claw_open);
 
     // If INTAKE_MOTOR stalling, update state and timer
     if ((intake_command) &&
