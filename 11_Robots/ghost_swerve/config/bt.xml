@@ -230,9 +230,9 @@
   </BehaviorTree>
 
   <BehaviorTree ID="search_and_destroy">
-    <Fallback>
-      <AutonTimer seconds="40">
-        <Repeat num_cycles="4">
+    <Sequence>
+      <!-- <AutonTimer seconds="40"> -->
+        <Repeat num_cycles="2">
           <Fallback>
             <ReactiveSequence>
               <Inverter>
@@ -243,7 +243,7 @@
             <SubTree ID="score"/>
           </Fallback>
         </Repeat>
-      </AutonTimer>
+      <!-- </AutonTimer> -->
       <KeepRunningUntilFailure>
         <Sequence>
           <ReactiveFallback>
@@ -255,12 +255,12 @@
           <SubTree ID="score"/>
         </Sequence>
       </KeepRunningUntilFailure>
-    </Fallback>
+    </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="starting_balls">
     <Sequence>
-      <MoveToPoseCubic posX="0.5"
+      <MoveToPoseCubic posX="0.7"
                        posY="-0.7"
                        theta="-90"
                        velX="0.0"
@@ -281,7 +281,7 @@
                        timeout="-1000"
                        speed="0.5"/>
       <MoveToPoseCubic posX="0.3"
-                       posY="0.2"
+                       posY="0.0"
                        theta="-90"
                        velX="0.0"
                        velY="0.0"
@@ -301,7 +301,7 @@
                        timeout="-1000"
                        speed="0.5"/>
       <MoveToPoseCubic posX="1.0"
-                       posY="0.2"
+                       posY="0.0"
                        theta="-90"
                        velX="0.0"
                        velY="0.0"
@@ -315,7 +315,7 @@
 
   <BehaviorTree ID="loop_goal">
     <Sequence>
-      <MoveToPoseCubic posX="1.0"
+      <!-- <MoveToPoseCubic posX="1.0"
                        posY="-1.0"
                        theta="135"
                        velX="0.0"
@@ -334,7 +334,7 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-1000"
-                       speed="0.5"/>
+                       speed="0.5"/> -->
       <MoveToPoseCubic posX="1.5"
                        posY="-0.5"
                        theta="0"
@@ -468,7 +468,7 @@
 
   <BehaviorTree ID="block_climb">
     <Sequence>
-      <MoveToPoseCubic posX="0.6"
+      <MoveToPoseCubic posX="0.7"
                        posY="1.0"
                        theta="-90"
                        velX="0.0"
@@ -494,6 +494,9 @@
           <Logging message="after intake"/>
         </Delay>
       </ReactiveFallback>
+      <RetryUntilSuccessful num_attempts="-1">
+        <AutoDone/>
+      </RetryUntilSuccessful>
     </Sequence>
   </BehaviorTree>
 
