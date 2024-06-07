@@ -406,8 +406,6 @@ void SwerveRobotPlugin::autonomous(double current_time)
   double vel_cmd_x = 0;
   double vel_cmd_y = 0;
   double vel_cmd_theta = 0;
-  double des_pos_x = 0;
-  double des_pos_y = 0;
 
   // auto command_map = get_commands(current_time);
 
@@ -474,7 +472,7 @@ void SwerveRobotPlugin::autonomous(double current_time)
     // std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
   }
 
-  if((des_pos_x == 0.0) && (des_pos_y == 0.0) || m_swerve_model_ptr->getAutoStatus()){
+  if(m_swerve_model_ptr->getAutoStatus()){
      vel_cmd_x = 0.0;
      vel_cmd_y = 0.0;
      vel_cmd_theta = 0.0;

@@ -126,10 +126,10 @@
   <BehaviorTree ID="close_triball">
     <Sequence>
       <Logging message="close triball"/>
-      <!-- <ReactiveFallback>
+      <ReactiveFallback>
         <IntakeCmd in="true"/>
-        <Delay delay_msec="3000">
-          <MoveToPoseCubic posX="-1.0"
+        <Delay delay_msec="1000">
+          <!-- <MoveToPoseCubic posX="-1.0"
                       posY="-2.5"
                       theta="0"
                       velX="0.0"
@@ -138,9 +138,10 @@
                       threshold="0.05"
                       angle_threshold="5.0"
                       timeout="-1000"
-                      speed="0.5"/>
+                      speed="0.5"/> -->
+          <Logging message="after inake"/>
         </Delay>
-      </ReactiveFallback> -->
+      </ReactiveFallback>
       <MoveToPoseCubic posX="1.8"
                   posY="-2.5"
                   theta="0"
@@ -194,34 +195,43 @@
 
   <BehaviorTree ID="full_auton">
     <Sequence>
-      <SubTree ID="close_triball"
-               _autoremap="false"/>
-      <!-- <MoveToPoseCubic posX="2.0"
-                  posY="-1.8"
-                  theta="135"
-                  velX="0.0"
-                  velY="0.0"
-                  omega="0.0"
-                  threshold="0.05"
-                  angle_threshold="5.0"
-                  timeout="-1500"
-                  speed="0.5"/> -->
-      <!-- <SubTree ID="far_triball"
-               _autoremap="false"/> -->
-      <SubTree ID="search_and_destroy"
-               _autoremap="false"/>
-      <KeepRunningUntilFailure>
-        <CheckForRestart/>
-      </KeepRunningUntilFailure>
-      <RetryUntilSuccessful num_attempts="-1">
-        <AutoDone/>
-      </RetryUntilSuccessful>
+      <Logging message="started"/>
+      <Fallback>
+        <AutonTimer seconds="55">
+          <Sequence>
+            <Logging message="after timer"/>
+            <SubTree ID="close_triball"
+                    _autoremap="false"/>
+            <SubTree ID="search_and_destroy"
+                    _autoremap="false"/>
+          </Sequence>
+        </AutonTimer>
+        <SubTree ID="block_climb"
+                    _autoremap="false"/>
+      </Fallback>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="full_auton_block">
+    <Sequence>
+      <Fallback>
+        <AutonTimer seconds="55">
+          <Sequence>
+            <SubTree ID="close_triball"
+                    _autoremap="false"/>
+            <SubTree ID="block_bowling"
+                    _autoremap="false"/>
+          </Sequence>
+        </AutonTimer>
+        <SubTree ID="block_climb"
+                    _autoremap="false"/>
+      </Fallback>
     </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="search_and_destroy">
     <Fallback>
-      <AutonTimer seconds="20000">
+      <AutonTimer seconds="30">
         <Repeat num_cycles="4">
           <Fallback>
             <ReactiveSequence>
@@ -250,7 +260,7 @@
 
   <BehaviorTree ID="starting_balls">
     <Sequence>
-      <MoveToPoseCubic posX="0.3"
+      <MoveToPoseCubic posX="0.5"
                        posY="-0.7"
                        theta="-90"
                        velX="0.0"
@@ -305,6 +315,26 @@
 
   <BehaviorTree ID="loop_goal">
     <Sequence>
+      <MoveToPoseCubic posX="1.0"
+                       posY="-1.0"
+                       theta="135"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-1500"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="1.3"
+                       posY="-1.3"
+                       theta="135"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-1500"
+                       speed="0.5"/>
       <MoveToPoseCubic posX="1.5"
                        posY="-0.5"
                        theta="0"
@@ -314,7 +344,7 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-1500"
-                       speed="0.3"/>
+                       speed="0.5"/>
       <MoveToPoseCubic posX="0.6"
                        posY="-0.5"
                        theta="0"
@@ -324,7 +354,7 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-1500"
-                       speed="0.3"/>
+                       speed="0.5"/>
       <MoveToPoseCubic posX="1.5"
                        posY="-1.0"
                        theta="0"
@@ -334,7 +364,7 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-1500"
-                       speed="0.3"/>
+                       speed="0.5"/>
       <MoveToPoseCubic posX="0.6"
                        posY="-1.0"
                        theta="0"
@@ -344,7 +374,7 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-1500"
-                       speed="0.3"/>
+                       speed="0.5"/>
       <MoveToPoseCubic posX="1.5"
                        posY="-1.5"
                        theta="0"
@@ -354,7 +384,7 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-1500"
-                       speed="0.3"/>
+                       speed="0.5"/>
       <MoveToPoseCubic posX="0.6"
                        posY="-1.5"
                        theta="0"
@@ -364,13 +394,23 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-1500"
-                       speed="0.3"/>
+                       speed="0.5"/>
     </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="climb">
     <Sequence>
-      <!-- <MoveToPoseCubic posX="1.5"
+      <MoveToPoseCubic posX="1.0"
+                       posY="-1.0"
+                       theta="180"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="1.5"
                        posY="-2.0"
                        theta="180"
                        velX="0.0"
@@ -389,8 +429,14 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-3000"
-                       speed="0.1"/> -->
+                       speed="0.2"/>
       <Climb/>
+      <KeepRunningUntilFailure>
+        <CheckForRestart/>
+      </KeepRunningUntilFailure>
+      <RetryUntilSuccessful num_attempts="-1">
+        <AutoDone/>
+      </RetryUntilSuccessful>
     </Sequence>
   </BehaviorTree>
 
@@ -417,6 +463,68 @@
                        timeout="-3000"
                        speed="0.1"/> -->
       <Climb/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="block_climb">
+    <Sequence>
+      <MoveToPoseCubic posX="0.6"
+                       posY="1.0"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="0.6"
+                       posY="1.6"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-2000"
+                       speed="0.5"/>
+      <ReactiveFallback>
+        <IntakeCmd in="true"/>
+        <Delay delay_msec="1000">
+          <Logging message="after intake"/>
+        </Delay>
+      </ReactiveFallback>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="block_bowling">
+    <Sequence>
+      <MoveToPoseCubic posX="1.0"
+                       posY="1.0"
+                       theta="0"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="0.4"
+                       posY="1.2"
+                       theta="0"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-2000"
+                       speed="0.5"/>
+      <ReactiveFallback>
+        <IntakeCmd in="true"/>
+        <Delay delay_msec="1000">
+          <Logging message="after intake"/>
+        </Delay>
+      </ReactiveFallback>
     </Sequence>
   </BehaviorTree>
 
