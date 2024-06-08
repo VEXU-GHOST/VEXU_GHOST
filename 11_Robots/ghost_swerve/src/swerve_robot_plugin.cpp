@@ -215,9 +215,9 @@ void SwerveRobotPlugin::initialize()
     swerve_model_config.max_wheel_actuator_vel * swerve_model_config.wheel_ratio;
   swerve_model_config.max_wheel_lin_vel = wheel_rad_per_sec * swerve_model_config.wheel_radius *
     ghost_util::INCHES_TO_METERS;
- 
-	node_ptr_->declare_parameter("swerve_robot_plugin.intake_setpoint", 7.0);
-	m_intake_setpoint = node_ptr_->get_parameter("swerve_robot_plugin.intake_setpoint").as_double();
+
+  node_ptr_->declare_parameter("swerve_robot_plugin.intake_setpoint", 7.0);
+  m_intake_setpoint = node_ptr_->get_parameter("swerve_robot_plugin.intake_setpoint").as_double();
 
   node_ptr_->declare_parameter("swerve_robot_plugin.max_ang_vel_slew", 0.);       // 0 should stop the robot from moving when the param is not set
   swerve_model_config.max_ang_vel_slew = node_ptr_->get_parameter(
@@ -547,6 +547,12 @@ void SwerveRobotPlugin::teleop(double current_time)
   m_swerve_model_ptr->enableSwerveHeuristics();
   // std::cout << "Teleop: " << current_time << std::endl;
   // m_swerve_model_ptr->setFieldOrientedControl(true);
+
+  if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
+    joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
+  {
+    std::system("echo 1 | sudo -S shutdown now");
+  }
 
   if (joy_data->btn_u) {
     if (!m_auton_button_pressed) {
