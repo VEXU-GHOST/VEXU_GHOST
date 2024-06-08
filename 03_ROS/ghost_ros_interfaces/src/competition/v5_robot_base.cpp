@@ -152,6 +152,13 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
     auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
     m_start_recorder_client->async_send_request(req);
   }
+
+  if ((last_comp_state_ == robot_state_e::AUTONOMOUS) &&
+    (curr_comp_state_ == robot_state_e::DISABLED)) {
+    // AUTONOMOUS -> DISABLED
+    m_is_first_auton_loop = false;
+  }
+
   if ((curr_comp_state_ == robot_state_e::TELEOP) && (last_comp_state_ != robot_state_e::TELEOP)) {
     // DISABLED/AUTONOMOUS -> TELEOP
     start_time_ = std::chrono::system_clock::now();

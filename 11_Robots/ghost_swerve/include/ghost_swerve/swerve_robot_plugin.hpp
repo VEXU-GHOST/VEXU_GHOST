@@ -177,7 +177,6 @@ protected:
   // Auton States
   bool m_auton_button_pressed = false;
   int m_auton_index = 0;
-  bool m_is_first_auton_loop = true;
 
   // stick
   double m_stick_angle_start = 0;
