@@ -24,15 +24,23 @@ arch=$(uname -p)
 cd $VEXU_HOME
 echo "---Building Ghost ROS Packages---"
 
+skip=(
+    behaviortree_cpp
+    behaviortree_ros2
+    btcpp_ros2_interfaces
+    btcpp_ros2_samples
+    rplidar_ros
+)
+
 # Build ignores simulator packages on embedded devices
 if [ "$arch" == 'x86_64' ];
 then 
-    colcon build --symlink-install --packages-skip --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
+    colcon build --symlink-install --packages-skip ${skip[@]} --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
 fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --symlink-install --packages-skip ghost_sim --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
+    colcon build --symlink-install --packages-skip ${skip[@]} ghost_sim ghost_viz plotjuggler plotjuggler-ros-plugins --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
 fi
 
 if [ "$1" != "-r" ];
