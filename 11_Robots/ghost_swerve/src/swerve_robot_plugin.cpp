@@ -403,7 +403,7 @@ void SwerveRobotPlugin::autonomous(double current_time)
   //    m_recording = true;
   // }
 
-  if (m_interaction_started){
+  if (!m_is_first_auton_loop){
     bt_->tick_tree_interaction();
   } else {
     bt_->tick_tree();
