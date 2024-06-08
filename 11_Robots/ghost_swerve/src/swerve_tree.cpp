@@ -33,10 +33,12 @@ namespace ghost_swerve
 {
 
 SwerveTree::SwerveTree(std::string bt_path,
+					   std::string bt_path_interaction,
                        std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
                        std::shared_ptr<SwerveModel> swerve_ptr,
                        std::shared_ptr<rclcpp::Node> node_ptr) :
 	bt_path_(bt_path),
+	bt_path_interaction_(bt_path_interaction),
 	node_ptr_(node_ptr){
 	BT::BehaviorTreeFactory factory;
 
@@ -51,11 +53,17 @@ SwerveTree::SwerveTree(std::string bt_path,
 	factory.registerNodeType<AutonTimer>("AutonTimer", node_ptr_, swerve_ptr);
 
     tree_ = factory.createTreeFromFile(bt_path_);
+	tree_interaction_ = factory.createTreeFromFile(bt_path_interaction_);
 }
 
 void SwerveTree::tick_tree()
 {
   tree_.tickExactlyOnce();
+}
+
+void SwerveTree::tick_tree_interaction()
+{
+  tree_interaction_.tickExactlyOnce();
 }
 
 } // namespace ghost_swerve

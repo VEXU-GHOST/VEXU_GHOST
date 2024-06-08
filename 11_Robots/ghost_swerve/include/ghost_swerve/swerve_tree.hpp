@@ -47,14 +47,18 @@ class SwerveTree
 {
 public:
 	SwerveTree(std::string bt_path,
+			   std::string bt_path_interaction,
 	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
 	           std::shared_ptr<SwerveModel> swerve_ptr,
 	           std::shared_ptr<rclcpp::Node> node_ptr);
 	void tick_tree();
+	void tick_tree_interaction();
 
 private:
   std::string bt_path_;
+  std::string bt_path_interaction_;
   BT::Tree tree_;
+  BT::Tree tree_interaction_;
   std::shared_ptr<rclcpp::Node> node_ptr_;
 };
 

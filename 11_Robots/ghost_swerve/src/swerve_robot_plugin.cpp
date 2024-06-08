@@ -77,6 +77,9 @@ void SwerveRobotPlugin::initialize()
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
+  node_ptr_->declare_parameter<std::string>("bt_path_interaction");
+  std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
+
   node_ptr_->declare_parameter("swerve_robot_plugin.k1", 0.0);
   node_ptr_->declare_parameter("swerve_robot_plugin.k2", 0.0);
   node_ptr_->declare_parameter("swerve_robot_plugin.k3", 0.0);
@@ -309,7 +312,7 @@ void SwerveRobotPlugin::initialize()
 
 	// resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
 	
-	bt_ = std::make_shared<SwerveTree>(bt_path, rhi_ptr_, m_swerve_model_ptr, node_ptr_);
+	bt_ = std::make_shared<SwerveTree>(bt_path, bt_path_interaction, rhi_ptr_, m_swerve_model_ptr, node_ptr_);
 }
 
 void SwerveRobotPlugin::onNewSensorData()
@@ -400,7 +403,14 @@ void SwerveRobotPlugin::autonomous(double current_time)
   //    m_recording = true;
   // }
 
-  bt_->tick_tree();
+
+
+  if (m_interaction_started){
+    bt_->tick_tree_interaction();
+  } else {
+    bt_->tick_tree();
+  }
+
   // publishTrajectoryVisualization();
 
   double vel_cmd_x = 0;
