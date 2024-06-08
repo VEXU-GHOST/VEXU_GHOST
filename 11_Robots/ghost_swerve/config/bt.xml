@@ -541,8 +541,8 @@
             editable="true"/>
     <Action ID="Climb"
             editable="true"/>
-    <!-- <Action ID="AutoDone"
-            editable="true"/> -->
+    <Action ID="AutoDone"
+            editable="true"/>
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="in"/>
@@ -572,6 +572,7 @@
             editable="true">
       <input_port name="posX">m</input_port>
       <input_port name="posY">m</input_port>
+            editable="true"/>
       <input_port name="theta">deg</input_port>
       <input_port name="velX">m.s</input_port>
       <input_port name="velY">m.s</input_port>
