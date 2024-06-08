@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Xander Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,36 +21,26 @@
  *   SOFTWARE.
  */
 
-#include "ghost_msgs/srv/stop_recorder.hpp"
-#include "rclcpp/rclcpp.hpp"
+#pragma once
 
-using namespace std::chrono_literals;
+#include <iostream>
+#include <memory>
+#include "ghost_v5_interfaces/devices/device_interfaces.hpp"
+#include "ghost_v5_interfaces/devices/digital_device_interface.hpp"
+#include "yaml-cpp/yaml.h"
 
-int main(int argc, char ** argv)
+namespace ghost_v5_interfaces
 {
-  rclcpp::init(argc, argv);
 
-  std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("stop_bag_recorder_client");
+namespace util
+{
 
-  rclcpp::Client<ghost_msgs::srv::StopRecorder>::SharedPtr client =
-    node->create_client<ghost_msgs::srv::StopRecorder>("bag_recorder/stop");
-  auto request = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+void loadDigitalDeviceConfigFromYAML(
+  YAML::Node node,
+  std::string device_name,
+  std::shared_ptr<devices::DigitalDeviceConfig> device_config_ptr,
+  bool verbose = false);
 
-  while (!client->wait_for_service(1s)) {
-    if (!rclcpp::ok()) {
-      RCLCPP_ERROR(
-        rclcpp::get_logger(
-          "rclcpp"), "Interrupted while waiting for the service. Exiting.");
-      return 0;
-    }
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Service not available, waiting again...");
-  }
+} // namespace util
 
-  auto response = client->async_send_request(request);
-
-  if (rclcpp::spin_until_future_complete(node, response) != rclcpp::FutureReturnCode::SUCCESS) {
-    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service bag_recorder/stop");
-  }
-
-  rclcpp::shutdown();
-}
+} // namespace ghost_v5_interfaces

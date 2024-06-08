@@ -42,6 +42,10 @@ namespace util
  *
  * port_configuration:
  *              use_partner_joystick = false/true
+ *      adi:
+ *          limit_switch_1:
+ *              port: A
+ *              type: DIGITAL_INPUT
  *      devices:
  *          my_motor_name_here:
  *              port: 1

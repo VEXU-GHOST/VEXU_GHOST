@@ -27,11 +27,13 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include "ghost_util/byte_utils.hpp"
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/digital_device_interface.hpp"
 
 
 #if GHOST_DEVICE == GHOST_JETSON
@@ -214,18 +216,18 @@ public:
   float getInertialSensorZAccel(const std::string & sensor_name);
   float getInertialSensorHeading(const std::string & sensor_name);
 
+  /////////////////////////////////////////////////////////////
+  ///////////////// Digital Device Interfaces /////////////////
+  /////////////////////////////////////////////////////////////
+  bool getDigitalDeviceValue(const std::string & device_name);
+  void setDigitalOutputValue(const std::string & device_name, bool value);
+  void setDigitalInputValue(const std::string & device_name, bool value);
+
   //////////////////////////////////////////////////////////////
   ///////////////// Joystick Device Interfaces /////////////////
   //////////////////////////////////////////////////////////////
   std::shared_ptr<devices::JoystickDeviceData> getMainJoystickData();
   std::shared_ptr<devices::JoystickDeviceData> getPartnerJoystickData();
-
-  //////////////////////////////////////////////////////////////
-  ///////////////////////// Digital IO /////////////////////////
-  //////////////////////////////////////////////////////////////
-
-  void setDigitalIO(const std::vector<bool> & digital_io);
-  const std::vector<bool> & getDigitalIO() const;
 
   /////////////////////////////////////////////////////////
   /////////////////// Device Interfaces ///////////////////
@@ -396,9 +398,6 @@ private:
   bool is_disabled_ = true;
   bool is_autonomous_ = false;
   bool is_connected_ = false;
-
-  // Digital IO
-  std::vector<bool> digital_io_;
 
   // Serialization
   int msg_id_ = 0;

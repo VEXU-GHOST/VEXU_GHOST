@@ -22,11 +22,13 @@
  */
 
 #include <ghost_util/yaml_utils.hpp>
+#include <ghost_v5_interfaces/devices/digital_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
+#include <ghost_v5_interfaces/util/load_digital_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_inertial_sensor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_motor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_rotation_sensor_device_config_yaml.hpp>
@@ -41,7 +43,6 @@ using namespace ghost_v5_interfaces::devices;
 
 namespace ghost_v5_interfaces
 {
-
 namespace util
 {
 
@@ -68,7 +69,21 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
     device_config_map_ptr->addDeviceConfig(joy_partner);
   }
 
-  // Iterate through each device defined in the YAML file
+  // Iterate through Digital IO Ports
+  if (node["port_configuration"]["adi"]) {
+  for (auto it = node["port_configuration"]["adi"].begin();
+    it != node["port_configuration"]["adi"].end(); it++)
+  {
+    std::string device_name = it->first.as<std::string>();
+    YAML::Node device_yaml_node = it->second;
+
+    auto device_config_base_ptr = std::make_shared<DigitalDeviceConfig>();
+    loadDigitalDeviceConfigFromYAML(node["port_configuration"], device_name, device_config_base_ptr, verbose);
+    device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
+  }
+  }
+
+  // Iterate through each smart device defined in the YAML file
   for (auto it = node["port_configuration"]["devices"].begin();
     it != node["port_configuration"]["devices"].end(); it++)
   {
@@ -149,6 +164,7 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 
     device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
   }
+
   return device_config_map_ptr;
 }
 
@@ -222,6 +238,7 @@ void generateCodeFromRobotConfig(
   output_file << "#include \"ghost_v5_interfaces/devices/motor_device_interface.hpp\"\n";
   output_file << "#include \"ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp\"\n";
   output_file << "#include \"ghost_v5_interfaces/devices/joystick_device_interface.hpp\"\n";
+  output_file << "#include \"ghost_v5_interfaces/devices/digital_device_interface.hpp\"\n";
   output_file << "\n";
   output_file <<
     "// This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.\n";
@@ -367,6 +384,38 @@ void generateCodeFromRobotConfig(
         "\t" + sensor_name + "->" + "serial_config.send_heading_data = " + std::to_string(
         config_ptr->serial_config.send_heading_data) + ";\n";
       output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
+      output_file << "\n";
+    } else if (val->type == device_type_e::DIGITAL_INPUT) {
+      auto config_ptr = val->as<const DigitalDeviceConfig>();
+      std::string device_name = config_ptr->name;
+
+      output_file <<
+        "\tstd::shared_ptr<ghost_v5_interfaces::devices::DigitalDeviceConfig> " +
+        device_name +
+        " = std::make_shared<ghost_v5_interfaces::devices::DigitalDeviceConfig>();\n";
+      output_file <<
+        "\t" + device_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+      output_file << "\t" + device_name + "->" + "name = \"" + device_name + "\";\n";
+      output_file <<
+        "\t" + device_name + "->" +
+        "type = ghost_v5_interfaces::devices::device_type_e::DIGITAL_INPUT;\n";
+      output_file << "\trobot_config->addDeviceConfig(" + device_name + ");\n";
+      output_file << "\n";
+    } else if (val->type == device_type_e::DIGITAL_OUTPUT) {
+      auto config_ptr = val->as<const DigitalDeviceConfig>();
+      std::string device_name = config_ptr->name;
+
+      output_file <<
+        "\tstd::shared_ptr<ghost_v5_interfaces::devices::DigitalDeviceConfig> " +
+        device_name +
+        " = std::make_shared<ghost_v5_interfaces::devices::DigitalDeviceConfig>();\n";
+      output_file <<
+        "\t" + device_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+      output_file << "\t" + device_name + "->" + "name = \"" + device_name + "\";\n";
+      output_file <<
+        "\t" + device_name + "->" +
+        "type = ghost_v5_interfaces::devices::device_type_e::DIGITAL_OUTPUT;\n";
+      output_file << "\trobot_config->addDeviceConfig(" + device_name + ");\n";
       output_file << "\n";
     } else if (val->type == device_type_e::JOYSTICK) {
       auto config_ptr = val->as<const JoystickDeviceConfig>();

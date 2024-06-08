@@ -129,6 +129,20 @@ protected:
     rotation_sensor_2->type = device_type_e::ROTATION_SENSOR;
     robot_config_ptr->addDeviceConfig(rotation_sensor_2);
 
+    // Default (minimal required params)
+    auto digital_in = std::make_shared<DigitalDeviceConfig>();
+    digital_in->port = 22;
+    digital_in->name = "digital_in";
+    digital_in->type = device_type_e::DIGITAL_INPUT;
+    robot_config_ptr->addDeviceConfig(digital_in);
+
+    // Default (minimal required params)
+    auto digital_out = std::make_shared<DigitalDeviceConfig>();
+    digital_out->port = 23;
+    digital_out->name = "digital_out";
+    digital_out->type = device_type_e::DIGITAL_OUTPUT;
+    robot_config_ptr->addDeviceConfig(digital_out);
+
     return robot_config_ptr;
   }
 };

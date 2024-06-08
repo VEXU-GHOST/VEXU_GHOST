@@ -23,10 +23,12 @@
 
 #include <ghost_planners/robot_trajectory.hpp>
 #include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/digital_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
+#include <ghost_v5_interfaces/util/device_type_helpers.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
 #include <ghost_msgs/msg/labeled_vector.hpp>
@@ -35,6 +37,7 @@
 #include <ghost_msgs/msg/v5_actuator_command.hpp>
 #include <ghost_msgs/msg/v5_device_header.hpp>
 #include <ghost_msgs/msg/v5_inertial_sensor_state.hpp>
+#include <ghost_msgs/msg/v5_digital_device_state.hpp>
 #include <ghost_msgs/msg/v5_joystick_state.hpp>
 #include <ghost_msgs/msg/v5_motor_command.hpp>
 #include <ghost_msgs/msg/v5_motor_state.hpp>
@@ -180,6 +183,48 @@ void toROSMsg(
 void fromROSMsg(
   ghost_v5_interfaces::devices::InertialSensorDeviceData & inertial_sensor_data,
   const ghost_msgs::msg::V5InertialSensorState & inertial_sensor_msg);
+
+// Digital Device
+
+/**
+ * @brief Copies digital device state data from a DigitalInputDeviceData object into a V5DigitalDeviceState msg.
+ *
+ * @param digital_device_data
+ * @param digital_device_msg
+ */
+void toROSMsg(
+  const ghost_v5_interfaces::devices::DigitalInputDeviceData & digital_device_data,
+  ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg);
+
+/**
+ * @brief Copies digital device state data from a V5DigitalDeviceState msg into a DigitalInputDeviceData object.
+ *
+ * @param digital_device_data
+ * @param digital_device_msg
+ */
+void fromROSMsg(
+  ghost_v5_interfaces::devices::DigitalInputDeviceData & digital_device_data,
+  const ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg);
+
+/**
+ * @brief Copies digital device state data from a DigitalOutputDeviceData object into a V5DigitalDeviceState msg.
+ *
+ * @param digital_device_data
+ * @param digital_device_msg
+ */
+void toROSMsg(
+  const ghost_v5_interfaces::devices::DigitalOutputDeviceData & digital_device_data,
+  ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg);
+
+/**
+ * @brief Copies digital device state data from a V5DigitalDeviceState msg into a DigitalOutputDeviceData object.
+ *
+ * @param digital_device_data
+ * @param digital_device_msg
+ */
+void fromROSMsg(
+  ghost_v5_interfaces::devices::DigitalOutputDeviceData & digital_device_data,
+  const ghost_msgs::msg::V5DigitalDeviceState & digital_device_msg);
 
 // Aggregate Actuator Command
 

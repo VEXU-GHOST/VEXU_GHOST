@@ -1,0 +1,97 @@
+/*
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
+ *   All rights reserved.
+
+ *   Permission is hereby granted, free of charge, to any person obtaining a copy
+ *   of this software and associated documentation files (the "Software"), to deal
+ *   in the Software without restriction, including without limitation the rights
+ *   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *   copies of the Software, and to permit persons to whom the Software is
+ *   furnished to do so, subject to the following conditions:
+
+ *   The above copyright notice and this permission notice shall be included in all
+ *   copies or substantial portions of the Software.
+
+ *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *   SOFTWARE.
+ */
+
+#include <ghost_util/yaml_utils.hpp>
+#include <ghost_v5_interfaces/util/load_digital_device_config_yaml.hpp>
+
+using ghost_util::loadYAMLParam;
+using namespace ghost_v5_interfaces::devices;
+namespace ghost_v5_interfaces
+{
+
+namespace util
+{
+
+void loadDigitalDeviceConfigFromYAML(
+  YAML::Node node,
+  std::string device_name,
+  std::shared_ptr<DigitalDeviceConfig> device_config_ptr,
+  bool verbose)
+{
+  // Get device node
+  auto device_node = node["adi"][device_name];
+  if (!device_node) {
+    throw std::runtime_error(
+            "[loadDigitalDeviceConfigFromYAML] Error: Device Sensor " + device_name +
+            " not found!");
+  }
+
+  // Load IO type
+  std::string type;
+  if (!loadYAMLParam(device_node, "type", type, verbose)) {
+    throw std::runtime_error(
+            "[loadDigitalDeviceConfigFromYAML] Error: Type not specified for Digital Device " +
+            device_name + "!");
+  }
+
+  if(type == "DIGITAL_INPUT"){
+    device_config_ptr->type = devices::device_type_e::DIGITAL_INPUT;
+  }
+  else if(type == "DIGITAL_OUTPUT"){
+    device_config_ptr->type = devices::device_type_e::DIGITAL_OUTPUT;
+  }
+  else{
+    throw std::runtime_error(std::string("[loadDigitalDeviceConfigFromYAML] Error: Unsupported digital device ") + type + "!");
+  }
+
+  // Get port
+  std::string port_string;
+  if (!loadYAMLParam(device_node, "port", port_string, verbose)) {
+    throw std::runtime_error(
+            "[loadDigitalDeviceConfigFromYAML] Error: Port not specified for Digital Device " +
+            device_name + "!");
+  }
+  char port = port_string[0];
+
+
+  // Validate port
+  const std::vector<char> valid_ports = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+  if (std::count(valid_ports.begin(), valid_ports.end(), port) == 0) {
+    throw std::runtime_error(
+            "[loadDigitalDeviceConfigFromYAML] Error: Invalid port specified for Digital Device " +
+            device_name + "!");
+  }
+
+  // Convert port from A-H to 22-28
+  port += 22 - 'A';
+
+  // Set port in device config
+  device_config_ptr->port = (int) port;
+
+    // Set base attributes
+  device_config_ptr->name = device_name;
+}
+
+} // namespace util
+
+} // namespace ghost_v5_interfaces

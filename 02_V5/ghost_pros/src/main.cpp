@@ -12,6 +12,7 @@
 
 #include "ghost_v5_interfaces/util/device_type_helpers.hpp"
 
+#include "ghost_v5/digital/v5_digital_actuator_interface.hpp"
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5/screen/screen_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
@@ -70,10 +71,6 @@ void zero_actuators(){
 		m.second->setMotorCommand(0.0, 0.0, 0.0, 0.0);
 	}
 
-	// // Zero Pneumatics
-	// for(int i = 0; i < 8; i++){
-	// 	v5_globals::adi_ports[i].set_value(false);
-	// }
 	actuator_lock.unlock();
 }
 
@@ -85,10 +82,11 @@ void update_actuators(){
 		m.second->updateInterface();
 	}
 
-	// Update Pneumatics
-	for(int i = 0; i < 8; i++){
-		v5_globals::adi_ports[i].set_value(v5_globals::digital_out_cmds[i]);
+    // Update digital actuators
+	for(auto & a : v5_globals::digital_actuators){
+		a.second->updateInterface();
 	}
+
 	actuator_lock.unlock();
 }
 
@@ -142,7 +140,7 @@ void ghost_main_loop(){
 		// Send robot state over serial to coprocessor
 		v5_globals::serial_node_ptr->writeV5StateUpdate();
 
-		// Zero All Motors if disableds
+		// Zero All Motors if disabled
 		if(pros::competition::is_disabled()){
 			zero_actuators();
 		}
@@ -200,6 +198,20 @@ void initialize(){
 					calibrateIMU(v5_globals::imus[device_name]);
 				}
 				break;
+
+                case device_type_e::DIGITAL_INPUT:
+                {
+                    auto digital_device_config_ptr = config_ptr->as<const DigitalDeviceConfig>();
+                    v5_globals::digital_sensors[device_name] = std::make_shared<pros::ADIDigitalIn>(digital_device_config_ptr->port - 21);
+                }
+                break;
+
+                case device_type_e::DIGITAL_OUTPUT:
+                {
+                    auto digital_device_config_ptr = config_ptr->as<const DigitalDeviceConfig>();
+                    v5_globals::digital_actuators[device_name] = std::make_shared<pros::V5DigitalActuatorInterface>(digital_device_config_ptr);
+                }
+                break;
 
 				case device_type_e::JOYSTICK:
 					// Do nothing, these are initialized already

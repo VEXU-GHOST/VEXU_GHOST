@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Xander Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -8,10 +8,10 @@
  *   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *   copies of the Software, and to permit persons to whom the Software is
  *   furnished to do so, subject to the following conditions:
-
+ 
  *   The above copyright notice and this permission notice shall be included in all
  *   copies or substantial portions of the Software.
-
+ 
  *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  *   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  *   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,36 +21,39 @@
  *   SOFTWARE.
  */
 
-#include "ghost_msgs/srv/stop_recorder.hpp"
-#include "rclcpp/rclcpp.hpp"
+#pragma once
+#include "ghost_v5_interfaces/devices/digital_device_interface.hpp"
+#include "pros/apix.h"
+#include "pros/error.h"
+#include "pros/motors.hpp"
 
-using namespace std::chrono_literals;
+#include <unordered_map>
 
-int main(int argc, char ** argv)
-{
-  rclcpp::init(argc, argv);
+namespace ghost_v5 {
 
-  std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("stop_bag_recorder_client");
+class V5DigitalActuatorInterface {
+public:
+	V5DigitalActuatorInterface(std::shared_ptr<const ghost_v5_interfaces::devices::DigitalDeviceConfig>);
 
-  rclcpp::Client<ghost_msgs::srv::StopRecorder>::SharedPtr client =
-    node->create_client<ghost_msgs::srv::StopRecorder>("bag_recorder/stop");
-  auto request = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+	void updateInterface();
 
-  while (!client->wait_for_service(1s)) {
-    if (!rclcpp::ok()) {
-      RCLCPP_ERROR(
-        rclcpp::get_logger(
-          "rclcpp"), "Interrupted while waiting for the service. Exiting.");
-      return 0;
-    }
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Service not available, waiting again...");
-  }
+	bool getDeviceIsConnected(){
+		return device_connected_;
+	}
 
-  auto response = client->async_send_request(request);
+	void setValue(bool value){
+		value_ = value;
+	}
 
-  if (rclcpp::spin_until_future_complete(node, response) != rclcpp::FutureReturnCode::SUCCESS) {
-    RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to call service bag_recorder/stop");
-  }
+	std::shared_ptr<pros::ADIDigitalOut> getDigitalActuatorPtr(){
+		return digital_actuator_ptr_;
+	}
 
-  rclcpp::shutdown();
-}
+private:
+    bool value_;
+	std::shared_ptr<pros::ADIDigitalOut> digital_actuator_ptr_;
+	bool device_connected_;
+	std::shared_ptr<const ghost_v5_interfaces::devices::DigitalDeviceConfig> config_ptr_;
+};
+
+} // namespace ghost_v5

@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,6 +46,8 @@ enum device_type_e
   GPS_SENSOR,            // Unsupported
   RADIO,                 // Unsupported
   JOYSTICK,
+  DIGITAL_INPUT,
+  DIGITAL_OUTPUT,
   INVALID
 };
 
@@ -164,7 +166,7 @@ public:
   /**
    * @brief Converts device data to byte stream.
    *
-   * @param to_v5	set to true when the data is going from coprocessor -> V5 Brain
+   * @param hardware_type current hardware type
    * @return std::vector<unsigned char> byte stream
    */
   virtual std::vector<unsigned char> serialize(hardware_type_e hardware_type) const = 0;
@@ -173,7 +175,7 @@ public:
    * @brief Updates device data from byte stream.
    *
    * @param data byte stream as unsigned char vector
-   * @param from_coprocessor set to true when the data is going from coprocesspr -> V5 Brain
+   * @param hardware_type current hardware type
    */
   virtual void deserialize(
     const std::vector<unsigned char> & data,

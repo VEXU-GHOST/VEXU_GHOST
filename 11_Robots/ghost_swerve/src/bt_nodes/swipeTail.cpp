@@ -76,13 +76,6 @@ void SwipeTail::onHalted()
 
 BT::NodeStatus SwipeTail::onRunning()
 {
-  auto m_digital_io = std::vector<bool>(8, false);
-  auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-    {"claw", 0},
-    {"right_wing", 1},
-    {"left_wing", 2},
-    {"tail", 3}
-  };
   auto status = BT::NodeStatus::RUNNING;
   int num_swipes = get_input<int>("num_swipes");
 
@@ -125,12 +118,11 @@ BT::NodeStatus SwipeTail::onRunning()
   // }
 
   // if(status == BT::NodeStatus::SUCCESS){
-  //    m_digital_io[m_digital_io_name_map.at("tail")] = false;
+  //    rhi_ptr_->setDigitalInputValue("tail", false);
   // } else {
-  //    m_digital_io[m_digital_io_name_map.at("tail")] = true;
+  //    rhi_ptr_->setDigitalInputValue("tail", true);
   // }
 
-  // rhi_ptr_->setDigitalIO(m_digital_io);
   return status;
 }
 

@@ -1,0 +1,11 @@
+port_configuration:
+    adi:
+        in:
+            port: A
+            type: DIGITAL_INPUT
+        out:
+            port: B
+            type: DIGITAL_OUTPUT
+    devices:
+
+    device_configurations:

@@ -84,8 +84,6 @@ bool V5SerialNode::readV5ActuatorUpdate(){
 void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 	hardware_interface_ptr_->deserialize(buffer);
 
-	v5_globals::digital_out_cmds = hardware_interface_ptr_->getDigitalIO();
-
 	for(const auto& name : *hardware_interface_ptr_){
 		auto device_data_ptr = hardware_interface_ptr_->getDeviceData<DeviceData>(name);
 
@@ -121,11 +119,23 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char>& buffer){
 			}
 			break;
 
+            case device_type_e::DIGITAL_INPUT:
+            {
+                continue;
+            }
+            break;
+
+            case device_type_e::DIGITAL_OUTPUT:
+            {
+				auto digital_device_data_ptr = device_data_ptr->as<DigitalOutputDeviceData>();
+                v5_globals::digital_actuators.at(name)->setValue(digital_device_data_ptr->value);
+            }
+            break;
+
 			case device_type_e::JOYSTICK:
 			{
 				continue;
 			}
-
 			break;
 
 			case device_type_e::INVALID:
@@ -234,6 +244,12 @@ void V5SerialNode::writeV5StateUpdate(){
 		inertial_sensor_data_ptr->heading = (float) device->get_heading();
 		hardware_interface_ptr_->setDeviceData(inertial_sensor_data_ptr);
 	}
+
+    // Digital Sensors
+    for (const auto& [name, device] : v5_globals::digital_sensors){
+        auto digital_device_data_ptr = hardware_interface_ptr_->getDeviceData<DigitalInputDeviceData>(name);
+        digital_device_data_ptr->value = device->get_value();
+    }
 
 	serial_base_interface_->writeMsgToSerial(hardware_interface_ptr_->serialize().data(), sensor_update_msg_len_);
 }

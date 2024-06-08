@@ -32,6 +32,7 @@
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
+#include "ghost_v5/digital/v5_digital_actuator_interface.hpp"
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5/screen/screen_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
@@ -56,12 +57,11 @@ extern std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardwa
 extern std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motor_interfaces;
 extern std::unordered_map<std::string, std::shared_ptr<pros::Rotation> > encoders;
 extern std::unordered_map<std::string, std::shared_ptr<pros::Imu> > imus;
+std::unordered_map<std::string, std::shared_ptr<pros::ADIDigitalIn> > digital_sensors;
+std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5DigitalActuatorInterface> > digital_actuators;
 
 extern const pros::controller_analog_e_t joy_channels[4];
 extern const pros::controller_digital_e_t joy_btns[12];
-
-extern pros::ADIDigitalOut adi_ports[8];
-extern std::vector<bool> digital_out_cmds;
 
 // Serial Port
 extern std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;

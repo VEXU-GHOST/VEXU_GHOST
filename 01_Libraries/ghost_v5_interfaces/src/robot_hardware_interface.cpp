@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -57,7 +57,11 @@ RobotHardwareInterface::RobotHardwareInterface(
     } else if (pair.config_ptr->type == device_type_e::JOYSTICK) {
       pair.data_ptr = std::make_shared<JoystickDeviceData>(
         val->name);
-    } else {
+    } else if (pair.config_ptr->type == device_type_e::DIGITAL_INPUT) {
+      pair.data_ptr = std::make_shared<DigitalInputDeviceData>(val->name);
+    } else if (pair.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
+      pair.data_ptr = std::make_shared<DigitalOutputDeviceData>(val->name);
+    }else {
       throw std::runtime_error(
               "[RobotHardwareInterface::RobotHardwareInterface()] Device type " + std::to_string(
                 pair.config_ptr->type) + " is unsupported!");
@@ -67,21 +71,20 @@ RobotHardwareInterface::RobotHardwareInterface(
     device_pair_port_map_[pair.config_ptr->port] = pair;
     port_to_device_name_map_.emplace(pair.config_ptr->port, val->name);
 
-    // Update msg lengths based on each device
-    sensor_update_msg_length_ += pair.data_ptr->getSensorPacketSize();
-    actuator_command_msg_length_ += pair.data_ptr->getActuatorPacketSize();
+    // Update msg lengths based on each non-digital device
+    if (pair.config_ptr->type != device_type_e::DIGITAL_INPUT && pair.config_ptr->type != device_type_e::DIGITAL_OUTPUT) {
+        sensor_update_msg_length_ += pair.data_ptr->getSensorPacketSize();
+        actuator_command_msg_length_ += pair.data_ptr->getActuatorPacketSize();
+    }
   }
 
   for (const auto & [key, val] : port_to_device_name_map_) {
     device_names_ordered_by_port_.emplace_back(val);
   }
 
-  // Add Digital IO to actuator command msg
-  actuator_command_msg_length_ += 1;
-  digital_io_ = std::vector<bool>(8, false);
-
-  // Add Competition State to sensor update msg
-  sensor_update_msg_length_ += 1;
+  // Add Competiton State and Digital IO to each command msg
+  actuator_command_msg_length_ += 2;
+  sensor_update_msg_length_ += 2;
 }
 
 std::vector<unsigned char> RobotHardwareInterface::serialize() const
@@ -89,7 +92,6 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
   std::vector<unsigned char> serial_data;
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 
-  // Only send competition state and joystick info from V5 Brain to Coprocessor
   if (hardware_type_ == hardware_type_e::V5_BRAIN) {
     serial_data.push_back(
       packByte(
@@ -97,13 +99,23 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
         is_disabled_, is_autonomous_, is_connected_, 0, 0, 0, 0, 0
       }));
   } else if (hardware_type_ == hardware_type_e::COPROCESSOR) {
-    // Send state of all Digital IO Ports
-    serial_data.push_back(packByte(digital_io_));
+    serial_data.push_back((unsigned char) 0);
   }
 
+  // Reserve empty byte for all Digital IO Ports
+  serial_data.push_back((unsigned char) 0);
+
   for (const auto & [key, val] : device_pair_port_map_) {
-    auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
-    serial_data.insert(serial_data.end(), device_serial_msg.begin(), device_serial_msg.end());
+    if (val.config_ptr->type == device_type_e::DIGITAL_INPUT) {
+        setBit(serial_data[1], (val.config_ptr->port - 22), val.data_ptr->as<DigitalInputDeviceData>()->value);
+    }
+    else if (val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
+        setBit(serial_data[1], (val.config_ptr->port - 22), val.data_ptr->as<DigitalOutputDeviceData>()->value);
+    }
+    else {
+      auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
+      serial_data.insert(serial_data.end(), device_serial_msg.begin(), device_serial_msg.end());
+    }
   }
 
   // Error Checking
@@ -143,23 +155,17 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
   }
 
   // Deserialize
-  int byte_offset = 0;
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-
-  if (hardware_type_ == hardware_type_e::V5_BRAIN) {
-    // Unpack Digital IO
-    digital_io_ = unpackByte(msg[byte_offset]);
-    byte_offset++;
-  }
 
   if (hardware_type_ == hardware_type_e::COPROCESSOR) {
     // Unpack competition state
-    auto packet_start_byte = unpackByte(msg[byte_offset]);
+    auto packet_start_byte = unpackByte(msg[0]);
     is_disabled_ = packet_start_byte[0];
     is_autonomous_ = packet_start_byte[1];
     is_connected_ = packet_start_byte[2];
-    byte_offset++;
   }
+
+  int byte_offset = 2;
 
   // Unpack each device in device tree
   for (const auto & [key, val] : device_pair_port_map_) {
@@ -173,12 +179,17 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
               "[RobotHardwareInterface::deserialize] Error: Attempted to deserialize with unsupported hardware type.");
     }
 
-    auto start_itr = msg.begin() + byte_offset;
-    val.data_ptr->deserialize(
+    if (val.config_ptr->type == device_type_e::DIGITAL_INPUT || val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
+      val.data_ptr->deserialize({getBit(msg[1], (val.config_ptr->port - 22))}, hardware_type_);
+    }
+    else {
+      auto start_itr = msg.begin() + byte_offset;
+      val.data_ptr->deserialize(
       std::vector<unsigned char>(
-        start_itr,
-        start_itr + msg_len), hardware_type_);
-    byte_offset += msg_len;
+          start_itr,
+          start_itr + msg_len), hardware_type_);
+      byte_offset += msg_len;
+    }
   }
   return byte_offset;
 }
@@ -194,9 +205,6 @@ bool RobotHardwareInterface::isDataEqual(const RobotHardwareInterface & rhs) con
   eq &= (msg_id_ == rhs.msg_id_);
   eq &= (actuator_command_msg_length_ == rhs.actuator_command_msg_length_);
   eq &= (sensor_update_msg_length_ == rhs.sensor_update_msg_length_);
-
-  // ADI Ports
-  eq &= (digital_io_ == rhs.digital_io_);
 
   for (const auto & [key, val] : device_pair_name_map_) {
     if (rhs.device_pair_name_map_.count(key) == 0) {
@@ -244,14 +252,17 @@ float RobotHardwareInterface::getMotorPosition(const std::string & motor_name)
 {
   return getDeviceData<MotorDeviceData>(motor_name)->curr_position;
 }
+
 float RobotHardwareInterface::getMotorCurrentMA(const std::string & motor_name)
 {
   return getDeviceData<MotorDeviceData>(motor_name)->curr_current_ma;
 }
+
 float RobotHardwareInterface::getMotorVelocityRPM(const std::string & motor_name)
 {
   return getDeviceData<MotorDeviceData>(motor_name)->curr_velocity_rpm;
 }
+
 void RobotHardwareInterface::setMotorPositionCommand(
   const std::string & motor_name,
   float position_cmd)
@@ -262,6 +273,7 @@ void RobotHardwareInterface::setMotorPositionCommand(
   motor_data_ptr->position_control = true;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorVelocityCommandRPM(
   const std::string & motor_name,
   float velocity_cmd)
@@ -272,6 +284,7 @@ void RobotHardwareInterface::setMotorVelocityCommandRPM(
   motor_data_ptr->velocity_control = true;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorVoltageCommandPercent(
   const std::string & motor_name,
   float voltage_cmd)
@@ -282,6 +295,7 @@ void RobotHardwareInterface::setMotorVoltageCommandPercent(
   motor_data_ptr->voltage_control = true;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorTorqueCommandPercent(
   const std::string & motor_name,
   float torque_cmd)
@@ -292,6 +306,7 @@ void RobotHardwareInterface::setMotorTorqueCommandPercent(
   motor_data_ptr->torque_control = true;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorCommand(
   const std::string & motor_name,
   float position_cmd,
@@ -307,6 +322,7 @@ void RobotHardwareInterface::setMotorCommand(
   motor_data_ptr->torque_command = torque_cmd;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorControlMode(
   const std::string & motor_name,
   bool position_control,
@@ -322,6 +338,7 @@ void RobotHardwareInterface::setMotorControlMode(
   motor_data_ptr->torque_control = torque_control;
   setDeviceDataNoLock(motor_data_ptr);
 }
+
 void RobotHardwareInterface::setMotorCurrentLimitMilliAmps(
   const std::string & motor_name,
   int32_t current_limit_ma)
@@ -379,6 +396,7 @@ float RobotHardwareInterface::getInertialSensorXRate(const std::string & sensor_
             " is not configured to send gyro data!");
   }
 }
+
 float RobotHardwareInterface::getInertialSensorYRate(const std::string & sensor_name)
 {
   if (getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data) {
@@ -390,6 +408,7 @@ float RobotHardwareInterface::getInertialSensorYRate(const std::string & sensor_
             " is not configured to send gyro data!");
   }
 }
+
 float RobotHardwareInterface::getInertialSensorZRate(const std::string & sensor_name)
 {
   if (getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data) {
@@ -450,15 +469,40 @@ float RobotHardwareInterface::getInertialSensorHeading(const std::string & senso
   }
 }
 
-void RobotHardwareInterface::setDigitalIO(const std::vector<bool> & digital_io)
-{
-  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-  digital_io_ = digital_io;
+bool RobotHardwareInterface::getDigitalDeviceValue(const std::string & device_name){
+  if(getDeviceData<DeviceData>(device_name)->type == DIGITAL_INPUT){
+    return getDeviceData<DigitalInputDeviceData>(device_name)->value;
+  }
+  else if(getDeviceData<DeviceData>(device_name)->type == DIGITAL_OUTPUT){
+    return getDeviceData<DigitalOutputDeviceData>(device_name)->value;
+  }
+  else{
+    throw std::runtime_error(std::string("[RobotHardwareInterface::getDigitalDeviceValue] Error: ") + device_name + " is not a digital device!");
+  }
 }
 
-const std::vector<bool> & RobotHardwareInterface::getDigitalIO() const
-{
-  return digital_io_;
+void RobotHardwareInterface::setDigitalInputValue(const std::string & device_name, bool value){
+
+  if (hardware_type_ != V5_BRAIN) {
+      throw std::runtime_error("[RobotHardwareInterface::setDigitalInputValue] Error: Attempted to set Digital Sensor value from Coprocessor.");
+  }
+
+  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+  auto device_data_ptr = getDeviceData<DigitalInputDeviceData>(device_name);
+  device_data_ptr->value = value;
+  setDeviceDataNoLock(device_data_ptr);
+}
+
+void RobotHardwareInterface::setDigitalOutputValue(const std::string & device_name, bool value){
+
+  if (hardware_type_ != COPROCESSOR) {
+      throw std::runtime_error("[RobotHardwareInterface::setDigitalOutputValue] Error: Attempted to set Digital Actuator value from V5 Brain.");
+  }
+
+  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+  auto device_data_ptr = getDeviceData<DigitalOutputDeviceData>(device_name);
+  device_data_ptr->value = value;
+  setDeviceDataNoLock(device_data_ptr);
 }
 
 std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getMainJoystickData()

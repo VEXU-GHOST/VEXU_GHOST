@@ -134,10 +134,6 @@ protected:
   bool m_use_backup_estimator = false;
   double m_intake_setpoint = 7.0;
 
-  // Digital IO
-  std::vector<bool> m_digital_io;
-  std::unordered_map<std::string, size_t> m_digital_io_name_map;
-
   // Claw
   bool m_claw_btn_pressed = false;
   bool m_claw_open = true;

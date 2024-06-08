@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Maxx Wilson, Xander Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,6 +26,7 @@
 #include <memory>
 #include <ghost_util/test_util.hpp>
 #include "ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/digital_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
@@ -183,6 +184,18 @@ std::shared_ptr<devices::InertialSensorDeviceData> getRandomInertialSensorData(
   return inertial_sensor_ptr;
 }
 
+
+std::shared_ptr<devices::DigitalOutputDeviceData> getRandomDigitalOutputDeviceData(){
+  auto digital_output_ptr = std::make_shared<devices::DigitalOutputDeviceData>("test");
+  digital_output_ptr->value = ghost_util::getRandomBool();
+  return digital_output_ptr;
+}
+
+std::shared_ptr<devices::DigitalInputDeviceData> getRandomDigitalInputDeviceData(){
+  auto digital_input_ptr = std::make_shared<devices::DigitalInputDeviceData>("test");
+  digital_input_ptr->value = ghost_util::getRandomBool();
+  return digital_input_ptr;
+}
 }
 
 }

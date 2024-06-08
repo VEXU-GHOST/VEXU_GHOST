@@ -1,4 +1,17 @@
 port_configuration:
+    adi:
+        tail:
+            port: A
+            type: DIGITAL_OUTPUT
+        claw:
+            port: B
+            type: DIGITAL_OUTPUT
+        claw_inner:
+            port: C
+            type: DIGITAL_INPUT
+        claw_outer:
+            port: D
+            type: DIGITAL_INPUT
     devices:
         steering_front_left:
             port: 1

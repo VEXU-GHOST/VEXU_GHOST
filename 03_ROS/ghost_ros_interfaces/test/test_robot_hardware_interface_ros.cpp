@@ -92,6 +92,10 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpd
   rotation_sensor_data_ptr->name = "rotation_sensor_1";
   rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
 
+  auto digital_in_ptr = getRandomDigitalInputDeviceData();
+  digital_in_ptr->name = "digital_in";
+  rhi_input_ptr_->setDeviceData(digital_in_ptr);
+
   auto msg = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
 
   // Convert to ROS Msg
@@ -106,6 +110,11 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceActuatorC
   motor_data_ptr->name = "default_motor";
   rhi_input_ptr_->setDeviceData(motor_data_ptr);
   auto msg = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
+
+  auto digital_out_ptr = getRandomDigitalOutputDeviceData();
+  digital_out_ptr->name = "digital_out";
+  digital_out_ptr->value = false;
+  rhi_input_ptr_->setDeviceData(digital_out_ptr);
 
   // Convert to ROS Msg
   toROSMsg(*rhi_input_ptr_, *msg);
@@ -145,6 +154,15 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
   motor_data_ptr->curr_power_w = getRandomFloat();
   motor_data_ptr->curr_temp_c = getRandomFloat();
   rhi_input_ptr_->setDeviceData(motor_data_ptr);
+
+  auto digital_in_ptr = getRandomDigitalInputDeviceData();
+  digital_in_ptr->name = "digital_in";
+  rhi_input_ptr_->setDeviceData(digital_in_ptr);
+
+  auto digital_out_ptr = getRandomDigitalOutputDeviceData();
+  digital_out_ptr->name = "digital_out";
+  digital_out_ptr->value = false;
+  rhi_input_ptr_->setDeviceData(digital_out_ptr);
 
   auto rotation_sensor_data_ptr = getRandomRotationSensorData();
   rotation_sensor_data_ptr->name = "rotation_sensor_1";
@@ -193,6 +211,15 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
   motor_data_ptr->curr_power_w = getRandomFloat();
   motor_data_ptr->curr_temp_c = getRandomFloat();
   rhi_input_ptr_->setDeviceData(motor_data_ptr);
+
+  auto digital_in_ptr = getRandomDigitalInputDeviceData();
+  digital_in_ptr->name = "digital_in";
+  rhi_input_ptr_->setDeviceData(digital_in_ptr);
+
+  auto digital_out_ptr = getRandomDigitalOutputDeviceData();
+  digital_out_ptr->name = "digital_out";
+  digital_out_ptr->value = false;
+  rhi_input_ptr_->setDeviceData(digital_out_ptr);
 
   auto rotation_sensor_data_ptr = getRandomRotationSensorData();
   rotation_sensor_data_ptr->name = "rotation_sensor_1";
