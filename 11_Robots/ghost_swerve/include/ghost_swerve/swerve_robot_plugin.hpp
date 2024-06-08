@@ -192,6 +192,8 @@ protected:
   rclcpp::Time m_intake_cooldown_start;
   bool m_intake_stalling = false;
   bool m_intake_cooling_down = false;
+
+  bool m_interaction_started = false;
 };
 
 } // namespace ghost_swerve
