@@ -1,1 +1,2 @@
-systemctl --user restart ghost2
+systemctl --user kill ghost2
+systemctl --user start ghost2
