@@ -31,18 +31,10 @@ git submodule update --recursive
 #### Add Setup to ~/.bashrc (which "configures" a new terminal when you open it)
 ```sh
 echo "export VEXU_HOME=\"/home/$(whoami)/VEXU_GHOST\"" >> ~/.bashrc
+source "$VEXU_HOME/scripts/setup_env.sh"
+
 ```
-```sh
-echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-```
-```
-echo "source ~/VEXU_GHOST/install/setup.bash" >> ~/.bashrc
-```
-```
-echo 'export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH' >> ~/.bashrc
-```
-```
-echo 'export GAZEBO_PLUGIN_PATH=$HOME/VEXU_GHOST/build/ghost_sim:$GAZEBO_PLUGIN_PATH' >> ~/.bashrc
+echo 'source "$VEXU_HOME/scripts/setup_env.sh"' >> ~/.bashrc
 ```
 Close this terminal, and open a new one to load new settings.
 #### Update Dependencies
@@ -52,25 +44,16 @@ Close this terminal, and open a new one to load new settings.
 
 #### Build Submodules
 ```sh
-source ~/.bashrc
-```
-```
 ./scripts/setup_submodules.sh
 ```
 
 #### Build Repository
 ```sh
-source ~/.bashrc
-```
-```
 ./scripts/build.sh -r
 ```
 
 #### Start Simulator
 ```sh
-source ~/.bashrc
-```
-```
 ./scripts/launch_sim.sh
 ```
 
