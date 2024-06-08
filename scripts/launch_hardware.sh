@@ -1,6 +1,9 @@
 #!/bin/bash
+set -x
 logger "RUNNING launch_hardware.sh"
-source ~/.bashrc
+cd
+export VEXU_HOME="/home/ghost2/VEXU_GHOST"
+source "$VEXU_HOME/scripts/setup_env.sh"
 cd $VEXU_HOME
 # idk if we need to double it given it's already in bashrc but it works so don't touch it
 source /opt/ros/humble/setup.bash
