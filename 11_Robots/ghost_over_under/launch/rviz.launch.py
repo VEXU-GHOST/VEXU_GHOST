@@ -12,10 +12,8 @@ def generate_launch_description():
     )
     ros_config_file = os.path.join(ghost_over_under_base_dir, "config/ros_config.yaml")
 
-    pkg_share = launch_ros.substitutions.FindPackageShare(
-        package="ghost_over_under"
-    ).find("ghost_over_under")
-    xacro_path = os.path.join(pkg_share, "urdf/ghost_24.xacro")
+    pkg_share = launch_ros.substitutions.FindPackageShare(package='ghost_over_under').find('ghost_over_under')
+    xacro_path = os.path.join(pkg_share, 'urdf/ghost_24.xacro')
     # rviz_config_path = os.path.join(pkg_share, 'rviz/base_link_config.rviz')
     rviz_config_path = os.path.join(pkg_share, "rviz/odom_config.rviz")
     rviz_config_path = os.path.join(pkg_share, "rviz/world_config.rviz")

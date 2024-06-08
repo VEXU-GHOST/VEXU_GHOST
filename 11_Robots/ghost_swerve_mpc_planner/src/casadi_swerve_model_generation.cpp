@@ -201,7 +201,7 @@ int main(int argc, char * argv[])
 
   auto node_ptr = std::make_shared<rclcpp::Node>("swerve_mpc_node");
   auto mpc_trajectory_publisher = node_ptr->create_publisher<ghost_msgs::msg::LabeledVectorMap>(
-    "/swerve_mpc_trajectory", 10);
+    "/trajectory/swerve_mpc_trajectory", 10);
 
   std::thread node_thread([&]() {
       rclcpp::spin(node_ptr);
@@ -357,6 +357,14 @@ int main(int argc, char * argv[])
           std::string knot_prefix = get_knot_prefix(k);
           solution_map[name][k] = solution_vector[state_index_map.at(knot_prefix + name)];
         }
+      }
+
+      // Allocate timeseries vector for each state/input variable
+      solution_map["time"] = std::vector<double>(NUM_KNOTS);
+
+      // Iterate through timeseries and add final state values to solution vector
+      for (int k = 0; k < NUM_KNOTS; k++) {
+        solution_map["time"][k] = DT * ((double) k);
       }
 
       return solution_map;
