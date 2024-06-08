@@ -392,10 +392,6 @@ void SwerveRobotPlugin::autonomous(double current_time)
   std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
 
   m_swerve_model_ptr->setAutonTime(current_time);
-  
-  if (m_is_first_auton_loop) {
-    m_is_first_auton_loop = false;
-  }
 
   m_swerve_model_ptr->disableSwerveHeuristics();
 

@@ -14,11 +14,11 @@ port_configuration:
             port: 3
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
-        lift_r1:
+        tail_motor:
             port: 4
             type: MOTOR
             reversed: false
-            config: lift_motor_config
+            config: tail_motor_config
         drive_frl:
             port: 5
             type: MOTOR
