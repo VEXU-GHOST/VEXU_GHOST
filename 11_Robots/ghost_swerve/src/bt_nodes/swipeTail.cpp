@@ -97,20 +97,21 @@ BT::NodeStatus SwipeTail::onRunning()
     start_time_ = std::chrono::system_clock::now();
     started_ = true;
     rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-    rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_upright_angle);
+    rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_angle_normal);
   }
 
   double tail_mtr_pos = rhi_ptr_->getMotorPosition("tail_motor");
   double stick_turn_offset = swerve_ptr_->getConfig().stick_turn_offset;
   #define MTR_CLOSE_TO(x) (fabs(tail_mtr_pos - x) < stick_turn_offset)
 
-  // RCLCPP_INFO(this->get_logger(), "time elapsed: %f", time_elapsed * 0.001);
+  RCLCPP_INFO(node_ptr_->get_logger(), "time elapsed: %f", time_elapsed * 0.001);
+  // std::cout << "time elapsed:" << time_elapsed * 0.001;
 
   if (500 < time_elapsed && time_elapsed < 1000 * num_swipes + 500) {
     if (time_elapsed % 1000 <= 400) {
       rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_angle_normal);
     } else {
-      rhi_ptr_->setMotorPositionCommand("tail_motor", swerve_ptr_->getConfig().stick_angle_skills);
+      rhi_ptr_->setMotorPositionCommand("tail_motor", -swerve_ptr_->getConfig().stick_angle_normal);
     }
     status = BT::NodeStatus::RUNNING;
   } else if (time_elapsed > 1000 * num_swipes + 500) {
