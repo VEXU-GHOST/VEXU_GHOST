@@ -177,7 +177,6 @@ protected:
   // Auton States
   bool m_auton_button_pressed = false;
   int m_auton_index = 0;
-  bool m_is_first_auton_loop = true;
 
   // stick
   double m_stick_angle_start = 0;
@@ -193,6 +192,8 @@ protected:
   rclcpp::Time m_intake_cooldown_start;
   bool m_intake_stalling = false;
   bool m_intake_cooling_down = false;
+
+  bool m_interaction_started = false;
 };
 
 } // namespace ghost_swerve

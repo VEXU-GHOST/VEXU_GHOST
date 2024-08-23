@@ -41,7 +41,6 @@ Climb::Climb(
 BT::PortsList Climb::providedPorts()
 {
   return {
-    BT::InputPort<bool>("climbed"),
   };
 }
 
@@ -62,6 +61,8 @@ T Climb::get_input(std::string key)
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus Climb::onStart()
 {
+  climbing_ = false;
+  reaching_ = true;
   return BT::NodeStatus::RUNNING;
 }
 
@@ -69,68 +70,103 @@ BT::NodeStatus Climb::onStart()
 /// This is a convenient place todo a cleanup, if needed.
 void Climb::onHalted()
 {
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 0);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
 
   resetStatus();
-}
-
-float Climb::tempPID(
-  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_,
-  const std::string & motor1, const std::string & motor2, float pos_want,
-  double kP)
-{
-  float pos1 = rhi_ptr_->getMotorPosition(motor1);
-  float pos2 = rhi_ptr_->getMotorPosition(motor2);
-  float pos = (pos1 + pos2) / 2;
-  float action = std::clamp((pos_want - pos) * kP, -100., 100.);       // TODO ???
-  if (fabs(action) < 1.5) {
-    action = 0;
-  }
-  rhi_ptr_->setMotorVoltageCommandPercent(motor1, action);
-  rhi_ptr_->setMotorVoltageCommandPercent(motor2, action);
-  // std::cout << "pos1: " << pos1 << " pos2: " << pos2 << " want: " << pos_want << " kP " << kP << " error " << (pos_want - pos) << " action " << action << std::endl;
-  return pos - pos_want;
 }
 
 BT::NodeStatus Climb::onRunning()
 {
   auto m_digital_io = std::vector<bool>(8, false);
   auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-    {"claw", 0},
-    {"right_wing", 1},
-    {"left_wing", 2},
-    {"tail", 3}
+    {"tail", 0},
+    {"claw", 1}
   };
+
   bool claw_open;
   auto status = BT::NodeStatus::RUNNING;
-  bool climbed = get_input<bool>("climbed");
 
-  if (climbed) {
-    lift_target = swerve_ptr_->getConfig().lift_climbed_angle;
-    claw_open = false;
-  } else {
-    lift_target = swerve_ptr_->getConfig().lift_up_angle;
-    claw_open = true;
+  double lift_target_up = swerve_ptr_->getConfig().lift_up_angle;
+  double lift_target_down = swerve_ptr_->getConfig().lift_climbed_angle;
+
+  double posR = rhi_ptr_->getMotorPosition("lift_r1");
+  double posL = rhi_ptr_->getMotorPosition("lift_l1");
+  RCLCPP_INFO(node_ptr_->get_logger(), "up: %f", lift_target_up);
+  
+
+  if (posL > lift_target_up)
+  {
+    reaching_ = false;
+    climbing_ = true;
+  } else if (posL < lift_target_down && climbing_)
+  {
+    climbing_ = false;
+    reaching_ = false;
   }
 
-  RCLCPP_INFO(node_ptr_->get_logger(), "Climbing");
+  if (reaching_) {
+    lift_target_ = lift_target_up;
+    claw_open = true;
+  } else if (climbing_) {
+    lift_target_ = lift_target_down;
+    claw_open = false;
+  } else {
+    // lift_target_ = lift_target_down;
+    claw_open = false;
+  }
 
-  // Toggle Climb Mode
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_right", 2500);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_left", 2500);
+  RCLCPP_INFO(node_ptr_->get_logger(), "target: %f", lift_target_);
 
-  float err = tempPID(
-    rhi_ptr_, "lift_right", "lift_left", lift_target,
-    swerve_ptr_->getConfig().lift_kP);                                                                           // go to 90deg
-  // ignore err
-
-  m_digital_io[m_digital_io_name_map.at("claw")] = claw_open;
+  m_digital_io[m_digital_io_name_map.at("claw")] = !claw_open;
 
   rhi_ptr_->setDigitalIO(m_digital_io);
 
-  // do not return any status but RUNNING
-  // so it keeps the state at the end of the auton
+  if (reaching_) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Reaching");
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
+  } else if (climbing_) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Climbing");
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
+  } else {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Done climbing");
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
+  }
 
   return status;
 }

@@ -29,7 +29,8 @@ def generate_launch_description():
     robot_name = "ghost_24"
 
     ghost_swerve_share_dir = get_package_share_directory("ghost_swerve")
-    bt_path = os.path.join(ghost_swerve_share_dir, "config", "bt.xml")
+    bt_path = os.path.join(ghost_swerve_share_dir, "config", "bt_isolation.xml")
+    bt_path_interaction = os.path.join(ghost_swerve_share_dir, "config", "bt_interaction.xml")
 
     ########################
     ### Node Definitions ###
@@ -55,6 +56,7 @@ def generate_launch_description():
             {
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
+                "bt_path_interaction": bt_path_interaction,
             },
         ],
         arguments=[plugin_type, robot_name],
@@ -62,17 +64,21 @@ def generate_launch_description():
     )
 
     cubic_motion_planner_node = Node(
-        package="ghost_swerve",
-        executable="cubic_motion_planner",
-        name="cubic_motion_planner",
-        output="screen",
-        parameters=[
-            ros_config_file,
-            # {
-            #     "robot_config_yaml_path": robot_config_yaml_path
-            # }
-        ],
-        # arguments=["--ros-args", "--log-level", "debug"]
+        package='ghost_swerve',
+        executable='cubic_motion_planner',
+        name='cubic_motion_planner',
+        output='screen',
+        parameters=[ros_config_file, 
+                    ],
+    )
+
+    trapezoid_motion_planner_node = Node(
+        package='ghost_swerve',
+        executable='trapezoid_motion_planner',
+        name='trapezoid_motion_planner',
+        output='screen',
+        parameters=[ros_config_file, 
+                    ],
     )
 
     bag_recorder_service = Node(
@@ -153,17 +159,16 @@ def generate_launch_description():
         parameters=[ros_config_file],
     )
 
-    return LaunchDescription(
-        [
-            serial_node,
-            competition_state_machine_node,
-            bag_recorder_service,
-            ekf_pf_node,  # THIS ONE
-            # realsense_node,
-            imu_filter_node,
-            odom_ekf_node,
-            map_ekf_node,
-            cubic_motion_planner_node,
-            # rplidar_node
-        ]
-    )
+    return LaunchDescription([
+        serial_node,
+        competition_state_machine_node,
+        bag_recorder_service,
+        ekf_pf_node, # THIS ONE
+        # realsense_node,
+        imu_filter_node,
+        odom_ekf_node,
+        map_ekf_node,
+        cubic_motion_planner_node,
+        # trapezoid_motion_planner_node,
+        rplidar_node
+    ])
