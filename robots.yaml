@@ -1,5 +1,5 @@
 ### Points to selected robot configuration for PROS compile ###
-selected_robot: GHOST_24
+selected_robot: GHOST_TANK
 
 ### Lists available robot configurations ###
 EXAMPLE_ROBOT:
@@ -10,3 +10,6 @@ GHOST_15:
   
 GHOST_24:
   config_file: 11_Robots/ghost_over_under/config/robot_hardware_config_worlds_24.yaml
+
+GHOST_TANK:
+  config_file: 11_Robots/ghost_high_stakes/config/robot_hardware_config_tank.yaml

@@ -1,0 +1,107 @@
+port_configuration:
+    devices:
+        drive_ltr:
+            port: 1
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_lbr:
+            port: 2
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_ltf:
+            port: 3
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_lbf:
+            port: 4
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_lttf:
+            port: 5
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        indexer_right:
+            port: 9
+            type: MOTOR
+            reversed: false
+            config: indexer_config
+        indexer_left:
+            port: 10
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_rttf:
+            port: 16
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_rtr:
+            port: 17
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_rbr:
+            port: 18
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_rtf:
+            port: 19
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_rbf:
+            port: 20
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+    device_configurations:
+        inertial_sensor_config:
+            serial:
+                send_accel_data: true
+                send_gyro_data: true
+                send_heading_data: true
+        drive_motor_config:
+            gearset: 600
+            brake_mode: COAST
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 15.0
+                ff_vel_gain: 1.0
+                ff_torque_gain: 0.0
+            model:
+                free_speed: 120.0
+                stall_torque: 3.6
+                free_current: 0.14
+                stall_current: 4.25
+                nominal_voltage: 12.0
+                gear_ratio: 6.0
+            serial:
+                send_position_command: false
+                send_velocity_command: true
+                send_voltage_command: true
+                send_torque_command: false
+                send_torque_data: false
+                send_voltage_data: false
+                send_current_data: false
+                send_power_data: false
+                send_temperature_data: false
+        indexer_config:
+            gearset: 600
+            brake_mode: BRAKE
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 0.0
+                ff_vel_gain: 0.0
+                ff_torque_gain: 100.0
+            serial:
+                send_position_command: false
+                send_velocity_command: false
+                send_voltage_command: true
