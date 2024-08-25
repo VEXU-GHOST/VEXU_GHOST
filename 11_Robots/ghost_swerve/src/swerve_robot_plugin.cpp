@@ -77,6 +77,9 @@ void SwerveRobotPlugin::initialize()
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
+  node_ptr_->declare_parameter<std::string>("bt_path_interaction");
+  std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
+
   node_ptr_->declare_parameter("swerve_robot_plugin.k1", 0.0);
   node_ptr_->declare_parameter("swerve_robot_plugin.k2", 0.0);
   node_ptr_->declare_parameter("swerve_robot_plugin.k3", 0.0);
@@ -185,9 +188,9 @@ void SwerveRobotPlugin::initialize()
   node_ptr_->declare_parameter("swerve_robot_plugin.lift_kP", 1.);
   node_ptr_->declare_parameter("swerve_robot_plugin.lift_speed", 1.);
   double gear_ratio = node_ptr_->get_parameter("swerve_robot_plugin.lift_gear_ratio").as_double();
-  swerve_model_config.lift_up_angle = gear_ratio * node_ptr_->get_parameter(
+  swerve_model_config.lift_up_angle = node_ptr_->get_parameter(
     "swerve_robot_plugin.lift_up_angle_deg").as_double();
-  swerve_model_config.lift_climbed_angle = gear_ratio * node_ptr_->get_parameter(
+  swerve_model_config.lift_climbed_angle = node_ptr_->get_parameter(
     "swerve_robot_plugin.lift_climbed_angle_deg").as_double();
   swerve_model_config.lift_kP = node_ptr_->get_parameter("swerve_robot_plugin.lift_kP").as_double();
   swerve_model_config.lift_speed =
@@ -280,10 +283,6 @@ void SwerveRobotPlugin::initialize()
     "/cmd_vel",
     10);
 
-  bt_ = std::make_shared<SwerveTree>(
-    bt_path, rhi_ptr_, m_swerve_model_ptr, node_ptr_,
-    m_burnout_absolute_rpm_threshold, m_burnout_stall_duration_ms,
-    m_burnout_cooldown_duration_ms, m_intake_setpoint);
 
   m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
     "bag_recorder/start");
@@ -311,12 +310,9 @@ void SwerveRobotPlugin::initialize()
     "/des_pos",
     10);
 
-  // resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
-  // if (!m_recording) {
-  //   auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-  //   m_start_recorder_client->async_send_request(req);
-  //   m_recording = true;
-  // }
+	// resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
+	
+	bt_ = std::make_shared<SwerveTree>(bt_path, bt_path_interaction, rhi_ptr_, m_swerve_model_ptr, node_ptr_);
 }
 
 void SwerveRobotPlugin::onNewSensorData()
@@ -393,9 +389,9 @@ void SwerveRobotPlugin::disabled()
 void SwerveRobotPlugin::autonomous(double current_time)
 {
   std::cout << "Autonomous: " << current_time << std::endl;
-  if (m_is_first_auton_loop) {
-    m_is_first_auton_loop = false;
-  }
+  std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
+
+  m_swerve_model_ptr->setAutonTime(current_time);
 
   m_swerve_model_ptr->disableSwerveHeuristics();
 
@@ -405,7 +401,12 @@ void SwerveRobotPlugin::autonomous(double current_time)
   //    m_recording = true;
   // }
 
-  bt_->tick_tree();
+  if (!m_is_first_auton_loop){
+    bt_->tick_tree_interaction();
+  } else {
+    bt_->tick_tree();
+  }
+
   // publishTrajectoryVisualization();
 
   double vel_cmd_x = 0;
@@ -477,11 +478,11 @@ void SwerveRobotPlugin::autonomous(double current_time)
     // std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
   }
 
-  // if((des_pos_x == 0.0) && (des_pos_y == 0.0) || m_swerve_model_ptr->getAutoStatus()){
-  //    vel_cmd_x = 0.0;
-  //    vel_cmd_y = 0.0;
-  //    vel_cmd_theta = 0.0;
-  // }
+  if(m_swerve_model_ptr->getAutoStatus()){
+     vel_cmd_x = 0.0;
+     vel_cmd_y = 0.0;
+     vel_cmd_theta = 0.0;
+  }
 
   m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(
     -vel_cmd_y, vel_cmd_x,
@@ -687,6 +688,9 @@ void SwerveRobotPlugin::teleop(double current_time)
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
 
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+        rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", -1.0);
+
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
 
@@ -696,6 +700,9 @@ void SwerveRobotPlugin::teleop(double current_time)
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
 
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+        rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 1.0);
+
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
 
@@ -704,6 +711,9 @@ void SwerveRobotPlugin::teleop(double current_time)
       } else {
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
+        rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 0);
 
         rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
         rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
@@ -721,6 +731,9 @@ void SwerveRobotPlugin::teleop(double current_time)
       rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
       rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
 
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
+      rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 0);
+
       rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
       rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
 
@@ -730,20 +743,20 @@ void SwerveRobotPlugin::teleop(double current_time)
 
     bool tail_down = false;
     // tail left and intake up
-    if (tail_mode) {
-      tail_down = true;
-      if (joy_data->btn_r2) {
-        rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-        rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_kick);
-      } else {
-        rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-        rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
-      }
-    } else {
-      tail_down = false;
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
-      rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
-    }
+    // if (tail_mode) {
+    //   tail_down = true;
+    //   if (joy_data->btn_r2) {
+    //     rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+    //     rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_kick);
+    //   } else {
+    //     rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+    //     rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
+    //   }
+    // } else {
+    //   tail_down = false;
+    //   rhi_ptr_->setMotorCurrentLimitMilliAmps("tail_motor", 2500);
+    //   rhi_ptr_->setMotorPositionCommand("tail_motor", m_stick_angle_start);
+    // }
 
     m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
     m_digital_io[m_digital_io_name_map["claw"]] = !m_claw_open;

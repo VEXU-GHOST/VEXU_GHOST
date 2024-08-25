@@ -26,22 +26,22 @@
 namespace ghost_swerve
 {
 
-IntakeCmd::IntakeCmd(
-  const std::string & name, const BT::NodeConfig & config, std::shared_ptr<rclcpp::Node> node_ptr,
-  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-  std::shared_ptr<SwerveModel> swerve_ptr,
-  double burnout_absolute_rpm_threshold,
-  double burnout_stall_duration_ms,
-  double burnout_cooldown_duration_ms,
-			double lift_setpoint)
-: BT::SyncActionNode(name, config),
-  node_ptr_(node_ptr),
-  rhi_ptr_(rhi_ptr),
-  swerve_ptr_(swerve_ptr),
-  burnout_absolute_rpm_threshold_(burnout_absolute_rpm_threshold),
-  burnout_stall_duration_ms_(burnout_stall_duration_ms),
-  burnout_cooldown_duration_ms_(burnout_cooldown_duration_ms),
-	lift_setpoint_(lift_setpoint){
+IntakeCmd::IntakeCmd(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
+                     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+                     std::shared_ptr<SwerveModel> swerve_ptr) :
+	BT::SyncActionNode(name, config),
+	node_ptr_(node_ptr),
+	rhi_ptr_(rhi_ptr),
+	swerve_ptr_(swerve_ptr){
+	// ros params
+	// node_ptr_->declare_parameter("swerve_robot_plugin.burnout_absolute_velocity_threshold_rpm", 50.0);
+	burnout_absolute_rpm_threshold_        = node_ptr_->get_parameter("swerve_robot_plugin.burnout_absolute_velocity_threshold_rpm").as_double();
+
+	// node_ptr_->declare_parameter("swerve_robot_plugin.burnout_stall_duration_ms", 1000);
+	burnout_stall_duration_ms_    = node_ptr_->get_parameter("swerve_robot_plugin.burnout_stall_duration_ms").as_int();
+
+	// node_ptr_->declare_parameter("swerve_robot_plugin.burnout_cooldown_duration_ms", 1000);
+	burnout_cooldown_duration_ms_ = node_ptr_->get_parameter("swerve_robot_plugin.burnout_cooldown_duration_ms").as_int();
 }
 
 // It is mandatory to define this STATIC method.
@@ -135,25 +135,10 @@ BT::NodeStatus IntakeCmd::tick()
     status = BT::NodeStatus::SUCCESS;
     intake_voltage = 0;
     rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
-    // intake_stalling_ = false;
-    // intake_cooling_down_ = true;
-    // intake_cooldown_start_ = std::chrono::system_clock::now();
   }
 
-  // Enforce INTAKE_MOTOR cooldown period
-  // if(intake_cooling_down_){
-  //    if((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - intake_cooldown_start_).count() <= burnout_cooldown_duration_ms_) && intake_command){
-  //            rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
-  //            rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
-  //    }
-  //    else{
-  //            intake_cooling_down_ = false;
-  //    }
-  // }
-
-
   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
-  RCLCPP_INFO(node_ptr_->get_logger(), "intaking");
+  // RCLCPP_INFO(node_ptr_->get_logger(), "intaking");
 
   return status;
 }

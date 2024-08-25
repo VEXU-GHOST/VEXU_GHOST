@@ -133,8 +133,9 @@ protected:
   std::shared_ptr<ghost_planners::RobotTrajectory> robot_trajectory_ptr_;
   double trajectory_start_time_;
 
-  // Auton Button
+  // Auton
   double m_auton_start_time = 0.0;
+  bool m_is_first_auton_loop = true;
 
   double getTimeFromStart() const;
 

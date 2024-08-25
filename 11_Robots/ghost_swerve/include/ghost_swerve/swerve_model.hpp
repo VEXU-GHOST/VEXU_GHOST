@@ -468,6 +468,15 @@ public:
     m_swerve_heuristics_enabled = false;
   }
 
+  void setAutonTime(double time)
+  {
+    m_auton_time = time;
+  }
+  double getAutonTime()
+  {
+    return m_auton_time;
+  }
+
 protected:
   // Initialization
   void validateConfig();
@@ -541,6 +550,8 @@ protected:
   double m_icr_sse = 0;
   double m_ls_error_metric = 0.0;
   bool m_auto_status = false;
+
+  double m_auton_time = 0.0;
 };
 
 } // namespace ghost_swerve

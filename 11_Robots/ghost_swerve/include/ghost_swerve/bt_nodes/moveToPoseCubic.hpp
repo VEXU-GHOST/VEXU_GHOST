@@ -38,14 +38,12 @@ namespace ghost_swerve
 {
 
 // SyncActionNode (synchronous action) with an input port.
-class MoveToPose : public BT::StatefulActionNode
-{
+class MoveToPoseCubic : public BT::StatefulActionNode {
 public:
-  // If your Node has ports, you must use this constructor signature
-  MoveToPose(
-    const std::string & name, const BT::NodeConfig & config, std::shared_ptr<rclcpp::Node> node_ptr,
-    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-    std::shared_ptr<SwerveModel> swerve_ptr);
+	// If your Node has ports, you must use this constructor signature
+	MoveToPoseCubic(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
+	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+	           std::shared_ptr<SwerveModel> swerve_ptr);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();

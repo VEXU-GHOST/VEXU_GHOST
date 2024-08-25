@@ -4,7 +4,7 @@
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
         <Action ID="CheckForRestart" editable="true"/>
-        <Action ID="MoveToPose" editable="true">
+        <Action ID="MoveToPoseCubic" editable="true">
             <input_port name="posX"/>
             <input_port name="posY"/>
             <input_port name="angle"/>
