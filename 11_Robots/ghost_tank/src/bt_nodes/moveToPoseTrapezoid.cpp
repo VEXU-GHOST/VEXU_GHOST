@@ -1,161 +1,144 @@
-/*
- *   Copyright (c) 2024 Maxx Wilson
- *   All rights reserved.
+#include "ghost_tank/bt_nodes/moveToPoseTrapezoid.hpp"
 
- *   Permission is hereby granted, free of charge, to any person obtaining a copy
- *   of this software and associated documentation files (the "Software"), to deal
- *   in the Software without restriction, including without limitation the rights
- *   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *   copies of the Software, and to permit persons to whom the Software is
- *   furnished to do so, subject to the following conditions:
+using std::placeholders::_1;
 
- *   The above copyright notice and this permission notice shall be included in all
- *   copies or substantial portions of the Software.
+namespace ghost_tank {
 
- *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *   SOFTWARE.
- */
+// If your Node has ports, you must use this constructor signature
+MoveToPoseTrapezoid::MoveToPoseTrapezoid(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
+                                 std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+                                 std::shared_ptr<tankModel> tank_ptr) :
+	BT::StatefulActionNode(name, config),
+	rhi_ptr_(rhi_ptr),
+	node_ptr_(node_ptr),
+	tank_ptr_(tank_ptr){
+	node_ptr_->declare_parameter("behavior_tree.trapezoid_planner_topic", "/motion_planner/trapezoid_command");
+	std::string trapezoid_planner_topic = node_ptr_->get_parameter("behavior_tree.trapezoid_planner_topic").as_string();
 
-#pragma once
+	command_pub_ = node_ptr_->create_publisher<ghost_msgs::msg::DrivetrainCommand>(
+		trapezoid_planner_topic,
+		10);
+	started_ = false;
+}
 
-#include "eigen3/Eigen/Geometry"
-#include <ghost_tank/tank_model.hpp>
-#include <ghost_util/angle_util.hpp>
-#include <ghost_util/test_util.hpp>
-#include <gtest/gtest.h>
+// It is mandatory to define this STATIC method.
+BT::PortsList MoveToPoseTrapezoid::providedPorts(){
+	return {
+	    BT::InputPort<double>("posX"),
+	    BT::InputPort<double>("posY"),
+	    BT::InputPort<double>("theta"),
+	    BT::InputPort<double>("velX"),
+	    BT::InputPort<double>("velY"),
+	    BT::InputPort<double>("omega"),
+	    BT::InputPort<double>("threshold"),
+	    BT::InputPort<double>("angle_threshold"),
+	    BT::InputPort<double>("max_speed"),
+	    BT::InputPort<int>("timeout"),
+	};
+}
 
-namespace ghost_tank
-{
+template <typename T>
+T MoveToPoseTrapezoid::get_input(std::string key){
+	BT::Expected<T> input = getInput<T>(key);
+	// Check if expected is valid. If not, throw its error
+	if(!input){
+		throw BT::RuntimeError("missing required input [" + key + "]: ",
+		                       input.error() );
+	}
+	return input.value();
+}
 
-namespace test
-{
+/// Method called once, when transitioning from the state IDLE.
+/// If it returns RUNNING, this becomes an asynchronous node.
+BT::NodeStatus MoveToPoseTrapezoid::onStart(){
+	started_ = false;
+	// plan_time_ = std::chrono::();
+	return BT::NodeStatus::RUNNING;
+}
 
-class tankModelTestFixture : public ::testing::Test
-{
-public:
-  void SetUp() override
-  {
-    m_config.max_wheel_lin_vel = 2.0;
-    m_config.steering_ratio = 13.0 / 44.0;
-    m_config.wheel_ratio = 13.0 / 44.0 * 30.0 / 14.0;
-    m_config.wheel_radius = 2.75 / 2.0;
-    m_config.steering_kp = 0.1;
-    m_config.max_wheel_actuator_vel = 600.0;
-    m_config.controller_dt = 0.01;
+/// when the method halt() is called and the action is RUNNING, this method is invoked.
+/// This is a convenient place todo a cleanup, if needed.
+void MoveToPoseTrapezoid::onHalted(){
+	resetStatus();
+}
 
-    // Mobile robots use forward as X, left as Y, and up as Z so that travelling forward is zero degree heading.
-    // No, I don't like it either.
-    m_config.module_positions["front_right"] = Eigen::Vector2d(5.5, -5.5);
-    m_config.module_positions["front_left"] = Eigen::Vector2d(5.5, 5.5);
-    m_config.module_positions["back_right"] = Eigen::Vector2d(-5.5, -5.5);
-    m_config.module_positions["back_left"] = Eigen::Vector2d(-5.5, 5.5);
+BT::NodeStatus MoveToPoseTrapezoid::onRunning() {
+	double posX = get_input<double>("posX");
+	double posY = get_input<double>("posY");
+	double theta = get_input<double>("theta");
+	double velX = get_input<double>("velX");
+	double velY = get_input<double>("velY");
+	double omega = get_input<double>("omega");
+	double threshold = get_input<double>("threshold");
+	double angle_threshold = get_input<double>("angle_threshold");
+	double max_speed = get_input<double>("max_speed");
+	int timeout = get_input<int>("timeout");
 
-    m_config.module_type = tank_type_e::COAXIAL;
-    m_coax_model_ptr = std::make_shared<tankModel>(m_config);
+	// tile conversion
+	double tile_to_meters = 0.6096;
+	posX *= tile_to_meters;
+	posY *= tile_to_meters;
 
-    m_config.module_type = tank_type_e::DIFFERENTIAL;
-    m_diff_model_ptr = std::make_shared<tankModel>(m_config);
+	// convert angle values to radians before sending
+	theta *= ghost_util::DEG_TO_RAD;
+	angle_threshold *= ghost_util::DEG_TO_RAD;
 
-    m_models.push_back(m_coax_model_ptr);
-    m_models.push_back(m_diff_model_ptr);
-  }
+	double w,x,y,z;
+	ghost_util::yawToQuaternionRad(theta, w, x, y, z);
+	ghost_msgs::msg::DrivetrainCommand msg{};
+	msg.pose.pose.position.x = posX;
+	msg.pose.pose.position.y = posY;
+	msg.pose.pose.orientation.x = x;
+	msg.pose.pose.orientation.y = y;
+	msg.pose.pose.orientation.z = z;
+	msg.pose.pose.orientation.w = w;
+	msg.pose.pose.position.z = threshold;
+	msg.twist.twist.angular.x = angle_threshold;
+	msg.speed = max_speed;
 
-  static void checkInverse(Eigen::MatrixXd m, Eigen::MatrixXd m_inv)
-  {
-    // Matrices are square and equal size
-    EXPECT_EQ(m.rows(), m.cols());
-    EXPECT_EQ(m_inv.rows(), m_inv.cols());
-    EXPECT_EQ(m.rows(), m_inv.rows());
+	msg.twist.twist.linear.x = velX;
+	msg.twist.twist.linear.y = velY;
+	msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
 
-    // Matrix times inverse should be identity
-    auto I1 = m * m_inv;
-    auto I2 = m_inv * m;
+	if( (abs(posX - tank_ptr_->getWorldLocation().x()) < threshold) &&
+	    (abs(posY - tank_ptr_->getWorldLocation().y()) < threshold) &&
+	    (abs(ghost_util::SmallestAngleDistRad(theta, tank_ptr_->getWorldAngleRad())) < angle_threshold)){
+		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseTrapezoid: Success");
+		return BT::NodeStatus::SUCCESS;
+	}
 
-    for (int row = 0; row < m.rows(); row++) {
-      for (int col = 0; col < m.cols(); col++) {
-        auto val = (row == col) ? 1.0 : 0.0;
-        EXPECT_NEAR(I1(row, col), val, m_eps);
-        EXPECT_NEAR(I2(row, col), val, m_eps);
-      }
-    }
-  }
+	if(started_){
+		auto now = std::chrono::system_clock::now();
+		int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
+		if(timeout > 0){
+			if(time_elapsed > timeout){
+				RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPoseTrapezoid Timeout: %i ms elapsed", time_elapsed);
+				start_time_ = std::chrono::system_clock::now();
+				command_pub_->publish(msg);
+				RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseTrapezoid: sent command");
+			}
+		}
+		else{
+			if(time_elapsed > abs(timeout)){
+				return BT::NodeStatus::SUCCESS;
+			}
+		}
+	}
+	else{
+		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseTrapezoid: Started");
+		start_time_ = std::chrono::system_clock::now();
+		started_ = true;
+		command_pub_->publish(msg);
 
-  static ModuleState getRandomModuleState()
-  {
-    ModuleState s;
-    s.wheel_position = ghost_util::getRandomDouble();
-    s.wheel_velocity = ghost_util::getRandomDouble();
-    s.wheel_acceleration = ghost_util::getRandomDouble();
+		RCLCPP_INFO(node_ptr_->get_logger(), "posX: %f", posX);
+		RCLCPP_INFO(node_ptr_->get_logger(), "posY: %f", posY);
+		RCLCPP_INFO(node_ptr_->get_logger(), "theta: %f", theta);
+		RCLCPP_INFO(node_ptr_->get_logger(), "velX: %f", velX);
+		RCLCPP_INFO(node_ptr_->get_logger(), "velY: %f", velY);
+		RCLCPP_INFO(node_ptr_->get_logger(), "omega: %f", omega);
+	}
 
-    s.steering_angle = ghost_util::getRandomDouble();
-    s.steering_velocity = ghost_util::getRandomDouble();
-    s.steering_acceleration = ghost_util::getRandomDouble();
-    return s;
-  }
-
-  static ModuleCommand getRandomModuleCommand()
-  {
-    ModuleCommand s;
-    s.wheel_velocity_command = ghost_util::getRandomDouble();
-    s.wheel_voltage_command = ghost_util::getRandomDouble();
-    s.steering_angle_command = ghost_util::getRandomDouble();
-    s.steering_velocity_command = ghost_util::getRandomDouble();
-    s.steering_voltage_command = ghost_util::getRandomDouble();
-    s.actuator_velocity_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    s.actuator_voltage_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    return s;
-  }
-
-  template<typename T>
-  static bool listContainsEigenVector(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= expected.isApprox(vec);
-    }
-    return result;
-  }
-
-  template<typename T>
-  static bool listContainsElement(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= (expected == vec);
-    }
-    return result;
-  }
-
-  template<typename T>
-  static bool eigenVectorListsAreIdentical(
-    const std::vector<T> & list,
-    const std::vector<T> & expected)
-  {
-    if (list.size() != expected.size()) {
-      return false;
-    }
-
-    bool result = false;
-    for (int i = 0; i < list.size(); i++) {
-      result |= (list[i].isApprox(expected[i]));
-    }
-    return result;
-  }
-
-  std::vector<std::shared_ptr<tankModel>> m_models;
-  std::shared_ptr<tankModel> m_coax_model_ptr;
-  std::shared_ptr<tankModel> m_diff_model_ptr;
-  tankConfig m_config;
-  static constexpr double m_eps = 1e-6;
-};
-
-} // namespace test
+	return BT::NodeStatus::RUNNING;
+}
 
 } // namespace ghost_tank

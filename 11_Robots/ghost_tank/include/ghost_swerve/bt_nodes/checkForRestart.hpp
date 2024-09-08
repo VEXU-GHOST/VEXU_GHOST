@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,140 +22,37 @@
  */
 
 #pragma once
+#include "behaviortree_cpp/behavior_tree.h"
+#include "ghost_msgs/msg/v5_actuator_command.hpp"
+#include "ghost_msgs/msg/v5_sensor_update.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+#include "rclcpp/rclcpp.hpp"
 
-#include "eigen3/Eigen/Geometry"
-#include <ghost_tank/tank_model.hpp>
-#include <ghost_util/angle_util.hpp>
-#include <ghost_util/test_util.hpp>
-#include <gtest/gtest.h>
+using std::placeholders::_1;
 
 namespace ghost_tank
 {
 
-namespace test
+// SyncActionNode (synchronous action) with an input port.
+class CheckForRestart : public BT::SyncActionNode
 {
+private:
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr_;
+  std::chrono::time_point<std::chrono::system_clock> start_time_;
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+  bool restarted_ = false;
 
-class tankModelTestFixture : public ::testing::Test
-{
 public:
-  void SetUp() override
-  {
-    m_config.max_wheel_lin_vel = 2.0;
-    m_config.steering_ratio = 13.0 / 44.0;
-    m_config.wheel_ratio = 13.0 / 44.0 * 30.0 / 14.0;
-    m_config.wheel_radius = 2.75 / 2.0;
-    m_config.steering_kp = 0.1;
-    m_config.max_wheel_actuator_vel = 600.0;
-    m_config.controller_dt = 0.01;
+  // If your Node has ports, you must use this constructor signature
+  CheckForRestart(
+    const std::string & name, const BT::NodeConfig & config, std::shared_ptr<rclcpp::Node> node_ptr,
+    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr);
 
-    // Mobile robots use forward as X, left as Y, and up as Z so that travelling forward is zero degree heading.
-    // No, I don't like it either.
-    m_config.module_positions["front_right"] = Eigen::Vector2d(5.5, -5.5);
-    m_config.module_positions["front_left"] = Eigen::Vector2d(5.5, 5.5);
-    m_config.module_positions["back_right"] = Eigen::Vector2d(-5.5, -5.5);
-    m_config.module_positions["back_left"] = Eigen::Vector2d(-5.5, 5.5);
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
 
-    m_config.module_type = tank_type_e::COAXIAL;
-    m_coax_model_ptr = std::make_shared<tankModel>(m_config);
-
-    m_config.module_type = tank_type_e::DIFFERENTIAL;
-    m_diff_model_ptr = std::make_shared<tankModel>(m_config);
-
-    m_models.push_back(m_coax_model_ptr);
-    m_models.push_back(m_diff_model_ptr);
-  }
-
-  static void checkInverse(Eigen::MatrixXd m, Eigen::MatrixXd m_inv)
-  {
-    // Matrices are square and equal size
-    EXPECT_EQ(m.rows(), m.cols());
-    EXPECT_EQ(m_inv.rows(), m_inv.cols());
-    EXPECT_EQ(m.rows(), m_inv.rows());
-
-    // Matrix times inverse should be identity
-    auto I1 = m * m_inv;
-    auto I2 = m_inv * m;
-
-    for (int row = 0; row < m.rows(); row++) {
-      for (int col = 0; col < m.cols(); col++) {
-        auto val = (row == col) ? 1.0 : 0.0;
-        EXPECT_NEAR(I1(row, col), val, m_eps);
-        EXPECT_NEAR(I2(row, col), val, m_eps);
-      }
-    }
-  }
-
-  static ModuleState getRandomModuleState()
-  {
-    ModuleState s;
-    s.wheel_position = ghost_util::getRandomDouble();
-    s.wheel_velocity = ghost_util::getRandomDouble();
-    s.wheel_acceleration = ghost_util::getRandomDouble();
-
-    s.steering_angle = ghost_util::getRandomDouble();
-    s.steering_velocity = ghost_util::getRandomDouble();
-    s.steering_acceleration = ghost_util::getRandomDouble();
-    return s;
-  }
-
-  static ModuleCommand getRandomModuleCommand()
-  {
-    ModuleCommand s;
-    s.wheel_velocity_command = ghost_util::getRandomDouble();
-    s.wheel_voltage_command = ghost_util::getRandomDouble();
-    s.steering_angle_command = ghost_util::getRandomDouble();
-    s.steering_velocity_command = ghost_util::getRandomDouble();
-    s.steering_voltage_command = ghost_util::getRandomDouble();
-    s.actuator_velocity_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    s.actuator_voltage_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    return s;
-  }
-
-  template<typename T>
-  static bool listContainsEigenVector(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= expected.isApprox(vec);
-    }
-    return result;
-  }
-
-  template<typename T>
-  static bool listContainsElement(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= (expected == vec);
-    }
-    return result;
-  }
-
-  template<typename T>
-  static bool eigenVectorListsAreIdentical(
-    const std::vector<T> & list,
-    const std::vector<T> & expected)
-  {
-    if (list.size() != expected.size()) {
-      return false;
-    }
-
-    bool result = false;
-    for (int i = 0; i < list.size(); i++) {
-      result |= (list[i].isApprox(expected[i]));
-    }
-    return result;
-  }
-
-  std::vector<std::shared_ptr<tankModel>> m_models;
-  std::shared_ptr<tankModel> m_coax_model_ptr;
-  std::shared_ptr<tankModel> m_diff_model_ptr;
-  tankConfig m_config;
-  static constexpr double m_eps = 1e-6;
+  // Override the virtual function tick()
+  BT::NodeStatus tick() override;
 };
-
-} // namespace test
 
 } // namespace ghost_tank

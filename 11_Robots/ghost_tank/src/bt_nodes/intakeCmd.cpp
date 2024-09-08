@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,141 +21,126 @@
  *   SOFTWARE.
  */
 
-#pragma once
-
-#include "eigen3/Eigen/Geometry"
-#include <ghost_tank/tank_model.hpp>
-#include <ghost_util/angle_util.hpp>
-#include <ghost_util/test_util.hpp>
-#include <gtest/gtest.h>
+#include "ghost_tank/bt_nodes/intakeCmd.hpp"
 
 namespace ghost_tank
 {
 
-namespace test
+IntakeCmd::IntakeCmd(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
+                     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+                     std::shared_ptr<tankModel> tank_ptr) :
+	BT::SyncActionNode(name, config),
+	node_ptr_(node_ptr),
+	rhi_ptr_(rhi_ptr),
+	tank_ptr_(tank_ptr){
+	// ros params
+	// node_ptr_->declare_parameter("tank_robot_plugin.burnout_absolute_velocity_threshold_rpm", 50.0);
+	burnout_absolute_rpm_threshold_        = node_ptr_->get_parameter("tank_robot_plugin.burnout_absolute_velocity_threshold_rpm").as_double();
+
+	// node_ptr_->declare_parameter("tank_robot_plugin.burnout_stall_duration_ms", 1000);
+	burnout_stall_duration_ms_    = node_ptr_->get_parameter("tank_robot_plugin.burnout_stall_duration_ms").as_int();
+
+	// node_ptr_->declare_parameter("tank_robot_plugin.burnout_cooldown_duration_ms", 1000);
+	burnout_cooldown_duration_ms_ = node_ptr_->get_parameter("tank_robot_plugin.burnout_cooldown_duration_ms").as_int();
+}
+
+// It is mandatory to define this STATIC method.
+BT::PortsList IntakeCmd::providedPorts()
 {
+  return {
+    BT::InputPort<bool>("in"),
+  };
+}
 
-class tankModelTestFixture : public ::testing::Test
+template<typename T>
+T IntakeCmd::get_input(std::string key)
 {
-public:
-  void SetUp() override
-  {
-    m_config.max_wheel_lin_vel = 2.0;
-    m_config.steering_ratio = 13.0 / 44.0;
-    m_config.wheel_ratio = 13.0 / 44.0 * 30.0 / 14.0;
-    m_config.wheel_radius = 2.75 / 2.0;
-    m_config.steering_kp = 0.1;
-    m_config.max_wheel_actuator_vel = 600.0;
-    m_config.controller_dt = 0.01;
+  BT::Expected<T> input = getInput<T>(key);
+  // Check if expected is valid. If not, throw its error
+  if (!input) {
+    throw BT::RuntimeError(
+            "missing required input [" + key + "]: ",
+            input.error() );
+  }
+  return input.value();
+}
 
-    // Mobile robots use forward as X, left as Y, and up as Z so that travelling forward is zero degree heading.
-    // No, I don't like it either.
-    m_config.module_positions["front_right"] = Eigen::Vector2d(5.5, -5.5);
-    m_config.module_positions["front_left"] = Eigen::Vector2d(5.5, 5.5);
-    m_config.module_positions["back_right"] = Eigen::Vector2d(-5.5, -5.5);
-    m_config.module_positions["back_left"] = Eigen::Vector2d(-5.5, 5.5);
+BT::NodeStatus IntakeCmd::tick()
+{
+  auto status = BT::NodeStatus::FAILURE;
+  bool in = get_input<bool>("in");
 
-    m_config.module_type = tank_type_e::COAXIAL;
-    m_coax_model_ptr = std::make_shared<tankModel>(m_config);
-
-    m_config.module_type = tank_type_e::DIFFERENTIAL;
-    m_diff_model_ptr = std::make_shared<tankModel>(m_config);
-
-    m_models.push_back(m_coax_model_ptr);
-    m_models.push_back(m_diff_model_ptr);
+  // Intake
+  double intake_voltage;
+  bool intake_command;
+  if (!in) {
+    intake_command = true;
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    intake_voltage = -1.0;
+  } else if (in) {
+    intake_command = true;
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    intake_voltage = 1.0;
+  } else {
+    intake_command = false;
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
+    intake_voltage = 0.0;
   }
 
-  static void checkInverse(Eigen::MatrixXd m, Eigen::MatrixXd m_inv)
-  {
-    // Matrices are square and equal size
-    EXPECT_EQ(m.rows(), m.cols());
-    EXPECT_EQ(m_inv.rows(), m_inv.cols());
-    EXPECT_EQ(m.rows(), m_inv.rows());
+  bool intake_up = false;
+  double intake_lift_target;
+  if (!in) {    // intake lift
+    intake_up = true;
+    intake_lift_target = 0.0;
+  } else {
+    intake_up = false;
+    intake_lift_target = 7.0;
+  }
 
-    // Matrix times inverse should be identity
-    auto I1 = m * m_inv;
-    auto I2 = m_inv * m;
-
-    for (int row = 0; row < m.rows(); row++) {
-      for (int col = 0; col < m.cols(); col++) {
-        auto val = (row == col) ? 1.0 : 0.0;
-        EXPECT_NEAR(I1(row, col), val, m_eps);
-        EXPECT_NEAR(I2(row, col), val, m_eps);
-      }
+  if (std::fabs(rhi_ptr_->getMotorPosition("intake_lift_motor") - intake_lift_target) < 0.05) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 0);
+    if (intake_up && !intake_command) {
+      intake_voltage = 0.0;
+    }
+  } else {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_lift_motor", 2500);
+    if (intake_up && !intake_command) {
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 1000);
+      intake_voltage = -1.0;
     }
   }
 
-  static ModuleState getRandomModuleState()
-  {
-    ModuleState s;
-    s.wheel_position = ghost_util::getRandomDouble();
-    s.wheel_velocity = ghost_util::getRandomDouble();
-    s.wheel_acceleration = ghost_util::getRandomDouble();
+  rhi_ptr_->setMotorPositionCommand("intake_lift_motor", intake_lift_target);
 
-    s.steering_angle = ghost_util::getRandomDouble();
-    s.steering_velocity = ghost_util::getRandomDouble();
-    s.steering_acceleration = ghost_util::getRandomDouble();
-    return s;
-  }
 
-  static ModuleCommand getRandomModuleCommand()
+  // If INTAKE_MOTOR stalling, update state and timer
+  if ((intake_command) &&
+    (std::fabs(rhi_ptr_->getMotorVelocityRPM("intake_motor")) < burnout_absolute_rpm_threshold_))
   {
-    ModuleCommand s;
-    s.wheel_velocity_command = ghost_util::getRandomDouble();
-    s.wheel_voltage_command = ghost_util::getRandomDouble();
-    s.steering_angle_command = ghost_util::getRandomDouble();
-    s.steering_velocity_command = ghost_util::getRandomDouble();
-    s.steering_voltage_command = ghost_util::getRandomDouble();
-    s.actuator_velocity_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    s.actuator_voltage_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    return s;
-  }
+    if (!intake_stalling_) {
+      intake_stall_start_ = std::chrono::system_clock::now();
 
-  template<typename T>
-  static bool listContainsEigenVector(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= expected.isApprox(vec);
+      intake_stalling_ = true;
     }
-    return result;
+  } else {
+    intake_stalling_ = false;
   }
 
-  template<typename T>
-  static bool listContainsElement(const std::vector<T> & list, const T & expected)
+  // If INTAKE_MOTOR stalled for too long, start cooldown period
+  if (!intake_cooling_down_ && intake_stalling_ &&
+    (std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now() -
+      intake_stall_start_).count() > burnout_stall_duration_ms_) )
   {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= (expected == vec);
-    }
-    return result;
+    status = BT::NodeStatus::SUCCESS;
+    intake_voltage = 0;
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
   }
 
-  template<typename T>
-  static bool eigenVectorListsAreIdentical(
-    const std::vector<T> & list,
-    const std::vector<T> & expected)
-  {
-    if (list.size() != expected.size()) {
-      return false;
-    }
+  rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
+  // RCLCPP_INFO(node_ptr_->get_logger(), "intaking");
 
-    bool result = false;
-    for (int i = 0; i < list.size(); i++) {
-      result |= (list[i].isApprox(expected[i]));
-    }
-    return result;
-  }
-
-  std::vector<std::shared_ptr<tankModel>> m_models;
-  std::shared_ptr<tankModel> m_coax_model_ptr;
-  std::shared_ptr<tankModel> m_diff_model_ptr;
-  tankConfig m_config;
-  static constexpr double m_eps = 1e-6;
-};
-
-} // namespace test
+  return status;
+}
 
 } // namespace ghost_tank

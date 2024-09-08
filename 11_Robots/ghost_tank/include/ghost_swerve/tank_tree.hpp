@@ -21,39 +21,45 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/loggingNode.hpp"
+#pragma once
+#include "behaviortree_cpp/bt_factory.h"
+#include "bt_nodes/checkForRestart.hpp"
+#include "bt_nodes/intakeCmd.hpp"
+#include "bt_nodes/loggingNode.hpp"
+#include "bt_nodes/moveToPoseCubic.hpp"
+#include "bt_nodes/swipeTail.hpp"
+#include "bt_nodes/autoDone.hpp"
+#include "bt_nodes/autonTimer.hpp"
+#include "bt_nodes/climb.hpp"
+#include "ghost_tank/tank_model.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/bool.hpp"
 
-// SyncActionNode (synchronous action) with an input port.
-// If your Node has ports, you must use this constructor signature
-LoggingNode::LoggingNode(
-  const std::string & name, const BT::NodeConfig & config,
-  std::shared_ptr<rclcpp::Node> node_ptr)
-: BT::SyncActionNode(name, config),
-  node_ptr_(node_ptr)
-{
-}
+// file that contains the custom nodes definitions
+// #include "dummy_nodes.h"
+// using namespace DummyNodes;
 
-// It is mandatory to define this STATIC method.
-BT::PortsList LoggingNode::providedPorts()
+namespace ghost_tank
 {
-  // This action has a single input port called "message"
-  return {
-    BT::InputPort<std::string>("message")
-  };
-}
 
-// Override the virtual function tick()
-BT::NodeStatus LoggingNode::tick()
+class tankTree
 {
-  BT::Expected<std::string> msg = getInput<std::string>("message");
-  // Check if expected is valid. If not, throw its error
-  if (!msg) {
-    throw BT::RuntimeError(
-            "missing required input [message]: ",
-            msg.error() );
-  }
-  // use the method value() to extract the valid message.
-  RCLCPP_INFO(node_ptr_->get_logger(), msg.value().c_str());
-  // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  return BT::NodeStatus::SUCCESS;
-}
+public:
+	tankTree(std::string bt_path,
+			   std::string bt_path_interaction,
+	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
+	           std::shared_ptr<tankModel> tank_ptr,
+	           std::shared_ptr<rclcpp::Node> node_ptr);
+	void tick_tree();
+	void tick_tree_interaction();
+
+private:
+  std::string bt_path_;
+  std::string bt_path_interaction_;
+  BT::Tree tree_;
+  BT::Tree tree_interaction_;
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+};
+
+} // namespace ghost_tank

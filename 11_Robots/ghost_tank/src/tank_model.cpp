@@ -21,7 +21,7 @@
  *   SOFTWARE.
  */
 
-#include <ghost_swerve/swerve_model.hpp>
+#include <ghost_tank/tank_model.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/math_util.hpp>
 #include <ghost_util/vector_util.hpp>
@@ -29,10 +29,10 @@
 
 using geometry::Line2d;
 using ghost_util::angleBetweenVectorsRadians;
-namespace ghost_swerve
+namespace ghost_tank
 {
 
-SwerveModel::SwerveModel(SwerveConfig config)
+TankModel::TankModel(TankConfig config)
 {
   m_config = config;
 
@@ -49,7 +49,7 @@ SwerveModel::SwerveModel(SwerveConfig config)
   }
 }
 
-void SwerveModel::validateConfig()
+void TankModel::validateConfig()
 {
   std::unordered_map<std::string, double> larger_than_zero_params{
     {"max_wheel_lin_vel", m_config.max_wheel_lin_vel},
@@ -66,7 +66,7 @@ void SwerveModel::validateConfig()
   for (const auto & [key, val] : larger_than_zero_params) {
     if (val <= 0) {
       std::string err_string =
-        std::string("[SwerveModel::validateConfig] Error: ") + key +
+        std::string("[TankModel::validateConfig] Error: ") + key +
         " must be non-zero and positive!";
       throw std::runtime_error(err_string);
     }
@@ -84,14 +84,14 @@ void SwerveModel::validateConfig()
   for (const auto & [key, val] : larger_or_equal_to_zero_params) {
     if (val < 0) {
       std::string err_string =
-        std::string("[SwerveModel::validateConfig] Error: ") + key + " must be positive!";
+        std::string("[TankModel::validateConfig] Error: ") + key + " must be positive!";
       throw std::runtime_error(err_string);
     }
   }
 
   if (m_config.module_positions.size() != 4) {
     throw std::runtime_error(
-            "[SwerveModel::validateConfig] Error: module_positions must be of size four (one for each module).");
+            "[TankModel::validateConfig] Error: module_positions must be of size four (one for each module).");
   }
 
   m_num_modules = m_config.module_positions.size();
@@ -112,17 +112,17 @@ void SwerveModel::validateConfig()
   m_world_angle_vel = 0.0;
 }
 
-void SwerveModel::calculateJacobians()
+void TankModel::calculateJacobians()
 {
   switch (m_config.module_type) {
-    case swerve_type_e::COAXIAL:
+    case tank_type_e::COAXIAL:
       {
         m_module_jacobian << m_config.wheel_ratio, 0.0, 0.0, m_config.steering_ratio;
         m_module_jacobian_inv << 1 / m_config.wheel_ratio, 0.0, 0.0, 1 / m_config.steering_ratio;
       }
       break;
 
-    case swerve_type_e::DIFFERENTIAL:
+    case tank_type_e::DIFFERENTIAL:
       {
         m_module_jacobian << m_config.wheel_ratio / 2.0, -m_config.wheel_ratio / 2.0,
           m_config.steering_ratio / 2.0, m_config.steering_ratio / 2.0;
@@ -167,7 +167,7 @@ void SwerveModel::calculateJacobians()
   }
 }
 
-void SwerveModel::calculateMaxBaseTwist()
+void TankModel::calculateMaxBaseTwist()
 {
   // Get Max Base Speeds
   double max_wheel_dist = 0.0;
@@ -179,23 +179,23 @@ void SwerveModel::calculateMaxBaseTwist()
   m_max_base_ang_vel = m_max_base_lin_vel / max_wheel_dist;
 }
 
-void SwerveModel::setModuleState(const std::string & name, ModuleState state)
+void TankModel::setModuleState(const std::string & name, ModuleState state)
 {
-  throwOnUnknownSwerveModule(name, "setModuleState");
+  throwOnUnknownTankModule(name, "setModuleState");
   state.steering_angle = ghost_util::WrapAngle360(state.steering_angle);
   m_previous_module_states[name] = m_current_module_states[name];
   m_current_module_states[name] = state;
 }
 
 // Assumes all module states have been updated prior to update
-void SwerveModel::updateSwerveModel()
+void TankModel::updateTankModel()
 {
   updateBaseTwist();
   calculateLeastSquaresICREstimate();
   calculateOdometry();
 }
 
-void SwerveModel::calculateLeastSquaresICREstimate()
+void TankModel::calculateLeastSquaresICREstimate()
 {
   // Update ICR Jacobian
   int n = 0;
@@ -249,7 +249,7 @@ void SwerveModel::calculateLeastSquaresICREstimate()
   m_icr_quality = 1 - log(f * m + 1) / log(f + 1);
 }
 
-void SwerveModel::updateBaseTwist()
+void TankModel::updateBaseTwist()
 {
   Eigen::VectorXd module_velocity_vector(2 * m_num_modules);
   int n = 0;
@@ -271,7 +271,7 @@ void SwerveModel::updateBaseTwist()
 }
 
 
-void SwerveModel::calculateKinematicSwerveControllerAngleControl(
+void TankModel::calculateKinematicTankControllerAngleControl(
   double right_cmd,
   double forward_cmd,
   double angle_cmd)
@@ -279,39 +279,39 @@ void SwerveModel::calculateKinematicSwerveControllerAngleControl(
   angle_cmd = ghost_util::WrapAngle2PI(angle_cmd);
   double vel_cmd =
     ghost_util::SmallestAngleDistRad(angle_cmd, getWorldAngleRad()) * m_config.angle_control_kp;
-  calculateKinematicSwerveControllerNormalized(right_cmd / 127.0, forward_cmd / 127.0, -vel_cmd);
+  calculateKinematicTankControllerNormalized(right_cmd / 127.0, forward_cmd / 127.0, -vel_cmd);
 }
 
-void SwerveModel::calculateKinematicSwerveControllerMoveToPoseWorld(
+void TankModel::calculateKinematicTankControllerMoveToPoseWorld(
   double des_x, double des_y,
   double angle_cmd)
 {
   double x_vel = (des_x - getOdometryLocation().x()) * m_config.move_to_pose_kp;
   double y_vel = (des_y - getOdometryLocation().y()) * m_config.move_to_pose_kp;
-  calculateKinematicSwerveControllerAngleControl(-y_vel, x_vel, angle_cmd);
+  calculateKinematicTankControllerAngleControl(-y_vel, x_vel, angle_cmd);
 }
 
 
-void SwerveModel::calculateKinematicSwerveControllerJoystick(
+void TankModel::calculateKinematicTankControllerJoystick(
   double right_cmd, double forward_cmd,
   double clockwise_cmd)
 {
-  calculateKinematicSwerveControllerNormalized(
+  calculateKinematicTankControllerNormalized(
     right_cmd / 127.0, forward_cmd / 127.0,
     clockwise_cmd / 127.0);
 }
 
-void SwerveModel::calculateKinematicSwerveControllerNormalized(
+void TankModel::calculateKinematicTankControllerNormalized(
   double right_cmd, double forward_cmd,
   double clockwise_cmd)
 {
-  calculateKinematicSwerveControllerVelocity(
+  calculateKinematicTankControllerVelocity(
     right_cmd * m_max_base_lin_vel,
     forward_cmd * m_max_base_lin_vel,
     clockwise_cmd * m_max_base_ang_vel);
 }
 
-void SwerveModel::calculateKinematicSwerveControllerVelocity(
+void TankModel::calculateKinematicTankControllerVelocity(
   double right_cmd, double forward_cmd,
   double clockwise_cmd)
 {
@@ -338,7 +338,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(
   // std::cout << "lin_vel_cmd: " << lin_vel_cmd << std::endl;
 
   // For combined linear and angular velocities, we scale down angular velocity (which tends to dominate).
-  if (m_swerve_heuristics_enabled) {
+  if (m_tank_heuristics_enabled) {
     if ((fabs(lin_vel_cmd) > m_max_base_lin_vel * m_config.velocity_scaling_threshold) &&
       (fabs(ang_vel_cmd) > m_max_base_ang_vel * m_config.velocity_scaling_threshold))
     {
@@ -448,7 +448,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(
     command.actuator_voltage_commands = m_module_jacobian_transpose * module_voltage_cmd;
   }
 
-  if (m_config.module_type == swerve_type_e::DIFFERENTIAL) {
+  if (m_config.module_type == tank_type_e::DIFFERENTIAL) {
     // Get largest velocity magnitude
     double max_velocity = 0.0;
     for (auto & [name, command] : m_module_commands) {
@@ -462,7 +462,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(
         command.actuator_velocity_commands *= (m_config.max_wheel_actuator_vel / max_velocity);
       }
     }
-  } else if (m_config.module_type == swerve_type_e::COAXIAL) {
+  } else if (m_config.module_type == tank_type_e::COAXIAL) {
     // Get largest velocity magnitude
     double max_velocity = 0.0;
     for (auto & [name, command] : m_module_commands) {
@@ -485,7 +485,7 @@ void SwerveModel::calculateKinematicSwerveControllerVelocity(
   }
 }
 
-void SwerveModel::calculateOdometry()
+void TankModel::calculateOdometry()
 {
   auto rotate_base_to_odom = Eigen::Rotation2D<double>(m_odom_angle).toRotationMatrix();
   m_odom_loc += rotate_base_to_odom *
@@ -494,30 +494,30 @@ void SwerveModel::calculateOdometry()
   m_odom_angle = ghost_util::WrapAngle2PI(m_odom_angle);
 }
 
-void SwerveModel::throwOnUnknownSwerveModule(
+void TankModel::throwOnUnknownTankModule(
   const std::string & name,
   const std::string & method_name) const
 {
   if (m_current_module_states.count(name) == 0) {
     throw std::runtime_error(
             std::string(
-              "[SwerveModel::" + method_name + "] Error:") + name +
-            " is not a known swerve module !");
+              "[TankModel::" + method_name + "] Error:") + name +
+            " is not a known tank module !");
   }
 }
 
-void SwerveModel::setModuleCommand(const std::string & name, ModuleCommand command)
+void TankModel::setModuleCommand(const std::string & name, ModuleCommand command)
 {
-  throwOnUnknownSwerveModule(name, "setModuleCommand");
+  throwOnUnknownTankModule(name, "setModuleCommand");
   command.steering_angle_command = ghost_util::WrapAngle360(command.steering_angle_command);
   m_previous_module_states[name] = m_current_module_states[name];
   m_module_commands[name] = command;
 }
 
-const ModuleCommand & SwerveModel::getModuleCommand(const std::string & name)
+const ModuleCommand & TankModel::getModuleCommand(const std::string & name)
 {
-  throwOnUnknownSwerveModule(name, "getModuleCommand");
+  throwOnUnknownTankModule(name, "getModuleCommand");
   return m_module_commands.at(name);
 }
 
-} // namespace ghost_swerve
+} // namespace ghost_tank

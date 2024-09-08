@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,141 +21,154 @@
  *   SOFTWARE.
  */
 
-#pragma once
-
-#include "eigen3/Eigen/Geometry"
-#include <ghost_tank/tank_model.hpp>
-#include <ghost_util/angle_util.hpp>
-#include <ghost_util/test_util.hpp>
-#include <gtest/gtest.h>
+#include "ghost_tank/bt_nodes/climb.hpp"
 
 namespace ghost_tank
 {
 
-namespace test
+Climb::Climb(
+  const std::string & name, const BT::NodeConfig & config, std::shared_ptr<rclcpp::Node> node_ptr,
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+  std::shared_ptr<tankModel> tank_ptr)
+: BT::StatefulActionNode(name, config),
+  node_ptr_(node_ptr),
+  rhi_ptr_(rhi_ptr),
+  tank_ptr_(tank_ptr)
 {
+}
 
-class tankModelTestFixture : public ::testing::Test
+// It is mandatory to define this STATIC method.
+BT::PortsList Climb::providedPorts()
 {
-public:
-  void SetUp() override
+  return {
+  };
+}
+
+template<typename T>
+T Climb::get_input(std::string key)
+{
+  BT::Expected<T> input = getInput<T>(key);
+  // Check if expected is valid. If not, throw its error
+  if (!input) {
+    throw BT::RuntimeError(
+            "missing required input [" + key + "]: ",
+            input.error());
+  }
+  return input.value();
+}
+
+/// Method called once, when transitioning from the state IDLE.
+/// If it returns RUNNING, this becomes an asynchronous node.
+BT::NodeStatus Climb::onStart()
+{
+  climbing_ = false;
+  reaching_ = true;
+  return BT::NodeStatus::RUNNING;
+}
+
+/// when the method halt() is called and the action is RUNNING, this method is invoked.
+/// This is a convenient place todo a cleanup, if needed.
+void Climb::onHalted()
+{
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
+
+  resetStatus();
+}
+
+BT::NodeStatus Climb::onRunning()
+{
+  auto m_digital_io = std::vector<bool>(8, false);
+  auto m_digital_io_name_map = std::unordered_map<std::string, size_t>{
+    {"tail", 0},
+    {"claw", 1}
+  };
+
+  bool claw_open;
+  auto status = BT::NodeStatus::RUNNING;
+
+  double lift_target_up = tank_ptr_->getConfig().lift_up_angle;
+  double lift_target_down = tank_ptr_->getConfig().lift_climbed_angle;
+
+  double posR = rhi_ptr_->getMotorPosition("lift_r1");
+  double posL = rhi_ptr_->getMotorPosition("lift_l1");
+  RCLCPP_INFO(node_ptr_->get_logger(), "up: %f", lift_target_up);
+  
+
+  if (posL > lift_target_up)
   {
-    m_config.max_wheel_lin_vel = 2.0;
-    m_config.steering_ratio = 13.0 / 44.0;
-    m_config.wheel_ratio = 13.0 / 44.0 * 30.0 / 14.0;
-    m_config.wheel_radius = 2.75 / 2.0;
-    m_config.steering_kp = 0.1;
-    m_config.max_wheel_actuator_vel = 600.0;
-    m_config.controller_dt = 0.01;
-
-    // Mobile robots use forward as X, left as Y, and up as Z so that travelling forward is zero degree heading.
-    // No, I don't like it either.
-    m_config.module_positions["front_right"] = Eigen::Vector2d(5.5, -5.5);
-    m_config.module_positions["front_left"] = Eigen::Vector2d(5.5, 5.5);
-    m_config.module_positions["back_right"] = Eigen::Vector2d(-5.5, -5.5);
-    m_config.module_positions["back_left"] = Eigen::Vector2d(-5.5, 5.5);
-
-    m_config.module_type = tank_type_e::COAXIAL;
-    m_coax_model_ptr = std::make_shared<tankModel>(m_config);
-
-    m_config.module_type = tank_type_e::DIFFERENTIAL;
-    m_diff_model_ptr = std::make_shared<tankModel>(m_config);
-
-    m_models.push_back(m_coax_model_ptr);
-    m_models.push_back(m_diff_model_ptr);
+    reaching_ = false;
+    climbing_ = true;
+  } else if (posL < lift_target_down && climbing_)
+  {
+    climbing_ = false;
+    reaching_ = false;
   }
 
-  static void checkInverse(Eigen::MatrixXd m, Eigen::MatrixXd m_inv)
-  {
-    // Matrices are square and equal size
-    EXPECT_EQ(m.rows(), m.cols());
-    EXPECT_EQ(m_inv.rows(), m_inv.cols());
-    EXPECT_EQ(m.rows(), m_inv.rows());
-
-    // Matrix times inverse should be identity
-    auto I1 = m * m_inv;
-    auto I2 = m_inv * m;
-
-    for (int row = 0; row < m.rows(); row++) {
-      for (int col = 0; col < m.cols(); col++) {
-        auto val = (row == col) ? 1.0 : 0.0;
-        EXPECT_NEAR(I1(row, col), val, m_eps);
-        EXPECT_NEAR(I2(row, col), val, m_eps);
-      }
-    }
+  if (reaching_) {
+    lift_target_ = lift_target_up;
+    claw_open = true;
+  } else if (climbing_) {
+    lift_target_ = lift_target_down;
+    claw_open = false;
+  } else {
+    // lift_target_ = lift_target_down;
+    claw_open = false;
   }
 
-  static ModuleState getRandomModuleState()
-  {
-    ModuleState s;
-    s.wheel_position = ghost_util::getRandomDouble();
-    s.wheel_velocity = ghost_util::getRandomDouble();
-    s.wheel_acceleration = ghost_util::getRandomDouble();
+  RCLCPP_INFO(node_ptr_->get_logger(), "target: %f", lift_target_);
 
-    s.steering_angle = ghost_util::getRandomDouble();
-    s.steering_velocity = ghost_util::getRandomDouble();
-    s.steering_acceleration = ghost_util::getRandomDouble();
-    return s;
+  m_digital_io[m_digital_io_name_map.at("claw")] = !claw_open;
+
+  rhi_ptr_->setDigitalIO(m_digital_io);
+
+  if (reaching_) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Reaching");
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 1.0);
+  } else if (climbing_) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Climbing");
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", -1.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", -1.0);
+  } else {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Done climbing");
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l1", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l1", 0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_l2", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_l2", 0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r1", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r1", 0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("lift_r2", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("lift_r2", 0);
   }
 
-  static ModuleCommand getRandomModuleCommand()
-  {
-    ModuleCommand s;
-    s.wheel_velocity_command = ghost_util::getRandomDouble();
-    s.wheel_voltage_command = ghost_util::getRandomDouble();
-    s.steering_angle_command = ghost_util::getRandomDouble();
-    s.steering_velocity_command = ghost_util::getRandomDouble();
-    s.steering_voltage_command = ghost_util::getRandomDouble();
-    s.actuator_velocity_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    s.actuator_voltage_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    return s;
-  }
-
-  template<typename T>
-  static bool listContainsEigenVector(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= expected.isApprox(vec);
-    }
-    return result;
-  }
-
-  template<typename T>
-  static bool listContainsElement(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= (expected == vec);
-    }
-    return result;
-  }
-
-  template<typename T>
-  static bool eigenVectorListsAreIdentical(
-    const std::vector<T> & list,
-    const std::vector<T> & expected)
-  {
-    if (list.size() != expected.size()) {
-      return false;
-    }
-
-    bool result = false;
-    for (int i = 0; i < list.size(); i++) {
-      result |= (list[i].isApprox(expected[i]));
-    }
-    return result;
-  }
-
-  std::vector<std::shared_ptr<tankModel>> m_models;
-  std::shared_ptr<tankModel> m_coax_model_ptr;
-  std::shared_ptr<tankModel> m_diff_model_ptr;
-  tankConfig m_config;
-  static constexpr double m_eps = 1e-6;
-};
-
-} // namespace test
+  return status;
+}
 
 } // namespace ghost_tank

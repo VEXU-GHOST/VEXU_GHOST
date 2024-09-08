@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,139 +23,39 @@
 
 #pragma once
 
-#include "eigen3/Eigen/Geometry"
-#include <ghost_tank/tank_model.hpp>
-#include <ghost_util/angle_util.hpp>
-#include <ghost_util/test_util.hpp>
-#include <gtest/gtest.h>
+#include <vector>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/Dense"
+#include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
+#include <ghost_util/unit_conversion_utils.hpp>
+#include "ghost_motion_planner_core/motion_planner.hpp"
+#include "ghost_planners/robot_trajectory.hpp"
+#include "ghost_tank/tank_model.hpp"
+#include "ghost_util/angle_util.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "tf2/LinearMath/Quaternion.h"
 
 namespace ghost_tank
 {
 
-namespace test
-{
+// using ghost_planners::CubicMotionPlanner;
+// using ghost_ros_interfaces::msg_helpers::toROSMsg;
 
-class tankModelTestFixture : public ::testing::Test
+class CubicMotionPlanner : public ghost_motion_planner::MotionPlanner
 {
+private:
+  Eigen::MatrixXf computeCubicCoeff(
+    double t0, double tf, std::vector<double> vec_q0,
+    std::vector<double> vec_qf);
+  std::tuple<std::vector<double>, std::vector<double>, std::vector<double>> computeCubicTraj(
+    std::vector<double> vec_q0,
+    std::vector<double> vec_qf,
+    double t0, double tf, int n);
+
 public:
-  void SetUp() override
-  {
-    m_config.max_wheel_lin_vel = 2.0;
-    m_config.steering_ratio = 13.0 / 44.0;
-    m_config.wheel_ratio = 13.0 / 44.0 * 30.0 / 14.0;
-    m_config.wheel_radius = 2.75 / 2.0;
-    m_config.steering_kp = 0.1;
-    m_config.max_wheel_actuator_vel = 600.0;
-    m_config.controller_dt = 0.01;
-
-    // Mobile robots use forward as X, left as Y, and up as Z so that travelling forward is zero degree heading.
-    // No, I don't like it either.
-    m_config.module_positions["front_right"] = Eigen::Vector2d(5.5, -5.5);
-    m_config.module_positions["front_left"] = Eigen::Vector2d(5.5, 5.5);
-    m_config.module_positions["back_right"] = Eigen::Vector2d(-5.5, -5.5);
-    m_config.module_positions["back_left"] = Eigen::Vector2d(-5.5, 5.5);
-
-    m_config.module_type = tank_type_e::COAXIAL;
-    m_coax_model_ptr = std::make_shared<tankModel>(m_config);
-
-    m_config.module_type = tank_type_e::DIFFERENTIAL;
-    m_diff_model_ptr = std::make_shared<tankModel>(m_config);
-
-    m_models.push_back(m_coax_model_ptr);
-    m_models.push_back(m_diff_model_ptr);
-  }
-
-  static void checkInverse(Eigen::MatrixXd m, Eigen::MatrixXd m_inv)
-  {
-    // Matrices are square and equal size
-    EXPECT_EQ(m.rows(), m.cols());
-    EXPECT_EQ(m_inv.rows(), m_inv.cols());
-    EXPECT_EQ(m.rows(), m_inv.rows());
-
-    // Matrix times inverse should be identity
-    auto I1 = m * m_inv;
-    auto I2 = m_inv * m;
-
-    for (int row = 0; row < m.rows(); row++) {
-      for (int col = 0; col < m.cols(); col++) {
-        auto val = (row == col) ? 1.0 : 0.0;
-        EXPECT_NEAR(I1(row, col), val, m_eps);
-        EXPECT_NEAR(I2(row, col), val, m_eps);
-      }
-    }
-  }
-
-  static ModuleState getRandomModuleState()
-  {
-    ModuleState s;
-    s.wheel_position = ghost_util::getRandomDouble();
-    s.wheel_velocity = ghost_util::getRandomDouble();
-    s.wheel_acceleration = ghost_util::getRandomDouble();
-
-    s.steering_angle = ghost_util::getRandomDouble();
-    s.steering_velocity = ghost_util::getRandomDouble();
-    s.steering_acceleration = ghost_util::getRandomDouble();
-    return s;
-  }
-
-  static ModuleCommand getRandomModuleCommand()
-  {
-    ModuleCommand s;
-    s.wheel_velocity_command = ghost_util::getRandomDouble();
-    s.wheel_voltage_command = ghost_util::getRandomDouble();
-    s.steering_angle_command = ghost_util::getRandomDouble();
-    s.steering_velocity_command = ghost_util::getRandomDouble();
-    s.steering_voltage_command = ghost_util::getRandomDouble();
-    s.actuator_velocity_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    s.actuator_voltage_commands = Eigen::Vector2d(
-      ghost_util::getRandomDouble(), ghost_util::getRandomDouble());
-    return s;
-  }
-
-  template<typename T>
-  static bool listContainsEigenVector(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= expected.isApprox(vec);
-    }
-    return result;
-  }
-
-  template<typename T>
-  static bool listContainsElement(const std::vector<T> & list, const T & expected)
-  {
-    bool result = false;
-    for (const auto & vec : list) {
-      result |= (expected == vec);
-    }
-    return result;
-  }
-
-  template<typename T>
-  static bool eigenVectorListsAreIdentical(
-    const std::vector<T> & list,
-    const std::vector<T> & expected)
-  {
-    if (list.size() != expected.size()) {
-      return false;
-    }
-
-    bool result = false;
-    for (int i = 0; i < list.size(); i++) {
-      result |= (list[i].isApprox(expected[i]));
-    }
-    return result;
-  }
-
-  std::vector<std::shared_ptr<tankModel>> m_models;
-  std::shared_ptr<tankModel> m_coax_model_ptr;
-  std::shared_ptr<tankModel> m_diff_model_ptr;
-  tankConfig m_config;
-  static constexpr double m_eps = 1e-6;
+  void initialize() override;
+  void generateMotionPlan(const ghost_msgs::msg::DrivetrainCommand::SharedPtr cmd) override;
 };
-
-} // namespace test
 
 } // namespace ghost_tank
