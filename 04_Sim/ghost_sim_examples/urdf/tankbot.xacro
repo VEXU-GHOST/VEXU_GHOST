@@ -7,9 +7,9 @@
     <xacro:property name="roller_width" value="0.0127"/>
     <xacro:property name="com_radius" value="0.02"/>
     <xacro:property name="d2r" value="${3.14159/180}"/>
-    <xacro:property name="mu" value="0.01"/>
-    <xacro:property name="mu2" value="1.0"/>
-    <xacro:property name="izz" value="0.000914"/>
+    <!-- <xacro:property name="mu" value="0.01"/>
+    <xacro:property name="mu2" value="1.0"/> -->
+    <xacro:property name="izz" value="0.0457126"/>
      <material name="white">
         <color rgba="1 1 1 1"/>
      </material>
@@ -139,18 +139,18 @@
     </joint>
 
  <!--Wheel Modules-->   
-    <xacro:wheel_macro id="front_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
-    <xacro:wheel_macro id="front_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
-    <xacro:wheel_macro id="back_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
-    <xacro:wheel_macro id="back_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
-    <xacro:wheel_macro id="middle_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
-    <xacro:wheel_macro id="middle_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="front_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8"  izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="front_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  collision_factor="8"  izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  collision_factor="8"  izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8"  izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="middle_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8"  izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="middle_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8"  izz="${izz}"></xacro:wheel_macro>
 
     <joint name="wheel_joint_back_left" type="continuous">
         <parent link="left_bar"/>
         <child link="wheel_link_back_left"/>
         <origin xyz="-0.0254 -0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/> 
-        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <!-- <dynamics damping="0.2" friction="0.2"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -158,7 +158,7 @@
         <parent link="right_bar"/>
         <child link="wheel_link_back_right"/>
         <origin xyz="0.0254 -0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <!-- <dynamics damping="0.2" friction="0.2"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -166,7 +166,7 @@
         <parent link="left_bar"/>
         <child link="wheel_link_front_left"/>
         <origin xyz="-0.0254 0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <!-- <dynamics damping="0.2" friction="0.2"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -174,7 +174,7 @@
         <parent link="right_bar"/>
         <child link="wheel_link_front_right"/>
         <origin xyz="0.0254 0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <!-- <dynamics damping="0.1" friction="0.1"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -182,7 +182,7 @@
         <parent link="left_bar"/>
         <child link="wheel_link_middle_left"/>
         <origin xyz="-0.0254 0 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <!-- <dynamics damping="0.1" friction="0.1"/> -->
         <axis xyz="0 0 1"/>
     </joint>
 
@@ -190,9 +190,35 @@
         <parent link="right_bar"/>
         <child link="wheel_link_middle_right"/>
         <origin xyz="0.0254 0 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
-        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <!-- <dynamics damping="0.1" friction="0.1"/>  -->
         <axis xyz="0 0 1"/>
     </joint>
 
+<gazebo>
+<plugin name="gazebo_torque_plugin" filename="libgazebo_torque_plugin.so">
+            <free_speed>130</free_speed>
+            <stall_torque>4.5</stall_torque>
+            <free_current>0.1</free_current>
+            <stall_current>4.5</stall_current>
+            <nominal_voltage>12.0</nominal_voltage>
+            <gear_ratio>1.0</gear_ratio>
+            <joint_names>
+            wheel_joint_middle_left
+            wheel_joint_middle_right
+            </joint_names>
+            <!-- Motor names must be formatted in this manner in order to index actuator jacobian -->
+            <motor_names>
+                DRIVE_LEFT_FRONT_LEFT_MOTOR
+                DRIVE_RIGHT_FRONT_LEFT_MOTOR
+                DRIVE_LEFT_BACK_LEFT_MOTOR
+                DRIVE_RIGHT_BACK_LEFT_MOTOR
+            </motor_names>            
+            <actuator_jacobian>
+                0.5     0.5      0           0         
+                0        0      0.5         0.5  
+            </actuator_jacobian>
+
+</plugin>
+</gazebo>
 
 </robot>

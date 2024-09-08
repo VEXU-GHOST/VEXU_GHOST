@@ -8,11 +8,15 @@
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <exec_depend>rviz2</exec_depend>
   <depend>ghost_sim</depend>
+  <depend>gazebo</depend>
+  <depend>gazebo_ros</depend>
+  <depend>ghost_control</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
