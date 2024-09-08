@@ -1,45 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="skills">
-  <BehaviorTree ID="skills">
+      main_tree_to_execute="interaction">
+
+  <BehaviorTree ID="interaction">
     <Sequence>
-      <Repeat num_cycles="-1">
-        <ReactiveSequence>
-          <Inverter>
-            <IntakeCmd in="false"/>
-          </Inverter>
-          <Repeat num_cycles="-1">
-            <SwipeTail num_swipes="40"/>
-          </Repeat>
-        </ReactiveSequence>
-      </Repeat>
-      <!-- <SubTree ID="push"/> -->
+      <MoveToPoseCubic posX="-1.1"
+                       posY="5.0"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-2000"
+                       speed="1.0"/>
+      <MoveToPoseCubic posX="-1.1"
+                       posY="1.5"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="1.0"/>
+      <!-- <Repeat num_cycles="-1">
+        <SubTree ID="block_bowling"
+                _autoremap="false"/>
+      </Repeat> -->
+      <Delay delay_msec="55000">
+        <MoveToPoseCubic posX="-1.1"
+                       posY="0.0"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-3000"
+                       speed="1.0"/>
+      </Delay>
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="push">
+  <BehaviorTree ID="block_bowling">
     <Sequence>
-      <MoveToPoseCubic posX="-1.5"
-                       posY="2.5"
-                       theta="180"
+      <MoveToPoseCubic posX="-2.0"
+                       posY="1.6"
+                       theta="0"
                        velX="0.0"
                        velY="0.0"
                        omega="0.0"
                        threshold="0.05"
                        angle_threshold="5.0"
-                       timeout="-1500"
+                       timeout="-2000"
                        speed="0.5"/>
-      <MoveToPoseCubic posX="1.0"
-                       posY="2.5"
-                       theta="180"
-                       velX="0.0"
-                       velY="0.0"
-                       omega="0.0"
-                       threshold="0.05"
-                       angle_threshold="5.0"
-                       timeout="-5000"
-                       speed="0.8"/>
-      </Sequence>
+      <Delay delay_msec="4000">
+        <MoveToPoseCubic posX="-1.4"
+                        posY="1.6"
+                        theta="-45"
+                        velX="0.0"
+                        velY="0.0"
+                        omega="0.0"
+                        threshold="0.05"
+                        angle_threshold="5.0"
+                        timeout="-2000"
+                        speed="0.5"/>
+      </Delay>
+    </Sequence>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
@@ -95,10 +123,6 @@
                   default="5000">ms</input_port>
       <input_port name="max_speed"
                   default="0.5">m.s</input_port>
-    </Action>
-    <Action ID="SwipeTail"
-            editable="true">
-      <input_port name="num_swipes"/>
     </Action>
   </TreeNodesModel>
 

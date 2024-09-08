@@ -2,6 +2,156 @@
 <root BTCPP_format="4"
       main_tree_to_execute="full_auton">
   <BehaviorTree ID="full_auton">
+    <Fallback>
+      <AutonTimer seconds="40">
+        <Sequence>
+          <MoveToPoseCubic posX="-0.5"
+                      posY="-1.5"
+                      theta="0"
+                      velX="0.0"
+                      velY="0.0"
+                      omega="0.0"
+                      threshold="0.10"
+                      angle_threshold="5.0"
+                      timeout="-2000"
+                      speed="0.8"/>
+          <MoveToPoseCubic posX="-1.0"
+                      posY="-1.0"
+                      theta="-90"
+                      velX="0.0"
+                      velY="0.0"
+                      omega="0.0"
+                      threshold="0.10"
+                      angle_threshold="5.0"
+                      timeout="-1500"
+                      speed="0.5"/>
+          <Repeat num_cycles="-1">
+            <Fallback>
+              <ReactiveSequence>
+                <Inverter>
+                  <IntakeCmd in="true"/>
+                </Inverter>
+                <SubTree ID="starting_balls"/>
+              </ReactiveSequence>
+              <SubTree ID="dump"/>
+            </Fallback>
+          </Repeat>
+        </Sequence>
+      </AutonTimer>
+      <MoveToPoseCubic posX="-1.0"
+                      posY="-0.5"
+                      theta="0"
+                      velX="0.0"
+                      velY="0.0"
+                      omega="0.0"
+                      threshold="0.10"
+                      angle_threshold="5.0"
+                      timeout="5000"
+                      speed="0.5"/>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="dump">
+    <Sequence>
+      <MoveToPoseCubic posX="-1.0"
+                  posY="-1.2"
+                  theta="180"
+                  velX="0.0"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.10"
+                  angle_threshold="5.0"
+                  timeout="-1500"
+                  speed="0.5"/>
+      <MoveToPoseCubic posX="-0.7"
+                  posY="-1.2"
+                  theta="180"
+                  velX="0.0"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.10"
+                  angle_threshold="5.0"
+                  timeout="-1500"
+                  speed="0.5"/>
+      <ReactiveFallback>
+        <IntakeCmd in="false"/>
+        <MoveToPoseCubic posX="-0.3"
+                  posY="-1.2"
+                  theta="180"
+                  velX="0.0"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.10"
+                  angle_threshold="5.0"
+                  timeout="-1500"
+                  speed="0.7"/>
+      </ReactiveFallback>
+      <MoveToPoseCubic posX="-1.0"
+                  posY="-1.2"
+                  theta="-90"
+                  velX="0.0"
+                  velY="0.0"
+                  omega="0.0"
+                  threshold="0.10"
+                  angle_threshold="5.0"
+                  timeout="-1000"
+                  speed="0.5"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="starting_balls">
+    <Sequence>
+      <MoveToPoseCubic posX="-1.1"
+                       posY="-1.0"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-1000"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="-1.1"
+                       posY="-0.8"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-1000"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="-1.1"
+                       posY="-0.6"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-1000"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="-0.3"
+                       posY="-1.0"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-1000"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="-0.3"
+                       posY="-0.6"
+                       theta="-90"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-1000"
+                       speed="0.5"/>
+      </Sequence>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->

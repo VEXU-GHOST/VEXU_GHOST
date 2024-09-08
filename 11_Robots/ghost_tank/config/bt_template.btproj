@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="Project">
+    <include path="bt.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="CheckForRestart" editable="true"/>
+        <Action ID="MoveToPoseCubic" editable="true">
+            <input_port name="posX"/>
+            <input_port name="posY"/>
+            <input_port name="angle"/>
+            <input_port name="velX"/>
+            <input_port name="velY"/>
+            <input_port name="omega"/>
+        </Action>
+        <Action ID="SaySomething" editable="true">
+            <input_port name="message"/>
+        </Action>
+    </TreeNodesModel>
+</root>

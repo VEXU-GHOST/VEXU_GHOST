@@ -32,16 +32,16 @@
 #include <ghost_util/unit_conversion_utils.hpp>
 #include "math/line2d.h"
 
-namespace ghost_tank
+namespace ghost_swerve
 {
 
-enum tank_type_e
+enum swerve_type_e
 {
   COAXIAL,
   DIFFERENTIAL
 };
 
-struct tankConfig
+struct SwerveConfig
 {
   // Maximum linear speed of robot base (or linear velocity of wheel surface).
   double max_wheel_lin_vel;
@@ -49,7 +49,7 @@ struct tankConfig
   double max_ang_vel_slew = 1.0;
 
   // Module Config
-  tank_type_e module_type;
+  swerve_type_e module_type;
   double steering_ratio;
   double wheel_ratio;
   double wheel_radius;
@@ -159,23 +159,23 @@ struct ModuleCommand
   }
 };
 
-class tankModel
+class SwerveModel
 {
 public:
-  tankModel(tankConfig config);
+  SwerveModel(SwerveConfig config);
 
   /**
-   * @brief Get the tank Model Configration
+   * @brief Get the Swerve Model Configration
    *
-   * @return const tankConfig&
+   * @return const SwerveConfig&
    */
-  const tankConfig & getConfig()
+  const SwerveConfig & getConfig()
   {
     return m_config;
   }
 
   /**
-   * @brief Updates a tank module state by module name.
+   * @brief Updates a swerve module state by module name.
    *
    * @param name
    * @param state
@@ -183,37 +183,37 @@ public:
   void setModuleState(const std::string & name, ModuleState state);
 
   /**
-   * @brief Calculates various attributes of the tank model based on the current Module States. Call after updating
+   * @brief Calculates various attributes of the swerve model based on the current Module States. Call after updating
    * all modules with new sensor data.
    */
-  void updatetankModel();
+  void updateSwerveModel();
 
   /**
-   * @brief Return current state of a given tank Module.
+   * @brief Return current state of a given Swerve Module.
    *
    * @param name
    * @return const ModuleState&
    */
   const ModuleState & getCurrentModuleState(const std::string & name)
   {
-    throwOnUnknowntankModule(name, "getCurrentModuleState");
+    throwOnUnknownSwerveModule(name, "getCurrentModuleState");
     return m_current_module_states.at(name);
   }
 
   /**
-   * @brief Return the previous state of a given tank Module.
+   * @brief Return the previous state of a given Swerve Module.
    *
    * @param name
    * @return const ModuleState&
    */
   const ModuleState & getPreviousModuleState(const std::string & name)
   {
-    throwOnUnknowntankModule(name, "getPreviousModuleState");
+    throwOnUnknownSwerveModule(name, "getPreviousModuleState");
     return m_previous_module_states.at(name);
   }
 
   /**
-   * @brief Updates a tank module command by module name.
+   * @brief Updates a swerve module command by module name.
    *
    * @param name
    * @param command
@@ -221,7 +221,7 @@ public:
   void setModuleCommand(const std::string & name, ModuleCommand command);
 
   /**
-   * @brief Gets a tank module command by name.
+   * @brief Gets a swerve module command by name.
    *
    * @param name
    * @param state
@@ -338,20 +338,20 @@ public:
    * @param forward
    * @param clockwise
    */
-  void calculateKinematictankControllerNormalized(
+  void calculateKinematicSwerveControllerNormalized(
     double right_cmd, double forward_cmd,
     double clockwise_cmd);
-  void calculateKinematictankControllerJoystick(
+  void calculateKinematicSwerveControllerJoystick(
     double right_cmd, double forward_cmd,
     double clockwise_cmd);
-  void calculateKinematictankControllerVelocity(
+  void calculateKinematicSwerveControllerVelocity(
     double right_cmd, double forward_cmd,
     double clockwise_cmd);
 
-  void calculateKinematictankControllerAngleControl(
+  void calculateKinematicSwerveControllerAngleControl(
     double right_cmd, double forward_cmd,
     double angle_cmd);
-  void calculateKinematictankControllerMoveToPoseWorld(
+  void calculateKinematicSwerveControllerMoveToPoseWorld(
     double des_x, double des_y,
     double angle_cmd);
 
@@ -458,14 +458,14 @@ public:
     return m_auto_status;
   }
 
-  void enabletankHeuristics()
+  void enableSwerveHeuristics()
   {
-    m_tank_heuristics_enabled = true;
+    m_swerve_heuristics_enabled = true;
   }
 
-  void disabletankHeuristics()
+  void disableSwerveHeuristics()
   {
-    m_tank_heuristics_enabled = false;
+    m_swerve_heuristics_enabled = false;
   }
 
   void setAutonTime(double time)
@@ -484,7 +484,7 @@ protected:
   void calculateMaxBaseTwist();
 
   // Error Catching
-  void throwOnUnknowntankModule(const std::string & name, const std::string & method_name) const;
+  void throwOnUnknownSwerveModule(const std::string & name, const std::string & method_name) const;
 
   // Model Updates
   void calculateLeastSquaresICREstimate();
@@ -493,14 +493,14 @@ protected:
   void updateICREstimate();
 
   // Configuration
-  tankConfig m_config;
+  SwerveConfig m_config;
   double m_max_base_lin_vel = 0;
   double m_max_base_ang_vel = 0;
   int m_num_modules = 0;
   double m_lin_vel_slew;
   double m_ang_slew;
   double LIN_VEL_TO_RPM;
-  bool m_tank_heuristics_enabled = true;
+  bool m_swerve_heuristics_enabled = true;
 
   // Jacobians
   Eigen::Matrix2d m_module_jacobian;                            // Maps actuator velocities to joint velocities
@@ -554,4 +554,4 @@ protected:
   double m_auton_time = 0.0;
 };
 
-} // namespace ghost_tank
+} // namespace ghost_swerve

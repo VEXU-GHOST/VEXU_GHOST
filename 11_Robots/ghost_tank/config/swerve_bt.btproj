@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="Project">
+    <include path="bt.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="CheckForRestart" editable="true"/>
+        <Action ID="Logging" editable="true">
+            <input_port name="message"/>
+        </Action>
+        <Action ID="MoveToPoseCubic" editable="true">
+            <input_port name="posX">m</input_port>
+            <input_port name="posY">m</input_port>
+            <input_port name="theta">deg</input_port>
+            <input_port name="threshold" default="0.025">m</input_port>
+            <input_port name="timeout" default="5000">ms</input_port>
+        </Action>
+        <Action ID="SetWing" editable="true">
+            <input_port name="state"/>
+        </Action>
+        <Action ID="SwipeTail" editable="true">
+            <input_port name="num_swipes"/>
+        </Action>
+    </TreeNodesModel>
+</root>
