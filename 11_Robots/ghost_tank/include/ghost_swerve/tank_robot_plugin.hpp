@@ -44,10 +44,10 @@
 namespace ghost_tank
 {
 
-class tankRobotPlugin : public ghost_ros_interfaces::V5RobotBase
+class TankRobotPlugin : public ghost_ros_interfaces::V5RobotBase
 {
 public:
-  tankRobotPlugin();
+  TankRobotPlugin();
 
   void initialize() override;
   void disabled() override;

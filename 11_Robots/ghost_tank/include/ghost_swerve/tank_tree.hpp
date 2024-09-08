@@ -43,10 +43,10 @@
 namespace ghost_tank
 {
 
-class tankTree
+class TankTree
 {
 public:
-	tankTree(std::string bt_path,
+	TankTree(std::string bt_path,
 			   std::string bt_path_interaction,
 	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
 	           std::shared_ptr<tankModel> tank_ptr,

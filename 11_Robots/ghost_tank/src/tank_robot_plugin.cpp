@@ -35,21 +35,19 @@ using std::placeholders::_1;
 namespace ghost_tank
 {
 
-tankRobotPlugin::tankRobotPlugin()
+TankRobotPlugin::TankRobotPlugin()
 {
-  m_digital_io = std::vector<bool>(8, false);
-  m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-    {"tail", 0},
-    {"claw", 1}
-  };
+  // TODO: test and implement digital io in rhi
+  // m_digital_io = std::vector<bool>(8, false);
+  // m_digital_io_name_map = std::unordered_map<std::string, size_t>{
+  //   {"tail", 0},
+  //   {"claw", 1}
+  // };
 }
 
-void tankRobotPlugin::initialize()
+void TankRobotPlugin::initialize()
 {
-  std::cout << "tank Robot Initialization!" << std::endl;
-
-  // node_ptr_->declare_parameter("trajectory_topic", "/motion_planning/trajectory");
-  // std::string trajectory_topic = node_ptr_->get_parameter("trajectory_topic").as_string();
+  std::cout << "Tank Robot Initialization!" << std::endl;
 
   node_ptr_->declare_parameter("odom_topic", "/sensors/wheel_odom");
   std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
@@ -63,12 +61,14 @@ void tankRobotPlugin::initialize()
   node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
   std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
 
-  node_ptr_->declare_parameter("marker_array_topic", "/tank_markers");
-  std::string marker_array_topic = node_ptr_->get_parameter("marker_array_topic").as_string();
+  // vizualization
 
-  node_ptr_->declare_parameter("trajectory_marker_topic", "/trajectory_markers");
-  std::string trajectory_marker_topic =
-    node_ptr_->get_parameter("trajectory_marker_topic").as_string();
+  // node_ptr_->declare_parameter("marker_array_topic", "/tank_markers");
+  // std::string marker_array_topic = node_ptr_->get_parameter("marker_array_topic").as_string();
+
+  // node_ptr_->declare_parameter("trajectory_marker_topic", "/trajectory_markers");
+  // std::string trajectory_marker_topic =
+  //   node_ptr_->get_parameter("trajectory_marker_topic").as_string();
 
   node_ptr_->declare_parameter("tank_robot_plugin.joy_angle_control_threshold", 0.0);
   m_joy_angle_control_threshold = node_ptr_->get_parameter(
@@ -76,7 +76,8 @@ void tankRobotPlugin::initialize()
 
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
-
+  
+  // for vex ai
   node_ptr_->declare_parameter<std::string>("bt_path_interaction");
   std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
 
@@ -99,148 +100,49 @@ void tankRobotPlugin::initialize()
   m_k8 = node_ptr_->get_parameter("tank_robot_plugin.k8").as_double();
   m_k9 = node_ptr_->get_parameter("tank_robot_plugin.k9").as_double();
 
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.0);
-  m_move_to_pose_kp_xy =
-    node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy", 0.0);
-  m_move_to_pose_kd_xy =
-    node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
+  // move to pose params
 
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta", 0.0);
-  m_move_to_pose_kp_theta =
-    node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.0);
-  m_move_to_pose_kd_theta =
-    node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
+  // node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.0);
+  // m_move_to_pose_kp_xy =
+  //   node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
+  // node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy", 0.0);
+  // m_move_to_pose_kd_xy =
+  //   node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
 
-  node_ptr_->declare_parameter("tank_robot_plugin.joystick_slew_rate", 0.0);
-  m_joystick_slew_rate =
-    node_ptr_->get_parameter("tank_robot_plugin.joystick_slew_rate").as_double();
+  // node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta", 0.0);
+  // m_move_to_pose_kp_theta =
+  //   node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
+  // node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.0);
+  // m_move_to_pose_kd_theta =
+  //   node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
 
   // Setup tank Model
-  tankConfig tank_model_config;
-  tank_model_config.module_type = tank_type_e::DIFFERENTIAL;
-  tank_model_config.steering_ratio = 13.0 / 44.0;
-  tank_model_config.wheel_ratio = tank_model_config.steering_ratio * 30.0 / 14.0;
-  tank_model_config.wheel_radius = 2.75 / 2.0;
+  TankConfig tank_model_config;
+  // TODO: define config params
+  // tank_model_config.steering_ratio = 13.0 / 44.0;
+  // tank_model_config.wheel_ratio = tank_model_config.steering_ratio * 30.0 / 14.0;
+  // tank_model_config.wheel_radius = 2.75 / 2.0;
 
-  node_ptr_->declare_parameter("tank_robot_plugin.angle_control_kp", 0.2);
-  tank_model_config.angle_control_kp = node_ptr_->get_parameter(
-    "tank_robot_plugin.angle_control_kp").as_double();
+  // initial position params
+  node_ptr_->declare_parameter("tank_robot_plugin.init_world_x", m_init_world_x);
+  node_ptr_->declare_parameter("tank_robot_plugin.init_world_y", m_init_world_y);
+  node_ptr_->declare_parameter("tank_robot_plugin.init_world_theta", m_init_world_theta);
 
-  tank_model_config.move_to_pose_kp = m_move_to_pose_kp_xy;
-
-  // tank Steering Controller
-  node_ptr_->declare_parameter("tank_robot_plugin.steering_kp", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.steering_kd", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.steering_ki", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.steering_ki_limit", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.controller_dt", 0.01);
-  node_ptr_->declare_parameter("tank_robot_plugin.steering_control_deadzone", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.angle_heuristic_start_angle", 0.01);
-  node_ptr_->declare_parameter("tank_robot_plugin.angle_heuristic_end_angle", 0.0);
-  tank_model_config.angle_heuristic_start_angle = node_ptr_->get_parameter(
-    "tank_robot_plugin.angle_heuristic_start_angle").as_double();
-  tank_model_config.angle_heuristic_end_angle = node_ptr_->get_parameter(
-    "tank_robot_plugin.angle_heuristic_end_angle").as_double();
-  tank_model_config.steering_kp =
-    node_ptr_->get_parameter("tank_robot_plugin.steering_kp").as_double();
-  tank_model_config.steering_kd =
-    node_ptr_->get_parameter("tank_robot_plugin.steering_kd").as_double();
-  tank_model_config.steering_ki =
-    node_ptr_->get_parameter("tank_robot_plugin.steering_ki").as_double();
-  tank_model_config.steering_ki_limit = node_ptr_->get_parameter(
-    "tank_robot_plugin.steering_ki_limit").as_double();
-  tank_model_config.controller_dt =
-    node_ptr_->get_parameter("tank_robot_plugin.controller_dt").as_double();
-  tank_model_config.steering_control_deadzone = node_ptr_->get_parameter(
-    "tank_robot_plugin.steering_control_deadzone").as_double();
-
-  // Combined Motion Scaling
-  node_ptr_->declare_parameter("tank_robot_plugin.velocity_scaling_ratio", 1.0);
-  tank_model_config.velocity_scaling_ratio = node_ptr_->get_parameter(
-    "tank_robot_plugin.velocity_scaling_ratio").as_double();
-  node_ptr_->declare_parameter("tank_robot_plugin.velocity_scaling_threshold", 0.7);
-  tank_model_config.velocity_scaling_threshold = node_ptr_->get_parameter(
-    "tank_robot_plugin.velocity_scaling_threshold").as_double();
-
-  node_ptr_->declare_parameter("tank_robot_plugin.m_init_world_x", m_init_world_x);
-  node_ptr_->declare_parameter("tank_robot_plugin.m_init_world_y", m_init_world_y);
-  node_ptr_->declare_parameter("tank_robot_plugin.m_init_world_theta", m_init_world_theta);
-
-  m_init_world_x = node_ptr_->get_parameter("tank_robot_plugin.m_init_world_x").as_double();
-  m_init_world_y = node_ptr_->get_parameter("tank_robot_plugin.m_init_world_y").as_double();
+  m_init_world_x = node_ptr_->get_parameter("tank_robot_plugin.init_world_x").as_double();
+  m_init_world_y = node_ptr_->get_parameter("tank_robot_plugin.init_world_y").as_double();
   m_init_world_theta =
-    node_ptr_->get_parameter("tank_robot_plugin.m_init_world_theta").as_double();
+    node_ptr_->get_parameter("tank_robot_plugin.init_world_theta").as_double();
 
-  node_ptr_->declare_parameter("tank_robot_plugin.m_init_sigma_x", m_init_sigma_x);
-  node_ptr_->declare_parameter("tank_robot_plugin.m_init_sigma_y", m_init_sigma_y);
-  node_ptr_->declare_parameter("tank_robot_plugin.m_init_sigma_theta", m_init_sigma_theta);
+  node_ptr_->declare_parameter("tank_robot_plugin.init_sigma_x", m_init_sigma_x);
+  node_ptr_->declare_parameter("tank_robot_plugin.init_sigma_y", m_init_sigma_y);
+  node_ptr_->declare_parameter("tank_robot_plugin.init_sigma_theta", m_init_sigma_theta);
 
-  m_init_sigma_x = node_ptr_->get_parameter("tank_robot_plugin.m_init_sigma_x").as_double();
-  m_init_sigma_y = node_ptr_->get_parameter("tank_robot_plugin.m_init_sigma_y").as_double();
+  m_init_sigma_x = node_ptr_->get_parameter("tank_robot_plugin.init_sigma_x").as_double();
+  m_init_sigma_y = node_ptr_->get_parameter("tank_robot_plugin.init_sigma_y").as_double();
   m_init_sigma_theta =
-    node_ptr_->get_parameter("tank_robot_plugin.m_init_sigma_theta").as_double();
-
-  node_ptr_->declare_parameter("tank_robot_plugin.lift_gear_ratio", 1.);
-  node_ptr_->declare_parameter("tank_robot_plugin.lift_up_angle_deg", 1.);
-  node_ptr_->declare_parameter("tank_robot_plugin.lift_climbed_angle_deg", 1.);
-  node_ptr_->declare_parameter("tank_robot_plugin.lift_kP", 1.);
-  node_ptr_->declare_parameter("tank_robot_plugin.lift_speed", 1.);
-  double gear_ratio = node_ptr_->get_parameter("tank_robot_plugin.lift_gear_ratio").as_double();
-  tank_model_config.lift_up_angle = node_ptr_->get_parameter(
-    "tank_robot_plugin.lift_up_angle_deg").as_double();
-  tank_model_config.lift_climbed_angle = node_ptr_->get_parameter(
-    "tank_robot_plugin.lift_climbed_angle_deg").as_double();
-  tank_model_config.lift_kP = node_ptr_->get_parameter("tank_robot_plugin.lift_kP").as_double();
-  tank_model_config.lift_speed =
-    node_ptr_->get_parameter("tank_robot_plugin.lift_speed").as_double();
-
-  node_ptr_->declare_parameter("tank_robot_plugin.stick_gear_ratio", 1.);
-  node_ptr_->declare_parameter("tank_robot_plugin.stick_angle_start", 1.);
-  node_ptr_->declare_parameter("tank_robot_plugin.stick_angle_kick", 1.);
-  // node_ptr_->declare_parameter("tank_robot_plugin.stick_angle_normal", 1.);
-  // node_ptr_->declare_parameter("tank_robot_plugin.stick_angle_soft_limit_offset", 1.);
-  gear_ratio = node_ptr_->get_parameter("tank_robot_plugin.stick_gear_ratio").as_double();
-
-  m_stick_angle_start = gear_ratio * node_ptr_->get_parameter(
-    "tank_robot_plugin.stick_angle_start").as_double();
-  m_stick_angle_kick = gear_ratio *
-    node_ptr_->get_parameter("tank_robot_plugin.stick_angle_kick").as_double();
-  // tank_model_config.stick_angle_normal = gear_ratio * node_ptr_->get_parameter("tank_robot_plugin.stick_angle_normal").as_double();
-  // tank_model_config.stick_turn_offset = gear_ratio * node_ptr_->get_parameter("tank_robot_plugin.stick_angle_soft_limit_offset").as_double();
-
-  node_ptr_->declare_parameter("tank_robot_plugin.max_wheel_actuator_vel", 625.0);
-  tank_model_config.max_wheel_actuator_vel = node_ptr_->get_parameter(
-    "tank_robot_plugin.max_wheel_actuator_vel").as_double();
-
-  auto wheel_rad_per_sec = ghost_util::RPM_TO_RAD_PER_SEC *
-    tank_model_config.max_wheel_actuator_vel * tank_model_config.wheel_ratio;
-  tank_model_config.max_wheel_lin_vel = wheel_rad_per_sec * tank_model_config.wheel_radius *
-    ghost_util::INCHES_TO_METERS;
-
-  node_ptr_->declare_parameter("tank_robot_plugin.intake_setpoint", 7.0);
-  m_intake_setpoint = node_ptr_->get_parameter("tank_robot_plugin.intake_setpoint").as_double();
-
-  node_ptr_->declare_parameter("tank_robot_plugin.max_ang_vel_slew", 0.);       // 0 should stop the robot from moving when the param is not set
-  tank_model_config.max_ang_vel_slew = node_ptr_->get_parameter(
-    "tank_robot_plugin.max_ang_vel_slew").as_double();
-  node_ptr_->declare_parameter("tank_robot_plugin.max_lin_vel_slew", 0.);
-  tank_model_config.max_lin_vel_slew = node_ptr_->get_parameter(
-    "tank_robot_plugin.max_lin_vel_slew").as_double();
-
-  tank_model_config.module_positions["left_front"] = Eigen::Vector2d(0.15875, 0.15875);
-  tank_model_config.module_positions["right_front"] = Eigen::Vector2d(0.15875, -0.15875);
-  tank_model_config.module_positions["left_back"] = Eigen::Vector2d(-0.15875, 0.15875);
-  tank_model_config.module_positions["right_back"] = Eigen::Vector2d(-0.15875, -0.15875);
+    node_ptr_->get_parameter("tank_robot_plugin.init_sigma_theta").as_double();
 
   m_tank_model_ptr = std::make_shared<tankModel>(tank_model_config);
-  m_tank_model_ptr->setFieldOrientedControl(true);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.burnout_absolute_current_threshold_ma", 1000.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.burnout_absolute_velocity_threshold_rpm", 50.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.burnout_stall_duration_ms", 1000);
-  node_ptr_->declare_parameter("tank_robot_plugin.burnout_cooldown_duration_ms", 1000);
 
   m_burnout_absolute_current_threshold_ma = node_ptr_->get_parameter(
     "tank_robot_plugin.burnout_absolute_current_threshold_ma").as_double();
@@ -255,13 +157,12 @@ void tankRobotPlugin::initialize()
   m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
     pose_topic,
     10,
-    std::bind(&tankRobotPlugin::worldOdometryUpdateCallback, this, _1));
+    std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
 
   m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
     backup_pose_topic,
     10,
-    std::bind(&tankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
-
+    std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
 
   m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
     odom_topic,
@@ -279,10 +180,10 @@ void tankRobotPlugin::initialize()
     trajectory_marker_topic,
     10);
 
+  // TODO: parameterize these topics
   m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     "/cmd_vel",
     10);
-
 
   m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
     "bag_recorder/start");
@@ -310,57 +211,13 @@ void tankRobotPlugin::initialize()
     "/des_pos",
     10);
 
-  // resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
-
   bt_ = std::make_shared<tankTree>(
     bt_path, bt_path_interaction, rhi_ptr_, m_tank_model_ptr,
     node_ptr_);
 }
 
-void tankRobotPlugin::onNewSensorData()
+void TankRobotPlugin::onNewSensorData()
 {
-  auto module_jacobian = m_tank_model_ptr->getModuleJacobian();
-
-  std::unordered_map<std::string,
-    std::tuple<std::string, std::string, std::string>> module_motor_mapping{
-    {"left_front", std::tuple<std::string, std::string, std::string>(
-        "drive_fll", "drive_flr",
-        "steering_front_left")},
-    {"right_front", std::tuple<std::string, std::string, std::string>(
-        "drive_frr", "drive_frl",
-        "steering_front_right")},
-    {"left_back", std::tuple<std::string, std::string, std::string>(
-        "drive_bll", "drive_blr",
-        "steering_back_left")},
-    {"right_back", std::tuple<std::string, std::string, std::string>(
-        "drive_brr", "drive_brl",
-        "steering_back_right")}};
-
-  // Update each tank module from new device data
-  for (const auto &[module_name, device_name_tuple] : module_motor_mapping) {
-    // Get Device Names for this module
-    std::string m1_name = std::get<0>(device_name_tuple);
-    std::string m2_name = std::get<1>(device_name_tuple);
-    std::string steering_name = std::get<2>(device_name_tuple);
-
-    // Make a new tank state to update the model
-    ModuleState new_state;
-
-    // Populate
-    auto m1_position = rhi_ptr_->getMotorPosition(m1_name);
-    auto m2_position = rhi_ptr_->getMotorPosition(m2_name);
-    new_state.wheel_position = (module_jacobian * Eigen::Vector2d(m1_position, m2_position))[0];
-
-    auto m1_velocity = rhi_ptr_->getMotorVelocityRPM(m1_name);
-    auto m2_velocity = rhi_ptr_->getMotorVelocityRPM(m2_name);
-    new_state.wheel_velocity = (module_jacobian * Eigen::Vector2d(m1_velocity, m2_velocity))[0];
-
-    new_state.steering_angle = rhi_ptr_->getRotationSensorAngleDegrees(steering_name);
-    new_state.steering_velocity = rhi_ptr_->getRotationSensorVelocityRPM(steering_name);
-
-    m_tank_model_ptr->setModuleState(module_name, new_state);
-  }
-
   sensor_msgs::msg::Imu imu_msg{};
   imu_msg.header.frame_id = "imu_link";
   imu_msg.header.stamp = node_ptr_->get_clock()->now();
@@ -376,7 +233,7 @@ void tankRobotPlugin::onNewSensorData()
     imu_msg.orientation.y, imu_msg.orientation.z);
   imu_pub->publish(imu_msg);
 
-  m_tank_model_ptr->updatetankModel();
+  m_tank_model_ptr->updateTankModel();
 
   publishOdometry();
   publishVisualization();
@@ -384,11 +241,11 @@ void tankRobotPlugin::onNewSensorData()
   // publishTrajectoryVisualization();
 }
 
-void tankRobotPlugin::disabled()
+void TankRobotPlugin::disabled()
 {
 }
 
-void tankRobotPlugin::autonomous(double current_time)
+void TankRobotPlugin::autonomous(double current_time)
 {
   std::cout << "Autonomous: " << current_time << std::endl;
   std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
@@ -511,7 +368,8 @@ float tempPID(
   return pos - pos_want;
 }
 
-void tankRobotPlugin::resetPose(double x, double y, double theta)
+// TODO: should/can this also reset ekf?
+void TankRobotPlugin::resetPose(double x, double y, double theta)
 {
   std::cout << "Resetting Pose!" << std::endl;
   m_last_odom_loc = m_curr_odom_loc;
@@ -544,7 +402,7 @@ void tankRobotPlugin::resetPose(double x, double y, double theta)
   m_set_pose_publisher->publish(msg);
 }
 
-void tankRobotPlugin::teleop(double current_time)
+void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
   m_tank_model_ptr->enabletankHeuristics();
@@ -801,7 +659,7 @@ void tankRobotPlugin::teleop(double current_time)
   }
 }
 
-void tankRobotPlugin::updateDrivetrainMotors()
+void TankRobotPlugin::updateDrivetrainMotors()
 {
   std::unordered_map<std::string,
     std::pair<std::string, std::string>> module_actuator_motor_mapping{
@@ -833,7 +691,7 @@ void tankRobotPlugin::updateDrivetrainMotors()
 }
 
 
-void tankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
+void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
   if (!m_use_backup_estimator) {
     double theta = ghost_util::quaternionToYawRad(
@@ -850,7 +708,7 @@ void tankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry:
   }
 }
 
-void tankRobotPlugin::worldOdometryUpdateCallbackBackup(
+void TankRobotPlugin::worldOdometryUpdateCallbackBackup(
   const nav_msgs::msg::Odometry::SharedPtr msg)
 {
   if (m_use_backup_estimator) {
@@ -868,7 +726,7 @@ void tankRobotPlugin::worldOdometryUpdateCallbackBackup(
   }
 }
 
-void tankRobotPlugin::publishBaseTwist()
+void TankRobotPlugin::publishBaseTwist()
 {
   geometry_msgs::msg::Twist msg{};
   auto base_vel_cmd = m_tank_model_ptr->getBaseVelocityCommand();
@@ -878,7 +736,7 @@ void tankRobotPlugin::publishBaseTwist()
   m_base_twist_cmd_pub->publish(msg);
 }
 
-void tankRobotPlugin::publishOdometry()
+void TankRobotPlugin::publishOdometry()
 {
   m_curr_odom_loc = m_tank_model_ptr->getOdometryLocation();
   m_curr_odom_angle = m_tank_model_ptr->getOdometryAngle();
@@ -963,7 +821,7 @@ void tankRobotPlugin::publishOdometry()
   m_last_odom_angle = m_curr_odom_angle;
 }
 
-void tankRobotPlugin::publishVisualization()
+void TankRobotPlugin::publishVisualization()
 {
   std::unordered_map<std::string, std::pair<std::string, std::string>> joint_name_map{
     {"left_front", std::pair<std::string, std::string>(
@@ -1082,7 +940,7 @@ void tankRobotPlugin::publishVisualization()
   m_tank_viz_pub->publish(viz_msg);
 }
 
-void tankRobotPlugin::publishTrajectoryVisualization()
+void TankRobotPlugin::publishTrajectoryVisualization()
 {
   visualization_msgs::msg::MarkerArray viz_msg;
   auto time = robot_trajectory_ptr_->x_trajectory.time_vector;
@@ -1134,7 +992,7 @@ void tankRobotPlugin::publishTrajectoryVisualization()
   m_trajectory_viz_pub->publish(viz_msg);
 }
 
-void tankRobotPlugin::publishCurrentTwist(
+void TankRobotPlugin::publishCurrentTwist(
   double curr_vel_x, double curr_vel_y,
   double curr_vel_theta)
 {
@@ -1145,7 +1003,7 @@ void tankRobotPlugin::publishCurrentTwist(
   m_cur_vel_pub->publish(msg);
 }
 
-void tankRobotPlugin::publishDesiredTwist(
+void TankRobotPlugin::publishDesiredTwist(
   double des_vel_x, double des_vel_y,
   double des_vel_theta)
 {
@@ -1156,7 +1014,7 @@ void tankRobotPlugin::publishDesiredTwist(
   m_des_vel_pub->publish(msg);
 }
 
-void tankRobotPlugin::publishDesiredPose(double des_x, double des_y, double des_theta)
+void TankRobotPlugin::publishDesiredPose(double des_x, double des_y, double des_theta)
 {
   geometry_msgs::msg::Pose msg{};
   msg.position.x = des_x;
@@ -1172,4 +1030,4 @@ void tankRobotPlugin::publishDesiredPose(double des_x, double des_y, double des_
 
 } // namespace ghost_tank
 
-PLUGINLIB_EXPORT_CLASS(ghost_tank::tankRobotPlugin, ghost_ros_interfaces::V5RobotBase)
+PLUGINLIB_EXPORT_CLASS(ghost_tank::TankRobotPlugin, ghost_ros_interfaces::V5RobotBase)

@@ -32,7 +32,7 @@
 namespace ghost_tank
 {
 
-tankTree::tankTree(std::string bt_path,
+TankTree::TankTree(std::string bt_path,
 					   std::string bt_path_interaction,
                        std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
                        std::shared_ptr<tankModel> tank_ptr,
@@ -56,12 +56,12 @@ tankTree::tankTree(std::string bt_path,
 	tree_interaction_ = factory.createTreeFromFile(bt_path_interaction_);
 }
 
-void tankTree::tick_tree()
+void TankTree::tick_tree()
 {
   tree_.tickExactlyOnce();
 }
 
-void tankTree::tick_tree_interaction()
+void TankTree::tick_tree_interaction()
 {
   tree_interaction_.tickExactlyOnce();
 }

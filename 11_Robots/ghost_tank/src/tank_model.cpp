@@ -179,74 +179,11 @@ void TankModel::calculateMaxBaseTwist()
   m_max_base_ang_vel = m_max_base_lin_vel / max_wheel_dist;
 }
 
-void TankModel::setModuleState(const std::string & name, ModuleState state)
-{
-  throwOnUnknownTankModule(name, "setModuleState");
-  state.steering_angle = ghost_util::WrapAngle360(state.steering_angle);
-  m_previous_module_states[name] = m_current_module_states[name];
-  m_current_module_states[name] = state;
-}
-
 // Assumes all module states have been updated prior to update
 void TankModel::updateTankModel()
 {
   updateBaseTwist();
-  calculateLeastSquaresICREstimate();
   calculateOdometry();
-}
-
-void TankModel::calculateLeastSquaresICREstimate()
-{
-  // Update ICR Jacobian
-  int n = 0;
-  for (const auto & [name, state] : m_current_module_states) {
-    m_least_square_icr_A(
-      2 * n,
-      2 + n) = -cos((state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD);
-    m_least_square_icr_A(2 * n + 1, 2 + n) = -sin(
-      (state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD);
-    n++;
-  }
-  Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(m_least_square_icr_A);
-  auto rank = lu_decomp.rank();
-  bool full_rank = (rank == (2 + m_num_modules));
-
-  if (full_rank) {
-    auto A_decomposition = m_least_square_icr_A.completeOrthogonalDecomposition();
-    auto x = A_decomposition.solve(m_least_squares_icr_B);
-    m_icr_point = Eigen::Vector2d(x[0], x[1]);
-
-    m_icr_sse = (m_least_square_icr_A * x - m_least_squares_icr_B).norm();
-  }
-
-  // Handle pure translation
-  m_straight_line_translation = (m_icr_point.norm() > 500.0 || !full_rank);
-  if (m_straight_line_translation) {
-    auto module_state = m_current_module_states.begin()->second;
-    double angle = (module_state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD;
-    m_icr_point = Eigen::Vector2d(cos(angle), sin(angle));
-    m_icr_sse = 0.0;
-  }
-
-  double m = 0.0;
-  for (const auto & [name, state] : m_current_module_states) {
-    auto current_steering_axis = Eigen::Vector2d(
-      cos((state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD),
-      sin((state.steering_angle + 90.0) * ghost_util::DEG_TO_RAD)
-    );
-    Eigen::Vector2d ideal_steering_axis;
-
-    if (m_straight_line_translation) {
-      ideal_steering_axis = m_icr_point;
-    } else {
-      ideal_steering_axis = (m_icr_point - m_config.module_positions.at(name)).normalized();
-    }
-
-    double angle = angleBetweenVectorsRadians(current_steering_axis, ideal_steering_axis);
-    m += angle * angle / (n * M_PI * M_PI);
-  }
-  double f = 1.0;
-  m_icr_quality = 1 - log(f * m + 1) / log(f + 1);
 }
 
 void TankModel::updateBaseTwist()
