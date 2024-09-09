@@ -46,6 +46,21 @@ install(TARGETS
 publish_test
   DESTINATION lib/${PROJECT_NAME})
 
+# test robot config publisher
+add_executable(boomerang_planner
+  src/boomerang_planner.cpp
+)
+ament_target_dependencies(boomerang_planner
+  ${DEPENDENCIES}
+)
+target_include_directories(boomerang_planner
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  boomerang_planner
+  DESTINATION lib/${PROJECT_NAME})
+
 #################
 #### Install ####
 #################
