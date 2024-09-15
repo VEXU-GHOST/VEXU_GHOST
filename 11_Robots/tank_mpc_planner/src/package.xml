@@ -12,6 +12,9 @@
   <build_depend>ament_cmake_gtest</build_depend>
   <build_depend>eigen3_cmake_module</build_depend>
   <build_depend>urdfdom</build_depend>
+  <build_depend>rosidl_default_generators</build_depend>
+
+  <exec_depend>rosidl_default_runtime</exec_depend>
 
   <depend>rclcpp</depend>
   <depend>ghost_msgs</depend>
@@ -19,6 +22,8 @@
   <depend>ghost_control</depend>
   <depend>ghost_util</depend>
   <depend>ghost_ros_interfaces</depend>
+  <depend>std_msgs</depend>
+
 
   <build_export_depend>ament_cmake</build_export_depend>
   <build_export_depend>ament_cmake_gtest</build_export_depend>
@@ -26,6 +31,8 @@
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
     <build_type>ament_cmake</build_type>

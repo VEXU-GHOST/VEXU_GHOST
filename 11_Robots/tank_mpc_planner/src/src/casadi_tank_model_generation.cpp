@@ -23,11 +23,55 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <memory>
+#include <string>
 #include "eigen3/Eigen/Geometry"
 #include <casadi/casadi.hpp>
 #include "matplotlibcpp.h"
+#include <rclcpp/rclcpp.hpp>
+#include <ghost_msgs/msg/state_sol.hpp>
+#include <std_msgs/msg/string.hpp>
+
 namespace plt = matplotlibcpp;
 using namespace casadi;
+
+std::unordered_map<std::string, std::vector<double>> STATE_SOL_MAP;
+
+class RvizStream : public rclcpp::Node
+{
+
+public:
+  RvizStream()
+  : Node("rviz_stream")
+  {
+    state_sol_pub_ = this->create_publisher<ghost_msgs::msg::StateSol>(
+      "/tank_mpc_sol",
+      10);
+
+    pipe_to_rviz(STATE_SOL_MAP);
+  }
+
+  ~RvizStream() {}
+
+  void pipe_to_rviz(
+    std::unordered_map<std::string,
+    std::vector<double>> & state_sol)
+  {
+    ghost_msgs::msg::StateSol msg{};
+    msg.header.stamp = this->get_clock()->now();
+    msg.header.frame_id = "map";
+    msg.base_pose_x_traj = state_sol["base_pose_x"];
+    msg.base_pose_y_traj = state_sol["base_pose_y"];
+    msg.base_pose_tht_traj = state_sol["base_pose_tht"];
+
+    state_sol_pub_->publish(msg);
+  }
+
+private:
+  rclcpp::Publisher<ghost_msgs::msg::StateSol>::SharedPtr state_sol_pub_;
+
+};
+
 
 /*
    This file is a working example for how to generate optimization problems using the CasADi symbolic toolbox.
@@ -238,14 +282,15 @@ int main(int argc, char * argv[])
   std::cout << state_solution_map["base_vel_x"].size() << std::endl;
   std::cout << state_solution_map["base_accel_x"].size() << std::endl;
 
-  plt::figure();
-  plt::subplot(3, 1, 1);
-  plt::plot(time_vector, state_solution_map["base_pose_x"]);
-  plt::subplot(3, 1, 2);
-  plt::plot(time_vector, state_solution_map["base_vel_x"]);
-  plt::subplot(3, 1, 3);
-  plt::plot(time_vector, state_solution_map["base_accel_x"]);
-  plt::show();
+  STATE_SOL_MAP = state_solution_map;
+  // plt::figure();
+  // plt::subplot(3, 1, 1);
+  // plt::plot(time_vector, state_solution_map["base_pose_x"]);
+  // plt::subplot(3, 1, 2);
+  // plt::plot(time_vector, state_solution_map["base_vel_x"]);
+  // plt::subplot(3, 1, 3);
+  // plt::plot(time_vector, state_solution_map["base_accel_x"]);
+  // plt::show();
 
   ////////////////////////////////
   ///// Generate Source Code /////
@@ -256,6 +301,12 @@ int main(int argc, char * argv[])
 
   // std::string filename = solver.generate_dependencies("example_trajectory_optimization.cpp", nlp_codegen_conf);
   // std::cout << "Saved to " << filename << std::endl;
-
+  ////////////////////////////////////
+  /////// Instantiate ROS Node ///////
+  ////////////////////////////////////
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<RvizStream>());
+  rclcpp::shutdown();
   return 0;
+  // return 0;
 }

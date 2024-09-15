@@ -48,9 +48,31 @@ include
 ${PYTHON_INCLUDE_DIRS}
 )
 
+###############################
+####   Tank MPC RVIZ Node  ####
+###############################
+add_executable(tank_mpc_viz
+  src/tank_mpc_viz.cpp
+)
+ament_target_dependencies(tank_mpc_viz
+  ${DEPENDENCIES}
+)
+install(TARGETS
+tank_mpc_viz
+  DESTINATION lib/${PROJECT_NAME})
+
+target_include_directories(tank_mpc_viz
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  tank_mpc_viz
+  DESTINATION lib/${PROJECT_NAME})
+
+
 ##############################
 ####   Bag Sim Time Node  ####
-# ##############################
+##############################
 add_executable(bag_set_pose_time
   src/bag_set_pose_time.cpp
 )

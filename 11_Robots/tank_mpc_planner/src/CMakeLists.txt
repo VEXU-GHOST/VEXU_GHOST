@@ -22,7 +22,9 @@ set(DEPENDENCIES
   ghost_ros_interfaces
   ghost_util
   rclcpp
+  rosidl_default_generators
   ghost_msgs
+  std_msgs
   )
 
 foreach(pkg ${DEPENDENCIES})
@@ -38,7 +40,6 @@ set(INCLUDE
 
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
-
 # set(CMAKE_BUILD_TYPE "DEBUG")
 # set(CMAKE_BUILD_TYPE "RELEASE")
 
