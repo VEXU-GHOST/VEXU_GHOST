@@ -2,7 +2,7 @@
 
 set -x
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIR="$(cd "$(dirname "$0")" && pwd)"
 
 case "$1" in
     "restart")
@@ -29,8 +29,8 @@ case "$1" in
         sudo poweroff
         ;;
     "install")
-        echo systemctl --user link $DIR/*service
-        echo systemctl --user enable --now $DIR/*service
+        systemctl --user link $DIR/*service
+        systemctl --user enable --now $DIR/*service
         ;;
     *)
         echo "Usage: service.sh [restart/stop/kill/shutdown/install]"
