@@ -22,6 +22,7 @@ case "$1" in
         pkill -f -9 -e gz
         ;;
     "shutdown")
+        sudo -v
         systemctl --user stop 'ghost*service'
         pkill -f -e ros2
         echo "shutting down in 3 seconds!!!!"
