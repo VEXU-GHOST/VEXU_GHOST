@@ -123,8 +123,8 @@ def generate_launch_description():
         ),
         launch_arguments={
             "unite_imu_method": "2",
-            "enable_depth": "false",
-            "enable_color": "false",
+            "enable_depth": "true",
+            "enable_color": "true",
             "enable_sync": "true",
             "enable_gyro": "true",
             "enable_accel": "true",
