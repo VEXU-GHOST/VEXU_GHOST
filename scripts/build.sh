@@ -15,7 +15,7 @@ then
     exit -1
 fi
 
-pkill ros -f
+$VEXU_HOME/scripts/hardware/service.sh stop
 
 # Get processor architecture to determine if we should build simulator or not (not on robot hardware)
 arch=$(uname -p)
