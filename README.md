@@ -34,6 +34,12 @@ echo "export VEXU_HOME=\"/home/$(whoami)/VEXU_GHOST\"" >> ~/.bashrc
 echo 'source "$VEXU_HOME/scripts/setup_env.sh"' >> ~/.bashrc
 ```
 Close this terminal, and open a new one to load new settings.
+#### Go to the VEXU_GHOST directory (every time you open a new terminal)
+
+```
+cd ~/VEXU_GHOST
+```
+
 #### Update Dependencies
 ```sh
 ./scripts/update_dependencies.sh
