@@ -1,0 +1,12 @@
+[Unit]
+Description="Service description"
+
+[Service]
+Type=simple
+StandardOutput=journal
+Environment="HOME=/home/ghost"
+ExecStart=/home/ghost/VEXU_GHOST/scripts/launch_hardware.sh
+
+[Install]
+WantedBy=default.target
+
