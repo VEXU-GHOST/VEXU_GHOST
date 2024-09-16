@@ -14,7 +14,7 @@ public:
     AutoDone(const std::string& name, const BT::NodeConfig& config,
 				std::shared_ptr<rclcpp::Node> node_ptr,
 	           	std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-	           	std::shared_ptr<tankModel> tank_ptr);
+	           	std::shared_ptr<TankModel> tank_ptr);
 
     // It is mandatory to define this STATIC method.
 	static BT::PortsList providedPorts();
@@ -27,7 +27,7 @@ private:
 	
  	std::shared_ptr<rclcpp::Node> node_ptr_;
     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
-	std::shared_ptr<tankModel> tank_ptr_;
+	std::shared_ptr<TankModel> tank_ptr_;
 };
 
 

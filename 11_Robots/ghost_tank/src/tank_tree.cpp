@@ -35,7 +35,7 @@ namespace ghost_tank
 TankTree::TankTree(std::string bt_path,
 					   std::string bt_path_interaction,
                        std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
-                       std::shared_ptr<tankModel> tank_ptr,
+                       std::shared_ptr<TankModel> tank_ptr,
                        std::shared_ptr<rclcpp::Node> node_ptr) :
 	bt_path_(bt_path),
 	bt_path_interaction_(bt_path_interaction),
@@ -46,9 +46,7 @@ TankTree::TankTree(std::string bt_path,
 	factory.registerNodeType<LoggingNode>("Logging", node_ptr_);
 	factory.registerNodeType<CheckForRestart>("CheckForRestart", node_ptr_, robot_hardware_interface_ptr);
 	factory.registerNodeType<MoveToPoseCubic>("MoveToPoseCubic", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
-	factory.registerNodeType<SwipeTail>("SwipeTail", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
 	factory.registerNodeType<IntakeCmd>("IntakeCmd", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
-	factory.registerNodeType<Climb>("Climb", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
 	factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
 	factory.registerNodeType<AutonTimer>("AutonTimer", node_ptr_, tank_ptr);
 

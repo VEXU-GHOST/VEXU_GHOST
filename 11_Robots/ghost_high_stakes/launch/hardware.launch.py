@@ -22,15 +22,15 @@ def generate_launch_description():
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
     robot_config_yaml_path = os.path.join(
-        ghost_high_stakes_base_dir, "config/robot_hardware_config_worlds_24.yaml"
+        ghost_high_stakes_base_dir, "config/robot_hardware_config_tank.yaml"
     )
 
-    plugin_type = "ghost_swerve::SwerveRobotPlugin"
-    robot_name = "ghost_24"
+    plugin_type = "ghost_tank::TankRobotPlugin"
+    robot_name = "GHOST_TANK"
 
-    ghost_swerve_share_dir = get_package_share_directory("ghost_swerve")
-    bt_path = os.path.join(ghost_swerve_share_dir, "config", "bt_isolation.xml")
-    bt_path_interaction = os.path.join(ghost_swerve_share_dir, "config", "bt_interaction.xml")
+    ghost_tank_share_dir = get_package_share_directory("ghost_tank")
+    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation.xml")
+    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
 
     ########################
     ### Node Definitions ###
@@ -64,7 +64,7 @@ def generate_launch_description():
     )
 
     cubic_motion_planner_node = Node(
-        package='ghost_swerve',
+        package='ghost_tank',
         executable='cubic_motion_planner',
         name='cubic_motion_planner',
         output='screen',
@@ -73,7 +73,7 @@ def generate_launch_description():
     )
 
     trapezoid_motion_planner_node = Node(
-        package='ghost_swerve',
+        package='ghost_tank',
         executable='trapezoid_motion_planner',
         name='trapezoid_motion_planner',
         output='screen',

@@ -31,7 +31,7 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 MoveToPoseCubic::MoveToPoseCubic(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
                                  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-                                 std::shared_ptr<tankModel> tank_ptr) :
+                                 std::shared_ptr<TankModel> tank_ptr) :
 	BT::StatefulActionNode(name, config),
 	rhi_ptr_(rhi_ptr),
 	node_ptr_(node_ptr),
@@ -127,8 +127,8 @@ BT::NodeStatus MoveToPoseCubic::onRunning() {
   msg.twist.twist.linear.y = velY;
   msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
 
-	if( (abs(posX - tank_ptr_->getWorldLocation().x()) < threshold) &&
-	    (abs(posY - tank_ptr_->getWorldLocation().y()) < threshold) &&
+	if( (abs(posX - tank_ptr_->getWorldPose().x()) < threshold) && // change to subscriber and move this file to ghost_autonomy
+	    (abs(posY - tank_ptr_->getWorldPose().y()) < threshold) &&
 	    (abs(ghost_util::SmallestAngleDistRad(theta, tank_ptr_->getWorldAngleRad())) < angle_threshold)){
 		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseCubic: Success");
 		return BT::NodeStatus::SUCCESS;

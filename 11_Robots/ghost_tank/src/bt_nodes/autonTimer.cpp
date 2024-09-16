@@ -31,7 +31,7 @@ namespace ghost_tank
 AutonTimer::AutonTimer(
   const std::string & name, const BT::NodeConfig & config,
   std::shared_ptr<rclcpp::Node> node_ptr,
-  std::shared_ptr<tankModel> tank_ptr)
+  std::shared_ptr<TankModel> tank_ptr)
 : BT::DecoratorNode(name, config),
   tank_ptr_(tank_ptr),
   node_ptr_(node_ptr)
@@ -66,7 +66,7 @@ BT::NodeStatus AutonTimer::tick()
   double time = tank_ptr_->getAutonTime();
 
   if (time > timeout) {
-    RCLCPP_INFO(node_ptr_->get_logger(), "AutonTimeout: %f s passed");
+    RCLCPP_INFO(node_ptr_->get_logger(), "AutonTimeout: %f s passed", time);
     return BT::NodeStatus::FAILURE;
   }
 

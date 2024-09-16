@@ -4,7 +4,7 @@ namespace ghost_tank {
 
 AutoDone::AutoDone(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
 			std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-			std::shared_ptr<tankModel> tank_ptr) :
+			std::shared_ptr<TankModel> tank_ptr) :
 	BT::SyncActionNode(name, config),
 	rclcpp::Node("intake_cmd"),
   	node_ptr_(node_ptr),

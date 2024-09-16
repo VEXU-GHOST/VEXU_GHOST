@@ -58,7 +58,7 @@ competition_state_machine_node:
     backup_pose_topic: "/odom_ekf/odometry"
     pose_topic: "/map_ekf/odometry"
 
-    swerve_robot_plugin:
+    tank_robot_plugin:
       init_world_x: 0.0
       init_world_y: 0.0
       init_world_theta: 0.0

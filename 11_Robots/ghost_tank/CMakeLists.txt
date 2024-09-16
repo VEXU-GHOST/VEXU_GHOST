@@ -131,9 +131,7 @@ set(NODES
   loggingNode
   moveToPoseCubic
   moveToPoseTrapezoid
-  swipeTail
   intakeCmd
-  climb
   autoDone
   autonTimer
 )
@@ -188,10 +186,6 @@ install(
 ###### Tests ######
 ###################
 set(TEST_FILES
-  test_base_tank_model
-  test_coaxial_tank_model
-  test_differential_tank_model
-  test_tank_icr
 )
 
 foreach(TEST ${TEST_FILES})

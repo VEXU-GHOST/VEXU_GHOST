@@ -34,7 +34,7 @@ port_configuration:
             port: 10
             type: MOTOR
             reversed: true
-            config: drive_motor_config
+            config: indexer_config
         drive_rttf:
             port: 16
             type: MOTOR

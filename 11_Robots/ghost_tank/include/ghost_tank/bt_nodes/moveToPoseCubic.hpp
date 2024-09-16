@@ -24,20 +24,26 @@
 #pragma once
 
 #include "behaviortree_cpp/behavior_tree.h"
+#include "ghost_msgs/msg/drivetrain_command.hpp"
 #include "ghost_tank/tank_model.hpp"
+#include "ghost_util/angle_util.hpp"
+#include "ghost_util/unit_conversion_utils.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+
+using std::placeholders::_1;
 
 namespace ghost_tank
 {
 
-class Climb : public BT::StatefulActionNode
-{
+// SyncActionNode (synchronous action) with an input port.
+class MoveToPoseCubic : public BT::StatefulActionNode {
 public:
-  Climb(
-    const std::string & name, const BT::NodeConfig & config, std::shared_ptr<rclcpp::Node> node_ptr,
-    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-    std::shared_ptr<tankModel> tank_ptr);
+	// If your Node has ports, you must use this constructor signature
+	MoveToPoseCubic(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
+	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+	           std::shared_ptr<TankModel> tank_ptr);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -53,21 +59,20 @@ public:
   /// This is a convenient place todo a cleanup, if needed.
   void onHalted();
 
+  // Override the virtual function tick()
+  // BT::NodeStatus tick() override;
+
 private:
   template<typename T>
   T get_input(std::string key);
-  float tempPID(
-    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_,
-    const std::string & motor1, const std::string & motor2, float pos_want, double kP);
 
-  std::shared_ptr<rclcpp::Node> node_ptr_;
   std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
-  std::shared_ptr<tankModel> tank_ptr_;
+  std::shared_ptr<TankModel> tank_ptr_;
+  rclcpp::Publisher<ghost_msgs::msg::DrivetrainCommand>::SharedPtr command_pub_;
   std::chrono::time_point<std::chrono::system_clock> start_time_;
-
-  double lift_target_;
-  bool climbing_ = false;
-  bool reaching_ = false;
+  std::chrono::time_point<std::chrono::system_clock> plan_time_;
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+  bool started_;
 };
 
-} // namespace ghost_tank
+} // namespace ghost_tank {

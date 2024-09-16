@@ -22,44 +22,35 @@
  */
 
 #pragma once
-#include "behaviortree_cpp/bt_factory.h"
-#include "bt_nodes/checkForRestart.hpp"
-#include "bt_nodes/intakeCmd.hpp"
-#include "bt_nodes/loggingNode.hpp"
-#include "bt_nodes/moveToPoseCubic.hpp"
-#include "bt_nodes/swipeTail.hpp"
-#include "bt_nodes/autoDone.hpp"
-#include "bt_nodes/autonTimer.hpp"
-#include "bt_nodes/climb.hpp"
-#include "ghost_tank/tank_model.hpp"
-#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+
+#include <string>
+#include "behaviortree_cpp/behavior_tree.h"
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/bool.hpp"
+#include "ghost_tank/tank_tree.hpp"
 
-// file that contains the custom nodes definitions
-// #include "dummy_nodes.h"
-// using namespace DummyNodes;
+namespace ghost_tank {
 
-namespace ghost_tank
-{
-
-class TankTree
+class AutonTimer : public BT::DecoratorNode
 {
 public:
-	TankTree(std::string bt_path,
-			   std::string bt_path_interaction,
-	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
-	           std::shared_ptr<tankModel> tank_ptr,
-	           std::shared_ptr<rclcpp::Node> node_ptr);
-	void tick_tree();
-	void tick_tree_interaction();
+  // If your Node has ports, you must use this constructor signature
+  AutonTimer(
+    const std::string & name, const BT::NodeConfig & config,
+    std::shared_ptr<rclcpp::Node> node_ptr,
+    std::shared_ptr<TankModel> tank_ptr);
+
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
+
+  // Override the virtual function tick()
+  BT::NodeStatus tick() override;
+
+  void halt() override;
+
 
 private:
-  std::string bt_path_;
-  std::string bt_path_interaction_;
-  BT::Tree tree_;
-  BT::Tree tree_interaction_;
   std::shared_ptr<rclcpp::Node> node_ptr_;
+	std::shared_ptr<TankModel> tank_ptr_;
 };
 
-} // namespace ghost_tank
+} // ghost_tank

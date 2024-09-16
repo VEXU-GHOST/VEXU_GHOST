@@ -1,5 +1,5 @@
 <library path="tank_robot_plugin">
-  <class type="ghost_tank::tankRobotPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
-    <description>tank Robot</description>
+  <class type="ghost_tank::TankRobotPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
+    <description>Tank Robot</description>
   </class>
 </library>

@@ -70,16 +70,15 @@ protected:
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_base_twist_cmd_pub;
 
-
   // rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_vel_pub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_vel_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
 
-  void publishDesiredTwist(double des_vel_x, double des_vel_y, double des_theta_vel);
-  void publishCurrentTwist(double curr_vel_x, double curr_vel_y, double des_vel_theta);
-  void publishDesiredPose(double des_x, double des_y, double des_theta);
+  void publishDesiredTwist(Eigen::Vector3d twist);
+  void publishCurrentTwist(Eigen::Vector3d twist);
+  void publishDesiredPose(Eigen::Vector3d pose);
 
   // Subscribers
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
@@ -93,11 +92,11 @@ protected:
 
   // tank Model
   void updateDrivetrainMotors();
-  std::shared_ptr<tankModel> m_tank_model_ptr;
+  std::shared_ptr<TankModel> m_tank_model_ptr;
 
   // Autonomy
   std::string bt_path_;
-  std::shared_ptr<tankTree> bt_;
+  std::shared_ptr<TankTree> bt_;
 
   // Motion Planner
   double m_move_to_pose_kp_xy = 0.0;
@@ -106,11 +105,9 @@ protected:
   double m_move_to_pose_kd_theta = 0.0;
 
   // Odometry
-  Eigen::Vector2d m_last_odom_loc = Eigen::Vector2d::Zero();
-  double m_last_odom_angle = 0.0;
+  Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
 
-  Eigen::Vector2d m_curr_odom_loc = Eigen::Vector2d::Zero();
-  double m_curr_odom_angle = 0.0;
+  Eigen::Vector3d m_curr_odom_pose = Eigen::Vector3d::Zero();
 
   Eigen::Vector3d m_curr_odom_std = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_curr_odom_cov = Eigen::Vector3d::Zero();
