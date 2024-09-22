@@ -18,5 +18,7 @@ log
 02_V5/ghost_pros/src/ghost_control/**
 02_V5/ghost_pros/src/ghost_util/**
 
+09_External/*deb
+
 # Auto-generated
 02_V5/ghost_pros/include/robot_config.hpp
