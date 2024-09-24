@@ -7,7 +7,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 case "$1" in
     "restart")
         systemctl --user kill 'ghost*service'
-        systemctl --user start 'ghost*.service'
+        systemctl --user start --all 'ghost*.service'
         ;;
     "stop")
         systemctl --user stop 'ghost*service'
