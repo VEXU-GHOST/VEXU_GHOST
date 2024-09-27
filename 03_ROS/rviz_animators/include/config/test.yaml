@@ -1,0 +1,3 @@
+subscriber_node:
+  ros__parameters:
+    test_param: "test"
