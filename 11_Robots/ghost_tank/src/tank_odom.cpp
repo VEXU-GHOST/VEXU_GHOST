@@ -19,7 +19,10 @@ namespace ghost_tank{
     left_encoder = in_left_encoder;
     right_encoder = in_right_encoder;
     
-    return {current_xpos, current_ypos, theta}
+    prev_xpos = current_xpos;
+    prev_ypos = current_ypos;
+
+    return {current_xpos, current_ypos, theta};
     }
 
     void TankOdometry::resetEncoders(){
