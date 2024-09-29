@@ -13,7 +13,7 @@ echo
 echo "--------------- Non-ROS Dependencies ---------------"
 sudo apt-get install -y libgoogle-glog-dev cmake python3-colcon-common-extensions gfortran-10 || exit -1
 sudo apt-get install -y python3-pip libgtest-dev libgoogle-glog-dev python3-rosdep2 apt-rdepends ros-humble-xacro || exit -1
-pip install colcon-lint || exit -1
+pip install colcon-lint ultralytics || exit -1
 
 echo
 echo "--------------- ROSDEP Init ---------------"

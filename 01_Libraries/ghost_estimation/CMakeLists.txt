@@ -30,6 +30,7 @@ set(DEPENDENCIES
   visualization_msgs
   eigen3_cmake_module
   Eigen3
+  vision_msgs
   )
 
 foreach(pkg ${DEPENDENCIES})
