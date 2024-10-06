@@ -195,8 +195,8 @@
     </joint>
 
 <gazebo>
-<plugin name="gazebo_torque_plugin" filename="libgazebo_torque_plugin.so">
-            <free_speed>130</free_speed>
+<plugin name="v5_robot_simulator_plugin" filename="libv5_robot_simulator_plugin.so">
+            <!-- <free_speed>130</free_speed>
             <stall_torque>4.5</stall_torque>
             <free_current>0.1</free_current>
             <stall_current>4.5</stall_current>
@@ -206,7 +206,6 @@
             wheel_joint_middle_left
             wheel_joint_middle_right
             </joint_names>
-            <!-- Motor names must be formatted in this manner in order to index actuator jacobian -->
             <motor_names>
                 DRIVE_LEFT_FRONT_LEFT_MOTOR
                 DRIVE_RIGHT_FRONT_LEFT_MOTOR
@@ -216,7 +215,7 @@
             <actuator_jacobian>
                 0.5     0.5      0           0         
                 0        0      0.5         0.5  
-            </actuator_jacobian>
+            </actuator_jacobian> -->
 
 </plugin>
 </gazebo>

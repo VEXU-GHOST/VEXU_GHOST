@@ -35,11 +35,11 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[{'use_sim_time': False}, {"robot_description": doc}])
 
-        actuator_cmd_publisher = Node(
-        package="ghost_sim_examples",
-        executable="test_publisher_actuator_cmd",
-        name="test_publisher_actuator_cmd",
-    )
+    # actuator_cmd_publisher = Node(
+    #     package="ghost_sim_examples",
+    #     executable="test_publisher_actuator_cmd",
+    #     name="test_publisher_actuator_cmd",
+    # )
 
 
     return [gazebo_ros, robot_state_publisher]
@@ -71,6 +71,6 @@ def generate_launch_description():
         DeclareLaunchArgument('sim_gui', default_value='true'),
         DeclareLaunchArgument('verbose', default_value='true'),
         simulation,
-        actuator_cmd_publisher,
+        # actuator_cmd_publisher,
         OpaqueFunction(function = launch_setup)
     ])
