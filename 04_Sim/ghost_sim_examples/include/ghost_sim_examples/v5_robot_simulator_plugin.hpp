@@ -14,9 +14,9 @@ class V5RobotSimulatorPlugin : public gazebo::ModelPlugin
 {
 public:
   V5RobotSimulatorPlugin();
-  virtual ~V5RobotSimulatorPlugin() override;
+  ~V5RobotSimulatorPlugin() override = default;
 
-  void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
+  void Load(physics::ModelPtr model, sdf::ElementPtr sdf) override;
 
   void OnUpdate();
 

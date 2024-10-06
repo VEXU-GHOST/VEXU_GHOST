@@ -46,21 +46,13 @@ add_definitions(${GAZEBO_CXX_FLAGS})
 
 add_library(v5_robot_simulator_plugin SHARED src/v5_robot_simulator_plugin.cpp)
 ament_target_dependencies(v5_robot_simulator_plugin ${DEPENDENCIES})
-target_link_libraries(v5_robot_simulator_plugin ${GAZEBO_libraries})
 target_include_directories(v5_robot_simulator_plugin PUBLIC ${INCLUDE})
 ament_export_libraries(v5_robot_simulator_plugin)
-
-add_executable(test_main src/test_main.cpp)
-ament_target_dependencies(test_main ${DEPENDENCIES})
-target_link_libraries(test_main v5_robot_simulator_plugin ${GAZEBO_libraries})
-target_include_directories(test_main PUBLIC ${INCLUDE})
-
 
 ###############
 ### Install ###
 ###############
 install(TARGETS
-  test_main
   v5_robot_simulator_plugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
