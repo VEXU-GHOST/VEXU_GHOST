@@ -1,6 +1,3 @@
-#ifndef GHOST_SIM__EXAMPLES_GAZEBO_PLUGIN_HPP_
-#define GHOST_SIM__EXAMPLES_GAZEBO_PLUGIN_HPP_
-
 #include <gazebo/common/Plugin.hh>
 #include "std_msgs/msg/float32.hpp"
 
@@ -34,10 +31,9 @@
 //   std::unique_ptr<TankMovePrivate> impl_;
 // };
 
-// }  
+// }
 
-// #endif  
-
+// #endif
 
 
 #pragma once
@@ -132,4 +128,3 @@ private:
 };
 
 }       // namespace v5_robot_plugin
-

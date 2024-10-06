@@ -1,24 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 project(ghost_sim_examples)
 
-
+# Add Global CMake Config for Ghost Packages
 set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
-add_compile_options(-Wall -Wextra -Wpedantic)
-
-
 find_package(Ghost CONFIG REQUIRED)
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(gazebo_ros REQUIRED)
-find_package(ghost_msgs REQUIRED)
-find_package(ghost_control REQUIRED)
-find_package(gazebo REQUIRED)
-find_package(ghost_control REQUIRED)
-find_package(ghost_util REQUIRED)
-find_package(ghost_v5_interfaces REQUIRED)
-find_package(ghost_estimation REQUIRED)
 
+# Adds all our package dependencies to one list
 set(DEPENDENCIES
 ament_cmake
 rclcpp
@@ -32,28 +19,42 @@ ghost_control
 ghost_v5_interfaces
 )
 
-# foreach(pkg ${DEPENDENCIES})
-#   find_package(${pkg} REQUIRED)
-# endforeach()
+# Iterates through the list and finds the packages!
+foreach(pkg ${DEPENDENCIES})
+  find_package(${pkg} REQUIRED)
+endforeach()
+
 ament_export_dependencies(${DEPENDENCIES})
 
-
-include_directories(
+# Add any include directories to a list
+# Usually this is just "include", but for some depedencies there could be extras.
+set(INCLUDE
   include  
   ${GAZEBO_INCLUDE_DIRS}
 )
 
+# Tells the package where all our header files live
+include_directories(${INCLUDE})
 
+# Tells any packages that depend on us what include files we use.
+ament_export_include_directories(${INCLUDE})
+
+### Gazebo ###
 link_directories(${GAZEBO_LIBRARY_DIRS})
-
-
 add_definitions(${GAZEBO_CXX_FLAGS})
 
+add_library(v5_robot_simulator_plugin SHARED src/v5_robot_simulator_plugin.cpp)
+ament_target_dependencies(v5_robot_simulator_plugin ${DEPENDENCIES})
+target_link_libraries(v5_robot_simulator_plugin ${GAZEBO_LIBRARIES})
+target_include_directories(v5_robot_simulator_plugin PUBLIC ${GHOST_SIM_EXAMPLES_INCLUDE_DIRS})
 
-add_library(gazebo_torque_plugin SHARED src/gazebo_torque_plugin.cpp)
-ament_target_dependencies(gazebo_torque_plugin ${DEPENDENCIES})
-target_link_libraries(gazebo_torque_plugin ${GAZEBO_LIBRARIES})
-
+###############
+### Install ###
+###############
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
 
 install(DIRECTORY
   launch
