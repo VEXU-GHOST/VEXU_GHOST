@@ -1,0 +1,4 @@
+covariance_2d_publisher:
+  ros__parameters:
+    input_topic_names:
+      - /odometry/filtered

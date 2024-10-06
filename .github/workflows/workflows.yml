@@ -1,0 +1,81 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Host tmate session on failure for debugging.'
+        required: false
+        default: false
+    
+jobs:
+  build-and-test:
+    name: Build and Test
+    if: github.event_name == 'push' || !github.event.pull_request.draft
+    runs-on: ubuntu-22.04
+    env:
+      VEXU_HOME: ${{github.workspace}}
+
+    steps:
+      - name: Prune System Packages
+        run: sudo apt-get remove libunwind-14 libunwind-14-dev *dotnet* *aspnet* powershell *azure* firefox
+
+      - name: Update System Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get upgrade -y
+
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install ROS2 Humble
+        uses: ros-tooling/setup-ros@0.7.1
+        with:
+          required-ros-distributions: humble
+
+      - name: Set Environment Variables
+        run: |
+          env > ~/temp_env_1
+          source /opt/ros/humble/setup.sh
+          export GAZEBO_PLUGIN_PATH=$VEXU_HOME/build/ghost_sim:$GAZEBO_PLUGIN_PATH
+          export CUDA_PATH=/usr/local/cuda-12.2
+          export CUDA_HOME=/usr/local/cuda-12.2
+          export LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/cuda-12.2/lib64:$LD_LIBRARY_PATH
+          export PATH=/usr/local/cuda-12.2/bin${PATH:+:${PATH}}
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+      
+      - name: Update Dependencies
+        run: ./scripts/update_dependencies.sh
+
+      - name: Build Submodules
+        run: ./scripts/setup_submodules.sh
+        
+      - name: Build
+        run: |
+          env > ~/temp_env_1
+          ./scripts/build.sh -r
+          source $VEXU_HOME/install/setup.bash
+          env > ~/temp_env_2
+          diff ~/temp_env_1 ~/temp_env_2 | sed '/^[^>]/d' | sed 's/> //'g | xargs -n1 echo >> $GITHUB_ENV
+        
+      - name: Test
+        run: ./scripts/test_full.sh
+
+      - name: Open TMate Session
+        if: ${{ failure() }} 
+      # && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true

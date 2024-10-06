@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+      main_tree_to_execute="skills">
+  <BehaviorTree ID="skills">
+    <Sequence>
+      <Repeat num_cycles="-1">
+        <ReactiveSequence>
+          <Inverter>
+            <IntakeCmd in="false"/>
+          </Inverter>
+          <Repeat num_cycles="-1">
+            <SwipeTail num_swipes="40"/>
+          </Repeat>
+        </ReactiveSequence>
+      </Repeat>
+      <!-- <SubTree ID="push"/> -->
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="push">
+    <Sequence>
+      <MoveToPoseCubic posX="-1.5"
+                       posY="2.5"
+                       theta="180"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-1500"
+                       speed="0.5"/>
+      <MoveToPoseCubic posX="1.0"
+                       posY="2.5"
+                       theta="180"
+                       velX="0.0"
+                       velY="0.0"
+                       omega="0.0"
+                       threshold="0.05"
+                       angle_threshold="5.0"
+                       timeout="-5000"
+                       speed="0.8"/>
+      </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Decorator ID="AutonTimer"
+            editable="true">
+      <input_port name="seconds"/>
+    </Decorator>
+    <Action ID="CheckForRestart"
+            editable="true"/>
+    <Action ID="Climb"
+            editable="true"/>
+    <!-- <Action ID="AutoDone"
+            editable="true"/> -->
+    <Action ID="IntakeCmd"
+            editable="true">
+      <input_port name="in"/>
+    </Action>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPoseCubic"
+            editable="true">
+      <input_port name="posX">m</input_port>
+      <input_port name="posY">m</input_port>
+      <input_port name="theta">deg</input_port>
+      <input_port name="velX">m.s</input_port>
+      <input_port name="velY">m.s</input_port>
+      <input_port name="omega">deg.s</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+      <input_port name="speed"
+                  default="0.5">m.s</input_port>
+    </Action>
+    <Action ID="MoveToPoseTrapezoid"
+            editable="true">
+      <input_port name="posX">m</input_port>
+      <input_port name="posY">m</input_port>
+      <input_port name="theta">deg</input_port>
+      <input_port name="velX">m.s</input_port>
+      <input_port name="velY">m.s</input_port>
+      <input_port name="omega">deg.s</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+      <input_port name="max_speed"
+                  default="0.5">m.s</input_port>
+    </Action>
+    <Action ID="SwipeTail"
+            editable="true">
+      <input_port name="num_swipes"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

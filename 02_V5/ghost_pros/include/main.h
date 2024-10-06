@@ -49,6 +49,7 @@ std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_inte
 
 std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motor_interfaces;
 std::unordered_map<std::string, std::shared_ptr<pros::Rotation> > encoders;
+std::unordered_map<std::string, std::shared_ptr<pros::Imu> > imus;
 
 const pros::controller_analog_e_t joy_channels[4] = {
 	ANALOG_LEFT_X,

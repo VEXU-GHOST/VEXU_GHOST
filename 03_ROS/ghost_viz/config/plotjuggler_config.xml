@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<root>
+ <tabbed_widget parent="main_window" name="Main Window">
+  <Tab tab_name="tab1" containers="1">
+   <Container>
+    <DockSplitter count="1" sizes="1" orientation="-">
+     <DockArea name="...">
+      <plot mode="TimeSeries" flip_y="false" flip_x="false" style="Lines">
+       <range left="0.000000" top="1.000000" bottom="0.000000" right="1.000000"/>
+       <limitY/>
+      </plot>
+     </DockArea>
+    </DockSplitter>
+   </Container>
+  </Tab>
+  <currentTabIndex index="0"/>
+ </tabbed_widget>
+ <use_relative_time_offset enabled="1"/>
+ <!-- - - - - - - - - - - - - - - -->
+ <!-- - - - - - - - - - - - - - - -->
+ <Plugins>
+  <plugin ID="DataLoad CSV">
+   <parameters time_axis="" delimiter="0"/>
+  </plugin>
+  <plugin ID="DataLoad MCAP"/>
+  <plugin ID="DataLoad ROS2 bags">
+   <use_header_stamp value="false"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="1000"/>
+   <boolean_strings_to_number value="true"/>
+   <remove_suffix_from_strings value="true"/>
+   <selected_topics value="/sensors/wheel_odom"/>
+  </plugin>
+  <plugin ID="DataLoad ULog"/>
+  <plugin ID="ROS2 Topic Subscriber">
+   <use_header_stamp value="false"/>
+   <discard_large_arrays value="true"/>
+   <max_array_size value="100"/>
+   <boolean_strings_to_number value="true"/>
+   <remove_suffix_from_strings value="true"/>
+   <selected_topics value="/trajectory/swerve_mpc_trajectory"/>
+  </plugin>
+  <plugin ID="UDP Server"/>
+  <plugin ID="WebSocket Server"/>
+  <plugin ID="ZMQ Subscriber"/>
+  <plugin ID="Fast Fourier Transform"/>
+  <plugin ID="Quaternion to RPY"/>
+  <plugin ID="Reactive Script Editor">
+   <library code="--[[ Helper function to create a series from arrays&#xa;&#xa; new_series: a series previously created with ScatterXY.new(name)&#xa; prefix:     prefix of the timeseries, before the index of the array&#xa; suffix_X:   suffix to complete the name of the series containing the X value. If [nil], use the index of the array.&#xa; suffix_Y:   suffix to complete the name of the series containing the Y value&#xa; timestamp:   usually the tracker_time variable&#xa;              &#xa; Example:&#xa; &#xa; Assuming we have multiple series in the form:&#xa; &#xa;   /trajectory/node.{X}/position/x&#xa;   /trajectory/node.{X}/position/y&#xa;   &#xa; where {N} is the index of the array (integer). We can create a reactive series from the array with:&#xa; &#xa;   new_series = ScatterXY.new(&quot;my_trajectory&quot;) &#xa;   CreateSeriesFromArray( new_series, &quot;/trajectory/node&quot;, &quot;position/x&quot;, &quot;position/y&quot;, tracker_time );&#xa;--]]&#xa;&#xa;function CreateSeriesFromArray( new_series, prefix, suffix_X, suffix_Y, timestamp )&#xa;  &#xa;  --- clear previous values&#xa;  new_series:clear()&#xa;  &#xa;  --- Append points to new_series&#xa;  index = 0&#xa;  while(true) do&#xa;&#xa;    x = index;&#xa;    -- if not nil, get the X coordinate from a series&#xa;    if suffix_X ~= nil then &#xa;      series_x = TimeseriesView.find( string.format( &quot;%s.%d/%s&quot;, prefix, index, suffix_X) )&#xa;      if series_x == nil then break end&#xa;      x = series_x:atTime(timestamp)&#x9; &#xa;    end&#xa;    &#xa;    series_y = TimeseriesView.find( string.format( &quot;%s.%d/%s&quot;, prefix, index, suffix_Y) )&#xa;    if series_y == nil then break end &#xa;    y = series_y:atTime(timestamp)&#xa;    &#xa;    new_series:push_back(x,y)&#xa;    index = index+1&#xa;  end&#xa;end&#xa;&#xa;--[[ Similar to the built-in function GetSeriesNames(), but select only the names with a give prefix. --]]&#xa;&#xa;function GetSeriesNamesByPrefix(prefix)&#xa;  -- GetSeriesNames(9 is a built-in function&#xa;  all_names = GetSeriesNames()&#xa;  filtered_names = {}&#xa;  for i, name in ipairs(all_names)  do&#xa;    -- check the prefix&#xa;    if name:find(prefix, 1, #prefix) then&#xa;      table.insert(filtered_names, name);&#xa;    end&#xa;  end&#xa;  return filtered_names&#xa;end&#xa;&#xa;--[[ Modify an existing series, applying offsets to all their X and Y values&#xa;&#xa; series: an existing timeseries, obtained with TimeseriesView.find(name)&#xa; delta_x: offset to apply to each x value&#xa; delta_y: offset to apply to each y value &#xa;  &#xa;--]]&#xa;&#xa;function ApplyOffsetInPlace(series, delta_x, delta_y)&#xa;  -- use C++ indeces, not Lua indeces&#xa;  for index=0, series:size()-1 do&#xa;    x,y = series:at(index)&#xa;    series:set(index, x + delta_x, y + delta_y)&#xa;  end&#xa;end&#xa;&#xa;function TopicSplitter(inputstr)&#xa;  local t = {}&#xa;  for str in string.gmatch(inputstr, &quot;[^/]+&quot;) do&#xa;    table.insert(t, str)&#xa;  end&#xa;  return t&#xa;end&#xa;&#xa;function getDataFromSeriesName(name, time_sample)&#xa;    local data = {}&#xa;    local count = 0&#xa;    while(true) do&#xa;        local series_name = string.format(&quot;%s/%d&quot;, name, count)&#xa;        local series = TimeseriesView.find(series_name)&#xa;        &#xa;        if(series == nil) then&#xa;            break&#xa;        end&#xa;        &#xa;        table.insert(data, series:atTime(time_sample))&#xa;        count = count + 1&#xa;    end&#xa;    return data&#xa;end&#xa;"/>
+   <scripts>
+    <script function="series_names = GetSeriesNamesByPrefix(&quot;trajectory&quot;)&#xa;    &#xa;-- Adds new trajectories when received&#xa;for i, name in ipairs(series_names) do&#xa;  t = TopicSplitter(name)&#xa;  local group_name = t[2]&#xa;  local trajectory_name = t[3]&#xa;  &#xa;  -- If we haven't seen this trajectory group before, add table for group&#xa;  if(trajectory_groups[group_name] == nil) then&#xa;      trajectory_groups[group_name] = {}&#xa;  end&#xa;  -- If we haven't seen this trajectory within the group before, add series for it&#xa;  if(trajectory_groups[group_name][trajectory_name] == nil) then&#xa;    if(trajectory_name == &quot;time&quot;)then&#xa;      trajectory_groups[group_name][trajectory_name] = true&#xa;    else  &#xa;      new_series_name = string.format(&quot;%s/%s&quot;, group_name, trajectory_name)&#xa;      print(&quot;Creating new trajectory category&quot;, new_series_name)&#xa;      trajectory_groups[group_name][trajectory_name] = ScatterXY.new(new_series_name)&#xa;    end&#xa;  end&#xa;end&#xa;&#xa;-- Update existing trajectories --&#xa;for group_name, trajectory_map in pairs(trajectory_groups) do&#xa;    -- Abort for groups without a time vector&#xa;    if(trajectory_map[&quot;time&quot;] == nil)then&#xa;        print(&quot;No Time series found! Cannot continue for group: &quot;, group_name)&#xa;        break&#xa;    end&#xa;    -- Process time vector first&#xa;    time_str = string.format(&quot;/trajectory/%s/%s&quot;, group_name, &quot;time&quot;)&#xa;    time_array = getDataFromSeriesName(time_str, tracker_time);&#xa;    &#xa;    for traj_name, data in pairs(trajectory_map) do&#xa;        local series = trajectory_groups[group_name][traj_name]&#xa;        if(traj_name ~= &quot;time&quot;) then&#xa;            series:clear()&#xa;            local data_str = string.format(&quot;/trajectory/%s/%s&quot;, group_name, traj_name)&#xa;            local data_array = getDataFromSeriesName(data_str, tracker_time)&#xa;            &#xa;            for index, val in ipairs(data_array) do&#xa;                series:push_back(time_array[index], val)&#xa;            end&#xa;        end&#xa;    end&#xa;end&#xa;    " name="trajectory_plotter" global="trajectory_groups = {}&#xa;printed_already = false"/>
+   </scripts>
+  </plugin>
+  <plugin ID="CSV Exporter"/>
+  <plugin ID="ROS2 Topic Re-Publisher"/>
+ </Plugins>
+ <!-- - - - - - - - - - - - - - - -->
+ <previouslyLoaded_Datafiles/>
+ <!-- - - - - - - - - - - - - - - -->
+ <customMathEquations/>
+ <snippets/>
+ <!-- - - - - - - - - - - - - - - -->
+</root>
+

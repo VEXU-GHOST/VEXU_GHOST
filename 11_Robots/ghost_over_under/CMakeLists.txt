@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(ghost_over_under)
 
 # Add Global CMake Config for Ghost Packages
-set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 find_package(Ghost CONFIG REQUIRED)
 
 # Adds all our package dependencies to one list

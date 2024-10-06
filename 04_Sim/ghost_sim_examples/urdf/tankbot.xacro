@@ -1,0 +1,198 @@
+<?xml version="1.0"?>
+<robot name="tankbot" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:include filename="$(find ghost_sim_examples)/urdf/tank_macros.xacro"/>
+    <xacro:property name="r_wheel" value="0.034925"/> 
+    <xacro:property name="width_wheel" value="0.0254"/> 
+    <xacro:property name="roller_radius" value="0.00635"/>
+    <xacro:property name="roller_width" value="0.0127"/>
+    <xacro:property name="com_radius" value="0.02"/>
+    <xacro:property name="d2r" value="${3.14159/180}"/>
+    <xacro:property name="mu" value="0.01"/>
+    <xacro:property name="mu2" value="1.0"/>
+    <xacro:property name="izz" value="0.000914"/>
+     <material name="white">
+        <color rgba="1 1 1 1"/>
+     </material>
+   
+    <link name="base_link">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="0 0 0"/>
+        </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+        </visual>
+        <collision>
+        <geometry>
+            <box size="0 0 0"/>
+        </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="5"/>
+            <inertia
+                ixx="0.0" ixy="0.0" ixz="0.0"
+                iyy="0.094839" iyz="0.0"
+                izz="0.182903"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
+    </link>
+
+   
+     <link name="back_bar">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="0.0127 0.3302 0.0254"/>
+        </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+        </visual>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="10"/>
+            <inertia
+                ixx="0.0914" ixy="0.0" ixz="0.0"
+                iyy="0.000672" iyz="0.0"
+                izz="0.0910"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
+    </link>    
+
+    <joint name="back_bar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="back_bar"/>
+        <origin xyz="0.15875 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="left_bar">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="0.0127 0.3048 0.0254"/>
+        </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+        </visual>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="10"/>
+            <inertia
+                ixx="0.0914" ixy="0.0" ixz="0.0"
+                iyy="0.000672" iyz="0.0"
+                izz="0.0910"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
+    </link>
+
+    <joint name="left_bar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="left_bar"/>
+        <origin xyz="0 0.15875 0" rpy="0 0 1.5708"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="right_bar">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="0.0127 0.3048 0.0254"/>
+        </geometry>
+            <material name="silver">
+                <color rgba="0.9 0.9 0.9 1.0"/>
+            </material>
+    </visual>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="10"/>
+            <inertia
+                ixx="0.0914" ixy="0.0" ixz="0.0"
+                iyy="0.000672" iyz="0.0"
+                izz="0.0910"/>
+        </inertial>
+
+        <gazebo>
+            <maxVel>3.0</maxVel>
+        </gazebo>
+    </link>
+
+    <joint name="right_bar_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="right_bar"/>
+        <origin xyz="0 -0.15875 0" rpy="0 0 1.5708"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+ <!--Wheel Modules-->   
+    <xacro:wheel_macro id="front_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="front_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"  collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="back_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="middle_left" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
+    <xacro:wheel_macro id="middle_right" r_wheel="${r_wheel}" width_wheel="${width_wheel}"   collision_factor="8" mu="${mu}" mu2="${mu2}" izz="${izz}"></xacro:wheel_macro>
+
+    <joint name="wheel_joint_back_left" type="continuous">
+        <parent link="left_bar"/>
+        <child link="wheel_link_back_left"/>
+        <origin xyz="-0.0254 -0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/> 
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="wheel_joint_back_right" type="continuous">
+        <parent link="right_bar"/>
+        <child link="wheel_link_back_right"/>
+        <origin xyz="0.0254 -0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="wheel_joint_front_left" type="continuous">
+        <parent link="left_bar"/>
+        <child link="wheel_link_front_left"/>
+        <origin xyz="-0.0254 0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="wheel_joint_front_right" type="continuous">
+        <parent link="right_bar"/>
+        <child link="wheel_link_front_right"/>
+        <origin xyz="0.0254 0.10795 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <axis xyz="0 0 1"/>
+    </joint>
+
+        <joint name="wheel_joint_middle_left" type="continuous">
+        <parent link="left_bar"/>
+        <child link="wheel_link_middle_left"/>
+        <origin xyz="-0.0254 0 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <joint name="wheel_joint_middle_right" type="continuous">
+        <parent link="right_bar"/>
+        <child link="wheel_link_middle_right"/>
+        <origin xyz="0.0254 0 0" rpy="${-90*d2r} 0 ${90*d2r}"/>
+        <!-- <dynamics damping="0.0" friction="0.0"/> -->
+        <axis xyz="0 0 1"/>
+    </joint>
+
+
+</robot>

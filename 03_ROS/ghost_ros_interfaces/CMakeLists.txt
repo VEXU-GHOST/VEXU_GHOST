@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(ghost_ros_interfaces)
 
 # Add Global CMake Config for Ghost Packages
-set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 find_package(Ghost CONFIG REQUIRED)
 
 ######################
@@ -224,6 +224,7 @@ install(
 set(TESTS
   test_robot_hardware_interface_ros
   test_device_interfaces_ros
+  test_msg_helpers
 )
 foreach(TEST ${TESTS})
   ament_add_gtest(${TEST} test/${TEST}.cpp)
