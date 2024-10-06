@@ -77,6 +77,9 @@ void V5RobotBase::configure()
 
 void V5RobotBase::loadRobotHardwareInterface()
 {
+
+  // ZAARA
+  
   // Get YAML path from ROS Param
   node_ptr_->declare_parameter("robot_config_yaml_path", "");
   std::string robot_config_yaml_path =

@@ -4,13 +4,15 @@
 #include <unordered_map>
 #include "eigen3/Eigen/Geometry"
 
-#include "ghost_msgs/msg/"
-#include "ghost_common/util/angle_util.hpp"
-#include "ghost_common/util/parsing_util.hpp"
+#include "ghost_util/angle_util.hpp"
+#include "ghost_util/parsing_util.hpp"
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
-#include "ghost_common/v5_robot_config_defs.hpp"
+//#include "ghost_util/v5_robot_config_defs.hpp"
 #include "ghost_control/models/dc_motor_model.hpp"
+#include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 #include "ghost_control/motor_controller.hpp"
+//#include "ghost_ros_interfaces/v5_robot_base.hpp"
+#include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 #include "gazebo_plugin.hpp"
 #include <gazebo/physics/Joint.hh>
 #include <gazebo/physics/Link.hh>
@@ -21,15 +23,23 @@
 #include <memory>
 #include <vector>
 
+using Eigen::Dynamic;
+using Eigen::Matrix;
+using Eigen::RowMajor;
+
+using ghost_control::DCMotorModel;
+using ghost_control::MotorController;
+using ghost_v5_interfaces::RobotHardwareInterface;
+using ghost_v5_interfaces::devices::hardware_type_e;
+using ghost_v5_interfaces::util::loadRobotConfigFromYAMLFile;
+
 namespace gazebo
 {
   class TankMovePrivate
   {
     public: 
-    TankMovePrivate()
+    TankMovePrivate();
 
-        {
-        }
 
     // Pointer to the update event connection
     gazebo::event::ConnectionPtr updateConnection;
@@ -40,7 +50,7 @@ namespace gazebo
     std::vector<std::string> motor_names_;
     std::vector<std::string> joint_names_;
 
-
+ // std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 
 
 
@@ -76,7 +86,7 @@ namespace gazebo
 
  rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
 
-
+  std::mutex actuator_update_callback_mutex;
 
 
   };
@@ -102,6 +112,17 @@ TankMove::~TankMove()
       impl_->model_ = model;
 
 
+  // Get YAML path from ROS Param
+      impl_->ros_node_->declare_parameter("robot_hardware_config_worlds_24", "");
+  std::string robot_config_yaml_path =
+      impl_->ros_node_->get_parameter("robot_hardware_config_worlds_24").as_string();
+
+  // Load RobotHardwareInterface from YAML
+  auto device_config_map = loadRobotConfigFromYAMLFile(robot_config_yaml_path);
+  rhi_ptr_ = std::make_shared<RobotHardwareInterface>(
+    device_config_map,
+    hardware_type_e::V5_BRAIN);
+
 
   // Initialize ROS Subscriptions
   impl_->actuator_command_sub_ =
@@ -112,8 +133,8 @@ TankMove::~TankMove()
       std::unique_lock update_lock(impl_->actuator_update_callback_mutex);
       for (const std::string & name : impl_->motor_names_) {
         // Get V5 Motor Command msg, Motor Model, and Motor Controller for each motor
-        const auto & motor_cmd_msg =
-        msg->motor_commands[ghost_v5_config::motor_config_map.at(name).port];
+       // const auto & motor_cmd_msg = msg->motor_commands = impl_->motor_model_map_;
+        msg->motor_commands[rhi_ptr_-> motor_config_map.at(name).port];
         auto motor_model_ptr = impl_->motor_model_map_.at(name);
         auto motor_controller_ptr = impl_->motor_controller_map_.at(name);
 
@@ -158,10 +179,10 @@ std::vector<std::string> params{
   }
 
   // Parse input plugin parameters
-  impl_->joint_names_ = ghost_common::getVectorFromString<std::string>(
+  impl_->joint_names_ = ghost_util::getVectorFromString<std::string>(
     sdf->GetElement(
       "joint_names")->Get<std::string>(), ' ');
-  impl_->motor_names_ = ghost_common::getVectorFromString<std::string>(
+  impl_->motor_names_ = ghost_util::getVectorFromString<std::string>(
     sdf->GetElement(
       "motor_names")->Get<std::string>(), ' ');
 
@@ -170,7 +191,7 @@ std::vector<std::string> params{
   impl_->joint_velocities_.resize(impl_->joint_names_.size());
   impl_->joint_efforts_.resize(impl_->joint_names_.size());
 
-  std::vector<double> actuator_jacobian_temp = ghost_common::getVectorFromString<double>(
+  std::vector<double> actuator_jacobian_temp = ghost_util::getVectorFromString<double>(
     sdf->GetElement(
       "actuator_jacobian")->Get<std::string>(), ' ');
   
@@ -197,8 +218,9 @@ std::vector<std::string> params{
   for (const std::string & name : impl_->motor_names_) {
     //     // Get config from global definitions
     try {
-      ghost_v5_config::MotorConfigStruct config =
-        (ghost_v5_config::motor_config_map.at(name)).config;
+      rhi_ptr_->MotorConfigStruct config = 
+      rhi_ptr_->MotorConfigStruct config =
+        (motor_config_map.at(name)).config;
 
       impl_->motor_model_map_[name] = std::make_shared<DCMotorModel>(
         impl_->free_speed_,
@@ -208,6 +230,16 @@ std::vector<std::string> params{
         impl_->nominal_voltage_.
         impl_->gear_ratio
 );
+// auto motor_config = rhi_ptr_->getDeviceConfig(name); 
+// impl_->motor_model_map_[name] = std::make_shared<DCMotorModel>(
+//   motor_config.free_speed,
+//   motor_config.stall_torque,
+//   motor_config.free_current,
+//   motor_config.stall_current,
+//   motor_config.nominal_voltage,
+//   motor_config.gear_ratio
+// );
+impl_->motor_controller_map_[name] = std::make_shared<MotorController>(motor_config);
 
       impl_->motor_controller_map_[name] = std::make_shared<MotorController>(config);
 
@@ -225,7 +257,7 @@ std::vector<std::string> params{
 
     }
 
-Eigen::VectorXd V5RobotPlugin::motorToJointTransform(const Eigen::VectorXd & motor_data)
+Eigen::VectorXd TankMove::motorToJointTransform(const Eigen::VectorXd & motor_data)
 {
   // Actuator Jacobian 6X8 rad/s
   // Motor Data 6X1 RPM
@@ -234,7 +266,7 @@ Eigen::VectorXd V5RobotPlugin::motorToJointTransform(const Eigen::VectorXd & mot
   return joint_data;
 }
 
-Eigen::VectorXd V5RobotPlugin::jointToMotorTransform(const Eigen::VectorXd & joint_data)
+Eigen::VectorXd TankMove::jointToMotorTransform(const Eigen::VectorXd & joint_data)
 {
   // Actuator Jacobian 6X8
   // Joint Data 6X1
@@ -243,7 +275,7 @@ Eigen::VectorXd V5RobotPlugin::jointToMotorTransform(const Eigen::VectorXd & joi
 }
 
 
-void V5RobotPlugin::updateJointStates()
+void TankMove::updateJointStates()
 {
   int index = 0;
   // Lamda for-each expression to get encoder values for every joint
@@ -251,7 +283,7 @@ void V5RobotPlugin::updateJointStates()
     begin(impl_->joint_names_), end(impl_->joint_names_), [&](const std::string & joint_name) {
       try {
         impl_->joint_angles_(index) =
-        fmod(impl_->model_->GetJoint(joint_name)->Position(2) * ghost_common::RAD_TO_DEG, 360);
+        fmod(impl_->model_->GetJoint(joint_name)->Position(2) * ghost_util::RAD_TO_DEG, 360);
         impl_->joint_velocities_(index) = impl_->model_->GetJoint(joint_name)->GetVelocity(2);
         index++;
       } catch (const std::exception & e) {
@@ -262,7 +294,7 @@ void V5RobotPlugin::updateJointStates()
     });
 }
 
-void V5RobotPlugin::updateMotorController()
+void TankMove::updateMotorController()
 {
   int motor_index = 0;
   // Defined to avoid out of bounds indexing
@@ -306,7 +338,7 @@ void V5RobotPlugin::updateMotorController()
   // Nothing is publishing the output joint torques
 }
 
-void V5RobotPlugin::applySimJointTorques()
+void TankMove::applySimJointTorques()
 {
   int joint_index = 0;
   for (const std::string & name : impl_->joint_names_) {

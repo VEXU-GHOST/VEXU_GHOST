@@ -17,6 +17,9 @@
   <depend>gazebo</depend>
   <depend>gazebo_ros</depend>
   <depend>ghost_control</depend>
+  <depend>ghost_util</depend>
+  <depend>ghost_msgs</depend>
+  <depend>ghost_v5_interfaces</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

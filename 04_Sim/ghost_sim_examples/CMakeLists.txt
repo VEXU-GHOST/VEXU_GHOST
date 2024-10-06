@@ -12,18 +12,24 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
 find_package(ghost_msgs REQUIRED)
+find_package(ghost_control REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(ghost_control REQUIRED)
+find_package(ghost_util REQUIRED)
+find_package(ghost_v5_interfaces REQUIRED)
 find_package(ghost_estimation REQUIRED)
 
 set(DEPENDENCIES
-ghost_msgs
 ament_cmake
 rclcpp
 std_msgs
 gazebo_ros
+ghost_msgs
+ghost_control
+ghost_util
 gazebo
 ghost_control
+ghost_v5_interfaces
 )
 
 # foreach(pkg ${DEPENDENCIES})
@@ -54,6 +60,7 @@ install(DIRECTORY
   urdf
   rviz
   world
+  test
   DESTINATION share/${PROJECT_NAME}
 )
 
