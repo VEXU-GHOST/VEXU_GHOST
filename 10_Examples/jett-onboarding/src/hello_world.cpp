@@ -6,8 +6,9 @@ using namespace std;
 
 int test();
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
-    test();
-    return 0;
+  talking t1;
+  t1.talk("Hello World");
+  return 0;
 }

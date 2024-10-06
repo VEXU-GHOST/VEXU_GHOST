@@ -2,34 +2,35 @@
 #include <iostream>
 #include "string.h"
 
-// using namespace std;
+using namespace std;
 
 talking::talking()
 {
-    this->num1 = 10;
+  this->num1 = 10;
 }
 
 talking::~talking()
 {
 }
 
-void talking::talk(string words)
+string talking::talk(string words)
 {
-    cout << words << endl;
+  cout << words << endl;
+  return words;
 }
 
-void talking::numberPrint()
+int talking::numberPrint()
 {
-    cout << num1 << endl;
+  cout << num1 << endl;
+  return num1;
 }
 
 int talking::twoToPower(int i)
 {
-    int value = 1;
-    while (i > 0)
-    {
-        value *= 2;
-        i--;
-    }
-    return value;
+  int value = 1;
+  while (i > 0) {
+    value *= 2;
+    i--;
+  }
+  return value;
 }

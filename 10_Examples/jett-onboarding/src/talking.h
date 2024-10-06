@@ -9,15 +9,15 @@ using namespace std;
 class talking
 {
 public:
-    int num1;
+  int num1;
 
-    talking();  // constructor
-    ~talking(); // destructor
+  talking();    // constructor
+  ~talking();   // destructor
 
-    void talk(string words);
-    void numberPrint();
+  string talk(string words);
+  int numberPrint();
 
-    int twoToPower(int i);
+  int twoToPower(int i);
 };
 
 #endif
