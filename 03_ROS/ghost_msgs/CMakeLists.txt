@@ -23,6 +23,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/device_msgs/states/V5JoystickState.msg"
   "msg/device_msgs/states/V5MotorState.msg"
   "msg/device_msgs/states/V5RotationSensorState.msg"
+  "msg/device_msgs/states/DiffDriveState.msg"
   "msg/device_msgs/states/V5InertialSensorState.msg"
   "msg/V5ActuatorCommand.msg"
   "msg/V5SensorUpdate.msg"
