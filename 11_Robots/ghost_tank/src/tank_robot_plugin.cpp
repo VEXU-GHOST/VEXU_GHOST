@@ -226,8 +226,6 @@ void TankRobotPlugin::autonomous(double current_time)
   std::cout << "Autonomous: " << current_time << std::endl;
   std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
 
-  // m_tank_model_ptr->setAutonTime(current_time);
-
   // if(!m_recording){
   //    auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
   //    m_start_recorder_client->async_send_request(req);
@@ -245,9 +243,7 @@ void TankRobotPlugin::autonomous(double current_time)
 
   // Get best state estimate
   auto curr_pose = m_tank_model_ptr->getWorldPose();
-  // double curr_theta = m_tank_model_ptr->getWorldAngleRad();
   auto curr_twist = m_tank_model_ptr->getWorldTwist();
-  // auto curr_vel_theta = m_tank_model_ptr->getWorldAngularVelocity();
   auto curr_vel_x = curr_twist.x();
   auto curr_vel_y = curr_twist.y();
   auto curr_vel_theta = curr_twist.z();
@@ -264,6 +260,64 @@ void TankRobotPlugin::autonomous(double current_time)
 
   // m_tank_model_ptr->drive command thing
 
+  std::vector<std::vector<double>> auton_instructions = {
+    {3.0, 0.5, 0.0},
+    {2.0, 0.0, 0.5},
+    {4.0, 0.5, 0.0}
+  };
+
+  double forward_vel = 0;
+  double angular_vel = 0;
+  double time_sum = 0;
+  static int auton_index = 0;
+
+  if (auton_index < auton_instructions.size()){
+    if (current_time < auton_instructions[auton_index][0] + time_sum){
+      forward_vel = auton_instructions[auton_index][1];
+      angular_vel = auton_instructions[auton_index][2];
+    } else {
+      time_sum += auton_instructions[auton_index][0];
+      auton_index++;
+    }
+  } else {
+
+  }
+
+  double left_cmd = forward_vel + angular_vel;
+  double right_cmd = forward_vel - angular_vel;
+
+  std::vector<std::string> motor_list = {
+      "drive_ltr",
+      "drive_lbr",
+      "drive_ltf",
+      "drive_lbf",
+      "drive_lttf",
+      "indexer_right",
+      "indexer_left",
+      "drive_rttf",
+      "drive_rtr",
+      "drive_rbr",
+      "drive_rtf",
+      "drive_rbf"
+    };
+    
+  for (const auto motor_name: motor_list){
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+  }
+
+  for (int i = 0; i < 5; i++){
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
+  }
+
+  for (int i = 7; i < 12; i++){
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
+  }
+
+  geometry_msgs::msg::Twist msg{};
+  msg.linear.x = forward_vel;
+  msg.linear.y = 0;
+  msg.angular.z = angular_vel;
+  m_base_twist_cmd_pub->publish(msg);
   // updateDrivetrainMotors();
 }
 

@@ -21,7 +21,7 @@ ament_export_dependencies(${DEPENDENCIES})
 install(DIRECTORY
   config
   launch
-  urdf
+  # urdf
   rviz
   DESTINATION share/${PROJECT_NAME})
 
