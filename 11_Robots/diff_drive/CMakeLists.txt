@@ -13,6 +13,8 @@ set(DEPENDENCIES
   ghost_msgs
   Eigen3
   eigen3_cmake_module
+  nav_msgs
+  ghost_util
   )
 
 # find dependencies
@@ -21,23 +23,46 @@ foreach(pkg ${DEPENDENCIES})
 endforeach()
 ament_export_dependencies(${DEPENDENCIES})
 
-add_executable(diff_drive_ss
-  src/diff_drive_ss.cpp
-)
-
-ament_target_dependencies(diff_drive_ss
-  ${DEPENDENCIES}
-)
-
+# Diff Drive State Space
+add_library(diff_drive_ss SHARED src/diff_drive_ss.cpp)
 target_include_directories(diff_drive_ss
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-install(TARGETS
+ament_target_dependencies(diff_drive_ss
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
   diff_drive_ss
+)
+ament_export_targets(diff_drive_ss HAS_LIBRARY_TARGET)
+install(
+  TARGETS diff_drive_ss
+  EXPORT diff_drive_ss
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DES
+)
+
+# Diff Drive Main
+add_executable(diff_drive_main
+  src/diff_drive_main.cpp
+)
+
+ament_target_dependencies(diff_drive_main
+  ${DEPENDENCIES}
+)
+target_link_libraries(diff_drive_main diff_drive_ss)
+target_include_directories(diff_drive_main
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  diff_drive_main
   DESTINATION lib/${PROJECT_NAME})
 
-
+# Psuedo motor voltage publisher for testing
 add_executable(mtr_vltg_pub
   test/mtr_vltg_pub.cpp
 )

@@ -6,31 +6,26 @@
 #include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "ghost_msgs/msg/diff_drive_state.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+
+/*
+Matrix dimensions are static! A is 5x5
+*/
 
 
-namespace diff_drive_ss
+namespace diff_drive
 {
-
-class DiffDriveSS : public rclcpp::Node
+class DiffDriveSS
 {
 public:
   DiffDriveSS();
-
-  // Subscribers
-  rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr mtr_vltg_sub_;
-
-
-  // Publishers
-  rclcpp::Publisher<ghost_msgs::msg::DiffDriveState>::SharedPtr diff_drive_ss_pub_;
-
-  void MtrVltgCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
-
-private:
-  unsigned long int n_dim_;
-  unsigned long int m_dim_;
+  void getA();
+  void VltgToVelocity(
+    std::vector<ghost_msgs::msg::V5MotorCommand,
+    std::allocator<ghost_msgs::msg::V5MotorCommand>> & mtr_cmds);
 
 
 };
 
+
 }
-// namespace diff_drive_ss

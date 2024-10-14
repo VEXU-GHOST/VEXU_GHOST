@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 
+#include "ghost_msgs/msg/v5_actuator_command.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
@@ -16,7 +17,9 @@ public:
   MtrVltgPub()
   : Node("mtr_vltg_pub"), count_(0)
   {
-    publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
+    publisher_ = this->create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
+      "v5_act_cmd",
+      10);
     timer_ = this->create_wall_timer(
       500ms, std::bind(&MtrVltgPub::timer_callback, this));
   }
@@ -24,13 +27,36 @@ public:
 private:
   void timer_callback()
   {
-    auto message = std_msgs::msg::String();
-    message.data = "Hello, world! " + std::to_string(count_++);
-    RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
-    publisher_->publish(message);
+    auto cmd = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
+    auto l_mtr_cmd = std::make_shared<ghost_msgs::msg::V5MotorCommand>();
+    auto r_mtr_cmd = std::make_shared<ghost_msgs::msg::V5MotorCommand>();
+
+    l_mtr_cmd->position_command = 0.0;
+    l_mtr_cmd->velocity_command = 0.0;
+    l_mtr_cmd->torque_command = 0.0;
+    l_mtr_cmd->voltage_command = 1.0;
+    l_mtr_cmd->current_limit = 0.0;
+
+    l_mtr_cmd->position_control = false;
+    l_mtr_cmd->velocity_control = false;
+    l_mtr_cmd->torque_control = false;
+    l_mtr_cmd->voltage_control = true;
+
+
+    r_mtr_cmd->position_command = 0.0;
+    r_mtr_cmd->velocity_command = 0.0;
+    r_mtr_cmd->torque_command = 0.0;
+    r_mtr_cmd->voltage_command = 1.0;
+    r_mtr_cmd->current_limit = 0.0;
+
+    r_mtr_cmd->position_control = false;
+    r_mtr_cmd->velocity_control = false;
+    r_mtr_cmd->torque_control = false;
+    r_mtr_cmd->voltage_control = true;
+    // publisher_->publish(cmd);
   }
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
+  rclcpp::Publisher<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr publisher_;
   size_t count_;
 };
 

@@ -16,6 +16,8 @@
 
   <depend>ghost_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>ghost_util</depend>
 
 
   <export>
