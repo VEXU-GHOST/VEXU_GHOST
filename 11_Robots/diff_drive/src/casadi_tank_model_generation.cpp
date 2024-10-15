@@ -87,18 +87,51 @@ int main(int argc, char * argv[])
   constexpr float TIME_HORIZON = 1.0;
   constexpr float DT = 0.01;
 
-  // 2D Point Mass model
+  // Params
+  double mass = 10.0;
+  double inertia = 0.14868;
+  double init_pose_x = -1.0;
+  double init_pose_y = 0.0;
+  double init_pose_tht = 0.0;
+  double init_vel_x = 0.0;
+  double init_vel_y = 0.0;
+  double init_vel_tht = 0.0;
+  double des_vel_x = 0.75;
+  double des_vel_y = 0.0;
+  double des_vel_tht = 0.0;
+
   const std::vector<std::string> STATE_NAMES = {
     "base_pose_x",
+    "base_pose_y",
+    "base_pose_tht",
     "base_vel_x",
-    "base_accel_x"};
+    "base_vel_y",
+    "base_vel_tht",
+    "base_accel_x",
+    "base_accel_y",
+    "base_accel_tht"};
   const std::vector<std::string> PARAM_NAMES = {
-    "final_pose_x"};
+    "mass",
+    "inertia",
+    "init_pose_x",
+    "init_pose_y",
+    "init_pose_tht",
+    "init_vel_x",
+    "init_vel_y",
+    "init_vel_tht",
+    "des_vel_x",
+    "des_vel_y",
+    "des_vel_tht", };
 
   // List pairs of base state and derivative state
   const std::vector<std::pair<std::string, std::string>> INTEGRATION_STATE_NAME_PAIRS = {
     std::pair<std::string, std::string>{"base_pose_x", "base_vel_x"},
+    std::pair<std::string, std::string>{"base_pose_y", "base_vel_y"},
+    std::pair<std::string, std::string>{"base_pose_tht", "base_vel_tht"},
+
     std::pair<std::string, std::string>{"base_vel_x", "base_accel_x"},
+    std::pair<std::string, std::string>{"base_vel_y", "base_accel_y"},
+    std::pair<std::string, std::string>{"base_vel_tht", "base_accel_tht"},
   };
 
   ////////////////////////////////////////////
@@ -187,7 +220,7 @@ int main(int argc, char * argv[])
 
   // Initial and Terminal Constraints
   auto initial_state_constraint_vector = vertcat(
-    get_state("k0_base_pose_x") - 1,
+    get_state("init_pose_x") - 1,
     -get_state("k0_base_pose_x") + 1,
     get_state("k0_base_vel_x"),
     -get_state("k0_base_vel_x"));
@@ -216,17 +249,47 @@ int main(int argc, char * argv[])
     std::string curr_knot_prefix = "k" + std::to_string(k) + "_";
     std::string next_knot_prefix = "k" + std::to_string(k + 1) + "_";
 
-    // Normalize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
-    f += 1 / DT *
+    // Regularize base acceleration (essentially averaging adjacent values via trapezoidal quadrature)
+    f += 0.000001 / DT *
       (pow(
         get_state(curr_knot_prefix + "base_accel_x"),
         2) + pow(get_state(next_knot_prefix + "base_accel_x"), 2));
-
-    // Minimize jerk via finite difference
-    f += 1 / DT *
+    f += 0.000001 / DT *
       (pow(
-        get_state(next_knot_prefix + "base_accel_x") -
-        get_state(curr_knot_prefix + "base_accel_x"), 2));
+        get_state(curr_knot_prefix + "base_accel_y"),
+        2) + pow(get_state(next_knot_prefix + "base_accel_y"), 2));
+    f += 0.000001 / DT *
+      (pow(
+        get_state(curr_knot_prefix + "base_accel_tht"),
+        2) + pow(get_state(next_knot_prefix + "base_accel_tht"), 2));
+
+    // Regularize Base Jerk
+    f += 0.01 / DT *
+      (pow(
+        get_state(curr_knot_prefix + "base_accel_x") -
+        get_state(next_knot_prefix + "base_accel_x"), 2));
+    f += 0.01 / DT *
+      (pow(
+        get_state(curr_knot_prefix + "base_accel_y") -
+        get_state(next_knot_prefix + "base_accel_y"), 2));
+    f += 0.01 / DT *
+      (pow(
+        get_state(curr_knot_prefix + "base_accel_tht") -
+        get_state(next_knot_prefix + "base_accel_tht"), 2));
+
+    // Penalize Velocity Deviation
+    f += 10000.0 * 1 / DT *
+      (pow(
+        get_param("des_vel_x") - get_state(curr_knot_prefix + "base_vel_x"),
+        2) + pow(get_param("des_vel_x") - get_state(next_knot_prefix + "base_vel_x"), 2));
+    f += 10000.0 * 1 / DT *
+      (pow(
+        get_param("des_vel_y") - get_state(curr_knot_prefix + "base_vel_y"),
+        2) + pow(get_param("des_vel_y") - get_state(next_knot_prefix + "base_vel_y"), 2));
+    f += 10000.0 * 1 / DT *
+      (pow(
+        get_param("des_vel_tht") - get_state(curr_knot_prefix + "base_vel_tht"),
+        2) + pow(get_param("des_vel_tht") - get_state(next_knot_prefix + "base_vel_tht"), 2));
   }
 
   /////////////////////////
@@ -252,7 +315,19 @@ int main(int argc, char * argv[])
   solver_args["lbg"] = 0;
   solver_args["ubg"] = 0;
   solver_args["x0"] = DM::ones(NUM_OPT_VARS);
-  solver_args["p"] = {5.0};
+
+  solver_args["p"] = {mass,
+    inertia,
+    init_pose_x,
+    init_pose_y,
+    init_pose_tht,
+    init_vel_x,
+    init_vel_y,
+    init_vel_tht,
+    des_vel_x,
+    des_vel_y,
+    des_vel_tht
+  };
   res = solver(solver_args);
 
   /////////////////////////////

@@ -2,9 +2,6 @@
 
 using std::placeholders::_1;
 
-// TODO: make individual parts of algo and unit test . Change to library or make library file and leave this as executable
-// First validate MPC/iLQR with diff drive sim. Use position as input and cmd vel as output
-
 namespace diff_drive
 {
 
