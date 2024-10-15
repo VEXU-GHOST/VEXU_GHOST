@@ -15,6 +15,11 @@ set(DEPENDENCIES
   eigen3_cmake_module
   nav_msgs
   ghost_util
+  casadi
+  matplotlib_cpp
+  yaml-cpp
+  urdf
+
   )
 
 # find dependencies
@@ -44,6 +49,10 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DES
 )
+
+###################
+### Executables ###
+###################
 
 # Diff Drive Main
 add_executable(diff_drive_main
@@ -78,6 +87,25 @@ target_include_directories(mtr_vltg_pub
 install(TARGETS
   mtr_vltg_pub
   DESTINATION lib/${PROJECT_NAME})
+
+# Main to generate Problem Formulation for MDS MPC
+add_executable(casadi_tank_model_generation src/casadi_tank_model_generation.cpp)
+ament_target_dependencies(casadi_tank_model_generation
+  ${DEPENDENCIES}
+)
+target_link_libraries(casadi_tank_model_generation
+  casadi
+  matplotlib_cpp::matplotlib_cpp
+  ${PYTHON_LIBRARIES}
+)
+target_include_directories(casadi_tank_model_generation
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  casadi_tank_model_generation
+  DESTINATION lib/${PROJECT_NAME})
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
