@@ -72,7 +72,7 @@ void TankRobotPlugin::initialize()
 
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
-  
+
   // for vex ai
   node_ptr_->declare_parameter<std::string>("bt_path_interaction");
   std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
@@ -226,23 +226,54 @@ void TankRobotPlugin::autonomous(double current_time)
   std::cout << "Autonomous: " << current_time << std::endl;
   // std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
 
-  
+
 }
 
 void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
 
-  double forward_vel = joy_data->left_y / 127.0;
-  double angular_vel = joy_data->right_x / 127.0;
+//interpret joystick data as decimal -1.0 -- 1.0
 
+// //forward-velo
+//   double forward_velo = joy_data->left_y / 127.0;
+// //angular-velo
+//   double angular_velo = joy_data->right_x / 127.0;
+
+
+//check for threshold
+
+//   double threshold = 0.05;
+//   forward_vel = (std::fabs(forward_velo) < threshold) ? 0.0 : forward_velo;
+//   angular_vel = (std::fabs(angular_velo) < threshold) ? 0.0 : angular_velo;
+
+// //left motors
+//   double left_cmd = forward_velo + angular_velo;
+// //right motors
+//   double right_cmd = forward_velo - angular_velo;
+
+
+//double joystick driving
+//left
+  double left_velo = joy_data->left_y / 127.0;
+  double right_velo = joy_data->right_y / 127.0;
+
+  double forward_velo = joy_data->btn_u ? 0.0 : 1.0;
+  double backward_velo = joy_data->btn_d ? 0.0 : 1.0;
   double threshold = 0.05;
-  forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-  angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+  if (forward_velo) {
+    left_velo = 1.0;
+    right_velo = 1.0;
+  } else if (backward_velo) {
+    left_velo = -1.0;
+    right_velo = -1.0;
+  } else {
+    left_velo = std::fabs(left_velo) < threshold ? 0.0 : 1.0;
+    right_velo = std::fabs(right_velo) < threshold ? 0.0 : 1.0;
+  }
 
-  double left_cmd = forward_vel + angular_vel;
-  double right_cmd = forward_vel - angular_vel;
-
+  double left_cmd = left_velo;
+  double right_cmd = right_velo;
   // this is from ghost_high_stakes/config/robot_hardware_config_tank.yaml
   std::vector<std::string> motor_list = {
     "drive_ltr",
@@ -258,43 +289,54 @@ void TankRobotPlugin::teleop(double current_time)
     "drive_rtf",
     "drive_rbf"
   };
-  
-  for (const auto motor_name: motor_list){
+
+  //initiallize current for all motors
+  for (const auto motor_name: motor_list) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
-
-  for (int i = 0; i < 5; i++){
+  //voltage percentage based on current inputs
+  //for left
+  for (int i = 0; i < 5; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
-
-  for (int i = 7; i < 12; i++){
+  //for right
+  for (int i = 7; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
   }
 
-  double intake_power = 0;
-  if(joy_data->btn_r2){
-    intake_power = 1.0;
-  }
-  else if(joy_data->btn_r1){
-    intake_power = -1.0;
-  }
-  else{
-    intake_power = 0.0;
-  }
-  
-  rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
-  rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
+  //now you need to check the inputs for non-driving-mechanics
 
+  //intake for donuts
+  double intake;
+  //if r2 is pressed, it should take in a donut
+  //if r1 is pressed, it should eject the donut
+  //if neither is pressed nothing should happen
+
+  if (joy_data->btn_r2) {
+    intake = 1.0;
+  } else if (joy_data->btn_r1) {
+    intake = -1.0;
+  } else {
+    intake = 0.0;
+  }
+
+  rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake);
+  rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake);
+
+
+  //forklift
+
+  //if l2 is pressed, the forklift should be turned on or should stay on
   static bool forklift_pressed = false;
   static bool forklift_up = false;
 
-  if(joy_data->btn_l1 && !forklift_pressed){
-      forklift_pressed = true;
-      forklift_up = !forklift_up;
-  }
-  else if(!joy_data->btn_l1){
+  if (joy_data->btn_l1 && !forklift_pressed) {
+    forklift_pressed = true;
+    forklift_up = !forklift_up;
+  } else if (!joy_data->btn_l1) {//if l1 is pressed, the forklift should turn off or stay off
     forklift_pressed = false;
   }
+
 
   m_digital_io[1] = forklift_up; // forklift
   m_digital_io[2] = joy_data->btn_l2; // pooper
@@ -461,7 +503,7 @@ void TankRobotPlugin::publishOdometry()
 }
 
 void TankRobotPlugin::publishCurrentTwist(
-    Eigen::Vector3d twist)
+  Eigen::Vector3d twist)
 {
   geometry_msgs::msg::Twist msg{};
   msg.linear.x = twist.x();
