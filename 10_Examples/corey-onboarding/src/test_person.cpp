@@ -1,16 +1,22 @@
 #include "person.h"
-#include <cassert>
+#include <gtest/gtest.h>
 #include <iostream>
+#include "ghost_examples/ros_subscriber_example.hpp"
+#include "gtest/gtest.h"
 
-int main()
+TEST_F(Person, Constructor) {
+
+  Person person1("Bob", 25);
+
+  EXPECT_EQ(person1.getName(), "Bob");
+  EXPECT_EQ(person1.getAGe(), "25");
+
+}
+
+int main(int argc, char ** argv)
 {
 
-	Person person1("Bob", 25);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 
-	assert(person1.getName() == "Bob");
-	assert(person1.getAge() == 25);
-
-	std::cout << "All tests passed!" << std::endl;
-
-	return 0;
 }
