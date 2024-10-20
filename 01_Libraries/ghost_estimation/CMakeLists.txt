@@ -134,6 +134,7 @@ target_include_directories(particle_filter
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 ament_export_targets(particle_filter HAS_LIBRARY_TARGET)
+
 install(
   TARGETS particle_filter
   EXPORT particle_filter
@@ -147,13 +148,19 @@ install(
 #### Disc Detector ####
 #######################
 # Install Python modules
-ament_python_install_package(${PROJECT_NAME})
+ament_python_install_package(${PROJECT_NAME} )
  
 # Install Python executables
 install(PROGRAMS
   src/disc_detector/disc_detector.py
   DESTINATION lib/${PROJECT_NAME}
 )
+
+install(PROGRAMS
+  src/disc_detector/yolo_detector.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 
 #################
 #### Install ####
