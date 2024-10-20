@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(ghost_v5_interfaces)
 
 # Add Global CMake Config for Ghost Packages
-set(Ghost_DIR "$ENV{HOME}/VEXU_GHOST/cmake")
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 find_package(Ghost CONFIG REQUIRED)
 
 ######################
@@ -60,6 +60,7 @@ install(
 set(UTIL_LIBS
   load_motor_device_config_yaml
   load_rotation_sensor_device_config_yaml
+  load_inertial_sensor_device_config_yaml
 )
 
 foreach(UTIL ${UTIL_LIBS})
@@ -134,6 +135,7 @@ set(DEVICE_TESTS
   test_device_config_interfaces
   test_motor_device_interface
   test_rotation_sensor_device_interface
+  test_inertial_sensor_device_interface
   test_joystick_device_interface
 )
 foreach(TEST ${DEVICE_TESTS})
@@ -152,6 +154,7 @@ foreach(TEST ${UTIL_LIBS})
     gtest_main
     load_motor_device_config_yaml
     load_rotation_sensor_device_config_yaml
+    load_inertial_sensor_device_config_yaml
     device_config_factory_utils
     yaml-cpp
   )

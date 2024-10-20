@@ -83,4 +83,3 @@ port_configuration:
                 stall_current: 4.25
                 nominal_voltage: 12.0
                 gear_ratio: 1.0
-

@@ -11,6 +11,9 @@ ghost_msgs/V5JoystickState[] joysticks
 # Rotation Sensor States
 ghost_msgs/V5RotationSensorState[] rotation_sensors
 
+# Inertial Sensor States
+ghost_msgs/V5InertialSensorState[] inertial_sensors
+
 # Motor States
 ghost_msgs/V5MotorState[] motors
 

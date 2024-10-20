@@ -22,6 +22,7 @@ endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 set(DEPENDENCIES
   ament_cmake
   ament_cmake_python
+  ghost_util
   rclcpp
   rclpy
   tf2_msgs

@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Deprecated: Previously contained ROS nodes for VEXU Ghost</description>
   <maintainer email="JesseMaxxWilson@utexas.edu">maxx</maintainer>
-  <license>GPLv3.0</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -23,7 +23,6 @@
   <depend>ghost_common</depend>
   <depend>ghost_serial</depend>
   <depend>ghost_msgs</depend>
-  <depend>ghost_description</depend>
   <depend>ghost_estimation</depend>
   <depend>ghost_control</depend>
 

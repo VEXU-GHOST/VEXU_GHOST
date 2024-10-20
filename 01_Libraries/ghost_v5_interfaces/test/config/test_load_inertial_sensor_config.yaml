@@ -1,0 +1,26 @@
+port_configuration:
+    devices:
+        inertial_sensor_1:
+            port: 1
+            type: INERTIAL_SENSOR
+            config: inertial_sensor_config
+        inertial_sensor_2:
+            port: 2
+            type: INERTIAL_SENSOR
+            config: default_inertial_sensor_config
+        inertial_sensor_no_config:
+            port: 2
+            type: INERTIAL_SENSOR
+        inertial_sensor_no_port:
+            type: INERTIAL_SENSOR
+        inertial_sensor_no_type:
+            port: 2
+
+    device_configurations:
+        default_inertial_sensor_config:
+
+        inertial_sensor_config:
+            serial:
+                send_gyro_data: true
+                send_accel_data: true
+                send_heading_data: false

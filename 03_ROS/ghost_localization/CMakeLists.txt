@@ -21,9 +21,24 @@ find_package(ghost_msgs REQUIRED)
 
 include_directories(include)
 
-##############################
-#### Ghost EKF-PF Node ####
-##############################
+###############################
+### 2D Covariance Publisher ###
+###############################
+add_executable(covariance_2d_publisher src/covariance_2d_publisher.cpp)
+ament_target_dependencies(covariance_2d_publisher
+  nav_msgs
+  rclcpp)
+target_include_directories(covariance_2d_publisher
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  covariance_2d_publisher
+  DESTINATION lib/${PROJECT_NAME})
+
+###############################
+###### Ghost EKF-PF Node ######
+###############################
 add_executable(ekf_pf_node
   src/ekf_pf_node.cpp
 )
