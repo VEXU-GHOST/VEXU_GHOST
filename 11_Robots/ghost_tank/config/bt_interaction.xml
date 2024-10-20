@@ -3,8 +3,9 @@
       main_tree_to_execute="interaction">
 
   <BehaviorTree ID="interaction">
-    <Sequence>
-      <MoveToPoseCubic posX="-1.1"
+     <Sequence>
+        <IntakeCmd in="true"/>
+    <!--  <MoveToPoseCubic posX="-1.1"
                        posY="5.0"
                        theta="-90"
                        velX="0.0"
@@ -24,10 +25,10 @@
                        angle_threshold="5.0"
                        timeout="-3000"
                        speed="1.0"/>
-      <!-- <Repeat num_cycles="-1">
+      <!- <Repeat num_cycles="-1">
         <SubTree ID="block_bowling"
                 _autoremap="false"/>
-      </Repeat> -->
+      </Repeat> ->
       <Delay delay_msec="55000">
         <MoveToPoseCubic posX="-1.1"
                        posY="0.0"
@@ -39,13 +40,14 @@
                        angle_threshold="5.0"
                        timeout="-3000"
                        speed="1.0"/>
-      </Delay>
+      </Delay>-->
     </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="block_bowling">
-    <Sequence>
-      <MoveToPoseCubic posX="-2.0"
+     <Sequence>
+        <IntakeCmd in="true"/>
+    <!--  <MoveToPoseCubic posX="-2.0"
                        posY="1.6"
                        theta="0"
                        velX="0.0"
@@ -66,8 +68,8 @@
                         angle_threshold="5.0"
                         timeout="-2000"
                         speed="0.5"/>
-      </Delay>
-    </Sequence>
+      </Delay>-->
+    </Sequence> 
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
@@ -76,12 +78,8 @@
             editable="true">
       <input_port name="seconds"/>
     </Decorator>
-    <Action ID="CheckForRestart"
-            editable="true"/>
     <Action ID="Climb"
             editable="true"/>
-    <!-- <Action ID="AutoDone"
-            editable="true"/> -->
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="in"/>

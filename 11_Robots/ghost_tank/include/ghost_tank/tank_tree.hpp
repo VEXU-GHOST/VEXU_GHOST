@@ -23,7 +23,6 @@
 
 #pragma once
 #include "behaviortree_cpp/bt_factory.h"
-#include "bt_nodes/checkForRestart.hpp"
 #include "bt_nodes/intakeCmd.hpp"
 #include "bt_nodes/loggingNode.hpp"
 #include "bt_nodes/moveToPoseCubic.hpp"
@@ -44,20 +43,23 @@ namespace ghost_tank
 class TankTree
 {
 public:
-	TankTree(std::string bt_path,
-			   std::string bt_path_interaction,
-	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
-	           std::shared_ptr<TankModel> tank_ptr,
-	           std::shared_ptr<rclcpp::Node> node_ptr);
+	TankTree(std::string bt_path, std::string bt_path_interaction);
 	void tick_tree();
 	void tick_tree_interaction();
-
+	template<typename T>
+	void set_variable(std::string name, T value){
+	if(global_blackboard){
+		global_blackboard->set<T>(name, value);
+	} else {
+		std::cout << "ERROR: Tried to set BT variable before the BT constructor" << std::endl;
+	}
+}
 private:
-  std::string bt_path_;
-  std::string bt_path_interaction_;
-  BT::Tree tree_;
-  BT::Tree tree_interaction_;
-  std::shared_ptr<rclcpp::Node> node_ptr_;
+	std::string bt_path_;
+	std::string bt_path_interaction_;
+	BT::Blackboard::Ptr global_blackboard;
+	BT::Tree tree_;
+	BT::Tree tree_interaction_;
 };
 
 } // namespace ghost_tank

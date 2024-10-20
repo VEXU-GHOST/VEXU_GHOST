@@ -29,13 +29,10 @@ namespace ghost_tank
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
 AutonTimer::AutonTimer(
-  const std::string & name, const BT::NodeConfig & config,
-  std::shared_ptr<rclcpp::Node> node_ptr,
-  std::shared_ptr<TankModel> tank_ptr)
-: BT::DecoratorNode(name, config),
-  tank_ptr_(tank_ptr),
-  node_ptr_(node_ptr)
-{
+  const std::string & name, const BT::NodeConfig & config)
+  : BT::DecoratorNode(name, config){
+    blackboard_ = config.blackboard;
+	  blackboard_->get("node_ptr", node_ptr_);
 }
 
 // It is mandatory to define this STATIC method.
@@ -55,15 +52,17 @@ void AutonTimer::halt()
 // Override the virtual function tick()
 BT::NodeStatus AutonTimer::tick()
 {
-  BT::Expected<double> seconds = getInput<double>("seconds");
-  // Check if expected is valid. If not, throw its error
-  if (!seconds) {
-    throw BT::RuntimeError(
-            "missing required input [message]: ",
-            seconds.error() );
-  }
-  double timeout = seconds.value();
-  double time = tank_ptr_->getAutonTime();
+  // BT::Expected<double> seconds = getInput<double>("seconds");
+  // // Check if expected is valid. If not, throw its error
+  // if (!seconds) {
+  //   throw BT::RuntimeError(
+  //           "missing required input [message]: ",
+  //           seconds.error() );
+  // }
+  double timeout = BT_Util::get_input<double>(this, "seconds");
+  
+  // double timeout = seconds.value();
+  double time = blackboard_->get<double>("auton_time_elapsed");
 
   if (time > timeout) {
     RCLCPP_INFO(node_ptr_->get_logger(), "AutonTimeout: %f s passed", time);

@@ -2,8 +2,10 @@
 <root BTCPP_format="4"
       main_tree_to_execute="full_auton">
   <BehaviorTree ID="full_auton">
-    <Fallback>
-      <AutonTimer seconds="40">
+     <Sequence>
+        <IntakeCmd in="true"/>
+
+    <!--  <AutonTimer seconds="40">
         <Sequence>
           <MoveToPoseCubic posX="-0.5"
                       posY="-1.5"
@@ -47,13 +49,14 @@
                       threshold="0.10"
                       angle_threshold="5.0"
                       timeout="5000"
-                      speed="0.5"/>
-    </Fallback>
+                      speed="0.5"/>-->
+    </Sequence> 
   </BehaviorTree>
 
   <BehaviorTree ID="dump">
-    <Sequence>
-      <MoveToPoseCubic posX="-1.0"
+     <Sequence>
+        <IntakeCmd in="true"/>
+      <!--<MoveToPoseCubic posX="-1.0"
                   posY="-1.2"
                   theta="180"
                   velX="0.0"
@@ -95,13 +98,14 @@
                   threshold="0.10"
                   angle_threshold="5.0"
                   timeout="-1000"
-                  speed="0.5"/>
+                  speed="0.5"/>-->
     </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="starting_balls">
     <Sequence>
-      <MoveToPoseCubic posX="-1.1"
+        <IntakeCmd in="true"/>
+    <!--   <MoveToPoseCubic posX="-1.1"
                        posY="-1.0"
                        theta="-90"
                        velX="0.0"
@@ -150,7 +154,7 @@
                        threshold="0.05"
                        angle_threshold="5.0"
                        timeout="-1000"
-                       speed="0.5"/>
+                       speed="0.5"/>-->
       </Sequence>
   </BehaviorTree>
 
@@ -160,12 +164,8 @@
             editable="true">
       <input_port name="seconds"/>
     </Decorator>
-    <Action ID="CheckForRestart"
-            editable="true"/>
     <Action ID="Climb"
             editable="true"/>
-    <!-- <Action ID="AutoDone"
-            editable="true"/> -->
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="in"/>

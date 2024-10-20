@@ -72,7 +72,7 @@ void TankRobotPlugin::initialize()
 
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
-  
+
   // for vex ai
   node_ptr_->declare_parameter<std::string>("bt_path_interaction");
   std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
@@ -186,10 +186,14 @@ void TankRobotPlugin::initialize()
   m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
     "/des_pos",
     10);
-
   bt_ = std::make_shared<TankTree>(
-    bt_path, bt_path_interaction, rhi_ptr_, m_tank_model_ptr,
-    node_ptr_);
+    bt_path, bt_path_interaction);
+    
+  bt_->set_variable<int>("hello", 123);
+  bt_->set_variable("rhi_ptr", rhi_ptr_);
+  bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
+  bt_->set_variable("note_ptr", node_ptr_);
+
 }
 
 void TankRobotPlugin::onNewSensorData()
@@ -225,6 +229,7 @@ void TankRobotPlugin::autonomous(double current_time)
 {
   std::cout << "Autonomous: " << current_time << std::endl;
   std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
+  bt_->set_variable("auton_time_elapsed", current_time);
 
   // if(!m_recording){
   //    auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
@@ -236,7 +241,7 @@ void TankRobotPlugin::autonomous(double current_time)
   // if (!m_is_first_auton_loop) {
   //   bt_->tick_tree_interaction();
   // } else {
-  //   bt_->tick_tree();
+  bt_->tick_tree();
   // }
 
   // publishTrajectoryVisualization();
@@ -260,56 +265,56 @@ void TankRobotPlugin::autonomous(double current_time)
 
   // m_tank_model_ptr->drive command thing
 
-  std::vector<std::vector<double>> auton_instructions = {
-    {3.0, 0.5, 0.0},
-    {2.0, 0.0, 0.5},
-    {4.0, 0.5, 0.0}
-  };
+  // std::vector<std::vector<double>> auton_instructions = {
+  //   {3.0, 0.5, 0.0},
+  //   {2.0, 0.0, 0.5},
+  //   {4.0, 0.5, 0.0}
+  // };
 
   double forward_vel = 0;
   double angular_vel = 0;
-  double time_sum = 0;
-  static int auton_index = 0;
+  // double time_sum = 0;
+  // static int auton_index = 0;
 
-  if (auton_index < auton_instructions.size()){
-    if (current_time < auton_instructions[auton_index][0] + time_sum){
-      forward_vel = auton_instructions[auton_index][1];
-      angular_vel = auton_instructions[auton_index][2];
-    } else {
-      time_sum += auton_instructions[auton_index][0];
-      auton_index++;
-    }
-  } else {
+  // if (auton_index < auton_instructions.size()) {
+  //   if (current_time < auton_instructions[auton_index][0] + time_sum) {
+  //     forward_vel = auton_instructions[auton_index][1];
+  //     angular_vel = auton_instructions[auton_index][2];
+  //   } else {
+  //     time_sum += auton_instructions[auton_index][0];
+  //     auton_index++;
+  //   }
+  // } else {
 
-  }
+  // }
 
   double left_cmd = forward_vel + angular_vel;
   double right_cmd = forward_vel - angular_vel;
 
   std::vector<std::string> motor_list = {
-      "drive_ltr",
-      "drive_lbr",
-      "drive_ltf",
-      "drive_lbf",
-      "drive_lttf",
-      "indexer_right",
-      "indexer_left",
-      "drive_rttf",
-      "drive_rtr",
-      "drive_rbr",
-      "drive_rtf",
-      "drive_rbf"
-    };
-    
-  for (const auto motor_name: motor_list){
+    "drive_ltr",
+    "drive_lbr",
+    "drive_ltf",
+    "drive_lbf",
+    "drive_lttf",
+    "indexer_right",
+    "indexer_left",
+    "drive_rttf",
+    "drive_rtr",
+    "drive_rbr",
+    "drive_rtf",
+    "drive_rbf"
+  };
+
+  for (const auto motor_name: motor_list) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
 
-  for (int i = 0; i < 5; i++){
+  for (int i = 0; i < 5; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
 
-  for (int i = 7; i < 12; i++){
+  for (int i = 7; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
   }
 
@@ -422,11 +427,11 @@ void TankRobotPlugin::teleop(double current_time)
     // m_last_theta_cmd = m_curr_theta_cmd;
 
     double forward_vel = joy_data->left_y / 127.0;
-		double angular_vel = joy_data->right_x / 127.0;
+    double angular_vel = joy_data->right_x / 127.0;
 
-		double threshold = 0.05;
-		forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-		angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+    double threshold = 0.05;
+    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
 
     double left_cmd = forward_vel + angular_vel;
     double right_cmd = forward_vel - angular_vel;
@@ -445,43 +450,40 @@ void TankRobotPlugin::teleop(double current_time)
       "drive_rtf",
       "drive_rbf"
     };
-    
-    for (const auto motor_name: motor_list){
+
+    for (const auto motor_name: motor_list) {
       rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
     }
 
-    for (int i = 0; i < 5; i++){
+    for (int i = 0; i < 5; i++) {
       rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
     }
 
-    for (int i = 7; i < 12; i++){
+    for (int i = 7; i < 12; i++) {
       rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
     }
 
-		double intake_power = 0;
-		if(joy_data->btn_r2){
-			intake_power = 1.0;
-		}
-		else if(joy_data->btn_r1){
-			intake_power = -1.0;
-		}
-		else{
-			intake_power = 0.0;
-		}
-    
+    double intake_power = 0;
+    if (joy_data->btn_r2) {
+      intake_power = 1.0;
+    } else if (joy_data->btn_r1) {
+      intake_power = -1.0;
+    } else {
+      intake_power = 0.0;
+    }
+
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
 
-  	static bool forklift_pressed = false;
-  	static bool forklift_up = false;
+    static bool forklift_pressed = false;
+    static bool forklift_up = false;
 
-		if(joy_data->btn_l1 && !forklift_pressed){
-				forklift_pressed = true;
-				forklift_up = !forklift_up;
-		}
-		else if(!joy_data->btn_l1){
-			forklift_pressed = false;
-		}
+    if (joy_data->btn_l1 && !forklift_pressed) {
+      forklift_pressed = true;
+      forklift_up = !forklift_up;
+    } else if (!joy_data->btn_l1) {
+      forklift_pressed = false;
+    }
 
     m_digital_io[1] = forklift_up; // forklift
     m_digital_io[2] = joy_data->btn_l2; // pooper
@@ -679,7 +681,7 @@ void TankRobotPlugin::publishOdometry()
 }
 
 void TankRobotPlugin::publishCurrentTwist(
-    Eigen::Vector3d twist)
+  Eigen::Vector3d twist)
 {
   geometry_msgs::msg::Twist msg{};
   msg.linear.x = twist.x();
