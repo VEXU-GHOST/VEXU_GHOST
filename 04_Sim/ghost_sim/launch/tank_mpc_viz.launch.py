@@ -54,15 +54,17 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     # Load relevant filepaths
-    ghost_sim_share_dir = get_package_share_directory("ghost_sim")
-    rviz_config_path = os.path.join(ghost_sim_share_dir, "rviz/ekf_pf.rviz")
+    ghost_sim_examples_dir = get_package_share_directory("ghost_sim_examples")
+    # ghost_sim_share_dir = get_package_share_directory("ghost_sim")
+    # rviz_config_path = os.path.join(ghost_sim_share_dir, "rviz/ekf_pf.rviz")
 
-    # Launch RVIZ Display as primary GUI interface
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        arguments=["-d", rviz_config_path],
+    
+    # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
+    rviz2 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(ghost_sim_examples_dir,
+                         'launch', 'rviz.launch.py')
+        ),
     )
 
     # plot_juggler_node = Node(
@@ -81,7 +83,7 @@ def generate_launch_description():
             DeclareLaunchArgument(name="channel_id", default_value="1"),
             DeclareLaunchArgument("sim_gui", default_value="false"),
             DeclareLaunchArgument("verbose", default_value="true"),
-            rviz_node,
+            rviz2,
             # plot_juggler_node,
             tank_mpc_viz_node,
             OpaqueFunction(function=launch_setup),
