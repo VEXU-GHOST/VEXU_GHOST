@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Melissa Cruz
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -99,6 +99,7 @@ int main(int argc, char * argv[])
   double des_vel_x = 0.75;
   double des_vel_y = 0.0;
   double des_vel_tht = 0.0;
+  double final_pose_x = 1.0;
 
   const std::vector<std::string> STATE_NAMES = {
     "base_pose_x",
@@ -121,7 +122,8 @@ int main(int argc, char * argv[])
     "init_vel_tht",
     "des_vel_x",
     "des_vel_y",
-    "des_vel_tht", };
+    "des_vel_tht",
+    "final_pose_x"};
 
   // List pairs of base state and derivative state
   const std::vector<std::pair<std::string, std::string>> INTEGRATION_STATE_NAME_PAIRS = {
@@ -132,6 +134,16 @@ int main(int argc, char * argv[])
     std::pair<std::string, std::string>{"base_vel_x", "base_accel_x"},
     std::pair<std::string, std::string>{"base_vel_y", "base_accel_y"},
     std::pair<std::string, std::string>{"base_vel_tht", "base_accel_tht"},
+  };
+
+  // Initial State Constraints
+  std::vector<std::pair<std::string, std::string>> initial_state_constraint_param_pairs{
+    std::pair<std::string, std::string>{"k0_base_pose_x", "init_pose_x"},
+    std::pair<std::string, std::string>{"k0_base_pose_y", "init_pose_y"},
+    std::pair<std::string, std::string>{"k0_base_pose_tht", "init_pose_tht"},
+    std::pair<std::string, std::string>{"k0_base_vel_x", "init_vel_x"},
+    std::pair<std::string, std::string>{"k0_base_vel_y", "init_vel_y"},
+    std::pair<std::string, std::string>{"k0_base_vel_tht", "init_vel_tht"}
   };
 
   ////////////////////////////////////////////
@@ -219,11 +231,13 @@ int main(int argc, char * argv[])
   }
 
   // Initial and Terminal Constraints
-  auto initial_state_constraint_vector = vertcat(
-    get_state("init_pose_x") - 1,
-    -get_state("k0_base_pose_x") + 1,
-    get_state("k0_base_vel_x"),
-    -get_state("k0_base_vel_x"));
+  auto initial_state_constraint_vector = casadi::Matrix<casadi::SXElem>();
+
+  for (const auto & pair : initial_state_constraint_param_pairs) {
+    initial_state_constraint_vector = vertcat(
+      initial_state_constraint_vector, get_state(
+        pair.first) - get_param(pair.second));
+  }
 
   std::string final_knot_prefix = get_knot_prefix(NUM_KNOTS - 1);
   auto final_state_constraint_vector = vertcat(
@@ -304,7 +318,8 @@ int main(int argc, char * argv[])
     // {"verbose", true},
     // {"ipopt.print_level", 0}
   };
-  auto solver = nlpsol("example_trajectory_optimization", "ipopt", nlp_config, solver_config);
+
+  auto solver = nlpsol("casadi_tank_model", "ipopt", nlp_config, solver_config);
 
   //////////////////////
   ///// Test Solve /////
@@ -326,7 +341,8 @@ int main(int argc, char * argv[])
     init_vel_tht,
     des_vel_x,
     des_vel_y,
-    des_vel_tht
+    des_vel_tht,
+    final_pose_x
   };
   res = solver(solver_args);
 
@@ -337,6 +353,7 @@ int main(int argc, char * argv[])
   std::cout << "-----" << std::endl;
   std::cout << "Optimal solution for p = " << solver_args.at("p") << ":" << std::endl;
   std::cout << "Objective: " << res.at("f") << std::endl;
+
 
   // Unpack solution into individual time series
   std::unordered_map<std::string, std::vector<double>> state_solution_map;
@@ -352,10 +369,10 @@ int main(int argc, char * argv[])
     }
   }
 
-  std::cout << time_vector.size() << std::endl;
-  std::cout << state_solution_map["base_pose_x"].size() << std::endl;
-  std::cout << state_solution_map["base_vel_x"].size() << std::endl;
-  std::cout << state_solution_map["base_accel_x"].size() << std::endl;
+  // std::cout << time_vector.size() << std::endl;
+  // std::cout << state_solution_map["base_pose_x"].size() << std::endl;
+  // std::cout << state_solution_map["base_vel_x"].size() << std::endl;
+  // std::cout << state_solution_map["base_accel_x"].size() << std::endl;
 
   STATE_SOL_MAP = state_solution_map;
   // plt::figure();
