@@ -72,14 +72,10 @@ void TankMPCViz::stateSolCallback(const ghost_msgs::msg::StateSol::SharedPtr msg
     tf_stamped.header.frame_id = "map";
     tf_stamped.child_frame_id = "base_link";
     tf_stamped.transform.translation.x = msg->base_pose_x_traj[i];
-    RCLCPP_INFO(get_logger(), "here");
-    RCLCPP_INFO(get_logger(), "here2");
 
     tf_stamped.transform.translation.z = 0.0;
-    RCLCPP_INFO(get_logger(), "here3");
 
     tf_stamped.transform.rotation.z = msg->base_pose_tht_traj[0];
-    RCLCPP_INFO(get_logger(), "here4");
 
     tf_stamped.transform.translation.y = msg->base_pose_y_traj[i];
     tf_transforms_.emplace_back(tf_stamped);
