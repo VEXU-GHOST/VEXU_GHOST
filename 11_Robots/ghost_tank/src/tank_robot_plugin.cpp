@@ -172,7 +172,7 @@ void TankRobotPlugin::initialize()
     10);
 
   imu_sub = node_ptr_->create_subscription<sensor_msgs::msg::Imu>(
-    "/sensors/imu",
+    "/camera/camera/imu",
     10, 
     std::bind(&TankRobotPlugin::imuUpdateCallback, this, _1));
 
@@ -188,8 +188,9 @@ void TankRobotPlugin::initialize()
     "/des_pos",
     10);
 
+// blue motor is 300, TODO put this in config files
   odom = std::make_shared<TankOdometry>(
-100, 4.5, 10
+300. * 23. / 20. , 2.75 * ghost_util::INCHES_TO_METERS, 12.5 * ghost_util::INCHES_TO_METERS
     );
   bt_ = std::make_shared<TankTree>(
     bt_path, bt_path_interaction);
@@ -252,7 +253,8 @@ void TankRobotPlugin::onNewSensorData()
       printf("FAILIANIGNINGINGI\n"); // TODO: how to error properly
     }
 
-std::cout <<    odom->update(l_pos, r_pos, m_imu_yaw) << std::endl;
+  odom->update(l_pos, r_pos, m_imu_yaw) ;
+publishOdometry();
 }
 
 void TankRobotPlugin::disabled()

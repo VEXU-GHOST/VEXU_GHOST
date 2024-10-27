@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <ghost_util/angle_util.hpp>
 
 
 namespace ghost_tank
@@ -131,7 +132,9 @@ if (dl == dr) {
       (cur_pos - Eigen::Vector3d(iccx, iccy, 0));
 }
 
-      cur_pos[2] = angle_rad; // TODO: how do i better integrate imu stuff into my stuff of stuff
+  cur_pos[2] = ghost_util::WrapAngle2PI(cur_pos[2]);
+
+//      cur_pos[2] = angle_rad; // TODO: how do i better integrate imu stuff into my stuff of stuff
 
 //std::cerr << 1.7;
 
