@@ -171,9 +171,10 @@ void TankRobotPlugin::initialize()
     "/set_pose",
     10);
 
-  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
+  imu_sub = node_ptr_->create_subscription<sensor_msgs::msg::Imu>(
     "/sensors/imu",
-    10);
+    10, 
+    std::bind(&TankRobotPlugin::imuUpdateCallback, this, _1));
 
   m_des_vel_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     "/des_vel",
@@ -187,6 +188,9 @@ void TankRobotPlugin::initialize()
     "/des_pos",
     10);
 
+  odom = std::make_shared<TankOdometry>(
+100, 4.5, 10
+    );
   bt_ = std::make_shared<TankTree>(
     bt_path, bt_path_interaction, rhi_ptr_, m_tank_model_ptr,
     node_ptr_);
@@ -194,7 +198,7 @@ void TankRobotPlugin::initialize()
 
 void TankRobotPlugin::onNewSensorData()
 {
-  sensor_msgs::msg::Imu imu_msg{};
+  //sensor_msgs::msg::Imu imu_msg{};
   // imu_msg.header.frame_id = "imu_link";
   // imu_msg.header.stamp = node_ptr_->get_clock()->now();
   // imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
@@ -209,12 +213,41 @@ void TankRobotPlugin::onNewSensorData()
   //   imu_msg.orientation.y, imu_msg.orientation.z);
   // imu_pub->publish(imu_msg);
 
-  m_tank_model_ptr->updateTankModel();
+  //m_tank_model_ptr->updateTankModel();
+
+
 
   // publishOdometry();
   // publishVisualization();
   // publishBaseTwist();
   // publishTrajectoryVisualization();
+
+
+    std::vector<std::string> motor_list = {
+    "drive_ltr",
+      "drive_lbr",
+      "drive_ltf",
+      "drive_lbf",
+      "drive_lttf",
+      "drive_rttf",
+      "drive_rtr",
+      "drive_rbr",
+      "drive_rtf",
+      "drive_rbf"
+    };
+    std::vector<long> r_pos;
+    std::vector<long> l_pos;
+    for (const std::string s : motor_list) {
+      long p = rhi_ptr_->getMotorPosition(s);
+      if (s.at(6) == 'r') 
+      r_pos.push_back(p);
+      else if (s.at(6) == 'l')
+      l_pos.push_back(p);
+      else 
+      printf("FAILIANIGNINGINGI\n"); // TODO: how to error properly
+    }
+
+std::cout <<    odom->update(l_pos, r_pos, m_imu_yaw) << std::endl;
 }
 
 void TankRobotPlugin::disabled()
@@ -383,8 +416,8 @@ void TankRobotPlugin::teleop(double current_time)
       "drive_ltf",
       "drive_lbf",
       "drive_lttf",
-      "indexer_right",
-      "indexer_left",
+      //"indexer_right",
+      //"indexer_left",
       "drive_rttf",
       "drive_rtr",
       "drive_rbr",
@@ -498,6 +531,14 @@ void TankRobotPlugin::teleop(double current_time)
 //   }
 // }
 
+void TankRobotPlugin::imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg) {
+    m_imu_yaw = ghost_util::quaternionToYawRad(
+      msg->orientation.w,
+      msg->orientation.x,
+      msg->orientation.y,
+      msg->orientation.z);
+}
+
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
   if (!m_use_backup_estimator) {
@@ -533,17 +574,17 @@ void TankRobotPlugin::worldOdometryUpdateCallbackBackup(
 
 void TankRobotPlugin::publishBaseTwist()
 {
-  geometry_msgs::msg::Twist msg{};
-  auto base_vel_cmd = m_tank_model_ptr->getBaseVelocityCommand();
-  msg.linear.x = base_vel_cmd.x();
-  msg.linear.y = base_vel_cmd.y();
-  msg.angular.z = base_vel_cmd.z();
-  m_base_twist_cmd_pub->publish(msg);
+  //geometry_msgs::msg::Twist msg{};
+  //auto base_vel_cmd = m_tank_model_ptr->getBaseVelocityCommand();
+  //msg.linear.x = base_vel_cmd.x();
+  //msg.linear.y = base_vel_cmd.y();
+  //msg.angular.z = base_vel_cmd.z();
+  //m_base_twist_cmd_pub->publish(msg);
 }
 
 void TankRobotPlugin::publishOdometry()
 {
-  m_curr_odom_pose = m_tank_model_ptr->getOdometryPose();
+  m_curr_odom_pose = odom->getPose();
 
   nav_msgs::msg::Odometry msg{};
   msg.header.frame_id = "odom";
@@ -586,38 +627,38 @@ void TankRobotPlugin::publishOdometry()
 
   msg.pose.covariance = pose_covariance;
 
-  auto current_velocity = m_tank_model_ptr->getBaseVelocityCurrent();
+  //auto current_velocity = m_tank_model_ptr->getBaseVelocityCurrent();
 
-  msg.twist.twist.linear.x = current_velocity.x();
-  msg.twist.twist.linear.y = current_velocity.y();
-  msg.twist.twist.linear.z = 0.0;
-  msg.twist.twist.angular.x = 0.0;
-  msg.twist.twist.angular.y = 0.0;
-  msg.twist.twist.angular.z = current_velocity.z();
+  //msg.twist.twist.linear.x = current_velocity.x();
+  //msg.twist.twist.linear.y = current_velocity.y();
+  //msg.twist.twist.linear.z = 0.0;
+  //msg.twist.twist.angular.x = 0.0;
+  //msg.twist.twist.angular.y = 0.0;
+  //msg.twist.twist.angular.z = current_velocity.z();
 
-  double sigma_x_vel =
-    m_k1 * current_velocity.x() +
-    m_k2 * current_velocity.y() +
-    m_k3 * abs(current_velocity.z());
-  double sigma_y_vel =
-    m_k4 * current_velocity.x() +
-    m_k5 * current_velocity.y() +
-    m_k6 * abs(current_velocity.z());
-  // Get noisy angle
-  double sigma_tht_vel =
-    m_k7 * current_velocity.x() +
-    m_k8 * current_velocity.y() +
-    m_k9 * abs(current_velocity.z());
+  //double sigma_x_vel =
+  //  m_k1 * current_velocity.x() +
+  //  m_k2 * current_velocity.y() +
+  //  m_k3 * abs(current_velocity.z());
+  //double sigma_y_vel =
+  //  m_k4 * current_velocity.x() +
+  //  m_k5 * current_velocity.y() +
+  //  m_k6 * abs(current_velocity.z());
+  //// Get noisy angle
+  //double sigma_tht_vel =
+  //  m_k7 * current_velocity.x() +
+  //  m_k8 * current_velocity.y() +
+  //  m_k9 * abs(current_velocity.z());
 
-  std::array<double, 36> vel_covariance{
-    sigma_x_vel * sigma_x_vel, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, sigma_y_vel * sigma_y_vel, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht_vel * sigma_tht_vel};
+  //std::array<double, 36> vel_covariance{
+  //  sigma_x_vel * sigma_x_vel, 0.0, 0.0, 0.0, 0.0, 0.0,
+  //  0.0, sigma_y_vel * sigma_y_vel, 0.0, 0.0, 0.0, 0.0,
+  //  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  //  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  //  0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  //  0.0, 0.0, 0.0, 0.0, 0.0, sigma_tht_vel * sigma_tht_vel};
 
-  msg.twist.covariance = vel_covariance;
+  //msg.twist.covariance = vel_covariance;
 
   m_odom_pub->publish(msg);
 

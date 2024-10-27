@@ -29,6 +29,7 @@
 
 #include "eigen3/Eigen/Geometry"
 #include <ghost_util/angle_util.hpp>
+#include <ghost_ros_interfaces/competition/v5_robot_base.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include "math/line2d.h"
 

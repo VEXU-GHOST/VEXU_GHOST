@@ -115,6 +115,7 @@ void TankModel::updateTankModel()
 
 void TankModel::updateBaseTwist()
 {
+
   // Eigen::VectorXd module_velocity_vector(2 * m_num_modules);
   // int n = 0;
   // for (const auto & [name, state] : m_current_module_states) {
@@ -136,6 +137,16 @@ void TankModel::updateBaseTwist()
 
 void TankModel::calculateOdometry()
 {
+ //Eigen::VectorXd module_velocity_vector(2 * m_num_modules);
+ //  int n = 0;
+ //  for (const auto & [name, state] : m_current_module_states) {
+ //    module_velocity_vector[2 * n] = state.wheel_velocity / LIN_VEL_TO_RPM * cos(
+ //      state.steering_angle * ghost_util::DEG_TO_RAD);
+ //    module_velocity_vector[2 * n + 1] = state.wheel_velocity / LIN_VEL_TO_RPM * sin(
+ //      state.steering_angle * ghost_util::DEG_TO_RAD);
+ //    n++;
+ //  }
+
   // auto rotate_base_to_odom = Eigen::Rotation2D<double>(m_odom_angle).toRotationMatrix();
   // m_odom_loc += rotate_base_to_odom *
   //   Eigen::Vector2d(m_base_vel_curr.x(), m_base_vel_curr.y()) * 0.01;

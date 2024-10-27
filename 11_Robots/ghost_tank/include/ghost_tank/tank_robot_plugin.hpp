@@ -40,6 +40,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #include <ghost_tank/tank_tree.hpp>
+#include <ghost_tank/tank_odom.hpp>
 
 namespace ghost_tank
 {
@@ -67,7 +68,7 @@ protected:
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_tank_viz_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
-  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_base_twist_cmd_pub;
 
   // rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_pos_pub;
@@ -81,6 +82,7 @@ protected:
   void publishDesiredPose(Eigen::Vector3d pose);
 
   // Subscribers
+  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg) ;
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
@@ -105,6 +107,8 @@ protected:
   double m_move_to_pose_kd_theta = 0.0;
 
   // Odometry
+  std::shared_ptr<TankOdometry> odom;
+  double m_imu_yaw;
   Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
 
   Eigen::Vector3d m_curr_odom_pose = Eigen::Vector3d::Zero();
