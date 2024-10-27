@@ -159,7 +159,6 @@ install(TARGETS
 
 # bt node libraries
 set(NODES
-  checkForRestart
   loggingNode
   moveToPoseCubic
   moveToPoseTrapezoid

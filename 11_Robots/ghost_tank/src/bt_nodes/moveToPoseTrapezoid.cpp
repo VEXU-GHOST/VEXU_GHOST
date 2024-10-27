@@ -5,13 +5,12 @@ using std::placeholders::_1;
 namespace ghost_tank {
 
 // If your Node has ports, you must use this constructor signature
-MoveToPoseTrapezoid::MoveToPoseTrapezoid(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
-                                 std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-                                 std::shared_ptr<TankModel> tank_ptr) :
-	BT::StatefulActionNode(name, config),
-	rhi_ptr_(rhi_ptr),
-	node_ptr_(node_ptr),
-	tank_ptr_(tank_ptr){
+MoveToPoseTrapezoid::MoveToPoseTrapezoid(const std::string& name, const BT::NodeConfig& config) :
+	BT::StatefulActionNode(name, config){
+    blackboard_ = config.blackboard;
+	blackboard_->get("tank_model_ptr", tank_ptr_);
+	blackboard_->get("node_ptr", node_ptr_);
+
 	node_ptr_->declare_parameter("behavior_tree.trapezoid_planner_topic", "/motion_planner/trapezoid_command");
 	std::string trapezoid_planner_topic = node_ptr_->get_parameter("behavior_tree.trapezoid_planner_topic").as_string();
 
@@ -37,17 +36,6 @@ BT::PortsList MoveToPoseTrapezoid::providedPorts(){
 	};
 }
 
-template <typename T>
-T MoveToPoseTrapezoid::get_input(std::string key){
-	BT::Expected<T> input = getInput<T>(key);
-	// Check if expected is valid. If not, throw its error
-	if(!input){
-		throw BT::RuntimeError("missing required input [" + key + "]: ",
-		                       input.error() );
-	}
-	return input.value();
-}
-
 /// Method called once, when transitioning from the state IDLE.
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus MoveToPoseTrapezoid::onStart(){
@@ -63,16 +51,16 @@ void MoveToPoseTrapezoid::onHalted(){
 }
 
 BT::NodeStatus MoveToPoseTrapezoid::onRunning() {
-	double posX = get_input<double>("posX");
-	double posY = get_input<double>("posY");
-	double theta = get_input<double>("theta");
-	double velX = get_input<double>("velX");
-	double velY = get_input<double>("velY");
-	double omega = get_input<double>("omega");
-	double threshold = get_input<double>("threshold");
-	double angle_threshold = get_input<double>("angle_threshold");
-	double max_speed = get_input<double>("max_speed");
-	int timeout = get_input<int>("timeout");
+	double posX = BT_Util::get_input<double>(this, "posX");
+	double posY = BT_Util::get_input<double>(this, "posY");
+	double theta = BT_Util::get_input<double>(this, "theta");
+	double velX = BT_Util::get_input<double>(this, "velX");
+	double velY = BT_Util::get_input<double>(this, "velY");
+	double omega = BT_Util::get_input<double>(this, "omega");
+	double threshold = BT_Util::get_input<double>(this, "threshold");
+	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold");
+	double max_speed = BT_Util::get_input<double>(this, "max_speed");
+	int timeout = BT_Util::get_input<int>(this, "timeout");
 
 	// tile conversion
 	double tile_to_meters = 0.6096;

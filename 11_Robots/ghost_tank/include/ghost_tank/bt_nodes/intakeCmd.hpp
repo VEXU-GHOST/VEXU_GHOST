@@ -27,6 +27,7 @@
 #include "ghost_tank/tank_model.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
 
 namespace ghost_tank
 {
@@ -34,9 +35,7 @@ namespace ghost_tank
 class IntakeCmd : public BT::SyncActionNode
 {
 public:
-	IntakeCmd(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
-	          std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-	          std::shared_ptr<TankModel> tank_ptr);
+	IntakeCmd(const std::string& name, const BT::NodeConfig& config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -44,8 +43,7 @@ public:
   BT::NodeStatus tick();
 
 private:
-  template<typename T>
-  T get_input(std::string key);
+	BT::Blackboard::Ptr blackboard_;
 
   bool intake_stalling_;
   bool intake_cooling_down_;

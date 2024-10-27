@@ -122,7 +122,7 @@ def generate_launch_description():
         [
             DeclareLaunchArgument(name="use_joy", default_value="false"),
             DeclareLaunchArgument(name="channel_id", default_value="1"),
-            DeclareLaunchArgument("sim_gui", default_value="false"),
+            DeclareLaunchArgument("sim_gui", default_value="true"),
             DeclareLaunchArgument("verbose", default_value="true"),
             simulation,
             ekf_pf_node,

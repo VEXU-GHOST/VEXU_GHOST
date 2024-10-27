@@ -128,6 +128,7 @@ def generate_launch_description():
             "enable_sync": "true",
             "enable_gyro": "true",
             "enable_accel": "true",
+            "initial_reset": "true",
             "gyro_fps": "200",  # 200 or 400
             "accel_fps": "63",  # 63 or 250
         }.items(),

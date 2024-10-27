@@ -32,26 +32,23 @@
 namespace ghost_tank
 {
 
-TankTree::TankTree(std::string bt_path,
-					   std::string bt_path_interaction,
-                       std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
-                       std::shared_ptr<TankModel> tank_ptr,
-                       std::shared_ptr<rclcpp::Node> node_ptr) :
+TankTree::TankTree(std::string bt_path, std::string bt_path_interaction) :
 	bt_path_(bt_path),
-	bt_path_interaction_(bt_path_interaction),
-	node_ptr_(node_ptr){
+	bt_path_interaction_(bt_path_interaction){
+
 	BT::BehaviorTreeFactory factory;
+	global_blackboard = BT::Blackboard::create();
 
 	// add all nodes here
-	factory.registerNodeType<LoggingNode>("Logging", node_ptr_);
-	factory.registerNodeType<CheckForRestart>("CheckForRestart", node_ptr_, robot_hardware_interface_ptr);
-	factory.registerNodeType<MoveToPoseCubic>("MoveToPoseCubic", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
-	factory.registerNodeType<IntakeCmd>("IntakeCmd", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
-	factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
-	factory.registerNodeType<AutonTimer>("AutonTimer", node_ptr_, tank_ptr);
+	factory.registerNodeType<LoggingNode>("Logging");
+	factory.registerNodeType<MoveToPoseCubic>("MoveToPoseCubic");
+	factory.registerNodeType<IntakeCmd>("IntakeCmd");
+	factory.registerNodeType<AutoDone>("AutoDone");
+	factory.registerNodeType<AutonTimer>("AutonTimer");
 
-    tree_ = factory.createTreeFromFile(bt_path_);
-	tree_interaction_ = factory.createTreeFromFile(bt_path_interaction_);
+    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard);
+
+	tree_interaction_ = factory.createTreeFromFile(bt_path_interaction_, global_blackboard);
 }
 
 void TankTree::tick_tree()

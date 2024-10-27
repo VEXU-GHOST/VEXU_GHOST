@@ -29,13 +29,12 @@ namespace ghost_tank
 {
 
 // If your Node has ports, you must use this constructor signature
-MoveToPoseCubic::MoveToPoseCubic(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
-                                 std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-                                 std::shared_ptr<TankModel> tank_ptr) :
-	BT::StatefulActionNode(name, config),
-	rhi_ptr_(rhi_ptr),
-	node_ptr_(node_ptr),
-	tank_ptr_(tank_ptr){
+MoveToPoseCubic::MoveToPoseCubic(const std::string& name, const BT::NodeConfig& config) :
+	BT::StatefulActionNode(name, config){
+    blackboard_ = config.blackboard;
+	blackboard_->get("tank_model_ptr", tank_ptr_);
+	blackboard_->get("node_ptr", node_ptr_);
+
 	if(!node_ptr_->has_parameter("behavior_tree.cubic_planner_topic")){
 		node_ptr_->declare_parameter(
 		"behavior_tree.cubic_planner_topic",
@@ -66,22 +65,10 @@ BT::PortsList MoveToPoseCubic::providedPorts(){
 	};
 }
 
-template <typename T>
-T MoveToPoseCubic::get_input(std::string key){
-	BT::Expected<T> input = getInput<T>(key);
-	// Check if expected is valid. If not, throw its error
-	if(!input){
-		throw BT::RuntimeError("missing required input [" + key + "]: ",
-		                       input.error() );
-	}
-	return input.value();
-}
-
 /// Method called once, when transitioning from the state IDLE.
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus MoveToPoseCubic::onStart(){
 	started_ = false;
-	// plan_time_ = std::chrono::();
 	return BT::NodeStatus::RUNNING;
 }
 
@@ -92,40 +79,40 @@ void MoveToPoseCubic::onHalted(){
 }
 
 BT::NodeStatus MoveToPoseCubic::onRunning() {
-	double posX = get_input<double>("posX");
-	double posY = get_input<double>("posY");
-	double theta = get_input<double>("theta");
-	double velX = get_input<double>("velX");
-	double velY = get_input<double>("velY");
-	double omega = get_input<double>("omega");
-	double threshold = get_input<double>("threshold");
-	double angle_threshold = get_input<double>("angle_threshold");
-	double speed = get_input<double>("speed");
-	int timeout = get_input<int>("timeout");
+	double posX = BT_Util::get_input<double>(this, "posX");
+	double posY = BT_Util::get_input<double>(this, "posY");
+	double theta = BT_Util::get_input<double>(this, "theta");
+	double velX = BT_Util::get_input<double>(this, "velX");
+	double velY = BT_Util::get_input<double>(this, "velY");
+	double omega = BT_Util::get_input<double>(this, "omega");
+	double threshold = BT_Util::get_input<double>(this, "threshold");
+	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold");
+	double speed = BT_Util::get_input<double>(this, "speed");
+	int timeout = BT_Util::get_input<int>(this, "timeout");
 	double tile_to_meters = 0.6096;
 	posX *= tile_to_meters;
 	posY *= tile_to_meters;
 
-  theta *= ghost_util::DEG_TO_RAD;
-  angle_threshold *= ghost_util::DEG_TO_RAD;
+	theta *= ghost_util::DEG_TO_RAD;
+	angle_threshold *= ghost_util::DEG_TO_RAD;
 
-  double w, x, y, z;
-  ghost_util::yawToQuaternionRad(theta, w, x, y, z);
-  ghost_msgs::msg::DrivetrainCommand msg{};
-  msg.pose.pose.position.x = posX;
-  msg.pose.pose.position.y = posY;
-  msg.pose.pose.orientation.x = x;
-  msg.pose.pose.orientation.y = y;
-  msg.pose.pose.orientation.z = z;
-  msg.pose.pose.orientation.w = w;
-  msg.pose.pose.position.z = threshold;
-  msg.twist.twist.angular.x = angle_threshold;
-  msg.speed = speed;
+	double w, x, y, z;
+	ghost_util::yawToQuaternionRad(theta, w, x, y, z);
+	ghost_msgs::msg::DrivetrainCommand msg{};
+	msg.pose.pose.position.x = posX;
+	msg.pose.pose.position.y = posY;
+	msg.pose.pose.orientation.x = x;
+	msg.pose.pose.orientation.y = y;
+	msg.pose.pose.orientation.z = z;
+	msg.pose.pose.orientation.w = w;
+	msg.pose.pose.position.z = threshold;
+	msg.twist.twist.angular.x = angle_threshold;
+	msg.speed = speed;
 
-  // geometry_msgs::msg::TwistStamped twist{};
-  msg.twist.twist.linear.x = velX;
-  msg.twist.twist.linear.y = velY;
-  msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
+	// geometry_msgs::msg::TwistStamped twist{};
+	msg.twist.twist.linear.x = velX;
+	msg.twist.twist.linear.y = velY;
+  	msg.twist.twist.angular.z = omega * ghost_util::DEG_TO_RAD;
 
 	if( (abs(posX - tank_ptr_->getWorldPose().x()) < threshold) && // change to subscriber and move this file to ghost_autonomy
 	    (abs(posY - tank_ptr_->getWorldPose().y()) < threshold) &&

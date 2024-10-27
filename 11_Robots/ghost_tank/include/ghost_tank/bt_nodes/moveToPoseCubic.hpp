@@ -31,6 +31,7 @@
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "tf2/LinearMath/Quaternion.h"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
 
 using std::placeholders::_1;
 
@@ -41,9 +42,7 @@ namespace ghost_tank
 class MoveToPoseCubic : public BT::StatefulActionNode {
 public:
 	// If your Node has ports, you must use this constructor signature
-	MoveToPoseCubic(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
-	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-	           std::shared_ptr<TankModel> tank_ptr);
+	MoveToPoseCubic(const std::string& name, const BT::NodeConfig& config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -63,9 +62,7 @@ public:
   // BT::NodeStatus tick() override;
 
 private:
-  template<typename T>
-  T get_input(std::string key);
-
+	BT::Blackboard::Ptr blackboard_;
   std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
   std::shared_ptr<TankModel> tank_ptr_;
   rclcpp::Publisher<ghost_msgs::msg::DrivetrainCommand>::SharedPtr command_pub_;
