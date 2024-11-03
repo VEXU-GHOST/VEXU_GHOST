@@ -1,4 +1,4 @@
-#include "bankheader.h"
+#include "bankheader.hpp"
 #include "gtest/gtest.h"
 
 class BankAccountTest : public ::testing::Test
@@ -24,9 +24,9 @@ protected:
 TEST_F(BankAccountTest, testWithdrawMoney)
 {
     bankmaincode->withdraw(20000);
-    EXPECT_EQ(bankmaincode->balance, 30000);
-    EXPECT_TRUE(bankmaincode->balance == 30000);
-    EXPECT_FALSE(bankmaincode->balance == 35000);
+    EXPECT_EQ(bankmaincode->getBalance(), 30000);
+    EXPECT_TRUE(bankmaincode->getBalance() == 30000);
+    EXPECT_FALSE(bankmaincode->getBalance() == 35000);
 }
 
 TEST_F(BankAccountTest, testPrint)

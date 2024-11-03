@@ -3,11 +3,14 @@
 <package format="3">
   <name>corey-onboarding</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="corey@todo.todo">corey</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Package corey onboarding</description>
+  <maintainer email="khoi11@utexas.edu">corey</maintainer>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <depend>ament_cmake_gtest</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
