@@ -57,6 +57,7 @@ public:
 
 protected:
   // Publishers
+  void go_forward(float target_inch);
   void publishVisualization();
   void publishOdometry();
   void publishBaseTwist();

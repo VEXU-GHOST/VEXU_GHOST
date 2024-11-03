@@ -72,7 +72,7 @@ void TankRobotPlugin::initialize()
 
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
-  
+
   // for vex ai
   node_ptr_->declare_parameter<std::string>("bt_path_interaction");
   std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
@@ -221,12 +221,82 @@ void TankRobotPlugin::disabled()
 {
 }
 
+void TankRobotPlugin::go_forward(float target_inch)
+{
+  std::vector<std::string> motor_list = {
+    "drive_ltr",
+    "drive_lbr",
+    "drive_ltf",
+    "drive_lbf",
+    "drive_lttf",
+    "indexer_right",
+    "indexer_left",
+    "drive_rttf",
+    "drive_rtr",
+    "drive_rbr",
+    "drive_rtf",
+    "drive_rbf"
+  };
+  for (const auto motor_name: motor_list) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+  }
+
+  double left_cmd = 0.0;
+  double right_cmd = 0.0;
+
+  static double tick_per_IN = 39.93342;
+  double target_inch_distance = 1;
+
+  float right_motor_position = rhi_ptr_->getMotorPosition("drive_rttf");
+  float left_motor_position = rhi_ptr_->getMotorPosition("drive_lttf");
+  float average = (right_motor_position + left_motor_position) / 2;
+  static float p_constant = 0.5;
+
+
+  if (average < abs(target_inch) * tick_per_IN) {
+    left_cmd = p_constant * -0.01 * ((left_motor_position / tick_per_IN) - (target_inch));
+    right_cmd = p_constant * -0.01 * ((right_motor_position / tick_per_IN) - (target_inch));
+
+  } else {
+    left_cmd = 0.0;
+    right_cmd = 0.0;
+  }
+
+  //2.75 in per revolution
+  /*if (counter<4){
+    // for(int i= 0; i<4; i++){
+    if (current_time < 4.0 + 5.0 *counter) {
+      left_cmd = 10;
+      right_cmd = 10;
+    } else if (current_time < 5.0 + 5.0 * counter) {
+      left_cmd = 10;
+      right_cmd = 0;
+    } else {
+      left_cmd =0;
+      right_cmd=0;
+      counter = counter +1;
+    }
+    // }
+  }
+  */
+  for (int i = 0; i < 5; i++) {
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
+  }
+
+  for (int i = 7; i < 12; i++) {
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
+  }
+}
+
 void TankRobotPlugin::autonomous(double current_time)
 {
-  std::cout << "Autonomous: " << current_time << std::endl;
-  // std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
 
-  
+  go_forward(10);
+
+
+  //2.75 in per revolution
+
+
 }
 
 void TankRobotPlugin::teleop(double current_time)
@@ -258,41 +328,38 @@ void TankRobotPlugin::teleop(double current_time)
     "drive_rtf",
     "drive_rbf"
   };
-  
-  for (const auto motor_name: motor_list){
+
+  for (const auto motor_name: motor_list) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
 
-  for (int i = 0; i < 5; i++){
+  for (int i = 0; i < 5; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
 
-  for (int i = 7; i < 12; i++){
+  for (int i = 7; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
   }
 
   double intake_power = 0;
-  if(joy_data->btn_r2){
+  if (joy_data->btn_r2) {
     intake_power = 1.0;
-  }
-  else if(joy_data->btn_r1){
+  } else if (joy_data->btn_r1) {
     intake_power = -1.0;
-  }
-  else{
+  } else {
     intake_power = 0.0;
   }
-  
+
   rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
   rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
 
   static bool forklift_pressed = false;
   static bool forklift_up = false;
 
-  if(joy_data->btn_l1 && !forklift_pressed){
-      forklift_pressed = true;
-      forklift_up = !forklift_up;
-  }
-  else if(!joy_data->btn_l1){
+  if (joy_data->btn_l1 && !forklift_pressed) {
+    forklift_pressed = true;
+    forklift_up = !forklift_up;
+  } else if (!joy_data->btn_l1) {
     forklift_pressed = false;
   }
 
@@ -461,7 +528,7 @@ void TankRobotPlugin::publishOdometry()
 }
 
 void TankRobotPlugin::publishCurrentTwist(
-    Eigen::Vector3d twist)
+  Eigen::Vector3d twist)
 {
   geometry_msgs::msg::Twist msg{};
   msg.linear.x = twist.x();
