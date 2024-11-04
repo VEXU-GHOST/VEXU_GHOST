@@ -29,7 +29,6 @@ public:
 
     BankAccount(string AccountName, int AccountBalance); // declare constructor
 
-//s
    
 };
 
