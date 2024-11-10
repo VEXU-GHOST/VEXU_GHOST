@@ -221,16 +221,13 @@ void TankRobotPlugin::onNewSensorData()
 
   //m_tank_model_ptr->updateTankModel();
 
-
-
   // publishOdometry();
   // publishVisualization();
   // publishBaseTwist();
   // publishTrajectoryVisualization();
 
-
     std::vector<std::string> motor_list = {
-    "drive_ltr",
+      "drive_ltr",
       "drive_lbr",
       "drive_ltf",
       "drive_lbf",
@@ -245,16 +242,18 @@ void TankRobotPlugin::onNewSensorData()
     std::vector<long> l_pos;
     for (const std::string s : motor_list) {
       long p = rhi_ptr_->getMotorPosition(s);
-      if (s.at(6) == 'r') 
-      r_pos.push_back(p);
-      else if (s.at(6) == 'l')
-      l_pos.push_back(p);
-      else 
-      printf("FAILIANIGNINGINGI\n"); // TODO: how to error properly
+      if (s.at(6) == 'r') {
+        r_pos.push_back(p);
+      } else if (s.at(6) == 'l') {
+        l_pos.push_back(p);
+      } else {
+        RCLCPP_ERROR(node_ptr_->get_logger(), "Odom: Motor Name Error");
+        std::cout << "Odom: Motor Name Error\n";
+      }
     }
 
-  odom->update(l_pos, r_pos, m_imu_yaw) ;
-publishOdometry();
+  odom->update(l_pos, r_pos, m_imu_yaw);
+  publishOdometry();
 }
 
 void TankRobotPlugin::disabled()
@@ -399,6 +398,12 @@ void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
   // std::cout << "Teleop: " << current_time << std::endl;
+
+  // auto pose = odom->getPose();
+  // std::cout << "Pose X: " << pose[0] << std::endl;
+  // std::cout << "Pose Y: " << pose[1] << std::endl;
+  // std::cout << "Pose Theta: " << pose[2] << std::endl;
+
 
   if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
     joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
@@ -661,8 +666,8 @@ void TankRobotPlugin::publishOdometry()
     msg.pose.pose.orientation.z);
 
   // Calculate differences for odometry
-  auto odom_diff_x = std::fabs(m_curr_odom_pose.x() - m_curr_odom_pose.x());
-  auto odom_diff_y = std::fabs(m_curr_odom_pose.y() - m_curr_odom_pose.y());
+  auto odom_diff_x = std::fabs(m_curr_odom_pose.x() - m_last_odom_pose.x());
+  auto odom_diff_y = std::fabs(m_curr_odom_pose.y() - m_last_odom_pose.y());
   auto odom_diff_theta =
     std::fabs(ghost_util::SmallestAngleDistRad(m_curr_odom_pose.z(), m_last_odom_pose.z()));
 
