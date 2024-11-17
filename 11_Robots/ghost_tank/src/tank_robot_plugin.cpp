@@ -225,23 +225,55 @@ void TankRobotPlugin::autonomous(double current_time)
 {
   std::cout << "Autonomous: " << current_time << std::endl;
   // std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
+  double current_position = rhi_ptr_->getMotorPosition("drive_ltr");
+  double target_postiion = 1000;
+  double error = target_postiion - current_position;
 
+  double kp = 0.5;
+  double left_cmd = kp*error;
+  double right_cmd = kp*error;
+
+  std::vector<std::string> motor_list = {
+    "drive_ltr",
+    "drive_lbr",
+    "drive_ltf",
+    "drive_lbf",
+    "drive_lttf",
+    "indexer_right",
+    "indexer_left",
+    "drive_rttf",
+    "drive_rtr",
+    "drive_rbr",
+    "drive_rtf",
+    "drive_rbf"
+  };
   
+  for (const auto motor_name: motor_list){
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+  }
+
+  for (int i = 0; i < 5; i++){
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
+  }
+
+  for (int i = 7; i < 12; i++){
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
+  }
 }
 
 void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
 
-  double forward_vel = joy_data->left_y / 127.0;
-  double angular_vel = joy_data->right_x / 127.0;
+  double left_velocity = joy_data->left_y / 127.0;
+  double right_velocity = joy_data->right_y / 127.0;
 
   double threshold = 0.05;
-  forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-  angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+  left_velocity = (std::fabs(left_velocity) < threshold) ? 0.0 : left_velocity;
+  right_velocity = (std::fabs(right_velocity) < threshold) ? 0.0 : right_velocity;
 
-  double left_cmd = forward_vel + angular_vel;
-  double right_cmd = forward_vel - angular_vel;
+  double left_cmd = left_velocity;
+  double right_cmd = right_velocity;
 
   // this is from ghost_high_stakes/config/robot_hardware_config_tank.yaml
   std::vector<std::string> motor_list = {
