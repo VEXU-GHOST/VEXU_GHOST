@@ -42,11 +42,11 @@ void loadDigitalDeviceConfigFromYAML(
   auto device_node = node["adi"][device_name];
   if (!device_node) {
     throw std::runtime_error(
-            "[loadDigitalDeviceConfigFromYAML] Error: Device Sensor " + device_name +
+            "[loadDigitalDeviceConfigFromYAML] Error: Digital Device " + device_name +
             " not found!");
   }
 
-  // Load IO type
+  // Load type
   std::string type;
   if (!loadYAMLParam(device_node, "type", type, verbose)) {
     throw std::runtime_error(
@@ -61,7 +61,7 @@ void loadDigitalDeviceConfigFromYAML(
     device_config_ptr->type = devices::device_type_e::DIGITAL_OUTPUT;
   }
   else{
-    throw std::runtime_error(std::string("[loadDigitalDeviceConfigFromYAML] Error: Unsupported digital device ") + type + "!");
+    throw std::runtime_error(std::string("[loadDigitalDeviceConfigFromYAML] Error: Unsupported digital device type ") + type + "!");
   }
 
   // Get port
@@ -73,7 +73,6 @@ void loadDigitalDeviceConfigFromYAML(
   }
   char port = port_string[0];
 
-
   // Validate port
   const std::vector<char> valid_ports = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
   if (std::count(valid_ports.begin(), valid_ports.end(), port) == 0) {
@@ -83,7 +82,7 @@ void loadDigitalDeviceConfigFromYAML(
   }
 
   // Convert port from A-H to 22-28
-  port += 22 - 'A';
+  port = port - 'A' + 22;
 
   // Set port in device config
   device_config_ptr->port = (int) port;
