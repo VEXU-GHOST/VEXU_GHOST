@@ -61,7 +61,7 @@ RobotHardwareInterface::RobotHardwareInterface(
       pair.data_ptr = std::make_shared<DigitalInputDeviceData>(val->name);
     } else if (pair.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
       pair.data_ptr = std::make_shared<DigitalOutputDeviceData>(val->name);
-    }else {
+    } else {
       throw std::runtime_error(
               "[RobotHardwareInterface::RobotHardwareInterface()] Device type " + std::to_string(
                 pair.config_ptr->type) + " is unsupported!");
