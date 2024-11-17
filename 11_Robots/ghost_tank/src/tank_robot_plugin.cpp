@@ -72,7 +72,7 @@ void TankRobotPlugin::initialize()
 
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
-  
+
   // for vex ai
   node_ptr_->declare_parameter<std::string>("bt_path_interaction");
   std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
@@ -190,6 +190,9 @@ void TankRobotPlugin::initialize()
   bt_ = std::make_shared<TankTree>(
     bt_path, bt_path_interaction, rhi_ptr_, m_tank_model_ptr,
     node_ptr_);
+
+  starting_pos = rhi_ptr_->getMotorPosition("drive_ltr");
+
 }
 
 void TankRobotPlugin::onNewSensorData()
@@ -223,15 +226,16 @@ void TankRobotPlugin::disabled()
 
 void TankRobotPlugin::autonomous(double current_time)
 {
-  std::cout << "Autonomous: " << current_time << std::endl;
-  // std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
-  double current_position = rhi_ptr_->getMotorPosition("drive_ltr");
-  double target_postiion = 1000;
-  double error = target_postiion - current_position;
+    double current_position = rhi_ptr_->getMotorPosition("drive_ltr") - starting_pos;
 
-  double kp = 0.5;
-  double left_cmd = kp*error;
-  double right_cmd = kp*error;
+  std::cout << "Autonomous: " << current_time << "motor pos: " << current_position << std::endl;
+  // std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
+  double target_position = 3 * 360;
+  double error = target_position - current_position;
+
+  double kp = 0.50/target_position;
+  double left_cmd = kp * error;
+  double right_cmd = kp * error;
 
   std::vector<std::string> motor_list = {
     "drive_ltr",
@@ -247,16 +251,16 @@ void TankRobotPlugin::autonomous(double current_time)
     "drive_rtf",
     "drive_rbf"
   };
-  
-  for (const auto motor_name: motor_list){
+
+  for (const auto motor_name: motor_list) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
 
-  for (int i = 0; i < 5; i++){
+  for (int i = 0; i < 5; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
 
-  for (int i = 7; i < 12; i++){
+  for (int i = 7; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
   }
 }
@@ -290,41 +294,38 @@ void TankRobotPlugin::teleop(double current_time)
     "drive_rtf",
     "drive_rbf"
   };
-  
-  for (const auto motor_name: motor_list){
+
+  for (const auto motor_name: motor_list) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
 
-  for (int i = 0; i < 5; i++){
+  for (int i = 0; i < 5; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
 
-  for (int i = 7; i < 12; i++){
+  for (int i = 7; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
   }
 
   double intake_power = 0;
-  if(joy_data->btn_r2){
+  if (joy_data->btn_r2) {
     intake_power = 1.0;
-  }
-  else if(joy_data->btn_r1){
+  } else if (joy_data->btn_r1) {
     intake_power = -1.0;
-  }
-  else{
+  } else {
     intake_power = 0.0;
   }
-  
+
   rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
   rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
 
   static bool forklift_pressed = false;
   static bool forklift_up = false;
 
-  if(joy_data->btn_l1 && !forklift_pressed){
-      forklift_pressed = true;
-      forklift_up = !forklift_up;
-  }
-  else if(!joy_data->btn_l1){
+  if (joy_data->btn_l1 && !forklift_pressed) {
+    forklift_pressed = true;
+    forklift_up = !forklift_up;
+  } else if (!joy_data->btn_l1) {
     forklift_pressed = false;
   }
 
@@ -493,7 +494,7 @@ void TankRobotPlugin::publishOdometry()
 }
 
 void TankRobotPlugin::publishCurrentTwist(
-    Eigen::Vector3d twist)
+  Eigen::Vector3d twist)
 {
   geometry_msgs::msg::Twist msg{};
   msg.linear.x = twist.x();

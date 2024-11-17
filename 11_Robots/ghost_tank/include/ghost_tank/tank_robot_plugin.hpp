@@ -104,6 +104,8 @@ protected:
   double m_move_to_pose_kp_theta = 0.0;
   double m_move_to_pose_kd_theta = 0.0;
 
+  double starting_pos = 0;
+
   // Odometry
   Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
 
