@@ -66,11 +66,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-
-
-
-
-
 add_library(tank_odom SHARED src/tank_odom.cpp)
 target_include_directories(tank_odom
   PUBLIC
@@ -91,11 +86,6 @@ install(
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
-
-
-
-
-
 
 add_library(tank_robot_plugin SHARED src/tank_robot_plugin.cpp)
 target_include_directories(tank_robot_plugin
