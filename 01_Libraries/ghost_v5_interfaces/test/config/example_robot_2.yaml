@@ -1,10 +1,10 @@
 port_configuration:
     use_partner_joystick: false
     adi:
-        digital_in:
+        digital_in_1:
             port: A
             type: DIGITAL_INPUT
-        digital_out:
+        digital_out_1:
             port: B
             type: DIGITAL_OUTPUT
     devices:

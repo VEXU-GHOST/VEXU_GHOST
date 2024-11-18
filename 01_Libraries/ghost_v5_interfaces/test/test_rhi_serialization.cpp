@@ -78,15 +78,15 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineCoprocessorTo
   hw_interface.setDeviceData(motor_data_3);
   
   // Update Digital In
-  auto digital_in = getRandomDigitalInputDeviceData();
-  digital_in->name = "digital_in";
-  digital_in->value = false;
-  hw_interface.setDeviceData(digital_in);
+  auto digital_in_1 = getRandomDigitalInputDeviceData();
+  digital_in_1->name = "digital_in_1";
+  digital_in_1->value = false;
+  hw_interface.setDeviceData(digital_in_1);
 
   // Update Digital Out
-  auto digital_out = getRandomDigitalOutputDeviceData();
-  digital_out->name = "digital_out";
-  hw_interface.setDeviceData(digital_out);
+  auto digital_out_1 = getRandomDigitalOutputDeviceData();
+  digital_out_1->name = "digital_out_1";
+  hw_interface.setDeviceData(digital_out_1);
 
   RobotHardwareInterface hw_interface_copy(device_config_map_ptr_single_joy_,
     hardware_type_e::V5_BRAIN);
@@ -125,16 +125,16 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
   hw_interface.setDeviceData(inertial_sensor_1);
 
   // Update Digital In
-  auto digital_in = getRandomDigitalInputDeviceData();
-  digital_in->name = "digital_in";
-  digital_in->value = false;
-  hw_interface.setDeviceData(digital_in);
+  auto digital_in_1 = getRandomDigitalInputDeviceData();
+  digital_in_1->name = "digital_in_1";
+  digital_in_1->value = false;
+  hw_interface.setDeviceData(digital_in_1);
 
   // Update Digital Out
-  auto digital_out = getRandomDigitalOutputDeviceData();
-  digital_out->name = "digital_out";
-  digital_out->value = false;
-  hw_interface.setDeviceData(digital_out);
+  auto digital_out_1 = getRandomDigitalOutputDeviceData();
+  digital_out_1->name = "digital_out_1";
+  digital_out_1->value = false;
+  hw_interface.setDeviceData(digital_out_1);
 
   // Update Competition State
   hw_interface.setDisabledStatus(getRandomBool());
@@ -182,15 +182,15 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
   hw_interface.setDeviceData(inertial_sensor_1);
 
   // Update Digital In
-  auto digital_in = getRandomDigitalInputDeviceData();
-  digital_in->name = "digital_in";
-  hw_interface.setDeviceData(digital_in);
+  auto digital_in_1 = getRandomDigitalInputDeviceData();
+  digital_in_1->name = "digital_in_1";
+  hw_interface.setDeviceData(digital_in_1);
 
   // Update Digital Out
-  auto digital_out = getRandomDigitalOutputDeviceData();
-  digital_out->name = "digital_out";
-  digital_out->value = false;
-  hw_interface.setDeviceData(digital_out);
+  auto digital_out_1 = getRandomDigitalOutputDeviceData();
+  digital_out_1->name = "digital_out_1";
+  digital_out_1->value = false;
+  hw_interface.setDeviceData(digital_out_1);
 
   // Update Competition State
   hw_interface.setDisabledStatus(getRandomBool());

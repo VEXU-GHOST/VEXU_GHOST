@@ -253,13 +253,13 @@ TEST_F(RobotHardwareInterfaceTestFixture, testDigitalOutSetterGetter) {
     hardware_type_e::COPROCESSOR);
 
   // Default
-  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_in"));
-  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_out"));
-  EXPECT_THROW(hw_interface.setDigitalInputValue("digital_in", true), std::runtime_error);
-  EXPECT_NO_THROW(hw_interface.setDigitalOutputValue("digital_out", true));
-  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_out"), true);
-  EXPECT_NO_THROW(hw_interface.setDigitalOutputValue("digital_out", false));
-  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_out"), false);
+  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_in_1"));
+  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_out_1"));
+  EXPECT_THROW(hw_interface.setDigitalInputValue("digital_in_1", true), std::runtime_error);
+  EXPECT_NO_THROW(hw_interface.setDigitalOutputValue("digital_out_1", true));
+  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_out_1"), true);
+  EXPECT_NO_THROW(hw_interface.setDigitalOutputValue("digital_out_1", false));
+  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_out_1"), false);
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testDigitalInSetterGetter) {
@@ -267,13 +267,13 @@ TEST_F(RobotHardwareInterfaceTestFixture, testDigitalInSetterGetter) {
     hardware_type_e::V5_BRAIN);
 
   // Default
-  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_out"));
-  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_in"));
-  EXPECT_THROW(hw_interface.setDigitalOutputValue("digital_out", true), std::runtime_error);
-  EXPECT_NO_THROW(hw_interface.setDigitalInputValue("digital_in", true));
-  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_in"), true);
-  EXPECT_NO_THROW(hw_interface.setDigitalInputValue("digital_in", false));
-  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_in"), false);
+  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_out_1"));
+  EXPECT_FALSE(hw_interface.getDigitalDeviceValue("digital_in_1"));
+  EXPECT_THROW(hw_interface.setDigitalOutputValue("digital_out_1", true), std::runtime_error);
+  EXPECT_NO_THROW(hw_interface.setDigitalInputValue("digital_in_1", true));
+  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_in_1"), true);
+  EXPECT_NO_THROW(hw_interface.setDigitalInputValue("digital_in_1", false));
+  EXPECT_EQ(hw_interface.getDigitalDeviceValue("digital_in_1"), false);
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateGetters) {
