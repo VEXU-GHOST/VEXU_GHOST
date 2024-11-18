@@ -42,12 +42,12 @@ protected:
     // Expected motor configurations
     digital_input_config_ = std::make_shared<DigitalDeviceConfig>();
     digital_input_config_->port = 22;
-    digital_input_config_->name = "in";
+    digital_input_config_->name = "digital_in_1";
     digital_input_config_->type = device_type_e::DIGITAL_INPUT;
 
     digital_output_config_ = std::make_shared<DigitalDeviceConfig>();
     digital_output_config_->port = 23;
-    digital_output_config_->name = "out";
+    digital_output_config_->name = "digital_out_1";
     digital_output_config_->type = device_type_e::DIGITAL_OUTPUT;
 
   }
@@ -60,12 +60,12 @@ protected:
 
 TEST_F(TestLoadDigitalDeviceConfigYAML, testLoadDigitalIn) {
     std::shared_ptr<DigitalDeviceConfig> input_ptr = std::make_shared<DigitalDeviceConfig>();
-    loadDigitalDeviceConfigFromYAML(config_yaml_["port_configuration"], "in", input_ptr, false);
+    loadDigitalDeviceConfigFromYAML(config_yaml_["port_configuration"], "digital_in_1", input_ptr, false);
     EXPECT_EQ(*input_ptr, *digital_input_config_);
 }
 
 TEST_F(TestLoadDigitalDeviceConfigYAML, testLoadDigitalOut) {
     std::shared_ptr<DigitalDeviceConfig> output_ptr = std::make_shared<DigitalDeviceConfig>();
-    loadDigitalDeviceConfigFromYAML(config_yaml_["port_configuration"], "out", output_ptr, false);
+    loadDigitalDeviceConfigFromYAML(config_yaml_["port_configuration"], "digital_out_1", output_ptr, false);
     EXPECT_EQ(*output_ptr, *digital_output_config_);
 }

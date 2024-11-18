@@ -1,9 +1,9 @@
 port_configuration:
     adi:
-        in:
+        digital_in_1:
             port: A
             type: DIGITAL_INPUT
-        out:
+        digital_out_1:
             port: B
             type: DIGITAL_OUTPUT
     devices:
