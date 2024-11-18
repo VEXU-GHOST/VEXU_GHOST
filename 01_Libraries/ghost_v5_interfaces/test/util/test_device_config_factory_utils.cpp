@@ -132,14 +132,14 @@ protected:
     // Default (minimal required params)
     auto digital_in = std::make_shared<DigitalDeviceConfig>();
     digital_in->port = 22;
-    digital_in->name = "digital_in";
+    digital_in->name = "digital_in_1";
     digital_in->type = device_type_e::DIGITAL_INPUT;
     robot_config_ptr->addDeviceConfig(digital_in);
 
     // Default (minimal required params)
     auto digital_out = std::make_shared<DigitalDeviceConfig>();
     digital_out->port = 23;
-    digital_out->name = "digital_out";
+    digital_out->name = "digital_out_1";
     digital_out->type = device_type_e::DIGITAL_OUTPUT;
     robot_config_ptr->addDeviceConfig(digital_out);
 

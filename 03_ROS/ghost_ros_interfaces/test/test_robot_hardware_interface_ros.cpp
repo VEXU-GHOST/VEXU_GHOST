@@ -93,7 +93,7 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpd
   rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
 
   auto digital_in_ptr = getRandomDigitalInputDeviceData();
-  digital_in_ptr->name = "digital_in";
+  digital_in_ptr->name = "digital_in_1";
   rhi_input_ptr_->setDeviceData(digital_in_ptr);
 
   auto msg = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
@@ -112,7 +112,7 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceActuatorC
   auto msg = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
 
   auto digital_out_ptr = getRandomDigitalOutputDeviceData();
-  digital_out_ptr->name = "digital_out";
+  digital_out_ptr->name = "digital_out_1";
   digital_out_ptr->value = false;
   rhi_input_ptr_->setDeviceData(digital_out_ptr);
 
@@ -156,11 +156,11 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
   rhi_input_ptr_->setDeviceData(motor_data_ptr);
 
   auto digital_in_ptr = getRandomDigitalInputDeviceData();
-  digital_in_ptr->name = "digital_in";
+  digital_in_ptr->name = "digital_in_1";
   rhi_input_ptr_->setDeviceData(digital_in_ptr);
 
   auto digital_out_ptr = getRandomDigitalOutputDeviceData();
-  digital_out_ptr->name = "digital_out";
+  digital_out_ptr->name = "digital_out_1";
   digital_out_ptr->value = false;
   rhi_input_ptr_->setDeviceData(digital_out_ptr);
 
@@ -213,11 +213,11 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
   rhi_input_ptr_->setDeviceData(motor_data_ptr);
 
   auto digital_in_ptr = getRandomDigitalInputDeviceData();
-  digital_in_ptr->name = "digital_in";
+  digital_in_ptr->name = "digital_in_1";
   rhi_input_ptr_->setDeviceData(digital_in_ptr);
 
   auto digital_out_ptr = getRandomDigitalOutputDeviceData();
-  digital_out_ptr->name = "digital_out";
+  digital_out_ptr->name = "digital_out_1";
   digital_out_ptr->value = false;
   rhi_input_ptr_->setDeviceData(digital_out_ptr);
 
