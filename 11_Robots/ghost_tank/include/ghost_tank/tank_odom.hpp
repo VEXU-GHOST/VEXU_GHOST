@@ -16,7 +16,7 @@ public:
     };
 
     //Eigen::Vector2d getRobotWorldPosition(double left_encoders, double right_encoders);
-    Eigen::Vector3d update(std::vector<long> l_wheel_pos, std::vector<long> r_wheel_pos, double angle_rad);
+    Eigen::Vector3d update(std::vector<long> l_wheel_pos, std::vector<long> r_wheel_pos);
 
 
     Eigen::Vector3d resetPose() {

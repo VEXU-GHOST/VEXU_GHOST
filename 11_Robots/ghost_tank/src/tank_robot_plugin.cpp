@@ -173,7 +173,7 @@ void TankRobotPlugin::initialize()
 
   imu_sub = node_ptr_->create_subscription<sensor_msgs::msg::Imu>(
     "/camera/camera/imu",
-    10, 
+    10,
     std::bind(&TankRobotPlugin::imuUpdateCallback, this, _1));
 
   m_des_vel_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
@@ -190,11 +190,11 @@ void TankRobotPlugin::initialize()
 
 // blue motor is 300, TODO put this in config files
   odom = std::make_shared<TankOdometry>(
-300. * 23. / 20. , 2.75 * ghost_util::INCHES_TO_METERS, 12.5 * ghost_util::INCHES_TO_METERS
-    );
+    300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS, 12.5 * ghost_util::INCHES_TO_METERS
+  );
   bt_ = std::make_shared<TankTree>(
     bt_path, bt_path_interaction);
-    
+
   bt_->set_variable<int>("hello", 123);
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
@@ -226,33 +226,33 @@ void TankRobotPlugin::onNewSensorData()
   // publishBaseTwist();
   // publishTrajectoryVisualization();
 
-    std::vector<std::string> motor_list = {
-      "drive_ltr",
-      "drive_lbr",
-      "drive_ltf",
-      "drive_lbf",
-      "drive_lttf",
-      "drive_rttf",
-      "drive_rtr",
-      "drive_rbr",
-      "drive_rtf",
-      "drive_rbf"
-    };
-    std::vector<long> r_pos;
-    std::vector<long> l_pos;
-    for (const std::string s : motor_list) {
-      long p = rhi_ptr_->getMotorPosition(s);
-      if (s.at(6) == 'r') {
-        r_pos.push_back(p);
-      } else if (s.at(6) == 'l') {
-        l_pos.push_back(p);
-      } else {
-        RCLCPP_ERROR(node_ptr_->get_logger(), "Odom: Motor Name Error");
-        std::cout << "Odom: Motor Name Error\n";
-      }
+  std::vector<std::string> motor_list = {
+    "drive_ltr",
+    "drive_lbr",
+    "drive_ltf",
+    "drive_lbf",
+    "drive_lttf",
+    "drive_rttf",
+    "drive_rtr",
+    "drive_rbr",
+    "drive_rtf",
+    "drive_rbf"
+  };
+  std::vector<long> r_pos;
+  std::vector<long> l_pos;
+  for (const std::string s : motor_list) {
+    long p = rhi_ptr_->getMotorPosition(s);
+    if (s.at(6) == 'r') {
+      r_pos.push_back(p);
+    } else if (s.at(6) == 'l') {
+      l_pos.push_back(p);
+    } else {
+      RCLCPP_ERROR(node_ptr_->get_logger(), "Odom: Motor Name Error");
+      std::cout << "Odom: Motor Name Error\n";
     }
+  }
 
-  odom->update(l_pos, r_pos, m_imu_yaw);
+  odom->update(l_pos, r_pos);
   publishOdometry();
 }
 
@@ -595,12 +595,14 @@ void TankRobotPlugin::teleop(double current_time)
 //   }
 // }
 
-void TankRobotPlugin::imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg) {
-    m_imu_yaw = ghost_util::quaternionToYawRad(
-      msg->orientation.w,
-      msg->orientation.x,
-      msg->orientation.y,
-      msg->orientation.z);
+void TankRobotPlugin::imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
+{
+  // TODO do we even need this anymore
+  m_imu_yaw = ghost_util::quaternionToYawRad(
+    msg->orientation.w,
+    msg->orientation.x,
+    msg->orientation.y,
+    msg->orientation.z);
 }
 
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)

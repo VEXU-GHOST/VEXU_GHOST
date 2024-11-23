@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <ghost_util/angle_util.hpp>
+#include <ghost_util/unit_conversion_utils.hpp>
 
 
 namespace ghost_tank
@@ -64,7 +65,7 @@ T median(std::vector<T> & vec)
 
 Eigen::Vector3d TankOdometry::update(
   std::vector<long> l_wheel_pos,
-  std::vector<long> r_wheel_pos, double angle_rad)
+  std::vector<long> r_wheel_pos)
 {
   {
 
@@ -79,25 +80,37 @@ Eigen::Vector3d TankOdometry::update(
       !prev_r_ticks.empty() ? subtractVectors(r_wheel_pos, prev_r_ticks) : r_wheel_pos;
     double dr = median(r_vel_arr) * meters_per_tick;
 
-    double dtheta = angle_rad - prev_angle;
-
     #define x cur_pos[0]
     #define y cur_pos[1]
     #define theta cur_pos[2]
 
-    double w = (dr - dl) / wheelbase;
-    dtheta = w; // TODO garbage?? can we not use our actual angle??????
+    double dtheta = (dr - dl) / wheelbase;
+    //dtheta *= 2;
 
-    Eigen::Matrix3d tfmat;
-    tfmat << cos(dtheta), -sin(dtheta), 0.,
-      sin(dtheta), cos(dtheta), 0.,
-      0., 0., 1.;
+    std::cout << "dl: " << dl << " dr: " << dr << " dtheta: " << dtheta * ghost_util::RAD_TO_DEG<< std::endl;
+    //dtheta = w; // TODO garbage?? can we not use our actual angle??????
+
+       Eigen::Matrix3d tfmat = Eigen::Matrix3d::Identity();
+      tfmat.block<2,2>(0,0) = Eigen::Rotation2D<double> (dtheta).toRotationMatrix();
+
+
+
+      Eigen::Matrix3d tftheta = Eigen::Matrix3d::Identity();
+      tftheta.block<2,2>(0,0) = Eigen::Rotation2D<double> (theta).toRotationMatrix();
 
     if (dl == dr) {
-      cur_pos += tfmat *
+      std::cerr << theta << " " << tftheta << " " << tftheta *
+        Eigen::Vector3d(dr, 0, dtheta) << std::endl;
+      cur_pos += tftheta *
         Eigen::Vector3d(dr, 0, dtheta);
     } else {
-      double R = (dl + dr) / w / 2;
+      double R;
+      if (dtheta == 0) {
+R = dr;
+      }
+
+       else
+      R = (dl + dr) / 2 /  dtheta ;
       Eigen::Vector2d icc(x - R * sin(theta), y + R * cos(theta));
       #define iccx icc[0]
       #define iccy icc[1]
@@ -110,7 +123,8 @@ Eigen::Vector3d TankOdometry::update(
     cur_pos[2] = ghost_util::WrapAngle2PI(cur_pos[2]);
 
     prev_l_ticks = l_wheel_pos, prev_r_ticks = r_wheel_pos,
-    prev_angle = angle_rad;
+    // TODO: can we set this to our physical imu angle
+    prev_angle = theta;
     return cur_pos;
   }
 }
