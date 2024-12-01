@@ -69,7 +69,7 @@ Eigen::Vector3d TankOdometry::update(
 {
   {
 
-// https://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
+// NO // https://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
 
     std::vector<long> l_vel_arr =
       !prev_l_ticks.empty() ? subtractVectors(l_wheel_pos, prev_l_ticks) : l_wheel_pos;
@@ -80,51 +80,64 @@ Eigen::Vector3d TankOdometry::update(
       !prev_r_ticks.empty() ? subtractVectors(r_wheel_pos, prev_r_ticks) : r_wheel_pos;
     double dr = median(r_vel_arr) * meters_per_tick;
 
-    #define x cur_pos[0]
-    #define y cur_pos[1]
-    #define theta cur_pos[2]
-
     double dtheta = (dr - dl) / wheelbase;
     //dtheta *= 2;
 
     std::cout << "dl: " << dl << " dr: " << dr << " dtheta: " << dtheta * ghost_util::RAD_TO_DEG<< std::endl;
     //dtheta = w; // TODO garbage?? can we not use our actual angle??????
 
-       Eigen::Matrix3d tfmat = Eigen::Matrix3d::Identity();
-      tfmat.block<2,2>(0,0) = Eigen::Rotation2D<double> (dtheta).toRotationMatrix();
+    Eigen::Vector2d local = {}; 
+
+    std::cout << "dr/dtheta: " << dr/dtheta << " corelogic: " << dr / dtheta + wheelbase / 2 << std::endl;
+
+  //https://github.com/OkapiLib/OkapiLib/blob/master/src/api/odometry/twoEncoderOdometry.cpp
+  if (dtheta != 0) {
+      local[0] = 2 * std::sin(dtheta / 2) * 0;//chassisScales.middleWheelDistance.convert(meter);
+      local[1] = 2 * std::sin(dtheta / 2) *
+                  (-dr / dtheta + wheelbase / 2);
+  } else {
+      local[0] = 0;
+      local[1] = dr;
+  }
+
+  double avgA = cur_pos[2] + dtheta/2 ;
+  std::cout << "localx: " << local[0] << " localy: " << local[1] << " avgA: " << avgA << std::endl;
+
+  //double polarR = std::sqrt(localOffX * localOffX + localOffY * localOffY);
+  double polarR = std::sqrt(local[0] * local[0] + local[1] * local[1]);
+  //double polarR = local[1];
+  double polarA = std::atan2(local[1], local[0]) - avgA;
+  std::cout << "polarR: " << polarR << " polarA: " << polarA << std::endl;
+ 
+  //double dY = std::sin(avgA) * local[1];
+  //double dX = std::cos(avgA) * local[1];
+
+  double dX = std::sin(polarA) * polarR;
+  double dY = std::cos(polarA) * polarR;
 
 
+  if (isnan(dX)) {
+    dX = 0;
+  }
 
-      Eigen::Matrix3d tftheta = Eigen::Matrix3d::Identity();
-      tftheta.block<2,2>(0,0) = Eigen::Rotation2D<double> (theta).toRotationMatrix();
+  if (isnan(dY)) {
+    dY = 0;
+  }
 
-    if (dl == dr) {
-      std::cerr << theta << " " << tftheta << " " << tftheta *
-        Eigen::Vector3d(dr, 0, dtheta) << std::endl;
-      cur_pos += tftheta *
-        Eigen::Vector3d(dr, 0, dtheta);
-    } else {
-      double R;
-      if (dtheta == 0) {
-R = dr;
-      }
 
-       else
-      R = (dl + dr) / 2 /  dtheta ;
-      Eigen::Vector2d icc(x - R * sin(theta), y + R * cos(theta));
-      #define iccx icc[0]
-      #define iccy icc[1]
+  if (isnan(dtheta)) {
+    dtheta = 0;
+  }
 
-      cur_pos = Eigen::Vector3d(iccx, iccy, dtheta) +
-        tfmat *
-        (cur_pos - Eigen::Vector3d(iccx, iccy, 0));
-    }
+
+cur_pos[0] += dX;
+cur_pos[1] += dY;
+cur_pos[2] += dtheta;
 
     cur_pos[2] = ghost_util::WrapAngle2PI(cur_pos[2]);
 
-    prev_l_ticks = l_wheel_pos, prev_r_ticks = r_wheel_pos,
+    prev_l_ticks = l_wheel_pos, prev_r_ticks = r_wheel_pos;
     // TODO: can we set this to our physical imu angle
-    prev_angle = theta;
     return cur_pos;
   }
 }

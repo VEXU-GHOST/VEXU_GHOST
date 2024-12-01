@@ -32,7 +32,6 @@ public:
 private:
     std::vector<long> prev_l_ticks;
     std::vector<long> prev_r_ticks;
-    double prev_angle;
 
     Eigen::Vector3d cur_pos;
 
