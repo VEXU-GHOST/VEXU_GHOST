@@ -137,3 +137,39 @@ TEST_F(TestTankOdom, testTriangle) {
   }
 
 }
+
+
+TEST_F(TestTankOdom, testTriangleInReverse) {
+  Eigen::Vector3d got, expected;
+  ghost_tank::TankOdometry t(100, 1. / 2. / M_PI, 10. * 2 / M_PI);
+
+  std::vector<Eigen::Vector2i> encoder_diffs = {
+    {-100 * 10 * 2 / 4, 100 * 10 * 2 / 4},
+    {-100,-100},
+    {-100 * 10 * -5 / 4, 100 * 10 * -5 / 4},
+    {-100 * sqrt(2), -100 * sqrt(2)},
+    {-100 * 10 * 3 / 4, 100 * 10 * 3 / 4},
+    {-100, -100},
+    {0, 0},
+  };
+  std::vector<Eigen::Vector3d> expected_pts = {
+    {0, 0, 90  * ghost_util::DEG_TO_RAD   },
+    {0, -1, 90 * ghost_util::DEG_TO_RAD},
+    {0, -1, (360 - 135) * ghost_util::DEG_TO_RAD},
+    {1, 0, (360 - 135) * ghost_util::DEG_TO_RAD},
+    {1, 0, 0},
+    {0, 0, 0},
+  };
+
+
+  for (int i = 0; i < expected_pts.size(); i++) {
+    ASSERT_LT(i, encoder_diffs.size());
+    if (i >= 1) {
+      encoder_diffs[i] += encoder_diffs[i - 1];            //accumlate the encoder values
+    }
+    got = t.update({encoder_diffs[i].x()}, {encoder_diffs[i].y()});
+    expected = expected_pts[i];
+    GOT_EXPECTED_EXPECT(0.01);
+  }
+
+}

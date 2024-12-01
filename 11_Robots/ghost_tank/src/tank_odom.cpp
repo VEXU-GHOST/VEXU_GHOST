@@ -137,6 +137,8 @@ cur_pos[2] += dtheta;
     cur_pos[2] = ghost_util::WrapAngle2PI(cur_pos[2]);
 
     prev_l_ticks = l_wheel_pos, prev_r_ticks = r_wheel_pos;
+
+    printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", getPose().x(), getPose().y(), getPose().z());
     // TODO: can we set this to our physical imu angle
     return cur_pos;
   }
