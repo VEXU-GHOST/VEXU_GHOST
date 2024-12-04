@@ -78,14 +78,15 @@ void DiffDriveNode::OdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 // Callback for input motor voltage command
 void DiffDriveNode::MtrVltgCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg)
 {
-  // check if number of input motor voltages match mdim
-  if (msg->motor_commands.size() == m_dim_) {
-    ss->VltgToVelocity(msg->motor_commands);
-  } else {
-    RCLCPP_WARN(
-      this->get_logger(), "The number of motor commands %ld does not match the number of specified control inputs %ld",
-      msg->motor_commands.size(), m_dim_);
-  }
+// TODO: uncomment when VltgToVelocity is defined in diff_drive_ss.cpp
+// check if number of input motor voltages match mdim
+// if (msg->motor_commands.size() == m_dim_) {
+//   ss->VltgToVelocity(msg->motor_commands);
+// } else {
+//   RCLCPP_WARN(
+//     this->get_logger(), "The number of motor commands %ld does not match the number of specified control inputs %ld",
+//     msg->motor_commands.size(), m_dim_);
+// }
 }
 
 

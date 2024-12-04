@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
 project(diff_drive)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+set(CMAKE_BUILD_TYPE "DEBUG")
+if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0)
-endif()
+endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+
+# Add Global CMake Config for Ghost Packages
+set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
 
 set(DEPENDENCIES
   ament_cmake
@@ -20,7 +23,7 @@ set(DEPENDENCIES
   matplotlib_cpp
   yaml-cpp
   urdf
-
+  ghost_ros_interfaces
   )
 
 # find dependencies
@@ -28,6 +31,15 @@ foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
 endforeach()
 ament_export_dependencies(${DEPENDENCIES})
+
+# Set Include Directories
+set(INCLUDE
+  include
+  ${PYTHON_INCLUDE_DIRS}
+)
+
+include_directories(${INCLUDE})
+ament_export_include_directories(${INCLUDE})
 
 # Diff Drive State Space
 add_library(diff_drive_ss SHARED src/diff_drive_ss.cpp)
@@ -38,22 +50,42 @@ target_include_directories(diff_drive_ss
 ament_target_dependencies(diff_drive_ss
   ${DEPENDENCIES}
 )
-ament_export_libraries(
-  diff_drive_ss
+target_link_libraries(diff_drive_ss
+  casadi
 )
-ament_export_targets(diff_drive_ss HAS_LIBRARY_TARGET)
 install(
   TARGETS diff_drive_ss
   EXPORT diff_drive_ss
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
-  INCLUDES DES
+  INCLUDES DESTINATION include
 )
+ament_export_libraries(
+  diff_drive_ss
+)
+ament_export_targets(diff_drive_ss HAS_LIBRARY_TARGET)
 
 ###################
 ### Executables ###
 ###################
+# Main to generate Problem Formulation for MDS MPC
+add_executable(casadi_tank_model_generation src/casadi_tank_model_generation.cpp)
+ament_target_dependencies(casadi_tank_model_generation
+  ${DEPENDENCIES}
+)
+target_include_directories(casadi_tank_model_generation
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_link_libraries(casadi_tank_model_generation
+  casadi
+  matplotlib_cpp::matplotlib_cpp
+  ${PYTHON_LIBRARIES}
+)
+install(TARGETS
+  casadi_tank_model_generation
+  DESTINATION lib/${PROJECT_NAME})
 
 # Diff Drive Main
 add_executable(diff_drive_main
@@ -63,7 +95,8 @@ add_executable(diff_drive_main
 ament_target_dependencies(diff_drive_main
   ${DEPENDENCIES}
 )
-target_link_libraries(diff_drive_main diff_drive_ss)
+target_link_libraries(diff_drive_main 
+            diff_drive_ss)
 target_include_directories(diff_drive_main
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -87,24 +120,6 @@ target_include_directories(mtr_vltg_pub
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
   mtr_vltg_pub
-  DESTINATION lib/${PROJECT_NAME})
-
-# Main to generate Problem Formulation for MDS MPC
-add_executable(casadi_tank_model_generation src/casadi_tank_model_generation.cpp)
-ament_target_dependencies(casadi_tank_model_generation
-  ${DEPENDENCIES}
-)
-target_link_libraries(casadi_tank_model_generation
-  casadi
-  matplotlib_cpp::matplotlib_cpp
-  ${PYTHON_LIBRARIES}
-)
-target_include_directories(casadi_tank_model_generation
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  casadi_tank_model_generation
   DESTINATION lib/${PROJECT_NAME})
 
 

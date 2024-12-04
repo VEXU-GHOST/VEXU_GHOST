@@ -19,6 +19,8 @@
   <depend>nav_msgs</depend>
   <depend>ghost_util</depend>
 
+  <depend>ghost_ros_interfaces</depend>
+
 
   <export>
     <build_type>ament_cmake</build_type>
