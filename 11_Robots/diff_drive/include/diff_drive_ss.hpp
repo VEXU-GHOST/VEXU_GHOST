@@ -20,18 +20,17 @@ public:
   DiffDriveSS();
   ~DiffDriveSS();
   void getA();
-  void VltgToVelocity(
-    std::vector<ghost_msgs::msg::V5MotorCommand,
-    std::allocator<ghost_msgs::msg::V5MotorCommand>> & mtr_cmds);
+  void VltgToVelocity(std::vector<ghost_msgs::msg::V5MotorCommand, std::allocator<ghost_msgs::msg::V5MotorCommand>> & mtr_cmds);
 
   void DesiredTrajectoryCallback();
+  // Approximate dynamics about state x_bar and control u_bar
+  std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> ApproxDynamics(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar, float del_T);
+  // Nonlinear dynamics
+  Eigen::MatrixXd F(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar);
+  // Propogate nonlinear dynamics over timestep del_T
+  Eigen::MatrixXd next_step(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar, const float del_T);
 
 private:
-// Nonlinear dynamics
-  Eigen::MatrixXd F(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar);
-// Approximate dynamics about state x_bar and control u_bar
-  void ApproxDynamics(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar);
-
   Eigen::MatrixXd Q_;
   Eigen::MatrixXd R_;
 

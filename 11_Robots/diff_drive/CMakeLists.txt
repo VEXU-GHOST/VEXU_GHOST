@@ -4,6 +4,8 @@ project(diff_drive)
 set(CMAKE_BUILD_TYPE "DEBUG")
 if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
   add_compile_options(-g -O0)
+else()
+  add_compile_options(-g -O2)
 endif(CMAKE_BUILD_TYPE EQUAL "DEBUG")
 
 # Add Global CMake Config for Ghost Packages
