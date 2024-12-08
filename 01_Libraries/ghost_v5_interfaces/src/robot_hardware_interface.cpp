@@ -110,10 +110,10 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
   // Serialize devices
   for (const auto & [key, val] : device_pair_port_map_) {
     if (val.config_ptr->type == device_type_e::DIGITAL_INPUT) {
-        setBit(serial_data[1], (val.config_ptr->port - 22), val.data_ptr->as<DigitalInputDeviceData>()->value);
+        setBit(serial_data[1], val.config_ptr->port, val.data_ptr->as<DigitalInputDeviceData>()->value);
     }
     else if (val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
-        setBit(serial_data[1], (val.config_ptr->port - 22), val.data_ptr->as<DigitalOutputDeviceData>()->value);
+        setBit(serial_data[1], val.config_ptr->port, val.data_ptr->as<DigitalOutputDeviceData>()->value);
     }
     else {
       auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
@@ -183,7 +183,7 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
     }
 
     if (val.config_ptr->type == device_type_e::DIGITAL_INPUT || val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
-      val.data_ptr->deserialize({getBit(msg[1], (val.config_ptr->port - 22))}, hardware_type_);
+      val.data_ptr->deserialize({getBit(msg[1], val.config_ptr->port)}, hardware_type_);
     }
     else {
       auto start_itr = msg.begin() + byte_offset;

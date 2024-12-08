@@ -81,8 +81,8 @@ void loadDigitalDeviceConfigFromYAML(
             device_name + "!");
   }
 
-  // Convert port from A-H to 22-28
-  port = port - 'A' + 22;
+  // Convert port from A-H to 0-7
+  port = port - 'A';
 
   // Set port in device config
   device_config_ptr->port = (int) port;
