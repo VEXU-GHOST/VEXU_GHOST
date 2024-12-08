@@ -108,9 +108,6 @@ Eigen::Vector3d TankOdometry::update(
   //double polarR = local[1];
   double polarA = std::atan2(local[1], local[0]) - avgA;
   std::cout << "polarR: " << polarR << " polarA: " << polarA << std::endl;
- 
-  //double dY = std::sin(avgA) * local[1];
-  //double dX = std::cos(avgA) * local[1];
 
   double dX = std::sin(polarA) * polarR;
   double dY = std::cos(polarA) * polarR;

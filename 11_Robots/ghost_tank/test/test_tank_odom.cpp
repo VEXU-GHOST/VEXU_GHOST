@@ -34,37 +34,6 @@ TEST_F(TestTankOdom, testSimple) {
   expected = {0, 5, 0};
   GOT_EXPECTED_EXPECT(0.0001)
 
-//printf("=====swing 'left'(actually flipped) wheel\n");
-//  got = t.update({(long)(+10*100 * M_PI / 2)}, {0});
-//  PRINT_POS();
-//  got = t.update({(long)(0)}, {0});
-//  PRINT_POS();
-//  got = t.update({(long)(-10*100 * M_PI / 2)}, {0});
-//  PRINT_POS();
-//  got = t.update({(long)(0)}, {0});
-//  PRINT_POS();
-//
-//printf("=====swing 'right'(actually flipped) wheel\n");
-//  got = t.update({0},{(long)(+10*100 * M_PI / 2)});
-//  PRINT_POS();
-//  got = t.update({(long)(0)}, {0});
-//  PRINT_POS();
-//  got = t.update({0},{(long)(-10*100 * M_PI / 2)});
-//  PRINT_POS();
-//  got = t.update({(long)(0)}, {0});
-//  PRINT_POS();
-//printf("=====middle stuff ookkkkkkkkkkkk\n");
-//  got = t.update({100},{(long)(101)});
-//  PRINT_POS();
-//  got = t.update({(long)(0)}, {0});
-//  PRINT_POS();
-//  got = t.update({101},{(long)100});
-//  PRINT_POS();
-//  got = t.update({(long)(0)}, {0});
-//  PRINT_POS();
-
-
-
 printf("=====tests start\n");
 
 int i;
