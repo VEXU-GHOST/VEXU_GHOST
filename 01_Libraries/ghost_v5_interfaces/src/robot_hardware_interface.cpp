@@ -72,7 +72,8 @@ RobotHardwareInterface::RobotHardwareInterface(
     port_to_device_name_map_.emplace(pair.config_ptr->port, val->name);
 
     // Update msg lengths based on each non-digital device
-    if (pair.config_ptr->type != device_type_e::DIGITAL_INPUT && pair.config_ptr->type != device_type_e::DIGITAL_OUTPUT) {
+    if (pair.config_ptr->type != device_type_e::DIGITAL_INPUT &&
+        pair.config_ptr->type != device_type_e::DIGITAL_OUTPUT) {
         sensor_update_msg_length_ += pair.data_ptr->getSensorPacketSize();
         actuator_command_msg_length_ += pair.data_ptr->getActuatorPacketSize();
     }
@@ -92,6 +93,7 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
   std::vector<unsigned char> serial_data;
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 
+  // Competition State
   if (hardware_type_ == hardware_type_e::V5_BRAIN) {
     serial_data.push_back(
       packByte(
@@ -102,9 +104,10 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
     serial_data.push_back((unsigned char) 0);
   }
 
-  // Reserve empty byte for all Digital IO Ports
+  // Reserve byte for Digital IO
   serial_data.push_back((unsigned char) 0);
 
+  // Serialize devices
   for (const auto & [key, val] : device_pair_port_map_) {
     if (val.config_ptr->type == device_type_e::DIGITAL_INPUT) {
         setBit(serial_data[1], (val.config_ptr->port - 22), val.data_ptr->as<DigitalInputDeviceData>()->value);
