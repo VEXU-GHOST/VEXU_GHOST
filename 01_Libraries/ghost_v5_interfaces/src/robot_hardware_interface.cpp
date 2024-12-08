@@ -182,8 +182,10 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
               "[RobotHardwareInterface::deserialize] Error: Attempted to deserialize with unsupported hardware type.");
     }
 
-    if (val.config_ptr->type == device_type_e::DIGITAL_INPUT || val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
-      val.data_ptr->deserialize({getBit(msg[1], val.config_ptr->port)}, hardware_type_);
+    if (val.config_ptr->type == device_type_e::DIGITAL_INPUT ||
+        val.config_ptr->type == device_type_e::DIGITAL_OUTPUT) {
+      std::vector<unsigned char> data = {getBit(msg[1], val.config_ptr->port)};
+      val.data_ptr->deserialize(data, hardware_type_);
     }
     else {
       auto start_itr = msg.begin() + byte_offset;
