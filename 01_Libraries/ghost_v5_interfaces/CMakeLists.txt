@@ -154,10 +154,7 @@ foreach(TEST ${UTIL_LIBS})
   ament_target_dependencies(test_${TEST} ${DEPENDENCIES})
   target_link_libraries(test_${TEST}
     gtest_main
-    load_motor_device_config_yaml
-    load_rotation_sensor_device_config_yaml
-    load_inertial_sensor_device_config_yaml
-    load_digital_device_config_yaml
+    ${UTIL_LIBS}
     device_config_factory_utils
     yaml-cpp
   )
