@@ -138,6 +138,7 @@ set(DEVICE_TESTS
   test_rotation_sensor_device_interface
   test_inertial_sensor_device_interface
   test_joystick_device_interface
+  test_digital_device_interface
 )
 foreach(TEST ${DEVICE_TESTS})
   ament_add_gtest(${TEST} test/devices/${TEST}.cpp)
