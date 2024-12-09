@@ -190,7 +190,7 @@ void TankRobotPlugin::initialize()
 
 // blue motor is 300, TODO put this in config files
   odom = std::make_shared<TankOdometry>(
-    300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS, 12.5 * ghost_util::INCHES_TO_METERS
+    300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS / 2., 12.5 * ghost_util::INCHES_TO_METERS
   );
   bt_ = std::make_shared<TankTree>(
     bt_path, bt_path_interaction);
@@ -483,7 +483,9 @@ void TankRobotPlugin::teleop(double current_time)
       "drive_ltf",
       "drive_lbf",
       "drive_lttf",
+
       "indexer_right",
+
       "indexer_left",
       "drive_rttf",
       "drive_rtr",

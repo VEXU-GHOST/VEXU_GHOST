@@ -38,13 +38,12 @@ printf("=====tests start\n");
 
 int i;
 //for ( i = 1; i <= 50; i++)
-i=50;
-  got = t.update({0},     {(long)(   10*i * M_PI / 2)});
-  expected = {-5./sqrt(2), 5./sqrt(2), M_PI / 4};
-  GOT_EXPECTED_EXPECT(0.01)
+//i=50;
+//  got = t.update({0},     {(long)(   10*i * M_PI / 2)});
+//  expected = {-5./sqrt(2), 5./sqrt(2), M_PI / 4};
+//  GOT_EXPECTED_EXPECT(0.01)
 
-//for ( i = 51; i <= 100; i++)
-i=100;
+for ( i = 1; i <= 100; i++)
   got = t.update(  {0},        {(long)(  10*i * M_PI / 2)});
   expected = {-5, 0, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)

@@ -12,7 +12,7 @@ public:
     TankOdometry(int ticks_per_rotation, double wheel_radius_m, double wheelbase_m);
 
     Eigen::Vector3d getPose() {
-        return cur_pos;
+        return m_cur_pos;
     };
 
     //Eigen::Vector2d getRobotWorldPosition(double left_encoders, double right_encoders);
@@ -24,18 +24,18 @@ public:
     }
 
     Eigen::Vector3d setPose(Eigen::Vector3d p) {
-        cur_pos = p;
+        m_cur_pos = p;
         return p;
     };
 
 
 private:
-    std::vector<long> prev_l_ticks;
-    std::vector<long> prev_r_ticks;
+    std::vector<long> m_prev_l_ticks;
+    std::vector<long> m_prev_r_ticks;
 
-    Eigen::Vector3d cur_pos;
+    Eigen::Vector3d m_cur_pos;
 
-    double meters_per_tick;
-    double wheelbase; 
+    double m_meters_per_tick;
+    double m_wheelbase; 
 };
 } //namespace ghost_tank

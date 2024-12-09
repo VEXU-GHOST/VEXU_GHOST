@@ -12,11 +12,11 @@ namespace ghost_tank
 TankOdometry::TankOdometry(int ticks_per_rotation, double wheel_radius_m, double wheelbase_m)
 {
   double wheel_circumference = 2 * M_PI * wheel_radius_m;
-  meters_per_tick = wheel_circumference / ticks_per_rotation;
+  m_meters_per_tick = wheel_circumference / ticks_per_rotation;
   //std::cout << "meters per tick" << meters_per_tick << std::endl;
 
-  wheelbase = wheelbase_m;
-  cur_pos = {0, 0, 0};
+  m_wheelbase = wheelbase_m;
+  m_cur_pos = {0, 0, 0};
 }
 
 
@@ -72,72 +72,56 @@ Eigen::Vector3d TankOdometry::update(
 // NO // https://www.cs.columbia.edu/~allen/F17/NOTES/icckinematics.pdf
 
     std::vector<long> l_vel_arr =
-      !prev_l_ticks.empty() ? subtractVectors(l_wheel_pos, prev_l_ticks) : l_wheel_pos;
+      !m_prev_l_ticks.empty() ? subtractVectors(l_wheel_pos, m_prev_l_ticks) : l_wheel_pos;
 
-    double dl = median(l_vel_arr) * meters_per_tick;
+    double dl = median(l_vel_arr) * m_meters_per_tick;
 
     std::vector<long> r_vel_arr =
-      !prev_r_ticks.empty() ? subtractVectors(r_wheel_pos, prev_r_ticks) : r_wheel_pos;
-    double dr = median(r_vel_arr) * meters_per_tick;
+      !m_prev_r_ticks.empty() ? subtractVectors(r_wheel_pos, m_prev_r_ticks) : r_wheel_pos;
+    double dr = median(r_vel_arr) * m_meters_per_tick;
 
-    double dtheta = (dr - dl) / wheelbase;
+    double dtheta = (dr - dl) / m_wheelbase;
     //dtheta *= 2;
 
     std::cout << "dl: " << dl << " dr: " << dr << " dtheta: " << dtheta * ghost_util::RAD_TO_DEG<< std::endl;
     //dtheta = w; // TODO garbage?? can we not use our actual angle??????
 
-    Eigen::Vector2d local = {}; 
+    std::cout << "dr/dtheta: " << dr/dtheta << " dl/dtheta: " << dl/dtheta << std::endl;
 
-    std::cout << "dr/dtheta: " << dr/dtheta << " corelogic: " << dr / dtheta + wheelbase / 2 << std::endl;
+Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
+rotation_matrix.block<2,2>(0,0) = Eigen::Rotation2Dd(m_cur_pos.z()).toRotationMatrix();
 
-  //https://github.com/OkapiLib/OkapiLib/blob/master/src/api/odometry/twoEncoderOdometry.cpp
-  if (dtheta != 0) {
-      local[0] = 2 * std::sin(dtheta / 2) * 0;//chassisScales.middleWheelDistance.convert(meter);
-      local[1] = 2 * std::sin(dtheta / 2) *
-                  (-dr / dtheta + wheelbase / 2);
-  } else {
-      local[0] = 0;
-      local[1] = dr;
-  }
+Eigen::Vector3d local = Eigen::Vector3d::Zero();
 
-  double avgA = cur_pos[2] + dtheta/2 ;
-  std::cout << "localx: " << local[0] << " localy: " << local[1] << " avgA: " << avgA << std::endl;
-
-  //double polarR = std::sqrt(localOffX * localOffX + localOffY * localOffY);
-  double polarR = std::sqrt(local[0] * local[0] + local[1] * local[1]);
-  //double polarR = local[1];
-  double polarA = std::atan2(local[1], local[0]) - avgA;
-  std::cout << "polarR: " << polarR << " polarA: " << polarA << std::endl;
-
-  double dX = std::sin(polarA) * polarR;
-  double dY = std::cos(polarA) * polarR;
+if (dr == dl) 
+{
+  local.x() = (dl + dr) / 2;
+}
+ else {
 
 
-  if (isnan(dX)) {
-    dX = 0;
-  }
+double dtheta = (dr - dl) / m_wheelbase;
 
-  if (isnan(dY)) {
-    dY = 0;
-  }
+double rw = (dl/dtheta + dr/dtheta) / 2;
+local.x() = (rw) * sin(dtheta );
+local.y() = (rw) *(1-  cos(dtheta));
+local.z() = dtheta;
 
-
-  if (isnan(dtheta)) {
-    dtheta = 0;
-  }
+ }
+ std::cout << "local: \n" << local << std::endl;
 
 
-cur_pos[0] += dX;
-cur_pos[1] += dY;
-cur_pos[2] += dtheta;
 
-    cur_pos[2] = ghost_util::WrapAngle2PI(cur_pos[2]);
+m_cur_pos += rotation_matrix * local;
 
-    prev_l_ticks = l_wheel_pos, prev_r_ticks = r_wheel_pos;
+    m_cur_pos[2] = ghost_util::WrapAngle2PI(m_cur_pos[2]);
+
+    m_prev_l_ticks = l_wheel_pos;
+    m_prev_r_ticks = r_wheel_pos;
 
     printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", getPose().x(), getPose().y(), getPose().z());
     // TODO: can we set this to our physical imu angle
-    return cur_pos;
+    return m_cur_pos;
   }
 }
 
