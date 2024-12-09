@@ -54,13 +54,13 @@ void loadDigitalDeviceConfigFromYAML(
             device_name + "!");
   }
 
-  if(type == "DIGITAL_INPUT"){
+  if (type == "DIGITAL_INPUT") {
     device_config_ptr->type = devices::device_type_e::DIGITAL_INPUT;
   }
-  else if(type == "DIGITAL_OUTPUT"){
+  else if (type == "DIGITAL_OUTPUT") {
     device_config_ptr->type = devices::device_type_e::DIGITAL_OUTPUT;
   }
-  else{
+  else {
     throw std::runtime_error(std::string("[loadDigitalDeviceConfigFromYAML] Error: Unsupported digital device type ") + type + "!");
   }
 
