@@ -41,12 +41,12 @@ protected:
 
     // Expected motor configurations
     digital_input_config_ = std::make_shared<DigitalDeviceConfig>();
-    digital_input_config_->port = 22;
+    digital_input_config_->port = 0;
     digital_input_config_->name = "digital_in_1";
     digital_input_config_->type = device_type_e::DIGITAL_INPUT;
 
     digital_output_config_ = std::make_shared<DigitalDeviceConfig>();
-    digital_output_config_->port = 23;
+    digital_output_config_->port = 1;
     digital_output_config_->name = "digital_out_1";
     digital_output_config_->type = device_type_e::DIGITAL_OUTPUT;
 
