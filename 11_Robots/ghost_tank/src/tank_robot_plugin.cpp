@@ -479,62 +479,13 @@ void TankRobotPlugin::teleop(double current_time)
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
 
-  // for (const auto & name : m_left_drive_motor_names) {
-  //   rhi_ptr_->setMotorVoltageCommandPercent(name, left_cmd);
-  // }
-
-  // for (const auto & name : m_right_drive_motor_names) {
-  //   rhi_ptr_->setMotorVoltageCommandPercent(name, right_cmd);
-  // }
-
-  std::string motor = "";
-
-  if (joy_data->btn_a) {
-    motor = "drive_r1";
-
-  } else if (joy_data->btn_b) {
-    motor = "drive_r2";
-
-  } else if (joy_data->btn_x) {
-    motor = "drive_r3";
-
-  } else if (joy_data->btn_y) {
-    motor = "drive_r4";
-
-  } else if (joy_data->btn_u) {
-    motor = "drive_r5";
-
-  } else if (joy_data->btn_d) {
-    motor = "drive_r6";
-
-  } else if (joy_data->btn_l) {
-    motor = "drive_l1";
-
-  } else if (joy_data->btn_r) {
-    motor = "drive_l2";
-
-  } else if (joy_data->btn_l1) {
-    motor = "drive_l3";
-
-  } else if (joy_data->btn_l2) {
-    motor = "drive_l4";
-
-  } else if (joy_data->btn_r1) {
-    motor = "drive_l5";
-
-  } else if (joy_data->btn_r2) {
-    motor = "drive_l6";
-
+  for (const auto & name : m_left_drive_motor_names) {
+    rhi_ptr_->setMotorVoltageCommandPercent(name, left_cmd);
   }
 
-  for (const auto & name : m_all_motor_names) {
-    float pwr = 0.0;
-    if (name == motor) {
-      pwr = 1.0;
-    }
-    rhi_ptr_->setMotorVoltageCommandPercent(name, pwr);
+  for (const auto & name : m_right_drive_motor_names) {
+    rhi_ptr_->setMotorVoltageCommandPercent(name, right_cmd);
   }
-
 
   static bool forklift_pressed = false;
   static bool forklift_up = false;

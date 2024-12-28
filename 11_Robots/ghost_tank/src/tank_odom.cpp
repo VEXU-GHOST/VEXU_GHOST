@@ -1,4 +1,4 @@
-#include "ghost_tank/tank_odom.hpp"
+#include <ghost_tank/tank_odom.hpp>
 #include <vector>
 #include <cmath>
 #include <iostream>
@@ -83,43 +83,40 @@ Eigen::Vector3d TankOdometry::update(
     double dtheta = (dr - dl) / m_wheelbase;
     //dtheta *= 2;
 
-    std::cout << "dl: " << dl << " dr: " << dr << " dtheta: " << dtheta * ghost_util::RAD_TO_DEG<< std::endl;
+    // std::cout << "dl: "/ << dl << " dr: " << dr << " dtheta: " << dtheta * ghost_util::RAD_TO_DEG<< std::endl;
     //dtheta = w; // TODO garbage?? can we not use our actual angle??????
 
-    std::cout << "dr/dtheta: " << dr/dtheta << " dl/dtheta: " << dl/dtheta << std::endl;
+    // std::cout << "dr//dtheta: " << dr/dtheta << " dl/dtheta: " << dl/dtheta << std::endl;
 
-Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
-rotation_matrix.block<2,2>(0,0) = Eigen::Rotation2Dd(m_cur_pos.z()).toRotationMatrix();
+    Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
+    rotation_matrix.block<2, 2>(0, 0) = Eigen::Rotation2Dd(m_cur_pos.z()).toRotationMatrix();
 
-Eigen::Vector3d local = Eigen::Vector3d::Zero();
+    Eigen::Vector3d local = Eigen::Vector3d::Zero();
 
-if (dr == dl) 
-{
-  local.x() = (dl + dr) / 2;
-}
- else {
+    if (dr == dl) {
+      local.x() = (dl + dr) / 2;
+    } else {
 
 
-double dtheta = (dr - dl) / m_wheelbase;
+      double dtheta = (dr - dl) / m_wheelbase;
 
-double rw = (dl/dtheta + dr/dtheta) / 2;
-local.x() = (rw) * sin(dtheta );
-local.y() = (rw) *(1-  cos(dtheta));
-local.z() = dtheta;
+      double rw = (dl / dtheta + dr / dtheta) / 2;
+      local.x() = (rw) * sin(dtheta);
+      local.y() = (rw) * (1 - cos(dtheta));
+      local.z() = dtheta;
 
- }
- std::cout << "local: \n" << local << std::endl;
+    }
+    // std::cout << "local: \n" << local << std::endl;
 
 
-
-m_cur_pos += rotation_matrix * local;
+    m_cur_pos += rotation_matrix * local;
 
     m_cur_pos[2] = ghost_util::WrapAngle2PI(m_cur_pos[2]);
 
     m_prev_l_ticks = l_wheel_pos;
     m_prev_r_ticks = r_wheel_pos;
 
-    printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", getPose().x(), getPose().y(), getPose().z());
+    // printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", getPose().x(), getPose().y(), getPose().z());
     // TODO: can we set this to our physical imu angle
     return m_cur_pos;
   }
