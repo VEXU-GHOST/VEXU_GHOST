@@ -28,7 +28,10 @@ public:
   // Nonlinear dynamics
   Eigen::MatrixXd F(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar);
   // Propogate nonlinear dynamics over timestep del_T
-  Eigen::MatrixXd next_step(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar, const float del_T);
+  Eigen::VectorXd next_step(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar, const float del_T);
+
+  int GetNDim();
+  int GetMDim();
 
 private:
   Eigen::MatrixXd Q_;
@@ -37,9 +40,8 @@ private:
   std::vector<Eigen::MatrixXd> Qk_data;
   std::vector<Eigen::MatrixXd> Rk_data;
 
-  std::vector<Eigen::MatrixXd> x_bar_data;
-  std::vector<Eigen::MatrixXd> u_bar_data;
-  std::vector<Eigen::MatrixXd> del_u_star_data;
+  std::vector<Eigen::VectorXd> x_bar_data;
+  std::vector<Eigen::Vector2d> u_bar_data;
 
   // Number of states
   int n_dim_;

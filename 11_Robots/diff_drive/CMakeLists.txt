@@ -23,9 +23,9 @@ set(DEPENDENCIES
   ghost_util
   casadi
   matplotlib_cpp
-  yaml-cpp
   urdf
   ghost_ros_interfaces
+  yaml-cpp
   )
 
 # find dependencies
@@ -52,9 +52,6 @@ target_include_directories(diff_drive_ss
 ament_target_dependencies(diff_drive_ss
   ${DEPENDENCIES}
 )
-target_link_libraries(diff_drive_ss
-  casadi
-)
 install(
   TARGETS diff_drive_ss
   EXPORT diff_drive_ss
@@ -67,6 +64,31 @@ ament_export_libraries(
   diff_drive_ss
 )
 ament_export_targets(diff_drive_ss HAS_LIBRARY_TARGET)
+
+# ILQR
+add_library(ilqr SHARED src/ilqr.cpp)
+target_include_directories(ilqr
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(ilqr
+  ${DEPENDENCIES}
+)
+install(
+  TARGETS ilqr
+  EXPORT ilqr
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+target_link_libraries(ilqr
+  yaml-cpp
+)
+ament_export_libraries(
+  ilqr
+)
+ament_export_targets(ilqr HAS_LIBRARY_TARGET)
 
 ###################
 ### Executables ###

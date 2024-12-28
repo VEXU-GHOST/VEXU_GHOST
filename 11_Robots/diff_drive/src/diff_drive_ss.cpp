@@ -127,10 +127,20 @@ std::tuple<Eigen::MatrixXd, Eigen::MatrixXd> DiffDriveSS::ApproxDynamics(const E
 /*
   For a given control u_bar, returns next state x_bar
 */
-Eigen::MatrixXd DiffDriveSS::next_step(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar, const float del_T){
+Eigen::VectorXd DiffDriveSS::next_step(const Eigen::MatrixXd x_bar, const Eigen::MatrixXd u_bar, const float del_T){
   Eigen::MatrixXd Fk = F(x_bar, u_bar) * del_T;
-  Eigen::MatrixXd x_next = x_bar + Fk;
+  Eigen::VectorXd x_next = x_bar + Fk;
   return x_next;
+}
+
+/*
+  Getters
+*/
+int DiffDriveSS::GetNDim(){
+  return n_dim_;  
+}
+int DiffDriveSS::GetMDim(){
+  return m_dim_;
 }
 
 }

@@ -1,0 +1,8 @@
+horizon : 0.1 #s
+del_T : 0.01  #s
+
+n_dim : 5
+m_dim : 2
+
+# Initial State: x y tht vel_l_wheel vel_r_wheel
+x0 : [0.0, 0.0, 0.0, 0.0, 0.0]

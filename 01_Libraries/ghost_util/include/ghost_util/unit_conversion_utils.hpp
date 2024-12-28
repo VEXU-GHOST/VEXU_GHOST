@@ -37,4 +37,6 @@ inline constexpr double DEG_TO_RAD = M_PI / 180.0;
 inline constexpr double INCHES_TO_METERS = 2.54 / 100.0;
 inline constexpr double METERS_TO_INCHES = 100.0 / 2.54;
 
+inline constexpr double LBS_TO_KG = 1 / 2.205;
+
 } // namespace ghost_util
