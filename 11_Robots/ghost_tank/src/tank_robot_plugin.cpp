@@ -43,6 +43,33 @@ TankRobotPlugin::TankRobotPlugin()
   //   {"tail", 0},
   //   {"claw", 1}
   // };
+
+  m_right_drive_motor_names = {
+    "drive_r1",
+    "drive_r2",
+    "drive_r3",
+    "drive_r4",
+    "drive_r5",
+    "drive_r6",
+  };
+  m_left_drive_motor_names = {
+    "drive_l1",
+    "drive_l2",
+    "drive_l3",
+    "drive_l4",
+    "drive_l5",
+    "drive_l6",
+  };
+
+  m_all_motor_names.insert(
+    m_all_motor_names.end(),
+    m_right_drive_motor_names.begin(),
+    m_right_drive_motor_names.end());
+
+  m_all_motor_names.insert(
+    m_all_motor_names.end(),
+    m_left_drive_motor_names.begin(),
+    m_left_drive_motor_names.end());
 }
 
 void TankRobotPlugin::initialize()
@@ -226,30 +253,16 @@ void TankRobotPlugin::onNewSensorData()
   // publishBaseTwist();
   // publishTrajectoryVisualization();
 
-  std::vector<std::string> motor_list = {
-    "drive_ltr",
-    "drive_lbr",
-    "drive_ltf",
-    "drive_lbf",
-    "drive_lttf",
-    "drive_rttf",
-    "drive_rtr",
-    "drive_rbr",
-    "drive_rtf",
-    "drive_rbf"
-  };
+
   std::vector<long> r_pos;
   std::vector<long> l_pos;
-  for (const std::string s : motor_list) {
-    long p = rhi_ptr_->getMotorPosition(s);
-    if (s.at(6) == 'r') {
-      r_pos.push_back(p);
-    } else if (s.at(6) == 'l') {
-      l_pos.push_back(p);
-    } else {
-      RCLCPP_ERROR(node_ptr_->get_logger(), "Odom: Motor Name Error");
-      std::cout << "Odom: Motor Name Error\n";
-    }
+
+  for (const auto & name : m_right_drive_motor_names) {
+    r_pos.push_back(rhi_ptr_->getMotorPosition(name));
+  }
+
+  for (const auto & name : m_left_drive_motor_names) {
+    l_pos.push_back(rhi_ptr_->getMotorPosition(name));
   }
 
   odom->update(l_pos, r_pos);
@@ -326,31 +339,16 @@ void TankRobotPlugin::autonomous(double current_time)
   double left_cmd = forward_vel + angular_vel;
   double right_cmd = forward_vel - angular_vel;
 
-  std::vector<std::string> motor_list = {
-    "drive_ltr",
-    "drive_lbr",
-    "drive_ltf",
-    "drive_lbf",
-    "drive_lttf",
-    "indexer_right",
-    "indexer_left",
-    "drive_rttf",
-    "drive_rtr",
-    "drive_rbr",
-    "drive_rtf",
-    "drive_rbf"
-  };
-
-  for (const auto motor_name: motor_list) {
+  for (const auto motor_name: m_all_motor_names) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
 
-  for (int i = 0; i < 5; i++) {
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
+  for (const auto & name : m_left_drive_motor_names) {
+    rhi_ptr_->setMotorVoltageCommandPercent(name, left_cmd);
   }
 
-  for (int i = 7; i < 12; i++) {
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
+  for (const auto & name : m_right_drive_motor_names) {
+    rhi_ptr_->setMotorVoltageCommandPercent(name, right_cmd);
   }
 
   geometry_msgs::msg::Twist msg{};
@@ -405,185 +403,192 @@ void TankRobotPlugin::teleop(double current_time)
   // std::cout << "Pose Theta: " << pose[2] << std::endl;
 
 
-  if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
-    joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
-  {
-    std::system("echo 1 | sudo -S shutdown now");
+  // if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
+  //   joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
+  // {
+  //   std::system("echo 1 | sudo -S shutdown now");
+  // }
+
+  // if (joy_data->btn_u) {
+  //   if (!m_auton_button_pressed) {
+  //     m_auton_button_pressed = true;
+  //     m_is_first_auton_loop = true;
+  //     m_auton_start_time = current_time;
+  //     m_auton_button_pressed = false;
+  //     m_auton_index = 0;
+  //   }
+  //   autonomous(current_time - m_auton_start_time);
+  // } else {
+  //   static bool reset_pose_btn_pressed = false;
+  //   if (joy_data->btn_d && joy_data->btn_l && !reset_pose_btn_pressed && m_use_backup_estimator) {
+  //     resetPose(0.0, 0.0, 0.0);
+  //     reset_pose_btn_pressed = true;
+  //   } else if (!joy_data->btn_d && !joy_data->btn_l) {
+  //     reset_pose_btn_pressed = false;
+  //   }
+
+  //   // Toggle Bag Recorder
+  //   if (joy_data->btn_y && !m_recording_btn_pressed) {
+  //     m_recording_btn_pressed = true;
+
+  //     if (!m_recording) {
+  //       auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+  //       m_start_recorder_client->async_send_request(req);
+  //     } else {
+  //       auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+  //       m_stop_recorder_client->async_send_request(req);
+  //     }
+
+  //     m_recording = !m_recording;
+  //   } else if (!joy_data->btn_y) {
+  //     m_recording_btn_pressed = false;
+  //   }
+
+
+  // static bool btn_r_pressed = false;
+  // if (joy_data->btn_r && !btn_r_pressed) {
+  //   btn_r_pressed = true;
+  //   m_use_backup_estimator = !m_use_backup_estimator;
+  // } else if (!joy_data->btn_r) {
+  //   btn_r_pressed = false;
+  // }
+
+  // m_curr_x_cmd = joy_data->left_x / 127.0;             // * scale;
+  // m_curr_y_cmd = joy_data->left_y / 127.0;             // * scale;
+  // m_curr_theta_cmd = joy_data->right_x / 127.0;             // * scale;
+
+  // m_tank_model_ptr->drivecommandthing(
+  //   m_curr_x_cmd, m_curr_y_cmd,
+  //   m_curr_theta_cmd);
+
+  // m_last_x_cmd = m_curr_x_cmd;
+  // m_last_y_cmd = m_curr_y_cmd;
+  // m_last_theta_cmd = m_curr_theta_cmd;
+
+  double forward_vel = joy_data->left_y / 127.0;
+  double angular_vel = joy_data->right_x / 127.0;
+
+  double threshold = 0.05;
+  forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+  angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+
+  double left_cmd = forward_vel + angular_vel;
+  double right_cmd = forward_vel - angular_vel;
+
+  for (const auto motor_name: m_all_motor_names) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
 
-  if (joy_data->btn_u) {
-    if (!m_auton_button_pressed) {
-      m_auton_button_pressed = true;
-      m_is_first_auton_loop = true;
-      m_auton_start_time = current_time;
-      m_auton_button_pressed = false;
-      m_auton_index = 0;
-    }
-    autonomous(current_time - m_auton_start_time);
-  } else {
-    static bool reset_pose_btn_pressed = false;
-    if (joy_data->btn_d && joy_data->btn_l && !reset_pose_btn_pressed && m_use_backup_estimator) {
-      resetPose(0.0, 0.0, 0.0);
-      reset_pose_btn_pressed = true;
-    } else if (!joy_data->btn_d && !joy_data->btn_l) {
-      reset_pose_btn_pressed = false;
-    }
+  // for (const auto & name : m_left_drive_motor_names) {
+  //   rhi_ptr_->setMotorVoltageCommandPercent(name, left_cmd);
+  // }
 
-    // Toggle Bag Recorder
-    if (joy_data->btn_y && !m_recording_btn_pressed) {
-      m_recording_btn_pressed = true;
+  // for (const auto & name : m_right_drive_motor_names) {
+  //   rhi_ptr_->setMotorVoltageCommandPercent(name, right_cmd);
+  // }
 
-      if (!m_recording) {
-        auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-        m_start_recorder_client->async_send_request(req);
-      } else {
-        auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
-        m_stop_recorder_client->async_send_request(req);
-      }
+  std::string motor = "";
 
-      m_recording = !m_recording;
-    } else if (!joy_data->btn_y) {
-      m_recording_btn_pressed = false;
-    }
-
-
-    static bool btn_r_pressed = false;
-    if (joy_data->btn_r && !btn_r_pressed) {
-      btn_r_pressed = true;
-      m_use_backup_estimator = !m_use_backup_estimator;
-    } else if (!joy_data->btn_r) {
-      btn_r_pressed = false;
-    }
-
-    // m_curr_x_cmd = joy_data->left_x / 127.0;             // * scale;
-    // m_curr_y_cmd = joy_data->left_y / 127.0;             // * scale;
-    // m_curr_theta_cmd = joy_data->right_x / 127.0;             // * scale;
-
-    // m_tank_model_ptr->drivecommandthing(
-    //   m_curr_x_cmd, m_curr_y_cmd,
-    //   m_curr_theta_cmd);
-
-    // m_last_x_cmd = m_curr_x_cmd;
-    // m_last_y_cmd = m_curr_y_cmd;
-    // m_last_theta_cmd = m_curr_theta_cmd;
-
-    double forward_vel = joy_data->left_y / 127.0;
-    double angular_vel = joy_data->right_x / 127.0;
-
-    double threshold = 0.05;
-    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
-
-    double left_cmd = forward_vel + angular_vel;
-    double right_cmd = forward_vel - angular_vel;
-
-    std::vector<std::string> motor_list = {
-      "drive_ltr",
-      "drive_lbr",
-      "drive_ltf",
-      "drive_lbf",
-      "drive_lttf",
-
-      "indexer_right",
-
-      "indexer_left",
-      "drive_rttf",
-      "drive_rtr",
-      "drive_rbr",
-      "drive_rtf",
-      "drive_rbf"
-    };
-
-    for (const auto motor_name: motor_list) {
-      rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
-    }
-
-    for (int i = 0; i < 5; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
-    }
-
-    for (int i = 7; i < 12; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
-    }
-
-    double intake_power = 0;
-    if (joy_data->btn_r2) {
-      intake_power = 1.0;
-    } else if (joy_data->btn_r1) {
-      intake_power = -1.0;
-    } else {
-      intake_power = 0.0;
-    }
-
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
-
-    static bool forklift_pressed = false;
-    static bool forklift_up = false;
-
-    if (joy_data->btn_l1 && !forklift_pressed) {
-      forklift_pressed = true;
-      forklift_up = !forklift_up;
-    } else if (!joy_data->btn_l1) {
-      forklift_pressed = false;
-    }
-
-    m_digital_io[1] = forklift_up; // forklift
-    m_digital_io[2] = joy_data->btn_l2; // pooper
-    rhi_ptr_->setDigitalIO(m_digital_io);
-
-    // updateDrivetrainMotors();
-
-    // Intake
-    // double intake_voltage;
-    // if (joy_data->btn_r1) {
-    //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    //   intake_voltage = -1.0;
-    // } else if (joy_data->btn_r2) {
-    //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    //   intake_voltage = 1.0;
-    // } else {
-    //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
-    //   intake_voltage = 0.0;
-    // }
-    // rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
-
-    // intake burnout
-
-    // // If INTAKE_MOTOR stalling, update state and timer
-    // if ((intake_command) &&
-    //   (std::fabs(rhi_ptr_->getMotorVelocityRPM("intake_motor")) < m_burnout_absolute_rpm_threshold))
-    // {
-    //   if (!m_intake_stalling) {
-    //     m_intake_stall_start = node_ptr_->now();
-    //     m_intake_stalling = true;
-    //   }
-    // } else {
-    //   m_intake_stalling = false;
-    // }
-
-    // // If INTAKE_MOTOR stalled for too long, start cooldown period
-    // if (!m_intake_cooling_down && m_intake_stalling &&
-    //   ((node_ptr_->now() - m_intake_stall_start).nanoseconds() >
-    //   m_burnout_stall_duration_ms * 1000000) )
-    // {
-    //   m_intake_stalling = false;
-    //   m_intake_cooling_down = true;
-    //   m_intake_cooldown_start = node_ptr_->now();
-    // }
-
-    // // Enforce INTAKE_MOTOR cooldown period
-    // if (m_intake_cooling_down) {
-    //   if (((node_ptr_->now() - m_intake_cooldown_start).nanoseconds() <=
-    //     m_burnout_cooldown_duration_ms * 1000000) && intake_command)
-    //   {
-    //     rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
-    //     rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
-    //   } else {
-    //     m_intake_cooling_down = false;
-    //   }
-    // }
+  if (joy_data->btn_a) {
+    motor = "drive_r1";
+  } else if (joy_data->btn_b) {
+    motor = "drive_r2";
+  } else if (joy_data->btn_x) {
+    motor = "drive_r3";
+  } else if (joy_data->btn_y) {
+    motor = "drive_r4";
+  } else if (joy_data->btn_u) {
+    motor = "drive_r5";
+  } else if (joy_data->btn_d) {
+    motor = "drive_r6";
+  } else if (joy_data->btn_l) {
+    motor = "drive_l1";
+  } else if (joy_data->btn_r) {
+    motor = "drive_l2";
+  } else if (joy_data->btn_l1) {
+    motor = "drive_l3";
+  } else if (joy_data->btn_l2) {
+    motor = "drive_l4";
+  } else if (joy_data->btn_r1) {
+    motor = "drive_r5";
+  } else if (joy_data->btn_r2) {
+    motor = "drive_r6";
   }
+
+  for (const auto & name : m_all_motor_names) {
+    float pwr = 0.0;
+    if (name == motor) {
+      pwr = 1.0;
+    }
+    rhi_ptr_->setMotorVoltageCommandPercent(name, pwr);
+  }
+
+
+  static bool forklift_pressed = false;
+  static bool forklift_up = false;
+
+  if (joy_data->btn_l1 && !forklift_pressed) {
+    forklift_pressed = true;
+    forklift_up = !forklift_up;
+  } else if (!joy_data->btn_l1) {
+    forklift_pressed = false;
+  }
+
+  m_digital_io[1] = forklift_up;   // forklift
+  m_digital_io[2] = joy_data->btn_l2;   // pooper
+  rhi_ptr_->setDigitalIO(m_digital_io);
+
+  // updateDrivetrainMotors();
+
+  // Intake
+  // double intake_voltage;
+  // if (joy_data->btn_r1) {
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  //   intake_voltage = -1.0;
+  // } else if (joy_data->btn_r2) {
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  //   intake_voltage = 1.0;
+  // } else {
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
+  //   intake_voltage = 0.0;
+  // }
+  // rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_voltage);
+
+  // intake burnout
+
+  // // If INTAKE_MOTOR stalling, update state and timer
+  // if ((intake_command) &&
+  //   (std::fabs(rhi_ptr_->getMotorVelocityRPM("intake_motor")) < m_burnout_absolute_rpm_threshold))
+  // {
+  //   if (!m_intake_stalling) {
+  //     m_intake_stall_start = node_ptr_->now();
+  //     m_intake_stalling = true;
+  //   }
+  // } else {
+  //   m_intake_stalling = false;
+  // }
+
+  // // If INTAKE_MOTOR stalled for too long, start cooldown period
+  // if (!m_intake_cooling_down && m_intake_stalling &&
+  //   ((node_ptr_->now() - m_intake_stall_start).nanoseconds() >
+  //   m_burnout_stall_duration_ms * 1000000) )
+  // {
+  //   m_intake_stalling = false;
+  //   m_intake_cooling_down = true;
+  //   m_intake_cooldown_start = node_ptr_->now();
+  // }
+
+  // // Enforce INTAKE_MOTOR cooldown period
+  // if (m_intake_cooling_down) {
+  //   if (((node_ptr_->now() - m_intake_cooldown_start).nanoseconds() <=
+  //     m_burnout_cooldown_duration_ms * 1000000) && intake_command)
+  //   {
+  //     rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 0);
+  //     rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0);
+  //   } else {
+  //     m_intake_cooling_down = false;
+  //   }
+  // }
 }
 
 // make a class for this

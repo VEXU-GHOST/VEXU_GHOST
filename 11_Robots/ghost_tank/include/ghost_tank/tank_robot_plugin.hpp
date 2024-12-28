@@ -82,7 +82,7 @@ protected:
   void publishDesiredPose(Eigen::Vector3d pose);
 
   // Subscribers
-  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg) ;
+  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
@@ -195,6 +195,10 @@ protected:
   bool m_intake_cooling_down = false;
 
   bool m_interaction_started = false;
+
+  std::vector<std::string> m_right_drive_motor_names;
+  std::vector<std::string> m_left_drive_motor_names;
+  std::vector<std::string> m_all_motor_names;
 };
 
 } // namespace ghost_tank
