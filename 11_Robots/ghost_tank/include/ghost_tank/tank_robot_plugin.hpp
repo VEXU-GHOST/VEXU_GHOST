@@ -57,7 +57,10 @@ public:
 
 protected:
   // Publishers
+  void movePointToPoint();
+  void readPathFromFile(const std::string& filename);
   void go_forward(float target_inch);
+  void turn(float target_angle);
   void publishVisualization();
   void publishOdometry();
   void publishBaseTwist();

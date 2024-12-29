@@ -22,16 +22,22 @@
  */
 
 #include <iostream>
+#include <cmath>
+#include <bits/stdc++.h>
 #include <ghost_tank/tank_model.hpp>
 #include <ghost_tank/tank_robot_plugin.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
+#include <ghost_util/read_path.hpp>
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
 
+std::vector<double> x_values;
+    std::vector<double> y_values;
+    std::vector<double> angle_values;
 namespace ghost_tank
 {
 
@@ -190,6 +196,9 @@ void TankRobotPlugin::initialize()
   bt_ = std::make_shared<TankTree>(
     bt_path, bt_path_interaction, rhi_ptr_, m_tank_model_ptr,
     node_ptr_);
+    //read path from file 
+    std::string path_file = "path/to/your/file.csv";
+    readPathFromFile(path_file);
 }
 
 void TankRobotPlugin::onNewSensorData()
@@ -286,6 +295,73 @@ void TankRobotPlugin::go_forward(float target_inch)
   for (int i = 7; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
   }
+}
+
+void TankRobotPlugin::turn(float target_angle)
+{
+  std::vector<std::string> motor_list = {
+    "drive_ltr",
+    "drive_lbr",
+    "drive_ltf",
+    "drive_lbf",
+    "drive_lttf",
+    "indexer_right",
+    "indexer_left",
+    "drive_rttf",
+    "drive_rtr",
+    "drive_rbr",
+    "drive_rtf",
+    "drive_rbf"
+  };
+  for (const auto motor_name: motor_list) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+  }
+
+  double left_cmd = 0.0;
+  double right_cmd = 0.0;
+
+  static double tick_per_IN = 39.93342;
+  double target_inch_distance = 1;
+
+  float robot_angle = m_curr_odom_pose.z;
+  static float p_constant = 0.5;
+
+/*
+  if (average < abs(target_angle) * tick_per_IN) {
+    left_cmd = p_constant * -0.01 * ((left_motor_position / tick_per_IN) - (target_inch));
+    right_cmd = p_constant * -0.01 * ((right_motor_position / tick_per_IN) - (target_inch));
+
+  } else {
+    left_cmd = 0.0;
+    right_cmd = 0.0;
+  }
+*/
+  //2.75 in per revolution
+  /*if (counter<4){
+    // for(int i= 0; i<4; i++){
+    if (current_time < 4.0 + 5.0 *counter) {
+      left_cmd = 10;
+      right_cmd = 10;
+    } else if (current_time < 5.0 + 5.0 * counter) {
+      left_cmd = 10;
+      right_cmd = 0;
+    } else {
+      left_cmd =0;
+      right_cmd=0;
+      counter = counter +1;
+    }
+    // }
+  }
+  */
+ if (target_angle <0){
+  for (int i = 0; i < 5; i++) {
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
+  }
+ }else{
+  for (int i = 7; i < 12; i++) {
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
+  }
+}
 }
 
 void TankRobotPlugin::autonomous(double current_time)
@@ -560,6 +636,67 @@ void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d twist)
     msg.orientation.z);
   m_des_pos_pub->publish(msg);
 }
+
+void TankRobotPlugin::readPathFromFile(const std::string& filename) {
+    std::vector<double> x_values;
+    std::vector<double> y_values;
+    std::vector<double> angle_values;
+
+    int result = ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
+
+    
+}
+
+
+void TankRobotPlugin:: movePointToPoint(){
+   
+    for (size_t i = 0; i < x_values.size(); ++i) {
+        double goal_x = x_values[i];
+        double goal_y = y_values[i];
+        double goal_angle = angle_values[i];
+    
+        double current_x = 0;
+        double current_y= 0;
+        double current_angle = m_curr_odom_pose.z();
+
+        //goal angle 
+        double dx= goal_x - current_x;
+        double dy= goal_y - current_y;
+        double angle_radians = atan2(dx, dy);
+        double goal_degrees= angle_radians * (double)(180/3.14159265358987932);
+        if (goal_degrees <= 0){
+          goal_degrees += 360;
+        }
+
+        //turn to goal angle 
+        double diff= abs(goal_degrees - current_angle);
+        double shortest_angle = min(diff, 360-diff);
+        if((goal_degrees - current_angle + 360)%(double)360 <= 180){
+          int direction = 1;
+        }else{
+          int direction = -1; 
+        }
+
+        turn(direction * shortest_angle);
+
+      //distance between current and goal pt 
+      double distance = sqrt(pow(dx,2)+pow(dy,2));
+
+      //move 
+
+      go_forward(distance);
+      current_x = x_values[i];
+      current_y= y_values[i];
+
+      
+    }
+
+
+
+
+  
+}
+
 
 } // namespace ghost_tank
 
