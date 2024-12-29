@@ -1,5 +1,9 @@
 port_configuration:
     devices:
+        imu:
+            port: 1
+            type: INERTIAL_SENSOR
+            config: inertial_sensor_config
         drive_l1:
             port: 11
             type: MOTOR
@@ -63,7 +67,7 @@ port_configuration:
     device_configurations:
         inertial_sensor_config:
             serial:
-                send_accel_data: true
+                send_accel_data: false
                 send_gyro_data: true
                 send_heading_data: true
         drive_motor_config:

@@ -198,10 +198,9 @@ void TankRobotPlugin::initialize()
     "/set_pose",
     10);
 
-  imu_sub = node_ptr_->create_subscription<sensor_msgs::msg::Imu>(
-    "/camera/camera/imu",
-    10,
-    std::bind(&TankRobotPlugin::imuUpdateCallback, this, _1));
+  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
+    "/sensors/imu",
+    10);
 
   m_des_vel_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     "/des_vel",
@@ -231,20 +230,20 @@ void TankRobotPlugin::initialize()
 
 void TankRobotPlugin::onNewSensorData()
 {
-  //sensor_msgs::msg::Imu imu_msg{};
-  // imu_msg.header.frame_id = "imu_link";
-  // imu_msg.header.stamp = node_ptr_->get_clock()->now();
+  sensor_msgs::msg::Imu imu_msg{};
+  imu_msg.header.frame_id = "imu_link";
+  imu_msg.header.stamp = node_ptr_->get_clock()->now();
   // imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
   // imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
   // imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
-  // imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
-  // imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
-  // imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
-  // double yaw = -rhi_ptr_->getInertialSensorHeading("imu");
-  // ghost_util::yawToQuaternionDeg(
-  //   yaw, imu_msg.orientation.w, imu_msg.orientation.x,
-  //   imu_msg.orientation.y, imu_msg.orientation.z);
-  // imu_pub->publish(imu_msg);
+  imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
+  imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
+  imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+  double yaw = -rhi_ptr_->getInertialSensorHeading("imu");
+  ghost_util::yawToQuaternionDeg(
+    yaw, imu_msg.orientation.w, imu_msg.orientation.x,
+    imu_msg.orientation.y, imu_msg.orientation.z);
+  imu_pub->publish(imu_msg);
 
   //m_tank_model_ptr->updateTankModel();
 
@@ -289,7 +288,7 @@ void TankRobotPlugin::autonomous(double current_time)
   // if (!m_is_first_auton_loop) {
   //   bt_->tick_tree_interaction();
   // } else {
-  bt_->tick_tree();
+  // bt_->tick_tree();
   // }
 
   // publishTrajectoryVisualization();
@@ -564,16 +563,6 @@ void TankRobotPlugin::teleop(double current_time)
 //     btn_r_pressed = false;
 //   }
 // }
-
-void TankRobotPlugin::imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
-{
-  // TODO do we even need this anymore
-  m_imu_yaw = ghost_util::quaternionToYawRad(
-    msg->orientation.w,
-    msg->orientation.x,
-    msg->orientation.y,
-    msg->orientation.z);
-}
 
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
