@@ -338,11 +338,18 @@ void TankRobotPlugin::turn(float target_angle)
  if (target_angle <0){
   for (int i = 0; i < 5; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
+    
+  }for (int i = 7; i < 12; i++) {
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], -1*left_cmd);
   }
  }else{
-  for (int i = 7; i < 12; i++) {
+  for (int i = 0; i < 5; i++) {
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], -1* right_cmd);
+    
+  }for (int i = 7; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
+  
 }
 pastdiff = diff;
 }
