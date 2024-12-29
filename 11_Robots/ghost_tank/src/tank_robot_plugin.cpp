@@ -320,39 +320,21 @@ void TankRobotPlugin::turn(float target_angle)
   double left_cmd = 0.0;
   double right_cmd = 0.0;
 
-  static double tick_per_IN = 39.93342;
-  double target_inch_distance = 1;
-
-  float robot_angle = m_curr_odom_pose.z;
+  float robot_angle = m_curr_odom_pose.z();
   static float p_constant = 0.5;
-
-/*
-  if (average < abs(target_angle) * tick_per_IN) {
-    left_cmd = p_constant * -0.01 * ((left_motor_position / tick_per_IN) - (target_inch));
-    right_cmd = p_constant * -0.01 * ((right_motor_position / tick_per_IN) - (target_inch));
+  float pastdiff = 0;
+  float diff = abs(target_angle - robot_angle);
+  float ddiff = abs(diff- pastdiff);
+  float p_const = 0.5;
+  float d_const = 0.5;
+  if (diff >0.5) {
+    left_cmd = right_cmd = p_const* diff + d_const*ddiff;
 
   } else {
     left_cmd = 0.0;
     right_cmd = 0.0;
   }
-*/
-  //2.75 in per revolution
-  /*if (counter<4){
-    // for(int i= 0; i<4; i++){
-    if (current_time < 4.0 + 5.0 *counter) {
-      left_cmd = 10;
-      right_cmd = 10;
-    } else if (current_time < 5.0 + 5.0 * counter) {
-      left_cmd = 10;
-      right_cmd = 0;
-    } else {
-      left_cmd =0;
-      right_cmd=0;
-      counter = counter +1;
-    }
-    // }
-  }
-  */
+
  if (target_angle <0){
   for (int i = 0; i < 5; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
@@ -362,6 +344,7 @@ void TankRobotPlugin::turn(float target_angle)
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
 }
+pastdiff = diff;
 }
 
 void TankRobotPlugin::autonomous(double current_time)
@@ -669,15 +652,10 @@ void TankRobotPlugin:: movePointToPoint(){
         }
 
         //turn to goal angle 
-        double diff= abs(goal_degrees - current_angle);
-        double shortest_angle = min(diff, 360-diff);
-        if((goal_degrees - current_angle + 360)%(double)360 <= 180){
-          int direction = 1;
-        }else{
-          int direction = -1; 
-        }
+        auto turn_degree =
+    std::fabs(ghost_util::SmallestAngleDistDeg(goal_degrees, current_angle));
 
-        turn(direction * shortest_angle);
+        turn(turn_degree);
 
       //distance between current and goal pt 
       double distance = sqrt(pow(dx,2)+pow(dy,2));
