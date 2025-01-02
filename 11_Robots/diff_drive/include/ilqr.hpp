@@ -7,6 +7,7 @@
 
 #include <vector>
 
+using namespace casadi;
 /*
 Iterative Linear Quadratic Regulator for Differential Drive Robot
 Input: Desired Trajectory, time horizon
