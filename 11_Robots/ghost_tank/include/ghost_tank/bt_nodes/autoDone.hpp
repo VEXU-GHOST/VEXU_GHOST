@@ -21,7 +21,6 @@ public:
 private:
  	std::shared_ptr<rclcpp::Node> node_ptr_;
     std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
-	std::shared_ptr<TankModel> tank_ptr_;
 	BT::Blackboard::Ptr blackboard_;
 };
 

@@ -27,95 +27,28 @@
 #include <string>
 #include <unordered_map>
 
+#include "rclcpp/rclcpp.hpp"
 #include "eigen3/Eigen/Geometry"
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include "math/line2d.h"
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 
 namespace ghost_tank
 {
 
 struct TankConfig
 {
-
-
-};
-
-struct ModuleState
-{
-  double wheel_position;
-  double wheel_velocity;
-  double wheel_acceleration;
-  double steering_angle;
-  double steering_velocity;
-  double steering_acceleration;
-
-  ModuleState() = default;
-
-  ModuleState(
-    double wheel_pos, double steering_ang, double wheel_vel, double steering_vel,
-    double wheel_accel = 0.0, double steering_accel = 0.0)
-  {
-    wheel_position = wheel_pos;
-    steering_angle = ghost_util::WrapAngle360(steering_ang);
-    wheel_velocity = wheel_vel;
-    steering_velocity = steering_vel;
-    wheel_acceleration = wheel_accel;
-    steering_acceleration = steering_accel;
-  }
-
-  bool operator==(const ModuleState & rhs) const
-  {
-    return (std::fabs(wheel_position - rhs.wheel_position) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(wheel_velocity - rhs.wheel_velocity) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(wheel_acceleration - rhs.wheel_acceleration) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(steering_angle - rhs.steering_angle) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(steering_velocity - rhs.steering_velocity) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(steering_acceleration - rhs.steering_acceleration) <
-           std::numeric_limits<double>::epsilon());
-  }
-};
-
-struct ModuleCommand
-{
-  double wheel_velocity_command;
-  double wheel_voltage_command;
-  double steering_angle_command;
-  double steering_velocity_command;
-  double steering_voltage_command;
-
-  Eigen::Vector2d wheel_velocity_vector = Eigen::Vector2d(0.0, 0.0);
-  Eigen::Vector2d actuator_velocity_commands = Eigen::Vector2d(0.0, 0.0);
-  Eigen::Vector2d actuator_voltage_commands = Eigen::Vector2d(0.0, 0.0);
-
-  ModuleCommand() = default;
-
-  bool operator==(const ModuleCommand & rhs) const
-  {
-    return (std::fabs(wheel_velocity_command - rhs.wheel_velocity_command) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(wheel_voltage_command - rhs.wheel_voltage_command) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(steering_angle_command - rhs.steering_angle_command) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(steering_velocity_command - rhs.steering_velocity_command) <
-           std::numeric_limits<double>::epsilon()) &&
-           (std::fabs(steering_voltage_command - rhs.steering_voltage_command) <
-           std::numeric_limits<double>::epsilon()) &&
-           (actuator_velocity_commands.isApprox(rhs.actuator_velocity_commands)) &&
-           (actuator_voltage_commands.isApprox(rhs.actuator_voltage_commands));
-  }
+  std::vector<std::string> motor_list;
+  double wheel_radius;
+  double wheel_gear_ratio;
+  double wheel_dist;
 };
 
 class TankModel
 {
 public:
-  TankModel(TankConfig config);
+  TankModel(std::shared_ptr<rclcpp::Node> node_ptr, TankConfig config);
 
   /**
    * @brief Get the Tank Model Configration
@@ -126,12 +59,6 @@ public:
   {
     return m_config;
   }
-
-  /**
-   * @brief Calculates various attributes of the tank model based on the current Module States. Call after updating
-   * all modules with new sensor data.
-   */
-  void updateTankModel();
 
   /**
    * @brief Get the max linear velocity of the robot base at nominal motor speed.
@@ -151,16 +78,6 @@ public:
   double getMaxBaseAngularVelocity() const
   {
     return m_max_base_ang_vel;
-  }
-
-  const Eigen::Vector3d & getBaseVelocityCommand()
-  {
-    return m_base_vel_cmd;
-  }
-
-  const Eigen::Vector3d & getBaseVelocityCurrent()
-  {
-    return m_base_vel_curr;
   }
 
   // Base States
@@ -184,6 +101,14 @@ public:
     m_world_pose.x() = x;
     m_world_pose.y() = y;
     m_world_pose.z() = theta;
+    geometry_msgs::msg::PoseWithCovarianceStamped msg{};
+    msg.header.stamp = node_ptr_->get_clock()->now();
+    msg.pose.pose.position.x = x;
+    msg.pose.pose.position.y = y;
+    ghost_util::yawToQuaternionDeg(
+      theta, msg.pose.pose.orientation.w, msg.pose.pose.orientation.x,
+      msg.pose.pose.orientation.y, msg.pose.pose.orientation.z);
+    m_particle_filter_set_pose_publisher->publish(msg);
   }
 
   double getWorldAngleDeg() const
@@ -223,33 +148,11 @@ public:
     m_world_twist.z() = omega;
   }
 
-  void setAutoStatus(bool state)
-  {
-    m_auto_status = state;
-  }
-
-  bool getAutoStatus()
-  {
-    return m_auto_status;
-  }
-
-  void setAutonTime(double time)
-  {
-    m_auton_time = time;
-  }
-  double getAutonTime()
-  {
-    return m_auton_time;
-  }
-
 protected:
   // Initialization
   void validateConfig();
   void calculateMaxBaseTwist();
-
-  // Model Updates
-  void calculateOdometry();
-  void updateBaseTwist();
+  std::shared_ptr<rclcpp::Node> node_ptr_;
 
   // Configuration
   TankConfig m_config;
@@ -264,19 +167,10 @@ protected:
 
   Eigen::Vector3d m_world_twist;
 
-  // Steering Integral
-  std::unordered_map<std::string, double> m_error_sum_map;
-
-  // Current centroidal states
-  double m_curr_angle;
-  Eigen::Vector3d m_base_vel_curr;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_particle_filter_set_pose_publisher;
 
   // Command Setpoints
   Eigen::Vector3d m_base_vel_cmd;
-
-  // Auton
-  bool m_auto_status = false;
-  double m_auton_time = 0.0;
 };
 
 } // namespace ghost_tank
