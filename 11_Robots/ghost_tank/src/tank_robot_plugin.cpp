@@ -631,45 +631,42 @@ void TankRobotPlugin::readPathFromFile(const std::string& filename) {
 
 
 void TankRobotPlugin::movePointToPoint(){
+   float search_radius = 3.0; 
+   static int past_index = 0; 
+   int next_index; 
+   double current_x = m_curr_odom_pose.x() ;
+   double current_y= m_curr_odom_pose.y();
+   double current_angle = m_curr_odom_pose.z();
+   if (past_index == x_values.size()-1){
+    return;
+   }
+   for(int i = past_index; past_index< x_values.size(); ++i){//find farthest point in radius 
+    double distance = sqrt(pow((current_x - x_values[i]),2)+pow((current_y - y_values[i]),2));
+    if (distance < search_radius){
+      next_index = i;
+    }
+   }
+   past_index = next_index; 
    
-    for (size_t i = 0; i < x_values.size(); ++i) {
-        double goal_x = x_values[i];
-        double goal_y = y_values[i];
-        double goal_angle = angle_values[i];
-    
-        double current_x = 0;
-        double current_y= 0;
-        double current_angle = m_curr_odom_pose.z();
+   //goal angle 
+    double dx= x_values[next_index] - current_x;
+    double dy= y_values[next_index]- current_y;
+    double angle_radians = atan2(dx, dy);
+    double goal_degrees= angle_radians * (double)(180/3.14159265358987932);
+    if (goal_degrees <= 0){
+      goal_degrees += 360;
+    }
+    //turn to goal angle 
+    auto turn_degree = ghost_util::SmallestAngleDistDeg(goal_degrees, current_angle);
 
-        //goal angle 
-        double dx= goal_x - current_x;
-        double dy= goal_y - current_y;
-        double angle_radians = atan2(dx, dy);
-        double goal_degrees= angle_radians * (double)(180/3.14159265358987932);
-        if (goal_degrees <= 0){
-          goal_degrees += 360;
-        }
+    //distance between current and goal pt 
+    double distance = sqrt(pow(dx,2)+pow(dy,2));
 
-        //turn to goal angle 
-        auto turn_degree =
-    std::fabs(ghost_util::SmallestAngleDistDeg(goal_degrees, current_angle));
-
-        turn(turn_degree);
-
-      //distance between current and goal pt 
-      double distance = sqrt(pow(dx,2)+pow(dy,2));
-
-      //move 
-
-      go_forward(distance);
-      current_x = x_values[i];
-      current_y= y_values[i];
-
-      
+    //move ==> jake 
     }
 }
 
 
-} // namespace ghost_tank
+ // namespace ghost_tank
 
 PLUGINLIB_EXPORT_CLASS(ghost_tank::TankRobotPlugin, ghost_ros_interfaces::V5RobotBase)
