@@ -14,9 +14,7 @@ public:
   EXPECT_TRUE( \
     (got - expected).norm() < \
     n) << "expected: {" << expected.transpose() << "} got: {" << got.transpose() << "}" << \
-    std::endl; \
-  //std::cout << "pos: " << t.getPose().x() << " " << t.getPose().y() << " " << t.getPose().z() << \
-  //     std::endl;
+    std::endl;
 
 #define PRINT_POS() \
   printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", t.getPose().x(), t.getPose().y(), t.getPose().z());
@@ -44,7 +42,7 @@ TEST_F(TestTankOdom, testSimple) {
   GOT_EXPECTED_EXPECT(0.01)
 
 
-  got = t.update({(long)(  -10 * 100 * M_PI / 2) + 100}, {100});
+  got = t.update({(long)(  -10 * 100 * M_PI / 2) + 100}, {  100});
   expected = {-5, 1, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
   got = t.update({(long)(  -10 * 100 * M_PI / 2)}, {0});
