@@ -15,10 +15,11 @@ public:
     (got - expected).norm() < \
     n) << "expected: {" << expected.transpose() << "} got: {" << got.transpose() << "}" << \
     std::endl; \
-    std::cout << "pos: " << t.getPose().x() << " " << t.getPose().y() << " " << t.getPose().z() << std::endl;
+  std::cout << "pos: " << t.getPose().x() << " " << t.getPose().y() << " " << t.getPose().z() << \
+    std::endl;
 
 #define PRINT_POS() \
-    printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", t.getPose().x(), t.getPose().y(), t.getPose().z());
+  printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", t.getPose().x(), t.getPose().y(), t.getPose().z());
 
 TEST_F(TestTankOdom, testSimple) {
   Eigen::Vector3d got, expected;
@@ -34,40 +35,34 @@ TEST_F(TestTankOdom, testSimple) {
   expected = {0, 5, 0};
   GOT_EXPECTED_EXPECT(0.0001)
 
-printf("=====tests start\n");
+  printf("=====tests start\n");
 
-int i;
+  int i;
 //for ( i = 1; i <= 50; i++)
 //i=50;
 //  got = t.update({0},     {(long)(   10*i * M_PI / 2)});
 //  expected = {-5./sqrt(2), 5./sqrt(2), M_PI / 4};
 //  GOT_EXPECTED_EXPECT(0.01)
 
-for ( i = 1; i <= 100; i++)
-  got = t.update(  {0},        {(long)(  10*i * M_PI / 2)});
+  for (i = 1; i <= 100; i++) {
+    got = t.update({0}, {(long)(  10 * i * M_PI / 2)});
+  }
   expected = {-5, 0, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
 
 
-
-
-
-
-
-  got = t.update(  {0 + 100},        {(long)(  10*i * M_PI / 2)  + 100});
+  got = t.update({0 + 100}, {(long)(  10 * i * M_PI / 2) + 100});
   expected = {-5, 1, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
-  got = t.update(  {0},        {(long)(  10*i * M_PI / 2)});
+  got = t.update({0}, {(long)(  10 * i * M_PI / 2)});
   expected = {-5, 0, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
-
-
 
 
 // not sure what this was supposed to be
- // got = t.update({ (long) (-  10.*i * M_PI / 2. +   200.)}, {(long) (0) + 200});
- // expected = {6, 7, M_PI / 2};
- // GOT_EXPECTED_EXPECT(0.01)
+// got = t.update({ (long) (-  10.*i * M_PI / 2. +   200.)}, {(long) (0) + 200});
+// expected = {6, 7, M_PI / 2};
+// GOT_EXPECTED_EXPECT(0.01)
 }
 
 TEST_F(TestTankOdom, testTriangle) {
@@ -80,7 +75,7 @@ TEST_F(TestTankOdom, testTriangle) {
     {100 * 10 * 3 / 4, -100 * 10 * 3 / 4},
     {100 * sqrt(2), 100 * sqrt(2)},
     {100 * 10 * -5 / 4, -100 * 10 * -5 / 4},
-    {100,100},
+    {100, 100},
     {100 * 10 * 2 / 4, -100 * 10 * 2 / 4},
   };
   std::vector<Eigen::Vector3d> expected_pts = {
@@ -89,7 +84,7 @@ TEST_F(TestTankOdom, testTriangle) {
     {1, 0, (360 - 135) * ghost_util::DEG_TO_RAD},
     {0, -1, (360 - 135) * ghost_util::DEG_TO_RAD},
     {0, -1, 90 * ghost_util::DEG_TO_RAD},
-    {0, 0, 90  * ghost_util::DEG_TO_RAD   },
+    {0, 0, 90 * ghost_util::DEG_TO_RAD},
     {0, 0, 0},
   };
 
@@ -113,7 +108,7 @@ TEST_F(TestTankOdom, testTriangleInReverse) {
 
   std::vector<Eigen::Vector2i> encoder_diffs = {
     {-100 * 10 * 2 / 4, 100 * 10 * 2 / 4},
-    {-100,-100},
+    {-100, -100},
     {-100 * 10 * -5 / 4, 100 * 10 * -5 / 4},
     {-100 * sqrt(2), -100 * sqrt(2)},
     {-100 * 10 * 3 / 4, 100 * 10 * 3 / 4},
@@ -121,7 +116,7 @@ TEST_F(TestTankOdom, testTriangleInReverse) {
     {0, 0},
   };
   std::vector<Eigen::Vector3d> expected_pts = {
-    {0, 0, 90  * ghost_util::DEG_TO_RAD   },
+    {0, 0, 90 * ghost_util::DEG_TO_RAD},
     {0, -1, 90 * ghost_util::DEG_TO_RAD},
     {0, -1, (360 - 135) * ghost_util::DEG_TO_RAD},
     {1, 0, (360 - 135) * ghost_util::DEG_TO_RAD},

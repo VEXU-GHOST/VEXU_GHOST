@@ -81,7 +81,7 @@ protected:
   void publishDesiredPose(Eigen::Vector3d pose);
 
   // Subscribers
-  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg) ;
+  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;

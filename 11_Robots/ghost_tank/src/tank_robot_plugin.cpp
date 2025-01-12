@@ -51,8 +51,8 @@ void TankRobotPlugin::initialize()
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
 
-  node_ptr_->declare_parameter("backup_pose_topic", "/odometry/filtered");
-  std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
+  //node_ptr_->declare_parameter("backup_pose_topic", "/odometry/filtered");
+  //std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
 
   node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
   std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
@@ -66,8 +66,8 @@ void TankRobotPlugin::initialize()
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
   // for vex ai
-  node_ptr_->declare_parameter<std::string>("bt_path_interaction");
-  std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
+  //node_ptr_->declare_parameter<std::string>("bt_path_interaction");
+  //std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
 
   node_ptr_->declare_parameter("particle_filter.k1", 0.0);
   node_ptr_->declare_parameter("particle_filter.k2", 0.0);
@@ -157,12 +157,14 @@ void TankRobotPlugin::initialize()
     10);
 
   node_ptr_->declare_parameter("bag_recorder_start_topic", "bag_recorder/start");
-  std::string bag_recorder_start_topic = node_ptr_->get_parameter("bag_recorder_start_topic").as_string();
+  std::string bag_recorder_start_topic =
+    node_ptr_->get_parameter("bag_recorder_start_topic").as_string();
   m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
     bag_recorder_start_topic);
 
   node_ptr_->declare_parameter("bag_recorder_stop_topic", "bag_recorder/stop");
-  std::string bag_recorder_stop_topic = node_ptr_->get_parameter("bag_recorder_stop_topic").as_string();
+  std::string bag_recorder_stop_topic =
+    node_ptr_->get_parameter("bag_recorder_stop_topic").as_string();
   m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
     bag_recorder_stop_topic);
 
@@ -200,7 +202,7 @@ void TankRobotPlugin::initialize()
     300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS / 2., 12.5 * ghost_util::INCHES_TO_METERS
   );
   bt_ = std::make_shared<TankTree>(
-    bt_path, bt_path_interaction);
+    bt_path);
 
   bt_->set_variable<int>("hello", 123);
   bt_->set_variable("rhi_ptr", rhi_ptr_);
@@ -368,9 +370,7 @@ void TankRobotPlugin::teleop(double current_time)
       "drive_ltf",
       "drive_lbf",
       "drive_lttf",
-
       "indexer_right",
-
       "indexer_left",
       "drive_rttf",
       "drive_rtr",
@@ -442,48 +442,48 @@ void TankRobotPlugin::imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr m
     msg->orientation.z);
 }
 
-void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
-{
-  if (!m_use_backup_estimator) {
-    double theta = ghost_util::quaternionToYawRad(
-      msg->pose.pose.orientation.w,
-      msg->pose.pose.orientation.x,
-      msg->pose.pose.orientation.y,
-      msg->pose.pose.orientation.z);
-    m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
-    m_tank_model_ptr->setWorldTwist(
-      msg->twist.twist.linear.x,
-      msg->twist.twist.linear.y,
-      msg->twist.twist.angular.z);
-  }
-}
+//void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
+//{
+//if (!m_use_backup_estimator) {
+//  double theta = ghost_util::quaternionToYawRad(
+//    msg->pose.pose.orientation.w,
+//    msg->pose.pose.orientation.x,
+//    msg->pose.pose.orientation.y,
+//    msg->pose.pose.orientation.z);
+//  m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
+//  m_tank_model_ptr->setWorldTwist(
+//    msg->twist.twist.linear.x,
+//    msg->twist.twist.linear.y,
+//    msg->twist.twist.angular.z);
+//}
+//}
 
-void TankRobotPlugin::worldOdometryUpdateCallbackBackup(
-  const nav_msgs::msg::Odometry::SharedPtr msg)
-{
-  if (m_use_backup_estimator) {
-    double theta = ghost_util::quaternionToYawRad(
-      msg->pose.pose.orientation.w,
-      msg->pose.pose.orientation.x,
-      msg->pose.pose.orientation.y,
-      msg->pose.pose.orientation.z);
-    m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
-    m_tank_model_ptr->setWorldTwist(
-      msg->twist.twist.linear.x,
-      msg->twist.twist.linear.y,
-      msg->twist.twist.angular.z);
-  }
-}
+//void TankRobotPlugin::worldOdometryUpdateCallbackBackup(
+//  const nav_msgs::msg::Odometry::SharedPtr msg)
+//{
+//if (m_use_backup_estimator) {
+//  double theta = ghost_util::quaternionToYawRad(
+//    msg->pose.pose.orientation.w,
+//    msg->pose.pose.orientation.x,
+//    msg->pose.pose.orientation.y,
+//    msg->pose.pose.orientation.z);
+//  m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
+//  m_tank_model_ptr->setWorldTwist(
+//    msg->twist.twist.linear.x,
+//    msg->twist.twist.linear.y,
+//    msg->twist.twist.angular.z);
+//}
+//}
 
-void TankRobotPlugin::publishBaseTwist()
-{
-  //geometry_msgs::msg::Twist msg{};
-  //auto base_vel_cmd = m_tank_model_ptr->getBaseVelocityCommand();
-  //msg.linear.x = base_vel_cmd.x();
-  //msg.linear.y = base_vel_cmd.y();
-  //msg.angular.z = base_vel_cmd.z();
-  //m_base_twist_cmd_pub->publish(msg);
-}
+//void TankRobotPlugin::publishBaseTwist()
+//{
+//geometry_msgs::msg::Twist msg{};
+//auto base_vel_cmd = m_tank_model_ptr->getBaseVelocityCommand();
+//msg.linear.x = base_vel_cmd.x();
+//msg.linear.y = base_vel_cmd.y();
+//msg.angular.z = base_vel_cmd.z();
+//m_base_twist_cmd_pub->publish(msg);
+//}
 
 void TankRobotPlugin::publishOdometry()
 {

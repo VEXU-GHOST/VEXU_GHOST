@@ -168,7 +168,8 @@ protected:
 
   Eigen::Vector3d m_world_twist;
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_particle_filter_set_pose_publisher;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
+    m_particle_filter_set_pose_publisher;
 
   // Command Setpoints
   Eigen::Vector3d m_base_vel_cmd;
