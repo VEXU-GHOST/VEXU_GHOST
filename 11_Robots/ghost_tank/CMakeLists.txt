@@ -113,46 +113,9 @@ RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
-add_executable(cubic_motion_planner
-  src/cubic_motion_planner.cpp
-)
-ament_target_dependencies(cubic_motion_planner
-  ${DEPENDENCIES}
-)
-target_link_libraries(cubic_motion_planner
-
-)
-target_include_directories(cubic_motion_planner
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  cubic_motion_planner
-  DESTINATION lib/${PROJECT_NAME})
-
-add_executable(trapezoid_motion_planner
-  src/trapezoid_motion_planner.cpp
-)
-ament_target_dependencies(trapezoid_motion_planner
-  ${DEPENDENCIES}
-)
-target_link_libraries(trapezoid_motion_planner
-
-)
-target_include_directories(trapezoid_motion_planner
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  trapezoid_motion_planner
-  DESTINATION lib/${PROJECT_NAME})
-
 # bt node libraries
 set(NODES
   loggingNode
-  moveToPoseCubic
-  moveToPoseTrapezoid
-  intakeCmd
   autoDone
   autonTimer
 )

@@ -60,7 +60,6 @@ protected:
   // Publishers
   void publishVisualization();
   void publishOdometry();
-  void publishBaseTwist();
   void publishTrajectoryVisualization();
   void resetPose(double x, double y, double theta);
 
@@ -71,9 +70,9 @@ protected:
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_base_twist_cmd_pub;
 
-  // rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_pos_pub;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_vel_pub;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_vel_pub;
+  // rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_cur_pos_pub;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_twist_pub;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
 
@@ -84,7 +83,6 @@ protected:
   // Subscribers
   void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg) ;
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
-  void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
 
@@ -99,6 +97,7 @@ protected:
   // Autonomy
   std::string bt_path_;
   std::shared_ptr<TankTree> bt_;
+  std::shared_ptr<TankTree> bt_interaction;
 
   // Motion Planner
   double m_move_to_pose_kp_xy = 0.0;
@@ -132,27 +131,10 @@ protected:
   double m_init_world_x = 0.0;
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
-  bool m_use_backup_estimator = false;
-  double m_intake_setpoint = 7.0;
 
   // Digital IO
   std::vector<bool> m_digital_io;
   std::unordered_map<std::string, size_t> m_digital_io_name_map;
-
-  // Claw
-  bool m_claw_btn_pressed = false;
-  bool m_claw_open = true;
-  bool claw_auto_extended = false;
-
-  // Tail
-  bool m_tail_btn_pressed = false;
-  bool m_tail_down = false;
-
-  // Climb Mode
-  bool m_climb_mode = false;
-
-  // Stick Mode
-  bool m_tail_mode = false;
 
   // Bag Recorder
   bool m_recording_btn_pressed = false;
