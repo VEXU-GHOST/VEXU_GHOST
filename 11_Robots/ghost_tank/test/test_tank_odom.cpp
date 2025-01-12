@@ -15,7 +15,7 @@ public:
     (got - expected).norm() < \
     n) << "expected: {" << expected.transpose() << "} got: {" << got.transpose() << "}" << \
     std::endl; \
-  std::cout << "pos: " << t.getPose().x() << " " << t.getPose().y() << " " << t.getPose().z() << \
+  //std::cout << "pos: " << t.getPose().x() << " " << t.getPose().y() << " " << t.getPose().z() << \
     std::endl;
 
 #define PRINT_POS() \
@@ -37,24 +37,17 @@ TEST_F(TestTankOdom, testSimple) {
 
   printf("=====tests start\n");
 
-  int i;
-//for ( i = 1; i <= 50; i++)
-//i=50;
-//  got = t.update({0},     {(long)(   10*i * M_PI / 2)});
-//  expected = {-5./sqrt(2), 5./sqrt(2), M_PI / 4};
-//  GOT_EXPECTED_EXPECT(0.01)
-
-  for (i = 1; i <= 100; i++) {
-    got = t.update({0}, {(long)(  10 * i * M_PI / 2)});
+  for (int i = 1; i <= 100; i++) {
+    got = t.update({(long)(  -10 * i * M_PI / 2)}, {0});
   }
   expected = {-5, 0, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
 
 
-  got = t.update({0 + 100}, {(long)(  10 * i * M_PI / 2) + 100});
+  got = t.update({(long)(  -10 * 100 * M_PI / 2) + 100}, {  100});
   expected = {-5, 1, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
-  got = t.update({0}, {(long)(  10 * i * M_PI / 2)});
+  got = t.update({(long)(  -10 * 100 * M_PI / 2)}, {0});
   expected = {-5, 0, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
 

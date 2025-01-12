@@ -83,11 +83,11 @@ Eigen::Vector3d TankOdometry::update(
     double dtheta = (dr - dl) / m_wheelbase;
     //dtheta *= 2;
 
-    std::cout << "dl: " << dl << " dr: " << dr << " dtheta: " << dtheta * ghost_util::RAD_TO_DEG <<
-      std::endl;
+    //std::cout << "dl: " << dl << " dr: " << dr << " dtheta: " << dtheta * ghost_util::RAD_TO_DEG <<
+      //std::endl;
     //dtheta = w; // TODO garbage?? can we not use our actual angle??????
 
-    std::cout << "dr/dtheta: " << dr / dtheta << " dl/dtheta: " << dl / dtheta << std::endl;
+    //std::cout << "dr/dtheta: " << dr / dtheta << " dl/dtheta: " << dl / dtheta << std::endl;
 
     Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
     rotation_matrix.block<2, 2>(0, 0) = Eigen::Rotation2Dd(m_cur_pos.z()).toRotationMatrix();
