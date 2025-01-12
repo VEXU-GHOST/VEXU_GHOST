@@ -197,8 +197,8 @@ void TankRobotPlugin::initialize()
     bt_path, bt_path_interaction, rhi_ptr_, m_tank_model_ptr,
     node_ptr_);
     //read path from file 
-    std::string path_file = "path/to/your/file.csv";
-    readPathFromFile(path_file);
+    // std::string path_file = "path/to/your/file.csv";
+    // readPathFromFile(path_file);
 }
 
 void TankRobotPlugin::onNewSensorData()
@@ -233,18 +233,18 @@ void TankRobotPlugin::disabled()
 void TankRobotPlugin::go_forward(float target_inch)
 {
   std::vector<std::string> motor_list = {
-    "drive_ltr",
-    "drive_lbr",
-    "drive_ltf",
-    "drive_lbf",
-    "drive_lttf",
-    "indexer_right",
-    "indexer_left",
-    "drive_rttf",
-    "drive_rtr",
-    "drive_rbr",
-    "drive_rtf",
-    "drive_rbf"
+    "drive_l1",
+    "drive_l2",
+    "drive_l3",
+    "drive_l4",
+    "drive_l5",
+    "drive_l6",
+    "drive_r1",
+    "drive_r2",
+    "drive_r3",
+    "drive_r4",
+    "drive_r5",
+    "drive_r6"
   };
   for (const auto motor_name: motor_list) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
@@ -256,10 +256,10 @@ void TankRobotPlugin::go_forward(float target_inch)
   static double tick_per_IN = 39.93342;
   double target_inch_distance = 1;
 
-  float right_motor_position = rhi_ptr_->getMotorPosition("drive_rttf");
-  float left_motor_position = rhi_ptr_->getMotorPosition("drive_lttf");
+  float right_motor_position = rhi_ptr_->getMotorPosition("drive_r1");
+  float left_motor_position = rhi_ptr_->getMotorPosition("drive_l1");
   float average = (right_motor_position + left_motor_position) / 2;
-  static float p_constant = 0.5;
+  static float p_constant = 5.0;
 
 
   if (average < abs(target_inch) * tick_per_IN) {
@@ -288,11 +288,11 @@ void TankRobotPlugin::go_forward(float target_inch)
     // }
   }
   */
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 6; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
 
-  for (int i = 7; i < 12; i++) {
+  for (int i = 6; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
   }
 }
@@ -300,18 +300,18 @@ void TankRobotPlugin::go_forward(float target_inch)
 void TankRobotPlugin::turn(float target_angle)
 {
   std::vector<std::string> motor_list = {
-    "drive_ltr",
-    "drive_lbr",
-    "drive_ltf",
-    "drive_lbf",
-    "drive_lttf",
-    "indexer_right",
-    "indexer_left",
-    "drive_rttf",
-    "drive_rtr",
-    "drive_rbr",
-    "drive_rtf",
-    "drive_rbf"
+    "drive_l1",
+    "drive_l2",
+    "drive_l3",
+    "drive_l4",
+    "drive_l5",
+    "drive_l6",
+    "drive_r1",
+    "drive_r2",
+    "drive_r3",
+    "drive_r4",
+    "drive_r5",
+    "drive_r6"
   };
   for (const auto motor_name: motor_list) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
@@ -356,7 +356,7 @@ pastdiff = diff;
 
 void TankRobotPlugin::autonomous(double current_time)
 {
-
+  
   go_forward(10);
 
 
@@ -381,29 +381,29 @@ void TankRobotPlugin::teleop(double current_time)
 
   // this is from ghost_high_stakes/config/robot_hardware_config_tank.yaml
   std::vector<std::string> motor_list = {
-    "drive_ltr",
-    "drive_lbr",
-    "drive_ltf",
-    "drive_lbf",
-    "drive_lttf",
-    "indexer_right",
-    "indexer_left",
-    "drive_rttf",
-    "drive_rtr",
-    "drive_rbr",
-    "drive_rtf",
-    "drive_rbf"
+    "drive_l1",
+    "drive_l2",
+    "drive_l3",
+    "drive_l4",
+    "drive_l5",
+    "drive_l6",
+    "drive_r1",
+    "drive_r2",
+    "drive_r3",
+    "drive_r4",
+    "drive_r5",
+    "drive_r6"
   };
 
   for (const auto motor_name: motor_list) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
   }
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 6; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
   }
 
-  for (int i = 7; i < 12; i++) {
+  for (int i = 6; i < 12; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
   }
 
@@ -628,17 +628,11 @@ void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d twist)
 }
 
 void TankRobotPlugin::readPathFromFile(const std::string& filename) {
-    std::vector<double> x_values;
-    std::vector<double> y_values;
-    std::vector<double> angle_values;
-
-    int result = ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
-
-    
+    ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
 }
 
 
-void TankRobotPlugin:: movePointToPoint(){
+void TankRobotPlugin::movePointToPoint(){
    
     for (size_t i = 0; i < x_values.size(); ++i) {
         double goal_x = x_values[i];
@@ -675,11 +669,6 @@ void TankRobotPlugin:: movePointToPoint(){
 
       
     }
-
-
-
-
-  
 }
 
 

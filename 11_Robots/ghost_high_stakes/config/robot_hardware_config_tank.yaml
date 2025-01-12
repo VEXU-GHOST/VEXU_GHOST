@@ -1,61 +1,65 @@
 port_configuration:
     devices:
-        drive_ltr:
+        imu:
             port: 1
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_lbr:
-            port: 2
+            type: INERTIAL_SENSOR
+            config: inertial_sensor_config
+        drive_l1:
+            port: 11
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_ltf:
+        drive_l2:
+            port: 12
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_l3:
+            port: 13
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_l4:
             port: 3
             type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_lbf:
-            port: 4
-            type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_lttf:
+        drive_l5:
+            port: 4
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_l6:
             port: 5
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        indexer_right:
-            port: 9
-            type: MOTOR
-            reversed: false
-            config: indexer_config
-        indexer_left:
-            port: 10
-            type: MOTOR
-            reversed: true
-            config: indexer_config
-        drive_rttf:
-            port: 16
+        drive_r1:
+            port: 6
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_rtr:
-            port: 17
+        drive_r2:
+            port: 7
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_rbr:
+        drive_r3:
+            port: 8
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_r4:
             port: 18
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_rtf:
+        drive_r5:
             port: 19
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_rbf:
+        drive_r6:
             port: 20
             type: MOTOR
             reversed: true
@@ -63,7 +67,7 @@ port_configuration:
     device_configurations:
         inertial_sensor_config:
             serial:
-                send_accel_data: true
+                send_accel_data: false
                 send_gyro_data: true
                 send_heading_data: true
         drive_motor_config:
