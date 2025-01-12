@@ -16,7 +16,7 @@ public:
     n) << "expected: {" << expected.transpose() << "} got: {" << got.transpose() << "}" << \
     std::endl; \
   //std::cout << "pos: " << t.getPose().x() << " " << t.getPose().y() << " " << t.getPose().z() << \
-    std::endl;
+  //     std::endl;
 
 #define PRINT_POS() \
   printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", t.getPose().x(), t.getPose().y(), t.getPose().z());
@@ -44,18 +44,12 @@ TEST_F(TestTankOdom, testSimple) {
   GOT_EXPECTED_EXPECT(0.01)
 
 
-  got = t.update({(long)(  -10 * 100 * M_PI / 2) + 100}, {  100});
+  got = t.update({(long)(  -10 * 100 * M_PI / 2) + 100}, {100});
   expected = {-5, 1, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
   got = t.update({(long)(  -10 * 100 * M_PI / 2)}, {0});
   expected = {-5, 0, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
-
-
-// not sure what this was supposed to be
-// got = t.update({ (long) (-  10.*i * M_PI / 2. +   200.)}, {(long) (0) + 200});
-// expected = {6, 7, M_PI / 2};
-// GOT_EXPECTED_EXPECT(0.01)
 }
 
 TEST_F(TestTankOdom, testTriangle) {
