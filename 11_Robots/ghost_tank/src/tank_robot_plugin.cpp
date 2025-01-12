@@ -254,18 +254,17 @@ void TankRobotPlugin::go_forward(float target_inch)
   double right_cmd = 0.0;
 
   static double tick_per_IN = 39.93342;
-  double target_inch_distance = 1;
 
   float right_motor_position = rhi_ptr_->getMotorPosition("drive_r1");
   float left_motor_position = rhi_ptr_->getMotorPosition("drive_l1");
   float average = (right_motor_position + left_motor_position) / 2;
+  float goal_encoder = average + target_inch * tick_per_IN;
   static float p_constant = 5.0;
 
 
-  if (average < abs(target_inch) * tick_per_IN) {
-    left_cmd = p_constant * -0.01 * ((left_motor_position / tick_per_IN) - (target_inch));
-    right_cmd = p_constant * -0.01 * ((right_motor_position / tick_per_IN) - (target_inch));
-
+  if (average < goal_encoder) {
+    left_cmd = right_cmd = p_constant * -0.01 * (average - (goal_encoder));
+  
   } else {
     left_cmd = 0.0;
     right_cmd = 0.0;
@@ -320,22 +319,21 @@ void TankRobotPlugin::turn(float target_angle)
   double left_cmd = 0.0;
   double right_cmd = 0.0;
 
-  float robot_angle = m_curr_odom_pose.z();
-  static float p_constant = 0.5;
+  float robot_angle = m_curr_odom_pose.z();// current angle position
   float pastdiff = 0;
-  float diff = abs(target_angle - robot_angle);
+  float diff = (target_angle - robot_angle);//abs becasue 
   float ddiff = abs(diff- pastdiff);
   float p_const = 0.5;
   float d_const = 0.5;
-  if (diff >0.5) {
-    left_cmd = right_cmd = p_const* diff + d_const*ddiff;
+  if (diff >0) {
+    left_cmd = right_cmd = p_const* abs(diff) + d_const*ddiff;
 
   } else {
     left_cmd = 0.0;
     right_cmd = 0.0;
   }
 
- if (target_angle <0){
+ if (diff <0){
   for (int i = 0; i < 5; i++) {
     rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
     
