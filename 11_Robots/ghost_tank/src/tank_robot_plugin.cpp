@@ -214,26 +214,7 @@ void TankRobotPlugin::initialize()
 
 void TankRobotPlugin::onNewSensorData()
 {
-  //sensor_msgs::msg::Imu imu_msg{};
-  // imu_msg.header.frame_id = "imu_link";
-  // imu_msg.header.stamp = node_ptr_->get_clock()->now();
-  // imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
-  // imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
-  // imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
-  // imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
-  // imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
-  // imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
-  // double yaw = -rhi_ptr_->getInertialSensorHeading("imu");
-  // ghost_util::yawToQuaternionDeg(
-  //   yaw, imu_msg.orientation.w, imu_msg.orientation.x,
-  //   imu_msg.orientation.y, imu_msg.orientation.z);
-  // imu_pub->publish(imu_msg);
-
-  //m_tank_model_ptr->updateTankModel();
-
-  // publishOdometry();
   // publishVisualization();
-  // publishBaseTwist();
   // publishTrajectoryVisualization();
 
   std::vector<std::string> motor_list = {
