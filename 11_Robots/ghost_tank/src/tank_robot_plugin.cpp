@@ -91,18 +91,18 @@ void TankRobotPlugin::initialize()
   // Setup tank Model
   TankConfig tank_model_config;
   std::vector<std::string> motor_list = {
-    "drive_ltr",
-    "drive_lbr",
-    "drive_ltf",
-    "drive_lbf",
-    "drive_lttf",
-    "indexer_right",
-    "indexer_left",
-    "drive_rttf",
-    "drive_rtr",
-    "drive_rbr",
-    "drive_rtf",
-    "drive_rbf"
+    "drive_l1",
+    "drive_l2",
+    "drive_l3",
+    "drive_l4",
+    "drive_l5",
+    "drive_l6",
+    "drive_r1",
+    "drive_r2",
+    "drive_r3",
+    "drive_r4",
+    "drive_r5",
+    "drive_r6",
   };
   tank_model_config.motor_list = motor_list;
   tank_model_config.wheel_radius = 2.75 / 2.0; //in
@@ -214,9 +214,9 @@ void TankRobotPlugin::onNewSensorData()
   sensor_msgs::msg::Imu imu_msg{};
   imu_msg.header.frame_id = "imu_link";
   imu_msg.header.stamp = node_ptr_->get_clock()->now();
-  imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
-  imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
-  imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
+  // imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
+  // imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
+  // imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
   imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
   imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
   imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
@@ -227,8 +227,8 @@ void TankRobotPlugin::onNewSensorData()
   imu_pub->publish(imu_msg);
 
   publishOdometry();
-  publishVisualization();
-  publishTrajectoryVisualization();
+  // publishVisualization();
+  // publishTrajectoryVisualization();
 }
 
 void TankRobotPlugin::disabled()
@@ -322,31 +322,16 @@ void TankRobotPlugin::teleop(double current_time)
     double left_cmd = forward_vel + angular_vel;
     double right_cmd = forward_vel - angular_vel;
 
-    std::vector<std::string> motor_list = {
-      "drive_ltr",
-      "drive_lbr",
-      "drive_ltf",
-      "drive_lbf",
-      "drive_lttf",
-      "indexer_right",
-      "indexer_left",
-      "drive_rttf",
-      "drive_rtr",
-      "drive_rbr",
-      "drive_rtf",
-      "drive_rbf"
-    };
-
-    for (const auto motor_name: motor_list) {
+    for (const auto motor_name: m_tank_model_ptr->getConfig().motor_list) {
       rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
     }
 
-    for (int i = 0; i < 5; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
+    for (int i = 0; i < 6; i++) {
+      rhi_ptr_->setMotorVoltageCommandPercent(m_tank_model_ptr->getConfig().motor_list[i], left_cmd);
     }
 
-    for (int i = 7; i < 12; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
+    for (int i = 6; i < 12; i++) {
+      rhi_ptr_->setMotorVoltageCommandPercent(m_tank_model_ptr->getConfig().motor_list[i], right_cmd);
     }
 
     double intake_power = 0;
@@ -358,8 +343,8 @@ void TankRobotPlugin::teleop(double current_time)
       intake_power = 0.0;
     }
 
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
+    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
+    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
 
     static bool forklift_pressed = false;
     static bool forklift_up = false;
