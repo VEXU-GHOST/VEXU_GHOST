@@ -204,7 +204,6 @@ void TankRobotPlugin::initialize()
   bt_ = std::make_shared<TankTree>(
     bt_path);
 
-  bt_->set_variable<int>("hello", 123);
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
   bt_->set_variable("node_ptr", node_ptr_);// have to move this in front of bt somehow
@@ -301,11 +300,6 @@ void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
   // std::cout << "Teleop: " << current_time << std::endl;
-
-  // auto pose = odom->getPose();
-  // std::cout << "Pose X: " << pose[0] << std::endl;
-  // std::cout << "Pose Y: " << pose[1] << std::endl;
-  // std::cout << "Pose Theta: " << pose[2] << std::endl;
 
 
   if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
@@ -441,49 +435,6 @@ void TankRobotPlugin::imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr m
     msg->orientation.y,
     msg->orientation.z);
 }
-
-//void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
-//{
-//if (!m_use_backup_estimator) {
-//  double theta = ghost_util::quaternionToYawRad(
-//    msg->pose.pose.orientation.w,
-//    msg->pose.pose.orientation.x,
-//    msg->pose.pose.orientation.y,
-//    msg->pose.pose.orientation.z);
-//  m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
-//  m_tank_model_ptr->setWorldTwist(
-//    msg->twist.twist.linear.x,
-//    msg->twist.twist.linear.y,
-//    msg->twist.twist.angular.z);
-//}
-//}
-
-//void TankRobotPlugin::worldOdometryUpdateCallbackBackup(
-//  const nav_msgs::msg::Odometry::SharedPtr msg)
-//{
-//if (m_use_backup_estimator) {
-//  double theta = ghost_util::quaternionToYawRad(
-//    msg->pose.pose.orientation.w,
-//    msg->pose.pose.orientation.x,
-//    msg->pose.pose.orientation.y,
-//    msg->pose.pose.orientation.z);
-//  m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
-//  m_tank_model_ptr->setWorldTwist(
-//    msg->twist.twist.linear.x,
-//    msg->twist.twist.linear.y,
-//    msg->twist.twist.angular.z);
-//}
-//}
-
-//void TankRobotPlugin::publishBaseTwist()
-//{
-//geometry_msgs::msg::Twist msg{};
-//auto base_vel_cmd = m_tank_model_ptr->getBaseVelocityCommand();
-//msg.linear.x = base_vel_cmd.x();
-//msg.linear.y = base_vel_cmd.y();
-//msg.angular.z = base_vel_cmd.z();
-//m_base_twist_cmd_pub->publish(msg);
-//}
 
 void TankRobotPlugin::publishOdometry()
 {
