@@ -238,7 +238,6 @@ void TankRobotPlugin::disabled()
 void TankRobotPlugin::autonomous(double current_time)
 {
   std::cout << "Autonomous: " << current_time << std::endl;
-  std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
 
   bt_->tick_tree();

@@ -47,8 +47,6 @@ BT::PortsList LoggingNode::providedPorts()
 // Override the virtual function tick()
 BT::NodeStatus LoggingNode::tick()
 {
-  std::cout << "tick!" << std::endl;
-
   std::string msg = BT_Util::get_input<std::string>(this, "message");
 
   // use the method value() to extract the valid message.
