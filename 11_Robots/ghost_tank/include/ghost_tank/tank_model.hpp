@@ -33,6 +33,8 @@
 #include <ghost_util/unit_conversion_utils.hpp>
 #include "math/line2d.h"
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <ghost_v5_interfaces/robot_hardware_interface.hpp>
+
 
 namespace ghost_tank
 {
@@ -48,7 +50,9 @@ struct TankConfig
 class TankModel
 {
 public:
-  TankModel(std::shared_ptr<rclcpp::Node> node_ptr, TankConfig config);
+  TankModel(std::shared_ptr<rclcpp::Node> node_ptr,
+      std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+      TankConfig config);
 
   /**
    * @brief Get the Tank Model Configration
@@ -148,11 +152,15 @@ public:
     m_world_twist.z() = omega;
   }
 
+  void driveCommand(double fwd_vel, double ang_vel);
+  void driveCommandJoystick(double fwd_vel, double ang_vel, double deadzone);
+
 protected:
   // Initialization
   void validateConfig();
   void calculateMaxBaseTwist();
   std::shared_ptr<rclcpp::Node> node_ptr_;
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 
   // Configuration
   TankConfig m_config;

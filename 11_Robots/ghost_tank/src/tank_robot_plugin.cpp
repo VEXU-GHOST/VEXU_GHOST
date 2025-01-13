@@ -199,7 +199,7 @@ void TankRobotPlugin::initialize()
   bt_ = std::make_shared<TankTree>(bt_path);
   // bt_interaction_ = std::make_shared<TankTree>(bt_path_interaction);
 
-  m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, tank_model_config);
+  m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
 
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
@@ -299,39 +299,8 @@ void TankRobotPlugin::teleop(double current_time)
       m_recording_btn_pressed = false;
     }
 
-    // m_curr_x_cmd = joy_data->left_x / 127.0;             // * scale;
-    // m_curr_y_cmd = joy_data->left_y / 127.0;             // * scale;
-    // m_curr_theta_cmd = joy_data->right_x / 127.0;             // * scale;
-
-    // m_tank_model_ptr->drivecommandthing(
-    //   m_curr_x_cmd, m_curr_y_cmd,
-    //   m_curr_theta_cmd);
-
-    // m_last_x_cmd = m_curr_x_cmd;
-    // m_last_y_cmd = m_curr_y_cmd;
-    // m_last_theta_cmd = m_curr_theta_cmd;
-
-    double forward_vel = joy_data->left_y / 127.0;
-    double angular_vel = joy_data->right_x / 127.0;
-
-    double threshold = 0.05;
-    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
-
-    double left_cmd = forward_vel + angular_vel;
-    double right_cmd = forward_vel - angular_vel;
-
-    for (const auto motor_name: m_tank_model_ptr->getConfig().motor_list) {
-      rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
-    }
-
-    for (int i = 0; i < 6; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(m_tank_model_ptr->getConfig().motor_list[i], left_cmd);
-    }
-
-    for (int i = 6; i < 12; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(m_tank_model_ptr->getConfig().motor_list[i], right_cmd);
-    }
+    m_tank_model_ptr->driveCommandJoystick(
+      joy_data->left_y, joy_data->right_x, 0.05);
 
     double intake_power = 0;
     if (joy_data->btn_r2) {

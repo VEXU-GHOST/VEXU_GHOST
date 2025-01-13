@@ -32,8 +32,11 @@ using ghost_util::angleBetweenVectorsRadians;
 namespace ghost_tank
 {
 
-TankModel::TankModel(std::shared_ptr<rclcpp::Node> node_ptr, TankConfig config)
-  :node_ptr_(node_ptr)
+TankModel::TankModel(std::shared_ptr<rclcpp::Node> node_ptr, 
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+  TankConfig config)
+  :node_ptr_(node_ptr), 
+  rhi_ptr_(rhi_ptr)
 {
   m_config = config;
 
@@ -87,5 +90,31 @@ void TankModel::calculateMaxBaseTwist(){
   m_max_base_ang_vel = m_max_base_lin_vel / m_config.wheel_dist / ghost_util::INCHES_TO_METERS;
 }
 
+void TankModel::driveCommand(double fwd_pct, double ang_pct){
+    double left_cmd = fwd_pct + ang_pct;
+    double right_cmd = fwd_pct - ang_pct;
+
+    for (const auto motor_name: m_config.motor_list) {
+      rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+    }
+
+    for (int i = 0; i < 6; i++) {
+      rhi_ptr_->setMotorVoltageCommandPercent(m_config.motor_list[i], left_cmd);
+    }
+
+    for (int i = 6; i < 12; i++) {
+      rhi_ptr_->setMotorVoltageCommandPercent(m_config.motor_list[i], right_cmd);
+    }
+}
+
+void TankModel::driveCommandJoystick(double fwd, double ang, double deadzone){
+    double forward_vel = fwd / 127.0;
+    double angular_vel = ang / 127.0;
+
+    forward_vel = (std::fabs(forward_vel) < deadzone) ? 0.0 : forward_vel;
+    angular_vel = (std::fabs(angular_vel) < deadzone) ? 0.0 : angular_vel;
+
+    driveCommand(forward_vel, angular_vel);
+}
 
 } // namespace ghost_tank
