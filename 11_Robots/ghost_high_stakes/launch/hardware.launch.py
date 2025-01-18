@@ -63,24 +63,6 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
-    cubic_motion_planner_node = Node(
-        package='ghost_tank',
-        executable='cubic_motion_planner',
-        name='cubic_motion_planner',
-        output='screen',
-        parameters=[ros_config_file, 
-                    ],
-    )
-
-    trapezoid_motion_planner_node = Node(
-        package='ghost_tank',
-        executable='trapezoid_motion_planner',
-        name='trapezoid_motion_planner',
-        output='screen',
-        parameters=[ros_config_file, 
-                    ],
-    )
-
     bag_recorder_service = Node(
         package="ghost_ros_interfaces",
         executable="bag_recorder_service",
@@ -169,7 +151,5 @@ def generate_launch_description():
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
-        # cubic_motion_planner_node,
-        # trapezoid_motion_planner_node,
         rplidar_node
     ])

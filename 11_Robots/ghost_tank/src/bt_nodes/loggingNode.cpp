@@ -30,7 +30,9 @@ LoggingNode::LoggingNode(
 : BT::SyncActionNode(name, config)
 {
     blackboard_ = config.blackboard;
-	  blackboard_->get("node_ptr", node_ptr_);
+	  if(!blackboard_->get("node_ptr", node_ptr_)){
+        std::cout << name << ": node_ptr not found in blackboard" << std::endl;
+    }
 }
 
 // It is mandatory to define this STATIC method.
@@ -45,6 +47,8 @@ BT::PortsList LoggingNode::providedPorts()
 // Override the virtual function tick()
 BT::NodeStatus LoggingNode::tick()
 {
+  std::cout << "tick!" << std::endl;
+
   std::string msg = BT_Util::get_input<std::string>(this, "message");
 
   // use the method value() to extract the valid message.

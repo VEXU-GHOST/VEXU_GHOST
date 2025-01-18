@@ -1,75 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="interaction">
+      main_tree_to_execute="main">
 
-  <BehaviorTree ID="interaction">
-     <Sequence>
-        <IntakeCmd in="true"/>
-    <!--  <MoveToPoseCubic posX="-1.1"
-                       posY="5.0"
-                       theta="-90"
-                       velX="0.0"
-                       velY="0.0"
-                       omega="0.0"
-                       threshold="0.05"
-                       angle_threshold="5.0"
-                       timeout="-2000"
-                       speed="1.0"/>
-      <MoveToPoseCubic posX="-1.1"
-                       posY="1.5"
-                       theta="-90"
-                       velX="0.0"
-                       velY="0.0"
-                       omega="0.0"
-                       threshold="0.05"
-                       angle_threshold="5.0"
-                       timeout="-3000"
-                       speed="1.0"/>
-      <!- <Repeat num_cycles="-1">
-        <SubTree ID="block_bowling"
-                _autoremap="false"/>
-      </Repeat> ->
-      <Delay delay_msec="55000">
-        <MoveToPoseCubic posX="-1.1"
-                       posY="0.0"
-                       theta="-90"
-                       velX="0.0"
-                       velY="0.0"
-                       omega="0.0"
-                       threshold="0.05"
-                       angle_threshold="5.0"
-                       timeout="-3000"
-                       speed="1.0"/>
-      </Delay>-->
+  <BehaviorTree ID="main">
+    <Sequence>
+      <Logging message="test">
     </Sequence>
-  </BehaviorTree>
-
-  <BehaviorTree ID="block_bowling">
-     <Sequence>
-        <IntakeCmd in="true"/>
-    <!--  <MoveToPoseCubic posX="-2.0"
-                       posY="1.6"
-                       theta="0"
-                       velX="0.0"
-                       velY="0.0"
-                       omega="0.0"
-                       threshold="0.05"
-                       angle_threshold="5.0"
-                       timeout="-2000"
-                       speed="0.5"/>
-      <Delay delay_msec="4000">
-        <MoveToPoseCubic posX="-1.4"
-                        posY="1.6"
-                        theta="-45"
-                        velX="0.0"
-                        velY="0.0"
-                        omega="0.0"
-                        threshold="0.05"
-                        angle_threshold="5.0"
-                        timeout="-2000"
-                        speed="0.5"/>
-      </Delay>-->
-    </Sequence> 
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
@@ -78,49 +14,9 @@
             editable="true">
       <input_port name="seconds"/>
     </Decorator>
-    <Action ID="Climb"
-            editable="true"/>
-    <Action ID="IntakeCmd"
-            editable="true">
-      <input_port name="in"/>
-    </Action>
     <Action ID="Logging"
             editable="true">
       <input_port name="message"/>
-    </Action>
-    <Action ID="MoveToPoseCubic"
-            editable="true">
-      <input_port name="posX">m</input_port>
-      <input_port name="posY">m</input_port>
-      <input_port name="theta">deg</input_port>
-      <input_port name="velX">m.s</input_port>
-      <input_port name="velY">m.s</input_port>
-      <input_port name="omega">deg.s</input_port>
-      <input_port name="threshold"
-                  default="0.025">m</input_port>
-      <input_port name="angle_threshold"
-                  default="5.0">m</input_port>
-      <input_port name="timeout"
-                  default="5000">ms</input_port>
-      <input_port name="speed"
-                  default="0.5">m.s</input_port>
-    </Action>
-    <Action ID="MoveToPoseTrapezoid"
-            editable="true">
-      <input_port name="posX">m</input_port>
-      <input_port name="posY">m</input_port>
-      <input_port name="theta">deg</input_port>
-      <input_port name="velX">m.s</input_port>
-      <input_port name="velY">m.s</input_port>
-      <input_port name="omega">deg.s</input_port>
-      <input_port name="threshold"
-                  default="0.025">m</input_port>
-      <input_port name="angle_threshold"
-                  default="5.0">m</input_port>
-      <input_port name="timeout"
-                  default="5000">ms</input_port>
-      <input_port name="max_speed"
-                  default="0.5">m.s</input_port>
     </Action>
   </TreeNodesModel>
 

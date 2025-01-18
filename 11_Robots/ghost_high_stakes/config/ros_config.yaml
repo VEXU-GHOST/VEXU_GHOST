@@ -100,15 +100,21 @@ competition_state_machine_node:
       burnout_absolute_velocity_threshold_rpm: 400.0
       burnout_stall_duration_ms: 500
       burnout_cooldown_duration_ms: 5000
+      
+      cmd_twist_topic: "/cmd_vel" # from ekf
+      bag_recorder_start_topic: "bag_recorder/start"
+      bag_recorder_stop_topic: "bag_recorder/stop"
+      cmd_pose_topic: "/set_pose"
+      imu_topic: "/sensors/imu"
+      des_twist_topic: "/des_vel"
+      cur_twist_topic: "/cur_vel"
+      des_pos_topic: "/des_pos"
 
     behavior_tree:
       cubic_planner_topic: "/motion_planner/cubic_command"
       trapezoid_planner_topic: "/motion_planner/trapezoid_command"
 
-# If you are using the sweve model and you are tuning the k1-9 parameters,
-# the swerve model plugin has its own duplicate (11_Robots/ghost_high_stakes/config/ros_config.yaml) of the k1-9 parameters that must
-# be changed as well as this file. TODO: make a class for this
-ekf_pf_node:
+/**:
   ros__parameters:
     particle_filter:
       world_frame: "map"
@@ -124,20 +130,6 @@ ekf_pf_node:
       init_x_sigma: 0.05 #
       init_y_sigma: 0.05 #
       init_r_sigma: 0.2 #
-
-      # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
-      # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
-      # You can tune this up and down based on performance, but I recommend starting from some initial guess based on robot config or data
-
-      # Robot Constants
-      laser_offset_x: 0.1651
-      laser_offset_y: -0.1651
-      laser_angle_offset: 3.14159
-
-      # RPLidar A1 datasheet
-      range_min: 0.15
-      range_max: 5.0
-      sigma_observation: 0.2 # Prof recommends 0.15-0.2 based on sensor specs
 
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
@@ -161,6 +153,39 @@ ekf_pf_node:
       k7: 0.2 # theta error from x motion     # After 2ft of travel, 99% are within by 5°
       k8: 0.2 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
       k9: 0.02 # theta error from rotation     # % error in primary direction
+
+      rviz_set_pose_topic: "/set_pf_pose"
+
+    #odom_ekf_node and #map_ekf_node
+    # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
+    # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
+    # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
+    # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
+    # default values, and must be specified.
+    odom0: /sensors/wheel_odom
+
+# If you are using the sweve model and you are tuning the k1-9 parameters,
+# the swerve model plugin has its own duplicate (11_Robots/ghost_high_stakes/config/ros_config.yaml) of the k1-9 parameters that must
+# be changed as well as this file. TODO: make a class for this
+ekf_pf_node:
+  ros__parameters:
+    particle_filter:
+      world_frame: "map"
+      map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
+
+      # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
+      # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
+      # You can tune this up and down based on performance, but I recommend starting from some initial guess based on robot config or data
+
+      # Robot Constants
+      laser_offset_x: 0.1651
+      laser_offset_y: -0.1651
+      laser_angle_offset: 3.14159
+
+      # RPLidar A1 datasheet
+      range_min: 0.15
+      range_max: 5.0
+      sigma_observation: 0.2 # Prof recommends 0.15-0.2 based on sensor specs
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
       min_update_dist: 0.05 #0.05
@@ -283,13 +308,6 @@ odom_ekf_node:
     odom_frame: odom # Defaults to "odom" if unspecified
     base_link_frame: base_link # Defaults to "base_link" if unspecified
     world_frame: odom # Defaults to the value of odom_frame if unspecified
-
-    # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
-    # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
-    # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
-    # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
-    # default values, and must be specified.
-    odom0: /sensors/wheel_odom
 
     # Each sensor reading updates some or all of the filter's state. These options give you greater control over which
     # values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only
@@ -978,13 +996,6 @@ map_ekf_node:
     pose0_differential: false
     pose0_relative: false
     pose0_queue_size: 5
-
-    # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
-    # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
-    # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
-    # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
-    # default values, and must be specified.
-    odom0: /sensors/wheel_odom
 
     # Each sensor reading updates some or all of the filter's state. These options give you greater control over which
     # values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only

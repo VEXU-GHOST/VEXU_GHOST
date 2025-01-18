@@ -32,33 +32,25 @@
 namespace ghost_tank
 {
 
-TankTree::TankTree(std::string bt_path, std::string bt_path_interaction) :
-	bt_path_(bt_path),
-	bt_path_interaction_(bt_path_interaction){
+TankTree::TankTree(std::string bt_path) :
+	bt_path_(bt_path){
+	global_blackboard_ = BT::Blackboard::create();
+}
 
+void TankTree::init_tree(){
 	BT::BehaviorTreeFactory factory;
-	global_blackboard = BT::Blackboard::create();
 
 	// add all nodes here
 	factory.registerNodeType<LoggingNode>("Logging");
-	factory.registerNodeType<MoveToPoseCubic>("MoveToPoseCubic");
-	factory.registerNodeType<IntakeCmd>("IntakeCmd");
 	factory.registerNodeType<AutoDone>("AutoDone");
 	factory.registerNodeType<AutonTimer>("AutonTimer");
 
-    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard);
-
-	tree_interaction_ = factory.createTreeFromFile(bt_path_interaction_, global_blackboard);
+    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
 }
 
 void TankTree::tick_tree()
 {
   tree_.tickExactlyOnce();
-}
-
-void TankTree::tick_tree_interaction()
-{
-  tree_interaction_.tickExactlyOnce();
 }
 
 } // namespace ghost_tank
