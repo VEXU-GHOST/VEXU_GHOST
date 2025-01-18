@@ -60,6 +60,7 @@ protected:
   // Publishers
   void publishVisualization();
   void publishOdometry();
+  void publishBaseTwist();
   void publishTrajectoryVisualization();
   void resetPose(double x, double y, double theta);
 
@@ -83,6 +84,8 @@ protected:
   // Subscribers
   void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
+
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
@@ -132,6 +135,7 @@ protected:
   double m_init_world_x = 0.0;
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
+  bool m_use_backup_estimator = false;
 
   // Digital IO
   std::vector<bool> m_digital_io;

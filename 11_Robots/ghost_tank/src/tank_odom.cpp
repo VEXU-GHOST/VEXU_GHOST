@@ -64,8 +64,6 @@ Eigen::Vector3d TankOdometry::update(
   std::vector<long> l_wheel_pos,
   std::vector<long> r_wheel_pos)
 {
-  {
-
     std::vector<long> l_vel_arr =
       !m_prev_l_ticks.empty() ? subtractVectors(l_wheel_pos, m_prev_l_ticks) : l_wheel_pos;
 
@@ -105,7 +103,6 @@ Eigen::Vector3d TankOdometry::update(
     m_prev_r_ticks = r_wheel_pos;
 
     return m_cur_pos;
-  }
 }
 
 } // namespace ghost_tank
