@@ -30,6 +30,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "eigen3/Eigen/Geometry"
 #include <ghost_util/angle_util.hpp>
+#include <ghost_ros_interfaces/competition/v5_robot_base.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include "math/line2d.h"
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
@@ -175,7 +176,8 @@ protected:
 
   Eigen::Vector3d m_world_twist;
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_particle_filter_set_pose_publisher;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
+    m_particle_filter_set_pose_publisher;
 
   // Command Setpoints
   Eigen::Vector3d m_base_vel_cmd;

@@ -43,9 +43,11 @@ TankModel::TankModel(std::shared_ptr<rclcpp::Node> node_ptr,
   validateConfig();
 
   node_ptr_->declare_parameter("particle_filter.rviz_set_pose_topic", "/set_pf_pose");
-  std::string particle_filter_set_pose_topic = node_ptr_->get_parameter("particle_filter.rviz_set_pose_topic").as_string();
+  std::string particle_filter_set_pose_topic = node_ptr_->get_parameter(
+    "particle_filter.rviz_set_pose_topic").as_string();
 
-  m_particle_filter_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+  m_particle_filter_set_pose_publisher =
+    node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     particle_filter_set_pose_topic,
     10);
 }
@@ -84,9 +86,11 @@ void TankModel::validateConfig()
   m_world_twist = Eigen::Vector3d::Zero();
 }
 
-void TankModel::calculateMaxBaseTwist(){
+void TankModel::calculateMaxBaseTwist()
+{
   // max motor speed is 600 rpm = 10 rps
-  m_max_base_lin_vel = M_2PI * m_config.wheel_radius * m_config.wheel_gear_ratio * 10 * ghost_util::INCHES_TO_METERS;
+  m_max_base_lin_vel = M_2PI * m_config.wheel_radius * m_config.wheel_gear_ratio * 10 *
+    ghost_util::INCHES_TO_METERS;
   m_max_base_ang_vel = m_max_base_lin_vel / m_config.wheel_dist / ghost_util::INCHES_TO_METERS;
 }
 
