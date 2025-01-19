@@ -38,9 +38,9 @@ imu_filter_node:
     gyro_covariance: [1.0e-5, 0.0, 0.0, 0.0, 1.0e-05, 0.0, 0.0, 0.0, 1.0e-5]
 
     # This is a ZYX rotation from base link to imu!
-    sensor_roll: 90.0
+    sensor_roll: 0.0
     sensor_pitch: 0.0
-    sensor_yaw: 90.0
+    sensor_yaw: 0.0
 
 bag_recorder_service:
   ros__parameters:
@@ -78,17 +78,17 @@ competition_state_machine_node:
       # Too generous though, and you are either losing resolution or wasting computation.
 
       # MAKE SURE THESE MATCH IN THE PARTICLE FILTER
-      k1: 0.25 # x error from x motion      # 25% error in primary direction
+      k1: 0.154 # x error from x motion      # % error in primary direction
       k2: 0.05 # x error from y motion      # Assume 5% drift via steering errors (hard to drive straight w swerve)
       k3: 0.02 # x error from rotation        # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k4: 0.05 # y error from x motion      # Assume 5% drift via steering errors (hard to drive straight w swerve)
-      k5: 0.25 # y error from y motion      # 25% error in primary direction
+      k5: 0.154 # y error from y motion      # % error in primary direction
       k6: 0.02 # y error from rotation        # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k7: 0.2 # theta error from x motion    # After 2ft of travel, 99% are within by 20°
       k8: 0.2 # theta error from y motion    # After 2ft of travel, 99% are within by 20°
-      k9: 0.5 # theta error from rotation   # 25% error in primary direction
+      k9: 0.02 # theta error from rotation   # % error in primary direction
 
       # motion planning
       move_to_pose_kp_xy: 1.0
@@ -100,10 +100,69 @@ competition_state_machine_node:
       burnout_absolute_velocity_threshold_rpm: 400.0
       burnout_stall_duration_ms: 500
       burnout_cooldown_duration_ms: 5000
+      
+      cmd_twist_topic: "/cmd_vel" # from ekf
+      bag_recorder_start_topic: "bag_recorder/start"
+      bag_recorder_stop_topic: "bag_recorder/stop"
+      cmd_pose_topic: "/set_pose"
+      imu_topic: "/sensors/imu"
+      des_twist_topic: "/des_vel"
+      cur_twist_topic: "/cur_vel"
+      des_pos_topic: "/des_pos"
 
     behavior_tree:
       cubic_planner_topic: "/motion_planner/cubic_command"
       trapezoid_planner_topic: "/motion_planner/trapezoid_command"
+
+/**:
+  ros__parameters:
+    particle_filter:
+      world_frame: "map"
+      rviz_set_pose_topic: "/set_pf_pose"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
+
+      # Initial position
+      init_x: 0.1905
+      init_y: 0.18415
+      init_r: 1.5708
+      
+      # Initial cloud distribution
+      init_x_sigma: 0.05 #
+      init_y_sigma: 0.05 #
+      init_r_sigma: 0.2 #
+
+      # Motion Model Params
+      # These calculate odometry standard deviations. X is forward, Y is left on robot.
+      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
+
+      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
+      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
+
+      # Remember that LIDAR will correct periodically, so these can be a bit generous.
+      # Too generous though, and you are either losing resolution or wasting computation.
+
+      # MAKE SURE THESE MATCH IN THE SWERVE MODEL
+      k1: 0.154 # x error from x motion         # % error in primary direction
+      k2: 0.05 # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k3: 0.05 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+
+      k4: 0.05 # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k5: 0.154 # y error from y motion         # % error in primary direction
+      k6: 0.05 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+
+      k7: 0.2 # theta error from x motion     # After 2ft of travel, 99% are within by 5°
+      k8: 0.2 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
+      k9: 0.02 # theta error from rotation     # % error in primary direction
+
+      rviz_set_pose_topic: "/set_pf_pose"
+
+    #odom_ekf_node and #map_ekf_node
+    # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
+    # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
+    # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
+    # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
+    # default values, and must be specified.
+    odom0: /sensors/wheel_odom
 
 # If you are using the sweve model and you are tuning the k1-9 parameters,
 # the swerve model plugin has its own duplicate (11_Robots/ghost_high_stakes/config/ros_config.yaml) of the k1-9 parameters that must
@@ -112,22 +171,7 @@ ekf_pf_node:
   ros__parameters:
     particle_filter:
       world_frame: "map"
-      rviz_set_pose_topic: "/set_pf_pose"
-      # map: "/home/maxx/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
-      map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
-
-      # Initial position
-      init_x: -1.524
-      init_y: -0.9144
-      init_r: 0.0
-      # init_x: -0.3048
-      # init_y: -1.524
-      # init_r: 0.0
-
-      # Initial cloud distribution
-      init_x_sigma: 0.05 #
-      init_y_sigma: 0.05 #
-      init_r_sigma: 0.2 #
+      # map: "/home/ghost2/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXField.txt"
 
       # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
       # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
@@ -142,29 +186,6 @@ ekf_pf_node:
       range_min: 0.15
       range_max: 5.0
       sigma_observation: 0.2 # Prof recommends 0.15-0.2 based on sensor specs
-
-      # Motion Model Params
-      # These calculate odometry standard deviations. X is forward, Y is left on robot.
-      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
-
-      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
-      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
-
-      # Remember that LIDAR will correct periodically, so these can be a bit generous.
-      # Too generous though, and you are either losing resolution or wasting computation.
-
-      # MAKE SURE THESE MATCH IN THE SWERVE MODEL
-      k1: 0.4 # x error from x motion         # 50% error in primary direction
-      k2: 0.1 # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k3: 0.05 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-
-      k4: 0.1 # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k5: 0.4 # y error from y motion         # 50% error in primary direction
-      k6: 0.05 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-
-      k7: 0.2 # theta error from x motion     # After 2ft of travel, 99% are within by 5°
-      k8: 0.2 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
-      k9: 0.5 # theta error from rotation     # 50% error in primary direction
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
       min_update_dist: 0.05 #0.05
@@ -288,13 +309,6 @@ odom_ekf_node:
     base_link_frame: base_link # Defaults to "base_link" if unspecified
     world_frame: odom # Defaults to the value of odom_frame if unspecified
 
-    # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
-    # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
-    # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
-    # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
-    # default values, and must be specified.
-    odom0: /sensors/wheel_odom
-
     # Each sensor reading updates some or all of the filter's state. These options give you greater control over which
     # values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only
     # want to use its Z position value, then set the entire vector to false, except for the third entry. The order of the
@@ -304,21 +318,11 @@ odom_ekf_node:
     # if unspecified, effectively making this parameter required for each sensor.
     odom0_config:
       [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
+        true, true, false,
+        false, false, false,
+         false,  false,  false,
+        false, false,  false,
+        false, false, false,
       ]
 
     # If you have high-frequency data or are running with a low frequency parameter value, then you may want to increase
@@ -338,8 +342,7 @@ odom_ekf_node:
     # data is converted to velocity data by differentiating the absolute pose measurements. These velocities are then
     # integrated as usual. NOTE: this only applies to sensors that provide pose measurements; setting differential to true
     # for twist measurements has no effect.
-    # odom0_differential: false
-    odom0_differential: false
+    odom0_differential: true
 
     # [ADVANCED] When the node starts, if this parameter is true, then the first measurement is treated as a "zero point"
     # for all future measurements. While you can achieve the same effect with the differential paremeter, the key
@@ -355,23 +358,16 @@ odom_ekf_node:
     # the thresholds.
 
     imu0: /estimation/imu/filtered
+
+    # The order of the
+    # values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az
     imu0_config:
       [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
+        false, false, false,
+        false,false,true,
+        false,false,false,
+        false,false,true,
+        false,false,false,
       ]
     imu0_differential: false
     imu0_relative: true
@@ -898,13 +894,11 @@ map_ekf_node:
 
     initial_state:
       [
-        -1.524,
-        # -0.3048,
-        -0.9144,
-        # -1.524,
+        0.1905,
+        0.18415,
         0.0,
         0.0,
-        0.0,
+        1.5708,
         0.0,
         0.0,
         0.0,
@@ -1003,13 +997,6 @@ map_ekf_node:
     pose0_relative: false
     pose0_queue_size: 5
 
-    # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
-    # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
-    # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
-    # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
-    # default values, and must be specified.
-    odom0: /sensors/wheel_odom
-
     # Each sensor reading updates some or all of the filter's state. These options give you greater control over which
     # values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only
     # want to use its Z position value, then set the entire vector to false, except for the third entry. The order of the
@@ -1019,15 +1006,15 @@ map_ekf_node:
     # if unspecified, effectively making this parameter required for each sensor.
     odom0_config:
       [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
         true,
         true,
-        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
         false,
         false,
         false,
