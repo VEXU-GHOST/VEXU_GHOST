@@ -689,7 +689,7 @@ void TankRobotPlugin::movePointToPoint(){
     std::cout << "dx:" << dx << std::endl;
     std::cout << "dy:" << dy << std::endl;
     
-    m_tank_model_ptr->driveCommand(distance * 0.10, turn_degree);
+    m_tank_model_ptr->driveCommand(distance * 0.010, turn_degree / 360.0);
   }
 }
 

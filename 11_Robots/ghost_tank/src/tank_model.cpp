@@ -96,6 +96,8 @@ void TankModel::calculateMaxBaseTwist()
 }
 
 void TankModel::driveCommand(double fwd_pct, double ang_pct){
+    ghost_util::clamp(fwd_pct, -1.0, 1.0);
+    ghost_util::clamp(ang_pct, -1.0, 1.0);
     double left_cmd = fwd_pct + ang_pct;
     double right_cmd = fwd_pct - ang_pct;
 
