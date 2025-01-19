@@ -66,6 +66,27 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_library(tank_odom SHARED src/tank_odom.cpp)
+target_include_directories(tank_odom
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(tank_odom
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  tank_odom
+)
+ament_export_targets(tank_odom HAS_LIBRARY_TARGET)
+install(
+  TARGETS tank_odom
+  EXPORT tank_odom
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 add_library(tank_robot_plugin SHARED src/tank_robot_plugin.cpp)
 target_include_directories(tank_robot_plugin
   PUBLIC
@@ -73,6 +94,7 @@ target_include_directories(tank_robot_plugin
   $<INSTALL_INTERFACE:include>)
   target_link_libraries(tank_robot_plugin
     tank_model
+    tank_odom
     tank_tree
   )
 ament_target_dependencies(tank_robot_plugin
@@ -91,47 +113,9 @@ RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
-add_executable(cubic_motion_planner
-  src/cubic_motion_planner.cpp
-)
-ament_target_dependencies(cubic_motion_planner
-  ${DEPENDENCIES}
-)
-target_link_libraries(cubic_motion_planner
-
-)
-target_include_directories(cubic_motion_planner
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  cubic_motion_planner
-  DESTINATION lib/${PROJECT_NAME})
-
-add_executable(trapezoid_motion_planner
-  src/trapezoid_motion_planner.cpp
-)
-ament_target_dependencies(trapezoid_motion_planner
-  ${DEPENDENCIES}
-)
-target_link_libraries(trapezoid_motion_planner
-
-)
-target_include_directories(trapezoid_motion_planner
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  trapezoid_motion_planner
-  DESTINATION lib/${PROJECT_NAME})
-
 # bt node libraries
 set(NODES
-  checkForRestart
   loggingNode
-  moveToPoseCubic
-  moveToPoseTrapezoid
-  intakeCmd
   autoDone
   autonTimer
 )
@@ -192,7 +176,7 @@ foreach(TEST ${TEST_FILES})
   ament_add_gtest(${TEST} test/${TEST}.cpp)
   ament_target_dependencies(${TEST} ${DEPENDENCIES})
   target_link_libraries(${TEST}
-    tank_model
+    tank_odom
     gtest_main
   )
   target_include_directories(${TEST} PUBLIC
@@ -200,6 +184,12 @@ foreach(TEST ${TEST_FILES})
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
   $<INSTALL_INTERFACE:include>)
 endforeach()
+
+ament_add_gtest(test_tank_odom test/test_tank_odom.cpp)
+target_link_libraries(test_tank_odom
+  gtest
+  tank_odom
+)
 
 
 ###################

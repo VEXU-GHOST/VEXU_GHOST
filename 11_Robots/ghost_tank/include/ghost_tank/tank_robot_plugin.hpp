@@ -40,6 +40,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #include <ghost_tank/tank_tree.hpp>
+#include <ghost_tank/tank_odom.hpp>
 
 namespace ghost_tank
 {
@@ -71,12 +72,12 @@ protected:
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_tank_viz_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
-  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_base_twist_cmd_pub;
 
-  // rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_pos_pub;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_vel_pub;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_vel_pub;
+  // rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_cur_pos_pub;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_twist_pub;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
 
@@ -85,10 +86,13 @@ protected:
   void publishDesiredPose(Eigen::Vector3d pose);
 
   // Subscribers
+  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
+
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
@@ -101,6 +105,7 @@ protected:
   // Autonomy
   std::string bt_path_;
   std::shared_ptr<TankTree> bt_;
+  std::shared_ptr<TankTree> bt_interaction;
 
   // Motion Planner
   double m_move_to_pose_kp_xy = 0.0;
@@ -109,6 +114,8 @@ protected:
   double m_move_to_pose_kd_theta = 0.0;
 
   // Odometry
+  std::shared_ptr<TankOdometry> m_odom_ptr;
+  double m_imu_yaw;
   Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
 
   Eigen::Vector3d m_curr_odom_pose = Eigen::Vector3d::Zero();
@@ -133,26 +140,10 @@ protected:
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
   bool m_use_backup_estimator = false;
-  double m_intake_setpoint = 7.0;
 
   // Digital IO
   std::vector<bool> m_digital_io;
   std::unordered_map<std::string, size_t> m_digital_io_name_map;
-
-  // Claw
-  bool m_claw_btn_pressed = false;
-  bool m_claw_open = true;
-  bool claw_auto_extended = false;
-
-  // Tail
-  bool m_tail_btn_pressed = false;
-  bool m_tail_down = false;
-
-  // Climb Mode
-  bool m_climb_mode = false;
-
-  // Stick Mode
-  bool m_tail_mode = false;
 
   // Bag Recorder
   bool m_recording_btn_pressed = false;
@@ -195,6 +186,10 @@ protected:
   bool m_intake_cooling_down = false;
 
   bool m_interaction_started = false;
+
+  std::vector<std::string> m_right_drive_motor_names;
+  std::vector<std::string> m_left_drive_motor_names;
+  std::vector<std::string> m_all_motor_names;
 };
 
 } // namespace ghost_tank

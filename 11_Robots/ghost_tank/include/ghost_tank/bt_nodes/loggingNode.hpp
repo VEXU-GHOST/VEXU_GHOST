@@ -26,6 +26,7 @@
 #include <string>
 #include "behaviortree_cpp/behavior_tree.h"
 #include "rclcpp/rclcpp.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
 
 // SyncActionNode (synchronous action) with an input port.
 class LoggingNode : public BT::SyncActionNode
@@ -33,8 +34,7 @@ class LoggingNode : public BT::SyncActionNode
 public:
   // If your Node has ports, you must use this constructor signature
   LoggingNode(
-    const std::string & name, const BT::NodeConfig & config,
-    std::shared_ptr<rclcpp::Node> node_ptr);
+    const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -43,5 +43,6 @@ public:
   BT::NodeStatus tick() override;
 
 private:
+	BT::Blackboard::Ptr blackboard_;
   std::shared_ptr<rclcpp::Node> node_ptr_;
 };
