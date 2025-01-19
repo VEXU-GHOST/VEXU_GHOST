@@ -123,8 +123,8 @@ def generate_launch_description():
         ),
         launch_arguments={
             "unite_imu_method": "2",
-            "enable_depth": "false",
-            "enable_color": "false",
+            "enable_depth": "true",
+            "enable_color": "true",
             "enable_sync": "true",
             "enable_gyro": "true",
             "enable_accel": "true",
@@ -164,7 +164,7 @@ def generate_launch_description():
         competition_state_machine_node,
         bag_recorder_service,
         ekf_pf_node, # THIS ONE
-        # realsense_node,
+        realsense_node,
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
