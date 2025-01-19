@@ -197,9 +197,27 @@ void TankRobotPlugin::initialize()
     des_pos_topic,
     10);
 
-// blue motor is 300, TODO put this in config files
+
+  double motor_ticks_per_rotation, drive_gear_ratio, wheel_size_inches, wheel_base_inches;
+  node_ptr_->declare_parameter("drive_motor_ticks_per_rotation", motor_ticks_per_rotation);
+  node_ptr_->declare_parameter("drive_gear_ratio", drive_gear_ratio);
+  node_ptr_->declare_parameter("drive_wheel_size_inches", wheel_size_inches);
+  node_ptr_->declare_parameter("wheel_base_inches", wheel_base_inches);
+
+  motor_ticks_per_rotation =
+    node_ptr_->get_parameter("drive_motor_ticks_per_rotation").as_double();
+  drive_gear_ratio =
+    node_ptr_->get_parameter("drive_gear_ratio").as_double();
+  wheel_size_inches =
+    node_ptr_->get_parameter("drive_wheel_size_inches").as_double();
+  wheel_base_inches =
+    node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
+
+
+  // blue motor is 300, TODO put this in config files
+    //300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS / 2., 12.5 * ghost_util::INCHES_TO_METERS
   odom = std::make_shared<TankOdometry>(
-    300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS / 2., 12.5 * ghost_util::INCHES_TO_METERS
+    motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * ghost_util::INCHES_TO_METERS , wheel_base_inches * ghost_util::INCHES_TO_METERS
   );
   bt_ = std::make_shared<TankTree>(
     bt_path);
@@ -396,6 +414,26 @@ void TankRobotPlugin::teleop(double current_time)
   }
 }
 
+
+void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  // TODO: implement this. 
+  // This is the post-filtered absolute source of truth for autonomous odom
+  // don't know where to store this yet 
+
+    double theta = ghost_util::quaternionToYawRad(
+      msg->pose.pose.orientation.w,
+      msg->pose.pose.orientation.x,
+      msg->pose.pose.orientation.y,
+      msg->pose.pose.orientation.z);
+    
+    //m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
+    //m_swerve_model_ptr->setWorldAngleRad(theta);
+    //m_swerve_model_ptr->setWorldTranslationalVelocity(
+    //  msg->twist.twist.linear.x,
+    //  msg->twist.twist.linear.y);
+    //m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
+}
 // make a class for this
 // void TankRobotPlugin::onButtonPress(bool button){
 //   static bool btn_r_pressed = false;
