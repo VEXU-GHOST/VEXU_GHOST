@@ -674,22 +674,28 @@ void TankRobotPlugin::movePointToPoint(){
     std::cout << "size:" << x_values.size() << std::endl;
     double dx = x_values[next_index] - current_x;
     double dy = y_values[next_index] - current_y;
-    double angle_radians = atan2(dx, dy);
-    double goal_degrees = angle_radians * (double)(180/3.14159265358987932);
-    if (goal_degrees <= 0){
-        goal_degrees += 360;
-    }
+    double goal_radians = atan2(dx, dy);
+    // double goal_degrees = angle_radians * (double)(180/3.14159265358987932);
+    // if (goal_degrees <= 0){
+    //     goal_degrees += 360;
+    // }
     //turn to goal angle 
-    auto turn_degree = ghost_util::SmallestAngleDistDeg(goal_degrees, current_angle);
+    auto turn_rad = ghost_util::SmallestAngleDistRad(goal_radians, current_angle);
+    auto turn_limit = 0.3;
+    if (turn_rad < turn_limit && turn_rad > -turn_limit){ //5.7 DEGREES
+      turn_rad = 0;
+    }
 
     //distance between current and goal pt 
     double distance = sqrt(pow(dx,2)+pow(dy,2));
     std::cout << "posx:" << current_x << std::endl;
     std::cout << "posy:" << current_y << std::endl;
+    std::cout << "postheta:" << current_angle << std::endl;
     std::cout << "dx:" << dx << std::endl;
     std::cout << "dy:" << dy << std::endl;
+    std::cout << "dtheta:" << turn_rad << std::endl;
     
-    m_tank_model_ptr->driveCommand(distance * 0.010, turn_degree / 360.0);
+    m_tank_model_ptr->driveCommand(distance * 0.5, turn_rad / 3.14 / 1.0);
   }
 }
 

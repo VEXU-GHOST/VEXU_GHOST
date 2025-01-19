@@ -98,8 +98,8 @@ void TankModel::calculateMaxBaseTwist()
 void TankModel::driveCommand(double fwd_pct, double ang_pct){
     ghost_util::clamp(fwd_pct, -1.0, 1.0);
     ghost_util::clamp(ang_pct, -1.0, 1.0);
-    double left_cmd = fwd_pct + ang_pct;
-    double right_cmd = fwd_pct - ang_pct;
+    double left_cmd = fwd_pct - ang_pct;
+    double right_cmd = fwd_pct + ang_pct;
 
     for (const auto motor_name: m_config.motor_list) {
       rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
