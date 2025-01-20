@@ -2,15 +2,7 @@
 #include "gtest/gtest.h"
 #include <ghost_util/unit_conversion_utils.hpp>
 
-class TestTankOdom : public ::testing::Test
-{
-public:
-  TestTankOdom()
-  {
-  }
-};
-
-TEST_F(TestTankOdom, testSimple) {
+TEST(TestTankOdom, testSimple) {
   Eigen::Vector3d got, expected;
   ghost_tank::TankOdometry t(1000, 1. / 2. / M_PI, 10);
   t.setPose({0, 5, 0});
@@ -45,7 +37,7 @@ TEST_F(TestTankOdom, testSimple) {
     expected.transpose();
 }
 
-TEST_F(TestTankOdom, testTriangle) {
+TEST(TestTankOdom, testTriangle) {
   Eigen::Vector3d got, expected;
   ghost_tank::TankOdometry t(100, 1. / 2. / M_PI, 10. * 2 / M_PI);
 
@@ -83,7 +75,7 @@ TEST_F(TestTankOdom, testTriangle) {
 }
 
 
-TEST_F(TestTankOdom, testTriangleInReverse) {
+TEST(TestTankOdom, testTriangleInReverse) {
   Eigen::Vector3d got, expected;
   ghost_tank::TankOdometry t(100, 1. / 2. / M_PI, 10. * 2 / M_PI);
 

@@ -67,11 +67,10 @@ Eigen::Vector3d TankOdometry::update(
     r_wheel_pos_arr.size() ? (r_wheel_pos_arr - m_prev_r_ticks) : r_wheel_pos_arr;
   long r_wheel_pos = ghost_util::median(r_vel_arr);
 
-  m_cur_pos = update(l_wheel_pos, r_wheel_pos);
-
   m_prev_l_ticks = l_wheel_pos_arr;
   m_prev_r_ticks = r_wheel_pos_arr;
 
+  m_cur_pos = update(l_wheel_pos, r_wheel_pos);
   return m_cur_pos;
 }
 
