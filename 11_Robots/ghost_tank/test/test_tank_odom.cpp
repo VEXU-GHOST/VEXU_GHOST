@@ -21,31 +21,30 @@ public:
 
 TEST_F(TestTankOdom, testSimple) {
   Eigen::Vector3d got, expected;
-  ghost_tank::TankOdometry t(100, 1. / 2. / M_PI, 10);
+  ghost_tank::TankOdometry t(1000, 1. / 2. / M_PI, 10);
   t.setPose({0, 5, 0});
 
-  got = t.update({100}, {100});
+  got = t.update(1000, 1000);
   expected = {1, 5, 0};
   GOT_EXPECTED_EXPECT(0.0001)
 
 
-  got = t.update({0}, {0});
+  got = t.update(-1000, -1000);
   expected = {0, 5, 0};
   GOT_EXPECTED_EXPECT(0.0001)
 
   printf("=====tests start\n");
 
-  for (int i = 1; i <= 100; i++) {
-    got = t.update({(long)(  -10 * i * M_PI / 2)}, {0});
+  for (int i = 0; i < 100; i++) {
+    got = t.update(-100 * 1 * M_PI / 2, 0);
   }
   expected = {-5, 0, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
 
-
-  got = t.update({(long)(  -10 * 100 * M_PI / 2) + 100}, {  100});
+  got = t.update(1000, 1000);
   expected = {-5, 1, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
-  got = t.update({(long)(  -10 * 100 * M_PI / 2)}, {0});
+  got = t.update(-1000, -1000);
   expected = {-5, 0, M_PI / 2};
   GOT_EXPECTED_EXPECT(0.01)
 }
@@ -73,13 +72,14 @@ TEST_F(TestTankOdom, testTriangle) {
     {0, 0, 0},
   };
 
-
+  Eigen::Vector<long, 1> v_l(0);
+  Eigen::Vector<long, 1> v_r(0);
   for (int i = 0; i < expected_pts.size(); i++) {
     ASSERT_LT(i, encoder_diffs.size());
-    if (i >= 1) {
-      encoder_diffs[i] += encoder_diffs[i - 1];            //accumlate the encoder values
-    }
-    got = t.update({encoder_diffs[i].x()}, {encoder_diffs[i].y()});
+
+    v_l[0] += encoder_diffs[i][0];
+    v_r[0] += encoder_diffs[i][1];
+    got = t.update(v_l, v_r);
     expected = expected_pts[i];
     GOT_EXPECTED_EXPECT(0.01);
   }
@@ -110,14 +110,17 @@ TEST_F(TestTankOdom, testTriangleInReverse) {
   };
 
 
+  Eigen::Vector<long, 1> v_l(0);
+  Eigen::Vector<long, 1> v_r(0);
   for (int i = 0; i < expected_pts.size(); i++) {
     ASSERT_LT(i, encoder_diffs.size());
-    if (i >= 1) {
-      encoder_diffs[i] += encoder_diffs[i - 1];            //accumlate the encoder values
-    }
-    got = t.update({encoder_diffs[i].x()}, {encoder_diffs[i].y()});
+
+    v_l[0] += encoder_diffs[i][0];
+    v_r[0] += encoder_diffs[i][1];
+    got = t.update(v_l, v_r);
     expected = expected_pts[i];
     GOT_EXPECTED_EXPECT(0.01);
   }
+
 
 }

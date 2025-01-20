@@ -174,7 +174,7 @@ void TankRobotPlugin::initialize()
     cmd_pose_topic,
     10);
 
-  imu_sub = node_ptr_->create_subscription<sensor_msgs::msg::Imu>(
+  m_imu_sub = node_ptr_->create_subscription<sensor_msgs::msg::Imu>(
     "/camera/camera/imu",
     10,
     std::bind(&TankRobotPlugin::imuUpdateCallback, this, _1));
@@ -215,9 +215,9 @@ void TankRobotPlugin::initialize()
 
 
   // blue motor is 300, TODO put this in config files
-    //300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS / 2., 12.5 * ghost_util::INCHES_TO_METERS
+  //300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS / 2., 12.5 * ghost_util::INCHES_TO_METERS
   odom = std::make_shared<TankOdometry>(
-    motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * ghost_util::INCHES_TO_METERS , wheel_base_inches * ghost_util::INCHES_TO_METERS
+    motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * ghost_util::INCHES_TO_METERS, wheel_base_inches * ghost_util::INCHES_TO_METERS
   );
   bt_ = std::make_shared<TankTree>(
     bt_path);
@@ -261,7 +261,10 @@ void TankRobotPlugin::onNewSensorData()
     }
   }
 
-  odom->update(l_pos, r_pos);
+  odom->update(
+    Eigen::Map<Eigen::VectorX<long>>(l_pos.data(), l_pos.size()),
+    Eigen::Map<Eigen::VectorX<long>>(r_pos.data(), r_pos.size())
+  );
   publishOdometry();
 }
 
@@ -417,22 +420,22 @@ void TankRobotPlugin::teleop(double current_time)
 
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  // TODO: implement this. 
+  // TODO: implement this.
   // This is the post-filtered absolute source of truth for autonomous odom
-  // don't know where to store this yet 
+  // don't know where to store this yet
 
-    double theta = ghost_util::quaternionToYawRad(
-      msg->pose.pose.orientation.w,
-      msg->pose.pose.orientation.x,
-      msg->pose.pose.orientation.y,
-      msg->pose.pose.orientation.z);
-    
-    //m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
-    //m_swerve_model_ptr->setWorldAngleRad(theta);
-    //m_swerve_model_ptr->setWorldTranslationalVelocity(
-    //  msg->twist.twist.linear.x,
-    //  msg->twist.twist.linear.y);
-    //m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
+  double theta = ghost_util::quaternionToYawRad(
+    msg->pose.pose.orientation.w,
+    msg->pose.pose.orientation.x,
+    msg->pose.pose.orientation.y,
+    msg->pose.pose.orientation.z);
+
+  //m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
+  //m_swerve_model_ptr->setWorldAngleRad(theta);
+  //m_swerve_model_ptr->setWorldTranslationalVelocity(
+  //  msg->twist.twist.linear.x,
+  //  msg->twist.twist.linear.y);
+  //m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
 }
 // make a class for this
 // void TankRobotPlugin::onButtonPress(bool button){
@@ -499,6 +502,9 @@ void TankRobotPlugin::publishOdometry()
     0.0, 0.0, 0.0, 0.0, 0.0, m_curr_odom_cov.z()};
 
   msg.pose.covariance = pose_covariance;
+
+// INFO: Publishing twist is unimplemented, higher layers do without it
+// Leave this in since it may be a useful reference in the future
 
   //auto current_velocity = m_tank_model_ptr->getBaseVelocityCurrent();
 
