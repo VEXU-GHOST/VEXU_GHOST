@@ -17,8 +17,8 @@ public:
     return m_cur_pos;
   }
 
-  Eigen::Vector3d update(Eigen::VectorX<long>  l_wheel_pos, Eigen::VectorX<long>  r_wheel_pos);
-  Eigen::Vector3d update( long  diff_l_wheel_pos, long  diff_r_wheel_pos);
+  Eigen::Vector3d update(Eigen::VectorX<long> l_wheel_pos, Eigen::VectorX<long> r_wheel_pos);
+  Eigen::Vector3d update(long diff_l_wheel_pos, long diff_r_wheel_pos);
 
 
   void resetPose()
@@ -32,8 +32,8 @@ public:
   }
 
 private:
-  Eigen::VectorX<long> m_prev_l_ticks ;
-  Eigen::VectorX<long> m_prev_r_ticks ;
+  Eigen::VectorX<long> m_prev_l_ticks;
+  Eigen::VectorX<long> m_prev_r_ticks;
 
   Eigen::Vector3d m_cur_pos;
 

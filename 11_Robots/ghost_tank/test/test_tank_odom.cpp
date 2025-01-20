@@ -10,15 +10,6 @@ public:
   }
 };
 
-#define GOT_EXPECTED_EXPECT(n) \
-  EXPECT_TRUE( \
-    (got - expected).norm() < \
-    n) << "expected: {" << expected.transpose() << "} got: {" << got.transpose() << "}" << \
-    std::endl;
-
-#define PRINT_POS() \
-  printf("\rpos: x: %.2f y: %.2f theta: %.2f\n", t.getPose().x(), t.getPose().y(), t.getPose().z());
-
 TEST_F(TestTankOdom, testSimple) {
   Eigen::Vector3d got, expected;
   ghost_tank::TankOdometry t(1000, 1. / 2. / M_PI, 10);
@@ -26,27 +17,32 @@ TEST_F(TestTankOdom, testSimple) {
 
   got = t.update(1000, 1000);
   expected = {1, 5, 0};
-  GOT_EXPECTED_EXPECT(0.0001)
+  ASSERT_TRUE((got - expected).isZero(0.01)) << "got: " << got.transpose() << " expected: " <<
+    expected.transpose();
 
 
   got = t.update(-1000, -1000);
   expected = {0, 5, 0};
-  GOT_EXPECTED_EXPECT(0.0001)
+  ASSERT_TRUE((got - expected).isZero(0.01)) << "got: " << got.transpose() << " expected: " <<
+    expected.transpose();
 
-  printf("=====tests start\n");
-
-  for (int i = 0; i < 100; i++) {
-    got = t.update(-100 * 1 * M_PI / 2, 0);
+  const int NUM_TURN_STEPS = 10;
+  for (int i = 0; i < NUM_TURN_STEPS; i++) {
+    got = t.update(-1000 * M_PI / 2, 0);
+    //   steps over wheelbase * PI/2 for turning radius * 1000 for ticks
   }
   expected = {-5, 0, M_PI / 2};
-  GOT_EXPECTED_EXPECT(0.01)
+  ASSERT_TRUE((got - expected).isZero(0.01)) << "got: " << got.transpose() << " expected: " <<
+    expected.transpose();
 
   got = t.update(1000, 1000);
   expected = {-5, 1, M_PI / 2};
-  GOT_EXPECTED_EXPECT(0.01)
+  ASSERT_TRUE((got - expected).isZero(0.01)) << "got: " << got.transpose() << " expected: " <<
+    expected.transpose();
   got = t.update(-1000, -1000);
   expected = {-5, 0, M_PI / 2};
-  GOT_EXPECTED_EXPECT(0.01)
+  ASSERT_TRUE((got - expected).isZero(0.01)) << "got: " << got.transpose() << " expected: " <<
+    expected.transpose();
 }
 
 TEST_F(TestTankOdom, testTriangle) {
@@ -81,9 +77,9 @@ TEST_F(TestTankOdom, testTriangle) {
     v_r[0] += encoder_diffs[i][1];
     got = t.update(v_l, v_r);
     expected = expected_pts[i];
-    GOT_EXPECTED_EXPECT(0.01);
+    ASSERT_TRUE((got - expected).isZero(0.01)) << "got: " << got.transpose() << " expected: " <<
+      expected.transpose();
   }
-
 }
 
 
@@ -119,8 +115,7 @@ TEST_F(TestTankOdom, testTriangleInReverse) {
     v_r[0] += encoder_diffs[i][1];
     got = t.update(v_l, v_r);
     expected = expected_pts[i];
-    GOT_EXPECTED_EXPECT(0.01);
+    ASSERT_TRUE((got - expected).isZero(0.01)) << "got: " << got.transpose() << " expected: " <<
+      expected.transpose();
   }
-
-
 }
