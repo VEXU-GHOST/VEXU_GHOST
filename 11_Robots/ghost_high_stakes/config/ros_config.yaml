@@ -58,6 +58,7 @@ competition_state_machine_node:
     backup_pose_topic: "/odom_ekf/odometry"
     pose_topic: "/map_ekf/odometry"
 
+
     tank_robot_plugin:
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
@@ -101,6 +102,7 @@ competition_state_machine_node:
       des_twist_topic: "/des_vel"
       cur_twist_topic: "/cur_vel"
       des_pos_topic: "/des_pos"
+      use_backup_estimator: true
 
     behavior_tree:
       cubic_planner_topic: "/motion_planner/cubic_command"
@@ -1581,23 +1583,3 @@ map_ekf_node:
         1e-9,
       ]
     dynamic_process_noise_covariance: true
-
-cubic_motion_planner:
-  ros__parameters:
-    command_topic: "/motion_planner/cubic_command"
-
-    trajectory_topic: "/motion_planner/trajectory"
-
-    odom_topic: "/map_ekf/odometry"
-
-trapezoid_motion_planner:
-  ros__parameters:
-    command_topic: "/motion_planner/trapezoid_command"
-
-    trajectory_topic: "/motion_planner/trajectory"
-
-    odom_topic: "/map_ekf/odometry"
-    
-    acceleration: 1.0
-
-    badCase_timeout: 5.0

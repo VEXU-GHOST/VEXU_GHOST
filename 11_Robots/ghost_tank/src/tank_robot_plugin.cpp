@@ -88,8 +88,13 @@ void TankRobotPlugin::initialize()
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
 
-  //node_ptr_->declare_parameter("backup_pose_topic", "/odometry/filtered");
-  //std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
+  node_ptr_->declare_parameter("backup_pose_topic", "/odom_ekf/odometry");
+  std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
+  m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
+
+  std::cout << "backup: " << m_use_backup_estimator << std::endl;
 
   node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
   std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
@@ -177,6 +182,11 @@ void TankRobotPlugin::initialize()
     pose_topic,
     10,
     std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
+
+  m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
+    backup_pose_topic,
+    10,
+    std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
 
   m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
     odom_topic,
@@ -648,9 +658,9 @@ void TankRobotPlugin::readPathFromFile(const std::string& filename) {
 }
 
 void TankRobotPlugin::movePointToPoint(){
-    float search_radius = 0.30; 
+    float search_radius = 0.15; 
     static int past_index = 0; 
-    int next_index = 0; 
+    static int next_index = 0; 
     double current_x = m_curr_odom_pose.x();
     double current_y = m_curr_odom_pose.y();
     double current_angle = m_curr_odom_pose.z();
@@ -674,7 +684,7 @@ void TankRobotPlugin::movePointToPoint(){
     std::cout << "size:" << x_values.size() << std::endl;
     double dx = x_values[next_index] - current_x;
     double dy = y_values[next_index] - current_y;
-    double goal_radians = atan2(dx, dy);
+    double goal_radians = atan2(dy, dx);
     // double goal_degrees = angle_radians * (double)(180/3.14159265358987932);
     // if (goal_degrees <= 0){
     //     goal_degrees += 360;
@@ -695,7 +705,7 @@ void TankRobotPlugin::movePointToPoint(){
     std::cout << "dy:" << dy << std::endl;
     std::cout << "dtheta:" << turn_rad << std::endl;
     
-    m_tank_model_ptr->driveCommand(distance * 0.5, turn_rad / 3.14 / 1.0);
+    m_tank_model_ptr->driveCommand(distance * 1.0, turn_rad / 3.14 / 1.0);
   }
 }
 
