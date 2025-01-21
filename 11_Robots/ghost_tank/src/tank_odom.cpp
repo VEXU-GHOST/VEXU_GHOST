@@ -54,8 +54,8 @@ Eigen::Vector3d TankOdometry::update(
 
 
 Eigen::Vector3d TankOdometry::update(
-  Eigen::VectorX<long> l_wheel_pos_arr,
-  Eigen::VectorX<long> r_wheel_pos_arr)
+  const Eigen::VectorX<long> & l_wheel_pos_arr,
+  const Eigen::VectorX<long> & r_wheel_pos_arr)
 {
   Eigen::VectorX<long> l_vel_arr =
     m_prev_l_ticks.size() ==

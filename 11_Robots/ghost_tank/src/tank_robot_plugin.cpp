@@ -248,7 +248,7 @@ void TankRobotPlugin::initialize()
     node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
 
 
-  odom = std::make_shared<TankOdometry>(
+  m_odom_ptr = std::make_shared<TankOdometry>(
     motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * ghost_util::INCHES_TO_METERS, wheel_base_inches * ghost_util::INCHES_TO_METERS
   );
 
@@ -294,7 +294,7 @@ void TankRobotPlugin::onNewSensorData()
     l_pos.push_back(rhi_ptr_->getMotorPosition(name));
   }
 
-  odom->update(
+  m_odom_ptr->update(
     Eigen::Map<Eigen::VectorX<long>>(l_pos.data(), l_pos.size()),
     Eigen::Map<Eigen::VectorX<long>>(r_pos.data(), r_pos.size())
   );
@@ -428,39 +428,6 @@ void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry:
 //     btn_r_pressed = false;
 //   }
 // }
-
-void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
-{
-  if (!m_use_backup_estimator) {
-    double theta = ghost_util::quaternionToYawRad(
-      msg->pose.pose.orientation.w,
-      msg->pose.pose.orientation.x,
-      msg->pose.pose.orientation.y,
-      msg->pose.pose.orientation.z);
-    m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
-    m_tank_model_ptr->setWorldTwist(
-      msg->twist.twist.linear.x,
-      msg->twist.twist.linear.y,
-      msg->twist.twist.angular.z);
-  }
-}
-
-void TankRobotPlugin::worldOdometryUpdateCallbackBackup(
-  const nav_msgs::msg::Odometry::SharedPtr msg)
-{
-  if (m_use_backup_estimator) {
-    double theta = ghost_util::quaternionToYawRad(
-      msg->pose.pose.orientation.w,
-      msg->pose.pose.orientation.x,
-      msg->pose.pose.orientation.y,
-      msg->pose.pose.orientation.z);
-    m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
-    m_tank_model_ptr->setWorldTwist(
-      msg->twist.twist.linear.x,
-      msg->twist.twist.linear.y,
-      msg->twist.twist.angular.z);
-  }
-}
 
 void TankRobotPlugin::publishBaseTwist()
 {
