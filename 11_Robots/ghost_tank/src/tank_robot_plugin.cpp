@@ -39,6 +39,37 @@ TankRobotPlugin::TankRobotPlugin()
 {
   // TODO: test and implement digital io in rhi
   m_digital_io = std::vector<bool>(8, false);
+  // m_digital_io_name_map = std::unordered_map<std::string, size_t>{
+  //   {"tail", 0},
+  //   {"claw", 1}
+  // };
+
+  m_right_drive_motor_names = {
+    "drive_r1",
+    "drive_r2",
+    "drive_r3",
+    "drive_r4",
+    "drive_r5",
+    "drive_r6",
+  };
+  m_left_drive_motor_names = {
+    "drive_l1",
+    "drive_l2",
+    "drive_l3",
+    "drive_l4",
+    "drive_l5",
+    "drive_l6",
+  };
+
+  m_all_motor_names.insert(
+    m_all_motor_names.end(),
+    m_right_drive_motor_names.begin(),
+    m_right_drive_motor_names.end());
+
+  m_all_motor_names.insert(
+    m_all_motor_names.end(),
+    m_left_drive_motor_names.begin(),
+    m_left_drive_motor_names.end());
 }
 
 void TankRobotPlugin::initialize()
@@ -91,18 +122,18 @@ void TankRobotPlugin::initialize()
   // Setup tank Model
   TankConfig tank_model_config;
   std::vector<std::string> motor_list = {
-    "drive_ltr",
-    "drive_lbr",
-    "drive_ltf",
-    "drive_lbf",
-    "drive_lttf",
-    "indexer_right",
-    "indexer_left",
-    "drive_rttf",
-    "drive_rtr",
-    "drive_rbr",
-    "drive_rtf",
-    "drive_rbf"
+    "drive_l1",
+    "drive_l2",
+    "drive_l3",
+    "drive_l4",
+    "drive_l5",
+    "drive_l6",
+    "drive_r1",
+    "drive_r2",
+    "drive_r3",
+    "drive_r4",
+    "drive_r5",
+    "drive_r6",
   };
   tank_model_config.motor_list = motor_list;
   tank_model_config.wheel_radius = 2.75 / 2.0; //in
@@ -174,10 +205,9 @@ void TankRobotPlugin::initialize()
     cmd_pose_topic,
     10);
 
-  m_imu_sub = node_ptr_->create_subscription<sensor_msgs::msg::Imu>(
-    "/camera/camera/imu",
-    10,
-    std::bind(&TankRobotPlugin::imuUpdateCallback, this, _1));
+  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
+    "/sensors/imu",
+    10);
 
   node_ptr_->declare_parameter("des_twist_topic", "/des_vel");
   std::string des_twist_topic = node_ptr_->get_parameter("des_twist_topic").as_string();
@@ -197,6 +227,10 @@ void TankRobotPlugin::initialize()
     des_pos_topic,
     10);
 
+  bt_ = std::make_shared<TankTree>(bt_path);
+  // bt_interaction_ = std::make_shared<TankTree>(bt_path_interaction);
+
+  m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
 
   double motor_ticks_per_rotation, drive_gear_ratio, wheel_size_inches, wheel_base_inches;
   node_ptr_->declare_parameter("drive_motor_ticks_per_rotation", motor_ticks_per_rotation);
@@ -214,13 +248,9 @@ void TankRobotPlugin::initialize()
     node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
 
 
-  // blue motor is 300, TODO put this in config files
-  //300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS / 2., 12.5 * ghost_util::INCHES_TO_METERS
   odom = std::make_shared<TankOdometry>(
     motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * ghost_util::INCHES_TO_METERS, wheel_base_inches * ghost_util::INCHES_TO_METERS
   );
-  bt_ = std::make_shared<TankTree>(
-    bt_path);
 
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
@@ -232,33 +262,36 @@ void TankRobotPlugin::initialize()
 
 void TankRobotPlugin::onNewSensorData()
 {
+  sensor_msgs::msg::Imu imu_msg{};
+  imu_msg.header.frame_id = "imu_link";
+  imu_msg.header.stamp = node_ptr_->get_clock()->now();
+  // imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
+  // imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
+  // imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
+  imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
+  imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
+  imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+  double yaw = -rhi_ptr_->getInertialSensorHeading("imu");
+  ghost_util::yawToQuaternionDeg(
+    yaw, imu_msg.orientation.w, imu_msg.orientation.x,
+    imu_msg.orientation.y, imu_msg.orientation.z);
+  imu_pub->publish(imu_msg);
+
+  //m_tank_model_ptr->updateTankModel();
+
+  // publishOdometry();
   // publishVisualization();
   // publishTrajectoryVisualization();
 
-  std::vector<std::string> motor_list = {
-    "drive_ltr",
-    "drive_lbr",
-    "drive_ltf",
-    "drive_lbf",
-    "drive_lttf",
-    "drive_rttf",
-    "drive_rtr",
-    "drive_rbr",
-    "drive_rtf",
-    "drive_rbf"
-  };
+
   std::vector<long> r_pos;
   std::vector<long> l_pos;
-  for (const std::string s : motor_list) {
-    long p = rhi_ptr_->getMotorPosition(s);
-    if (s.at(6) == 'r') {
-      r_pos.push_back(p);
-    } else if (s.at(6) == 'l') {
-      l_pos.push_back(p);
-    } else {
-      RCLCPP_ERROR(node_ptr_->get_logger(), "Odom: Motor Name Error");
-      std::cout << "Odom: Motor Name Error\n";
-    }
+
+  for (const auto & name : m_right_drive_motor_names) {
+    r_pos.push_back(rhi_ptr_->getMotorPosition(name));
+  }
+  for (const auto & name : m_left_drive_motor_names) {
+    l_pos.push_back(rhi_ptr_->getMotorPosition(name));
   }
 
   odom->update(
@@ -266,6 +299,8 @@ void TankRobotPlugin::onNewSensorData()
     Eigen::Map<Eigen::VectorX<long>>(r_pos.data(), r_pos.size())
   );
   publishOdometry();
+  // publishVisualization();
+  // publishTrajectoryVisualization();
 }
 
 void TankRobotPlugin::disabled()
@@ -275,7 +310,6 @@ void TankRobotPlugin::disabled()
 void TankRobotPlugin::autonomous(double current_time)
 {
   std::cout << "Autonomous: " << current_time << std::endl;
-  std::cout << "Is First Auton: " << m_is_first_auton_loop << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
 
   bt_->tick_tree();
@@ -302,13 +336,6 @@ void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
   // std::cout << "Teleop: " << current_time << std::endl;
-
-
-  if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
-    joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
-  {
-    std::system("echo 1 | sudo -S shutdown now");
-  }
 
   if (joy_data->btn_u) {
     if (!m_auton_button_pressed) {
@@ -338,54 +365,8 @@ void TankRobotPlugin::teleop(double current_time)
       m_recording_btn_pressed = false;
     }
 
-    // m_curr_x_cmd = joy_data->left_x / 127.0;             // * scale;
-    // m_curr_y_cmd = joy_data->left_y / 127.0;             // * scale;
-    // m_curr_theta_cmd = joy_data->right_x / 127.0;             // * scale;
-
-    // m_tank_model_ptr->drivecommandthing(
-    //   m_curr_x_cmd, m_curr_y_cmd,
-    //   m_curr_theta_cmd);
-
-    // m_last_x_cmd = m_curr_x_cmd;
-    // m_last_y_cmd = m_curr_y_cmd;
-    // m_last_theta_cmd = m_curr_theta_cmd;
-
-    double forward_vel = joy_data->left_y / 127.0;
-    double angular_vel = joy_data->right_x / 127.0;
-
-    double threshold = 0.05;
-    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
-
-    double left_cmd = forward_vel + angular_vel;
-    double right_cmd = forward_vel - angular_vel;
-
-    std::vector<std::string> motor_list = {
-      "drive_ltr",
-      "drive_lbr",
-      "drive_ltf",
-      "drive_lbf",
-      "drive_lttf",
-      "indexer_right",
-      "indexer_left",
-      "drive_rttf",
-      "drive_rtr",
-      "drive_rbr",
-      "drive_rtf",
-      "drive_rbf"
-    };
-
-    for (const auto motor_name: motor_list) {
-      rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
-    }
-
-    for (int i = 0; i < 5; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
-    }
-
-    for (int i = 7; i < 12; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
-    }
+    m_tank_model_ptr->driveCommandJoystick(
+      joy_data->left_y, joy_data->right_x, 0.05);
 
     double intake_power = 0;
     if (joy_data->btn_r2) {
@@ -396,8 +377,8 @@ void TankRobotPlugin::teleop(double current_time)
       intake_power = 0.0;
     }
 
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
+    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
+    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
 
     static bool forklift_pressed = false;
     static bool forklift_up = false;
@@ -448,19 +429,52 @@ void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry:
 //   }
 // }
 
-void TankRobotPlugin::imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
+void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  // TODO do we even need this anymore
-  m_imu_yaw = ghost_util::quaternionToYawRad(
-    msg->orientation.w,
-    msg->orientation.x,
-    msg->orientation.y,
-    msg->orientation.z);
+  if (!m_use_backup_estimator) {
+    double theta = ghost_util::quaternionToYawRad(
+      msg->pose.pose.orientation.w,
+      msg->pose.pose.orientation.x,
+      msg->pose.pose.orientation.y,
+      msg->pose.pose.orientation.z);
+    m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
+    m_tank_model_ptr->setWorldTwist(
+      msg->twist.twist.linear.x,
+      msg->twist.twist.linear.y,
+      msg->twist.twist.angular.z);
+  }
+}
+
+void TankRobotPlugin::worldOdometryUpdateCallbackBackup(
+  const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  if (m_use_backup_estimator) {
+    double theta = ghost_util::quaternionToYawRad(
+      msg->pose.pose.orientation.w,
+      msg->pose.pose.orientation.x,
+      msg->pose.pose.orientation.y,
+      msg->pose.pose.orientation.z);
+    m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
+    m_tank_model_ptr->setWorldTwist(
+      msg->twist.twist.linear.x,
+      msg->twist.twist.linear.y,
+      msg->twist.twist.angular.z);
+  }
+}
+
+void TankRobotPlugin::publishBaseTwist()
+{
+  //geometry_msgs::msg::Twist msg{};
+  //auto base_vel_cmd = m_tank_model_ptr->getBaseVelocityCommand();
+  //msg.linear.x = base_vel_cmd.x();
+  //msg.linear.y = base_vel_cmd.y();
+  //msg.angular.z = base_vel_cmd.z();
+  //m_base_twist_cmd_pub->publish(msg);
 }
 
 void TankRobotPlugin::publishOdometry()
 {
-  m_curr_odom_pose = odom->getPose();
+  m_curr_odom_pose = m_odom_ptr->getPose();
 
   nav_msgs::msg::Odometry msg{};
   msg.header.frame_id = "odom";

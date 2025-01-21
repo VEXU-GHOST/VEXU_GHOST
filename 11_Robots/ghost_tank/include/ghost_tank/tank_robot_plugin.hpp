@@ -60,6 +60,7 @@ protected:
   // Publishers
   void publishVisualization();
   void publishOdometry();
+  void publishBaseTwist();
   void publishTrajectoryVisualization();
   void resetPose(double x, double y, double theta);
 
@@ -83,8 +84,11 @@ protected:
   // Subscribers
   void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
+
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
@@ -106,7 +110,7 @@ protected:
   double m_move_to_pose_kd_theta = 0.0;
 
   // Odometry
-  std::shared_ptr<TankOdometry> odom;
+  std::shared_ptr<TankOdometry> m_odom_ptr;
   double m_imu_yaw;
   Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
 
@@ -131,6 +135,7 @@ protected:
   double m_init_world_x = 0.0;
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
+  bool m_use_backup_estimator = false;
 
   // Digital IO
   std::vector<bool> m_digital_io;
@@ -177,6 +182,10 @@ protected:
   bool m_intake_cooling_down = false;
 
   bool m_interaction_started = false;
+
+  std::vector<std::string> m_right_drive_motor_names;
+  std::vector<std::string> m_left_drive_motor_names;
+  std::vector<std::string> m_all_motor_names;
 };
 
 } // namespace ghost_tank
