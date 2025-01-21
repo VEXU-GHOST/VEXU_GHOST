@@ -27,6 +27,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <vector>
+#include "eigen3/Eigen/Dense"
 
 namespace ghost_util
 {
@@ -54,4 +55,5 @@ double clampedLinearInterpolate(
   const std::vector<double> & y_data,
   const double desired_x);
 
+double median(const Eigen::VectorX<long> & v);
 }
