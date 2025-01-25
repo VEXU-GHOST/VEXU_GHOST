@@ -121,21 +121,7 @@ void TankRobotPlugin::initialize()
 
   // Setup tank Model
   TankConfig tank_model_config;
-  std::vector<std::string> motor_list = {
-    "drive_l1",
-    "drive_l2",
-    "drive_l3",
-    "drive_l4",
-    "drive_l5",
-    "drive_l6",
-    "drive_r1",
-    "drive_r2",
-    "drive_r3",
-    "drive_r4",
-    "drive_r5",
-    "drive_r6",
-  };
-  tank_model_config.motor_list = motor_list;
+  tank_model_config.motor_list = m_all_motor_names;
   tank_model_config.wheel_radius = 2.75 / 2.0; //in
   tank_model_config.wheel_gear_ratio = 1.0;
   tank_model_config.wheel_dist = 7.5; //in
@@ -181,48 +167,50 @@ void TankRobotPlugin::initialize()
     trajectory_marker_topic,
     10);
 
-  node_ptr_->declare_parameter("cmd_twist_topic", "/cmd_vel");
-  std::string cmd_twist_topic = node_ptr_->get_parameter("cmd_twist_topic").as_string();
+  node_ptr_->declare_parameter("tank_robot_plugin.cmd_twist_topic", "/cmd_vel");
+  std::string cmd_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
   m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     cmd_twist_topic,
     10);
 
-  node_ptr_->declare_parameter("bag_recorder_start_topic", "bag_recorder/start");
+  node_ptr_->declare_parameter("tank_robot_plugin.bag_recorder_start_topic", "bag_recorder/start");
   std::string bag_recorder_start_topic =
-    node_ptr_->get_parameter("bag_recorder_start_topic").as_string();
+    node_ptr_->get_parameter("tank_robot_plugin.bag_recorder_start_topic").as_string();
   m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
     bag_recorder_start_topic);
 
-  node_ptr_->declare_parameter("bag_recorder_stop_topic", "bag_recorder/stop");
+  node_ptr_->declare_parameter("tank_robot_plugin.bag_recorder_stop_topic", "bag_recorder/stop");
   std::string bag_recorder_stop_topic =
-    node_ptr_->get_parameter("bag_recorder_stop_topic").as_string();
+    node_ptr_->get_parameter("tank_robot_plugin.bag_recorder_stop_topic").as_string();
   m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
     bag_recorder_stop_topic);
 
-  node_ptr_->declare_parameter("cmd_pose_topic", "/set_pose");
-  std::string cmd_pose_topic = node_ptr_->get_parameter("cmd_pose_topic").as_string();
+  node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
+  std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
   m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     cmd_pose_topic,
     10);
-
+    
+  node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
+  std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
   imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
-    "/sensors/imu",
+    input_imu_topic,
     10);
 
-  node_ptr_->declare_parameter("des_twist_topic", "/des_vel");
-  std::string des_twist_topic = node_ptr_->get_parameter("des_twist_topic").as_string();
+  node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
+  std::string des_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
   m_des_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     des_twist_topic,
     10);
 
-  node_ptr_->declare_parameter("cur_twist_topic", "/cur_vel");
-  std::string cur_twist_topic = node_ptr_->get_parameter("cur_twist_topic").as_string();
+  node_ptr_->declare_parameter("tank_robot_plugin.cur_twist_topic", "/cur_vel");
+  std::string cur_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
   m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     cur_twist_topic,
     10);
 
-  node_ptr_->declare_parameter("des_pos_topic", "/des_pos");
-  std::string des_pos_topic = node_ptr_->get_parameter("des_pos_topic").as_string();
+  node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
+  std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
   m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
     des_pos_topic,
     10);
@@ -276,13 +264,6 @@ void TankRobotPlugin::onNewSensorData()
     yaw, imu_msg.orientation.w, imu_msg.orientation.x,
     imu_msg.orientation.y, imu_msg.orientation.z);
   imu_pub->publish(imu_msg);
-
-  //m_tank_model_ptr->updateTankModel();
-
-  // publishOdometry();
-  // publishVisualization();
-  // publishTrajectoryVisualization();
-
 
   std::vector<long> r_pos;
   std::vector<long> l_pos;
@@ -398,25 +379,37 @@ void TankRobotPlugin::teleop(double current_time)
   }
 }
 
-
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  // TODO: implement this.
-  // This is the post-filtered absolute source of truth for autonomous odom
-  // don't know where to store this yet
+  if (!m_use_backup_estimator) {
+    double theta = ghost_util::quaternionToYawRad(
+      msg->pose.pose.orientation.w,
+      msg->pose.pose.orientation.x,
+      msg->pose.pose.orientation.y,
+      msg->pose.pose.orientation.z);
+    m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
+    m_tank_model_ptr->setWorldTwist(
+      msg->twist.twist.linear.x,
+      msg->twist.twist.linear.y,
+      msg->twist.twist.angular.z);
+  }
+}
 
-  double theta = ghost_util::quaternionToYawRad(
-    msg->pose.pose.orientation.w,
-    msg->pose.pose.orientation.x,
-    msg->pose.pose.orientation.y,
-    msg->pose.pose.orientation.z);
-
-  //m_swerve_model_ptr->setWorldLocation(msg->pose.pose.position.x, msg->pose.pose.position.y);
-  //m_swerve_model_ptr->setWorldAngleRad(theta);
-  //m_swerve_model_ptr->setWorldTranslationalVelocity(
-  //  msg->twist.twist.linear.x,
-  //  msg->twist.twist.linear.y);
-  //m_swerve_model_ptr->setWorldAngularVelocity(msg->twist.twist.angular.z);
+void TankRobotPlugin::worldOdometryUpdateCallbackBackup(
+  const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  if (m_use_backup_estimator) {
+    double theta = ghost_util::quaternionToYawRad(
+      msg->pose.pose.orientation.w,
+      msg->pose.pose.orientation.x,
+      msg->pose.pose.orientation.y,
+      msg->pose.pose.orientation.z);
+    m_tank_model_ptr->setWorldPose(msg->pose.pose.position.x, msg->pose.pose.position.y, theta);
+    m_tank_model_ptr->setWorldTwist(
+      msg->twist.twist.linear.x,
+      msg->twist.twist.linear.y,
+      msg->twist.twist.angular.z);
+  }
 }
 // make a class for this
 // void TankRobotPlugin::onButtonPress(bool button){
@@ -451,6 +444,9 @@ void TankRobotPlugin::publishOdometry()
   msg.pose.pose.position.x = m_curr_odom_pose.x();
   msg.pose.pose.position.y = m_curr_odom_pose.y();
   msg.pose.pose.position.z = 0.0;
+  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)){
+    printf("ROBOT MOVED ANGLE IS %f\n", m_curr_odom_pose.z());
+  }
   ghost_util::yawToQuaternionRad(
     m_curr_odom_pose.z(),
     msg.pose.pose.orientation.w,

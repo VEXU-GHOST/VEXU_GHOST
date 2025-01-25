@@ -54,7 +54,7 @@ private:
   Eigen::VectorX<long> m_prev_l_ticks;
   Eigen::VectorX<long> m_prev_r_ticks;
 
-  Eigen::Vector3d m_cur_pos;
+  Eigen::Vector3d m_cur_pos = Eigen::Vector3d::Zero();
 
   double m_meters_per_tick;
   double m_wheelbase;
