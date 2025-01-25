@@ -21,6 +21,10 @@ int readPathFromFile(std::string filename, std::vector<double> &x_values, std::v
     //std::vector<double> y_values;
    // std::vector<double> angle_values;
 
+   //this method transformed to fit JerryPathIO (treats center as 0) 
+   //to Ghost convention (bottow right corner as 0). At bottom 0 corner, 
+   //we want both axis to be positive (left = positive, top= positive)
+
     std::string line;
     // Read the file line by line
     while (std::getline(file, line)) {
@@ -30,12 +34,12 @@ int readPathFromFile(std::string filename, std::vector<double> &x_values, std::v
         // Read X value
         if (std::getline(ss, value, ',')) {
             //std::cout << value << " ";
-            x_values.push_back(std::stod(value) / 100.0);
+            y_values.push_back((std::stod(value) / 100.0)+ 1.83);
         }
         
         // Read Y value
         if (std::getline(ss, value, ',')) {
-           y_values.push_back(std::stod(value) / 100.0);
+           x_values.push_back((std::stod(value) / -100.0)+1.83);
         }
         
         // Read Angle value

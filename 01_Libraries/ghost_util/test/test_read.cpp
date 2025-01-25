@@ -24,7 +24,7 @@ TEST_F(TESTREAD, testReadstuff) {
 
   
 
-    readPathFromFile("/home/jakew/VEXU_GHOST/01_Libraries/ghost_util/test/config/path.txt",x_values, y_values, angle_values);
+    readPathFromFile("/home/johnny/VEXU_GHOST/01_Libraries/ghost_util/test/config/path.txt",x_values, y_values, angle_values);
 
     EXPECT_EQ(x_values, expected_x);
     EXPECT_EQ(y_values, expected_y);
