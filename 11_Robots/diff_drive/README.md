@@ -1,0 +1,2 @@
+This package contains C++ code for a differential drive and an iLQR model. It needs to be refactored from Eigen to Casadi to utilize Casadi's symbolic variables.
+For a more complete working package, see ```03_ROS/ghost_ilqr```.
