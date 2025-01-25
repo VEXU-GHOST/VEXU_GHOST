@@ -72,7 +72,7 @@ competition_state_machine_node:
       des_twist_topic: "/des_vel"
       cur_twist_topic: "/cur_vel"
       des_pos_topic: "/des_pos"
-      drive_motor_ticks_per_rotation: 300.
+      drive_motor_ticks_per_rotation: 300.0
       drive_gear_ratio: 1.15 # 23/20
       drive_wheel_size_inches: 2.75
       wheel_base_inches: 12.5
