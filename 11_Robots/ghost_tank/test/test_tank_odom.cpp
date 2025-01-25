@@ -60,13 +60,15 @@ TEST(TestTankOdom, testTriangle) {
     {0, 0, 0},
   };
 
-  Eigen::Vector<long, 1> v_l(0);
-  Eigen::Vector<long, 1> v_r(0);
+  Eigen::Vector<long, 3> v_l = {0, 0, 0};
+  Eigen::Vector<long, 2> v_r = {0,1};
   for (int i = 0; i < expected_pts.size(); i++) {
     ASSERT_LT(i, encoder_diffs.size());
 
     v_l[0] += encoder_diffs[i][0];
+    v_l[1] += encoder_diffs[i][0];
     v_r[0] += encoder_diffs[i][1];
+    v_r[1] += encoder_diffs[i][1];
     got = t.update(v_l, v_r);
     expected = expected_pts[i];
     ASSERT_TRUE((got - expected).isZero(0.01)) << "got: " << got.transpose() << " expected: " <<
@@ -98,12 +100,13 @@ TEST(TestTankOdom, testTriangleInReverse) {
   };
 
 
-  Eigen::Vector<long, 1> v_l(0);
+  Eigen::Vector<long, 2> v_l(0, -1);
   Eigen::Vector<long, 1> v_r(0);
   for (int i = 0; i < expected_pts.size(); i++) {
     ASSERT_LT(i, encoder_diffs.size());
 
     v_l[0] += encoder_diffs[i][0];
+    v_l[1] += encoder_diffs[i][0];
     v_r[0] += encoder_diffs[i][1];
     got = t.update(v_l, v_r);
     expected = expected_pts[i];

@@ -232,21 +232,23 @@ void TankRobotPlugin::initialize()
 
   m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
 
-  double motor_ticks_per_rotation, drive_gear_ratio, wheel_size_inches, wheel_base_inches;
-  node_ptr_->declare_parameter("drive_motor_ticks_per_rotation", motor_ticks_per_rotation);
-  node_ptr_->declare_parameter("drive_gear_ratio", drive_gear_ratio);
-  node_ptr_->declare_parameter("drive_wheel_size_inches", wheel_size_inches);
-  node_ptr_->declare_parameter("wheel_base_inches", wheel_base_inches);
+  double motor_ticks_per_rotation = 0, drive_gear_ratio = 0, wheel_size_inches = 0,
+    wheel_base_inches = 0;
+  node_ptr_->declare_parameter(
+    "tank_robot_plugin.drive_motor_ticks_per_rotation",
+    motor_ticks_per_rotation);
+  node_ptr_->declare_parameter("tank_robot_plugin.drive_gear_ratio", drive_gear_ratio);
+  node_ptr_->declare_parameter("tank_robot_plugin.drive_wheel_size_inches", wheel_size_inches);
+  node_ptr_->declare_parameter("tank_robot_plugin.wheel_base_inches", wheel_base_inches);
 
   motor_ticks_per_rotation =
-    node_ptr_->get_parameter("drive_motor_ticks_per_rotation").as_double();
+    node_ptr_->get_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation").as_double();
   drive_gear_ratio =
-    node_ptr_->get_parameter("drive_gear_ratio").as_double();
+    node_ptr_->get_parameter("tank_robot_plugin.drive_gear_ratio").as_double();
   wheel_size_inches =
-    node_ptr_->get_parameter("drive_wheel_size_inches").as_double();
+    node_ptr_->get_parameter("tank_robot_plugin.drive_wheel_size_inches").as_double();
   wheel_base_inches =
-    node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
-
+    node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
 
   m_odom_ptr = std::make_shared<TankOdometry>(
     motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * ghost_util::INCHES_TO_METERS, wheel_base_inches * ghost_util::INCHES_TO_METERS
