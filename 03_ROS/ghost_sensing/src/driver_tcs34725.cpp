@@ -77,7 +77,7 @@
 /**
  * @brief iic address definition
  */
-#define TCS34725_ADDRESS        (0x29 << 1)        /**< iic address */
+#define TCS34725_ADDRESS        (0x29 )        /**< iic address */
 
 /**
  * @brief     enable or disable the rgbc interrupt
@@ -1149,6 +1149,7 @@ uint8_t tcs34725_init(tcs34725_handle_t *handle)
         
         return 1;                                                                        /* return error */
     }
+    handle->debug_print("tcs34725: found id is 0x%x\n", id);
     if ((id != 0x44) && (id != 0x4D))                                                    /* check id */
     {
         handle->debug_print("tcs34725: id is error.\n");                                 /* id is error */
