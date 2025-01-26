@@ -4,23 +4,29 @@ from rclpy.node import Node
 import math
 from nav_msgs.msg import Path, Odometry
 from geometry_msgs.msg import Pose, Quaternion
-# Make plt.show() responsive to ctrl+c
-# import signal
-# signal.signal(signal.SIGINT, signal.SIG_DFL)
-# from lqr import LQR
-from ilqr import iLQR
-from diff_drive_model import DiffDrive
+
+import sys
+sys.path.append('../')
+
+from ghost_ilqr.ilqr import iLQR
+from ghost_ilqr.diff_drive_model import DiffDrive
 
 class Controller(Node):
-    
     def __init__(self):
         super().__init__('ilqr_controller')
         self.odom_sub_ = self.create_subscription(Odometry, '/map_ekf/odometry', self.odom_callback, 10)
         self.path_pub_ = self.create_publisher(Path, 'ilqr_path', 10)
 
-        self.x_bar_data = np.empty()
-        self.y_bar_data = np.empty()
-        self.tht_bar_data = np.empty()
+        self.declare_parameter('t_horizon', rclpy.Parameter.Type.DOUBLE)
+        self.declare_parameter('del_t', rclpy.Parameter.Type.DOUBLE)
+        
+        self.t_horizon_ = self.get_parameter('t_horizon').value
+        self.del_t_ = self.get_parameter('del_t').value
+
+        t_range = np.arange(0.0, self.t_horizon_, self.del_t_)
+        self.x_bar_data = np.zeros((t_range.size, 1))
+        self.y_bar_data = np.zeros((t_range.size, 1))
+        self.tht_bar_data = np.zeros((t_range.size, 1))
 
     """
     Quaternion as wxyz
@@ -41,9 +47,9 @@ class Controller(Node):
         Declare constants and state variables
         """
         run_dynamics = False
-        Ts = 0.1
-        t_total = 10.0
-        t_range = np.arange(0, t_total, Ts)
+
+        t_range = np.arange(0, self.t_horizon_, self.del_t_)
+        
         # States. vl_wheel and vr_wheel are linear velocities of wheels
         n = np.size(np.array(['x', 'y','tht', 'vl_wheel', 'vr_wheel'])) # states
         m = np.size(np.array(['l_volts', 'r_volts'])) # states
@@ -64,14 +70,14 @@ class Controller(Node):
         """
         Create Differential Drive model
         """
-        drive = DiffDrive(Ts, n, m)
+        drive = DiffDrive(self.del_t_, n, m)
 
 
         """
         Initialize iLQR
         """
         x_exit = 1e-3
-        ilqr = iLQR(Ts, t_total, drive, X_0, U_0)
+        ilqr = iLQR(self.del_t_, self.t_horizon_, drive, X_0, U_0)
 
 
         """
@@ -112,7 +118,7 @@ class Controller(Node):
         Loop until a more optimal trajectory is found
         """
         while mag_diff <= x_exit:
-            ilqr = iLQR(Ts, t_total, drive, old_x_data, old_u_data)
+            ilqr = iLQR(self.del_t_, self.t_horizon_, drive, old_x_data, old_u_data)
             ilqr.get_linear_dyn()
             del_u_star_data, V_star_data = ilqr.back_pass(old_x_data, old_u_data)
             x_data, u_data = ilqr.for_pass(old_x_data, list(reversed(del_u_star_data.values())), old_u_data)
@@ -157,6 +163,7 @@ class Controller(Node):
 
 
 def main(args=None):
+    rclpy.init(args=args)
     """
     Spin controller node
     """

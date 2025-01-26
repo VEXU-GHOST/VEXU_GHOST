@@ -6,11 +6,11 @@ import math
 import sympy as sp
 from sympy import Symbol, Matrix, sin, cos
 from nav_msgs.msg import Path, Odometry
-# Make plt.show() responsive to ctrl+c
-# import signal
-# signal.signal(signal.SIGINT, signal.SIG_DFL)
-# from lqr import LQR
-from ilqr import iLQR
+
+import sys
+sys.path.append('../')
+
+from ghost_ilqr.ilqr import iLQR
 
 """
 Kinematic Differential Drive model

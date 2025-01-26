@@ -1,3 +1,5 @@
+import os
+from glob import glob
 from setuptools import find_packages, setup
 
 package_name = 'ghost_ilqr'
@@ -9,7 +11,10 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
+         (os.path.join('share', package_name), glob('ghost_ilqr/launch/*.launch.py')),
         ('share/' + package_name, ['package.xml']),
+        ('build/' + package_name, [package_name+'/ilqr.py']),
+        ('build/' + package_name, [package_name+'/diff_drive_model.py'])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -20,7 +25,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'ilqr = ghost_ilqr.controller:main'
+            'controller = ghost_ilqr.controller:main'
         ],
     },
 )
