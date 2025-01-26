@@ -25,7 +25,7 @@ def launch_setup(context, *args, **kwargs):
     doc = xml.toprettyxml(indent="  ")
 
     spawn_entity_args = (
-        "-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity ghost1 -topic robot_description"
+        "-x 0.3 -y 0.4 -z 1.0 -R 0.0 -P 0.0 -Y 1.5708 -entity ghost1 -topic robot_description"
     ).split()
 
     # Node to spawn robot model in Gazebo
@@ -127,7 +127,7 @@ def generate_launch_description():
             simulation,
             ekf_pf_node,
             rviz_node,
-            plot_juggler_node,
+            # plot_juggler_node,
             robot_localization_node,
             OpaqueFunction(function=launch_setup),
         ]

@@ -716,7 +716,13 @@ void TankRobotPlugin::movePointToPoint(){
     std::cout << "dy:" << dy << std::endl;
     std::cout << "dtheta:" << turn_rad << std::endl;
     
-    m_tank_model_ptr->driveCommand(distance * 0.2, turn_rad / 3.14 / 5.0);
+    double fwd_cmd = distance * 0.2;
+    double turn_cmd = turn_rad / 3.14 / 5.0;
+    geometry_msgs::msg::Twist msg{};
+    msg.linear.x = fwd_cmd;
+    msg.angular.z = turn_cmd;
+    m_base_twist_cmd_pub->publish(msg);
+    m_tank_model_ptr->driveCommand(fwd_cmd, turn_cmd);
   }
 }
 
