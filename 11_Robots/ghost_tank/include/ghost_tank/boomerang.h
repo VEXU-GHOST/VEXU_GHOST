@@ -58,6 +58,8 @@ public:
 
   void map_curve()
   {
+    std::cout << "map curve" << std::endl;
+    find_carrot();
     float x_next;
     float y_next;
     //float r_next;
@@ -73,6 +75,7 @@ public:
   {
 
     //finds next angle the robot needs to be oriented in to travel to next point.
+    std::cout << "find next point" << std::endl;
 
     float slope_y = points[1].y - st_y;
     float slope_x = points[1].x - st_x;
@@ -85,6 +88,8 @@ public:
       //this is the direction the robot must go
       next_theta = std::atan(std::abs(slope_y / slope_x));
     }
+    std::cout << "end of finding next point" << std::endl;
+
 
   }
 

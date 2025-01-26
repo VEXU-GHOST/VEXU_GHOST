@@ -312,12 +312,16 @@ void TankRobotPlugin::autonomous(double current_time)
   // msg.angular.z = angular_vel;
   m_base_twist_cmd_pub->publish(msg);
 
+  std::cout << "test" << std::endl;
   boomerang boom(curr_pose.x(), curr_pose.y(), curr_pose.z(), 5, 5, 3.14, 0.8);
+  std::cout << "test" << std::endl;
 
   pdControl pd(current_time, m_tank_model_ptr);
+  std::cout << "test" << std::endl;
 
   pd.linear_pid(curr_pose.x(), curr_pose.y(), boom.next_point_x, boom.next_point_y);
-  pd.angular_pid(curr_pose.z(), boom.next_theta);
+  std::cout << "test" << std::endl;
+  // pd.angular_pid(curr_pose.z(), boom.next_theta);
 
 }
 
