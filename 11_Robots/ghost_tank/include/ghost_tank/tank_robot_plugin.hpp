@@ -112,6 +112,7 @@ protected:
   double m_move_to_pose_kd_xy = 0.0;
   double m_move_to_pose_kp_theta = 0.0;
   double m_move_to_pose_kd_theta = 0.0;
+  double m_search_radius = 0.0;
 
   // Odometry
   std::shared_ptr<TankOdometry> m_odom_ptr;

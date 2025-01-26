@@ -102,7 +102,8 @@ competition_state_machine_node:
       des_twist_topic: "/des_vel"
       cur_twist_topic: "/cur_vel"
       des_pos_topic: "/des_pos"
-      use_backup_estimator: true
+      use_backup_estimator: false
+      search_radius: 0.3
 
     behavior_tree:
       cubic_planner_topic: "/motion_planner/cubic_command"

@@ -34,12 +34,12 @@ int readPathFromFile(std::string filename, std::vector<double> &x_values, std::v
         // Read X value
         if (std::getline(ss, value, ',')) {
             //std::cout << value << " ";
-            y_values.push_back((std::stod(value) / 100.0)+ 1.83);
+            y_values.push_back((std::stod(value) / -100.0)+ 1.83);
         }
         
         // Read Y value
         if (std::getline(ss, value, ',')) {
-           x_values.push_back((std::stod(value) / -100.0)+1.83);
+           x_values.push_back((std::stod(value) / 100.0)+ 1.83);
         }
         
         // Read Angle value

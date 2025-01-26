@@ -154,6 +154,9 @@ void TankRobotPlugin::initialize()
   tank_model_config.wheel_gear_ratio = 20.0 / 23.0;
   tank_model_config.wheel_dist = 7.5; //in
 
+  node_ptr_->declare_parameter("tank_robot_plugin.search_radius", m_search_radius);
+  m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
+
   // initial position params
   node_ptr_->declare_parameter("particle_filter.init_world_x", m_init_world_x);
   node_ptr_->declare_parameter("particle_filter.init_world_y", m_init_world_y);
@@ -255,6 +258,8 @@ void TankRobotPlugin::initialize()
   m_odom_ptr = std::make_shared<TankOdometry>(
     300. * 23. / 20., 2.75 * ghost_util::INCHES_TO_METERS / 2., 12.5 * ghost_util::INCHES_TO_METERS
   );
+  m_odom_ptr->resetPose();
+
 
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
@@ -395,6 +400,11 @@ void TankRobotPlugin::autonomous(double current_time)
   bt_->set_variable("auton_time_elapsed", current_time);
 
   // bt_->tick_tree();
+  static bool first_loop = true;
+  if (first_loop){
+    first_loop = false;
+    m_odom_ptr->resetPose();
+  }
 
   // Get best state estimate
   auto curr_pose = m_tank_model_ptr->getWorldPose();
@@ -658,12 +668,12 @@ void TankRobotPlugin::readPathFromFile(const std::string& filename) {
 }
 
 void TankRobotPlugin::movePointToPoint(){
-    float search_radius = 0.15; 
+    float search_radius = m_search_radius; 
     static int past_index = 0; 
     static int next_index = 0; 
     double current_x = m_curr_odom_pose.x();
     double current_y = m_curr_odom_pose.y();
-    double current_angle = m_curr_odom_pose.z();
+    double current_angle = m_curr_odom_pose.z() + 1.57;
     if (past_index == x_values.size()-1){
       return;
     }
@@ -691,6 +701,7 @@ void TankRobotPlugin::movePointToPoint(){
     // }
     //turn to goal angle 
     auto turn_rad = ghost_util::SmallestAngleDistRad(goal_radians, current_angle);
+
     auto turn_limit = 0.3;
     if (turn_rad < turn_limit && turn_rad > -turn_limit){ //5.7 DEGREES
       turn_rad = 0;
@@ -705,7 +716,7 @@ void TankRobotPlugin::movePointToPoint(){
     std::cout << "dy:" << dy << std::endl;
     std::cout << "dtheta:" << turn_rad << std::endl;
     
-    m_tank_model_ptr->driveCommand(distance * 1.0, turn_rad / 3.14 / 1.0);
+    m_tank_model_ptr->driveCommand(distance * 0.2, turn_rad / 3.14 / 5.0);
   }
 }
 
