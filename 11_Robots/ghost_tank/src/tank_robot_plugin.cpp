@@ -22,11 +22,13 @@
  */
 
 #include <iostream>
-#include <ghost_tank/tank_model.hpp>
+#include <../include/ghost_tank/tank_model.hpp>
 #include <ghost_tank/tank_robot_plugin.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
+#include <../include/ghost_tank/pdControl.hpp>
+#include <../include/ghost_tank/boomerang.h>
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -309,6 +311,14 @@ void TankRobotPlugin::autonomous(double current_time)
   msg.linear.y = 0;
   // msg.angular.z = angular_vel;
   m_base_twist_cmd_pub->publish(msg);
+
+  boomerang boom(curr_pose.x(), curr_pose.y(), curr_pose.z(), 5, 5, 3.14, 0.8);
+
+  pdControl pd(current_time, m_tank_model_ptr);
+
+  pd.linear_pid(curr_pose.x(), curr_pose.y(), boom.next_point_x, boom.next_point_y);
+  pd.angular_pid(curr_pose.z(), boom.next_theta);
+
 }
 
 void TankRobotPlugin::teleop(double current_time)
