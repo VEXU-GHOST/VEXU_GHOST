@@ -54,6 +54,24 @@ install(TARGETS
   imu_filter_node
   DESTINATION lib/${PROJECT_NAME})
 
+# TCS Color Sensor
+add_executable(tcs_color_sensor
+  src/tcs_color_sensor.cpp
+  src/driver_tcs34725.cpp
+)
+ament_target_dependencies(tcs_color_sensor
+  ${DEPENDENCIES}
+)
+target_link_libraries(tcs_color_sensor i2c)
+target_include_directories(tcs_color_sensor
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  tcs_color_sensor
+  DESTINATION lib/${PROJECT_NAME})
+
+
 #################
 #### Install ####
 #################
