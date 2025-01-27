@@ -111,7 +111,8 @@ def generate_launch_description():
         name="ekf_localization_node",
         output="screen",
         parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"],
-        remappings=[("/sensors/wheel_odom", "/odom")],
+        remappings=[("/sensors/wheel_odom", "/odom"),
+                    ("/odometry/filtered", "/map_ekf/odometry")],
     )
 
     plot_juggler_node = Node(

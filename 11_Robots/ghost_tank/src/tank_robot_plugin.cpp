@@ -671,9 +671,12 @@ void TankRobotPlugin::movePointToPoint(){
     float search_radius = m_search_radius; 
     static int past_index = 0; 
     static int next_index = 0; 
-    double current_x = m_curr_odom_pose.x();
-    double current_y = m_curr_odom_pose.y();
-    double current_angle = m_curr_odom_pose.z() + 1.57;
+    double current_x = m_tank_model_ptr->getWorldPose().x();
+    double current_y = m_tank_model_ptr->getWorldPose().y();
+    double current_angle = m_tank_model_ptr->getWorldAngleRad();
+    // double current_x = m_curr_odom_pose.x();
+    // double current_y = m_curr_odom_pose.y();
+    // double current_angle = m_curr_odom_pose.z() + 1.57;
     if (past_index == x_values.size()-1){
       return;
     }
@@ -716,8 +719,8 @@ void TankRobotPlugin::movePointToPoint(){
     std::cout << "dy:" << dy << std::endl;
     std::cout << "dtheta:" << turn_rad << std::endl;
     
-    double fwd_cmd = distance * 0.2;
-    double turn_cmd = turn_rad / 3.14 / 5.0;
+    double fwd_cmd = distance * 0.5;
+    double turn_cmd = turn_rad / 3.14 / 2.0;
     geometry_msgs::msg::Twist msg{};
     msg.linear.x = fwd_cmd;
     msg.angular.z = turn_cmd;
