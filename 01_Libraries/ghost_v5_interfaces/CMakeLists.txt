@@ -184,9 +184,9 @@ target_link_libraries(test_rhi_serialization
 ament_add_gtest(test_robot_hardware_interface test/test_robot_hardware_interface.cpp)
 ament_target_dependencies(test_robot_hardware_interface ${DEPENDENCIES})
 target_link_libraries(test_robot_hardware_interface
-gtest_main
-device_config_factory_utils
-robot_hardware_interface
+  gtest_main
+  device_config_factory_utils
+  robot_hardware_interface
 )
 
 ament_package()
