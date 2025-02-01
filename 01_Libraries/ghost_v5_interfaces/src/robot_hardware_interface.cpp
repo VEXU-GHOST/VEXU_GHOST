@@ -392,7 +392,6 @@ float RobotHardwareInterface::getInertialSensorXRate(const std::string & sensor_
             " is not configured to send gyro data!");
   }
 }
-
 float RobotHardwareInterface::getInertialSensorYRate(const std::string & sensor_name)
 {
   if (getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data) {
@@ -404,7 +403,6 @@ float RobotHardwareInterface::getInertialSensorYRate(const std::string & sensor_
             " is not configured to send gyro data!");
   }
 }
-
 float RobotHardwareInterface::getInertialSensorZRate(const std::string & sensor_name)
 {
   if (getDeviceConfig<InertialSensorDeviceConfig>(sensor_name)->serial_config.send_gyro_data) {
