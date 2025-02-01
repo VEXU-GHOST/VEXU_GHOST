@@ -164,7 +164,6 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 
     device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
   }
-
   return device_config_map_ptr;
 }
 
