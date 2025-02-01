@@ -143,7 +143,7 @@ set(DEVICE_TESTS
 foreach(TEST ${DEVICE_TESTS})
   ament_add_gtest(${TEST} test/devices/${TEST}.cpp)
   ament_target_dependencies(${TEST} ${DEPENDENCIES})
-  target_link_libraries(${TEST}
+  target_link_libraries(${TEST} 
     gtest_main
   )
 endforeach()
