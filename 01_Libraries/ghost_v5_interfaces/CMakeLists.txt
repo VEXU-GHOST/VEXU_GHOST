@@ -143,7 +143,7 @@ set(DEVICE_TESTS
 foreach(TEST ${DEVICE_TESTS})
   ament_add_gtest(${TEST} test/devices/${TEST}.cpp)
   ament_target_dependencies(${TEST} ${DEPENDENCIES})
-  target_link_libraries(${TEST} 
+  target_link_libraries(${TEST}
     gtest_main
   )
 endforeach()
@@ -154,7 +154,10 @@ foreach(TEST ${UTIL_LIBS})
   ament_target_dependencies(test_${TEST} ${DEPENDENCIES})
   target_link_libraries(test_${TEST}
     gtest_main
-    ${UTIL_LIBS}
+    load_motor_device_config_yaml
+    load_rotation_sensor_device_config_yaml
+    load_inertial_sensor_device_config_yaml
+    load_digital_device_config_yaml
     device_config_factory_utils
     yaml-cpp
   )
