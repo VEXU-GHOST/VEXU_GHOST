@@ -10,27 +10,27 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
     home_dir = os.path.expanduser("~")
-    ghost_over_under_base_dir = os.path.join(
-        home_dir, "VEXU_GHOST", "11_Robots", "ghost_over_under"
+    ghost_high_stakes_base_dir = os.path.join(
+        home_dir, "VEXU_GHOST", "11_Robots", "ghost_high_stakes"
     )
     ghost_ros_base_dir = os.path.join(
         home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces"
     )
 
     # This contains all the parameters for our ROS nodes
-    ros_config_file = os.path.join(ghost_over_under_base_dir, "config/ros_config.yaml")
+    ros_config_file = os.path.join(ghost_high_stakes_base_dir, "config/ros_config.yaml")
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
     robot_config_yaml_path = os.path.join(
-        ghost_over_under_base_dir, "config/robot_hardware_config_worlds_24.yaml"
+        ghost_high_stakes_base_dir, "config/robot_hardware_config_tank.yaml"
     )
 
-    plugin_type = "ghost_swerve::SwerveRobotPlugin"
-    robot_name = "ghost_24"
+    plugin_type = "ghost_tank::TankRobotPlugin"
+    robot_name = "GHOST_TANK"
 
-    ghost_swerve_share_dir = get_package_share_directory("ghost_swerve")
-    bt_path = os.path.join(ghost_swerve_share_dir, "config", "bt_isolation.xml")
-    bt_path_interaction = os.path.join(ghost_swerve_share_dir, "config", "bt_interaction.xml")
+    ghost_tank_share_dir = get_package_share_directory("ghost_tank")
+    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation.xml")
+    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
 
     ########################
     ### Node Definitions ###
@@ -63,24 +63,6 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
-    cubic_motion_planner_node = Node(
-        package='ghost_swerve',
-        executable='cubic_motion_planner',
-        name='cubic_motion_planner',
-        output='screen',
-        parameters=[ros_config_file, 
-                    ],
-    )
-
-    trapezoid_motion_planner_node = Node(
-        package='ghost_swerve',
-        executable='trapezoid_motion_planner',
-        name='trapezoid_motion_planner',
-        output='screen',
-        parameters=[ros_config_file, 
-                    ],
-    )
-
     bag_recorder_service = Node(
         package="ghost_ros_interfaces",
         executable="bag_recorder_service",
@@ -97,7 +79,7 @@ def generate_launch_description():
             {
                 "channel_type": "serial",
                 "serial_port": "/dev/ttyUSB0",
-                "serial_baudrate": 115200,
+                "serial_baudrate": 256000,
                 "frame_id": "lidar_link",
                 "inverted": False,
                 "angle_compensate": True,
@@ -113,25 +95,26 @@ def generate_launch_description():
         parameters=[ros_config_file],
     )
 
-    realsense_node = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("realsense2_camera"),
-                "launch",
-                "rs_launch.py",
-            )
-        ),
-        launch_arguments={
-            "unite_imu_method": "2",
-            "enable_depth": "false",
-            "enable_color": "false",
-            "enable_sync": "true",
-            "enable_gyro": "true",
-            "enable_accel": "true",
-            "gyro_fps": "200",  # 200 or 400
-            "accel_fps": "63",  # 63 or 250
-        }.items(),
-    )
+    # realsense_node = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         os.path.join(
+    #             get_package_share_directory("realsense2_camera"),
+    #             "launch",
+    #             "rs_launch.py",
+    #         )
+    #     ),
+    #     launch_arguments={
+    #         "unite_imu_method": "2",
+    #         "enable_depth": "true",
+    #         "enable_color": "true",
+    #         "enable_sync": "true",
+    #         "enable_gyro": "true",
+    #         "enable_accel": "true",
+    #         "initial_reset": "true",
+    #         "gyro_fps": "200",  # 200 or 400
+    #         "accel_fps": "63",  # 63 or 250
+    #     }.items(),
+    # )
 
     odom_ekf_node = Node(
         package="robot_localization",
@@ -168,7 +151,5 @@ def generate_launch_description():
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
-        cubic_motion_planner_node,
-        # trapezoid_motion_planner_node,
         rplidar_node
     ])

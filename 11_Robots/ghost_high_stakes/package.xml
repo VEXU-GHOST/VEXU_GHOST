@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ghost_sensing</name>
+  <name>ghost_high_stakes</name>
   <version>0.0.0</version>
-  <description>Packages for GHOST sensor processing</description>
+  <description>Config files for GHOST 2023-2024 Competition Season</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
   <license>MIT</license>
 
@@ -11,17 +11,13 @@
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-  <depend>rclcpp</depend>
-  <depend>visualization_msgs</depend>
-  <depend>builtin_interfaces</depend>
-  <depend>ghost_util</depend>
-  <depend>std_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>Eigen3</depend>
-  <depend>yaml-cpp</depend>
 
+  <exec_depend>ghost_ros_interfaces</exec_depend>
+  <exec_depend>ghost_tank</exec_depend>
+  <exec_depend>ghost_localization</exec_depend>
+  <exec_depend>ghost_sensing</exec_depend>
   <exec_depend>realsense2_camera</exec_depend>
+  <exec_depend>rviz2</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

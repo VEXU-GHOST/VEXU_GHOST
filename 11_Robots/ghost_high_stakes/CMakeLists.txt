@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ghost_over_under)
+project(ghost_high_stakes)
 
 # Add Global CMake Config for Ghost Packages
 set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
@@ -21,7 +21,6 @@ ament_export_dependencies(${DEPENDENCIES})
 install(DIRECTORY
   config
   launch
-  urdf
   rviz
   DESTINATION share/${PROJECT_NAME})
 

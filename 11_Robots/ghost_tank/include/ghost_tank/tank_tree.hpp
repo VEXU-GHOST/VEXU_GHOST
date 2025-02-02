@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,38 +22,37 @@
  */
 
 #pragma once
+#include "behaviortree_cpp/bt_factory.h"
+#include "bt_nodes/loggingNode.hpp"
+#include "bt_nodes/autoDone.hpp"
+#include "bt_nodes/autonTimer.hpp"
+#include "ghost_tank/tank_model.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/bool.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <stdexcept>
-#include <vector>
-#include "eigen3/Eigen/Dense"
-
-namespace ghost_util
+namespace ghost_tank
 {
 
-template<typename T>
-T clamp(T val, T min, T max)
+class TankTree
 {
-  return std::max(min, std::min(val, max));
-}
+public:
+	TankTree(std::string bt_path);
+	void tick_tree();
+	void init_tree();
+	template<typename T>
+	void set_variable(std::string name, T value){
+		if(global_blackboard_){
+			global_blackboard_->set<T>(name, value);
+			// std::cout << "Set bt variable:" << name << std::endl;
+		} else {
+			std::cout << "ERROR: Tried to set BT variable before the BT constructor" << std::endl;
+		}
+	}
+private:
+	std::string bt_path_;
+	BT::Blackboard::Ptr global_blackboard_;
+	BT::Tree tree_;
+};
 
-
-double slewRate(double curr, double next, double limit);
-
-double sign(double val);
-
-bool isPositive(double val);
-
-double linearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double clampedLinearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double median(const Eigen::VectorX<long> & v);
-}
+} // namespace ghost_tank

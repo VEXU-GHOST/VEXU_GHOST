@@ -1,95 +1,82 @@
 port_configuration:
     devices:
-        lift_right:
+        imu:
             port: 1
+            type: INERTIAL_SENSOR
+            config: inertial_sensor_config
+        drive_l1:
+            port: 11
             type: MOTOR
             reversed: false
-            config: lift_motor_config
-        tail_motor:
+            config: drive_motor_config
+        drive_l2:
+            port: 12
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_l3:
+            port: 13
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_l4:
+            port: 3
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_l5:
             port: 4
             type: MOTOR
-            reversed: false
-            config: tail_motor_config
-        steering_front_right:
-            port: 5
-            type: ROTATION_SENSOR
             reversed: true
-            config: steering_sensor_config
-        drive_frr:
+            config: drive_motor_config
+        drive_l6:
+            port: 5
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_r1:
             port: 6
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_frl:
+        drive_r2:
             port: 7
             type: MOTOR
-            reversed: true
+            reversed: false
             config: drive_motor_config
-        drive_brf:
+        drive_r3:
             port: 8
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_brb:
-            port: 9
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        steering_back_right:
-            port: 10
-            type: ROTATION_SENSOR
-            reversed: true
-            config: steering_sensor_config
-        lift_left:
-            port: 11
-            type: MOTOR
-            reversed: true
-            config: lift_motor_config
-        steering_front_left:
-            port: 15
-            type: ROTATION_SENSOR
-            reversed: true
-            config: steering_sensor_config
-        drive_fll:
-            port: 16
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_flr:
-            port: 17
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_blb:
+        drive_r4:
             port: 18
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_blf:
+        drive_r5:
             port: 19
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_r6:
+            port: 20
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        steering_back_left:
-            port: 20
-            type: ROTATION_SENSOR
-            reversed: true
-            config: steering_sensor_config
-
     device_configurations:
-        steering_sensor_config:
-            data_rate: 5
+        inertial_sensor_config:
             serial:
-                send_angle_data: true
-                send_position_data: false
-                send_velocity_data: true
+                send_accel_data: false
+                send_gyro_data: true
+                send_heading_data: true
         drive_motor_config:
             gearset: 600
             brake_mode: COAST
             encoder_units: DEGREES
             controller:
                 pos_gain: 0.0
-                vel_gain: 10.0
+                vel_gain: 15.0
                 ff_vel_gain: 1.0
                 ff_torque_gain: 0.0
             model:
@@ -109,29 +96,16 @@ port_configuration:
                 send_current_data: false
                 send_power_data: false
                 send_temperature_data: false
-        lift_motor_config:
-            gearset: 200
+        indexer_config:
+            gearset: 600
             brake_mode: BRAKE
             encoder_units: DEGREES
             controller:
                 pos_gain: 0.0
-                vel_gain: 40.0
-                ff_vel_gain: 1.0
-                ff_torque_gain: 0.0
-            serial:
-                send_position_command: false
-                send_velocity_command: true
-                send_voltage_command: true
-        tail_motor_config:
-            gearset: 200
-            brake_mode: COAST
-            encoder_units: DEGREES
-            controller:
-                pos_gain: 500.0
                 vel_gain: 0.0
                 ff_vel_gain: 0.0
-                ff_torque_gain: 0.0
+                ff_torque_gain: 100.0
             serial:
-                send_position_command: true
+                send_position_command: false
                 send_velocity_command: false
                 send_voltage_command: true

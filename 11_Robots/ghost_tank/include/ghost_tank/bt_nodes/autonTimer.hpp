@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,37 +23,34 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <stdexcept>
-#include <vector>
-#include "eigen3/Eigen/Dense"
+#include <string>
+#include "behaviortree_cpp/behavior_tree.h"
+#include "rclcpp/rclcpp.hpp"
+#include "ghost_tank/tank_tree.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
 
-namespace ghost_util
+namespace ghost_tank {
+
+class AutonTimer : public BT::DecoratorNode
 {
+public:
+  // If your Node has ports, you must use this constructor signature
+  AutonTimer(
+    const std::string & name, const BT::NodeConfig & config);
 
-template<typename T>
-T clamp(T val, T min, T max)
-{
-  return std::max(min, std::min(val, max));
-}
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
+
+  // Override the virtual function tick()
+  BT::NodeStatus tick() override;
+
+  void halt() override;
 
 
-double slewRate(double curr, double next, double limit);
+private:
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+	std::shared_ptr<TankModel> tank_ptr_;
+  BT::Blackboard::Ptr blackboard_;
+};
 
-double sign(double val);
-
-bool isPositive(double val);
-
-double linearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double clampedLinearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double median(const Eigen::VectorX<long> & v);
-}
+} // ghost_tank

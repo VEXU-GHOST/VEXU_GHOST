@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,39 +21,36 @@
  *   SOFTWARE.
  */
 
-#pragma once
+#include "ghost_tank/bt_nodes/loggingNode.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <stdexcept>
-#include <vector>
-#include "eigen3/Eigen/Dense"
-
-namespace ghost_util
+// SyncActionNode (synchronous action) with an input port.
+// If your Node has ports, you must use this constructor signature
+LoggingNode::LoggingNode(
+  const std::string & name, const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
 {
-
-template<typename T>
-T clamp(T val, T min, T max)
-{
-  return std::max(min, std::min(val, max));
+    blackboard_ = config.blackboard;
+	  if(!blackboard_->get("node_ptr", node_ptr_)){
+        std::cout << name << ": node_ptr not found in blackboard" << std::endl;
+    }
 }
 
+// It is mandatory to define this STATIC method.
+BT::PortsList LoggingNode::providedPorts()
+{
+  // This action has a single input port called "message"
+  return {
+    BT::InputPort<std::string>("message")
+  };
+}
 
-double slewRate(double curr, double next, double limit);
+// Override the virtual function tick()
+BT::NodeStatus LoggingNode::tick()
+{
+  std::string msg = BT_Util::get_input<std::string>(this, "message");
 
-double sign(double val);
-
-bool isPositive(double val);
-
-double linearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double clampedLinearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double median(const Eigen::VectorX<long> & v);
+  // use the method value() to extract the valid message.
+  RCLCPP_INFO(node_ptr_->get_logger(), msg.c_str());
+  // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  return BT::NodeStatus::SUCCESS;
 }

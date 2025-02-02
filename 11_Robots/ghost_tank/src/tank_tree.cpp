@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,39 +21,36 @@
  *   SOFTWARE.
  */
 
-#pragma once
+#include <ghost_util/angle_util.hpp>
+#include "ghost_tank/tank_tree.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <stdexcept>
-#include <vector>
-#include "eigen3/Eigen/Dense"
 
-namespace ghost_util
+// file that contains the custom nodes definitions
+// #include "dummy_nodes.h"
+// using namespace DummyNodes;
+
+namespace ghost_tank
 {
 
-template<typename T>
-T clamp(T val, T min, T max)
+TankTree::TankTree(std::string bt_path) :
+	bt_path_(bt_path){
+	global_blackboard_ = BT::Blackboard::create();
+}
+
+void TankTree::init_tree(){
+	BT::BehaviorTreeFactory factory;
+
+	// add all nodes here
+	factory.registerNodeType<LoggingNode>("Logging");
+	factory.registerNodeType<AutoDone>("AutoDone");
+	factory.registerNodeType<AutonTimer>("AutonTimer");
+
+    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
+}
+
+void TankTree::tick_tree()
 {
-  return std::max(min, std::min(val, max));
+  tree_.tickExactlyOnce();
 }
 
-
-double slewRate(double curr, double next, double limit);
-
-double sign(double val);
-
-bool isPositive(double val);
-
-double linearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double clampedLinearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double median(const Eigen::VectorX<long> & v);
-}
+} // namespace ghost_tank

@@ -1,0 +1,5 @@
+Left side
+Top side
+Right side
+Bottom side
+field is CW with (0, 0) bottom left 

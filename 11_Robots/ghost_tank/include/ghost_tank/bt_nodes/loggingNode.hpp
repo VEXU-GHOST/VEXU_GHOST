@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Maxx Wilson
+ *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,37 +23,26 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <stdexcept>
-#include <vector>
-#include "eigen3/Eigen/Dense"
+#include <string>
+#include "behaviortree_cpp/behavior_tree.h"
+#include "rclcpp/rclcpp.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
 
-namespace ghost_util
+// SyncActionNode (synchronous action) with an input port.
+class LoggingNode : public BT::SyncActionNode
 {
+public:
+  // If your Node has ports, you must use this constructor signature
+  LoggingNode(
+    const std::string & name, const BT::NodeConfig & config);
 
-template<typename T>
-T clamp(T val, T min, T max)
-{
-  return std::max(min, std::min(val, max));
-}
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
 
+  // Override the virtual function tick()
+  BT::NodeStatus tick() override;
 
-double slewRate(double curr, double next, double limit);
-
-double sign(double val);
-
-bool isPositive(double val);
-
-double linearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double clampedLinearInterpolate(
-  const std::vector<double> & x_data,
-  const std::vector<double> & y_data,
-  const double desired_x);
-
-double median(const Eigen::VectorX<long> & v);
-}
+private:
+	BT::Blackboard::Ptr blackboard_;
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+};
