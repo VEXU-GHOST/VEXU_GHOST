@@ -117,17 +117,14 @@ void TCSColorSensorNode::timer_poll_color_sensor()
   const float max_sensor_val = (1 << 16) - 1;
   if (m_delay_loops-- > 0) {return;}
   auto msg_rgb = std_msgs::msg::ColorRGBA();
-  uint16_t r, g, b, c;
+  uint16_t r = 0, g = 0, b = 0, c = 0;
   int rgbc = m_sensor->read_rgbc(&r, &g, &b, &c);
 
-  rgbc = 0, r = 0, g = 1<<10 - 1, b = 0; // for testing only
-  msg_rgb.r = r / max_sensor_val;
-  msg_rgb.g = g / max_sensor_val;
-  msg_rgb.b = b / max_sensor_val;
-  msg_rgb.a = c / max_sensor_val;
 
-
-  if (rgbc == 1) {
+  if (rgbc == 1 || (r == 0 && g == 0 && b == 0 && c == 0)) { 
+    // could not communicate or got all zeros which should realistically never happen since we dont clear the registers
+    // there might be a better way to check uninitalized sensor, but simple solution rn is that values are all 0 which will never happen unless its perfectly dark which it will never be
+    // TODO
     int res = m_sensor->init();
     if (res != 0) {
       RCLCPP_WARN(this->get_logger(), "tcs34725 color sensor: init failed.\n");
@@ -140,13 +137,20 @@ void TCSColorSensorNode::timer_poll_color_sensor()
   }
 
 
+  rgbc = 0, r = 0, g = 1 << 10 - 1, b = 0; // for testing only
+  msg_rgb.r = r / max_sensor_val;
+  msg_rgb.g = g / max_sensor_val;
+  msg_rgb.b = b / max_sensor_val;
+  msg_rgb.a = c / max_sensor_val;
+
+
   auto msg_hsv = rgbc2hsv(msg_rgb);
 
   m_rgb_pub->publish(msg_rgb);
   m_hsv_pub->publish(msg_hsv);
 
 
-    printf(
+  printf(
     "r: %f g: %f b: %f a: %f | h: %f s: %f v: %f a: %f\n",
     msg_rgb.r, msg_rgb.g, msg_rgb.b, msg_rgb.a,
     msg_hsv.r, msg_hsv.g, msg_hsv.b, msg_hsv.a);
