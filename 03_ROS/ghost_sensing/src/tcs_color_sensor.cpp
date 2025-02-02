@@ -38,6 +38,9 @@
 #include <ghost_sensing/tcs_color_sensor.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+
+// https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
+// https://chatgpt.com/share/679f0740-6d9c-800c-98c3-25346862aadc
 void rgbc2hsv(
   float r, float g, float b, float clear, float & h, float & s,
   float & v)
@@ -114,7 +117,7 @@ void TCSColorSensorNode::timer_poll_color_sensor()
   if (m_delay_loops-- > 0) {return;}
   auto msg = ghost_msgs::msg::ColorSensor();
   int rgbc = m_sensor->read_rgbc(&msg.raw_r, &msg.raw_g, &msg.raw_b, &msg.raw_c);
-  rgbc = 0, msg.raw_r = 0, msg.raw_g = 1<<16 - 1, msg.raw_b = 0;
+  //rgbc = 0, msg.raw_r = 0, msg.raw_g = 1<<16 - 1, msg.raw_b = 0; // for testing only
   if (rgbc == 1) {
     int res = m_sensor->init();
     if (res != 0) {
