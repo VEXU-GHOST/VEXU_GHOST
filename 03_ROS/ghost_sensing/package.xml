@@ -15,7 +15,6 @@
   <depend>visualization_msgs</depend>
   <depend>builtin_interfaces</depend>
   <depend>ghost_util</depend>
-  <depend>ghost_msgs</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>

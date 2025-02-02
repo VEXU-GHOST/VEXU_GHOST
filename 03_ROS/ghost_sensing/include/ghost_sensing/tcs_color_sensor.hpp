@@ -27,7 +27,6 @@ class TCSColorSensorNode : public rclcpp::Node
 public:
   TCSColorSensorNode();
 
-  void start();
   void timer_poll_color_sensor();
 
 };
