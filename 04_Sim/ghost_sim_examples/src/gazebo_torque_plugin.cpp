@@ -143,62 +143,6 @@ void TankMove::Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf)
       // }
     });
 
-
-  std::vector<std::string> params{
-    "joint_names",
-    "motor_names",
-    "actuator_jacobian",
-    "free_speed",
-    "stall_torque",
-    "free_current",
-    "stall_current",
-    "nominal_voltage",
-    "gear_ratio"
-  };
-
-  for (std::string & param : params) {
-    if (!sdf->HasElement(param)) {
-      std::string err_string = "[V5 Robot Plugin] Missing <" + param + ">, cannot proceed";
-      RCLCPP_ERROR(logger, err_string.c_str());
-      return;
-    }
-  }
-
-  // Parse input plugin parameters
-  impl_->joint_names_ = ghost_util::getVectorFromString<std::string>(
-    sdf->GetElement(
-      "joint_names")->Get<std::string>(), ' ');
-  impl_->motor_names_ = ghost_util::getVectorFromString<std::string>(
-    sdf->GetElement(
-      "motor_names")->Get<std::string>(), ' ');
-
-  // Define eigen vector sizes using number of joints
-  impl_->joint_angles_.resize(impl_->joint_names_.size());
-  impl_->joint_velocities_.resize(impl_->joint_names_.size());
-  impl_->joint_efforts_.resize(impl_->joint_names_.size());
-
-  std::vector<double> actuator_jacobian_temp = ghost_util::getVectorFromString<double>(
-    sdf->GetElement(
-      "actuator_jacobian")->Get<std::string>(), ' ');
-
-
-  // Input Validation
-  if (actuator_jacobian_temp.size() != impl_->motor_names_.size() * impl_->joint_names_.size()) {
-    std::string err_string =
-      "[V5 Robot Plugin], Actuator Jacobian is incorrect size, cannot proceed!";
-    RCLCPP_ERROR(logger, err_string.c_str());
-    return;
-  }
-
-
-  // Populate Eigen Matrices for each jacobian
-  impl_->actuator_jacobian_ = Eigen::Map<Matrix<double, Dynamic, Dynamic, RowMajor>>(
-    actuator_jacobian_temp.data(), impl_->joint_names_.size(), impl_->motor_names_.size());
-
-
-  std::cout << "[V5 Robot Plugin] Actuator Jacobian: \n"
-            << impl_->actuator_jacobian_ << std::endl;
-
   std::cout << "reading motor names in constructor" << std::endl;
   // // Instantiate Motor Models and Motor Controllers for each motor
   for (const std::string & name : impl_->motor_names_) {

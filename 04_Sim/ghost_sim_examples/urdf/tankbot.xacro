@@ -201,7 +201,7 @@
             <free_current>0.1</free_current>
             <stall_current>4.5</stall_current>
             <nominal_voltage>12.0</nominal_voltage>
-            <gear_ratio>1.0</gear_ratio>
+            <gear_ratio>1.0</gear_ratio> -->
             <joint_names>
             wheel_joint_middle_left
             wheel_joint_middle_right
@@ -215,7 +215,7 @@
             <actuator_jacobian>
                 0.5     0.5      0           0         
                 0        0      0.5         0.5  
-            </actuator_jacobian> -->
+            </actuator_jacobian>
 
 </plugin>
 </gazebo>

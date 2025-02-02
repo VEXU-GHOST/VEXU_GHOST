@@ -5,6 +5,8 @@
 #include <gazebo/physics/Link.hh>
 #include <gazebo_ros/node.hpp>
 
+#include "eigen3/Eigen/Geometry"
+
 namespace gazebo
 {
 
@@ -21,6 +23,11 @@ public:
   void OnUpdate();
 
 protected:
+  void loadConfig(sdf::ElementPtr sdf);
+  void setupMotorModels();
+  void setupROSComms();
+  void setupRobotHardwareInterface();
+
   std::unique_ptr<V5RobotSimulatorPluginPrivate> impl_;
 };
 } // namespace gazebo
