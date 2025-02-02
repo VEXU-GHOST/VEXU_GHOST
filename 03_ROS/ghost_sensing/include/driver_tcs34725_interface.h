@@ -1,6 +1,8 @@
+#pragma once
+
 /**
  * Copyright (c) 2015 - present LibDriver All rights reserved
- * 
+ *
  * The MIT License (MIT)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,7 +21,7 @@
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE. 
+ * SOFTWARE.
  *
  * @file      driver_tcs34725_interface.h
  * @brief     driver tcs34725 interface header file
@@ -35,14 +37,16 @@
  * </table>
  */
 
-#ifndef DRIVER_TCS34725_INTERFACE_H
-#define DRIVER_TCS34725_INTERFACE_H
-
-#include "driver_tcs34725.h"
-
-#ifdef __cplusplus
-extern "C"{
-#endif
+#include <stdio.h>
+#include <linux/i2c-dev.h>
+#include <i2c/smbus.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <iostream>
 
 /**
  * @defgroup tcs34725_interface_driver tcs34725 interface driver function
@@ -51,6 +55,17 @@ extern "C"{
  * @{
  */
 
+namespace ghost_sensing
+{
+
+class tcs_i2c_interface
+{
+  int gs_fd = -1;            /**< file descriptor */
+  std::string filename;
+
+public:
+  tcs_i2c_interface(std::string iFilename)
+  : filename(iFilename) {}
 /**
  * @brief  interface iic bus init
  * @return status code
@@ -58,7 +73,7 @@ extern "C"{
  *         - 1 iic init failed
  * @note   none
  */
-uint8_t tcs34725_interface_iic_init(void);
+  uint8_t init();
 
 /**
  * @brief  interface iic bus deinit
@@ -67,7 +82,7 @@ uint8_t tcs34725_interface_iic_init(void);
  *         - 1 iic deinit failed
  * @note   none
  */
-uint8_t tcs34725_interface_iic_deinit(void);
+  uint8_t deinit(void);
 
 /**
  * @brief      interface iic bus read
@@ -80,7 +95,7 @@ uint8_t tcs34725_interface_iic_deinit(void);
  *             - 1 read failed
  * @note       none
  */
-uint8_t tcs34725_interface_iic_read(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len);
+  uint8_t read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len);
 
 /**
  * @brief     interface iic bus write
@@ -93,28 +108,22 @@ uint8_t tcs34725_interface_iic_read(uint8_t addr, uint8_t reg, uint8_t *buf, uin
  *            - 1 write failed
  * @note      none
  */
-uint8_t tcs34725_interface_iic_write(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len);
+  uint8_t write(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len);
 
 /**
  * @brief     interface delay ms
  * @param[in] ms time
  * @note      none
  */
-void tcs34725_interface_delay_ms(uint32_t ms);
+  void delay_ms(uint32_t ms);
 
 /**
  * @brief     interface print format data
  * @param[in] fmt format data
  * @note      none
  */
-void tcs34725_interface_debug_print(const char *const fmt, ...);
+  void debug_print(const char * const fmt, ...);
 
-/**
- * @}
- */
+};
 
-#ifdef __cplusplus
 }
-#endif
-
-#endif

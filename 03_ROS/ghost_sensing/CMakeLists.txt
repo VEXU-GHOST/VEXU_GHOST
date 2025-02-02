@@ -18,6 +18,7 @@ set(DEPENDENCIES
   std_msgs
   sensor_msgs
   geometry_msgs
+  ghost_msgs
   yaml-cpp
   Eigen3
   builtin_interfaces
@@ -56,8 +57,9 @@ install(TARGETS
 
 # TCS Color Sensor
 add_executable(tcs_color_sensor
-  src/tcs_color_sensor.cpp
+  src/driver_tcs34725_interface.cpp
   src/driver_tcs34725.cpp
+  src/tcs_color_sensor.cpp
 )
 ament_target_dependencies(tcs_color_sensor
   ${DEPENDENCIES}

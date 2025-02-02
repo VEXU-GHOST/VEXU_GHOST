@@ -17,6 +17,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/util/LabeledDoubleMap.msg"
   "msg/util/LabeledVector.msg"
   "msg/util/LabeledVectorMap.msg"
+  "msg/device_msgs/ColorSensor.msg"
   "msg/device_msgs/V5DeviceHeader.msg"
   "msg/device_msgs/commands/V5MotorCommand.msg"
   "msg/device_msgs/states/V5CompetitionStatus.msg"
