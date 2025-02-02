@@ -1,3 +1,6 @@
+# pip install pygame
+# python3 03_ROS/ghost_sensing/test/color_sensor_test.py
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import ColorRGBA
@@ -59,3 +62,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+

@@ -22,7 +22,7 @@ set(DEPENDENCIES
   yaml-cpp
   Eigen3
   builtin_interfaces
-  )
+)
 
 foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
@@ -73,6 +73,20 @@ install(TARGETS
   tcs_color_sensor
   DESTINATION lib/${PROJECT_NAME})
 
+# Color Classifier
+add_executable(color_classifier
+  src/color_classifier.cpp
+)
+ament_target_dependencies(color_classifier
+  ${DEPENDENCIES}
+)
+target_include_directories(color_classifier
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  color_classifier
+  DESTINATION lib/${PROJECT_NAME})
 
 #################
 #### Install ####
