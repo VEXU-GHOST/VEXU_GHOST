@@ -134,18 +134,18 @@ competition_state_machine_node:
     should_record: false
     color_classification:
       blue:
-        hue_center: 240
+        hue_center: 190
         hue_range: 20
-        sat_min: 0.5
+        sat_min: 0.4
         sat_max: 1.0
-        val_min: 0.3
+        val_min: 0.01
         val_max: 1.0
       red:
         hue_center: 0
         hue_range: 20
-        sat_min: 0.4
+        sat_min: 0.7
         sat_max: 1.0
-        val_min: 0.2
+        val_min: 0.01
         val_max: 1.0
 
 # If you are using the sweve model and you are tuning the k1-9 parameters,
