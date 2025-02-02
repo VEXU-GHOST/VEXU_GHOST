@@ -41,44 +41,43 @@
 
 // https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
 // https://chatgpt.com/share/679f0740-6d9c-800c-98c3-25346862aadc
-void rgbc2hsv(
-  float r, float g, float b, float clear, float & h, float & s,
-  float & v)
+std_msgs::msg::ColorRGBA rgbc2hsv(std_msgs::msg::ColorRGBA rgb)
 {
-  // ignoring clear value rn
+  auto hsv = std_msgs::msg::ColorRGBA();
 
-
-  if (r < 0 || r > 1 || g < 0 || g > 1 || b < 0 || b > 1) {
+  if (rgb.r < 0 || rgb.r > 1 || rgb.g < 0 || rgb.g > 1 || rgb.b < 0 || rgb.b > 1) {
     throw std::invalid_argument("RGB values must be in range [0,1]");
   }
 
-  float vmax = std::max({r, g, b});
-  float vmin = std::min({r, g, b});
+  float vmax = std::max({rgb.r, rgb.g, rgb.b});
+  float vmin = std::min({rgb.r, rgb.g, rgb.b});
   float c = vmax - vmin;
   float l = (vmax + vmin) / 2;
 
-  h = 0;
+  float h = 0;
   if (c != 0) {
-    if (vmax == r) {
-      h = 60 * (fmod((g - b) / c, 6));
-    } else if (vmax == g) {
-      h = 60 * ((b - r) / c + 2);
-    } else {     // vmax == b
-      h = 60 * ((r - g) / c + 4);
+    if (vmax == rgb.r) {
+      h = 60 * (fmod((rgb.g - rgb.b) / c, 6));
+    } else if (vmax == rgb.g) {
+      h = 60 * ((rgb.b - rgb.r) / c + 2);
+    } else {     // vmax == rgb.b
+      h = 60 * ((rgb.r - rgb.g) / c + 4);
     }
   }
   if (h < 0) {h += 360;}
 
   float sv = (vmax == 0) ? 0 : (c / vmax);
-  float sl = (l == 0 || l == 1) ? 0 : (c / (1 - std::abs(2 * l - 1)));
 
-  //ColorHSV hsv = {h, sv, vmax};
-  s = sv;
-  v = vmax;
-  //ColorHSL hsl = {h, sl, l};
+  hsv.r = h;
+  hsv.g = sv;
+  hsv.b = vmax;
+  hsv.a = -1;   // Preserve alpha value
 
-
-  //return {hsv, hsl};
+  // To switch to HSL conversion, replace sv with sl and vmax with l
+  // float sl = (l == 0 || l == 1) ? 0 : (c / (1 - std::abs(2 * l - 1)));
+  // hsv->g = sl;
+  // hsv->b = l;
+  return hsv;
 }
 
 
@@ -104,7 +103,8 @@ TCSColorSensorNode::TCSColorSensorNode()
 
   m_publish_timer =
     this->create_wall_timer(20ms, std::bind(&TCSColorSensorNode::timer_poll_color_sensor, this));
-  m_color_pub = this->create_publisher<ghost_msgs::msg::ColorSensor>("/sensors/color_sensor", 10);// whats 10
+  m_rgb_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("/sensors/color_sensor_0/rgb", 10);// whats 10
+  m_hsv_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("/sensors/color_sensor_0/hsv", 10);// whats 10
 
 
   printf("INIT FINISHED\n");
@@ -114,10 +114,19 @@ TCSColorSensorNode::TCSColorSensorNode()
 
 void TCSColorSensorNode::timer_poll_color_sensor()
 {
+  const float max_sensor_val = (1 << 16) - 1;
   if (m_delay_loops-- > 0) {return;}
-  auto msg = ghost_msgs::msg::ColorSensor();
-  int rgbc = m_sensor->read_rgbc(&msg.raw_r, &msg.raw_g, &msg.raw_b, &msg.raw_c);
-  //rgbc = 0, msg.raw_r = 0, msg.raw_g = 1<<16 - 1, msg.raw_b = 0; // for testing only
+  auto msg_rgb = std_msgs::msg::ColorRGBA();
+  uint16_t r, g, b, c;
+  int rgbc = m_sensor->read_rgbc(&r, &g, &b, &c);
+
+  rgbc = 0, r = 0, g = 1<<10 - 1, b = 0; // for testing only
+  msg_rgb.r = r / max_sensor_val;
+  msg_rgb.g = g / max_sensor_val;
+  msg_rgb.b = b / max_sensor_val;
+  msg_rgb.a = c / max_sensor_val;
+
+
   if (rgbc == 1) {
     int res = m_sensor->init();
     if (res != 0) {
@@ -131,17 +140,16 @@ void TCSColorSensorNode::timer_poll_color_sensor()
   }
 
 
-  float max_sensor_val = (1 << 16) - 1;
-  rgbc2hsv(
-    msg.raw_r / max_sensor_val, msg.raw_g / max_sensor_val, msg.raw_b / max_sensor_val,
-    msg.raw_c / max_sensor_val, msg.h, msg.s, msg.v);
+  auto msg_hsv = rgbc2hsv(msg_rgb);
 
-  m_color_pub->publish(msg);
+  m_rgb_pub->publish(msg_rgb);
+  m_hsv_pub->publish(msg_hsv);
 
-  printf(
-    "r: %d g: %d b: %d c: %d h: %f s: %f v: %f\n", msg.raw_r, msg.raw_g, msg.raw_b, msg.raw_c,
-    msg.h, msg.s,
-    msg.v);
+
+    printf(
+    "r: %f g: %f b: %f a: %f | h: %f s: %f v: %f a: %f\n",
+    msg_rgb.r, msg_rgb.g, msg_rgb.b, msg_rgb.a,
+    msg_hsv.r, msg_hsv.g, msg_hsv.b, msg_hsv.a);
 }
 
 void TCSColorSensorNode::start()
