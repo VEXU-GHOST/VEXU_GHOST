@@ -233,15 +233,15 @@ void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
 
-  double forward_vel = joy_data->left_y / 127.0;
-  double angular_vel = joy_data->right_x / 127.0;
+  double left_vel = joy_data->left_y / 127.0;
+  double right_vel = joy_data->right_y / 127.0;
 
   double threshold = 0.05;
-  forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-  angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+  left_vel = (std::fabs(left_vel) < threshold) ? 0.0 : left_vel;
+  right_vel = (std::fabs(right_vel) < threshold) ? 0.0 : right_vel;
 
-  double left_cmd = forward_vel + angular_vel;
-  double right_cmd = forward_vel - angular_vel;
+  double left_cmd = left_vel;
+  double right_cmd = right_vel;
 
   // this is from ghost_high_stakes/config/robot_hardware_config_tank.yaml
   std::vector<std::string> motor_list = {
