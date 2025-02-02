@@ -128,7 +128,7 @@ namespace ghost_sensing
     uint16_t r = 0, g = 0, b = 0, c = 0;
     int rgbc = m_sensor->read_rgbc(&r, &g, &b, &c);
 
-    rgbc = 0, r = 1 << 12, g =0 , b = 1<<16 - 1; // for testing only
+    //rgbc = 0, r = 1 << 12, g =0 , b = 1<<16 - 1; // for testing only
     if (rgbc == 1 || (r == 0 && g == 0 && b == 0 && c == 0))
     {
       // could not communicate or got all zeros which should realistically never happen since we dont clear the registers
