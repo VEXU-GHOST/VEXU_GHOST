@@ -154,6 +154,11 @@ void TankRobotPlugin::initialize()
     pose_topic,
     10,
     std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
+  m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>(
+    "/sensors/color_sensor_0/color",
+    10,
+    std::bind(&TankRobotPlugin::colorCallback, this, _1)
+  );
 
   m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
     odom_topic,
@@ -168,7 +173,8 @@ void TankRobotPlugin::initialize()
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_twist_topic", "/cmd_vel");
-  std::string cmd_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
+  std::string cmd_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
   m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     cmd_twist_topic,
     10);
@@ -186,11 +192,12 @@ void TankRobotPlugin::initialize()
     bag_recorder_stop_topic);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
-  std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
+  std::string cmd_pose_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
   m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     cmd_pose_topic,
     10);
-    
+
   node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
   std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
   imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
@@ -198,19 +205,22 @@ void TankRobotPlugin::initialize()
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
-  std::string des_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
+  std::string des_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
   m_des_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     des_twist_topic,
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cur_twist_topic", "/cur_vel");
-  std::string cur_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
+  std::string cur_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
   m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     cur_twist_topic,
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
-  std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
+  std::string des_pos_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
   m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
     des_pos_topic,
     10);
@@ -352,12 +362,22 @@ void TankRobotPlugin::teleop(double current_time)
       joy_data->left_y, joy_data->right_x, 0.05);
 
     double intake_power = 0;
+    if (m_color == "red" && m_first_color_detect < 0) {
+      m_first_color_detect = current_time;
+    }
     if (joy_data->btn_r2) {
       intake_power = 1.0;
     } else if (joy_data->btn_r1) {
       intake_power = -1.0;
     } else {
       intake_power = 0.0;
+    }
+    if (m_first_color_detect > 0) {
+      if (current_time - m_first_color_detect < 0.1) {
+// do nothing
+      } else if (current_time - m_first_color_detect < .2) {
+        intake_power = 0;
+      }
     }
 
     // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
@@ -446,7 +466,7 @@ void TankRobotPlugin::publishOdometry()
   msg.pose.pose.position.x = m_curr_odom_pose.x();
   msg.pose.pose.position.y = m_curr_odom_pose.y();
   msg.pose.pose.position.z = 0.0;
-  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)){
+  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)) {
     printf("ROBOT MOVED ANGLE IS %f\n", m_curr_odom_pose.z());
   }
   ghost_util::yawToQuaternionRad(
