@@ -193,6 +193,7 @@ protected:
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
+  std::vector<std::string> m_intake_motor_names;
   std::vector<std::string> m_all_motor_names;
 };
 

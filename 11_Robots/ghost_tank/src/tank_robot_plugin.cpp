@@ -60,6 +60,10 @@ TankRobotPlugin::TankRobotPlugin()
     "drive_l5",
     "drive_l6",
   };
+  m_intake_motor_names = {
+    "intake_l",
+    "intake_r",
+  };
 
   m_all_motor_names.insert(
     m_all_motor_names.end(),
@@ -70,6 +74,11 @@ TankRobotPlugin::TankRobotPlugin()
     m_all_motor_names.end(),
     m_left_drive_motor_names.begin(),
     m_left_drive_motor_names.end());
+  m_all_motor_names.insert(
+    m_all_motor_names.end(),
+    m_intake_motor_names.begin(),
+    m_intake_motor_names.end());
+
 }
 
 void TankRobotPlugin::initialize()
@@ -328,7 +337,6 @@ void TankRobotPlugin::autonomous(double current_time)
 void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
-  // std::cout << "Teleop: " << current_time << std::endl;
 
   if (joy_data->btn_u) {
     if (!m_auton_button_pressed) {
@@ -362,7 +370,9 @@ void TankRobotPlugin::teleop(double current_time)
       joy_data->left_y, joy_data->right_x, 0.05);
 
     double intake_power = 0;
-    if (m_color == "red" && m_first_color_detect < 0) {
+    printf("'%s'\n", m_color.c_str());
+    if (m_color.compare("blue") == 0 && m_first_color_detect < 0) {
+      std::cout << "red yo" << std::endl;
       m_first_color_detect = current_time;
     }
     if (joy_data->btn_r2) {
@@ -373,15 +383,17 @@ void TankRobotPlugin::teleop(double current_time)
       intake_power = 0.0;
     }
     if (m_first_color_detect > 0) {
-      if (current_time - m_first_color_detect < 0.1) {
+      if (current_time - m_first_color_detect < 0) {
 // do nothing
-      } else if (current_time - m_first_color_detect < .2) {
+      } else if (current_time - m_first_color_detect < .35) {
         intake_power = 0;
+      } else {
+        m_first_color_detect = -1;
       }
     }
 
-    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
-    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
+     rhi_ptr_->setMotorVoltageCommandPercent(m_intake_motor_names[0], intake_power);
+     rhi_ptr_->setMotorVoltageCommandPercent(m_intake_motor_names[1], intake_power);
 
     static bool forklift_pressed = false;
     static bool forklift_up = false;

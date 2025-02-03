@@ -1,9 +1,20 @@
 port_configuration:
     devices:
         imu:
-            port: 1
+            port: 10
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
+        intake_l:
+            port: 2
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        intake_r:
+            port: 1
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+
         drive_l1:
             port: 11
             type: MOTOR
