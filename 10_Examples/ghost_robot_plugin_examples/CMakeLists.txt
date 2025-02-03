@@ -10,12 +10,22 @@ set(DEPENDENCIES
   ament_cmake
   rclcpp
   ghost_ros_interfaces
+  ghost_high_stakes
+  pluginlib
   )
 
 # Iterates through the list and finds the packages!
 foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
 endforeach()
+
+ament_export_dependencies(${DEPENDENCIES})
+
+set(INCLUDE
+  include
+)
+
+include_directories(${INCLUDE})
 
 ####################
 ##### Targets ######
@@ -50,10 +60,11 @@ install(
 )
 
 install(DIRECTORY
+  config
+  launch
   DESTINATION share/${PROJECT_NAME})
 
-pluginlib_export_plugin_description_file(ghost_robot_plugin_examples plugins.xml)
+pluginlib_export_plugin_description_file(ghost_ros_interfaces plugins.xml)
 
 ament_export_include_directories(${INCLUDE})
-
 ament_package()
