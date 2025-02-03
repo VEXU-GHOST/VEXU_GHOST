@@ -4,7 +4,7 @@
 #include <iostream>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
-#include <ghost_util/math_util.hpp>
+#include <ghost_util/eigen_util.hpp>
 
 namespace ghost_tank
 {
