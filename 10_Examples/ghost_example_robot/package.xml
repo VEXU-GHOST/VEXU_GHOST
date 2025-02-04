@@ -3,12 +3,15 @@
 <package format="3">
   <name>ghost_example_robot</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Provides Example Robot Plugin for interacting with V5 Hardware</description>
   <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>ament_cmake_gtest</depend>
   <depend>ghost_ros_interfaces</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
