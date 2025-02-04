@@ -6,7 +6,7 @@ TEST_HARDWARE_CONFIG:
   config_file: 01_Libraries/ghost_v5_interfaces/test/config/example_robot_2.yaml
 
 EXAMPLE_ROBOT:
-  config_file: 10_Examples/ghost_robot_plugin_examples/config/example_hardware_config.yaml
+  config_file: 10_Examples/ghost_example_robot/config/example_hardware_config.yaml
 
 GHOST_15:
   config_file: 11_Robots/ghost_over_under/config/robot_hardware_config_preworlds_swerve.yaml
