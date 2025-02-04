@@ -10,9 +10,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
     home_dir = os.path.expanduser("~")
-    pkg_dir = os.path.join(
-        home_dir, "VEXU_GHOST", "10_Examples", "ghost_robot_plugin_examples"
-    )
+    pkg_dir = os.path.join(home_dir, "VEXU_GHOST", "10_Examples", "ghost_example_robot")
 
     # This contains all the parameters for our ROS nodes
     ros_config_file = os.path.join(pkg_dir, "config/example_ros_config.yaml")
@@ -22,7 +20,7 @@ def generate_launch_description():
         pkg_dir, "config/example_hardware_config.yaml"
     )
 
-    plugin_type = "ghost_robot_plugin_examples::GhostRobotPluginExample"
+    plugin_type = "ghost_example_robot::GhostExampleRobot"
     robot_name = "EXAMPLE_ROBOT"
 
     ########################

@@ -1,5 +1,0 @@
-<library path="ghost_robot_plugin_example">
-  <class type="ghost_robot_plugin_examples::GhostRobotPluginExample" base_class_type="ghost_ros_interfaces::V5RobotBase">
-    <description>Example Robot</description>
-  </class>
-</library>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ghost_robot_plugin_examples)
+project(ghost_example_robot)
 
 # Add Global CMake Config for Ghost Packages
 set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
@@ -29,26 +29,42 @@ include_directories(${INCLUDE})
 ####################
 ##### Targets ######
 ####################
-add_library(ghost_robot_plugin_example SHARED src/ghost_robot_plugin_example.cpp)
-target_include_directories(ghost_robot_plugin_example
+add_library(ghost_example_robot SHARED src/ghost_example_robot.cpp)
+target_include_directories(ghost_example_robot
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(ghost_robot_plugin_example
+ament_target_dependencies(ghost_example_robot
   ${DEPENDENCIES}
 )
 ament_export_libraries(
-  ghost_robot_plugin_example
+  ghost_example_robot
 )
-ament_export_targets(ghost_robot_plugin_example HAS_LIBRARY_TARGET)
+ament_export_targets(ghost_example_robot HAS_LIBRARY_TARGET)
 install(
-TARGETS ghost_robot_plugin_example
-EXPORT ghost_robot_plugin_example
+TARGETS ghost_example_robot
+EXPORT ghost_example_robot
 LIBRARY DESTINATION lib
 ARCHIVE DESTINATION lib
 RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
+
+#################
+##### Tests #####
+#################
+ament_add_gtest(test_example_plugin test/test_example_plugin.cpp)
+ament_target_dependencies(test_example_plugin
+  ${DEPENDENCIES}
+)
+target_link_libraries(test_example_plugin
+  ghost_example_robot
+  gtest
+)
+target_include_directories(test_example_plugin
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 
 ###################
 ##### Install #####

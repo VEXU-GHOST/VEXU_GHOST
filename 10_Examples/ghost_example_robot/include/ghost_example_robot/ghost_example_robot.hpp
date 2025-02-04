@@ -21,48 +21,27 @@
  *   SOFTWARE.
  */
 
-#include <iostream>
-#include <ghost_robot_plugin_examples/ghost_robot_plugin_example.hpp>
-#include <pluginlib/class_list_macros.hpp>
+#pragma once
 
-using ghost_planners::RobotTrajectory;
-using ghost_ros_interfaces::msg_helpers::fromROSMsg;
-using std::placeholders::_1;
+#include <ghost_planners/robot_trajectory.hpp>
+#include <ghost_ros_interfaces/competition/v5_robot_base.hpp>
+#include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 
-namespace ghost_robot_plugin_examples
+namespace ghost_example_robot
 {
 
-GhostRobotPluginExample::GhostRobotPluginExample()
+class GhostExampleRobot : public ghost_ros_interfaces::V5RobotBase
 {
-}
+public:
+  GhostExampleRobot();
 
-void GhostRobotPluginExample::initialize()
-{
-  std::cout << "initialize" << std::endl;
-}
+  void initialize() override;
+  void disabled() override;
+  void autonomous(double current_time) override;
+  void teleop(double current_time) override;
+  void onNewSensorData() override;
 
-void GhostRobotPluginExample::onNewSensorData()
-{
-  std::cout << "onNewSensorData" << std::endl;
-}
+protected:
+};
 
-void GhostRobotPluginExample::disabled()
-{
-  std::cout << "disabled" << std::endl;
-}
-
-void GhostRobotPluginExample::autonomous(double current_time)
-{
-  std::cout << "Autonomous" << current_time << std::endl;
-}
-
-void GhostRobotPluginExample::teleop(double current_time)
-{
-  std::cout << "Teleop" << current_time << std::endl;
-}
-
-} // namespace ghost_robot_plugin_examples
-
-PLUGINLIB_EXPORT_CLASS(
-  ghost_robot_plugin_examples::GhostRobotPluginExample,
-  ghost_ros_interfaces::V5RobotBase)
+} // namespace ghost_example_robot
