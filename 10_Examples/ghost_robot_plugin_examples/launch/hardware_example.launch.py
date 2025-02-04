@@ -11,21 +11,19 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     home_dir = os.path.expanduser("~")
     pkg_dir = os.path.join(
-        home_dir, "VEXU_GHOST", "11_Robots", "ghost_robot_plugin_examples"
-    )
-
-    high_stakes_dir = os.path.join(
-        home_dir, "VEXU_GHOST", "11_Robots", "ghost_high_stakes"
+        home_dir, "VEXU_GHOST", "10_Examples", "ghost_robot_plugin_examples"
     )
 
     # This contains all the parameters for our ROS nodes
-    ros_config_file = os.path.join(pkg_dir, "config/example.yaml")
+    ros_config_file = os.path.join(pkg_dir, "config/example_ros_config.yaml")
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
-    robot_config_yaml_path = os.path.join(high_stakes_dir, "config/omega_jerry.yaml")
+    robot_config_yaml_path = os.path.join(
+        pkg_dir, "config/example_hardware_config.yaml"
+    )
 
     plugin_type = "ghost_robot_plugin_examples::GhostRobotPluginExample"
-    robot_name = "OMEGA_JERRY"
+    robot_name = "EXAMPLE_ROBOT"
 
     ########################
     ### Node Definitions ###
@@ -39,7 +37,6 @@ def generate_launch_description():
             ros_config_file,
             {"robot_config_yaml_path": robot_config_yaml_path},
         ],
-        # arguments=["--ros-args", "--log-level", "debug"]
     )
 
     competition_state_machine_node = Node(

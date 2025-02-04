@@ -10,7 +10,6 @@ set(DEPENDENCIES
   ament_cmake
   rclcpp
   ghost_ros_interfaces
-  ghost_high_stakes
   pluginlib
   )
 
