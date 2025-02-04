@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ghost_examples)
+project(ghost_example_pkg)
 
 # Add Global CMake Config for Ghost Packages
 set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")
@@ -64,7 +64,7 @@ ament_export_include_directories(${INCLUDE})
 #   Again, we start with the executable name, then we add the names of all the ROS Package dependencies
 # install:
 #   This function is what actually causes the executable file to show up in our build folder (where our binaries live).
-#   If you navigate to ~/VEXU_GHOST/install/ghost_examples/lib/ghost_examples, you will see an executable
+#   If you navigate to ~/VEXU_GHOST/install/ghost_example_pkg/lib/ghost_example_pkg, you will see an executable
 #   called ros_publisher_example! Notice how that matches up with the DESTINATION of lib/${PROJECT_NAME}.
 add_executable(ros_publisher_example src/ros_publisher_example.cpp)
 ament_target_dependencies(ros_publisher_example ${DEPENDENCIES})
@@ -163,7 +163,7 @@ target_link_libraries(test_example
 # Typically if you download code from somewhere else, you won't get the source files, just the headers, binaries, and
 # any extras (like the config files).
 
-# This copies our install folder to ~/VEXU_GHOST/install/ghost_examples/include/
+# This copies our install folder to ~/VEXU_GHOST/install/ghost_example_pkg/include/
 # Note:
 #   The slash after include causes it to copy the contents of the folder and not the folder itself.
 #   Without it, we would have "include/include" because we already have include as the DESTINATION.
@@ -172,7 +172,7 @@ install(
   DESTINATION include
 )
 
-# This copies the launch/urdf/config folders to ~/VEXU_GHOST/install/ghost_examples/share/ghost_examples.
+# This copies the launch/urdf/config folders to ~/VEXU_GHOST/install/ghost_example_pkg/share/ghost_example_pkg.
 install(DIRECTORY
   launch
   urdf

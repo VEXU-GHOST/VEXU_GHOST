@@ -21,9 +21,9 @@
  *   SOFTWARE.
  */
 
-#include "ghost_examples/ros_subscriber_example.hpp"
+#include "ghost_example_pkg/ros_subscriber_example.hpp"
 
-namespace ghost_examples
+namespace ghost_example_pkg
 {
 
 ROSSubscriberExample::ROSSubscriberExample()
@@ -60,4 +60,4 @@ void ROSSubscriberExample::do_nothing()
 {
 }
 
-} // namespace ghost_examples
+} // namespace ghost_example_pkg
