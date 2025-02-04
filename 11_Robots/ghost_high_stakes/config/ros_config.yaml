@@ -132,56 +132,6 @@ competition_state_machine_node:
     input_imu_topic: /sensors/imu
     should_record: false
 
-/**:
-  ros__parameters:
-    particle_filter:
-      world_frame: "map"
-      rviz_set_pose_topic: "/set_pf_pose"
-      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
-
-      # Initial position
-      init_x: 0.1905
-      init_y: 0.18415
-      init_r: 1.5708
-      
-      # Initial cloud distribution
-      init_x_sigma: 0.05 #
-      init_y_sigma: 0.05 #
-      init_r_sigma: 0.2 #
-
-      # Motion Model Params
-      # These calculate odometry standard deviations. X is forward, Y is left on robot.
-      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
-
-      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
-      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
-
-      # Remember that LIDAR will correct periodically, so these can be a bit generous.
-      # Too generous though, and you are either losing resolution or wasting computation.
-
-      # MAKE SURE THESE MATCH IN THE SWERVE MODEL
-      k1: 0.154 # x error from x motion         # % error in primary direction
-      k2: 0.05 # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k3: 0.05 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-
-      k4: 0.05 # y error from x motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k5: 0.154 # y error from y motion         # % error in primary direction
-      k6: 0.05 # y error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
-
-      k7: 0.2 # theta error from x motion     # After 2ft of travel, 99% are within by 5°
-      k8: 0.2 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
-      k9: 0.02 # theta error from rotation     # % error in primary direction
-
-      rviz_set_pose_topic: "/set_pf_pose"
-
-    #odom_ekf_node and #map_ekf_node
-    # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
-    # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
-    # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
-    # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
-    # default values, and must be specified.
-    odom0: /sensors/wheel_odom
-
 # If you are using the sweve model and you are tuning the k1-9 parameters,
 # the swerve model plugin has its own duplicate (11_Robots/ghost_high_stakes/config/ros_config.yaml) of the k1-9 parameters that must
 # be changed as well as this file. TODO: make a class for this
