@@ -8,6 +8,7 @@
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_export_depend>ament_cmake</build_export_depend>
   <depend>ament_cmake_gtest</depend>
   <depend>ghost_ros_interfaces</depend>
   <depend>pluginlib</depend>
