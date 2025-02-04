@@ -8,7 +8,12 @@ The biggest tradeoff with not having a "true" Linux installation is you will not
 ## 1) Install WSL2
 Make sure you install **WSL2** and **Ubuntu 22.04** or you will have to redo it.
 
-Link: https://www.omgubuntu.co.uk/how-to-install-wsl2-on-windows-10
+NOTE: Step 4 of the guide below tends to go wrong and people install the the wrong Ubuntu version. When you get to that point, use the following command instead,
+courtesy of Alessandra!
+
+`wsl --install -d Ubuntu-22.04`
+
+https://www.omgubuntu.co.uk/how-to-install-wsl2-on-windows-10
 
 ## 2) Install X11 Forwarding
 X11 Forwarding allows you to send graphics from your WSL Installation to your windows computer.
