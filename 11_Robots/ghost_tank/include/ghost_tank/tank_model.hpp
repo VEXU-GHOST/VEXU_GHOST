@@ -51,9 +51,10 @@ struct TankConfig
 class TankModel
 {
 public:
-  TankModel(std::shared_ptr<rclcpp::Node> node_ptr,
-      std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-      TankConfig config);
+  TankModel(
+    std::shared_ptr<rclcpp::Node> node_ptr,
+    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+    TankConfig config);
 
   /**
    * @brief Get the Tank Model Configration

@@ -30,6 +30,8 @@
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <ghost_util/read_path.hpp>
+#include <ghost_tank/pdControl.hpp>
+#include <ghost_tank/boomerang.h>
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -342,9 +344,12 @@ void TankRobotPlugin::autonomous(double current_time)
   auto curr_vel_y = curr_twist.y();
   auto curr_vel_theta = curr_twist.z();
 
+<<<<<<< HEAD
   publishCurrentTwist(curr_twist);
   // publishDesiredTwist(des_vel_x, des_vel_y, des_vel_theta);
   // publishDesiredPose(des_pos_x, des_pos_y, des_pos_theta);
+=======
+>>>>>>> onboarding-3-jett
 
   geometry_msgs::msg::Twist msg{};
   // msg.linear.x = forward_vel;
@@ -352,7 +357,21 @@ void TankRobotPlugin::autonomous(double current_time)
   // msg.angular.z = angular_vel;
   m_base_twist_cmd_pub->publish(msg);
 
+<<<<<<< HEAD
   movePointToPoint();
+=======
+  std::cout << "test" << std::endl;
+  boomerang boom(curr_pose.x(), curr_pose.y(), curr_pose.z(), 5, 5, 3.14, 0.8);
+  std::cout << "test" << std::endl;
+
+  pdControl pd(current_time, m_tank_model_ptr);
+  std::cout << "test" << std::endl;
+
+  pd.linear_pid(curr_pose.x(), curr_pose.y(), boom.next_point_x, boom.next_point_y);
+  std::cout << "test" << std::endl;
+  // pd.angular_pid(curr_pose.z(), boom.next_theta);
+
+>>>>>>> onboarding-3-jett
 }
 
 void TankRobotPlugin::teleop(double current_time)
