@@ -104,6 +104,7 @@ competition_state_machine_node:
       des_pos_topic: "/des_pos"
       use_backup_estimator: false
       search_radius: 0.3
+      sim_mode: false
 
     behavior_tree:
       cubic_planner_topic: "/motion_planner/cubic_command"

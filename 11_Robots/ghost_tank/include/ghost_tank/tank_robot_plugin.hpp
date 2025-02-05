@@ -187,6 +187,7 @@ protected:
   bool m_intake_cooling_down = false;
 
   bool m_interaction_started = false;
+  bool m_sim_mode = false;
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;

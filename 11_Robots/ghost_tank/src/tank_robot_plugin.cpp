@@ -249,6 +249,9 @@ void TankRobotPlugin::initialize()
     des_pos_topic,
     10);
 
+  node_ptr_->declare_parameter("tank_robot_plugin.sim_mode", false);
+  m_sim_mode = node_ptr_->get_parameter("tank_robot_plugin.sim_mode").as_bool();
+
   bt_ = std::make_shared<TankTree>(bt_path);
   // bt_interaction_ = std::make_shared<TankTree>(bt_path_interaction);
 
@@ -313,85 +316,11 @@ void TankRobotPlugin::onNewSensorData()
 
 void TankRobotPlugin::disabled()
 {
-}
-
-void TankRobotPlugin::go_forward(float target_inch)
-{
-  const double tick_per_IN = 39.93342;
-
-  float right_motor_position = rhi_ptr_->getMotorPosition("drive_r1");
-  float left_motor_position = rhi_ptr_->getMotorPosition("drive_l1");
-  float average = (right_motor_position + left_motor_position) / 2;
-  float goal_encoder = average + target_inch * tick_per_IN;
-  static float p_constant = 5.0;
-
-  double left_cmd = 0.0;
-  double right_cmd = 0.0;
-  if (average < goal_encoder) {
-    left_cmd = right_cmd = p_constant * -0.01 * (average - (goal_encoder));
-  
-  } else {
-    left_cmd = 0.0;
-    right_cmd = 0.0;
-  }
-
-  m_tank_model_ptr->driveCommand(left_cmd, 0);
-}
-
-void TankRobotPlugin::turn(float target_angle)
-{
-  std::vector<std::string> motor_list = {
-    "drive_l1",
-    "drive_l2",
-    "drive_l3",
-    "drive_l4",
-    "drive_l5",
-    "drive_l6",
-    "drive_r1",
-    "drive_r2",
-    "drive_r3",
-    "drive_r4",
-    "drive_r5",
-    "drive_r6"
-  };
-  for (const auto motor_name: motor_list) {
-    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
-  }
-
-  double left_cmd = 0.0;
-  double right_cmd = 0.0;
-
-  float robot_angle = m_curr_odom_pose.z();// current angle position
-  float pastdiff = 0;
-  float diff = (target_angle - robot_angle);//abs becasue 
-  float ddiff = abs(diff- pastdiff);
-  float p_const = 0.5;
-  float d_const = 0.5;
-  if (diff >0) {
-    left_cmd = right_cmd = p_const* abs(diff) + d_const*ddiff;
-
-  } else {
-    left_cmd = 0.0;
-    right_cmd = 0.0;
-  }
-
- if (diff <0){
-  for (int i = 0; i < 5; i++) {
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], right_cmd);
-    
-  }for (int i = 7; i < 12; i++) {
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], -1*left_cmd);
-  }
- }else{
-  for (int i = 0; i < 5; i++) {
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], -1* right_cmd);
-    
-  }for (int i = 7; i < 12; i++) {
-    rhi_ptr_->setMotorVoltageCommandPercent(motor_list[i], left_cmd);
-  }
-  
-}
-pastdiff = diff;
+  // if (m_sim_mode) {
+  //   // std::cout << "sim_time: " << current_time << std::endl;
+  //   autonomous(0.0);
+  //   return;
+  // }
 }
 
 void TankRobotPlugin::autonomous(double current_time)
@@ -428,6 +357,12 @@ void TankRobotPlugin::autonomous(double current_time)
 
 void TankRobotPlugin::teleop(double current_time)
 {
+  // if (m_sim_mode) {
+  //   std::cout << "Teleop: " << current_time << std::endl;
+  //   autonomous(current_time);
+  //   return;
+  // }
+
   auto joy_data = rhi_ptr_->getMainJoystickData();
   // std::cout << "Teleop: " << current_time << std::endl;
 
