@@ -67,6 +67,7 @@ def generate_launch_description():
     ghost_ros_share_dir = get_package_share_directory("ghost_ros_interfaces")
     ghost_sim_share_dir = get_package_share_directory("ghost_sim")
     ghost_localization_share_dir = get_package_share_directory("ghost_localization")
+    ghost_high_stakes_share_dir = get_package_share_directory("ghost_high_stakes")
 
     home_dir = os.path.expanduser("~")
     ghost_ros_base_dir = os.path.join(
@@ -118,6 +119,14 @@ def generate_launch_description():
     plot_juggler_node = Node(
         package="plotjuggler", executable="plotjuggler", name="plot_juggler"
     )
+    
+    sensor_update_spoofer_node = Node(
+        package="ghost_sim",
+        executable="sensor_update_spoofer",
+        name="sensor_update_spoofer",
+        output="screen",
+        parameters=[ghost_high_stakes_share_dir + "/config/ros_config.yaml"],
+    )
 
     return LaunchDescription(
         [
@@ -130,6 +139,7 @@ def generate_launch_description():
             rviz_node,
             # plot_juggler_node,
             robot_localization_node,
+            sensor_update_spoofer_node,
             OpaqueFunction(function=launch_setup),
         ]
     )

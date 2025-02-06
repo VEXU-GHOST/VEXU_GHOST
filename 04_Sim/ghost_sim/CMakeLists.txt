@@ -62,6 +62,19 @@ install(TARGETS
 bag_set_pose_time
   DESTINATION lib/${PROJECT_NAME})
 
+# sensor update spoofer
+add_executable(sensor_update_spoofer
+  src/sensor_update_spoofer.cpp
+)
+ament_target_dependencies(sensor_update_spoofer
+  rclcpp
+  ghost_msgs
+)
+install(TARGETS
+sensor_update_spoofer
+  DESTINATION lib/${PROJECT_NAME})
+
+
 include_directories(${INCLUDE})
 ament_export_include_directories(${INCLUDE})
 
