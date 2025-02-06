@@ -21,12 +21,23 @@
  *   SOFTWARE.
  */
 
-#include "ghost_examples/ros_subscriber_example.hpp"
+#include <iostream>
+#include "yaml-cpp/yaml.h"
 
 int main(int argc, char * argv[])
 {
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ghost_examples::ROSSubscriberExample>());
-  rclcpp::shutdown();
+  std::string config_path = std::string(getenv("VEXU_HOME")) +
+    "/10_Examples/ghost_example_pkg/config/example.yaml";
+  YAML::Node config = YAML::LoadFile(config_path);
+  const std::string string_val = config["ns1"]["ns2"]["string_val"].as<std::string>();
+  const int an_integer = config["ns1"]["ns2"]["an_int"].as<int>();
+  const double some_number = config["ns1"]["ns2"]["a_double"].as<double>();
+
+  std::cout << "Example String: " << string_val << std::endl;
+  std::cout << "Example Integer: " << an_integer << std::endl;
+  std::cout << "Example Double: " << some_number << std::endl;
+
+  std::cout << "Change example.yaml and run again!" << std::endl;
+
   return 0;
 }

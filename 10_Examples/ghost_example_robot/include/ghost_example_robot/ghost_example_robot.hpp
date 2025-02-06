@@ -21,43 +21,27 @@
  *   SOFTWARE.
  */
 
-#include "ghost_examples/ros_subscriber_example.hpp"
+#pragma once
 
-namespace ghost_examples
+#include <ghost_planners/robot_trajectory.hpp>
+#include <ghost_ros_interfaces/competition/v5_robot_base.hpp>
+#include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
+
+namespace ghost_example_robot
 {
 
-ROSSubscriberExample::ROSSubscriberExample()
-: Node("latency_test_subscriber")
+class GhostExampleRobot : public ghost_ros_interfaces::V5RobotBase
 {
-  subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "latency_test_topic", 10, std::bind(&ROSSubscriberExample::topic_callback, this, _1));
-}
+public:
+  GhostExampleRobot();
 
-void ROSSubscriberExample::topic_callback(
-  const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
-{
-  auto now = this->get_clock()->now();
-  auto diff = now - msg->header.stamp;
-  RCLCPP_INFO(this->get_logger(), "%ld us", diff.nanoseconds() / 1000);
-}
+  void initialize() override;
+  void disabled() override;
+  void autonomous(double current_time) override;
+  void teleop(double current_time) override;
+  void onNewSensorData() override;
 
-int ROSSubscriberExample::add_ints(int a, int b)
-{
-  return a + b;
-}
+protected:
+};
 
-float ROSSubscriberExample::add_floats(float a, float b)
-{
-  return a + b;
-}
-
-void ROSSubscriberExample::function_that_throws_error()
-{
-  throw(std::runtime_error("Yup, thats what this function does!"));
-}
-
-void ROSSubscriberExample::do_nothing()
-{
-}
-
-} // namespace ghost_examples
+} // namespace ghost_example_robot

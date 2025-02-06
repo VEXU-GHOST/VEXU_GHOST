@@ -21,7 +21,7 @@
  *   SOFTWARE.
  */
 
-#include "ghost_examples/ros_subscriber_example.hpp"
+#include "ghost_example_pkg/ros_subscriber_example.hpp"
 #include "gtest/gtest.h"
 
 class TestExample : public ::testing::Test
@@ -29,7 +29,7 @@ class TestExample : public ::testing::Test
 protected:
   TestExample()
   {
-    subscriber_node_ = std::make_shared<ghost_examples::ROSSubscriberExample>();
+    subscriber_node_ = std::make_shared<ghost_example_pkg::ROSSubscriberExample>();
   }
 
   void SetUp() override
@@ -39,7 +39,7 @@ protected:
   void TearDown() override
   {
   }
-  std::shared_ptr<ghost_examples::ROSSubscriberExample> subscriber_node_;
+  std::shared_ptr<ghost_example_pkg::ROSSubscriberExample> subscriber_node_;
 };
 
 TEST_F(TestExample, testAddInts) {

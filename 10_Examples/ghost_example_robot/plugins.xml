@@ -1,0 +1,5 @@
+<library path="ghost_example_robot">
+  <class type="ghost_example_robot::GhostExampleRobot" base_class_type="ghost_ros_interfaces::V5RobotBase">
+    <description>Ghost Example Robot</description>
+  </class>
+</library>
