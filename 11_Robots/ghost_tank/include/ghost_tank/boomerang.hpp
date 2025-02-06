@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <ghost_tank/tank_model.hpp>
 #include <ghost_tank/tank_robot_plugin.hpp>

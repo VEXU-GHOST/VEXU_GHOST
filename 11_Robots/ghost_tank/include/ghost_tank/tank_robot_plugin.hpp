@@ -41,6 +41,8 @@
 
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
+#include <ghost_tank/pdcontrol.hpp>
+#include <ghost_tank/boomerang.hpp>
 
 namespace ghost_tank
 {
@@ -188,6 +190,11 @@ protected:
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;
+
+  // boomerang
+  std::shared_ptr<Boomerang> m_boomerang;
+  std::shared_ptr<PDControl> m_pd_control;
+
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;

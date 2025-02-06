@@ -1,4 +1,4 @@
-//header file for PD Control class, to use angular and linear PD control.
+#pragma once
 #include <vector>
 #include <iostream>
 #include <eigen3/Eigen/Core>
@@ -8,7 +8,6 @@ namespace ghost_tank
 
 class PDControl
 {
-
 
 public:
   //constructor

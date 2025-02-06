@@ -30,8 +30,6 @@
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <ghost_util/read_path.hpp>
-#include <ghost_tank/pdcontrol.hpp>
-#include <ghost_tank/boomerang.hpp>
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -265,6 +263,8 @@ void TankRobotPlugin::initialize()
   );
   m_odom_ptr->resetPose();
 
+  m_boomerang = std::make_shared<Boomerang>(0.8);
+  m_pd_control = std::make_shared<PDControl>();
 
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
@@ -358,13 +358,9 @@ void TankRobotPlugin::autonomous(double current_time)
   // movePointToPoint();
 
   std::cout << "test" << std::endl;
-  Boomerang boom(0.8);
+  m_boomerang->set_end_point(5, 5, 3.14);
   std::cout << "test" << std::endl;
-  boom.set_end_point(5, 5, 3.14);
-  std::cout << "test" << std::endl;
-  PDControl pd;
-  std::cout << "test" << std::endl;
-  auto command = pd.tank_pid(curr_pose, boom.get_next_point(curr_pose), current_time);
+  auto command = m_pd_control->tank_pid(curr_pose, m_boomerang->get_next_point(curr_pose), current_time);
 
   std::cout << "test" << std::endl;
   // pd.angular_pid(curr_pose.z(), boom.next_theta);
