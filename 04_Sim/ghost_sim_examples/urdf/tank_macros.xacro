@@ -41,15 +41,15 @@
                 </cylinder>
             </geometry>
 
-            <surface>
-                <friction>
-                <ode>
-                    <mu>"${mu}"</mu>
-                    <mu2>"${mu2}"</mu2> 
-                    <fdir1>1 0 0</fdir1>
-                </ode>                 
-                </friction>
-            </surface>
+            <!-- <surface> -->
+                <!-- <friction> -->
+                <!-- <ode> -->
+                    <!-- <mu>"${mu}"</mu> -->
+                    <!-- <mu2>"${mu2}"</mu2>  -->
+                    <!-- <fdir1>1 0 0</fdir1> -->
+                <!-- </ode>                  -->
+                <!-- </friction> -->
+            <!-- </surface> -->
         </collision>
 
         <material>Gazebo/White</material>
