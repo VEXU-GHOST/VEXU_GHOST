@@ -318,11 +318,13 @@ void TankRobotPlugin::onNewSensorData()
 
 void TankRobotPlugin::disabled()
 {
-  // if (m_sim_mode) {
-  //   // std::cout << "sim_time: " << current_time << std::endl;
-  //   autonomous(0.0);
-  //   return;
-  // }
+  if (m_sim_mode) {
+    static double time = 0.0;
+    std::cout << "disabled: " << time << std::endl;
+    autonomous(time);
+    time += 0.01;
+    return;
+  }
 }
 
 void TankRobotPlugin::autonomous(double current_time)
@@ -370,11 +372,11 @@ void TankRobotPlugin::autonomous(double current_time)
 
 void TankRobotPlugin::teleop(double current_time)
 {
-  // if (m_sim_mode) {
-  //   std::cout << "Teleop: " << current_time << std::endl;
-  //   autonomous(current_time);
-  //   return;
-  // }
+  if (m_sim_mode) {
+    std::cout << "sim Teleop: " << current_time << std::endl;
+    autonomous(current_time);
+    return;
+  }
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
   // std::cout << "Teleop: " << current_time << std::endl;

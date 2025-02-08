@@ -26,6 +26,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "ghost_msgs/msg/v5_sensor_update.hpp"
+using namespace std::chrono_literals;
 
 namespace sensor_update_spoofer
 {
@@ -40,22 +41,22 @@ public:
       "/v5/sensor_update",
       10);
 
-    auto publish_message =
-      [this]() -> void
-      {
-        auto msg = ghost_msgs::msg::V5SensorUpdate();
-        RCLCPP_INFO(this->get_logger(), "Publishing: sensor update");
-
-        // Put the message into a queue to be processed by the middleware.
-        // This call is non-blocking.
-        sensor_update_publisher->publish(msg);
-      };
-
-    this->create_wall_timer(
-      std::chrono::milliseconds(10),
-      publish_message);
+    timer = this->create_wall_timer(
+      20ms,
+      std::bind(&SensorUpdateSpoofer::publish_msg, this));
   }
 private:
+  rclcpp::TimerBase::SharedPtr timer;
+  void publish_msg()
+  {
+    auto msg = ghost_msgs::msg::V5SensorUpdate();
+    RCLCPP_INFO(this->get_logger(), "Publishing: sensor update");
+
+    msg.header.stamp = this->now();
+    msg.competition_status.is_disabled = false;
+    msg.competition_status.is_autonomous = true;
+    sensor_update_publisher->publish(msg);
+  }
   rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_publisher;
 };
 
