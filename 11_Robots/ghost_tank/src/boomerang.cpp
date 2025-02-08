@@ -16,11 +16,12 @@ namespace ghost_tank
 {
 
 Boomerang::Boomerang(
-  float lead)
+  float lead, rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub, rclcpp::Node::SharedPtr node_ptr):
+  lead_(lead),
+  m_trajectory_viz_pub(trajectory_viz_pub),
+  node_ptr_(node_ptr)
 {
-  lead_ = lead;
 }
-
 
 //determine carrot point
 void Boomerang::find_carrot(Eigen::Vector3d cur_pos)
@@ -32,24 +33,48 @@ void Boomerang::find_carrot(Eigen::Vector3d cur_pos)
 
 void Boomerang::map_curve(Eigen::Vector3d cur_pos)
 {
-  std::cout << "map curve" << std::endl;
   find_carrot(cur_pos);
+  points_.clear();
+
   float x_next;
   float y_next;
   //float r_next;
-  for (int t = 0; t <= 1; t += 0.1) {
+
+  auto msg = visualization_msgs::msg::MarkerArray{};
+  // int j = 0;
+
+  auto marker_msg = visualization_msgs::msg::Marker{};
+  marker_msg.header.frame_id = "base_link";
+  marker_msg.header.stamp = node_ptr_->get_clock()->now();
+  marker_msg.id = 0;
+  marker_msg.action = 0;
+  marker_msg.type = 8; // points type
+  marker_msg.scale.x = 0.1;
+  marker_msg.scale.y = 0.1;
+  marker_msg.scale.z = 0.1;
+  marker_msg.color.a = 1;
+  for (float t = 0; t <= 1; t += 0.1) {
     x_next = (1 - t) * ((1 - t) * cur_pos.x() + t * carrot_x_) + t * ((1 - t) * carrot_x_ + t * end_x_);
     y_next = (1 - t) * ((1 - t) * cur_pos.y() + t * carrot_y_) + t * ((1 - t) * carrot_y_ + t * end_y_);
 
+    geometry_msgs::msg::Point p0{};
+    p0.x = x_next;
+    p0.y = y_next;
+    p0.z = 0.0;
+    marker_msg.points.push_back(p0);
+    // msg.markers.push_back(marker_msg);
+
+    // std::cout << "x: " << x_next;
+    // std::cout << " y: " << y_next << std::endl;
     points_.push_back({x_next, y_next});
   }
+  msg.markers.push_back(marker_msg);
+  m_trajectory_viz_pub->publish(msg);
 }
 
 void Boomerang::find_next_point(Eigen::Vector3d cur_pos)
 {
   //finds next angle the robot needs to be oriented in to travel to next point.
-  std::cout << "find next point" << std::endl;
-
   float slope_y = points_[1].y - cur_pos.y();
   float slope_x = points_[1].x - cur_pos.x();
   //writes next point into public varibles, to be accessed in autonomous
@@ -61,7 +86,6 @@ void Boomerang::find_next_point(Eigen::Vector3d cur_pos)
     //this is the direction the robot must go
     next_theta_ = std::atan(std::abs(slope_y / slope_x));
   }
-  std::cout << "end of finding next point" << std::endl;
 }
 
 void Boomerang::set_end_point(float x, float y, float radians)

@@ -125,7 +125,8 @@ def generate_launch_description():
         executable="sensor_update_spoofer",
         name="sensor_update_spoofer",
         output="screen",
-        parameters=[ghost_high_stakes_share_dir + "/config/ros_config.yaml"],
+        parameters=[ghost_high_stakes_share_dir + "/config/ros_config.yaml",
+            {"use_sim_time": True}],
     )
 
     return LaunchDescription(

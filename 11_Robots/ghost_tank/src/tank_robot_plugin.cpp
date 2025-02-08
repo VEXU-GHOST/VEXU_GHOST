@@ -263,7 +263,7 @@ void TankRobotPlugin::initialize()
   );
   m_odom_ptr->resetPose();
 
-  m_boomerang = std::make_shared<Boomerang>(0.8);
+  m_boomerang = std::make_shared<Boomerang>(0.8, m_trajectory_viz_pub, node_ptr_);
   m_pd_control = std::make_shared<PDControl>();
 
   bt_->set_variable("rhi_ptr", rhi_ptr_);
@@ -318,13 +318,6 @@ void TankRobotPlugin::onNewSensorData()
 
 void TankRobotPlugin::disabled()
 {
-  if (m_sim_mode) {
-    static double time = 0.0;
-    std::cout << "disabled: " << time << std::endl;
-    autonomous(time);
-    time += 0.01;
-    return;
-  }
 }
 
 void TankRobotPlugin::autonomous(double current_time)
@@ -351,33 +344,23 @@ void TankRobotPlugin::autonomous(double current_time)
   // publishDesiredPose(des_pos_x, des_pos_y, des_pos_theta);
 
   geometry_msgs::msg::Twist msg{};
-  // msg.linear.x = forward_vel;
-  msg.linear.y = 0;
-  // msg.angular.z = angular_vel;
-  m_base_twist_cmd_pub->publish(msg);
 
   // purepursuit
   // movePointToPoint();
 
-  std::cout << "test" << std::endl;
-  m_boomerang->set_end_point(5, 5, 3.14);
-  std::cout << "test" << std::endl;
+  m_boomerang->set_end_point(2.0, 2.0, 0.0);
   auto command = m_pd_control->tank_pid(curr_pose, m_boomerang->get_next_point(curr_pose), current_time);
+  auto fwd_cmd = command[0];
+  auto turn_cmd = command[1];
 
-  std::cout << "test" << std::endl;
-  // pd.angular_pid(curr_pose.z(), boom.next_theta);
-
+  msg.linear.x = fwd_cmd;
+  msg.angular.z = turn_cmd;
+  m_base_twist_cmd_pub->publish(msg);
   m_tank_model_ptr->driveCommand(command[0],command[1]);
 }
 
 void TankRobotPlugin::teleop(double current_time)
 {
-  if (m_sim_mode) {
-    std::cout << "sim Teleop: " << current_time << std::endl;
-    autonomous(current_time);
-    return;
-  }
-
   auto joy_data = rhi_ptr_->getMainJoystickData();
   // std::cout << "Teleop: " << current_time << std::endl;
 

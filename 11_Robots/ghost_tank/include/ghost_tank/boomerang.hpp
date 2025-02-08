@@ -17,7 +17,10 @@ namespace ghost_tank
 
 class Boomerang {
 public:
-  Boomerang(float lead);
+  // Boomerang(float lead);
+  Boomerang(
+  float lead, rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub, rclcpp::Node::SharedPtr node_ptr);
+
 
   //determine carrot point
   void find_carrot(Eigen::Vector3d cur_pos);
@@ -41,6 +44,9 @@ private:
   float next_point_x_;
   float next_point_y_;
   float next_theta_;
+
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
+  rclcpp::Node::SharedPtr node_ptr_;
 
   struct XYD
   {
