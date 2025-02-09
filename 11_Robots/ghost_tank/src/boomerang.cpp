@@ -23,7 +23,7 @@ Boomerang::Boomerang(
 {
 }
 
-//determine carrot point
+// determine carrot point
 void Boomerang::find_carrot(Eigen::Vector3d cur_pos)
 {
   float hyp = sqrt(pow(cur_pos.x() - end_x_, 2) + pow(cur_pos.y() - end_y_, 2));
@@ -31,6 +31,7 @@ void Boomerang::find_carrot(Eigen::Vector3d cur_pos)
   carrot_y_ = end_y_ - hyp * std::cos(end_radians_) * lead_;
 }
 
+// map the curve with 10 points
 void Boomerang::map_curve(Eigen::Vector3d cur_pos)
 {
   find_carrot(cur_pos);
@@ -38,13 +39,11 @@ void Boomerang::map_curve(Eigen::Vector3d cur_pos)
 
   float x_next;
   float y_next;
-  //float r_next;
 
   auto msg = visualization_msgs::msg::MarkerArray{};
-  // int j = 0;
 
   auto marker_msg = visualization_msgs::msg::Marker{};
-  marker_msg.header.frame_id = "base_link";
+  marker_msg.header.frame_id = "map";
   marker_msg.header.stamp = node_ptr_->get_clock()->now();
   marker_msg.id = 0;
   marker_msg.action = 0;
@@ -62,32 +61,13 @@ void Boomerang::map_curve(Eigen::Vector3d cur_pos)
     p0.y = y_next;
     p0.z = 0.0;
     marker_msg.points.push_back(p0);
-    // msg.markers.push_back(marker_msg);
-
-    // std::cout << "x: " << x_next;
-    // std::cout << " y: " << y_next << std::endl;
     points_.push_back({x_next, y_next});
   }
   msg.markers.push_back(marker_msg);
   m_trajectory_viz_pub->publish(msg);
 }
 
-void Boomerang::find_next_point(Eigen::Vector3d cur_pos)
-{
-  //finds next angle the robot needs to be oriented in to travel to next point.
-  float slope_y = points_[1].y - cur_pos.y();
-  float slope_x = points_[1].x - cur_pos.x();
-  //writes next point into public varibles, to be accessed in autonomous
-  next_point_x_ = points_[1].x;
-  next_point_y_ = points_[1].x;
-  if (slope_x == 0) {
-    next_theta_ = (slope_y >= 0) ? 3.141 / 2 : -3.141 / 2;
-  } else {
-    //this is the direction the robot must go
-    next_theta_ = std::atan(std::abs(slope_y / slope_x));
-  }
-}
-
+// sets the end point
 void Boomerang::set_end_point(float x, float y, float radians)
 {
   end_x_ = x;
@@ -95,15 +75,16 @@ void Boomerang::set_end_point(float x, float y, float radians)
   end_radians_ = radians;
 }
 
+// sets the lead distance
 void Boomerang::set_lead(float lead)
 {
   lead_ = lead;
 }
-Eigen::Vector2d Boomerang::get_next_point(Eigen::Vector3d cur_pos)
+
+// returns the points of the curve
+std::vector<Eigen::Vector2d> Boomerang::get_points()
 {
-  map_curve(cur_pos);
-  find_next_point(cur_pos);
-  return Eigen::Vector2d(next_point_x_, next_point_y_);
+  return points_;
 }
 
 }  // namespace ghost_tank

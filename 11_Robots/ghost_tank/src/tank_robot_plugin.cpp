@@ -36,8 +36,9 @@ using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
 
 std::vector<double> x_values;
-    std::vector<double> y_values;
-    std::vector<double> angle_values;
+std::vector<double> y_values;
+std::vector<double> angle_values;
+std::vector<Eigen::Vector2d> m_trajectory;
 namespace ghost_tank
 {
 
@@ -348,8 +349,10 @@ void TankRobotPlugin::autonomous(double current_time)
   // purepursuit
   // movePointToPoint();
 
-  m_boomerang->set_end_point(2.0, 2.0, 0.0);
-  auto command = m_pd_control->tank_pid(curr_pose, m_boomerang->get_next_point(curr_pose), current_time);
+  m_boomerang->set_end_point(1.0, 2.5, -1.57);
+  m_boomerang->map_curve(curr_pose);
+  m_trajectory = m_boomerang->get_points();
+  auto command = m_pd_control->tank_pid(curr_pose, m_trajectory[1], current_time);
   auto fwd_cmd = command[0];
   auto turn_cmd = command[1];
 

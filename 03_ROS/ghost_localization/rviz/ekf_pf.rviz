@@ -10,8 +10,10 @@ Panels:
         - /LIDAR1/Topic1
         - /Odometry1
         - /Odometry1/Topic1
+        - /MarkerArray1
+        - /MarkerArray1/Status1
       Splitter Ratio: 0.5
-    Tree Height: 793
+    Tree Height: 907
 Visualization Manager:
   Class: ""
   Displays:
@@ -91,25 +93,9 @@ Visualization Manager:
         All Enabled: true
         base_link:
           Value: true
-        camera_accel_frame:
-          Value: true
-        camera_accel_optical_frame:
-          Value: true
-        camera_gyro_frame:
-          Value: true
-        camera_gyro_optical_frame:
-          Value: true
-        camera_imu_frame:
-          Value: true
-        camera_imu_optical_frame:
-          Value: true
-        camera_link:
-          Value: true
         imu_link:
           Value: true
         lidar_link:
-          Value: true
-        odom:
           Value: true
       Marker Scale: 0.20000000298023224
       Name: TF
@@ -117,10 +103,11 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        odom:
-          base_link:
-            imu_link: {}
-            lidar_link: {}
+        base_link:
+          imu_link:
+            {}
+          lidar_link:
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -147,7 +134,8 @@ Visualization Manager:
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Map
-      Namespaces: {}
+      Namespaces:
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -171,7 +159,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 47
+      Max Intensity: 0
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: LIDAR
@@ -193,7 +181,8 @@ Visualization Manager:
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: Swerve Kinematics
-      Namespaces: {}
+      Namespaces:
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -204,7 +193,8 @@ Visualization Manager:
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: Predicted Scan
-      Namespaces: {}
+      Namespaces:
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -286,10 +276,22 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /odometry/filtered
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /trajectory_markers
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
-    Fixed Frame: odom
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -347,10 +349,10 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1016
+  Height: 1136
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000025d000003a2fc0200000001fb000000100044006900730070006c006100790073010000003b000003a2000000c700ffffff000004d5000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
-  Width: 1848
-  X: 1945
-  Y: 206
+  QMainWindow State: 000000ff00000000fd00000001000000000000025d00000416fc0200000001fb000000100044006900730070006c006100790073010000003d00000416000000c900ffffff000004d70000041600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Width: 1850
+  X: 70
+  Y: 27
