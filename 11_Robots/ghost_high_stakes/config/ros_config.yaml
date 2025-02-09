@@ -106,10 +106,6 @@ competition_state_machine_node:
       search_radius: 0.3
       sim_mode: true
 
-    behavior_tree:
-      cubic_planner_topic: "/motion_planner/cubic_command"
-      trapezoid_planner_topic: "/motion_planner/trapezoid_command"
-
 /**:
   ros__parameters:
     particle_filter:
@@ -160,6 +156,9 @@ competition_state_machine_node:
     # default values, and must be specified.
     odom0: /sensors/wheel_odom
 
+    behavior_tree:
+      trajectory_topic: "/motion_planner/trajectory"
+    
     use_sim_time: true
 
 # If you are using the sweve model and you are tuning the k1-9 parameters,

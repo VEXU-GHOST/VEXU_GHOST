@@ -7,9 +7,6 @@
 
 namespace BT_Util {
     
-// template <typename T>
-// T get_input(std::string key);
-
 template<typename T>
 T get_input(BT::TreeNode* node, std::string key)
 {
@@ -23,5 +20,11 @@ T get_input(BT::TreeNode* node, std::string key)
   return input.value();
 }
 
+template<typename T>
+void get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T &value){
+    if(!blackboard->get(key, value)){
+        std::cout << key << " not found in blackboard" << std::endl;
+    }
+}
 
 } // namespace ghost_tank

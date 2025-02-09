@@ -35,10 +35,6 @@ using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
 
-std::vector<double> x_values;
-std::vector<double> y_values;
-std::vector<double> angle_values;
-std::vector<Eigen::Vector2d> m_trajectory;
 namespace ghost_tank
 {
 
@@ -248,8 +244,8 @@ void TankRobotPlugin::initialize()
     des_pos_topic,
     10);
 
-  node_ptr_->declare_parameter("tank_robot_plugin.sim_mode", false);
-  m_sim_mode = node_ptr_->get_parameter("tank_robot_plugin.sim_mode").as_bool();
+  // node_ptr_->declare_parameter("use_sim_time", false);
+  m_sim_mode = node_ptr_->get_parameter("use_sim_time").as_bool();
 
   bt_ = std::make_shared<TankTree>(bt_path);
   // bt_interaction_ = std::make_shared<TankTree>(bt_path_interaction);
@@ -326,12 +322,13 @@ void TankRobotPlugin::autonomous(double current_time)
   std::cout << "Autonomous: " << current_time << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
 
-  // bt_->tick_tree();
   static bool first_loop = true;
   if (first_loop){
     first_loop = false;
     m_odom_ptr->resetPose();
   }
+
+  bt_->tick_tree();
 
   // Get best state estimate
   auto curr_pose = m_tank_model_ptr->getWorldPose();
@@ -340,26 +337,18 @@ void TankRobotPlugin::autonomous(double current_time)
   auto curr_vel_y = curr_twist.y();
   auto curr_vel_theta = curr_twist.z();
 
-  publishCurrentTwist(curr_twist);
-  // publishDesiredTwist(des_vel_x, des_vel_y, des_vel_theta);
-  // publishDesiredPose(des_pos_x, des_pos_y, des_pos_theta);
+  movePointToPoint();
 
-  geometry_msgs::msg::Twist msg{};
+  publishCurrentTwist(curr_twist);
+  // publishDesiredTwist(m_desired_twist);
+  publishDesiredPose(m_desired_pose);
 
   // purepursuit
-  // movePointToPoint();
-  m_boomerang->set_lead(0.8);
-  m_boomerang->set_end_point(2.0, 2.0, -1.57);
-  m_boomerang->map_curve(curr_pose);
-  m_trajectory = m_boomerang->get_points();
-  auto command = m_pd_control->tank_pid(curr_pose, m_trajectory[1], current_time);
-  auto fwd_cmd = command[0];
-  auto turn_cmd = command[1];
+  // m_boomerang->set_lead(0.8);
+  // m_boomerang->set_end_point(2.0, 2.0, -1.57);
+  // m_boomerang->map_curve(curr_pose);
+  // m_trajectory = m_boomerang->get_points();
 
-  msg.linear.x = fwd_cmd;
-  msg.angular.z = turn_cmd;
-  m_base_twist_cmd_pub->publish(msg);
-  m_tank_model_ptr->driveCommand(command[0],command[1]);
 }
 
 void TankRobotPlugin::teleop(double current_time)
@@ -585,13 +574,13 @@ void TankRobotPlugin::publishDesiredTwist(
   m_des_twist_pub->publish(msg);
 }
 
-void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d twist)
+void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d pose)
 {
   geometry_msgs::msg::Pose msg{};
-  msg.position.x = twist.x();
-  msg.position.y = twist.y();
+  msg.position.x = pose.x();
+  msg.position.y = pose.y();
   ghost_util::yawToQuaternionRad(
-    twist.z(),
+    pose.z(),
     msg.orientation.w,
     msg.orientation.x,
     msg.orientation.y,
@@ -600,6 +589,9 @@ void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d twist)
 }
 
 void TankRobotPlugin::publishTrajectoryVisualization(){
+    if (!robot_trajectory_ptr_->isNotEmpty()){
+        return;
+    }
     visualization_msgs::msg::MarkerArray msg{};
     visualization_msgs::msg::Marker marker{};
     marker.header.frame_id = "map";
@@ -613,10 +605,10 @@ void TankRobotPlugin::publishTrajectoryVisualization(){
     marker.color.r = 1.0;
     marker.color.a = 1.0;
 
-    for (auto & point : m_trajectory) {
+    for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); ++i){
         geometry_msgs::msg::Point p;
-        p.x = point.x();
-        p.y = point.y();
+        p.x = robot_trajectory_ptr_->x_trajectory.position_vector[i];
+        p.y = robot_trajectory_ptr_->y_trajectory.position_vector[i];
         p.z = 0.0;
         marker.points.push_back(p);
     }
@@ -626,7 +618,7 @@ void TankRobotPlugin::publishTrajectoryVisualization(){
 }
 
 void TankRobotPlugin::readPathFromFile(const std::string& filename) {
-    ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
+    // ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
 }
 
 void TankRobotPlugin::movePointToPoint(){
@@ -636,62 +628,43 @@ void TankRobotPlugin::movePointToPoint(){
     double current_x = m_tank_model_ptr->getWorldPose().x();
     double current_y = m_tank_model_ptr->getWorldPose().y();
     double current_angle = m_tank_model_ptr->getWorldAngleRad();
-    // double current_x = m_curr_odom_pose.x();
-    // double current_y = m_curr_odom_pose.y();
-    // double current_angle = m_curr_odom_pose.z() + 1.57;
+
+    if (!robot_trajectory_ptr_->isNotEmpty()){
+        return;
+    }
+    auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
+    auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
     if (past_index == x_values.size()-1){
-      return;
+        return;
     }
 
     if (x_values.size() != y_values.size()) {
-      std::cout << "x_values and y_values must be the same size" << std::endl;
-      throw std::runtime_error("x_values and y_values must be the same size");
+        std::cout << "x_values and y_values must be the same size" << std::endl;
+        throw std::runtime_error("x_values and y_values must be the same size");
     }
     for(int i = past_index; i < x_values.size(); ++i){//find farthest point in radius 
-      double distance = sqrt(pow((current_x - x_values[i]),2)+pow((current_y - y_values[i]),2));
-      if (distance < search_radius){
-        next_index = i;
-      }
-    }
-   
-    //goal angle 
-    std::cout << "next index:" << next_index << std::endl;
-    std::cout << "size:" << x_values.size() << std::endl;
-    double dx = x_values[next_index] - current_x;
-    double dy = y_values[next_index] - current_y;
-    double goal_radians = atan2(dy, dx);
-    // double goal_degrees = angle_radians * (double)(180/3.14159265358987932);
-    // if (goal_degrees <= 0){
-    //     goal_degrees += 360;
-    // }
-    //turn to goal angle 
-    auto turn_rad = ghost_util::SmallestAngleDistRad(goal_radians, current_angle);
-
-    auto turn_limit = 0.3;
-    if (turn_rad < turn_limit && turn_rad > -turn_limit){ //5.7 DEGREES
-      turn_rad = 0;
+        double distance = sqrt(pow((current_x - x_values[i]),2)+pow((current_y - y_values[i]),2));
+        if (distance < search_radius){
+            next_index = i;
+        }
     }
 
-    //distance between current and goal pt 
-    double distance = sqrt(pow(dx,2)+pow(dy,2));
-    std::cout << "posx:" << current_x << std::endl;
-    std::cout << "posy:" << current_y << std::endl;
-    std::cout << "postheta:" << current_angle << std::endl;
-    std::cout << "dx:" << dx << std::endl;
-    std::cout << "dy:" << dy << std::endl;
-    std::cout << "dtheta:" << turn_rad << std::endl;
-    
-    double fwd_cmd = distance * 0.5;
-    double turn_cmd = turn_rad / 3.14 / 2.0;
+    m_desired_pose = Eigen::Vector3d(x_values[next_index], y_values[next_index], 0.0);
+
     geometry_msgs::msg::Twist msg{};
+
+    auto command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_desired_pose, 0.0);
+    auto fwd_cmd = command[0];
+    auto turn_cmd = command[1];
+
     msg.linear.x = fwd_cmd;
     msg.angular.z = turn_cmd;
     m_base_twist_cmd_pub->publish(msg);
-    m_tank_model_ptr->driveCommand(fwd_cmd, turn_cmd);
-  }
+    m_tank_model_ptr->driveCommand(command[0],command[1]);
+
 }
 
 
- // namespace ghost_tank
+} // namespace ghost_tank
 
 PLUGINLIB_EXPORT_CLASS(ghost_tank::TankRobotPlugin, ghost_ros_interfaces::V5RobotBase)

@@ -1,10 +1,8 @@
 #pragma once
 #include <iostream>
 #include <ghost_tank/tank_model.hpp>
-#include <ghost_tank/tank_robot_plugin.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
-#include <pluginlib/class_list_macros.hpp>
 #include <eigen3/Eigen/Core>
 
 #include <cmath>

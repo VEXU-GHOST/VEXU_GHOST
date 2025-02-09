@@ -162,6 +162,7 @@ set(NODES
   loggingNode
   autoDone
   autonTimer
+  moveToPoseBoomerang
 )
 
 foreach(NODE ${NODES})

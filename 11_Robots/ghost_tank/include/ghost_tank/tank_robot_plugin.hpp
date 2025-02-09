@@ -60,7 +60,6 @@ public:
 
 protected:
   // Publishers
-  void movePointToPoint();
   void readPathFromFile(const std::string& filename);
   void go_forward(float target_inch);
   void turn(float target_angle);
@@ -105,16 +104,15 @@ protected:
   std::shared_ptr<TankModel> m_tank_model_ptr;
 
   // Autonomy
+  void movePointToPoint();
   std::string bt_path_;
   std::shared_ptr<TankTree> bt_;
   std::shared_ptr<TankTree> bt_interaction;
 
   // Motion Planner
-  double m_move_to_pose_kp_xy = 0.0;
-  double m_move_to_pose_kd_xy = 0.0;
-  double m_move_to_pose_kp_theta = 0.0;
-  double m_move_to_pose_kd_theta = 0.0;
   double m_search_radius = 0.0;
+  Eigen::Vector3d m_desired_pose = Eigen::Vector3d::Zero();
+  Eigen::Vector3d m_desired_twist = Eigen::Vector3d::Zero();
 
   // Odometry
   std::shared_ptr<TankOdometry> m_odom_ptr;
@@ -194,7 +192,6 @@ protected:
   // boomerang
   std::shared_ptr<Boomerang> m_boomerang;
   std::shared_ptr<PDControl> m_pd_control;
-
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;

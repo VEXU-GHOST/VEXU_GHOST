@@ -20,7 +20,7 @@ PDControl::PDControl(float kp_xy,
   prev_error_theta_ = 0;
 }
 
-Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector2d end_pos, float time)
+Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d end_pos, float time)
 {
   float error_x = end_pos.x() - cur_pos.x();
   float error_y = end_pos.y() - cur_pos.y();
