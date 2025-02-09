@@ -69,6 +69,8 @@ add_executable(sensor_update_spoofer
 ament_target_dependencies(sensor_update_spoofer
   rclcpp
   ghost_msgs
+  gazebo_msgs
+  nav_msgs
 )
 install(TARGETS
 sensor_update_spoofer
