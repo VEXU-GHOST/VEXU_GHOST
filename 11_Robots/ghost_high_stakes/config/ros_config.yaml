@@ -86,7 +86,7 @@ competition_state_machine_node:
       # motion planning
       move_to_pose_kp_xy: 1.0
       move_to_pose_kd_xy: 0.7
-      move_to_pose_kp_theta: 1.0
+      move_to_pose_kp_theta: 0.2
       move_to_pose_kd_theta: 0.7
 
       burnout_absolute_current_threshold_ma: 100.0
@@ -103,7 +103,7 @@ competition_state_machine_node:
       cur_twist_topic: "/cur_vel"
       des_pos_topic: "/des_pos"
       use_backup_estimator: false
-      search_radius: 0.3
+      search_radius: 1.0
       sim_mode: true
 
 /**:

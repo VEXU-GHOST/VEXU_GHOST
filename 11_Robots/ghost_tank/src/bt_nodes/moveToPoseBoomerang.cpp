@@ -119,6 +119,10 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	msg.y_trajectory.threshold = threshold;
 	msg.theta_trajectory.threshold = angle_threshold;
 
+	msg.x_trajectory.time = {0.0};
+	msg.y_trajectory.time = {0.0};
+	msg.theta_trajectory.time = {0.0};
+
 	if( (abs(posX - tank_model_ptr_->getWorldPose().x()) < threshold) &&
 	    (abs(posY - tank_model_ptr_->getWorldPose().y()) < threshold) &&
 	    (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold)){

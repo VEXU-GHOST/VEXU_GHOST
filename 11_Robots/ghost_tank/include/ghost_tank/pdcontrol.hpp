@@ -15,10 +15,9 @@ public:
     float kd_xy_,
     float kp_theta_,
     float kd_theta_);
-  Eigen::Vector2d tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d end_pos, float time);
+  Eigen::Vector2d tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos);
 
 private:
-  float prev_time_;
   float prev_error_xy_;
   float prev_error_theta_;
 
