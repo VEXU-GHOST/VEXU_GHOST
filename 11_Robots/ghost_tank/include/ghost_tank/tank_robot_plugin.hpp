@@ -190,6 +190,9 @@ protected:
   bool m_sim_mode = false;
 
   // boomerang
+  double m_max_speed_linear;
+  double m_max_speed_angular;
+
   std::shared_ptr<Boomerang> m_boomerang;
   std::shared_ptr<PDControl> m_pd_control;
 

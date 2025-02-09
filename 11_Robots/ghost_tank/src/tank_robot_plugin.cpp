@@ -27,6 +27,7 @@
 #include <ghost_tank/tank_model.hpp>
 #include <ghost_tank/tank_robot_plugin.hpp>
 #include <ghost_util/angle_util.hpp>
+#include <ghost_util/math_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <ghost_util/read_path.hpp>
@@ -266,6 +267,11 @@ void TankRobotPlugin::initialize()
   float kd_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
   float kp_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
   float kd_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.max_speed_linear", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.max_speed_angular", 0.5);
+  m_max_speed_linear = node_ptr_->get_parameter("tank_robot_plugin.max_speed_linear").as_double();
+  m_max_speed_angular = node_ptr_->get_parameter("tank_robot_plugin.max_speed_angular").as_double();
 
   m_boomerang = std::make_shared<Boomerang>();
   m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta);
@@ -647,8 +653,8 @@ void TankRobotPlugin::movePointToPoint(){
     geometry_msgs::msg::Twist msg{};
 
     auto command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
-    auto fwd_cmd = command[0];
-    auto turn_cmd = command[1];
+    auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
+    auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
 
     msg.linear.x = fwd_cmd;
     msg.angular.z = turn_cmd;
