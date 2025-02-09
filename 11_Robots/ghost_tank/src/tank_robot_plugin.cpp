@@ -95,8 +95,6 @@ void TankRobotPlugin::initialize()
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
 
-  std::cout << "backup: " << m_use_backup_estimator << std::endl;
-
   node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
   std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
 
@@ -264,8 +262,17 @@ void TankRobotPlugin::initialize()
   );
   m_odom_ptr->resetPose();
 
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.5);
+  float kp_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
+  float kd_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
+  float kp_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
+  float kd_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
+
   m_boomerang = std::make_shared<Boomerang>();
-  m_pd_control = std::make_shared<PDControl>();
+  m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta);
 
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
