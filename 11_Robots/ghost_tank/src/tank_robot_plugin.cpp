@@ -264,7 +264,7 @@ void TankRobotPlugin::initialize()
   );
   m_odom_ptr->resetPose();
 
-  m_boomerang = std::make_shared<Boomerang>(0.8, m_trajectory_viz_pub, node_ptr_);
+  m_boomerang = std::make_shared<Boomerang>();
   m_pd_control = std::make_shared<PDControl>();
 
   bt_->set_variable("rhi_ptr", rhi_ptr_);
@@ -293,13 +293,6 @@ void TankRobotPlugin::onNewSensorData()
     imu_msg.orientation.y, imu_msg.orientation.z);
   imu_pub->publish(imu_msg);
 
-  //m_tank_model_ptr->updateTankModel();
-
-  // publishOdometry();
-  // publishVisualization();
-  // publishTrajectoryVisualization();
-
-
   std::vector<long> r_pos;
   std::vector<long> l_pos;
 
@@ -314,7 +307,7 @@ void TankRobotPlugin::onNewSensorData()
   m_odom_ptr->update(l_pos, r_pos);
   publishOdometry();
   // publishVisualization();
-  // publishTrajectoryVisualization();
+  publishTrajectoryVisualization();
 }
 
 void TankRobotPlugin::disabled()
@@ -348,8 +341,8 @@ void TankRobotPlugin::autonomous(double current_time)
 
   // purepursuit
   // movePointToPoint();
-
-  m_boomerang->set_end_point(1.0, 2.5, -1.57);
+  m_boomerang->set_lead(0.8);
+  m_boomerang->set_end_point(2.0, 2.0, -1.57);
   m_boomerang->map_curve(curr_pose);
   m_trajectory = m_boomerang->get_points();
   auto command = m_pd_control->tank_pid(curr_pose, m_trajectory[1], current_time);
@@ -597,6 +590,32 @@ void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d twist)
     msg.orientation.y,
     msg.orientation.z);
   m_des_pos_pub->publish(msg);
+}
+
+void TankRobotPlugin::publishTrajectoryVisualization(){
+    visualization_msgs::msg::MarkerArray msg{};
+    visualization_msgs::msg::Marker marker{};
+    marker.header.frame_id = "map";
+    marker.header.stamp = node_ptr_->get_clock()->now();
+    marker.id = 0;
+    marker.type = 8; // points type
+    marker.action = 0;
+    marker.scale.x = 0.1;
+    marker.scale.y = 0.1;
+    marker.scale.z = 0.1;
+    marker.color.r = 1.0;
+    marker.color.a = 1.0;
+
+    for (auto & point : m_trajectory) {
+        geometry_msgs::msg::Point p;
+        p.x = point.x();
+        p.y = point.y();
+        p.z = 0.0;
+        marker.points.push_back(p);
+    }
+
+    msg.markers.push_back(marker);
+    m_trajectory_viz_pub->publish(msg);
 }
 
 void TankRobotPlugin::readPathFromFile(const std::string& filename) {
