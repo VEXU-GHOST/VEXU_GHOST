@@ -45,6 +45,8 @@ void TankTree::init_tree(){
 	factory.registerNodeType<AutoDone>("AutoDone");
 	factory.registerNodeType<AutonTimer>("AutonTimer");
 	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
+	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
+
 
     tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
 }

@@ -105,7 +105,7 @@ competition_state_machine_node:
       cur_twist_topic: "/cur_vel"
       des_pos_topic: "/des_pos"
       use_backup_estimator: false
-      search_radius: 1.0
+      search_radius: 0.5
       sim_mode: true
 
 /**:

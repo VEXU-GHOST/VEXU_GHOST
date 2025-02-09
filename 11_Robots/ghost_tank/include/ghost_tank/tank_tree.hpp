@@ -27,6 +27,8 @@
 #include "ghost_tank/bt_nodes/autoDone.hpp"
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
 #include "ghost_tank/bt_nodes/moveToPoseBoomerang.hpp"
+#include "ghost_tank/bt_nodes/moveToPosePurepursuit.hpp"
+
 #include "ghost_tank/tank_model.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"

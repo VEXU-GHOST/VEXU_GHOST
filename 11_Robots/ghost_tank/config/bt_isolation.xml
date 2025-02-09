@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main">
+      main_tree_to_execute="side">
   <BehaviorTree ID="main">
     <Sequence>
       <Logging message="test"/>
@@ -18,6 +18,28 @@
                            angle_threshold="5.0"
                            timeout="1000"
                            lead="0.5"/>
+      <Logging message="testover"/>
+
+      <Sleep msec="-1"/>
+    </Sequence>
+  </BehaviorTree>
+  <BehaviorTree ID="side">
+    <Sequence>
+      <Logging message="test"/>
+      <MoveToPosePurepursuit fileName= "/home/johnny/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
+                              threshold ="0.2"
+                              angle_threshold= "165.0"
+                              timeout= "1000"
+                              />
+      <!-- <MoveToPoseBoomerang posX="1.0"
+                           posY="1.0"
+                           theta="0.0"
+                           threshold="0.5"
+                           angle_threshold="5.0"
+                           timeout="1000"
+                           lead="0.5"/> -->
+                            
+  
       <Logging message="testover"/>
 
       <Sleep msec="-1"/>
@@ -43,6 +65,18 @@
                   default="5000">ms</input_port>
       <input_port name="lead"
                   default="0.5"/>
+    </Action>
+    <Action ID="MoveToPosePurepursuit"
+            editable="true">
+      <input_port name="fileName"></input_port>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+
+      
     </Action>
   </TreeNodesModel>
 

@@ -163,6 +163,7 @@ set(NODES
   autoDone
   autonTimer
   moveToPoseBoomerang
+  moveToPosePurepursuit
 )
 
 foreach(NODE ${NODES})
