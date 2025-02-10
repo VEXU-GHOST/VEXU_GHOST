@@ -656,10 +656,12 @@ void TankRobotPlugin::movePointToPoint(){
 
     geometry_msgs::msg::Twist msg{};
 
-    auto command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
+    Eigen::Vector2d command;
 
     if (threshold_xy > abs(m_desired_pose.x() - current_x) && threshold_xy > abs(m_desired_pose.y() - current_y)){
         command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), final_pose);
+    } else {
+        command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
     }
     auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
     auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
