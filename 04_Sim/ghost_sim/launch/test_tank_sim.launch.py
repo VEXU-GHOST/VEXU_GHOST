@@ -119,7 +119,7 @@ def generate_launch_description():
     plot_juggler_node = Node(
         package="plotjuggler", executable="plotjuggler", name="plot_juggler"
     )
-    
+
     sensor_update_spoofer_node = Node(
         package="ghost_sim",
         executable="sensor_update_spoofer",

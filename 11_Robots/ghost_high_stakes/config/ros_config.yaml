@@ -84,12 +84,12 @@ competition_state_machine_node:
       k9: 0.02 # theta error from rotation   # % error in primary direction
 
       # motion planning
-      move_to_pose_kp_xy: 0.2
-      move_to_pose_kd_xy: 0.3
-      move_to_pose_kp_theta: 0.1
+      move_to_pose_kp_xy: 0.4
+      move_to_pose_kd_xy: 0.6
+      move_to_pose_kp_theta: 0.5
       move_to_pose_kd_theta: 0.3
-      max_speed_linear: 0.5
-      max_speed_angular: 0.5
+      max_speed_linear: 0.3
+      max_speed_angular: 0.3
 
       burnout_absolute_current_threshold_ma: 100.0
       burnout_absolute_velocity_threshold_rpm: 400.0

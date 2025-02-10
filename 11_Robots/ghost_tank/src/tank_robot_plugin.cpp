@@ -631,6 +631,9 @@ void TankRobotPlugin::movePointToPoint(){
 
     auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
     auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
+    auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
+    auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
+
     if (past_index == x_values.size()-1){
         return;
     }
@@ -647,12 +650,17 @@ void TankRobotPlugin::movePointToPoint(){
     }
 
     m_desired_pose = Eigen::Vector3d(x_values[next_index], y_values[next_index], 0.0);
+    auto final_pose = Eigen::Vector3d(x_values[x_values.size()-1], y_values[y_values.size()-1], 0.0);
     std::cout << "despos_x " << m_desired_pose.x() << std::endl;
     std::cout << "despos_y " << m_desired_pose.y() << std::endl;
 
     geometry_msgs::msg::Twist msg{};
 
     auto command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
+
+    if (threshold_xy > abs(m_desired_pose.x() - current_x) && threshold_xy > abs(m_desired_pose.y() - current_y)){
+        command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), final_pose);
+    }
     auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
     auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
 

@@ -4,19 +4,19 @@
   <BehaviorTree ID="main">
     <Sequence>
       <Logging message="test"/>
-      <MoveToPoseBoomerang posX="1.0"
-                           posY="1.0"
-                           theta="0.0"
+      <MoveToPoseBoomerang posX="2.0"
+                           posY="2.0"
+                           theta="-90.0"
                            threshold="0.15"
                            angle_threshold="5.0"
-                           timeout="1000"
+                           timeout="100"
                            lead="0.5"/>
-      <MoveToPoseBoomerang posX="5.0"
+      <MoveToPoseBoomerang posX="2.0"
                            posY="5.0"
-                           theta="0.0"
-                           threshold="0.05"
+                           theta="180.0"
+                           threshold="0.10"
                            angle_threshold="5.0"
-                           timeout="1000"
+                           timeout="100"
                            lead="0.5"/>
       <Logging message="testover"/>
 
