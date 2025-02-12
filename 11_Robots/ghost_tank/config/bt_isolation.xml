@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="side">
+      main_tree_to_execute="main">
   <BehaviorTree ID="main">
     <Sequence>
       <Logging message="test"/>
@@ -26,7 +26,7 @@
   <BehaviorTree ID="side">
     <Sequence>
       <Logging message="test"/>
-      <MoveToPosePurepursuit fileName= "/home/johnny/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
+      <MoveToPosePurepursuit fileName= "~/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
                               threshold ="0.2"
                               angle_threshold= "165.0"
                               timeout= "1000"
