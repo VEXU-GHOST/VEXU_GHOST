@@ -13,6 +13,7 @@ skip=(
     btcpp_ros2_interfaces
     btcpp_ros2_samples
     rplidar_ros
+    ghost_sim
 )
 
 cd $VEXU_HOME

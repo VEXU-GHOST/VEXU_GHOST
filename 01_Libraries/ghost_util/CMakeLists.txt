@@ -46,6 +46,25 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_library(eigen_util SHARED
+  src/eigen_util.cpp
+)
+target_include_directories(eigen_util
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(eigen_util HAS_LIBRARY_TARGET)
+install(
+  TARGETS eigen_util
+  EXPORT eigen_util
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+
+
 add_library(angle_util SHARED
   src/angle_util.cpp
 )

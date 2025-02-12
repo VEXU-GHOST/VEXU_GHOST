@@ -5,10 +5,12 @@ on:
     branches:
       - master
       - develop
+      - onboarding
   pull_request:
     branches:
       - master
       - develop
+      - onboarding
   workflow_dispatch:
     inputs:
       debug_enabled:

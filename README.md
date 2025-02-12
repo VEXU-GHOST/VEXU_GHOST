@@ -31,12 +31,15 @@ git submodule update --recursive
 #### Add Setup to ~/.bashrc (which "configures" a new terminal when you open it)
 ```sh
 echo "export VEXU_HOME=\"/home/$(whoami)/VEXU_GHOST\"" >> ~/.bashrc
-source "$VEXU_HOME/scripts/setup_env.sh"
-
-```
 echo 'source "$VEXU_HOME/scripts/setup_env.sh"' >> ~/.bashrc
 ```
 Close this terminal, and open a new one to load new settings.
+#### Go to the VEXU_GHOST directory (every time you open a new terminal)
+
+```
+cd ~/VEXU_GHOST
+```
+
 #### Update Dependencies
 ```sh
 ./scripts/update_dependencies.sh

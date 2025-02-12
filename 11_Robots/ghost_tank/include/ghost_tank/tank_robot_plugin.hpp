@@ -61,8 +61,6 @@ public:
 protected:
   // Publishers
   void readPathFromFile(const std::string& filename);
-  void go_forward(float target_inch);
-  void turn(float target_angle);
   void publishVisualization();
   void publishOdometry();
   void publishBaseTwist();
@@ -73,7 +71,7 @@ protected:
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_tank_viz_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;
-  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr m_imu_sub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_base_twist_cmd_pub;
 
   // rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_cur_pos_pub;
@@ -113,6 +111,10 @@ protected:
   double m_search_radius = 0.0;
   Eigen::Vector3d m_desired_pose = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_desired_twist = Eigen::Vector3d::Zero();
+  double m_move_to_pose_kp_xy = 0.0;
+  double m_move_to_pose_kd_xy = 0.0;
+  double m_move_to_pose_kp_theta = 0.0;
+  double m_move_to_pose_kd_theta = 0.0;
 
   // Odometry
   std::shared_ptr<TankOdometry> m_odom_ptr;

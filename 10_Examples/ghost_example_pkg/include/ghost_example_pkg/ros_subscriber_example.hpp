@@ -36,7 +36,7 @@
 using std::placeholders::_1;
 
 // We typically define code inside a namespace so that it is easier to tell what it belongs to when things get complicated.
-namespace ghost_examples
+namespace ghost_example_pkg
 {
 
 // In C++, we typically "declare" classes and functions in a header file, and then actually "define" them in the cpp file.
@@ -71,4 +71,4 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr subscription_;
 };
 
-} // namespace ghost_examples
+} // namespace ghost_example_pkg

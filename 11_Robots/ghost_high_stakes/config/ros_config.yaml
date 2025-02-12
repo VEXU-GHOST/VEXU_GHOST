@@ -6,7 +6,7 @@ ghost_serial_node:
 
 imu_filter_node:
   ros__parameters:
-    input_imu_topic: /sensors/imu
+    # input_imu_topic: /sensors/imu
     output_imu_topic: /estimation/imu/filtered
     calculate_bias: false
     calculate_covariance: false
@@ -60,28 +60,6 @@ competition_state_machine_node:
 
 
     tank_robot_plugin:
-      # Motion Model Params
-      # These calculate odometry standard deviations. X is forward, Y is left on robot.
-      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
-
-      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
-      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
-
-      # Remember that LIDAR will correct periodically, so these can be a bit generous.
-      # Too generous though, and you are either losing resolution or wasting computation.
-
-      # MAKE SURE THESE MATCH IN THE PARTICLE FILTER
-      k1: 0.154 # x error from x motion      # % error in primary direction
-      k2: 0.05 # x error from y motion      # Assume 5% drift via steering errors (hard to drive straight w swerve)
-      k3: 0.02 # x error from rotation        # Pure rotation should be causing very little motion, 99% within 5" for 360°
-
-      k4: 0.05 # y error from x motion      # Assume 5% drift via steering errors (hard to drive straight w swerve)
-      k5: 0.154 # y error from y motion      # % error in primary direction
-      k6: 0.02 # y error from rotation        # Pure rotation should be causing very little motion, 99% within 5" for 360°
-
-      k7: 0.2 # theta error from x motion    # After 2ft of travel, 99% are within by 20°
-      k8: 0.2 # theta error from y motion    # After 2ft of travel, 99% are within by 20°
-      k9: 0.02 # theta error from rotation   # % error in primary direction
 
       # motion planning
       move_to_pose_kp_xy: 0.2
@@ -91,10 +69,10 @@ competition_state_machine_node:
       max_speed_linear: 0.3
       max_speed_angular: 0.3
 
-      burnout_absolute_current_threshold_ma: 100.0
-      burnout_absolute_velocity_threshold_rpm: 400.0
-      burnout_stall_duration_ms: 500
-      burnout_cooldown_duration_ms: 5000
+      drive_motor_ticks_per_rotation: 300.0
+      drive_gear_ratio: 1.15 # 23/20
+      drive_wheel_size_inches: 2.75
+      wheel_base_inches: 12.5
       
       cmd_twist_topic: "/cmd_vel" # from ekf
       bag_recorder_start_topic: "bag_recorder/start"
@@ -162,6 +140,8 @@ competition_state_machine_node:
       trajectory_topic: "/motion_planner/trajectory"
     
     use_sim_time: false
+    input_imu_topic: /sensors/imu
+    should_record: false
 
 # If you are using the sweve model and you are tuning the k1-9 parameters,
 # the swerve model plugin has its own duplicate (11_Robots/ghost_high_stakes/config/ros_config.yaml) of the k1-9 parameters that must
