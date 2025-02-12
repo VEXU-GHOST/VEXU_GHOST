@@ -145,7 +145,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        # serial_node,
+        serial_node,
         competition_state_machine_node,
         bag_recorder_service,
         ekf_pf_node, # THIS ONE
