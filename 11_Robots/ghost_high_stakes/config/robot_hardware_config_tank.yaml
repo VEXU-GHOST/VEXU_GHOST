@@ -1,7 +1,12 @@
 port_configuration:
     devices:
-        imu:
+        indexer:
             port: 1
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        imu:
+            port: 17
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
         drive_l1:

@@ -46,7 +46,7 @@ Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur
   output_linear = kp_xy_ * error_xy + kd_xy_* derivative + bias;
   output_linear = ghost_util::clamp(output_linear, -1.0f, 1.0f);
 
-  return Eigen::Vector2d(output_linear, output_angular);
+  return Eigen::Vector2d(output_linear, output_angular).normalized();
 }
 
 Eigen::Vector2d PDControl::theta_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos)

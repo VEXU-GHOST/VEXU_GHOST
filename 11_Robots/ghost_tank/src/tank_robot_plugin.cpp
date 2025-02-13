@@ -297,13 +297,22 @@ void TankRobotPlugin::onNewSensorData()
   // imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
   // imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
   // imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
-  imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
-  imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
-  imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
-  double yaw = -rhi_ptr_->getInertialSensorHeading("imu");
-  ghost_util::yawToQuaternionDeg(
-    yaw, imu_msg.orientation.w, imu_msg.orientation.x,
-    imu_msg.orientation.y, imu_msg.orientation.z);
+  if(!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))){
+    imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  if(!std::isnan(rhi_ptr_->getInertialSensorYRate("imu"))){
+    imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  if(!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))){
+    imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  double yaw;
+  if(!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))){
+    yaw = -rhi_ptr_->getInertialSensorHeading("imu");
+    ghost_util::yawToQuaternionDeg(
+      yaw, imu_msg.orientation.w, imu_msg.orientation.x,
+      imu_msg.orientation.y, imu_msg.orientation.z);
+  }
   imu_pub->publish(imu_msg);
 
   std::vector<long> r_pos;
@@ -358,7 +367,7 @@ void TankRobotPlugin::teleop(double current_time)
   auto joy_data = rhi_ptr_->getMainJoystickData();
   // std::cout << "Teleop: " << current_time << std::endl;
 
-  if (joy_data->btn_u) {
+  if (joy_data->btn_u && joy_data->btn_l) {
     if (!m_auton_button_pressed) {
       m_auton_button_pressed = true;
       m_is_first_auton_loop = true;
@@ -370,7 +379,7 @@ void TankRobotPlugin::teleop(double current_time)
     m_auton_button_pressed = false;
 
     // Toggle Bag Recorder
-    if (joy_data->btn_y && !m_recording_btn_pressed) {
+    if (joy_data->btn_y && joy_data->btn_x && !m_recording_btn_pressed) {
       m_recording_btn_pressed = true;
 
       if (!m_recording) {
@@ -382,12 +391,12 @@ void TankRobotPlugin::teleop(double current_time)
       }
 
       m_recording = !m_recording;
-    } else if (!joy_data->btn_y) {
+    } else if (!(joy_data->btn_y && joy_data->btn_x)) {
       m_recording_btn_pressed = false;
     }
 
     m_tank_model_ptr->driveCommandJoystick(
-      joy_data->left_y, joy_data->right_x, 0.05);
+      joy_data->left_y, -joy_data->right_x, 0.05);
 
     double intake_power = 0;
     if (joy_data->btn_r2) {
@@ -474,9 +483,9 @@ void TankRobotPlugin::publishOdometry()
   msg.pose.pose.position.x = m_curr_odom_pose.x();
   msg.pose.pose.position.y = m_curr_odom_pose.y();
   msg.pose.pose.position.z = 0.0;
-  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)){
-    printf("ROBOT MOVED ANGLE IS %f\n", m_curr_odom_pose.z());
-  }
+  // if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)){
+  //   printf("ROBOT MOVED ANGLE IS %f\n", m_curr_odom_pose.z());
+  // }
   ghost_util::yawToQuaternionRad(
     m_curr_odom_pose.z(),
     msg.pose.pose.orientation.w,
@@ -664,6 +673,7 @@ void TankRobotPlugin::movePointToPoint(){
     } else {
         command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
     }
+    command = command.normalized();
     auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
     auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
 

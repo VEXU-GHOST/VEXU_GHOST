@@ -7,7 +7,7 @@
       <MoveToPoseBoomerang posX="2.0"
                            posY="2.0"
                            theta="-90.0"
-                           threshold="0.50"
+                           threshold="0.20"
                            angle_threshold="5.0"
                            timeout="100"
                            lead="0.5"/>
