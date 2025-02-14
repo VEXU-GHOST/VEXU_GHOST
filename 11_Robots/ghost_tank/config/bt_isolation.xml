@@ -6,17 +6,17 @@
       <Logging message="test"/>
       <MoveToPoseBoomerang posX="2.0"
                            posY="2.0"
-                           theta="-90.0"
-                           threshold="0.20"
+                           theta="90.0"
+                           threshold="0.10"
                            angle_threshold="5.0"
-                           timeout="100"
+                           timeout="0"
                            lead="0.5"/>
       <MoveToPoseBoomerang posX="2.0"
                            posY="5.0"
                            theta="180.0"
                            threshold="0.10"
                            angle_threshold="5.0"
-                           timeout="100"
+                           timeout="0"
                            lead="0.5"/>
       <Logging message="testover"/>
 

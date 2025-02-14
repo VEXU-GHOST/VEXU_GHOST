@@ -639,28 +639,30 @@ void TankRobotPlugin::movePointToPoint(){
         return;
     }
 
-    auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
-    auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
+    // auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
+    // auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
     auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
     auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
 
-    if (past_index == x_values.size()-1){
-        return;
-    }
+    // if (x_values.size() != y_values.size()) {
+    //     std::cout << "x_values and y_values must be the same size" << std::endl;
+    //     throw std::runtime_error("x_values and y_values must be the same size");
+    // }
+    // for(int i = past_index; i < x_values.size(); ++i){//find farthest point in radius 
+    //     double distance = sqrt(pow((current_x - x_values[i]),2)+pow((current_y - y_values[i]),2));
+    //     if (distance < search_radius){
+    //         next_index = i;
+    //     }
+    // }
 
-    if (x_values.size() != y_values.size()) {
-        std::cout << "x_values and y_values must be the same size" << std::endl;
-        throw std::runtime_error("x_values and y_values must be the same size");
-    }
-    for(int i = past_index; i < x_values.size(); ++i){//find farthest point in radius 
-        double distance = sqrt(pow((current_x - x_values[i]),2)+pow((current_y - y_values[i]),2));
-        if (distance < search_radius){
-            next_index = i;
-        }
-    }
-
-    m_desired_pose = Eigen::Vector3d(x_values[next_index], y_values[next_index], 0.0);
-    auto final_pose = Eigen::Vector3d(x_values[x_values.size()-1], y_values[y_values.size()-1], 0.0);
+    // m_desired_pose = Eigen::Vector3d(x_values[next_index], y_values[next_index], 0.0);
+    // auto final_pose = Eigen::Vector3d(x_values[x_values.size()-1], y_values[y_values.size()-1], 0.0);
+    m_desired_pose = Eigen::Vector3d(robot_trajectory_ptr_->x_trajectory.getPosition(search_radius), 
+                                    robot_trajectory_ptr_->y_trajectory.getPosition(search_radius), 0.0);
+    auto final_pose = Eigen::Vector3d(robot_trajectory_ptr_->x_trajectory.getPosition(1.0), 
+                                    robot_trajectory_ptr_->y_trajectory.getPosition(1.0),
+                                  robot_trajectory_ptr_->theta_trajectory.getPosition(1.0));
+    
     std::cout << "despos_x " << m_desired_pose.x() << std::endl;
     std::cout << "despos_y " << m_desired_pose.y() << std::endl;
 
@@ -668,7 +670,7 @@ void TankRobotPlugin::movePointToPoint(){
 
     Eigen::Vector2d command;
 
-    if (threshold_xy > abs(m_desired_pose.x() - current_x) && threshold_xy > abs(m_desired_pose.y() - current_y)){
+    if (threshold_xy > abs(final_pose.x() - current_x) && threshold_xy > abs(final_pose.y() - current_y)){
         command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), final_pose);
     } else {
         command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);

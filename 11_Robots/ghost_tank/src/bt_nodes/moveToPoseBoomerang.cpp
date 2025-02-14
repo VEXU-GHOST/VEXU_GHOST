@@ -105,11 +105,17 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	auto points = boomerang_->get_points();
 	std::vector<double> x_trajectory;
     std::vector<double> y_trajectory;
+    std::vector<double> theta_trajectory;
+	std::vector<double> time_vector;
 
     for (const auto& vec : points) {
         x_trajectory.push_back(vec.x());
         y_trajectory.push_back(vec.y());
+		theta_trajectory.push_back(theta);
     }
+	for (int i = 0; i < 500; i++){
+		time_vector.push_back(i * 1.0/500.0);
+	}
 
 	ghost_msgs::msg::RobotTrajectory msg{};
 	msg.header.stamp = node_ptr_->get_clock()->now();
@@ -119,13 +125,15 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	msg.y_trajectory.threshold = threshold;
 	msg.theta_trajectory.threshold = angle_threshold;
 
-	msg.x_trajectory.time = {0.0};
-	msg.y_trajectory.time = {0.0};
-	msg.theta_trajectory.time = {0.0};
+	msg.x_trajectory.time = time_vector;
+	msg.y_trajectory.time = time_vector;
+	msg.theta_trajectory.time = time_vector;
 
 	if( (abs(posX - tank_model_ptr_->getWorldPose().x()) < threshold) &&
-	    (abs(posY - tank_model_ptr_->getWorldPose().y()) < threshold) &&
-	    (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold)){
+	    (abs(posY - tank_model_ptr_->getWorldPose().y()) < threshold)
+		//  && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold)
+		)
+	{
 		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
 		return BT::NodeStatus::SUCCESS;
 	}
