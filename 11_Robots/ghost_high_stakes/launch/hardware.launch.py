@@ -101,7 +101,7 @@ def generate_launch_description():
         name="tcs_color_sensor_0",
         output="screen",
         parameters=[ros_config_file, {
-"system_i2c_bus_path" : "/dev/i2c-7"
+            "system_i2c_bus_path" : "/dev/i2c-7"
         }],
     )
     color_classifier_node = Node(

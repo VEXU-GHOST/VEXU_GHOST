@@ -75,7 +75,7 @@ Eigen::Vector3d TankOdometry::update(
   m_prev_r_ticks = r_wheel_pos_arr;
 
   m_cur_pos = update(l_wheel_pos, r_wheel_pos);
- 
+
   return m_cur_pos;
 }
 
