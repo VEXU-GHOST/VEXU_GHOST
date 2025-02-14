@@ -18,7 +18,6 @@ set(DEPENDENCIES
   std_msgs
   sensor_msgs
   geometry_msgs
-  ghost_msgs
   yaml-cpp
   Eigen3
   builtin_interfaces
