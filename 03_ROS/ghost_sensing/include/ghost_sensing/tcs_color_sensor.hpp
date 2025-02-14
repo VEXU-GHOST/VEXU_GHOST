@@ -29,6 +29,7 @@ public:
 
   void timer_poll_color_sensor();
 
+  double m_poll_freq;
 };
 
 }

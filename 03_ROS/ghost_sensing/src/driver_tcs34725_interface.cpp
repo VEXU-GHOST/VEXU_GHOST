@@ -127,9 +127,18 @@ void tcs_i2c_interface::debug_print(const char * const fmt, ...)
   va_list args;
   va_start(args, fmt);
 
-  // Single printf call with concatenated format string
-  vprintf(("tcs34725_driver: " + std::string(fmt)).c_str(), args);
+  // Create a new format string with the prefix.
+  std::string full_fmt = std::string("tcs34725_driver: ") + fmt;
 
+  // Define a fixed-size stack buffer.
+  char buffer[256];
+
+  // Format the message into the stack buffer.
+  // If the formatted message is longer than STACK_BUFFER_SIZE, it will be truncated.
+  vsnprintf(buffer, 256, full_fmt.c_str(), args);
+
+  // Log the formatted message.
+  RCLCPP_DEBUG(logger, "%s", buffer);
   va_end(args);
 }
 }

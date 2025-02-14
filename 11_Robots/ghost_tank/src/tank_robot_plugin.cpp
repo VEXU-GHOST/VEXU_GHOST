@@ -386,7 +386,10 @@ void TankRobotPlugin::teleop(double current_time)
       if (current_time - m_first_color_detect < 0) {
 // do nothing
       } else if (current_time - m_first_color_detect < .35) {
-        intake_power = 0;
+        if (intake_power > 1) {intake_power = 0;} // or whatever takes in idk
+        // like don't disable taking out motioon just in case
+        // also maybe find a better way to not get a thing stuck, such as waiting for unkown in between double unextrusing
+        // stuck is much worse than scoring the wrong color
       } else {
         m_first_color_detect = -1;
       }
@@ -478,9 +481,7 @@ void TankRobotPlugin::publishOdometry()
   msg.pose.pose.position.x = m_curr_odom_pose.x();
   msg.pose.pose.position.y = m_curr_odom_pose.y();
   msg.pose.pose.position.z = 0.0;
-  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)) {
-    printf("ROBOT MOVED ANGLE IS %f\n", m_curr_odom_pose.z());
-  }
+
   ghost_util::yawToQuaternionRad(
     m_curr_odom_pose.z(),
     msg.pose.pose.orientation.w,

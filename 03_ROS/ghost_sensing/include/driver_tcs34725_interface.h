@@ -47,6 +47,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <iostream>
+#include <rclcpp/rclcpp.hpp>
 
 /**
  * @defgroup tcs34725_interface_driver tcs34725 interface driver function
@@ -60,12 +61,14 @@ namespace ghost_sensing
 
 class tcs_i2c_interface
 {
+private:
   int gs_fd = -1;            /**< file descriptor */
   std::string filename;
+  rclcpp::Logger logger;
 
 public:
-  tcs_i2c_interface(std::string iFilename)
-  : filename(iFilename) {}
+  tcs_i2c_interface(std::string iFilename, rclcpp::Logger iLogger)
+  : filename(iFilename), logger(iLogger) {}
 /**
  * @brief  interface iic bus init
  * @return status code

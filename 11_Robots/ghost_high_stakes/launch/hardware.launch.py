@@ -100,7 +100,9 @@ def generate_launch_description():
         executable="tcs_color_sensor",
         name="tcs_color_sensor_0",
         output="screen",
-        parameters=[ros_config_file],
+        parameters=[ros_config_file, {
+"system_i2c_bus_path" : "/dev/i2c-7"
+        }],
     )
     color_classifier_node = Node(
         package="ghost_sensing",
