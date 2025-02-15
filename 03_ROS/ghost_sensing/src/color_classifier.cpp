@@ -123,9 +123,9 @@ void ColorClassifier::callback(const std_msgs::msg::ColorRGBA::SharedPtr msg)
   color_msg.data = matched_color;
   m_category_pub->publish(color_msg);
 
-  RCLCPP_INFO(
-    this->get_logger(), "HSV: (%.1f, %.2f, %.4f) -> Classified as: %s",
-    h, s, v, matched_color.c_str());
+  //RCLCPP_INFO(
+  //  this->get_logger(), "HSV: (%.1f, %.2f, %.4f) -> Classified as: %s",
+  //  h, s, v, matched_color.c_str());
 }
 }
 

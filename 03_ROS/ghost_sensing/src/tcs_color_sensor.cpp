@@ -157,10 +157,10 @@ void TCSColorSensorNode::timer_poll_color_sensor()
   m_rgb_pub->publish(msg_rgb);
   m_hsv_pub->publish(msg_hsv);
 
-  printf(
-    "r: %f g: %f b: %f a: %f | h: %f s: %f v: %f a: %f\n",
-    msg_rgb.r, msg_rgb.g, msg_rgb.b, msg_rgb.a,
-    msg_hsv.r, msg_hsv.g, msg_hsv.b, msg_hsv.a);
+  //printf(
+  //  "r: %f g: %f b: %f a: %f | h: %f s: %f v: %f a: %f\n",
+  //  msg_rgb.r, msg_rgb.g, msg_rgb.b, msg_rgb.a,
+  //  msg_hsv.r, msg_hsv.g, msg_hsv.b, msg_hsv.a);
 }
 
 }
