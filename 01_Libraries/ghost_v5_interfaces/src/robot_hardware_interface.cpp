@@ -55,8 +55,9 @@ RobotHardwareInterface::RobotHardwareInterface(
         val->name,
         pair.config_ptr->as<const InertialSensorDeviceConfig>()->serial_config);
     } else if (pair.config_ptr->type == device_type_e::JOYSTICK) {
-      pair.data_ptr = std::make_shared<JoystickDeviceData>(
-        val->name);
+      pair.data_ptr = std::make_shared<JoystickDeviceData>(val->name);
+    } else if (pair.config_ptr->type == device_type_e::DIGITAL_IO) {
+      pair.data_ptr = std::make_shared<DigitalIODeviceData>(val->name);
     } else {
       throw std::runtime_error(
               "[RobotHardwareInterface::RobotHardwareInterface()] Device type " + std::to_string(

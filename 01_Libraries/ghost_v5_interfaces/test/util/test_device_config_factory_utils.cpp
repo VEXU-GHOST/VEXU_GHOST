@@ -28,6 +28,7 @@
 #include <ghost_v5_interfaces/devices/device_config_map.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/digital_io_device_interface.hpp>
 #include <ghost_v5_interfaces/test/device_test_utils.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
@@ -64,6 +65,14 @@ protected:
       joy_partner->is_partner = true;
       robot_config_ptr->addDeviceConfig(joy_partner);
     }
+
+    auto digital_io_config = std::make_shared<DigitalIODeviceConfig>();
+    digital_io_config->name = "digital_io";
+    digital_io_config->port = -3;
+    digital_io_config->type = device_type_e::DIGITAL_IO;
+    digital_io_config->input_mask = packByte(std::vector<bool>{true, false, false, false, false, false, true, false});
+    digital_io_config->output_mask = packByte(std::vector<bool>{false, true, false, false, false, false, false, false});
+    robot_config_ptr->addDeviceConfig(digital_io_config);
 
     // Motor some parameters changed
     auto left_drive_motor = std::make_shared<MotorDeviceConfig>();
@@ -137,8 +146,7 @@ protected:
  * @brief Test that we can load a DeviceConfigMap from YAML.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLFile) {
-  auto example_robot_config_file = std::string(getenv("VEXU_HOME")) +
-    "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml";
+  auto example_robot_config_file = std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml";
   auto device_config_ptr = loadRobotConfigFromYAMLFile(example_robot_config_file);
   EXPECT_EQ(*device_config_ptr, *getExpectedRobotConfig(false));
 }
@@ -147,10 +155,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLFile) {
  * @brief Test that we can load a DeviceConfigMap from YAML with secondary joystick set to true
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLSecondaryJoystick) {
-  auto example_robot_config = YAML::LoadFile(
-    std::string(
-      getenv(
-        "VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+  auto example_robot_config = YAML::LoadFile(std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
   example_robot_config["port_configuration"]["use_partner_joystick"] = true;
   auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
   EXPECT_EQ(*device_config_ptr, *getExpectedRobotConfig(true));
@@ -160,10 +165,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLSecondaryJoystick)
  * @brief Test that we can load a DeviceConfigMap from YAML and it mismatches if we change joystick settings.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML) {
-  auto example_robot_config = YAML::LoadFile(
-    std::string(
-      getenv(
-        "VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+  auto example_robot_config = YAML::LoadFile(std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
   example_robot_config["port_configuration"]["use_partner_joystick"] = true;
   auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
   EXPECT_FALSE(*device_config_ptr == *getExpectedRobotConfig(false));
@@ -173,10 +175,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAML) {
  * @brief Test that mismatched motor port will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig) {
-  auto example_robot_config = YAML::LoadFile(
-    std::string(
-      getenv(
-        "VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+  auto example_robot_config = YAML::LoadFile(std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
   example_robot_config["port_configuration"]["devices"]["left_drive_motor"]["port"] = 10;
   auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);
   EXPECT_FALSE(*device_config_ptr == *getExpectedRobotConfig(false));
@@ -186,10 +185,7 @@ TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchPortConfig
  * @brief Test that mismatched motor config will fail.
  */
 TEST_F(DeviceConfigMapTestFixture, testLoadRobotConfigFromYAMLMismatchMotorConfig) {
-  auto example_robot_config = YAML::LoadFile(
-    std::string(
-      getenv(
-        "VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
+  auto example_robot_config = YAML::LoadFile(std::string(getenv("VEXU_HOME")) + "/01_Libraries/ghost_v5_interfaces/test/config/example_robot.yaml");
   example_robot_config["port_configuration"]["device_configurations"]["test_motor_config"]["filter"]
   ["timestep"] = 0.1;
   auto device_config_ptr = loadRobotConfigFromYAML(example_robot_config);

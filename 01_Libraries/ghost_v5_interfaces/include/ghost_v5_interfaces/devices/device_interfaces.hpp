@@ -40,6 +40,7 @@ enum device_type_e
   MOTOR,
   ROTATION_SENSOR,
   INERTIAL_SENSOR,
+  DIGITAL_IO,
   DISTANCE_SENSOR,       // Unsupported
   OPTICAL_SENSOR,        // Unsupported
   VISION_SENSOR,         // Unsupported

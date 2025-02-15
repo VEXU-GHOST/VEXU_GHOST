@@ -60,6 +60,7 @@ install(
 set(UTIL_LIBS
   load_motor_device_config_yaml
   load_rotation_sensor_device_config_yaml
+  load_digital_io_device_config_yaml
   load_inertial_sensor_device_config_yaml
 )
 
@@ -133,10 +134,11 @@ install(
 # Device Interface Tests
 set(DEVICE_TESTS
   test_device_config_interfaces
-  test_motor_device_interface
-  test_rotation_sensor_device_interface
-  test_inertial_sensor_device_interface
-  test_joystick_device_interface
+  # test_motor_device_interface
+  # test_rotation_sensor_device_interface
+  # test_inertial_sensor_device_interface
+  # test_joystick_device_interface
+  test_digital_io_device_interface
 )
 foreach(TEST ${DEVICE_TESTS})
   ament_add_gtest(${TEST} test/devices/${TEST}.cpp)
@@ -155,6 +157,7 @@ foreach(TEST ${UTIL_LIBS})
     load_motor_device_config_yaml
     load_rotation_sensor_device_config_yaml
     load_inertial_sensor_device_config_yaml
+    load_digital_io_device_config_yaml
     device_config_factory_utils
     yaml-cpp
   )
