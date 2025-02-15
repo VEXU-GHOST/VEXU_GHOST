@@ -77,10 +77,6 @@ RobotHardwareInterface::RobotHardwareInterface(
     device_names_ordered_by_port_.emplace_back(val);
   }
 
-  // Add Digital IO to actuator command msg
-  actuator_command_msg_length_ += 1;
-  digital_io_ = std::vector<bool>(8, false);
-
   // Add Competition State to sensor update msg
   sensor_update_msg_length_ += 1;
 }
@@ -97,9 +93,6 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
         std::vector<bool>{
         is_disabled_, is_autonomous_, is_connected_, 0, 0, 0, 0, 0
       }));
-  } else if (hardware_type_ == hardware_type_e::COPROCESSOR) {
-    // Send state of all Digital IO Ports
-    serial_data.push_back(packByte(digital_io_));
   }
 
   for (const auto & [key, val] : device_pair_port_map_) {
@@ -147,12 +140,6 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
   int byte_offset = 0;
   std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
 
-  if (hardware_type_ == hardware_type_e::V5_BRAIN) {
-    // Unpack Digital IO
-    digital_io_ = unpackByte(msg[byte_offset]);
-    byte_offset++;
-  }
-
   if (hardware_type_ == hardware_type_e::COPROCESSOR) {
     // Unpack competition state
     auto packet_start_byte = unpackByte(msg[byte_offset]);
@@ -195,9 +182,6 @@ bool RobotHardwareInterface::isDataEqual(const RobotHardwareInterface & rhs) con
   eq &= (msg_id_ == rhs.msg_id_);
   eq &= (actuator_command_msg_length_ == rhs.actuator_command_msg_length_);
   eq &= (sensor_update_msg_length_ == rhs.sensor_update_msg_length_);
-
-  // ADI Ports
-  eq &= (digital_io_ == rhs.digital_io_);
 
   for (const auto & [key, val] : device_pair_name_map_) {
     if (rhs.device_pair_name_map_.count(key) == 0) {
@@ -451,15 +435,45 @@ float RobotHardwareInterface::getInertialSensorHeading(const std::string & senso
   }
 }
 
-void RobotHardwareInterface::setDigitalIO(const std::vector<bool> & digital_io)
+bool RobotHardwareInterface::getDigitalIOValue(uint8_t bit)
 {
-  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
-  digital_io_ = digital_io;
+  return getBit(getDeviceData<DigitalIODeviceData>("digital_io")->data, bit);
 }
 
-const std::vector<bool> & RobotHardwareInterface::getDigitalIO() const
+bool RobotHardwareInterface::setDigitalIn(uint8_t bit, bool val)
 {
-  return digital_io_;
+  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+  auto config = getDeviceConfig<DigitalIODeviceConfig>("digital_io");
+  if (bit > 7) {
+    std::cout << "[RobotHardwareInterface::setDigitalIn] WARNING: Bit must be in range 0-7! Value: " << bit << std::endl;
+    return false;
+  }
+
+  if (!getBit(config->input_mask, bit)) {
+    std::cout << "[RobotHardwareInterface::setDigitalIn] WARNING: Bit " << std::to_string(bit) << " is not a Digital In!" << std::endl;
+    return false;
+  }
+
+  setBit(getDeviceData<DigitalIODeviceData>("digital_io")->data, bit, val);
+  return true;
+}
+
+bool RobotHardwareInterface::setDigitalOut(uint8_t bit, bool val)
+{
+  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+  auto config = getDeviceConfig<DigitalIODeviceConfig>("digital_io");
+  if (bit > 7) {
+    std::cout << "[RobotHardwareInterface::setDigitalOut] WARNING: Bit must be in range 0-7! Value: " << bit << std::endl;
+    return false;
+  }
+
+  if (!getBit(config->output_mask, bit)) {
+    std::cout << "[RobotHardwareInterface::setDigitalOut] WARNING: Bit " << std::to_string(bit) << " is not a Digital Out!" << std::endl;
+    return false;
+  }
+
+  setBit(getDeviceData<DigitalIODeviceData>("digital_io")->data, bit, val);
+  return true;
 }
 
 std::shared_ptr<JoystickDeviceData> RobotHardwareInterface::getMainJoystickData()
