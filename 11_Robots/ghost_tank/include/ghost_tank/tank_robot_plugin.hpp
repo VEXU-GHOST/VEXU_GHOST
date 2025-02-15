@@ -96,7 +96,7 @@ protected:
     m_color = msg.data;
   };
   std::string m_color;
-  double m_first_color_detect = -1;
+  double m_first_color_detect_inches = INFINITY;
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
