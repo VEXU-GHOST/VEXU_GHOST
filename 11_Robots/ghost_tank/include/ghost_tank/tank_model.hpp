@@ -36,151 +36,151 @@
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 
-
 namespace ghost_tank
 {
 
-struct TankConfig
-{
-  std::vector<std::string> motor_list;
-  double wheel_radius;
-  double wheel_gear_ratio;
-  double wheel_dist;
-};
-
-class TankModel
-{
-public:
-  TankModel(std::shared_ptr<rclcpp::Node> node_ptr,
-      std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-      TankConfig config);
-
-  /**
-   * @brief Get the Tank Model Configration
-   *
-   * @return const TankConfig&
-   */
-  const TankConfig & getConfig()
+  struct TankConfig
   {
-    return m_config;
-  }
+    std::vector<std::string> motor_list;
+    double wheel_radius;
+    double wheel_gear_ratio;
+    double wheel_dist;
+  };
 
-  /**
-   * @brief Get the max linear velocity of the robot base at nominal motor speed.
-   *
-   * @return double
-   */
-  double getMaxBaseLinearVelocity() const
+  class TankModel
   {
-    return m_max_base_lin_vel;
-  }
+  public:
+    TankModel(std::shared_ptr<rclcpp::Node> node_ptr,
+              std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+              TankConfig config);
 
-  /**
-   * @brief Get the max angular velocity of the robot base at nominal motor speed.
-   *
-   * @return double
-   */
-  double getMaxBaseAngularVelocity() const
-  {
-    return m_max_base_ang_vel;
-  }
+    /**
+     * @brief Get the Tank Model Configration
+     *
+     * @return const TankConfig&
+     */
+    const TankConfig &getConfig()
+    {
+      return m_config;
+    }
 
-  // Base States
-  const Eigen::Vector3d & getOdometryPose()
-  {
-    return m_odom_pose;
-  }
+    /**
+     * @brief Get the max linear velocity of the robot base at nominal motor speed.
+     *
+     * @return double
+     */
+    double getMaxBaseLinearVelocity() const
+    {
+      return m_max_base_lin_vel;
+    }
 
-  double getOdometryAngle() const
-  {
-    return m_odom_pose.z();
-  }
+    /**
+     * @brief Get the max angular velocity of the robot base at nominal motor speed.
+     *
+     * @return double
+     */
+    double getMaxBaseAngularVelocity() const
+    {
+      return m_max_base_ang_vel;
+    }
 
-  const Eigen::Vector3d & getWorldPose()
-  {
-    return m_world_pose;
-  }
+    // Base States
+    const Eigen::Vector3d &getOdometryPose()
+    {
+      return m_odom_pose;
+    }
 
-  void setWorldPose(const double x, const double y, const double theta)
-  {
-    m_world_pose.x() = x;
-    m_world_pose.y() = y;
-    m_world_pose.z() = theta;
-    geometry_msgs::msg::PoseWithCovarianceStamped msg{};
-    msg.header.stamp = node_ptr_->get_clock()->now();
-    msg.pose.pose.position.x = x;
-    msg.pose.pose.position.y = y;
-    ghost_util::yawToQuaternionDeg(
-      theta, msg.pose.pose.orientation.w, msg.pose.pose.orientation.x,
-      msg.pose.pose.orientation.y, msg.pose.pose.orientation.z);
-    m_particle_filter_set_pose_publisher->publish(msg);
-  }
+    double getOdometryAngle() const
+    {
+      return m_odom_pose.z();
+    }
 
-  double getWorldAngleDeg() const
-  {
-    return m_world_pose.z() * ghost_util::RAD_TO_DEG;
-  }
+    const Eigen::Vector3d &getWorldPose()
+    {
+      return m_world_pose;
+    }
 
-  double getWorldAngleRad() const
-  {
-    return m_world_pose.z();
-  }
+    void setWorldPose(const double x, const double y, const double theta)
+    {
+      m_world_pose.x() = x;
+      m_world_pose.y() = y;
+      m_world_pose.z() = theta;
+      geometry_msgs::msg::PoseWithCovarianceStamped msg{};
+      msg.header.stamp = node_ptr_->get_clock()->now();
+      msg.pose.pose.position.x = x;
+      msg.pose.pose.position.y = y;
+      ghost_util::yawToQuaternionDeg(
+          theta, msg.pose.pose.orientation.w, msg.pose.pose.orientation.x,
+          msg.pose.pose.orientation.y, msg.pose.pose.orientation.z);
+      m_particle_filter_set_pose_publisher->publish(msg);
+    }
 
-  void setWorldAngleRad(const double theta)
-  {
-    m_world_pose.z() = theta;
-  }
+    double getWorldAngleDeg() const
+    {
+      return m_world_pose.z() * ghost_util::RAD_TO_DEG;
+    }
 
-  const Eigen::Vector3d & getWorldTwist()
-  {
-    return m_world_twist;
-  }
+    double getWorldAngleRad() const
+    {
+      return m_world_pose.z();
+    }
 
-  void setWorldTwist(const double x, const double y, const double theta)
-  {
-    m_world_twist.x() = x;
-    m_world_twist.y() = y;
-    m_world_twist.z() = theta;
-  }
+    void setWorldAngleRad(const double theta)
+    {
+      m_world_pose.z() = theta;
+    }
 
-  const double getWorldAngularVelocity()
-  {
-    return m_world_twist.z();
-  }
+    const Eigen::Vector3d &getWorldTwist()
+    {
+      return m_world_twist;
+    }
 
-  void setWorldAngularVelocity(const double omega)
-  {
-    m_world_twist.z() = omega;
-  }
+    void setWorldTwist(const double x, const double y, const double theta)
+    {
+      m_world_twist.x() = x;
+      m_world_twist.y() = y;
+      m_world_twist.z() = theta;
+    }
 
-  void driveCommand(double fwd_vel, double ang_vel);
-  void driveCommandJoystick(double fwd_vel, double ang_vel, double deadzone);
+    const double getWorldAngularVelocity()
+    {
+      return m_world_twist.z();
+    }
 
-protected:
-  // Initialization
-  void validateConfig();
-  void calculateMaxBaseTwist();
-  std::shared_ptr<rclcpp::Node> node_ptr_;
-  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+    void setWorldAngularVelocity(const double omega)
+    {
+      m_world_twist.z() = omega;
+    }
 
-  // Configuration
-  TankConfig m_config;
-  double m_max_base_lin_vel = 0;
-  double m_max_base_ang_vel = 0;
-  double LIN_VEL_TO_RPM;
+    void driveCommand(double left_cmd, double right_cmd, bool lower_power);
+    void driveCommandTankJoystick(double l, double r, double deadzone, bool lower_power);
+    void driveCommandArcadeJoystick(double fwd, double ang, double deadzone, bool lower_power);
 
-  // Odometry
-  Eigen::Vector3d m_odom_pose;
+  protected:
+    // Initialization
+    void validateConfig();
+    void calculateMaxBaseTwist();
+    std::shared_ptr<rclcpp::Node> node_ptr_;
+    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
 
-  Eigen::Vector3d m_world_pose;
+    // Configuration
+    TankConfig m_config;
+    double m_max_base_lin_vel = 0;
+    double m_max_base_ang_vel = 0;
+    double LIN_VEL_TO_RPM;
 
-  Eigen::Vector3d m_world_twist;
+    // Odometry
+    Eigen::Vector3d m_odom_pose;
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
-    m_particle_filter_set_pose_publisher;
+    Eigen::Vector3d m_world_pose;
 
-  // Command Setpoints
-  Eigen::Vector3d m_base_vel_cmd;
-};
+    Eigen::Vector3d m_world_twist;
+
+    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
+        m_particle_filter_set_pose_publisher;
+
+    // Command Setpoints
+    Eigen::Vector3d m_base_vel_cmd;
+  };
 
 } // namespace ghost_tank

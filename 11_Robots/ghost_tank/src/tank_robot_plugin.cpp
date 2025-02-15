@@ -366,8 +366,11 @@ void TankRobotPlugin::teleop(double current_time)
       m_recording_btn_pressed = false;
     }
 
-    m_tank_model_ptr->driveCommandJoystick(
-      joy_data->left_y, joy_data->right_x, 0.05);
+      //m_tank_model_ptr->driveCommandTankJoystick(
+      //    joy_data->left_y, joy_data->right_y, 0.05, false);
+
+       m_tank_model_ptr->driveCommandArcadeJoystick(
+         joy_data->left_y, joy_data->right_x, 0.05, false);
 
     double intake_power = 0;
     printf("'%s'\n", m_color.c_str());
