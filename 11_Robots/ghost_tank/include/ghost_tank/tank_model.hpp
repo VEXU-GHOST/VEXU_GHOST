@@ -157,6 +157,8 @@ public:
   void driveCommand(double fwd_vel, double ang_vel);
   void driveCommandJoystick(double fwd_vel, double ang_vel, double deadzone);
 
+  void intake(auto intake_lower_power, auto intake_power);
+
 protected:
   // Initialization
   void validateConfig();

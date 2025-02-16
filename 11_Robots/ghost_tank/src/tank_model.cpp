@@ -123,5 +123,9 @@ void TankModel::driveCommandJoystick(double fwd, double ang, double deadzone){
 
     driveCommand(forward_vel, angular_vel);
 }
+void TankModel::intake(auto intake_lower_power, auto intake_power){
+  rhi_ptr_->setMotorVoltageCommandPercent(m_intake_motor_names[0], intake_lower_power);
+  rhi_ptr_->setMotorVoltageCommandPercent(m_intake_motor_names[1], intake_power);
+}
 
 } // namespace ghost_tank

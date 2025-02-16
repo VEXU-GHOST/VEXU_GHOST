@@ -84,10 +84,10 @@ competition_state_machine_node:
       k9: 0.02 # theta error from rotation   # % error in primary direction
 
       # motion planning
-      move_to_pose_kp_xy: 0.2
-      move_to_pose_kd_xy: 0.3
+      move_to_pose_kp_xy: 0.1
+      move_to_pose_kd_xy: 0.1
       move_to_pose_kp_theta: 0.1
-      move_to_pose_kd_theta: 0.3
+      move_to_pose_kd_theta: 0.1
       max_speed_linear: 0.5
       max_speed_angular: 0.5
 
@@ -105,7 +105,7 @@ competition_state_machine_node:
       cur_twist_topic: "/cur_vel"
       des_pos_topic: "/des_pos"
       use_backup_estimator: false
-      search_radius: 0.5
+      search_radius: 0.3
       sim_mode: true
 
 /**:
