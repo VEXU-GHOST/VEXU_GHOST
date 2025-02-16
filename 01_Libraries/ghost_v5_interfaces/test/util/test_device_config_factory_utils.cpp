@@ -70,8 +70,8 @@ protected:
     digital_io_config->name = "digital_io";
     digital_io_config->port = -3;
     digital_io_config->type = device_type_e::DIGITAL_IO;
-    digital_io_config->input_mask = packByte(std::vector<bool>{true, false, false, false, false, false, true, false});
-    digital_io_config->output_mask = packByte(std::vector<bool>{false, true, false, false, false, false, false, false});
+    digital_io_config->input_mask = packByte(std::vector<bool>{true, true, true, true, false, false, false, false});
+    digital_io_config->output_mask = packByte(std::vector<bool>{false, false, false, false, true, true, true, true});
     robot_config_ptr->addDeviceConfig(digital_io_config);
 
     // Motor some parameters changed

@@ -131,9 +131,9 @@ set(NODES
   loggingNode
   moveToPoseCubic
   moveToPoseTrapezoid
-  swipeTail
+  # swipeTail
   intakeCmd
-  climb
+  # climb
   autoDone
   autonTimer
 )
