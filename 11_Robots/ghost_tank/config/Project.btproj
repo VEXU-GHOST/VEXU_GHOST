@@ -1,10 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4" project_name="Project">
-    <include path="bt.xml"/>
+    <include path="bt_isolation.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
+        <Decorator ID="AutonTimer" editable="true">
+            <input_port name="seconds"/>
+        </Decorator>
         <Action ID="Logging" editable="true">
             <input_port name="message"/>
+        </Action>
+        <Action ID="MoveToPoseBoomerang" editable="true">
+            <input_port name="posX">m</input_port>
+            <input_port name="posY">m</input_port>
+            <input_port name="theta">deg</input_port>
+            <input_port name="threshold" default="0.025">m</input_port>
+            <input_port name="angle_threshold" default="5.0">m</input_port>
+            <input_port name="timeout" default="5000">ms</input_port>
+            <input_port name="lead" default="0.5"/>
         </Action>
     </TreeNodesModel>
 </root>

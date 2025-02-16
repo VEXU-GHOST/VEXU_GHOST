@@ -87,6 +87,48 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_library(boomerang SHARED src/boomerang.cpp)
+target_include_directories(boomerang
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(boomerang
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  boomerang
+)
+ament_export_targets(boomerang HAS_LIBRARY_TARGET)
+install(
+  TARGETS boomerang
+  EXPORT boomerang
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+add_library(pdcontrol SHARED src/pdcontrol.cpp)
+target_include_directories(pdcontrol
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(pdcontrol
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  pdcontrol
+)
+ament_export_targets(pdcontrol HAS_LIBRARY_TARGET)
+install(
+  TARGETS pdcontrol
+  EXPORT pdcontrol
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 add_library(tank_robot_plugin SHARED src/tank_robot_plugin.cpp)
 target_include_directories(tank_robot_plugin
   PUBLIC
@@ -96,6 +138,8 @@ target_include_directories(tank_robot_plugin
     tank_model
     tank_odom
     tank_tree
+    boomerang
+    pdcontrol
   )
 ament_target_dependencies(tank_robot_plugin
   ${DEPENDENCIES}
@@ -118,6 +162,8 @@ set(NODES
   loggingNode
   autoDone
   autonTimer
+  moveToPoseBoomerang
+  moveToPosePurepursuit
 )
 
 foreach(NODE ${NODES})

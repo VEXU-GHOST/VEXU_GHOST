@@ -87,7 +87,7 @@
 
       <model name="walls">
         <static>true</static>
-        <pose>0 0 0.1524 0 0 0</pose>
+        <pose>1.8542 1.8542 0.1524 0 0 0</pose>
 
         <link name="wall_1">
           <pose>0 1.8542 0 0 0 0</pose>

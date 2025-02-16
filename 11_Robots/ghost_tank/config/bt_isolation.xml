@@ -1,22 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
       main_tree_to_execute="main">
-
   <BehaviorTree ID="main">
     <Sequence>
       <Logging message="test"/>
+      <MoveToPoseBoomerang posX="2.0"
+                           posY="2.0"
+                           theta="-90.0"
+                           threshold="0.20"
+                           angle_threshold="5.0"
+                           timeout="100"
+                           lead="0.5"/>
+      <MoveToPoseBoomerang posX="2.0"
+                           posY="5.0"
+                           theta="180.0"
+                           threshold="0.10"
+                           angle_threshold="5.0"
+                           timeout="100"
+                           lead="0.5"/>
+      <Logging message="testover"/>
+
+      <Sleep msec="-1"/>
+    </Sequence>
+  </BehaviorTree>
+  <BehaviorTree ID="side">
+    <Sequence>
+      <Logging message="test"/>
+      <MoveToPosePurepursuit fileName= "~/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
+                              threshold ="0.2"
+                              angle_threshold= "165.0"
+                              timeout= "1000"
+                              />
+      <!-- <MoveToPoseBoomerang posX="1.0"
+                           posY="1.0"
+                           theta="0.0"
+                           threshold="0.5"
+                           angle_threshold="5.0"
+                           timeout="1000"
+                           lead="0.5"/> -->
+                            
+  
+      <Logging message="testover"/>
+
+      <Sleep msec="-1"/>
     </Sequence>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
-    <Decorator ID="AutonTimer"
-            editable="true">
-      <input_port name="seconds"/>
-    </Decorator>
     <Action ID="Logging"
             editable="true">
       <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPoseBoomerang"
+            editable="true">
+      <input_port name="posX">m</input_port>
+      <input_port name="posY">m</input_port>
+      <input_port name="theta">deg</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+      <input_port name="lead"
+                  default="0.5"/>
+    </Action>
+    <Action ID="MoveToPosePurepursuit"
+            editable="true">
+      <input_port name="fileName"></input_port>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+
+      
     </Action>
   </TreeNodesModel>
 

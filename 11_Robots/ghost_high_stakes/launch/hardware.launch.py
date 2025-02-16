@@ -31,6 +31,7 @@ def generate_launch_description():
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
     bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation.xml")
     bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
+    config_path = os.path.join(ghost_tank_share_dir, "config")
 
     ########################
     ### Node Definitions ###
@@ -57,6 +58,7 @@ def generate_launch_description():
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
                 "bt_path_interaction": bt_path_interaction,
+                "config_path": config_path,
             },
         ],
         arguments=[plugin_type, robot_name],

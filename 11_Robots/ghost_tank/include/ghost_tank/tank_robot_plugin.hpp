@@ -41,6 +41,8 @@
 
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
+#include <ghost_tank/pdcontrol.hpp>
+#include <ghost_tank/boomerang.hpp>
 
 namespace ghost_tank
 {
@@ -58,6 +60,7 @@ public:
 
 protected:
   // Publishers
+  void readPathFromFile(const std::string& filename);
   void publishVisualization();
   void publishOdometry();
   void publishBaseTwist();
@@ -99,11 +102,15 @@ protected:
   std::shared_ptr<TankModel> m_tank_model_ptr;
 
   // Autonomy
+  void movePointToPoint();
   std::string bt_path_;
   std::shared_ptr<TankTree> bt_;
   std::shared_ptr<TankTree> bt_interaction;
 
   // Motion Planner
+  double m_search_radius = 0.0;
+  Eigen::Vector3d m_desired_pose = Eigen::Vector3d::Zero();
+  Eigen::Vector3d m_desired_twist = Eigen::Vector3d::Zero();
   double m_move_to_pose_kp_xy = 0.0;
   double m_move_to_pose_kd_xy = 0.0;
   double m_move_to_pose_kp_theta = 0.0;
@@ -182,6 +189,14 @@ protected:
   bool m_intake_cooling_down = false;
 
   bool m_interaction_started = false;
+  bool m_sim_mode = false;
+
+  // boomerang
+  double m_max_speed_linear;
+  double m_max_speed_angular;
+
+  std::shared_ptr<Boomerang> m_boomerang;
+  std::shared_ptr<PDControl> m_pd_control;
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
