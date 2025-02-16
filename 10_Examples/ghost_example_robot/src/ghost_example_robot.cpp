@@ -67,12 +67,13 @@ void GhostExampleRobot::teleop(double current_time)
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
 
+
   if (joy_data->btn_a) {
-    std::cout << "Button A!" << std::endl;
+    std::cout << "A: " << rhi_ptr_->getDigitalIOValue(1) << std::endl;
   } else if (joy_data->btn_b) {
-    std::cout << "Button B!" << std::endl;
+    std::cout << "B: " << rhi_ptr_->getDigitalIOValue(0) << std::endl;
   } else if (joy_data->btn_x) {
-    std::cout << "Button X!" << std::endl;
+    std::cout << "Set Out: " << rhi_ptr_->setDigitalOut(1, 1) << std::endl;
   } else if (joy_data->btn_y) {
     std::cout << "Button Y!" << std::endl;
   } else if (joy_data->btn_u) {
@@ -87,6 +88,9 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << "Button L1!" << std::endl;
   } else if (joy_data->btn_l2) {
     std::cout << "Button L2!" << std::endl;
+  } else {
+    rhi_ptr_->setDigitalOut(1, 0);
+
   }
 
   // Print joystick data!

@@ -190,7 +190,7 @@ void TankRobotPlugin::initialize()
   m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     cmd_pose_topic,
     10);
-    
+
   node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
   std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
   imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
@@ -373,10 +373,6 @@ void TankRobotPlugin::teleop(double current_time)
       forklift_pressed = false;
     }
 
-    m_digital_io[1] = forklift_up; // forklift
-    m_digital_io[2] = joy_data->btn_l2; // pooper
-    rhi_ptr_->setDigitalIO(m_digital_io);
-
     // updateDrivetrainMotors();
   }
 }
@@ -446,7 +442,7 @@ void TankRobotPlugin::publishOdometry()
   msg.pose.pose.position.x = m_curr_odom_pose.x();
   msg.pose.pose.position.y = m_curr_odom_pose.y();
   msg.pose.pose.position.z = 0.0;
-  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)){
+  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)) {
     printf("ROBOT MOVED ANGLE IS %f\n", m_curr_odom_pose.z());
   }
   ghost_util::yawToQuaternionRad(
