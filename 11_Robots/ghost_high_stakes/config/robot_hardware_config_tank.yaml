@@ -1,7 +1,7 @@
 port_configuration:
     devices:
         imu:
-            port: 1
+            port: 17
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
         drive_l1:
