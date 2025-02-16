@@ -26,6 +26,8 @@
 
 using ghost_util::loadYAMLParam;
 using namespace ghost_v5_interfaces::devices;
+using ghost_util::packByte;
+
 namespace ghost_v5_interfaces
 {
 

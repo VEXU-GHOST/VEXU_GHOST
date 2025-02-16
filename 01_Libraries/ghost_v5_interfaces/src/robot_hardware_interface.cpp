@@ -442,7 +442,6 @@ bool RobotHardwareInterface::getDigitalIOValue(uint8_t bit)
 
 bool RobotHardwareInterface::setDigitalIn(uint8_t bit, bool val)
 {
-  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
   auto config = getDeviceConfig<DigitalIODeviceConfig>("digital_io");
   if (bit > 7) {
     std::cout << "[RobotHardwareInterface::setDigitalIn] WARNING: Bit must be in range 0-7! Value: " << bit << std::endl;
@@ -454,13 +453,14 @@ bool RobotHardwareInterface::setDigitalIn(uint8_t bit, bool val)
     return false;
   }
 
-  setBit(getDeviceData<DigitalIODeviceData>("digital_io")->data, bit, val);
+  auto ptr = getDeviceData<DigitalIODeviceData>("digital_io");
+  setBit(ptr->data, bit, val);
+  setDeviceData(ptr);
   return true;
 }
 
 bool RobotHardwareInterface::setDigitalOut(uint8_t bit, bool val)
 {
-  std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
   auto config = getDeviceConfig<DigitalIODeviceConfig>("digital_io");
   if (bit > 7) {
     std::cout << "[RobotHardwareInterface::setDigitalOut] WARNING: Bit must be in range 0-7! Value: " << bit << std::endl;
@@ -472,7 +472,9 @@ bool RobotHardwareInterface::setDigitalOut(uint8_t bit, bool val)
     return false;
   }
 
-  setBit(getDeviceData<DigitalIODeviceData>("digital_io")->data, bit, val);
+  auto ptr = getDeviceData<DigitalIODeviceData>("digital_io");
+  setBit(ptr->data, bit, val);
+  setDeviceData(ptr);
   return true;
 }
 

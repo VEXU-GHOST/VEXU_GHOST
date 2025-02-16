@@ -28,6 +28,7 @@
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
+using ghost_util::packByte;
 
 class TestLoadInertialSensorDeviceConfigYAML : public ::testing::Test
 {

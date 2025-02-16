@@ -37,7 +37,7 @@
 #include "pros/misc.h"
 
 
-using ghost_util::BITMASK_ARR_32BIT;
+using ghost_util::BITMASK_ARR_8BIT;
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces;
 
