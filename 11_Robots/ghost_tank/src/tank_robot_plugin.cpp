@@ -317,19 +317,132 @@ void TankRobotPlugin::autonomous(double current_time)
 
 void TankRobotPlugin::teleop(double current_time)
 {
+
   auto joy_data = rhi_ptr_->getMainJoystickData();
   // std::cout << "Teleop: " << current_time << std::endl;
 
-  if (joy_data->btn_u) {
-    if (!m_auton_button_pressed) {
-      m_auton_button_pressed = true;
-      m_is_first_auton_loop = true;
-      m_auton_start_time = current_time;
-      m_auton_index = 0;
-    }
-    autonomous(current_time - m_auton_start_time);
-  } else {
-    m_auton_button_pressed = false;
+
+  if(joy_data->btn_a){
+    double left_wheel_power = joy_data->left_y / 127.0;
+    double right_wheel_power = joy_data->right_y / 127.0;
+
+    // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+
+    // Each motor has a current limit that defaults to zero.
+    // This is so we can carefully allocate battery power between systems.
+    // If we don't set these, the motors will be extremely weak, if they move at all.
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    // Now we can get motor data and print it.
+    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    std::cout << std::endl;
+  }
+
+  if(joy_data->btn_b){
+
+    double forward_vel = joy_data->left_y / 127.0;
+    double angular_vel = joy_data->right_x / 127.0;
+
+    double threshold = 0.05;
+    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", forward_vel + angular_vel);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", forward_vel - angular_vel);
+
+    //idk how to get the motor position ?? or more like what it represents
+  }
+
+  if(joy_data->btn_u){
+
+    double kp = 0.5;
+    double current_x = m_tank_model_ptr->getWorldPose().x();
+    double current_y = m_tank_model_ptr->getWorldPose().y();
+    double current_angle = m_tank_model_ptr->getWorldAngleRad();
+
+    double target_x = current_x + 10*cos(current_angle);
+    double target_y = current_y + 10*sin(current_angle);
+
+    double error_x = target_x - current_x;
+    double error_y = target_y - current_y;
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", kp * error_x);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", kp * error_y);
+
+  }
+
+  if(joy_data->btn_d){
+
+    double kp = 0.5;
+    double current_x = m_tank_model_ptr->getWorldPose().x();
+    double current_y = m_tank_model_ptr->getWorldPose().y();
+    double current_angle = m_tank_model_ptr->getWorldAngleRad();
+
+    double target_x = current_x - 10*cos(current_angle);
+    double target_y = current_y - 10*sin(current_angle);
+
+    double error_x = target_x - current_x;
+    double error_y = target_y - current_y;
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", kp * error_x);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", kp * error_y);
+
+  }
+
+  if(joy_data->btn_l){
+
+    double kp = 0.5;
+    double current_x = m_tank_model_ptr->getWorldPose().x();
+    double current_y = m_tank_model_ptr->getWorldPose().y();
+    double current_angle = m_tank_model_ptr->getWorldAngleRad();
+
+    double move_angle = 90;
+
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", kp * -move_angle);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", kp * move_angle);
+
+
+  }
+
+  if(joy_data->btn_r){
+
+    double kp = 0.5;
+    double current_x = m_tank_model_ptr->getWorldPose().x();
+    double current_y = m_tank_model_ptr->getWorldPose().y();
+    double current_angle = m_tank_model_ptr->getWorldAngleRad();
+
+
+    double move_angle = 90;
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", kp * move_angle);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", kp * -move_angle);
+
+  }
+
+
+
+
+
+
+  // if (joy_data->btn_u) {
+  //   if (!m_auton_button_pressed) {
+  //     m_auton_button_pressed = true;
+  //     m_is_first_auton_loop = true;
+  //     m_auton_start_time = current_time;
+  //     m_auton_index = 0;
+  //   }
+  //   autonomous(current_time - m_auton_start_time);
+  // } else {
+  //   m_auton_button_pressed = false;
 
     // Toggle Bag Recorder
     if (joy_data->btn_y && !m_recording_btn_pressed) {
