@@ -36,6 +36,7 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
+#include <std_msgs/msg/string.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
@@ -92,6 +93,14 @@ protected:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_robot_color;
+  void colorCallback(const std_msgs::msg::String msg)
+  {
+    m_color = msg.data;
+  }
+  std::string m_color;
+  double m_first_color_detect_inches = INFINITY;
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
