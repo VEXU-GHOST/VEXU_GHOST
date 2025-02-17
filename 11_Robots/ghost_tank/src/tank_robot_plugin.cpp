@@ -186,7 +186,8 @@ void TankRobotPlugin::initialize()
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_twist_topic", "/cmd_vel");
-  std::string cmd_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
+  std::string cmd_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
   m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     cmd_twist_topic,
     10);
@@ -204,11 +205,12 @@ void TankRobotPlugin::initialize()
     bag_recorder_stop_topic);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
-  std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
+  std::string cmd_pose_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
   m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     cmd_pose_topic,
     10);
-    
+
   node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
   std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
   imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
@@ -216,19 +218,22 @@ void TankRobotPlugin::initialize()
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
-  std::string des_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
+  std::string des_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
   m_des_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     des_twist_topic,
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cur_twist_topic", "/cur_vel");
-  std::string cur_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
+  std::string cur_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
   m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     cur_twist_topic,
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
-  std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
+  std::string des_pos_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
   m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
     des_pos_topic,
     10);
