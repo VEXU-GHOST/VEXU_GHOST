@@ -65,12 +65,21 @@ git submodule update --recursive
 # Get processor architecture to determine proper .deb source
 arch=$(dpkg --print-architecture)
 
+# Uninstall any conflicting packages
+conflict_pkgs=(
+ 'ros-humble-rplidar-ros*'
+ 'ros-humble-behaviortree-cpp*'
+)
+
+for pkg in "${conflict_pkgs[@]}"
+do
+   sudo apt remove $pkg -y
+done
 
 # Build matplotlib-cpp
 echo "--------------- MATPLOTLIB_CPP ---------------"
 install_submodule matplotlibcpp
 echo; echo
-
 
 # Build Mumps
 echo "--------------- MUMPS ---------------"
@@ -83,7 +92,6 @@ export FC=$(which gfortran-10)
 install_submodule mumps
 echo; echo
 
-
 # Build IPOPT
 echo "--------------- IPOPT ---------------"
 install_submodule ipopt
@@ -92,24 +100,6 @@ echo; echo
 # Build Casadi
 echo "--------------- CASADI ---------------"
 install_submodule casadi
-echo; echo
-
-# Build Casadi Tutorial CPP
-echo "--------------- CASADI_TUTORIAL_CPP ---------------"
-if [ ! -d "${VEXU_HOME}/09_External/Casadi-Tutorial-CPP/build" ];
-then
-	cd $VEXU_HOME/09_External/Casadi-Tutorial-CPP
-	mkdir build code_gen
-	cd build
-
-	cmake .. || exit -1
-	make     || exit -1
-    
-	cd ../..
-else
-        echo "Build already exists"
-fi
-
 echo; echo
 
 echo "--------------- RPLIDAR ---------------"
