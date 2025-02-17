@@ -6,40 +6,6 @@
 	path = 09_External/yaml-cpp
 	url = git@github.com:VEXU-GHOST/yaml-cpp.git
 
-[submodule "09_External/Casadi-Tutorial-CPP"]
-	path = 09_External/Casadi-Tutorial-CPP
-	url = git@github.com:VEXU-GHOST/Tutorial-on-CasADi-with-CPP.git
-
-[submodule "09_External/casadi"]
-	path = 09_External/casadi
-	url = git@github.com:VEXU-GHOST/casadi.git
-
-[submodule "09_External/Ipopt"]
-	path = 09_External/Ipopt
-	url = git@github.com:VEXU-GHOST/Ipopt.git
-
-[submodule "09_External/rplidar_ros"]
-	path = 09_External/rplidar_ros
-	url = git@github.com:VEXU-GHOST/rplidar_ros.git
-	branch = ros2
-
-[submodule "09_External/matplotlib-cpp"]
-	path = 09_External/matplotlib-cpp
-	url = git@github.com:VEXU-GHOST/matplotlib-cpp.git
-
-[submodule "09_External/ThirdParty-Mumps"]
-	path = 09_External/ThirdParty-Mumps
-	url = git@github.com:VEXU-GHOST/ThirdParty-Mumps.git
-	branch = with-src
-
-[submodule "09_External/BehaviorTree.CPP"]
-	path = 09_External/BehaviorTree.CPP
-	url = git@github.com:VEXU-GHOST/BehaviorTree.CPP.git
-
-[submodule "09_External/BehaviorTree.ROS2"]
-	path = 09_External/BehaviorTree.ROS2
-	url = git@github.com:VEXU-GHOST/BehaviorTree.ROS2.git
-
 [submodule "09_External/plotjuggler"]
 	path = 09_External/plotjuggler
 	url = git@github.com:VEXU-GHOST/PlotJuggler.git

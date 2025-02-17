@@ -26,3 +26,6 @@ rosdep update || exit -1
 echo
 echo "--------------- ROSDEP Install ---------------"
 rosdep install --from-paths . --ignore-src -r -y || exit -1
+
+python3 -m pip install --upgrade pip
+pip install setuptools==61
