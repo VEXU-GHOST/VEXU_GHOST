@@ -41,7 +41,8 @@ TankModel::TankModel(std::shared_ptr<rclcpp::Node> node_ptr,
   m_config = config;
 
   validateConfig();
-
+  calculateMaxBaseTwist();
+  
   node_ptr_->declare_parameter("particle_filter.rviz_set_pose_topic", "/set_pf_pose");
   std::string particle_filter_set_pose_topic = node_ptr_->get_parameter(
     "particle_filter.rviz_set_pose_topic").as_string();
@@ -95,8 +96,10 @@ void TankModel::calculateMaxBaseTwist()
 }
 
 void TankModel::driveCommand(double fwd_pct, double ang_pct){
-    double left_cmd = fwd_pct + ang_pct;
-    double right_cmd = fwd_pct - ang_pct;
+    ghost_util::clamp(fwd_pct, -1.0, 1.0);
+    ghost_util::clamp(ang_pct, -1.0, 1.0);
+    double left_cmd = fwd_pct - ang_pct;
+    double right_cmd = fwd_pct + ang_pct;
 
     for (const auto motor_name: m_config.motor_list) {
       rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);

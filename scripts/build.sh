@@ -30,6 +30,7 @@ skip=(
     btcpp_ros2_interfaces
     btcpp_ros2_samples
     rplidar_ros
+    ghost_swerve
 )
 
 # Build ignores simulator packages on embedded devices

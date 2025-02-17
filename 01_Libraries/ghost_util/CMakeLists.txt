@@ -131,5 +131,9 @@ target_link_libraries(test_math_util
   gtest
   math_util
 )
+ament_add_gtest(test_read test/test_read.cpp)
+target_link_libraries(test_read
+  gtest
+)
 
 ament_package()

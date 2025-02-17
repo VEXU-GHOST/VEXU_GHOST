@@ -51,9 +51,10 @@ struct TankConfig
 class TankModel
 {
 public:
-  TankModel(std::shared_ptr<rclcpp::Node> node_ptr,
-      std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-      TankConfig config);
+  TankModel(
+    std::shared_ptr<rclcpp::Node> node_ptr,
+    std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+    TankConfig config);
 
   /**
    * @brief Get the Tank Model Configration
@@ -106,14 +107,6 @@ public:
     m_world_pose.x() = x;
     m_world_pose.y() = y;
     m_world_pose.z() = theta;
-    geometry_msgs::msg::PoseWithCovarianceStamped msg{};
-    msg.header.stamp = node_ptr_->get_clock()->now();
-    msg.pose.pose.position.x = x;
-    msg.pose.pose.position.y = y;
-    ghost_util::yawToQuaternionDeg(
-      theta, msg.pose.pose.orientation.w, msg.pose.pose.orientation.x,
-      msg.pose.pose.orientation.y, msg.pose.pose.orientation.z);
-    m_particle_filter_set_pose_publisher->publish(msg);
   }
 
   double getWorldAngleDeg() const
