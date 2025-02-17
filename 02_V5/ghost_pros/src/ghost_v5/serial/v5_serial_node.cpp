@@ -138,7 +138,7 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char> & buffer)
 
           for (int i = 0; i < 8; i++) {
             auto port_name = v5_globals::adi_ports_name_map[i];
-            if (output_mask_vector[i]) {
+            if (output_mask_vector[i] && v5_globals::digital_outputs.count(port_name) != 0 && v5_globals::digital_outputs.at(port_name)) {
               v5_globals::digital_outputs[port_name]->set_value(hardware_interface_ptr_->getDigitalIOValue(i));
             }
           }
@@ -262,7 +262,7 @@ void V5SerialNode::writeV5StateUpdate()
 
   for (int i = 0; i < 8; i++) {
     auto port_name = v5_globals::adi_ports_name_map[i];
-    if (input_mask_vector[i]) {
+    if (input_mask_vector[i] && v5_globals::digital_inputs.count(port_name) != 0 && v5_globals::digital_inputs.at(port_name)) {
       hardware_interface_ptr_->setDigitalIn(i, v5_globals::digital_inputs[port_name]->get_value());
     }
   }

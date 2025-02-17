@@ -218,10 +218,12 @@ void initialize()
             for (int i = 0; i < 8; i++) {
               auto port_name = v5_globals::adi_ports_name_map[i];
               if (input_mask_vector[i]) {
-                v5_globals::digital_inputs[port_name] = std::make_shared<pros::ADIDigitalIn>(i);
+                v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Input on port ", port_name);
+                v5_globals::digital_inputs[port_name] = std::make_shared<pros::ADIDigitalIn>(i + 1);
 
               } else if (output_mask_vector[i]) {
-                v5_globals::digital_outputs[port_name] = std::make_shared<pros::ADIDigitalOut>(i);
+                v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Output on port ", port_name);
+                v5_globals::digital_outputs[port_name] = std::make_shared<pros::ADIDigitalOut>(i + 1);
               }
             }
           }
