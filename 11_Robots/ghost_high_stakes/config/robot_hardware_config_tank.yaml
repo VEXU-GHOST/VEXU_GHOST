@@ -1,8 +1,8 @@
 port_configuration:
     digital_io:
-        A: conveyor_limit_switch
-        G: clamp
-        H: bite
+        A: IN
+        G: OUT
+        H: OUT
     devices:
         conveyor_motor:
             port: 1
