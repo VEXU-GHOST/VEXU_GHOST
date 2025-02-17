@@ -32,24 +32,22 @@
 namespace ghost_tank
 {
 
-TankTree::TankTree(std::string bt_path)
-: bt_path_(bt_path)
-{
-  global_blackboard_ = BT::Blackboard::create();
+TankTree::TankTree(std::string bt_path) :
+	bt_path_(bt_path){
+	global_blackboard_ = BT::Blackboard::create();
 }
 
-void TankTree::init_tree()
-{
-  BT::BehaviorTreeFactory factory;
+void TankTree::init_tree(){
+	BT::BehaviorTreeFactory factory;
 
-  // add all nodes here
-  factory.registerNodeType<LoggingNode>("Logging");
-  factory.registerNodeType<AutoDone>("AutoDone");
-  factory.registerNodeType<AutonTimer>("AutonTimer");
-  factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-  factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit");
+	// add all nodes here
+	factory.registerNodeType<LoggingNode>("Logging");
+	factory.registerNodeType<AutoDone>("AutoDone");
+	factory.registerNodeType<AutonTimer>("AutonTimer");
+	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
+	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
 
-  tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
+    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
 }
 
 void TankTree::tick_tree()

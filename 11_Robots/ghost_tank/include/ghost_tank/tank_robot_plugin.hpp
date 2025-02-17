@@ -209,8 +209,6 @@ protected:
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
-  std::vector<std::string> m_left_drive_motor_names;
-  >> >> >> > feature / color - sensor
   std::vector<std::string> m_all_motor_names;
 };
 

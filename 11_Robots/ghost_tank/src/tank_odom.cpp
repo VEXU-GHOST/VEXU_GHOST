@@ -77,3 +77,6 @@ Eigen::Vector3d TankOdometry::update(
   m_cur_pos = update(l_wheel_pos, r_wheel_pos);
 
   return m_cur_pos;
+}
+
+} // namespace ghost_tank
