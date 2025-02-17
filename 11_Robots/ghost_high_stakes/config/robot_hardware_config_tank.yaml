@@ -118,7 +118,7 @@ port_configuration:
                 pos_gain: 0.0
                 vel_gain: 0.0
                 ff_vel_gain: 0.0
-                ff_torque_gain: 100.0
+                ff_torque_gain: 0.0
             serial:
                 send_position_command: true
                 send_velocity_command: false

@@ -330,6 +330,7 @@ void TankRobotPlugin::teleop(double current_time)
 
   toggleBagRecorder(joy_data);
   updateIntake(joy_data);
+  updateBite(joy_data);
   updateClamp(joy_data);
   updateDrivetrain(joy_data);
 }
@@ -421,10 +422,10 @@ void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)
 void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool clamp_btn_pressed = false;
-  if (joy_data->btn_l1 && !clamp_btn_pressed) {
+  if (joy_data->btn_l2 && !clamp_btn_pressed) {
     clamp_btn_pressed = true;
     m_clamp_closed = !m_clamp_closed;
-  } else if (!joy_data->btn_l1) {
+  } else if (!joy_data->btn_l2) {
     clamp_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
