@@ -23,8 +23,7 @@ if [[ $(pros --version) ]] 2> /dev/null; then
     echo ---------------- Building PROS Project ----------------
     echo -------------------------------------------------------
     echo
-    #pros make || exit -1
-    make -j4 || exit -1
+    pros make || exit -1
 else
     echo "ERROR: PROS is not installed!"
 fi

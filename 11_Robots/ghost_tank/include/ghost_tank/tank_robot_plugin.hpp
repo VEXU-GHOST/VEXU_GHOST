@@ -61,7 +61,7 @@ public:
 
 protected:
   // Publishers
-  void readPathFromFile(const std::string & filename);
+  void readPathFromFile(const std::string& filename);
   void publishVisualization();
   void publishOdometry();
   void publishBaseTwist();
