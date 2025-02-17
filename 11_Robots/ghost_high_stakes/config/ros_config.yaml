@@ -1,4 +1,3 @@
-
 ghost_serial_node:
   ros__parameters:
     port_name: "/dev/ttyACM1"
