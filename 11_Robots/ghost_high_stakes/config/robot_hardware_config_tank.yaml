@@ -1,4 +1,8 @@
 port_configuration:
+    digital_io:
+        A: conveyor_limit_switch
+        G: clamp
+        H: bite
     devices:
         conveyor_motor:
             port: 1
@@ -8,7 +12,7 @@ port_configuration:
         ground_pickup_motor:
             port: 2
             type: MOTOR
-            reversed: true
+            reversed: false
             config: intake_motor_config
         imu:
             port: 17

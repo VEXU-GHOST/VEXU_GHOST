@@ -36,6 +36,8 @@ using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
 
+using ghost_v5_interfaces::devices::JoystickDeviceData;
+
 using ghost_util::INCHES_TO_METERS;
 
 namespace ghost_tank
@@ -44,6 +46,8 @@ namespace ghost_tank
 TankRobotPlugin::TankRobotPlugin()
 {
   populateMotorNames();
+  populateDigitalIONames();
+
 }
 
 void TankRobotPlugin::populateMotorNames()
@@ -77,6 +81,13 @@ void TankRobotPlugin::populateMotorNames()
 
   m_all_motor_names.push_back("ground_pickup_motor");
   m_all_motor_names.push_back("conveyor_motor");
+}
+
+void TankRobotPlugin::populateDigitalIONames()
+{
+  digital_io_port_map["conveyor_switch"] = 0;
+  digital_io_port_map["clamp"] = 6;
+  digital_io_port_map["bite"] = 7;
 }
 
 //////////////////////
@@ -312,6 +323,19 @@ void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
 
+  bool running_auton = runAutonFromDriver(joy_data, current_time);
+  if (running_auton) {
+    return;
+  }
+
+  toggleBagRecorder(joy_data);
+  updateIntake(joy_data);
+  updateClamp(joy_data);
+  updateDrivetrain(joy_data);
+}
+
+bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
+{
   if (joy_data->btn_u && joy_data->btn_l) {
     if (!m_auton_button_pressed) {
       m_auton_button_pressed = true;
@@ -320,58 +344,96 @@ void TankRobotPlugin::teleop(double current_time)
       m_auton_index = 0;
     }
     autonomous(current_time - m_auton_start_time);
-  } else {
-    m_auton_button_pressed = false;
 
-    // Toggle Bag Recorder
-    if (joy_data->btn_y && joy_data->btn_x && !m_recording_btn_pressed) {
-      m_recording_btn_pressed = true;
-
-      toggleBagRecorder();
-    } else if (!(joy_data->btn_y && joy_data->btn_x)) {
-      m_recording_btn_pressed = false;
-    }
-
-    m_tank_model_ptr->driveCommandJoystick(
-      joy_data->left_y, -joy_data->right_x, 0.05);
-
-    double intake_power = 0;
-    if (joy_data->btn_r2) {
-      intake_power = 1.0;
-    } else if (joy_data->btn_r1) {
-      intake_power = -1.0;
-    } else {
-      intake_power = 0.0;
-    }
-
-    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
-    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
-
-    static bool forklift_pressed = false;
-    static bool forklift_up = false;
-
-    if (joy_data->btn_l1 && !forklift_pressed) {
-      forklift_pressed = true;
-      forklift_up = !forklift_up;
-    } else if (!joy_data->btn_l1) {
-      forklift_pressed = false;
-    }
-
-    // updateDrivetrainMotors();
+    return true;
   }
+  m_auton_button_pressed = false;
+  return false;
 }
 
 
-void TankRobotPlugin::toggleBagRecorder()
+void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_data)
 {
-  if (!m_recording) {
-    auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-    m_start_recorder_client->async_send_request(req);
-  } else {
-    auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
-    m_stop_recorder_client->async_send_request(req);
+  if (joy_data->btn_y && joy_data->btn_x && !m_recording_btn_pressed) {
+    m_recording_btn_pressed = true;
+    if (!m_recording) {
+      std::cout << "[TankRobotPlugin::toggleBagRecorder] Starting Bag Recorder!" << std::endl;
+      auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+      m_start_recorder_client->async_send_request(req);
+    } else {
+      std::cout << "[TankRobotPlugin::toggleBagRecorder] Stopping Bag Recorder!" << std::endl;
+      auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+      m_stop_recorder_client->async_send_request(req);
+    }
+    m_recording = !m_recording;
+  } else if (!(joy_data->btn_y && joy_data->btn_x)) {
+    m_recording_btn_pressed = false;
   }
-  m_recording = !m_recording;
+}
+
+void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  double ground_pickup_power = 0;
+  int32_t ground_pickup_current = 0;
+  if (joy_data->btn_r2) {
+    ground_pickup_power = 1.0;
+    ground_pickup_current = 2500;
+  } else if (joy_data->btn_r) {
+    ground_pickup_power = -1.0;
+    ground_pickup_current = 2500;
+  } else {
+    ground_pickup_power = 0.0;
+    ground_pickup_current = 0;
+  }
+
+  double conveyor_power = 0;
+  int32_t conveyor_current = 0;
+  if (joy_data->btn_r1) {
+    conveyor_power = 1.0;
+    conveyor_current = 2500;
+  } else if (joy_data->btn_l1) {
+    conveyor_power = -1.0;
+    conveyor_current = 2500;
+  } else {
+    conveyor_power = 0.0;
+    conveyor_current = 0;
+  }
+
+  rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
+
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor", conveyor_current);
+}
+
+void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  static bool bite_btn_pressed = false;
+  if (joy_data->btn_y && !bite_btn_pressed) {
+    bite_btn_pressed = true;
+    m_bite_closed = !m_bite_closed;
+  } else if (!joy_data->btn_y) {
+    bite_btn_pressed = false;
+  }
+  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
+}
+
+void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  static bool clamp_btn_pressed = false;
+  if (joy_data->btn_l1 && !clamp_btn_pressed) {
+    clamp_btn_pressed = true;
+    m_clamp_closed = !m_clamp_closed;
+  } else if (!joy_data->btn_l1) {
+    clamp_btn_pressed = false;
+  }
+  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
+}
+
+void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  m_tank_model_ptr->driveCommandJoystick(joy_data->left_y, -joy_data->right_x, 0.05);
+
 }
 
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)

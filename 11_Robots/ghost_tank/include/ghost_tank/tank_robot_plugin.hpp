@@ -60,21 +60,34 @@ public:
   void onNewSensorData() override;
 
 protected:
-  // Initialization
+  // Construction
   void populateMotorNames();
+  void populateDigitalIONames();
+
+  // Initialization
   void initROSComms();
   void initEstimation();
   void initTankModel();
   void initAutonomy();
 
+  // onNewSensorData
   void publishIMUData();
   void updateAndPublishOdometry();
   void publishBaseTwist();
   void publishTrajectoryVisualization();
-  
-  void readPathFromFile(const std::string& filename);
+
+  // Teleop
+  bool runAutonFromDriver(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
+  void toggleBagRecorder(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateIntake(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+
+  void readPathFromFile(const std::string & filename);
   void resetPose(double x, double y, double theta);
 
+ 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_tank_viz_pub;
@@ -112,8 +125,7 @@ protected:
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
   rclcpp::Client<ghost_msgs::srv::StopRecorder>::SharedPtr m_stop_recorder_client;
 
-  // tank Model
-  void updateDrivetrainMotors();
+  // Tank Model
   std::shared_ptr<TankModel> m_tank_model_ptr;
 
   // Autonomy
@@ -158,6 +170,9 @@ protected:
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
   bool m_use_backup_estimator = false;
+
+  bool m_clamp_closed{false};
+  bool m_bite_closed{false};
 
   // Digital IO
   std::vector<bool> m_digital_io;
@@ -216,6 +231,8 @@ protected:
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
   std::vector<std::string> m_all_motor_names;
+
+  std::unordered_map<std::string, int> digital_io_port_map;
 };
 
 } // namespace ghost_tank
