@@ -60,12 +60,19 @@ public:
   void onNewSensorData() override;
 
 protected:
-  // Publishers
-  void readPathFromFile(const std::string& filename);
-  void publishVisualization();
-  void publishOdometry();
+  // Initialization
+  void populateMotorNames();
+  void initROSComms();
+  void initEstimation();
+  void initTankModel();
+  void initAutonomy();
+
+  void publishIMUData();
+  void updateAndPublishOdometry();
   void publishBaseTwist();
   void publishTrajectoryVisualization();
+  
+  void readPathFromFile(const std::string& filename);
   void resetPose(double x, double y, double theta);
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
@@ -75,7 +82,6 @@ protected:
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr m_imu_sub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_base_twist_cmd_pub;
 
-  // rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_cur_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;

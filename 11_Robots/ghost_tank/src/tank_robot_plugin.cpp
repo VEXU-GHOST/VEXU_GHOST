@@ -36,18 +36,17 @@ using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
 
+using ghost_util::INCHES_TO_METERS;
+
 namespace ghost_tank
 {
 
 TankRobotPlugin::TankRobotPlugin()
 {
-  // TODO: test and implement digital io in rhi
-  m_digital_io = std::vector<bool>(8, false);
-  // m_digital_io_name_map = std::unordered_map<std::string, size_t>{
-  //   {"tail", 0},
-  //   {"claw", 1}
-  // };
+  populateMotorNames();
+}
 
+void TankRobotPlugin::populateMotorNames(){
   m_right_drive_motor_names = {
     "drive_r1",
     "drive_r2",
@@ -74,41 +73,88 @@ TankRobotPlugin::TankRobotPlugin()
     m_all_motor_names.end(),
     m_right_drive_motor_names.begin(),
     m_right_drive_motor_names.end());
+
+  m_all_motor_names.push_back("ground_pickup_motor");
+  m_all_motor_names.push_back("conveyor_motor");
 }
+
+//////////////////////
+/// Initialization ///
+//////////////////////
 
 void TankRobotPlugin::initialize()
 {
-  std::cout << "Tank Robot Initialization!" << std::endl;
+  initROSComms();
+  initEstimation();
+  initTankModel();
+  initAutonomy();
+}
+
+void TankRobotPlugin::initROSComms(){
+  // TODO Why does this exist
+  node_ptr_->declare_parameter("use_sim_time", false);
+  m_sim_mode = node_ptr_->get_parameter("use_sim_time").as_bool();
+
+  // Services
+  node_ptr_->declare_parameter("bag_recorder_start_topic", "bag_recorder/start");
+  std::string bag_recorder_start_topic = node_ptr_->get_parameter("bag_recorder_start_topic").as_string();
+  m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(bag_recorder_start_topic);
+
+  node_ptr_->declare_parameter("bag_recorder_stop_topic", "bag_recorder/stop");
+  std::string bag_recorder_stop_topic = node_ptr_->get_parameter("bag_recorder_stop_topic").as_string();
+  m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>( bag_recorder_stop_topic);
+
+  // Publishers
+  node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
+  std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
+  m_joint_state_pub = node_ptr_->create_publisher<sensor_msgs::msg::JointState>(joint_state_topic, 10);
+
+  node_ptr_->declare_parameter("trajectory_marker_topic", "/trajectory_markers");
+  std::string trajectory_marker_topic = node_ptr_->get_parameter("trajectory_marker_topic").as_string();
+  m_trajectory_viz_pub = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>(trajectory_marker_topic, 10);
+
+  node_ptr_->declare_parameter("tank_robot_plugin.cmd_twist_topic", "/cmd_vel");
+  std::string cmd_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
+  m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(cmd_twist_topic, 10);
 
   node_ptr_->declare_parameter("odom_topic", "/sensors/wheel_odom");
   std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
+  m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(odom_topic, 10);
 
+  // Subscriptions
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
+  m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
 
   node_ptr_->declare_parameter("backup_pose_topic", "/odom_ekf/odometry");
   std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
+  m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
 
+  // Tank-Specific Publishers
+  node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
+  std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
+  m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(cmd_pose_topic, 10);
+
+  node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
+  std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
+  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(input_imu_topic, 10);
+
+  node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
+  std::string des_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
+  m_des_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(des_twist_topic, 10);
+
+  node_ptr_->declare_parameter("tank_robot_plugin.cur_twist_topic", "/cur_vel");
+  std::string cur_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
+  m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>( cur_twist_topic, 10);
+
+  node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
+  std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
+  m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(des_pos_topic, 10);
+}
+
+void TankRobotPlugin::initEstimation(){
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
-
-  node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
-  std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
-
-  // vizualization
-  node_ptr_->declare_parameter("trajectory_marker_topic", "/trajectory_markers");
-  std::string trajectory_marker_topic =
-    node_ptr_->get_parameter("trajectory_marker_topic").as_string();
-
-  node_ptr_->declare_parameter<std::string>("bt_path");
-  std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
-
-  node_ptr_->declare_parameter<std::string>("config_path");
-  std::string config_path = node_ptr_->get_parameter("config_path").as_string();
-
-  // for vex ai
-  //node_ptr_->declare_parameter<std::string>("bt_path_interaction");
-  //std::string bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
 
   node_ptr_->declare_parameter("particle_filter.k1", 0.0);
   node_ptr_->declare_parameter("particle_filter.k2", 0.0);
@@ -129,179 +175,90 @@ void TankRobotPlugin::initialize()
   m_k8 = node_ptr_->get_parameter("particle_filter.k8").as_double();
   m_k9 = node_ptr_->get_parameter("particle_filter.k9").as_double();
 
+  node_ptr_->declare_parameter("particle_filter.init_world_x", m_init_world_x);
+  node_ptr_->declare_parameter("particle_filter.init_world_y", m_init_world_y);
+  node_ptr_->declare_parameter("particle_filter.init_world_theta", m_init_world_theta);
+  node_ptr_->declare_parameter("particle_filter.init_sigma_x", m_init_sigma_x);
+  node_ptr_->declare_parameter("particle_filter.init_sigma_y", m_init_sigma_y);
+  node_ptr_->declare_parameter("particle_filter.init_sigma_theta", m_init_sigma_theta);
+  m_init_world_x = node_ptr_->get_parameter("particle_filter.init_world_x").as_double();
+  m_init_world_y = node_ptr_->get_parameter("particle_filter.init_world_y").as_double();
+  m_init_world_theta = node_ptr_->get_parameter("particle_filter.init_world_theta").as_double();
+  m_init_sigma_x = node_ptr_->get_parameter("particle_filter.init_sigma_x").as_double();
+  m_init_sigma_y = node_ptr_->get_parameter("particle_filter.init_sigma_y").as_double();
+  m_init_sigma_theta = node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
+}
+
+void TankRobotPlugin::initTankModel(){
   // Setup tank Model
   TankConfig tank_model_config;
   tank_model_config.motor_list = m_all_motor_names;
   tank_model_config.wheel_radius = 2.75 / 2.0; //in
   tank_model_config.wheel_gear_ratio = 20.0 / 23.0;
   tank_model_config.wheel_dist = 7.5; //in
-
-  node_ptr_->declare_parameter("tank_robot_plugin.search_radius", m_search_radius);
-  m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
-
-  // initial position params
-  node_ptr_->declare_parameter("particle_filter.init_world_x", m_init_world_x);
-  node_ptr_->declare_parameter("particle_filter.init_world_y", m_init_world_y);
-  node_ptr_->declare_parameter("particle_filter.init_world_theta", m_init_world_theta);
-
-  m_init_world_x =
-    node_ptr_->get_parameter("particle_filter.init_world_x").as_double();
-  m_init_world_y =
-    node_ptr_->get_parameter("particle_filter.init_world_y").as_double();
-  m_init_world_theta =
-    node_ptr_->get_parameter("particle_filter.init_world_theta").as_double();
-
-  node_ptr_->declare_parameter("particle_filter.init_sigma_x", m_init_sigma_x);
-  node_ptr_->declare_parameter("particle_filter.init_sigma_y", m_init_sigma_y);
-  node_ptr_->declare_parameter("particle_filter.init_sigma_theta", m_init_sigma_theta);
-
-  m_init_sigma_x =
-    node_ptr_->get_parameter("particle_filter.init_sigma_x").as_double();
-  m_init_sigma_y =
-    node_ptr_->get_parameter("particle_filter.init_sigma_y").as_double();
-  m_init_sigma_theta =
-    node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
-
-  // ROS Topics
-  m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
-    pose_topic,
-    10,
-    std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
-
-  m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(
-    backup_pose_topic,
-    10,
-    std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
-
-  m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
-    odom_topic,
-    10);
-
-  m_joint_state_pub = node_ptr_->create_publisher<sensor_msgs::msg::JointState>(
-    joint_state_topic,
-    10);
-
-  m_trajectory_viz_pub = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>(
-    trajectory_marker_topic,
-    10);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.cmd_twist_topic", "/cmd_vel");
-  std::string cmd_twist_topic =
-    node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
-  m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
-    cmd_twist_topic,
-    10);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.bag_recorder_start_topic", "bag_recorder/start");
-  std::string bag_recorder_start_topic =
-    node_ptr_->get_parameter("tank_robot_plugin.bag_recorder_start_topic").as_string();
-  m_start_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StartRecorder>(
-    bag_recorder_start_topic);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.bag_recorder_stop_topic", "bag_recorder/stop");
-  std::string bag_recorder_stop_topic =
-    node_ptr_->get_parameter("tank_robot_plugin.bag_recorder_stop_topic").as_string();
-  m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(
-    bag_recorder_stop_topic);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
-  std::string cmd_pose_topic =
-    node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
-  m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    cmd_pose_topic,
-    10);
-
-  node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
-  std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
-  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
-    input_imu_topic,
-    10);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
-  std::string des_twist_topic =
-    node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
-  m_des_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
-    des_twist_topic,
-    10);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.cur_twist_topic", "/cur_vel");
-  std::string cur_twist_topic =
-    node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
-  m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
-    cur_twist_topic,
-    10);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
-  std::string des_pos_topic =
-    node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
-  m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
-    des_pos_topic,
-    10);
-
-  // node_ptr_->declare_parameter("use_sim_time", false);
-  m_sim_mode = node_ptr_->get_parameter("use_sim_time").as_bool();
-
-  bt_ = std::make_shared<TankTree>(bt_path);
-  // bt_interaction_ = std::make_shared<TankTree>(bt_path_interaction);
-
   m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
+
+  node_ptr_->declare_parameter("tank_robot_plugin.search_radius", 0.0);
+  double m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.drive_gear_ratio", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.drive_wheel_size_inches", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.wheel_base_inches", 0.0);
+
+  double motor_ticks_per_rotation = node_ptr_->get_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation").as_double();
+  double drive_gear_ratio = node_ptr_->get_parameter("tank_robot_plugin.drive_gear_ratio").as_double();
+  double wheel_size_inches = node_ptr_->get_parameter("tank_robot_plugin.drive_wheel_size_inches").as_double();
+  double wheel_base_inches = node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
+
+  m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
+  m_odom_ptr->resetPose();
 
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.max_speed_linear", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.max_speed_angular", 0.5);
   float kp_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
   float kd_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
   float kp_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
   float kd_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
-
-  node_ptr_->declare_parameter("tank_robot_plugin.max_speed_linear", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.max_speed_angular", 0.5);
   m_max_speed_linear = node_ptr_->get_parameter("tank_robot_plugin.max_speed_linear").as_double();
   m_max_speed_angular = node_ptr_->get_parameter("tank_robot_plugin.max_speed_angular").as_double();
 
   m_boomerang = std::make_shared<Boomerang>();
   m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta);
+}
 
-  double motor_ticks_per_rotation = 0, drive_gear_ratio = 0, wheel_size_inches = 0,
-    wheel_base_inches = 0;
-  node_ptr_->declare_parameter(
-    "tank_robot_plugin.drive_motor_ticks_per_rotation",
-    motor_ticks_per_rotation);
-  node_ptr_->declare_parameter("tank_robot_plugin.drive_gear_ratio", drive_gear_ratio);
-  node_ptr_->declare_parameter("tank_robot_plugin.drive_wheel_size_inches", wheel_size_inches);
-  node_ptr_->declare_parameter("tank_robot_plugin.wheel_base_inches", wheel_base_inches);
+void TankRobotPlugin::initAutonomy(){
+  node_ptr_->declare_parameter<std::string>("bt_path");
+  std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
-  motor_ticks_per_rotation =
-    node_ptr_->get_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation").as_double();
-  drive_gear_ratio =
-    node_ptr_->get_parameter("tank_robot_plugin.drive_gear_ratio").as_double();
-  wheel_size_inches =
-    node_ptr_->get_parameter("tank_robot_plugin.drive_wheel_size_inches").as_double();
-  wheel_base_inches =
-    node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
+  node_ptr_->declare_parameter<std::string>("config_path");
+  std::string config_path = node_ptr_->get_parameter("config_path").as_string();
 
-  m_odom_ptr = std::make_shared<TankOdometry>(
-    motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * ghost_util::INCHES_TO_METERS, wheel_base_inches * ghost_util::INCHES_TO_METERS
-  );
-  m_odom_ptr->resetPose();
-
+  bt_ = std::make_shared<TankTree>(bt_path);
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
   bt_->set_variable("node_ptr", node_ptr_);// have to move this in front of bt somehow
   bt_->init_tree();
-
-  std::cout << "Tank Robot Initialization Done!" << std::endl;
 }
 
+/////////////////////
+/// State Machine ///
+/////////////////////
 void TankRobotPlugin::onNewSensorData()
 {
-  sensor_msgs::msg::Imu imu_msg{};
+  publishIMUData();
+  updateAndPublishOdometry();
+  publishTrajectoryVisualization();
+}
+
+void TankRobotPlugin::publishIMUData(){
+ sensor_msgs::msg::Imu imu_msg{};
   imu_msg.header.frame_id = "imu_link";
   imu_msg.header.stamp = node_ptr_->get_clock()->now();
-  // imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
-  // imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
-  // imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
   if (!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))) {
     imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
   }
@@ -319,24 +276,6 @@ void TankRobotPlugin::onNewSensorData()
       imu_msg.orientation.y, imu_msg.orientation.z);
   }
   imu_pub->publish(imu_msg);
-
-  std::vector<long> r_pos;
-  std::vector<long> l_pos;
-
-  for (const auto & name : m_right_drive_motor_names) {
-    r_pos.push_back(rhi_ptr_->getMotorPosition(name));
-  }
-  for (const auto & name : m_left_drive_motor_names) {
-    l_pos.push_back(rhi_ptr_->getMotorPosition(name));
-  }
-
-  m_odom_ptr->update(
-    Eigen::Map<Eigen::VectorX<long>>(l_pos.data(), l_pos.size()),
-    Eigen::Map<Eigen::VectorX<long>>(r_pos.data(), r_pos.size())
-  );
-  publishOdometry();
-  // publishVisualization();
-  publishTrajectoryVisualization();
 }
 
 void TankRobotPlugin::disabled()
@@ -472,8 +411,23 @@ void TankRobotPlugin::publishBaseTwist()
   //m_base_twist_cmd_pub->publish(msg);
 }
 
-void TankRobotPlugin::publishOdometry()
+void TankRobotPlugin::updateAndPublishOdometry()
 {
+  std::vector<long> r_pos;
+  std::vector<long> l_pos;
+
+  for (const auto & name : m_right_drive_motor_names) {
+    r_pos.push_back(rhi_ptr_->getMotorPosition(name));
+  }
+  for (const auto & name : m_left_drive_motor_names) {
+    l_pos.push_back(rhi_ptr_->getMotorPosition(name));
+  }
+
+  m_odom_ptr->update(
+    Eigen::Map<Eigen::VectorX<long>>(l_pos.data(), l_pos.size()),
+    Eigen::Map<Eigen::VectorX<long>>(r_pos.data(), r_pos.size())
+  );
+
   m_curr_odom_pose = m_odom_ptr->getPose();
 
   nav_msgs::msg::Odometry msg{};
