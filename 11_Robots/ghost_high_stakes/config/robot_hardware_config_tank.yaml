@@ -1,5 +1,15 @@
 port_configuration:
     devices:
+        conveyor_motor:
+            port: 1
+            type: MOTOR
+            reversed: true
+            config: intake_motor_config
+        ground_pickup_motor:
+            port: 2
+            type: MOTOR
+            reversed: true
+            config: intake_motor_config
         imu:
             port: 17
             type: INERTIAL_SENSOR
@@ -64,16 +74,6 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        ground_pickup_motor:
-            port: 9
-            type: MOTOR
-            reversed: true
-            config: intake_motor_config
-        conveyor_motor:
-            port: 10
-            type: MOTOR
-            reversed: true
-            config: intake_motor_config
     device_configurations:
         inertial_sensor_config:
             serial:

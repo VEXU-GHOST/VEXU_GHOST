@@ -46,7 +46,8 @@ TankRobotPlugin::TankRobotPlugin()
   populateMotorNames();
 }
 
-void TankRobotPlugin::populateMotorNames(){
+void TankRobotPlugin::populateMotorNames()
+{
   m_right_drive_motor_names = {
     "drive_r1",
     "drive_r2",
@@ -90,11 +91,8 @@ void TankRobotPlugin::initialize()
   initAutonomy();
 }
 
-void TankRobotPlugin::initROSComms(){
-  // TODO Why does this exist
-  node_ptr_->declare_parameter("use_sim_time", false);
-  m_sim_mode = node_ptr_->get_parameter("use_sim_time").as_bool();
-
+void TankRobotPlugin::initROSComms()
+{
   // Services
   node_ptr_->declare_parameter("bag_recorder_start_topic", "bag_recorder/start");
   std::string bag_recorder_start_topic = node_ptr_->get_parameter("bag_recorder_start_topic").as_string();
@@ -102,7 +100,7 @@ void TankRobotPlugin::initROSComms(){
 
   node_ptr_->declare_parameter("bag_recorder_stop_topic", "bag_recorder/stop");
   std::string bag_recorder_stop_topic = node_ptr_->get_parameter("bag_recorder_stop_topic").as_string();
-  m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>( bag_recorder_stop_topic);
+  m_stop_recorder_client = node_ptr_->create_client<ghost_msgs::srv::StopRecorder>(bag_recorder_stop_topic);
 
   // Publishers
   node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
@@ -145,14 +143,15 @@ void TankRobotPlugin::initROSComms(){
 
   node_ptr_->declare_parameter("tank_robot_plugin.cur_twist_topic", "/cur_vel");
   std::string cur_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
-  m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>( cur_twist_topic, 10);
+  m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(cur_twist_topic, 10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
   std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
   m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(des_pos_topic, 10);
 }
 
-void TankRobotPlugin::initEstimation(){
+void TankRobotPlugin::initEstimation()
+{
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
 
@@ -189,7 +188,8 @@ void TankRobotPlugin::initEstimation(){
   m_init_sigma_theta = node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
 }
 
-void TankRobotPlugin::initTankModel(){
+void TankRobotPlugin::initTankModel()
+{
   // Setup tank Model
   TankConfig tank_model_config;
   tank_model_config.motor_list = m_all_motor_names;
@@ -231,7 +231,8 @@ void TankRobotPlugin::initTankModel(){
   m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta);
 }
 
-void TankRobotPlugin::initAutonomy(){
+void TankRobotPlugin::initAutonomy()
+{
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
@@ -255,8 +256,9 @@ void TankRobotPlugin::onNewSensorData()
   publishTrajectoryVisualization();
 }
 
-void TankRobotPlugin::publishIMUData(){
- sensor_msgs::msg::Imu imu_msg{};
+void TankRobotPlugin::publishIMUData()
+{
+  sensor_msgs::msg::Imu imu_msg{};
   imu_msg.header.frame_id = "imu_link";
   imu_msg.header.stamp = node_ptr_->get_clock()->now();
   if (!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))) {
@@ -309,7 +311,6 @@ void TankRobotPlugin::autonomous(double current_time)
 void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
-  // std::cout << "Teleop: " << current_time << std::endl;
 
   if (joy_data->btn_u && joy_data->btn_l) {
     if (!m_auton_button_pressed) {
@@ -326,15 +327,7 @@ void TankRobotPlugin::teleop(double current_time)
     if (joy_data->btn_y && joy_data->btn_x && !m_recording_btn_pressed) {
       m_recording_btn_pressed = true;
 
-      if (!m_recording) {
-        auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-        m_start_recorder_client->async_send_request(req);
-      } else {
-        auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
-        m_stop_recorder_client->async_send_request(req);
-      }
-
-      m_recording = !m_recording;
+      toggleBagRecorder();
     } else if (!(joy_data->btn_y && joy_data->btn_x)) {
       m_recording_btn_pressed = false;
     }
@@ -366,6 +359,19 @@ void TankRobotPlugin::teleop(double current_time)
 
     // updateDrivetrainMotors();
   }
+}
+
+
+void TankRobotPlugin::toggleBagRecorder()
+{
+  if (!m_recording) {
+    auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+    m_start_recorder_client->async_send_request(req);
+  } else {
+    auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+    m_stop_recorder_client->async_send_request(req);
+  }
+  m_recording = !m_recording;
 }
 
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
