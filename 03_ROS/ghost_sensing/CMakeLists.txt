@@ -21,7 +21,7 @@ set(DEPENDENCIES
   yaml-cpp
   Eigen3
   builtin_interfaces
-)
+  )
 
 foreach(pkg ${DEPENDENCIES})
   find_package(${pkg} REQUIRED)
