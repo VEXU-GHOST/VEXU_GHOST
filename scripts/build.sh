@@ -46,9 +46,11 @@ then
     colcon build --symlink-install --packages-skip ${skip[@]} ghost_sim ghost_sim_examples ghost_viz plotjuggler plotjuggler_ros --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
 fi
 
-if [ "$1" != "-r" ];
+if ! command -v pros 2>&1 >/dev/null
 then
-  cd $VEXU_HOME
-  echo
-  bash scripts/pros_upload.sh
+    exit;
 fi
+
+cd $VEXU_HOME
+echo
+bash scripts/pros_upload.sh
