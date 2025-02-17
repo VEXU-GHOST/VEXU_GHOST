@@ -57,9 +57,9 @@ competition_state_machine_node:
 
       # motion planning
       move_to_pose_kp_xy: 0.2
-      move_to_pose_kd_xy: 0.6
-      move_to_pose_kp_theta: 0.5
-      move_to_pose_kd_theta: 0.3
+      move_to_pose_kd_xy: 0.0
+      move_to_pose_kp_theta: 0.05
+      move_to_pose_kd_theta: 0.001
       max_speed_linear: 0.2
       max_speed_angular: 0.2
 

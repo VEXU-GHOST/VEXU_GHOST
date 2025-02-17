@@ -687,7 +687,7 @@ void TankRobotPlugin::movePointToPoint(){
     msg.linear.x = fwd_cmd;
     msg.angular.z = turn_cmd;
     m_base_twist_cmd_pub->publish(msg);
-    m_tank_model_ptr->driveCommand(command[0],command[1]);
+    m_tank_model_ptr->driveCommand(fwd_cmd, turn_cmd);
 
 }
 

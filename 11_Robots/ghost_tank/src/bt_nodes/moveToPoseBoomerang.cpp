@@ -113,17 +113,18 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
         y_trajectory.push_back(vec.y());
 		theta_trajectory.push_back(theta);
     }
-	for (int i = 0; i < 500; i++){
-		time_vector.push_back(i * 1.0/500.0);
+	for (int i = 0; i <= 50; i++){
+		time_vector.push_back(i * 1.0/50.0);
 	}
 
 	ghost_msgs::msg::RobotTrajectory msg{};
 	msg.header.stamp = node_ptr_->get_clock()->now();
 	msg.x_trajectory.position = x_trajectory;
 	msg.y_trajectory.position = y_trajectory;
+	msg.theta_trajectory.threshold = angle_threshold;
 	msg.x_trajectory.threshold = threshold;
 	msg.y_trajectory.threshold = threshold;
-	msg.theta_trajectory.threshold = angle_threshold;
+	msg.theta_trajectory.position = theta_trajectory;
 
 	msg.x_trajectory.time = time_vector;
 	msg.y_trajectory.time = time_vector;
@@ -143,7 +144,7 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 		int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
 		// int time_elapsed_since_plan = std::chrono::duration_cast<std::chrono::milliseconds>(now - plan_time_).count();
 		// RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: %i ms elapsed", time_elapsed);
-		if(timeout > 0){ // positive timeout means how often to plan/send trajectory
+		if(timeout >= 0){ // positive timeout means how often to plan/send trajectory
 			if(time_elapsed > timeout){
 				RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPoseBoomerang Timeout: %i ms elapsed", time_elapsed);
 				// started_ = false;
