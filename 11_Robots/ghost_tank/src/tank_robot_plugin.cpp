@@ -69,7 +69,7 @@ TankRobotPlugin::TankRobotPlugin()
     m_all_motor_names.end(),
     m_left_drive_motor_names.begin(),
     m_left_drive_motor_names.end());
-  
+
   m_all_motor_names.insert(
     m_all_motor_names.end(),
     m_right_drive_motor_names.begin(),
@@ -302,17 +302,17 @@ void TankRobotPlugin::onNewSensorData()
   // imu_msg.linear_acceleration.x = rhi_ptr_->getInertialSensorXAccel("imu");
   // imu_msg.linear_acceleration.y = rhi_ptr_->getInertialSensorYAccel("imu");
   // imu_msg.linear_acceleration.z = rhi_ptr_->getInertialSensorZAccel("imu");
-  if(!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))){
+  if (!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))) {
     imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
   }
-  if(!std::isnan(rhi_ptr_->getInertialSensorYRate("imu"))){
+  if (!std::isnan(rhi_ptr_->getInertialSensorYRate("imu"))) {
     imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
   }
-  if(!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))){
+  if (!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))) {
     imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
   }
   double yaw;
-  if(!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))){
+  if (!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))) {
     yaw = -rhi_ptr_->getInertialSensorHeading("imu");
     ghost_util::yawToQuaternionDeg(
       yaw, imu_msg.orientation.w, imu_msg.orientation.x,
@@ -349,7 +349,7 @@ void TankRobotPlugin::autonomous(double current_time)
   bt_->set_variable("auton_time_elapsed", current_time);
 
   static bool first_loop = true;
-  if (first_loop){
+  if (first_loop) {
     first_loop = false;
     m_odom_ptr->resetPose();
   }
@@ -424,10 +424,6 @@ void TankRobotPlugin::teleop(double current_time)
     } else if (!joy_data->btn_l1) {
       forklift_pressed = false;
     }
-
-    m_digital_io[1] = forklift_up; // forklift
-    m_digital_io[2] = joy_data->btn_l2; // pooper
-    rhi_ptr_->setDigitalIO(m_digital_io);
 
     // updateDrivetrainMotors();
   }
@@ -599,93 +595,96 @@ void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d pose)
   m_des_pos_pub->publish(msg);
 }
 
-void TankRobotPlugin::publishTrajectoryVisualization(){
-    if (!robot_trajectory_ptr_->isNotEmpty()){
-        return;
-    }
-    visualization_msgs::msg::MarkerArray msg{};
-    visualization_msgs::msg::Marker marker{};
-    marker.header.frame_id = "map";
-    marker.header.stamp = node_ptr_->get_clock()->now();
-    marker.id = 0;
-    marker.type = 8; // points type
-    marker.action = 0;
-    marker.scale.x = 0.1;
-    marker.scale.y = 0.1;
-    marker.scale.z = 0.1;
-    marker.color.r = 1.0;
-    marker.color.a = 1.0;
+void TankRobotPlugin::publishTrajectoryVisualization()
+{
+  if (!robot_trajectory_ptr_->isNotEmpty()) {
+    return;
+  }
+  visualization_msgs::msg::MarkerArray msg{};
+  visualization_msgs::msg::Marker marker{};
+  marker.header.frame_id = "map";
+  marker.header.stamp = node_ptr_->get_clock()->now();
+  marker.id = 0;
+  marker.type = 8;   // points type
+  marker.action = 0;
+  marker.scale.x = 0.1;
+  marker.scale.y = 0.1;
+  marker.scale.z = 0.1;
+  marker.color.r = 1.0;
+  marker.color.a = 1.0;
 
-    for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); ++i){
-        geometry_msgs::msg::Point p;
-        p.x = robot_trajectory_ptr_->x_trajectory.position_vector[i];
-        p.y = robot_trajectory_ptr_->y_trajectory.position_vector[i];
-        p.z = 0.0;
-        marker.points.push_back(p);
-    }
+  for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); ++i) {
+    geometry_msgs::msg::Point p;
+    p.x = robot_trajectory_ptr_->x_trajectory.position_vector[i];
+    p.y = robot_trajectory_ptr_->y_trajectory.position_vector[i];
+    p.z = 0.0;
+    marker.points.push_back(p);
+  }
 
-    msg.markers.push_back(marker);
-    m_trajectory_viz_pub->publish(msg);
+  msg.markers.push_back(marker);
+  m_trajectory_viz_pub->publish(msg);
 }
 
-void TankRobotPlugin::readPathFromFile(const std::string& filename) {
-    // ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
+void TankRobotPlugin::readPathFromFile(const std::string & filename)
+{
+  // ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
 }
 
-void TankRobotPlugin::movePointToPoint(){
-    float search_radius = m_search_radius; 
-    static int past_index = 0; 
-    static int next_index = 0; 
-    double current_x = m_tank_model_ptr->getWorldPose().x();
-    double current_y = m_tank_model_ptr->getWorldPose().y();
-    double current_angle = m_tank_model_ptr->getWorldAngleRad();
+void TankRobotPlugin::movePointToPoint()
+{
+  float search_radius = m_search_radius;
+  static int past_index = 0;
+  static int next_index = 0;
+  double current_x = m_tank_model_ptr->getWorldPose().x();
+  double current_y = m_tank_model_ptr->getWorldPose().y();
+  double current_angle = m_tank_model_ptr->getWorldAngleRad();
 
-    if (!robot_trajectory_ptr_->isNotEmpty()){
-        return;
+  if (!robot_trajectory_ptr_->isNotEmpty()) {
+    return;
+  }
+
+  auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
+  auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
+  auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
+  auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
+
+  if (past_index == x_values.size() - 1) {
+    return;
+  }
+
+  if (x_values.size() != y_values.size()) {
+    std::cout << "x_values and y_values must be the same size" << std::endl;
+    throw std::runtime_error("x_values and y_values must be the same size");
+  }
+  for (int i = past_index; i < x_values.size(); ++i) {//find farthest point in radius
+    double distance = sqrt(pow((current_x - x_values[i]), 2) + pow((current_y - y_values[i]), 2));
+    if (distance < search_radius) {
+      next_index = i;
     }
+  }
 
-    auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
-    auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
-    auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
-    auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
+  m_desired_pose = Eigen::Vector3d(x_values[next_index], y_values[next_index], 0.0);
+  auto final_pose = Eigen::Vector3d(x_values[x_values.size() - 1], y_values[y_values.size() - 1], 0.0);
+  std::cout << "despos_x " << m_desired_pose.x() << std::endl;
+  std::cout << "despos_y " << m_desired_pose.y() << std::endl;
 
-    if (past_index == x_values.size()-1){
-        return;
-    }
+  geometry_msgs::msg::Twist msg{};
 
-    if (x_values.size() != y_values.size()) {
-        std::cout << "x_values and y_values must be the same size" << std::endl;
-        throw std::runtime_error("x_values and y_values must be the same size");
-    }
-    for(int i = past_index; i < x_values.size(); ++i){//find farthest point in radius 
-        double distance = sqrt(pow((current_x - x_values[i]),2)+pow((current_y - y_values[i]),2));
-        if (distance < search_radius){
-            next_index = i;
-        }
-    }
+  Eigen::Vector2d command;
 
-    m_desired_pose = Eigen::Vector3d(x_values[next_index], y_values[next_index], 0.0);
-    auto final_pose = Eigen::Vector3d(x_values[x_values.size()-1], y_values[y_values.size()-1], 0.0);
-    std::cout << "despos_x " << m_desired_pose.x() << std::endl;
-    std::cout << "despos_y " << m_desired_pose.y() << std::endl;
+  if (threshold_xy > abs(m_desired_pose.x() - current_x) && threshold_xy > abs(m_desired_pose.y() - current_y)) {
+    command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), final_pose);
+  } else {
+    command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
+  }
+  command = command.normalized();
+  auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
+  auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
 
-    geometry_msgs::msg::Twist msg{};
-
-    Eigen::Vector2d command;
-
-    if (threshold_xy > abs(m_desired_pose.x() - current_x) && threshold_xy > abs(m_desired_pose.y() - current_y)){
-        command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), final_pose);
-    } else {
-        command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
-    }
-    command = command.normalized();
-    auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
-    auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
-
-    msg.linear.x = fwd_cmd;
-    msg.angular.z = turn_cmd;
-    m_base_twist_cmd_pub->publish(msg);
-    m_tank_model_ptr->driveCommand(command[0],command[1]);
+  msg.linear.x = fwd_cmd;
+  msg.angular.z = turn_cmd;
+  m_base_twist_cmd_pub->publish(msg);
+  m_tank_model_ptr->driveCommand(command[0], command[1]);
 
 }
 

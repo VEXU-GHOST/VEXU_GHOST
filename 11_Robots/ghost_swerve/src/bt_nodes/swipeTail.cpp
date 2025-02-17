@@ -128,7 +128,7 @@ BT::NodeStatus SwipeTail::onRunning()
     m_digital_io[m_digital_io_name_map.at("tail")] = true;
   }
 
-  rhi_ptr_->setDigitalIO(m_digital_io);
+  // rhi_ptr_->setDigitalIO(m_digital_io);
   return status;
 }
 

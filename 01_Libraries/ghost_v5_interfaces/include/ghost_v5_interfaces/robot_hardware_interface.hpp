@@ -31,6 +31,7 @@
 #include "ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/digital_io_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 
 
@@ -224,8 +225,31 @@ public:
   ///////////////////////// Digital IO /////////////////////////
   //////////////////////////////////////////////////////////////
 
-  void setDigitalIO(const std::vector<bool> & digital_io);
-  const std::vector<bool> & getDigitalIO() const;
+  /**
+   * @brief Returns current value of given bit (0-7) of digital IO. Returns 0 for values that are not configured (Either IN or OUT).
+   *
+   * @param bit 0-7
+   * @returns Digital IO Value
+   */
+  bool getDigitalIOValue(uint8_t bit);
+
+  /**
+   * @brief Sets value for bit representing Digital In port (0-7). Fails if bit is not configured as a Digital In.
+   *
+   * @param bit 0-7
+   * @param val
+   * @return Whether operation succeeded.
+   */
+  bool setDigitalIn(uint8_t bit, bool val);
+
+  /**
+   * @brief Sets value for bit representing Digital Out port (0-7). Fails if bit is not configured as a Digital Out.
+   *
+   * @param bit 0-7
+   * @param val
+   * @return Whether operation succeeded.
+   */
+  bool setDigitalOut(uint8_t bit, bool val);
 
   /////////////////////////////////////////////////////////
   /////////////////// Device Interfaces ///////////////////
@@ -396,9 +420,6 @@ private:
   bool is_disabled_ = true;
   bool is_autonomous_ = false;
   bool is_connected_ = false;
-
-  // Digital IO
-  std::vector<bool> digital_io_;
 
   // Serialization
   int msg_id_ = 0;

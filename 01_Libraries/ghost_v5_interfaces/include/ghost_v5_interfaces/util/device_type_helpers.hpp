@@ -35,6 +35,7 @@ namespace util
 const std::unordered_map<std::string, devices::device_type_e> STRING_TO_DEVICE_TYPE_MAP{
   {"MOTOR", devices::device_type_e::MOTOR},
   {"ROTATION_SENSOR", devices::device_type_e::ROTATION_SENSOR},
+  {"DIGITAL_IO", devices::device_type_e::DIGITAL_IO},
   {"JOYSTICK", devices::device_type_e::JOYSTICK},
   {"INERTIAL_SENSOR", devices::device_type_e::INERTIAL_SENSOR},
   {"DISTANCE_SENSOR", devices::device_type_e::DISTANCE_SENSOR},
@@ -47,6 +48,7 @@ const std::unordered_map<std::string, devices::device_type_e> STRING_TO_DEVICE_T
 const std::unordered_map<devices::device_type_e, std::string> DEVICE_TYPE_TO_STRING_MAP{
   {devices::device_type_e::MOTOR, "MOTOR"},
   {devices::device_type_e::ROTATION_SENSOR, "ROTATION_SENSOR"},
+  {devices::device_type_e::DIGITAL_IO, "DIGITAL_IO"},
   {devices::device_type_e::JOYSTICK, "JOYSTICK"},
   {devices::device_type_e::INERTIAL_SENSOR, "INERTIAL_SENSOR"},
   {devices::device_type_e::DISTANCE_SENSOR, "DISTANCE_SENSOR"},

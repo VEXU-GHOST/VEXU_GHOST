@@ -1,4 +1,7 @@
 port_configuration:
+  digital_io:
+    A: IN
+    B: OUT
   devices:
     left_motor:
       port: 1
