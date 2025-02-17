@@ -5,10 +5,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "ghost_tank/tank_model.hpp"
 
-namespace BT_Util {
-    
+namespace BT_Util
+{
+
 template<typename T>
-T get_input(BT::TreeNode* node, std::string key)
+T get_input(BT::TreeNode * node, std::string key)
 {
   BT::Expected<T> input = node->getInput<T>(key);
   // Check if expected is valid. If not, throw its error
@@ -21,10 +22,11 @@ T get_input(BT::TreeNode* node, std::string key)
 }
 
 template<typename T>
-void get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T &value){
-    if(!blackboard->get(key, value)){
-        std::cout << key << " not found in blackboard" << std::endl;
-    }
+void get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T & value)
+{
+  if (!blackboard->get(key, value)) {
+    std::cout << key << " not found in blackboard" << std::endl;
+  }
 }
 
 } // namespace ghost_tank

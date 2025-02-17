@@ -62,6 +62,11 @@ port_configuration:
         drive_r6:
             port: 8
             type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_r6:
+            port: 20
+            type: MOTOR
             reversed: true
             config: drive_motor_config
     device_configurations:

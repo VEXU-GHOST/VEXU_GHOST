@@ -15,7 +15,7 @@ TankOdometry::TankOdometry(int ticks_per_rotation, double wheel_radius_m, double
   assert(wheel_circumference > 0);
   assert(ticks_per_rotation > 0);
   assert(wheelbase_m > 0);
-  
+
   m_meters_per_tick = wheel_circumference / ticks_per_rotation;
 
   m_wheelbase = wheelbase_m;
@@ -75,8 +75,5 @@ Eigen::Vector3d TankOdometry::update(
   m_prev_r_ticks = r_wheel_pos_arr;
 
   m_cur_pos = update(l_wheel_pos, r_wheel_pos);
- 
-  return m_cur_pos;
-}
 
-} // namespace ghost_tank
+  return m_cur_pos;
