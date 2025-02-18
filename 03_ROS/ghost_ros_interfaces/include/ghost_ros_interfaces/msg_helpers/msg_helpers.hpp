@@ -26,6 +26,7 @@
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/digital_io_device_interface.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 

@@ -32,7 +32,7 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 MoveToPosePurepursuit::MoveToPosePurepursuit(const std::string& name, const BT::NodeConfig& config):
 	BT::StatefulActionNode(name, config){
-  	std::cout << "test" << std::endl;
+  	std::cout << "[MoveToPosePurepursuit::MoveToPosePurepursuit]" << std::endl;
 		
 	blackboard_ = config.blackboard;
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);

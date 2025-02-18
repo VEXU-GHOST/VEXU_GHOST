@@ -21,14 +21,25 @@
  *   SOFTWARE.
  */
 
-#include "ghost_util/byte_utils.hpp"
+#pragma once
 
-namespace ghost_util
+#include <iostream>
+#include <memory>
+#include "ghost_v5_interfaces/devices/device_interfaces.hpp"
+#include "ghost_v5_interfaces/devices/digital_io_device_interface.hpp"
+#include "yaml-cpp/yaml.h"
+
+namespace ghost_v5_interfaces
 {
 
-const uint8_t BITMASK_ARR_8BIT[8] = {
-  0x01, 0x02, 0x04, 0x08,
-  0x10, 0x20, 0x40, 0x80,
-};
+namespace util
+{
 
-} // namespace ghost_util
+void loadDigitalIODeviceConfigFromYAML(
+  YAML::Node node,
+  std::shared_ptr<devices::DigitalIODeviceConfig> sensor_device_config_ptr,
+  bool verbose = false);
+
+} // namespace util
+
+} // namespace ghost_v5_interfaces

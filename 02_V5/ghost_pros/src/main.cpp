@@ -75,10 +75,6 @@ void zero_actuators()
     m.second->setMotorCommand(0.0, 0.0, 0.0, 0.0);
   }
 
-  // // Zero Pneumatics
-  // for(int i = 0; i < 8; i++){
-  //    v5_globals::adi_ports[i].set_value(false);
-  // }
   actuator_lock.unlock();
 }
 
@@ -89,11 +85,6 @@ void update_actuators()
   // Update velocity filter and motor controller for all motors
   for (auto & m : v5_globals::motor_interfaces) {
     m.second->updateInterface();
-  }
-
-  // Update Pneumatics
-  for (int i = 0; i < 8; i++) {
-    v5_globals::adi_ports[i].set_value(v5_globals::digital_out_cmds[i]);
   }
   actuator_lock.unlock();
 }
@@ -218,6 +209,26 @@ void initialize()
           // Do nothing, these are initialized already
           break;
 
+        case device_type_e::DIGITAL_IO:
+          {
+            auto digital_io_config_ptr = config_ptr->as<const DigitalIODeviceConfig>();
+            auto input_mask_vector = unpackByte(digital_io_config_ptr->input_mask);
+            auto output_mask_vector = unpackByte(digital_io_config_ptr->output_mask);
+
+            for (int i = 0; i < 8; i++) {
+              auto port_name = v5_globals::adi_ports_name_map[i];
+              if (input_mask_vector[i]) {
+                v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Input on port ", port_name);
+                v5_globals::digital_inputs[port_name] = std::make_shared<pros::ADIDigitalIn>(i + 1);
+
+              } else if (output_mask_vector[i]) {
+                v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Output on port ", port_name);
+                v5_globals::digital_outputs[port_name] = std::make_shared<pros::ADIDigitalOut>(i + 1);
+              }
+            }
+          }
+          break;
+
         case device_type_e::INVALID:
           {
             std::string err_string = "ERROR: Device type is listed as INVALID for device_name: ";
@@ -241,9 +252,6 @@ void initialize()
     }
 
     zero_actuators();
-    for (int i = 0; i < 8; i++) {
-      v5_globals::adi_ports[i].set_value(false);
-    }
     v5_globals::serial_node_ptr->initSerial();
     pros::Task reader_thread(reader_loop, "reader thread");
     pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");

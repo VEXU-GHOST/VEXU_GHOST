@@ -60,6 +60,7 @@ install(
 set(UTIL_LIBS
   load_motor_device_config_yaml
   load_rotation_sensor_device_config_yaml
+  load_digital_io_device_config_yaml
   load_inertial_sensor_device_config_yaml
 )
 
@@ -155,6 +156,7 @@ foreach(TEST ${UTIL_LIBS})
     load_motor_device_config_yaml
     load_rotation_sensor_device_config_yaml
     load_inertial_sensor_device_config_yaml
+    load_digital_io_device_config_yaml
     device_config_factory_utils
     yaml-cpp
   )

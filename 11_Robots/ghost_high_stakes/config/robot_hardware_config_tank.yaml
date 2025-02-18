@@ -1,5 +1,19 @@
 port_configuration:
+    digital_io:
+        A: IN
+        G: OUT
+        H: OUT
     devices:
+        conveyor_motor:
+            port: 1
+            type: MOTOR
+            reversed: true
+            config: intake_motor_config
+        ground_pickup_motor:
+            port: 2
+            type: MOTOR
+            reversed: false
+            config: intake_motor_config
         imu:
             port: 17
             type: INERTIAL_SENSOR
@@ -96,7 +110,7 @@ port_configuration:
                 send_current_data: false
                 send_power_data: false
                 send_temperature_data: false
-        indexer_config:
+        intake_motor_config:
             gearset: 600
             brake_mode: BRAKE
             encoder_units: DEGREES
@@ -104,8 +118,8 @@ port_configuration:
                 pos_gain: 0.0
                 vel_gain: 0.0
                 ff_vel_gain: 0.0
-                ff_torque_gain: 100.0
+                ff_torque_gain: 0.0
             serial:
-                send_position_command: false
+                send_position_command: true
                 send_velocity_command: false
                 send_voltage_command: true

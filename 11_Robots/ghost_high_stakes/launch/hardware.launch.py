@@ -97,6 +97,23 @@ def generate_launch_description():
         parameters=[ros_config_file],
     )
 
+    color_sensor_node = Node(
+        package="ghost_sensing",
+        executable="tcs_color_sensor",
+        name="tcs_color_sensor_0",
+        output="screen",
+        parameters=[ros_config_file, {
+            "system_i2c_bus_path" : "/dev/i2c-7"
+        }],
+    )
+    color_classifier_node = Node(
+        package="ghost_sensing",
+        executable="color_classifier",
+        name="color_classifier_0",
+        output="screen",
+        parameters=[ros_config_file],
+    )
+
     # realsense_node = IncludeLaunchDescription(
     #     PythonLaunchDescriptionSource(
     #         os.path.join(
@@ -153,5 +170,8 @@ def generate_launch_description():
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
-        rplidar_node
+        rplidar_node,
+        color_classifier_node,
+        color_sensor_node
+
     ])

@@ -29,6 +29,7 @@
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
 #include "ghost_v5_interfaces/devices/joystick_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
+#include "ghost_v5_interfaces/devices/digital_io_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "ghost_v5_interfaces/test/device_test_utils.hpp"
@@ -92,6 +93,10 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceSensorUpd
   rotation_sensor_data_ptr->name = "rotation_sensor_1";
   rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
 
+  auto ptr = rhi_input_ptr_->getDeviceData<DigitalIODeviceData>("digital_io");
+  ptr->data = packByte(std::vector<bool>{getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool()});
+  rhi_input_ptr_->setDeviceData(ptr);
+
   auto msg = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
 
   // Convert to ROS Msg
@@ -106,6 +111,10 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceActuatorC
   motor_data_ptr->name = "default_motor";
   rhi_input_ptr_->setDeviceData(motor_data_ptr);
   auto msg = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();
+
+  auto ptr = rhi_input_ptr_->getDeviceData<DigitalIODeviceData>("digital_io");
+  ptr->data = packByte(std::vector<bool>{getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool()});
+  rhi_input_ptr_->setDeviceData(ptr);
 
   // Convert to ROS Msg
   toROSMsg(*rhi_input_ptr_, *msg);
@@ -149,6 +158,10 @@ TEST_F(RobotHardwareInterfaceROSTestFixture, testRobotHardwareInterfaceFullCycle
   auto rotation_sensor_data_ptr = getRandomRotationSensorData();
   rotation_sensor_data_ptr->name = "rotation_sensor_1";
   rhi_input_ptr_->setDeviceData(rotation_sensor_data_ptr);
+
+  auto ptr = rhi_input_ptr_->getDeviceData<DigitalIODeviceData>("digital_io");
+  ptr->data = packByte(std::vector<bool>{getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool(), getRandomBool()});
+  rhi_input_ptr_->setDeviceData(ptr);
 
   auto msg_sensor_update = std::make_shared<ghost_msgs::msg::V5SensorUpdate>();
   auto msg_actuator_command = std::make_shared<ghost_msgs::msg::V5ActuatorCommand>();

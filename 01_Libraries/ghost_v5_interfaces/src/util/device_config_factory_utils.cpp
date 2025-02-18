@@ -25,11 +25,13 @@
 #include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/digital_io_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 #include <ghost_v5_interfaces/util/load_inertial_sensor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_motor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_rotation_sensor_device_config_yaml.hpp>
+#include <ghost_v5_interfaces/util/load_digital_io_device_config_yaml.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -50,6 +52,11 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
   auto device_config_map_ptr = std::make_shared<DeviceConfigMap>();
   bool use_partner_joystick = false;
   loadYAMLParam(node["port_configuration"], "use_partner_joystick", use_partner_joystick, false);
+
+  // Load digital io
+  auto digital_io_config = std::make_shared<DigitalIODeviceConfig>();
+  loadDigitalIODeviceConfigFromYAML(node["port_configuration"], digital_io_config);
+  device_config_map_ptr->addDeviceConfig(digital_io_config);
 
   // Load primary joystick
   auto joy_master = std::make_shared<JoystickDeviceConfig>();
@@ -210,6 +217,7 @@ void generateCodeFromRobotConfig(
     std::filesystem::remove(fs_path);
   }
 
+  /* *INDENT-OFF* */
   std::ofstream output_file;
   output_file.open(output_filepath);
   output_file << "/////////////////////////////////////////////////////////////////////\n";
@@ -222,15 +230,12 @@ void generateCodeFromRobotConfig(
   output_file << "#include \"ghost_v5_interfaces/devices/motor_device_interface.hpp\"\n";
   output_file << "#include \"ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp\"\n";
   output_file << "#include \"ghost_v5_interfaces/devices/joystick_device_interface.hpp\"\n";
+  output_file << "#include \"ghost_v5_interfaces/devices/digital_io_device_interface.hpp\"\n";
   output_file << "\n";
-  output_file <<
-    "// This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.\n";
-  output_file <<
-    "// It returns a raw pointer to a dynamically allocated object, so if you are poking around, please wrap in a smart pointer!\n";
-  output_file <<
-    "extern \"C\" ghost_v5_interfaces::devices::DeviceConfigMap* getRobotConfig(void) {\n";
-  output_file <<
-    "\tghost_v5_interfaces::devices::DeviceConfigMap* robot_config = new ghost_v5_interfaces::devices::DeviceConfigMap;\n";
+  output_file << "// This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.\n";
+  output_file << "// It returns a raw pointer to a dynamically allocated object, so if you are poking around, please wrap in a smart pointer!\n";
+  output_file << "extern \"C\" ghost_v5_interfaces::devices::DeviceConfigMap* getRobotConfig(void) {\n";
+  output_file << "\tghost_v5_interfaces::devices::DeviceConfigMap* robot_config = new ghost_v5_interfaces::devices::DeviceConfigMap;\n";
   output_file << "\n";
 
   // Generate code from DeviceConfigMap
@@ -239,151 +244,88 @@ void generateCodeFromRobotConfig(
       auto config_ptr = val->as<const MotorDeviceConfig>();
       std::string motor_name = config_ptr->name;
 
-      output_file <<
-        "\tstd::shared_ptr<ghost_v5_interfaces::devices::MotorDeviceConfig> " + motor_name +
-        " = std::make_shared<ghost_v5_interfaces::devices::MotorDeviceConfig>();\n";
-      output_file <<
-        "\t" + motor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+      output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::MotorDeviceConfig> " + motor_name + " = std::make_shared<ghost_v5_interfaces::devices::MotorDeviceConfig>();\n";
+      output_file << "\t" + motor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
       output_file << "\t" + motor_name + "->" + "name = \"" + motor_name + "\";\n";
-      output_file <<
-        "\t" + motor_name + "->" +
-        "type = ghost_v5_interfaces::devices::device_type_e::MOTOR;\n";
-      output_file << "\t" + motor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(
-        config_ptr->reversed) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "encoder_units = " + MOTOR_ENCODER_UNIT_STRING_MAP.at(
-        config_ptr->encoder_units) + ";\n";
-      output_file << "\t" + motor_name + "->" + "gearset = " + MOTOR_GEARSET_STRING_MAP.at(
-        config_ptr->gearset) + ";\n";
-      output_file << "\t" + motor_name + "->" + "brake_mode = " + MOTOR_BRAKE_MODE_STRING_MAP.at(
-        config_ptr->brake_mode) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "filter_config.cutoff_frequency = " + std::to_string(
-        config_ptr->filter_config.cutoff_frequency) + ";\n";
-      output_file << "\t" + motor_name + "->" + "filter_config.damping_ratio = " + std::to_string(
-        config_ptr->filter_config.damping_ratio) + ";\n";
-      output_file << "\t" + motor_name + "->" + "filter_config.timestep = " + std::to_string(
-        config_ptr->filter_config.timestep) + ";\n";
-      output_file << "\t" + motor_name + "->" + "model_config.free_speed = " + std::to_string(
-        config_ptr->model_config.free_speed) + ";\n";
-      output_file << "\t" + motor_name + "->" + "model_config.stall_torque = " + std::to_string(
-        config_ptr->model_config.stall_torque) + ";\n";
-      output_file << "\t" + motor_name + "->" + "model_config.free_current = " + std::to_string(
-        config_ptr->model_config.free_current) + ";\n";
-      output_file << "\t" + motor_name + "->" + "model_config.stall_current = " + std::to_string(
-        config_ptr->model_config.stall_current) + ";\n";
-      output_file << "\t" + motor_name + "->" + "model_config.nominal_voltage = " + std::to_string(
-        config_ptr->model_config.nominal_voltage) + ";\n";
-      output_file << "\t" + motor_name + "->" + "model_config.gear_ratio = " + std::to_string(
-        config_ptr->model_config.gear_ratio) + ";\n";
-      output_file << "\t" + motor_name + "->" + "controller_config.pos_gain = " + std::to_string(
-        config_ptr->controller_config.pos_gain) + ";\n";
-      output_file << "\t" + motor_name + "->" + "controller_config.vel_gain = " + std::to_string(
-        config_ptr->controller_config.vel_gain) + ";\n";
-      output_file << "\t" + motor_name + "->" + "controller_config.ff_vel_gain = " + std::to_string(
-        config_ptr->controller_config.ff_vel_gain) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "controller_config.ff_torque_gain = " + std::to_string(
-        config_ptr->controller_config.ff_torque_gain) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "controller_config.cmd_duration = " + std::to_string(
-        config_ptr->controller_config.cmd_duration) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "serial_config.send_position_command = " + std::to_string(
-        config_ptr->serial_config.send_position_command) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "serial_config.send_velocity_command = " + std::to_string(
-        config_ptr->serial_config.send_velocity_command) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "serial_config.send_voltage_command = " + std::to_string(
-        config_ptr->serial_config.send_voltage_command) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "serial_config.send_torque_command = " + std::to_string(
-        config_ptr->serial_config.send_torque_command) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "serial_config.send_torque_data = " + std::to_string(
-        config_ptr->serial_config.send_torque_data) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "serial_config.send_voltage_data = " + std::to_string(
-        config_ptr->serial_config.send_voltage_data) + ";\n";
-      output_file <<
-        "\t" + motor_name + "->" + "serial_config.send_current_data = " + std::to_string(
-        config_ptr->serial_config.send_current_data) + ";\n";
-      output_file << "\t" + motor_name + "->" + "serial_config.send_power_data = " + std::to_string(
-        config_ptr->serial_config.send_power_data) + ";\n";
-      output_file << "\t" + motor_name + "->" + "serial_config.send_temp_data = " + std::to_string(
-        config_ptr->serial_config.send_temp_data) + ";\n";
+      output_file << "\t" + motor_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::MOTOR;\n";
+      output_file << "\t" + motor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(config_ptr->reversed) + ";\n";
+      output_file << "\t" + motor_name + "->" + "encoder_units = " + MOTOR_ENCODER_UNIT_STRING_MAP.at(config_ptr->encoder_units) + ";\n";
+      output_file << "\t" + motor_name + "->" + "gearset = " + MOTOR_GEARSET_STRING_MAP.at(config_ptr->gearset) + ";\n";
+      output_file << "\t" + motor_name + "->" + "brake_mode = " + MOTOR_BRAKE_MODE_STRING_MAP.at(config_ptr->brake_mode) + ";\n";
+      output_file << "\t" + motor_name + "->" + "filter_config.cutoff_frequency = " + std::to_string(config_ptr->filter_config.cutoff_frequency) + ";\n";
+      output_file << "\t" + motor_name + "->" + "filter_config.damping_ratio = " + std::to_string(config_ptr->filter_config.damping_ratio) + ";\n";
+      output_file << "\t" + motor_name + "->" + "filter_config.timestep = " + std::to_string(config_ptr->filter_config.timestep) + ";\n";
+      output_file << "\t" + motor_name + "->" + "model_config.free_speed = " + std::to_string(config_ptr->model_config.free_speed) + ";\n";
+      output_file << "\t" + motor_name + "->" + "model_config.stall_torque = " + std::to_string(config_ptr->model_config.stall_torque) + ";\n";
+      output_file << "\t" + motor_name + "->" + "model_config.free_current = " + std::to_string(config_ptr->model_config.free_current) + ";\n";
+      output_file << "\t" + motor_name + "->" + "model_config.stall_current = " + std::to_string(config_ptr->model_config.stall_current) + ";\n";
+      output_file << "\t" + motor_name + "->" + "model_config.nominal_voltage = " + std::to_string(config_ptr->model_config.nominal_voltage) + ";\n";
+      output_file << "\t" + motor_name + "->" + "model_config.gear_ratio = " + std::to_string(config_ptr->model_config.gear_ratio) + ";\n";
+      output_file << "\t" + motor_name + "->" + "controller_config.pos_gain = " + std::to_string(config_ptr->controller_config.pos_gain) + ";\n";
+      output_file << "\t" + motor_name + "->" + "controller_config.vel_gain = " + std::to_string(config_ptr->controller_config.vel_gain) + ";\n";
+      output_file << "\t" + motor_name + "->" + "controller_config.ff_vel_gain = " + std::to_string(config_ptr->controller_config.ff_vel_gain) + ";\n";
+      output_file << "\t" + motor_name + "->" + "controller_config.ff_torque_gain = " + std::to_string(config_ptr->controller_config.ff_torque_gain) + ";\n";
+      output_file << "\t" + motor_name + "->" + "controller_config.cmd_duration = " + std::to_string(config_ptr->controller_config.cmd_duration) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_position_command = " + std::to_string(config_ptr->serial_config.send_position_command) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_velocity_command = " + std::to_string(config_ptr->serial_config.send_velocity_command) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_voltage_command = " + std::to_string(config_ptr->serial_config.send_voltage_command) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_torque_command = " + std::to_string(config_ptr->serial_config.send_torque_command) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_torque_data = " + std::to_string(config_ptr->serial_config.send_torque_data) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_voltage_data = " + std::to_string(config_ptr->serial_config.send_voltage_data) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_current_data = " + std::to_string(config_ptr->serial_config.send_current_data) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_power_data = " + std::to_string(config_ptr->serial_config.send_power_data) + ";\n";
+      output_file << "\t" + motor_name + "->" + "serial_config.send_temp_data = " + std::to_string(config_ptr->serial_config.send_temp_data) + ";\n";
       output_file << "\trobot_config->addDeviceConfig(" + motor_name + ");\n";
       output_file << "\n";
     } else if (val->type == device_type_e::ROTATION_SENSOR) {
       auto config_ptr = val->as<const RotationSensorDeviceConfig>();
       std::string sensor_name = config_ptr->name;
 
-      output_file <<
-        "\tstd::shared_ptr<ghost_v5_interfaces::devices::RotationSensorDeviceConfig> " +
-        sensor_name +
-        " = std::make_shared<ghost_v5_interfaces::devices::RotationSensorDeviceConfig>();\n";
-      output_file <<
-        "\t" + sensor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+      output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::RotationSensorDeviceConfig> " + sensor_name + " = std::make_shared<ghost_v5_interfaces::devices::RotationSensorDeviceConfig>();\n";
+      output_file << "\t" + sensor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
       output_file << "\t" + sensor_name + "->" + "name = \"" + sensor_name + "\";\n";
-      output_file <<
-        "\t" + sensor_name + "->" +
-        "type = ghost_v5_interfaces::devices::device_type_e::ROTATION_SENSOR;\n";
-      output_file << "\t" + sensor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(
-        config_ptr->reversed) + ";\n";
-      output_file << "\t" + sensor_name + "->" + "data_rate = " + std::to_string(
-        config_ptr->data_rate) + ";\n";
-      output_file <<
-        "\t" + sensor_name + "->" + "serial_config.send_angle_data = " + std::to_string(
-        config_ptr->serial_config.send_angle_data) + ";\n";
-      output_file <<
-        "\t" + sensor_name + "->" + "serial_config.send_position_data = " + std::to_string(
-        config_ptr->serial_config.send_position_data) + ";\n";
-      output_file <<
-        "\t" + sensor_name + "->" + "serial_config.send_velocity_data = " + std::to_string(
-        config_ptr->serial_config.send_velocity_data) + ";\n";
+      output_file << "\t" + sensor_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::ROTATION_SENSOR;\n";
+      output_file << "\t" + sensor_name + "->" + "reversed = " + BOOL_STRING_MAP.at(config_ptr->reversed) + ";\n";
+      output_file << "\t" + sensor_name + "->" + "data_rate = " + std::to_string(config_ptr->data_rate) + ";\n";
+      output_file << "\t" + sensor_name + "->" + "serial_config.send_angle_data = " + std::to_string(config_ptr->serial_config.send_angle_data) + ";\n";
+      output_file << "\t" + sensor_name + "->" + "serial_config.send_position_data = " + std::to_string(config_ptr->serial_config.send_position_data) + ";\n";
+      output_file << "\t" + sensor_name + "->" + "serial_config.send_velocity_data = " + std::to_string(config_ptr->serial_config.send_velocity_data) + ";\n";
       output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
       output_file << "\n";
     } else if (val->type == device_type_e::INERTIAL_SENSOR) {
       auto config_ptr = val->as<const InertialSensorDeviceConfig>();
       std::string sensor_name = config_ptr->name;
 
-      output_file <<
-        "\tstd::shared_ptr<ghost_v5_interfaces::devices::InertialSensorDeviceConfig> " +
-        sensor_name +
-        " = std::make_shared<ghost_v5_interfaces::devices::InertialSensorDeviceConfig>();\n";
-      output_file <<
-        "\t" + sensor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+      output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::InertialSensorDeviceConfig> " + sensor_name + " = std::make_shared<ghost_v5_interfaces::devices::InertialSensorDeviceConfig>();\n";
+      output_file << "\t" + sensor_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
       output_file << "\t" + sensor_name + "->" + "name = \"" + sensor_name + "\";\n";
-      output_file <<
-        "\t" + sensor_name + "->" +
-        "type = ghost_v5_interfaces::devices::device_type_e::INERTIAL_SENSOR;\n";
-      output_file <<
-        "\t" + sensor_name + "->" + "serial_config.send_accel_data = " + std::to_string(
-        config_ptr->serial_config.send_accel_data) + ";\n";
-      output_file << "\t" + sensor_name + "->" + "serial_config.send_gyro_data = " + std::to_string(
-        config_ptr->serial_config.send_gyro_data) + ";\n";
-      output_file <<
-        "\t" + sensor_name + "->" + "serial_config.send_heading_data = " + std::to_string(
-        config_ptr->serial_config.send_heading_data) + ";\n";
+      output_file << "\t" + sensor_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::INERTIAL_SENSOR;\n";
+      output_file << "\t" + sensor_name + "->" + "serial_config.send_accel_data = " + std::to_string(config_ptr->serial_config.send_accel_data) + ";\n";
+      output_file << "\t" + sensor_name + "->" + "serial_config.send_gyro_data = " + std::to_string(config_ptr->serial_config.send_gyro_data) + ";\n";
+      output_file << "\t" + sensor_name + "->" + "serial_config.send_heading_data = " + std::to_string( config_ptr->serial_config.send_heading_data) + ";\n";
       output_file << "\trobot_config->addDeviceConfig(" + sensor_name + ");\n";
       output_file << "\n";
     } else if (val->type == device_type_e::JOYSTICK) {
       auto config_ptr = val->as<const JoystickDeviceConfig>();
       std::string joy_name = config_ptr->name;
 
-      output_file <<
-        "\tstd::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceConfig> " + joy_name +
-        " = std::make_shared<ghost_v5_interfaces::devices::JoystickDeviceConfig>();\n";
+      output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceConfig> " + joy_name + " = std::make_shared<ghost_v5_interfaces::devices::JoystickDeviceConfig>();\n";
       output_file << "\t" + joy_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
       output_file << "\t" + joy_name + "->" + "name = \"" + joy_name + "\";\n";
-      output_file <<
-        "\t" + joy_name + "->" +
-        "type = ghost_v5_interfaces::devices::device_type_e::JOYSTICK;\n";
-      output_file << "\t" + joy_name + "->" + "is_partner = " + BOOL_STRING_MAP.at(
-        config_ptr->is_partner) + ";\n";
+      output_file << "\t" + joy_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::JOYSTICK;\n";
+      output_file << "\t" + joy_name + "->" + "is_partner = " + BOOL_STRING_MAP.at(config_ptr->is_partner) + ";\n";
       output_file << "\trobot_config->addDeviceConfig(" + joy_name + ");\n";
       output_file << "\n";
+    } else if (val->type == device_type_e::DIGITAL_IO) {
+      auto config_ptr = val->as<const DigitalIODeviceConfig>();
+      std::string name = config_ptr->name;
+      output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::DigitalIODeviceConfig> " + name + " = std::make_shared<ghost_v5_interfaces::devices::DigitalIODeviceConfig>();\n";
+      output_file << "\t" + name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+      output_file << "\t" + name + "->" + "name = \"" + name + "\";\n";
+      output_file << "\t" + name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::DIGITAL_IO;\n";
+      output_file << "\t" + name + "->" + "input_mask = " << std::to_string(static_cast<int>(config_ptr->input_mask)) << ";\n";
+      output_file << "\t" + name + "->" + "output_mask = " << std::to_string(static_cast<int>(config_ptr->output_mask)) << ";\n";
+      output_file << "\trobot_config->addDeviceConfig(" + name + ");\n";
     } else if (val->type == device_type_e::INVALID) {
       std::cout <<
         "[WARNING] Device " + val->name + " has invalid device type. Skipping this entry.";
@@ -392,6 +334,7 @@ void generateCodeFromRobotConfig(
     }
   }
 
+  /* *INDENT-ON* */
   output_file << "\treturn robot_config;\n";
   output_file << "}\n";
 

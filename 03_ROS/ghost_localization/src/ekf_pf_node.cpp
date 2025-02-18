@@ -83,7 +83,6 @@ EkfPfNode::EkfPfNode()
   laser_msg_received_ = false;
 
   const Vector2f init_loc(config_params.init_x, config_params.init_y);
-  const float init_angle = config_params.init_r;
 
   odom_loc_ = Eigen::Vector2f(config_params.init_x, config_params.init_y);
   odom_angle_ = config_params.init_r;
@@ -206,8 +205,8 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     if (publish_tf_) {
       PublishWorldTransform();
     }
-  } catch (std::exception e) {
-    RCLCPP_ERROR(this->get_logger(), "Laser : % s ", e.what());
+  } catch (std::exception& e) {
+    RCLCPP_ERROR(this->get_logger(), "Laser : %s ", e.what());
   }
 }
 
@@ -223,7 +222,7 @@ void EkfPfNode::InitialPoseCallback(
 
     RCLCPP_INFO(
       this->get_logger(),
-      "Initialize : % s (% f,% f) % f\u00b0 \n ",
+      "Initialize : %s (%f,%f) %f\u00b0 \n ",
       config_params.map.c_str(),
       init_loc.x(),
       init_loc.y(),
@@ -236,8 +235,8 @@ void EkfPfNode::InitialPoseCallback(
     }
     PublishVisualization();
     PublishMapViz();
-  } catch (std::exception e) {
-    RCLCPP_ERROR(this->get_logger(), "Initial Pose:% s ", e.what());
+  } catch (std::exception& e) {
+    RCLCPP_ERROR(this->get_logger(), "Initial Pose:%s ", e.what());
   }
 }
 
@@ -266,7 +265,7 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     if (publish_tf_) {
       PublishWorldTransform();
     }
-  } catch (std::exception e) {
+  } catch (std::exception& e) {
     RCLCPP_ERROR(this->get_logger(), "Odom: %s", e.what());
   }
 }

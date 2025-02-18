@@ -52,7 +52,7 @@ cd ~/VEXU_GHOST
 
 #### Build Repository
 ```sh
-./scripts/build.sh -r
+./scripts/build.sh
 ```
 
 #### Start Simulator
