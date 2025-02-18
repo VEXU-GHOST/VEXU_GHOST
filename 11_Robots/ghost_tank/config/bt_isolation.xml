@@ -4,15 +4,15 @@
   <BehaviorTree ID="main">
     <Sequence>
       <Logging message="test"/>
-      <MoveToPoseBoomerang posX="1.0"
-                           posY="3.0"
+      <MoveToPoseBoomerang posX="2.0"
+                           posY="1.0"
                            theta="0.0"
                            threshold="0.10"
                            angle_threshold="5.0"
                            timeout="5000"
                            lead="0.5"
-                           use_theta="false"/>
-      <MoveToPoseBoomerang posX="1.0"
+                           use_theta="true"/>
+      <!-- <MoveToPoseBoomerang posX="1.0"
                            posY="3.5"
                            theta="-90.0"
                            threshold="0.10"
@@ -27,7 +27,7 @@
                            angle_threshold="5.0"
                            timeout="5000"
                            lead="0.5"
-                           use_theta="false"/>
+                           use_theta="false"/> -->
       <Logging message="testover"/>
       <Sleep msec="1000000"/>
     </Sequence>

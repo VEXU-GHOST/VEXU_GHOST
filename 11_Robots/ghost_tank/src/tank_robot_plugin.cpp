@@ -650,11 +650,9 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   search_radius_marker.id = 1;
   search_radius_marker.type = 3;   // cylinder type
   search_radius_marker.action = 0;
-  // search_radius_marker.pose.position.x = m_tank_model_ptr->getWorldPose().x();
-  // search_radius_marker.pose.position.y = m_tank_model_ptr->getWorldPose().y();
-  search_radius_marker.scale.x = 1.0;
-  search_radius_marker.scale.y = 1.0;
-  search_radius_marker.scale.z = 0.1;
+  search_radius_marker.scale.x = 2*m_search_radius;
+  search_radius_marker.scale.y = 2*m_search_radius;
+  search_radius_marker.scale.z = 0.01;
   search_radius_marker.color.b = 1.0;
   search_radius_marker.color.a = 0.3;
 
@@ -686,8 +684,8 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   marker.id = 0;
   marker.type = 8;   // points type
   marker.action = 0;
-  marker.scale.x = 0.1;
-  marker.scale.y = 0.1;
+  marker.scale.x = 0.025;
+  marker.scale.y = 0.025;
   marker.scale.z = 0.1;
   marker.color.r = 1.0;
   marker.color.a = 1.0;
@@ -764,17 +762,20 @@ void TankRobotPlugin::movePointToPoint()
 
   Eigen::Vector2d command;
 
-  if (threshold_xy > abs(m_final_pose.x() - current_x) && threshold_xy > abs(m_final_pose.y() - current_y)) {
-    command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_final_pose);
-    Eigen::Vector3d error = m_final_pose - m_tank_model_ptr->getWorldPose();
-    error.z() = ghost_util::SmallestAngleDistRad(m_final_pose.z(), m_tank_model_ptr->getWorldPose().z());
-    publishErrorPose(error);
+  double dist_err = sqrt(((m_final_pose.x() - current_x) * (m_final_pose.x() - current_x) + (m_final_pose.y() - current_y) * (m_final_pose.y() - current_y)));
+
+  Eigen::Vector3d goal;
+
+  if (dist_err < threshold_xy) {
+    goal = m_final_pose;
   } else {
-    command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
-    Eigen::Vector3d error = m_desired_pose - m_tank_model_ptr->getWorldPose();
-    error.z() = ghost_util::SmallestAngleDistRad(m_desired_pose.z(), m_tank_model_ptr->getWorldPose().z());
-    publishErrorPose(error);
+    goal = m_desired_pose;
   }
+  command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), goal);
+  Eigen::Vector3d error = goal - m_tank_model_ptr->getWorldPose();
+  error.z() = ghost_util::SmallestAngleDistRad(goal.z(), m_tank_model_ptr->getWorldPose().z());
+  publishErrorPose(error);
+  
   // command = command.normalized();
   auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
   auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);

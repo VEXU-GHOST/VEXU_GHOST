@@ -134,19 +134,17 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 
 	msg.trajectory_type = ghost_msgs::msg::RobotTrajectory::TRAJECTORY_TYPE_PUREPURSUIT;
 
+	double dist_err = sqrt((posX - tank_model_ptr_->getWorldPose().x()) * (posX - tank_model_ptr_->getWorldPose().x()) + 
+	(posY - tank_model_ptr_->getWorldPose().y()) * (posY - tank_model_ptr_->getWorldPose().y()));
+
 	if (use_theta){
-		if( (abs(posX - tank_model_ptr_->getWorldPose().x()) < threshold) &&
-			(abs(posY - tank_model_ptr_->getWorldPose().y()) < threshold)
-			 && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold)
-			)
+		if(dist_err && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold))
 		{
 			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
 			return BT::NodeStatus::SUCCESS;
 		}
 	} else {
-		if( (abs(posX - tank_model_ptr_->getWorldPose().x()) < threshold) &&
-			(abs(posY - tank_model_ptr_->getWorldPose().y()) < threshold)
-			)
+		if(dist_err)
 		{
 			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
 			return BT::NodeStatus::SUCCESS;

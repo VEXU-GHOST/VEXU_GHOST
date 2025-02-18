@@ -64,9 +64,9 @@ competition_state_machine_node:
       move_to_pose_kd_xy: 0.0
       move_to_pose_kp_theta: 0.2
       move_to_pose_kd_theta: 0.00
-      max_speed_linear: 0.4
-      max_speed_angular: 0.4
-      search_radius: 0.5
+      max_speed_linear: 1.0
+      max_speed_angular: 1.0
+      search_radius: 0.25
 
       drive_motor_ticks_per_rotation: 600.0
       drive_gear_ratio: 1.15 # 23/20

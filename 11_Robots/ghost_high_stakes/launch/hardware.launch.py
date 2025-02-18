@@ -173,5 +173,4 @@ def generate_launch_description():
         rplidar_node,
         # color_classifier_node,
         # color_sensor_node
-
     ])
