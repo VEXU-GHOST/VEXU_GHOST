@@ -10,14 +10,16 @@
                            threshold="0.10"
                            angle_threshold="5.0"
                            timeout="50"
-                           lead="0.5"/>
+                           lead="0.5"
+                           use_theta="true"/>
       <MoveToPoseBoomerang posX="1.1"
                            posY="0.0"
                            theta="180.0"
                            threshold="0.10"
                            angle_threshold="5.0"
                            timeout="50"
-                           lead="0.5"/>
+                           lead="0.5"
+                           use_theta="true"/>
       <Logging message="testover"/>
       <Sleep msec="1000000"/>
     </Sequence>
@@ -63,6 +65,8 @@
                   default="5000">ms</input_port>
       <input_port name="lead"
                   default="0.5"/>
+      <input_port name="use_theta"
+                  default="false"/>
     </Action>
     <Action ID="MoveToPosePurepursuit"
             editable="true">
@@ -72,8 +76,10 @@
       <input_port name="threshold"
                   default="0.025">m</input_port>
       <input_port name="timeout"
-                  default="5000">ms</input_port>      
-    </Action>
+                  default="5000">ms</input_port>
+      <input_port name="use_theta"
+                  default="false"/>
+      </Action>
   </TreeNodesModel>
 
 </root>

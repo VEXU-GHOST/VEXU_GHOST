@@ -634,39 +634,49 @@ void TankRobotPlugin::readPathFromFile(const std::string& filename) {
 
 void TankRobotPlugin::movePointToPoint(){
     float search_radius = m_search_radius; 
-    static int past_index = 0; 
-    static int next_index = 0; 
     double current_x = m_tank_model_ptr->getWorldPose().x();
     double current_y = m_tank_model_ptr->getWorldPose().y();
     double current_angle = m_tank_model_ptr->getWorldAngleRad();
-
+    
     if (!robot_trajectory_ptr_->isNotEmpty()){
-        return;
+      return;
     }
-
-    // auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
-    // auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
+    
     auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
     auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
+    
+    if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::PUREPURSUIT){
+      auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
+      auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
+    
+      static double last_start_time = 0;
+      if (trajectory_start_time_ != last_start_time){
+        last_start_time = trajectory_start_time_;
+        m_past_index = 0;
+        m_next_index = 0;
+      }
 
-    // if (x_values.size() != y_values.size()) {
-    //     std::cout << "x_values and y_values must be the same size" << std::endl;
-    //     throw std::runtime_error("x_values and y_values must be the same size");
-    // }
-    // for(int i = past_index; i < x_values.size(); ++i){//find farthest point in radius 
-    //     double distance = sqrt(pow((current_x - x_values[i]),2)+pow((current_y - y_values[i]),2));
-    //     if (distance < search_radius){
-    //         next_index = i;
-    //     }
-    // }
+      for(int i = m_past_index; i < x_values.size(); ++i){//find farthest point in radius 
+        double distance = sqrt(
+          pow((current_x - x_values[i]),2)
+          +pow((current_y - y_values[i]),2));
+        if (distance < search_radius){
+          m_next_index = i;
+        }
+      }
+      m_past_index = m_next_index;
 
-    // m_desired_pose = Eigen::Vector3d(x_values[next_index], y_values[next_index], 0.0);
-    // auto final_pose = Eigen::Vector3d(x_values[x_values.size()-1], y_values[y_values.size()-1], 0.0);
-    m_desired_pose = Eigen::Vector3d(robot_trajectory_ptr_->x_trajectory.getPosition(search_radius), 
-                                    robot_trajectory_ptr_->y_trajectory.getPosition(search_radius), 0.0);
-    auto final_pose = Eigen::Vector3d(robot_trajectory_ptr_->x_trajectory.getPosition(1.0), 
-                                    robot_trajectory_ptr_->y_trajectory.getPosition(1.0),
-                                  robot_trajectory_ptr_->theta_trajectory.getPosition(1.0));
+      m_desired_pose = Eigen::Vector3d(x_values[m_next_index], y_values[m_next_index], 0.0);
+      m_final_pose = Eigen::Vector3d(x_values[x_values.size()-1], y_values[y_values.size()-1], 0.0);
+    
+    } else if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::BOOMERANG){
+      m_desired_pose = Eigen::Vector3d(robot_trajectory_ptr_->x_trajectory.getPosition(search_radius), 
+        robot_trajectory_ptr_->y_trajectory.getPosition(search_radius), 
+        0.0);
+      m_final_pose = Eigen::Vector3d(robot_trajectory_ptr_->x_trajectory.getPosition(1.0), 
+        robot_trajectory_ptr_->y_trajectory.getPosition(1.0),
+        robot_trajectory_ptr_->theta_trajectory.getPosition(1.0));
+    }
     
     std::cout << "despos_x " << m_desired_pose.x() << std::endl;
     std::cout << "despos_y " << m_desired_pose.y() << std::endl;
@@ -675,8 +685,8 @@ void TankRobotPlugin::movePointToPoint(){
 
     Eigen::Vector2d command;
 
-    if (threshold_xy > abs(final_pose.x() - current_x) && threshold_xy > abs(final_pose.y() - current_y)){
-        command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), final_pose);
+    if (threshold_xy > abs(m_final_pose.x() - current_x) && threshold_xy > abs(m_final_pose.y() - current_y)){
+        command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_final_pose);
     } else {
         command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
     }

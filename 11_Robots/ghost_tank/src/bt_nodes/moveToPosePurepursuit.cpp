@@ -62,6 +62,7 @@ BT::PortsList MoveToPosePurepursuit::providedPorts(){
 		BT::InputPort<double>("threshold"),
 		BT::InputPort<double>("angle_threshold"),
 		BT::InputPort<int>("timeout"),
+		BT::InputPort<bool>("use_theta"),
 	};
 }
 
@@ -84,11 +85,12 @@ BT::NodeStatus MoveToPosePurepursuit::onRunning() {
 	double threshold = BT_Util::get_input<double>(this, "threshold");
 	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold");
 	int timeout = BT_Util::get_input<int>(this, "timeout");
+	bool use_theta = BT_Util::get_input<bool>(this, "use_theta");
+
 	std::vector<double> x_values; 
 	std::vector<double> y_values; 
 	std::vector<double> angle_values; 
 
-	
 	ghost_util::readPathFromFile(file_name, x_values, y_values, angle_values);
 	int length = x_values.size();
 
@@ -97,18 +99,33 @@ BT::NodeStatus MoveToPosePurepursuit::onRunning() {
 	msg.x_trajectory.position = x_values;
 	msg.y_trajectory.position = y_values;
 	msg.theta_trajectory.position = angle_values;
-
+	msg.x_trajectory.threshold = threshold;
+	msg.y_trajectory.threshold = threshold;
+	msg.theta_trajectory.threshold = angle_threshold;
 	
-
 	msg.x_trajectory.time = {0.0};
 	msg.y_trajectory.time = {0.0};
 	msg.theta_trajectory.time = {0.0};
 
-	if( (abs(x_values[length-1] - tank_model_ptr_->getWorldPose().x()) < threshold) &&
-	    (abs(y_values[length-1] - tank_model_ptr_->getWorldPose().y()) < threshold) &&
-	    (abs(ghost_util::SmallestAngleDistRad(angle_values[length-1], tank_model_ptr_->getWorldAngleRad())) < angle_threshold)){
-		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPosePurepursuit: Success");
-		return BT::NodeStatus::SUCCESS;
+	msg.trajectory_type = ghost_msgs::msg::RobotTrajectory::TRAJECTORY_TYPE_PUREPURSUIT;
+
+	if (use_theta){
+		if( (abs(x_values[length-1] - tank_model_ptr_->getWorldPose().x()) < threshold) &&
+			(abs(y_values[length-1] - tank_model_ptr_->getWorldPose().y()) < threshold)
+			 && (abs(ghost_util::SmallestAngleDistRad(angle_values[length-1], tank_model_ptr_->getWorldAngleRad())) < angle_threshold)
+			)
+		{
+			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPosePurepursuit: Success");
+			return BT::NodeStatus::SUCCESS;
+		}
+	} else {
+		if( (abs(x_values[length-1] - tank_model_ptr_->getWorldPose().x()) < threshold) &&
+			(abs(y_values[length-1] - tank_model_ptr_->getWorldPose().y()) < threshold) 
+			)
+		{
+			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPosePurepursuit: Success");
+			return BT::NodeStatus::SUCCESS;
+		}
 	}
 
 	if(started_){

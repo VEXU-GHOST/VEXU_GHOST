@@ -111,6 +111,7 @@ protected:
   double m_search_radius = 0.0;
   Eigen::Vector3d m_desired_pose = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_desired_twist = Eigen::Vector3d::Zero();
+  Eigen::Vector3d m_final_pose = Eigen::Vector3d::Zero();
   double m_move_to_pose_kp_xy = 0.0;
   double m_move_to_pose_kd_xy = 0.0;
   double m_move_to_pose_kp_theta = 0.0;
@@ -173,27 +174,16 @@ protected:
   bool m_auton_button_pressed = false;
   int m_auton_index = 0;
 
-  // stick
-  double m_stick_angle_start = 0;
-  double m_stick_angle_kick = 0;
-
-  // Burnout Prevention
-  float m_burnout_absolute_current_threshold_ma;
-  float m_burnout_absolute_rpm_threshold;
-  long m_burnout_stall_duration_ms;
-  long m_burnout_cooldown_duration_ms;
-
-  rclcpp::Time m_intake_stall_start;
-  rclcpp::Time m_intake_cooldown_start;
-  bool m_intake_stalling = false;
-  bool m_intake_cooling_down = false;
-
   bool m_interaction_started = false;
   bool m_sim_mode = false;
 
   // boomerang
   double m_max_speed_linear;
   double m_max_speed_angular;
+
+  // pure pursuit
+  int m_past_index = 0;
+  int m_next_index = 0;
 
   std::shared_ptr<Boomerang> m_boomerang;
   std::shared_ptr<PDControl> m_pd_control;
