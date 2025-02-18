@@ -679,7 +679,7 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   p_carrot.z = 0.0;
   carrot.points.push_back(p_robot);
   carrot.points.push_back(p_carrot);
-  
+
   visualization_msgs::msg::Marker marker{};
   marker.header.frame_id = "map";
   marker.header.stamp = node_ptr_->get_clock()->now();
@@ -692,7 +692,7 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   marker.color.r = 1.0;
   marker.color.a = 1.0;
 
-  for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); i+=5) {
+  for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); i += 5) {
     geometry_msgs::msg::Point p;
     p.x = robot_trajectory_ptr_->x_trajectory.position_vector[i];
     p.y = robot_trajectory_ptr_->y_trajectory.position_vector[i];
@@ -705,81 +705,84 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   m_trajectory_viz_pub->publish(msg);
 }
 
-void TankRobotPlugin::movePointToPoint(){
-    double search_radius = m_search_radius; 
-    double current_x = m_tank_model_ptr->getWorldPose().x();
-    double current_y = m_tank_model_ptr->getWorldPose().y();
-    double current_angle = m_tank_model_ptr->getWorldAngleRad();
-    
-    if (!robot_trajectory_ptr_->isNotEmpty()){
-      return;
-    }
-    
-    auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
-    auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
-    
+void TankRobotPlugin::movePointToPoint()
+{
+  double search_radius = m_search_radius;
+  double current_x = m_tank_model_ptr->getWorldPose().x();
+  double current_y = m_tank_model_ptr->getWorldPose().y();
+  double current_angle = m_tank_model_ptr->getWorldAngleRad();
 
-    if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::PUREPURSUIT){
-      std::cout << "Purepursuit" << std::endl;
-      auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
-      auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
-      auto theta_values = robot_trajectory_ptr_->theta_trajectory.position_vector;
-    
-      static double last_start_time = 0;
-      if (trajectory_start_time_ != last_start_time){
-        last_start_time = trajectory_start_time_;
-        m_past_index = 0;
-        m_next_index = 0;
+  if (!robot_trajectory_ptr_->isNotEmpty()) {
+    return;
+  }
+
+  auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
+  auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
+
+
+  if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::PUREPURSUIT) {
+    std::cout << "Purepursuit" << std::endl;
+    auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
+    auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
+    auto theta_values = robot_trajectory_ptr_->theta_trajectory.position_vector;
+
+    static double last_start_time = 0;
+    if (trajectory_start_time_ != last_start_time) {
+      last_start_time = trajectory_start_time_;
+      m_past_index = 0;
+      m_next_index = 0;
+    }
+
+    for (int i = m_past_index; i < x_values.size(); ++i) {//find farthest point in radius
+      double distance = sqrt(
+        pow((current_x - x_values[i]), 2) +
+        pow((current_y - y_values[i]), 2));
+      if (distance < search_radius) {
+        m_next_index = i;
       }
-
-      for(int i = m_past_index; i < x_values.size(); ++i){//find farthest point in radius 
-        double distance = sqrt(
-          pow((current_x - x_values[i]),2)
-          +pow((current_y - y_values[i]),2));
-        if (distance < search_radius){
-          m_next_index = i;
-        }
-      }
-      m_past_index = m_next_index;
-
-      m_desired_pose = Eigen::Vector3d(x_values[m_next_index], y_values[m_next_index], 0.0);
-      m_final_pose = Eigen::Vector3d(x_values[x_values.size()-1], y_values[y_values.size()-1], theta_values[theta_values.size()-1]);
-    
-    } else if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::BOOMERANG){
-      m_desired_pose = Eigen::Vector3d(robot_trajectory_ptr_->x_trajectory.getPosition(search_radius), 
-        robot_trajectory_ptr_->y_trajectory.getPosition(search_radius), 
-        0.0);
-      m_final_pose = Eigen::Vector3d(robot_trajectory_ptr_->x_trajectory.getPosition(1.0), 
-        robot_trajectory_ptr_->y_trajectory.getPosition(1.0),
-        robot_trajectory_ptr_->theta_trajectory.getPosition(1.0));
     }
-    
-    std::cout << "despos_x " << m_desired_pose.x() << std::endl;
-    std::cout << "despos_y " << m_desired_pose.y() << std::endl;
+    m_past_index = m_next_index;
 
-    geometry_msgs::msg::Twist msg{};
+    m_desired_pose = Eigen::Vector3d(x_values[m_next_index], y_values[m_next_index], 0.0);
+    m_final_pose = Eigen::Vector3d(x_values[x_values.size() - 1], y_values[y_values.size() - 1], theta_values[theta_values.size() - 1]);
 
-    Eigen::Vector2d command;
+  } else if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::BOOMERANG) {
+    m_desired_pose = Eigen::Vector3d(
+      robot_trajectory_ptr_->x_trajectory.getPosition(search_radius),
+      robot_trajectory_ptr_->y_trajectory.getPosition(search_radius),
+      0.0);
+    m_final_pose = Eigen::Vector3d(
+      robot_trajectory_ptr_->x_trajectory.getPosition(1.0),
+      robot_trajectory_ptr_->y_trajectory.getPosition(1.0),
+      robot_trajectory_ptr_->theta_trajectory.getPosition(1.0));
+  }
 
-    if (threshold_xy > abs(m_final_pose.x() - current_x) && threshold_xy > abs(m_final_pose.y() - current_y)){
-        command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_final_pose);
-        Eigen::Vector3d error = m_final_pose - m_tank_model_ptr->getWorldPose();
-        error.z() = ghost_util::SmallestAngleDistRad(m_final_pose.z(), m_tank_model_ptr->getWorldPose().z());
-        publishErrorPose(error);
-    } else {
-        command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
-        Eigen::Vector3d error = m_desired_pose - m_tank_model_ptr->getWorldPose();
-        error.z() = ghost_util::SmallestAngleDistRad(m_desired_pose.z(), m_tank_model_ptr->getWorldPose().z());
-        publishErrorPose(error);
-    }
-    // command = command.normalized();
-    auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
-    auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
+  std::cout << "despos_x " << m_desired_pose.x() << std::endl;
+  std::cout << "despos_y " << m_desired_pose.y() << std::endl;
 
-    msg.linear.x = fwd_cmd;
-    msg.angular.z = turn_cmd;
-    m_base_twist_cmd_pub->publish(msg);
-    m_tank_model_ptr->driveCommand(fwd_cmd, turn_cmd);
+  geometry_msgs::msg::Twist msg{};
+
+  Eigen::Vector2d command;
+
+  if (threshold_xy > abs(m_final_pose.x() - current_x) && threshold_xy > abs(m_final_pose.y() - current_y)) {
+    command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_final_pose);
+    Eigen::Vector3d error = m_final_pose - m_tank_model_ptr->getWorldPose();
+    error.z() = ghost_util::SmallestAngleDistRad(m_final_pose.z(), m_tank_model_ptr->getWorldPose().z());
+    publishErrorPose(error);
+  } else {
+    command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
+    Eigen::Vector3d error = m_desired_pose - m_tank_model_ptr->getWorldPose();
+    error.z() = ghost_util::SmallestAngleDistRad(m_desired_pose.z(), m_tank_model_ptr->getWorldPose().z());
+    publishErrorPose(error);
+  }
+  // command = command.normalized();
+  auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
+  auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
+
+  msg.linear.x = fwd_cmd;
+  msg.angular.z = turn_cmd;
+  m_base_twist_cmd_pub->publish(msg);
+  m_tank_model_ptr->driveCommand(fwd_cmd, turn_cmd);
 
 }
 
