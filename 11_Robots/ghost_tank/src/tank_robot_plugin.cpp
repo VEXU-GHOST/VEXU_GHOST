@@ -302,7 +302,7 @@ void TankRobotPlugin::disabled()
 
 void TankRobotPlugin::autonomous(double current_time)
 {
-  std::cout << "Autonomous: " << current_time << std::endl;
+  // std::cout << "Autonomous: " << current_time << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
 
   static bool first_loop = true;
@@ -711,6 +711,7 @@ void TankRobotPlugin::movePointToPoint()
   double current_angle = m_tank_model_ptr->getWorldAngleRad();
 
   if (!robot_trajectory_ptr_->isNotEmpty()) {
+    std::cout << "[TankRobotPlugin::movePointToPoint] Warning: robot_trajectory_ptr_ is empty!" << std::endl;
     return;
   }
 
@@ -719,7 +720,7 @@ void TankRobotPlugin::movePointToPoint()
 
 
   if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::PUREPURSUIT) {
-    std::cout << "Purepursuit" << std::endl;
+    // std::cout << "Purepursuit" << std::endl;
     auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
     auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
     auto theta_values = robot_trajectory_ptr_->theta_trajectory.position_vector;
@@ -755,8 +756,8 @@ void TankRobotPlugin::movePointToPoint()
       robot_trajectory_ptr_->theta_trajectory.getPosition(1.0));
   }
 
-  std::cout << "despos_x " << m_desired_pose.x() << std::endl;
-  std::cout << "despos_y " << m_desired_pose.y() << std::endl;
+  // std::cout << "despos_x " << m_desired_pose.x() << std::endl;
+  // std::cout << "despos_y " << m_desired_pose.y() << std::endl;
 
   geometry_msgs::msg::Twist msg{};
 

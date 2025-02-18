@@ -60,13 +60,13 @@ competition_state_machine_node:
 
     tank_robot_plugin:
       # motion planning
-      move_to_pose_kp_xy: 0.7
+      move_to_pose_kp_xy: 1.0
       move_to_pose_kd_xy: 0.0
-      move_to_pose_kp_theta: 0.2
+      move_to_pose_kp_theta: 0.6
       move_to_pose_kd_theta: 0.00
       max_speed_linear: 1.0
       max_speed_angular: 1.0
-      search_radius: 0.25
+      search_radius: 0.3
 
       drive_motor_ticks_per_rotation: 600.0
       drive_gear_ratio: 1.15 # 23/20
@@ -96,7 +96,7 @@ competition_state_machine_node:
       # Initial position
       init_x: 0.56
       init_y: 0.28
-      init_r: 0.7853
+      init_r: 0.0
       
       # Initial cloud distribution
       init_x_sigma: 0.05 #
@@ -444,11 +444,11 @@ map_ekf_node:
 
     initial_state:
       [
-          0.28, 0.28, 0.0,
-           0.0,  1.5708, 0.0,
-           0.0,     0.0, 0.0,
-           0.0,     0.0, 0.0,
-           0.0,     0.0, 0.0,
+        0.56, 0.28, 0.0,
+        0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,
+        0.0,  0.0,  0.0,
       ]
 
     # The frequency, in Hz, at which the filter will output a position estimate. Note that the filter will not begin

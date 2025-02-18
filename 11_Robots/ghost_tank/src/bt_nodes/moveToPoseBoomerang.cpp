@@ -138,13 +138,13 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	(posY - tank_model_ptr_->getWorldPose().y()) * (posY - tank_model_ptr_->getWorldPose().y()));
 
 	if (use_theta){
-		if(dist_err && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold))
+		if(dist_err < threshold && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold))
 		{
 			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
 			return BT::NodeStatus::SUCCESS;
 		}
 	} else {
-		if(dist_err)
+		if(dist_err < threshold)
 		{
 			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
 			return BT::NodeStatus::SUCCESS;
