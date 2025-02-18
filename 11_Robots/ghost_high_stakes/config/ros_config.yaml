@@ -31,10 +31,10 @@ imu_filter_node:
 
     gyro_covariance: [1.0e-5, 0.0, 0.0, 0.0, 1.0e-05, 0.0, 0.0, 0.0, 1.0e-5]
 
-    # This is a ZYX rotation from base link to imu!
+    # This is a Intrinsic ZYX rotation from base link to imu!
     sensor_roll: 0.0
-    sensor_pitch: 0.0
-    sensor_yaw: 0.0
+    sensor_pitch: -90.0
+    sensor_yaw: 90.0
 
 bag_recorder_service:
   ros__parameters:
