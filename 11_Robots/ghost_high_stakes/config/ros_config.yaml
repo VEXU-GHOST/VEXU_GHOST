@@ -6,7 +6,7 @@ ghost_serial_node:
 
 imu_filter_node:
   ros__parameters:
-    # input_imu_topic: /sensors/imu
+    input_imu_topic: /sensors/imu
     output_imu_topic: /estimation/imu/filtered
     calculate_bias: false
     calculate_covariance: false
@@ -127,19 +127,10 @@ competition_state_machine_node:
 
       rviz_set_pose_topic: "/set_pf_pose"
 
-    #odom_ekf_node and #map_ekf_node
-    # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
-    # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
-    # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
-    # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
-    # default values, and must be specified.
-    odom0: /sensors/wheel_odom
-
     behavior_tree:
       trajectory_topic: "/motion_planner/trajectory"
     
     use_sim_time: false
-    input_imu_topic: /sensors/imu
     should_record: false
 
 # If you are using the sweve model and you are tuning the k1-9 parameters,
@@ -284,6 +275,8 @@ odom_ekf_node:
     # do not provide some of the state variables estimated by the filter. For example, a TwistWithCovarianceStamped message
     # has no pose information, so the first six values would be meaningless in that case. Each vector defaults to all false
     # if unspecified, effectively making this parameter required for each sensor.
+
+    odom0: /sensors/wheel_odom
     odom0_config:
       [
         true,  true,  false,
@@ -533,6 +526,7 @@ map_ekf_node:
     # has no pose information, so the first six values would be meaningless in that case. Each vector defaults to all false
     # if unspecified, effectively making this parameter required for each sensor.
         
+    odom0: /sensors/wheel_odom
     odom0_config:
       [
          true,  true, false,
