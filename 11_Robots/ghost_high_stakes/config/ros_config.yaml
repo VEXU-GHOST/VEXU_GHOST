@@ -60,12 +60,13 @@ competition_state_machine_node:
 
     tank_robot_plugin:
       # motion planning
-      move_to_pose_kp_xy: 0.2
+      move_to_pose_kp_xy: 0.7
       move_to_pose_kd_xy: 0.0
-      move_to_pose_kp_theta: 0.05
-      move_to_pose_kd_theta: 0.001
-      max_speed_linear: 0.2
-      max_speed_angular: 0.2
+      move_to_pose_kp_theta: 0.2
+      move_to_pose_kd_theta: 0.00
+      max_speed_linear: 0.4
+      max_speed_angular: 0.4
+      search_radius: 0.5
 
       drive_motor_ticks_per_rotation: 600.0
       drive_gear_ratio: 1.15 # 23/20
@@ -81,8 +82,8 @@ competition_state_machine_node:
       des_twist_topic: "/des_vel"
       cur_twist_topic: "/cur_vel"
       des_pos_topic: "/des_pos"
-      use_backup_estimator: true
-      search_radius: 0.5
+      err_pos_topic: "/err_pos"
+      use_backup_estimator: false
       sim_mode: false
 
 /**:
@@ -93,8 +94,8 @@ competition_state_machine_node:
       map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
 
       # Initial position
-      init_x: 0.245
-      init_y: 0.1905
+      init_x: 0.28
+      init_y: 0.28
       init_r: 1.5708
       
       # Initial cloud distribution
@@ -435,7 +436,7 @@ map_ekf_node:
 
     initial_state:
       [
-          0.245, 0.1905, 0.0,
+          0.28, 0.28, 0.0,
            0.0,  1.5708, 0.0,
            0.0,     0.0, 0.0,
            0.0,     0.0, 0.0,

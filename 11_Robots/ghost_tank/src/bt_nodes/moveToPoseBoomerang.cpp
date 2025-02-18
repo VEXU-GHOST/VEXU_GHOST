@@ -132,7 +132,7 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	msg.y_trajectory.time = time_vector;
 	msg.theta_trajectory.time = time_vector;
 
-	msg.trajectory_type = ghost_msgs::msg::RobotTrajectory::TRAJECTORY_TYPE_BOOMERANG;
+	msg.trajectory_type = ghost_msgs::msg::RobotTrajectory::TRAJECTORY_TYPE_PUREPURSUIT;
 
 	if (use_theta){
 		if( (abs(posX - tank_model_ptr_->getWorldPose().x()) < threshold) &&

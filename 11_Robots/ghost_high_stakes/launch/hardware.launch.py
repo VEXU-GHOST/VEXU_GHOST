@@ -169,7 +169,7 @@ def generate_launch_description():
         # realsense_node,
         imu_filter_node,
         odom_ekf_node,
-        # map_ekf_node,
+        map_ekf_node,
         rplidar_node,
         # color_classifier_node,
         # color_sensor_node

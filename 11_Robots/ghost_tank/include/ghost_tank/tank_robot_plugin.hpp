@@ -84,9 +84,7 @@ protected:
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
-  void readPathFromFile(const std::string & filename);
   void resetPose(double x, double y, double theta);
-
  
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
@@ -98,11 +96,13 @@ protected:
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
+  rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_err_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
 
   void publishDesiredTwist(Eigen::Vector3d twist);
   void publishCurrentTwist(Eigen::Vector3d twist);
   void publishDesiredPose(Eigen::Vector3d pose);
+  void publishErrorPose(Eigen::Vector3d pose);
 
   // Subscribers
   void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
