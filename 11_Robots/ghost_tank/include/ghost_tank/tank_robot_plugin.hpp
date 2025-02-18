@@ -84,9 +84,7 @@ protected:
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
-  void readPathFromFile(const std::string & filename);
   void resetPose(double x, double y, double theta);
-
  
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
@@ -98,11 +96,13 @@ protected:
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_des_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
+  rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_err_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
 
   void publishDesiredTwist(Eigen::Vector3d twist);
   void publishCurrentTwist(Eigen::Vector3d twist);
   void publishDesiredPose(Eigen::Vector3d pose);
+  void publishErrorPose(Eigen::Vector3d pose);
 
   // Subscribers
   void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
@@ -138,6 +138,7 @@ protected:
   double m_search_radius = 0.0;
   Eigen::Vector3d m_desired_pose = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_desired_twist = Eigen::Vector3d::Zero();
+  Eigen::Vector3d m_final_pose = Eigen::Vector3d::Zero();
   double m_move_to_pose_kp_xy = 0.0;
   double m_move_to_pose_kd_xy = 0.0;
   double m_move_to_pose_kp_theta = 0.0;
@@ -203,27 +204,16 @@ protected:
   bool m_auton_button_pressed = false;
   int m_auton_index = 0;
 
-  // stick
-  double m_stick_angle_start = 0;
-  double m_stick_angle_kick = 0;
-
-  // Burnout Prevention
-  float m_burnout_absolute_current_threshold_ma;
-  float m_burnout_absolute_rpm_threshold;
-  long m_burnout_stall_duration_ms;
-  long m_burnout_cooldown_duration_ms;
-
-  rclcpp::Time m_intake_stall_start;
-  rclcpp::Time m_intake_cooldown_start;
-  bool m_intake_stalling = false;
-  bool m_intake_cooling_down = false;
-
   bool m_interaction_started = false;
   bool m_sim_mode = false;
 
   // boomerang
   double m_max_speed_linear;
   double m_max_speed_angular;
+
+  // pure pursuit
+  int m_past_index = 0;
+  int m_next_index = 0;
 
   std::shared_ptr<Boomerang> m_boomerang;
   std::shared_ptr<PDControl> m_pd_control;

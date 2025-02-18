@@ -64,6 +64,7 @@ BT::PortsList MoveToPoseBoomerang::providedPorts(){
 	    BT::InputPort<double>("angle_threshold"),
 	    BT::InputPort<double>("lead"),
 	    BT::InputPort<int>("timeout"),
+		BT::InputPort<bool>("use_theta"),
 	};
 }
 
@@ -89,6 +90,7 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold");
 	double lead = BT_Util::get_input<double>(this, "lead");
 	int timeout = BT_Util::get_input<int>(this, "timeout");
+	bool use_theta = BT_Util::get_input<bool>(this, "use_theta");
 	double tile_to_meters = 0.6096;
 	posX *= tile_to_meters;
 	posY *= tile_to_meters;
@@ -105,37 +107,57 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	auto points = boomerang_->get_points();
 	std::vector<double> x_trajectory;
     std::vector<double> y_trajectory;
+    std::vector<double> theta_trajectory;
+	std::vector<double> time_vector;
 
     for (const auto& vec : points) {
         x_trajectory.push_back(vec.x());
         y_trajectory.push_back(vec.y());
+		theta_trajectory.push_back(theta);
     }
+	for (int i = 0; i <= 50; i++){
+		time_vector.push_back(i * 1.0/50.0);
+	}
 
 	ghost_msgs::msg::RobotTrajectory msg{};
 	msg.header.stamp = node_ptr_->get_clock()->now();
 	msg.x_trajectory.position = x_trajectory;
 	msg.y_trajectory.position = y_trajectory;
+	msg.theta_trajectory.threshold = angle_threshold;
 	msg.x_trajectory.threshold = threshold;
 	msg.y_trajectory.threshold = threshold;
-	msg.theta_trajectory.threshold = angle_threshold;
+	msg.theta_trajectory.position = theta_trajectory;
 
-	msg.x_trajectory.time = {0.0};
-	msg.y_trajectory.time = {0.0};
-	msg.theta_trajectory.time = {0.0};
+	msg.x_trajectory.time = time_vector;
+	msg.y_trajectory.time = time_vector;
+	msg.theta_trajectory.time = time_vector;
 
-	if( (abs(posX - tank_model_ptr_->getWorldPose().x()) < threshold) &&
-	    (abs(posY - tank_model_ptr_->getWorldPose().y()) < threshold) &&
-	    (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold)){
-		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
-		return BT::NodeStatus::SUCCESS;
+	msg.trajectory_type = ghost_msgs::msg::RobotTrajectory::TRAJECTORY_TYPE_PUREPURSUIT;
+
+	double dist_err = sqrt((posX - tank_model_ptr_->getWorldPose().x()) * (posX - tank_model_ptr_->getWorldPose().x()) + 
+	(posY - tank_model_ptr_->getWorldPose().y()) * (posY - tank_model_ptr_->getWorldPose().y()));
+
+	if (use_theta){
+		if(dist_err && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold))
+		{
+			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
+			return BT::NodeStatus::SUCCESS;
+		}
+	} else {
+		if(dist_err)
+		{
+			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
+			return BT::NodeStatus::SUCCESS;
+		}
 	}
+
 
 	if(started_){
 		auto now = std::chrono::system_clock::now();
 		int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
 		// int time_elapsed_since_plan = std::chrono::duration_cast<std::chrono::milliseconds>(now - plan_time_).count();
 		// RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: %i ms elapsed", time_elapsed);
-		if(timeout > 0){ // positive timeout means how often to plan/send trajectory
+		if(timeout >= 0){ // positive timeout means how often to plan/send trajectory
 			if(time_elapsed > timeout){
 				RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPoseBoomerang Timeout: %i ms elapsed", time_elapsed);
 				// started_ = false;

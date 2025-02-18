@@ -5,22 +5,31 @@
     <Sequence>
       <Logging message="test"/>
       <MoveToPoseBoomerang posX="2.0"
-                           posY="2.0"
-                           theta="-90.0"
-                           threshold="0.20"
-                           angle_threshold="5.0"
-                           timeout="100"
-                           lead="0.5"/>
-      <MoveToPoseBoomerang posX="2.0"
-                           posY="5.0"
-                           theta="180.0"
+                           posY="1.0"
+                           theta="0.0"
                            threshold="0.10"
                            angle_threshold="5.0"
-                           timeout="100"
-                           lead="0.5"/>
+                           timeout="5000"
+                           lead="0.5"
+                           use_theta="true"/>
+      <!-- <MoveToPoseBoomerang posX="1.0"
+                           posY="3.5"
+                           theta="-90.0"
+                           threshold="0.10"
+                           angle_threshold="5.0"
+                           timeout="5000"
+                           lead="0.5"
+                           use_theta="false"/>
+      <MoveToPoseBoomerang posX="1.5"
+                           posY="0.5"
+                           theta="-180.0"
+                           threshold="0.10"
+                           angle_threshold="5.0"
+                           timeout="5000"
+                           lead="0.5"
+                           use_theta="false"/> -->
       <Logging message="testover"/>
-
-      <Sleep msec="-1"/>
+      <Sleep msec="1000000"/>
     </Sequence>
   </BehaviorTree>
   <BehaviorTree ID="side">
@@ -41,7 +50,6 @@
                             
   
       <Logging message="testover"/>
-
       <Sleep msec="-1"/>
     </Sequence>
   </BehaviorTree>
@@ -65,6 +73,8 @@
                   default="5000">ms</input_port>
       <input_port name="lead"
                   default="0.5"/>
+      <input_port name="use_theta"
+                  default="false"/>
     </Action>
     <Action ID="MoveToPosePurepursuit"
             editable="true">
@@ -75,9 +85,9 @@
                   default="0.025">m</input_port>
       <input_port name="timeout"
                   default="5000">ms</input_port>
-
-      
-    </Action>
+      <input_port name="use_theta"
+                  default="false"/>
+      </Action>
   </TreeNodesModel>
 
 </root>

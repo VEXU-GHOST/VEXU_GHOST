@@ -95,6 +95,7 @@ TEST(TestDeviceInterfaces, testRobotTrajectoryMsg) {
   auto mt_input = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
   mt_input->position_vector.push_back(0);
   rt_input->x_trajectory = *mt_input;
+  rt_input->trajectory_type = ghost_planners::RobotTrajectory::TrajectoryType::BOOMERANG;
 
 
   auto msg = std::make_shared<ghost_msgs::msg::RobotTrajectory>();
