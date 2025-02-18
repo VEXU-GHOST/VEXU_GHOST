@@ -188,6 +188,13 @@ void EkfPfNode::LoadROSParams()
 
 void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
+  static int msg_count = 0;
+
+  if(msg_count++ % 100 == 0){
+    std::cout << "[EkfPfNode::LaserCallback] Received LIDAR Msg" << std::endl;
+
+  }
+
   if (!laser_msg_received_) {
     laser_msg_received_ = true;
   }
@@ -243,6 +250,12 @@ void EkfPfNode::InitialPoseCallback(
 // Odometry
 void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
+  static int msg_count = 0;
+
+  if(msg_count++ % 100 == 0){
+    std::cout << "[EkfPfNode::EkfCallback] Received Odometry Msg" << std::endl;
+  }
+
   this->last_filtered_odom_msg_ = *msg;
   odom_loc_ = Eigen::Vector2f(
     last_filtered_odom_msg_.pose.pose.position.x,

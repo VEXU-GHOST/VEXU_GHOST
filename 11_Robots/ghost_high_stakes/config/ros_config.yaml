@@ -100,7 +100,7 @@ competition_state_machine_node:
       
       # Initial cloud distribution
       init_x_sigma: 0.05 #
-      init_y_sigma: 0.07 #
+      init_y_sigma: 0.05 #
       init_r_sigma: 0.1 #
 
       # Motion Model Params
@@ -123,7 +123,7 @@ competition_state_machine_node:
       #k8: 0.001 # theta error from y motion   # Non-holonomic robot doesn't move in Y, 0.1% for tolerance. 
 
       # Melissa Gains
-      k1: 0.08 # x error from x motion         # % error in primary direction
+      k1: 0.15 # x error from x motion         # % error in primary direction
       k2: 0.05 # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
       k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
@@ -131,7 +131,7 @@ competition_state_machine_node:
       k5: 0.0703 # y error from y motion       # % error in primary direction
       k6: 0.1 # y error from rotation          # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
-      k7: 0.05 # theta error from x motion     # After 2ft of travel, 99% are within by 5°
+      k7: 0.15 # theta error from x motion       # After 2ft of travel, 99% of samples should be within 15°. std = (10°*DEG2RAD/3) / (24" * IN2M)
       k8: 0.05 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
       k9: 0.015 # theta error from rotation    # % error in primary direction. IMU is very good and main source of heading, so this is small.
 
