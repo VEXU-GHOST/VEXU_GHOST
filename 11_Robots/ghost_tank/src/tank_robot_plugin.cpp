@@ -215,7 +215,6 @@ void TankRobotPlugin::initTankModel()
 
   node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
   m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
-  std::cout << "radius: " << m_search_radius << std::endl;
 
   node_ptr_->declare_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.drive_gear_ratio", 0.0);
@@ -258,7 +257,8 @@ void TankRobotPlugin::initAutonomy()
   bt_ = std::make_shared<TankTree>(bt_path);
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
-  bt_->set_variable("node_ptr", node_ptr_);// have to move this in front of bt somehow
+  bt_->set_variable("node_ptr", node_ptr_);
+  bt_->set_variable("pd_control_ptr", m_pd_control);
   bt_->init_tree();
 }
 
