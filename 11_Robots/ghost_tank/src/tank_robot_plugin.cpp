@@ -467,7 +467,7 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
     ground_pickup_current = 0;
   }
 
-  // Manual Conveyor control
+  // Conveyor control
   // We assume any manual conveyor control misaligns the hooks
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
@@ -484,8 +484,8 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
     conveyor_current = 0;
   }
 
-  // Align Conveyor when Ground Pickup is active and there are no commands going to regular Conveyor control
-  if (joy_data->btn_r2 && !joy_data->btn_r1) {
+  // Align Conveyor when Ground Pickup is active and there are no commands going to manual Conveyor control
+  if (joy_data->btn_r2 && !joy_data->btn_r1 && !m_conveyor_hook_is_ejecting) {
     m_conveyor_hook_is_aligned = !(m_hook_fraction < m_conveyor_hook_align_threshold);
     if (m_conveyor_hook_is_aligned) {
       m_conveyor_last_aligned_position = m_conveyor_position_abs;
@@ -497,30 +497,42 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
     }
   }
 
-  if (joy_data->btn_r2 && joy_data->btn_l1 && m_conveyor_hook_is_aligned) {
+  // Transition to ejection mode
+  static double ejecting_start_time = 0.0;
+  if (joy_data->btn_r2 && joy_data->btn_l1 && m_conveyor_hook_is_aligned && !m_conveyor_hook_is_ejecting) {
+    ejecting_start_time = current_time;
     m_conveyor_hook_is_ejecting = true;
     m_conveyor_hook_is_aligned = false;
   }
 
+  // Max timeout on ejection
+  if(m_conveyor_hook_is_ejecting && current_time > ejecting_start_time + 1.5){
+    m_conveyor_hook_is_ejecting = false;
+  }
+
+  // During ejection, run until we reach throw position, then transition to throw
   if (m_conveyor_hook_is_ejecting) {
-    double throw_dist_rel = (1 + m_conveyor_hook_throw_threshold ) * m_conveyor_ticks_per_hook;
-    if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) < throw_dist_rel && !m_conveyor_is_throwing) {
+    double throw_dist_rel = (1 + m_conveyor_hook_throw_fraction) * m_conveyor_ticks_per_hook;
+      std::cout << (m_conveyor_position_abs - m_conveyor_last_aligned_position) << " > " << throw_dist_rel << std::endl;
+    if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) > throw_dist_rel && !m_conveyor_is_throwing) {
       m_conveyor_is_throwing = true;
+      m_conveyor_hook_is_ejecting = false;
       m_conveyor_throw_start_time = current_time;
     }
     conveyor_power = 1.0;
     conveyor_current = 2500;
   }
 
-  // if (m_conveyor_is_throwing) {
-  //   conveyor_power = -0.1;
-  //   conveyor_current = 500;
-  //   if (current_time > m_conveyor_throw_start_time + m_conveyor_hook_throw_duration) {
-  //     m_conveyor_is_throwing = false;
-  //     conveyor_power = 0.0;
-  //     conveyor_current = 0;
-  //   }
-  // }
+  // Throw reverses for set duration and then zeros conveyor and returns to manual control
+  if (m_conveyor_is_throwing) {
+    conveyor_power = -0.1;
+    conveyor_current = 500;
+    if (current_time > m_conveyor_throw_start_time + m_conveyor_hook_throw_duration) {
+      m_conveyor_is_throwing = false;
+      conveyor_power = 0.0;
+      conveyor_current = 0;
+    }
+  }
 
   rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
