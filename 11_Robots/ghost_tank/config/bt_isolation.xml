@@ -16,9 +16,9 @@
                             max_speed_angular_pct="1.0"
                             timeout_ms="5000"
                             use_theta="true"
-                            backwards="false"/>
+                            backwards="true"/>
       </ClampCmd>
-      <ClampCmd clamp_closed="false">
+      <!-- <ClampCmd clamp_closed="false">
         <MoveToPoseBoomerang posX_tiles="2.0"
                             posY_tiles="1.0"
                             theta_deg="0.0"
@@ -31,9 +31,9 @@
                             timeout_ms="5000"
                             use_theta="true"
                             backwards="false"/>
-      </ClampCmd>
+      </ClampCmd> -->
       <Logging message="testover"/>
-      <Sleep msec="1000000"/>
+      <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
   <BehaviorTree ID="side">

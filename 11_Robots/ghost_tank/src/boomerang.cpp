@@ -49,7 +49,7 @@ void Boomerang::set_end_point(float x, float y, float radians)
 {
   end_x_ = x;
   end_y_ = y;
-  end_radians_ = radians;
+  end_radians_ = ghost_util::WrapAngle2PI(radians - 1.5708);
 }
 
 // sets the lead distance
