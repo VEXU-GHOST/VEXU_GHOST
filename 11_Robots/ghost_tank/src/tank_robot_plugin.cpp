@@ -408,7 +408,7 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   toggleBagRecorder(joy_data);
-  updateIntake(joy_data, current_time);
+  updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_r, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
   updateDrivetrain(joy_data);
@@ -451,15 +451,15 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
   }
 }
 
-void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
+void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
 {
   // Manual Ground Pickup control
   double ground_pickup_power = 0;
   int32_t ground_pickup_current = 0;
-  if (joy_data->btn_r2) {
+  if (R2) {
     ground_pickup_power = 1.0;
     ground_pickup_current = 2500;
-  } else if (joy_data->btn_r) {
+  } else if (R) {
     ground_pickup_power = -1.0;
     ground_pickup_current = 2500;
   } else {
@@ -471,11 +471,11 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
   // We assume any manual conveyor control misaligns the hooks
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
-  if (joy_data->btn_r1) {
+  if (R1) {
     conveyor_power = 1.0;
     conveyor_current = 2500;
     m_conveyor_hook_is_aligned = false;
-  } else if (joy_data->btn_l1 && !joy_data->btn_r2) {
+  } else if (L1 && !R2) {
     conveyor_power = -1.0;
     conveyor_current = 2500;
     m_conveyor_hook_is_aligned = false;
@@ -485,7 +485,7 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
   }
 
   // Align Conveyor when Ground Pickup is active and there are no commands going to manual Conveyor control
-  if (joy_data->btn_r2 && !joy_data->btn_r1 && !m_conveyor_hook_is_ejecting) {
+  if (R2 && !R1 && !m_conveyor_hook_is_ejecting) {
     m_conveyor_hook_is_aligned = !(m_hook_fraction < m_conveyor_hook_align_threshold);
     if (m_conveyor_hook_is_aligned) {
       m_conveyor_last_aligned_position = m_conveyor_position_abs;
@@ -499,21 +499,20 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
 
   // Transition to ejection mode
   static double ejecting_start_time = 0.0;
-  if (joy_data->btn_r2 && joy_data->btn_l1 && m_conveyor_hook_is_aligned && !m_conveyor_hook_is_ejecting) {
+  if (R2 && L1 && m_conveyor_hook_is_aligned && !m_conveyor_hook_is_ejecting) {
     ejecting_start_time = current_time;
     m_conveyor_hook_is_ejecting = true;
     m_conveyor_hook_is_aligned = false;
   }
 
   // Max timeout on ejection
-  if(m_conveyor_hook_is_ejecting && current_time > ejecting_start_time + 1.5){
+  if (m_conveyor_hook_is_ejecting && current_time > ejecting_start_time + 1.5) {
     m_conveyor_hook_is_ejecting = false;
   }
 
   // During ejection, run until we reach throw position, then transition to throw
   if (m_conveyor_hook_is_ejecting) {
     double throw_dist_rel = (1 + m_conveyor_hook_throw_fraction) * m_conveyor_ticks_per_hook;
-      std::cout << (m_conveyor_position_abs - m_conveyor_last_aligned_position) << " > " << throw_dist_rel << std::endl;
     if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) > throw_dist_rel && !m_conveyor_is_throwing) {
       m_conveyor_is_throwing = true;
       m_conveyor_hook_is_ejecting = false;

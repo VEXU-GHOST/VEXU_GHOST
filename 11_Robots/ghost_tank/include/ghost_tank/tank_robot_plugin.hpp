@@ -81,13 +81,13 @@ protected:
   // Teleop
   bool runAutonFromDriver(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
   void toggleBagRecorder(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateIntake(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
+  void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   void resetWorldPose();
- 
+
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_tank_viz_pub;
@@ -175,11 +175,11 @@ protected:
   double m_init_world_x = 0.0;
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
-  static constexpr size_t m_cov_n = 6*6;
+  static constexpr size_t m_cov_n = 6 * 6;
 
   std::vector<double> m_reset_pose;
   std::vector<double> m_initial_estimate_covariance;
-  
+
   bool m_use_backup_estimator = false;
   bool m_reset_world_pose = false;
   bool m_clamp_closed{false};
@@ -197,7 +197,7 @@ protected:
   double m_conveyor_hook_align_power{0.0};
   double m_conveyor_last_aligned_position{0.0};
   bool m_conveyor_hook_is_aligned{false};
-  
+
 
   double m_conveyor_hook_throw_fraction{0.0};
   double m_conveyor_hook_throw_threshold{0.0};
