@@ -70,6 +70,7 @@ BT::PortsList MoveToPoseBoomerang::providedPorts(){
 		BT::InputPort<double>("max_speed_angular_pct"),
 	    BT::InputPort<int>("timeout_ms"),
 		BT::InputPort<bool>("use_theta"),
+		BT::InputPort<bool>("backwards"),
 	};
 }
 
@@ -204,6 +205,7 @@ void MoveToPoseBoomerang::PurePursuit(){
 	double search_radius = BT_Util::get_input<double>(this, "search_radius_m");
 	double max_speed_linear = BT_Util::get_input<double>(this, "max_speed_linear_pct");
 	double max_speed_angular = BT_Util::get_input<double>(this, "max_speed_angular_pct");
+	bool backwards = BT_Util::get_input<bool>(this, "backwards");
 
 	double current_x = tank_model_ptr_->getWorldPose().x();
 	double current_y = tank_model_ptr_->getWorldPose().y();
@@ -245,7 +247,7 @@ void MoveToPoseBoomerang::PurePursuit(){
 	} else {
 		goal = desired_pose;
 	}
-	command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), goal);
+	command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), goal, backwards);
 	// Eigen::Vector3d error = goal - tank_model_ptr_->getWorldPose();
 	// error.z() = ghost_util::SmallestAngleDistRad(goal.z(), tank_model_ptr_->getWorldPose().z());
 	// publishErrorPose(error);
