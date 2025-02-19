@@ -328,9 +328,10 @@ void TankRobotPlugin::onNewSensorData()
 
 void TankRobotPlugin::updateConveyorPositionSensing()
 {
-  m_conveyor_position = std::fmod(rhi_ptr_->getMotorPosition("conveyor_motor"), m_conveyor_ticks_per_loop);
-  m_conveyor_position += (m_conveyor_position < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
-  m_hook_fraction = std::fmod(m_conveyor_position, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
+  m_conveyor_position_abs = rhi_ptr_->getMotorPosition("conveyor_motor");
+  m_conveyor_position_rel = std::fmod(m_conveyor_position_abs, m_conveyor_ticks_per_loop);
+  m_conveyor_position_rel += (m_conveyor_position_rel < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
+  m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
 }
 
 void TankRobotPlugin::publishIMUData()
@@ -467,38 +468,43 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
 
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
-  if (m_conveyor_is_throwing) {
-    conveyor_power = -0.1;
-    conveyor_current = 500;
-    if (current_time > m_conveyor_throw_start_time + m_conveyor_hook_throw_duration) {
-      m_conveyor_is_throwing = false;
-    }
-
-  } else if (joy_data->btn_r1 && joy_data->btn_l1) {
-    static bool first_pass = false;
-    if (std::fabs(m_conveyor_hook_throw_fraction - m_hook_fraction) < m_conveyor_hook_throw_threshold && !m_conveyor_is_throwing) {
-      if (!first_pass) {
-        first_pass = true;
-      } else {
-        m_conveyor_is_throwing = true;
-        m_conveyor_throw_start_time = current_time;
-        first_pass = false;
-      }
+  if (joy_data->btn_r2 && joy_data->btn_l1) {
+    double throw_dist_rel = m_conveyor_hook_throw_threshold * (1 + m_conveyor_ticks_per_hook);
+    if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) < throw_dist_rel  && !m_conveyor_is_throwing) {
+      m_conveyor_is_throwing = true;
+      m_conveyor_throw_start_time = current_time;
     }
     conveyor_power = 1.0;
     conveyor_current = 2500;
+  } else if (joy_data->btn_r2) {
+    if (m_hook_fraction < m_conveyor_hook_align_threshold) {
+      conveyor_power = m_conveyor_hook_align_power;
+      ground_pickup_current = 1000;
+    } else {
+      m_conveyor_hook_is_aligned = true;
+      m_conveyor_last_aligned_position = m_conveyor_position_abs;
+      conveyor_power = 0;
+      ground_pickup_current = 0;
+    }
   } else if (joy_data->btn_r1) {
     conveyor_power = 1.0;
     conveyor_current = 2500;
   } else if (joy_data->btn_l1) {
     conveyor_power = -1.0;
     conveyor_current = 2500;
-  } else if (joy_data->btn_r2 && m_hook_fraction < m_conveyor_hook_align_threshold) {
-    conveyor_power = m_conveyor_hook_align_power;
-    ground_pickup_current = 1000;
   } else {
     conveyor_power = 0.0;
     conveyor_current = 0;
+  }
+
+  if (m_conveyor_is_throwing) {
+    conveyor_power = -0.1;
+    conveyor_current = 500;
+    if (current_time > m_conveyor_throw_start_time + m_conveyor_hook_throw_duration) {
+      m_conveyor_is_throwing = false;
+      conveyor_power = 0.0;
+      conveyor_current = 0;
+    }
   }
 
   rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);

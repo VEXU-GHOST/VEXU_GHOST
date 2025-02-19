@@ -188,10 +188,16 @@ protected:
   // Conveyor
   double m_conveyor_ticks_per_loop{0.0};
   double m_conveyor_ticks_per_hook{0.0};
+
+  double m_conveyor_position_abs{0.0};
+  double m_conveyor_position_rel{0.0};
+  double m_hook_fraction{0.0};
+
   double m_conveyor_hook_align_threshold{0.0};
   double m_conveyor_hook_align_power{0.0};
-  double m_conveyor_position{0.0};
-  double m_hook_fraction{0.0};
+  double m_conveyor_last_aligned_position{0.0};
+  bool m_conveyor_hook_is_aligned{false};
+  
 
   double m_conveyor_hook_throw_fraction{0.0};
   double m_conveyor_hook_throw_threshold{0.0};
