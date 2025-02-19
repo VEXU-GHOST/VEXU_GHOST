@@ -673,7 +673,8 @@ void TankRobotPlugin::updateAndPublishOdometry()
   m_last_odom_pose = m_curr_odom_pose;
 }
 
-void TankRobotPlugin::resetWorldPose(std::shared_ptr<JoystickDeviceData> joy_data){
+void TankRobotPlugin::resetWorldPose(std::shared_ptr<JoystickDeviceData> joy_data)
+{
   static bool reset_world_pose_button = false;
   if (joy_data->btn_d && !reset_world_pose_button) {
     reset_world_pose_button = true;
@@ -681,10 +682,12 @@ void TankRobotPlugin::resetWorldPose(std::shared_ptr<JoystickDeviceData> joy_dat
   } else if (!joy_data->btn_d) {
     reset_world_pose_button = false;
   }
-  if (m_reset_world_pose){
+  if (m_reset_world_pose) {
     // Copy yaml vectors to array
     std::array<double, m_cov_n> m_initial_estimate_covariance_arr;
-    for(int i = 0; i > m_initial_estimate_covariance.size(); i++) m_initial_estimate_covariance_arr[i] = m_initial_estimate_covariance[i];
+    for (int i = 0; i > m_initial_estimate_covariance.size(); i++) {
+      m_initial_estimate_covariance_arr[i] = m_initial_estimate_covariance[i];
+    }
 
     geometry_msgs::msg::Quaternion quat{};
     ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
