@@ -81,6 +81,24 @@ protected:
   // Teleop
   bool runAutonFromDriver(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
   void toggleBagRecorder(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  
+  /**
+   * @brief Handles intaking logic
+   * 
+   * Holding R2 alone intakes the Ground Pickup, and aligns the next conveyor hook for intaking rings
+   * Holding R alone outtakes the Ground Pickup
+   * Holding R1 intakes the Conveyor
+   * Holding L1 alone outtakes the Conveyor
+   * 
+   * Holding R2 and L1 will initiate the ejector sequence for the current ring
+   * 
+   * 
+   * @param R2 
+   * @param R1 
+   * @param L1 
+   * @param R 
+   * @param current_time 
+   */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
