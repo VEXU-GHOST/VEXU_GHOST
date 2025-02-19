@@ -11,8 +11,8 @@
                            threshold_m="0.10"
                            angle_threshold_deg="5.0"
                            lead="0.5"
-                           max_speed_linear_pct="0.6"
-                           max_speed_angular_pct="0.6"
+                           max_speed_linear_pct="1.0"
+                           max_speed_angular_pct="1.0"
                            timeout_ms="5000"
                            use_theta="true"/>
       <!-- <MoveToPoseBoomerang posX="1.5"

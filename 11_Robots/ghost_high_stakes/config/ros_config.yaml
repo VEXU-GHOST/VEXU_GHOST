@@ -66,7 +66,7 @@ competition_state_machine_node:
       conveyor_hook_align_power: 0.5
 
       # motion planning
-      move_to_pose_kp_xy: 1.0
+      move_to_pose_kp_xy: 1.5
       move_to_pose_kd_xy: 0.0
       move_to_pose_kp_theta: 0.6
       move_to_pose_kd_theta: 0.00
