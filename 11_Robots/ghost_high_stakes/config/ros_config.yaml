@@ -59,6 +59,12 @@ competition_state_machine_node:
 
 
     tank_robot_plugin:
+      conveyor_num_links: 69.0
+      conveyor_sprocket_teeth: 12.0
+      conveyor_num_hooks: 3.0
+      conveyor_hook_align_threshold: 0.2
+      conveyor_hook_align_power: 0.5
+
       # motion planning
       move_to_pose_kp_xy: 1.0
       move_to_pose_kd_xy: 0.0
@@ -70,7 +76,7 @@ competition_state_machine_node:
 
       drive_motor_ticks_per_rotation: 360.0
       drive_gear_ratio: 1.15 # 23/20
-      drive_wheel_size_inches: 1.375
+      drive_wheel_rad_in: 1.375
       wheel_base_inches: 12.5
       
       cmd_twist_topic: "/cmd_vel" # from ekf

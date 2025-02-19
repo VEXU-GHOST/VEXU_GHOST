@@ -98,6 +98,7 @@ void TankRobotPlugin::initialize()
 {
   initROSComms();
   initEstimation();
+  initIntake();
   initTankModel();
   initAutonomy();
 }
@@ -203,16 +204,23 @@ void TankRobotPlugin::initEstimation()
   m_init_sigma_theta = node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
 }
 
+void TankRobotPlugin::initIntake()
+{
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_links", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_sprocket_teeth", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_hooks", 0.0);
+  double conveyor_num_links = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_links").as_double();
+  double conveyor_sprocket_teeth = node_ptr_->get_parameter("tank_robot_plugin.conveyor_sprocket_teeth").as_double();
+  double conveyor_num_hooks = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_hooks").as_double();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_threshold", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_power", 0.0);
+  m_conveyor_hook_align_threshold = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_threshold").as_double();
+  m_conveyor_hook_align_power = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_power").as_double();
+}
+
 void TankRobotPlugin::initTankModel()
 {
-  // Setup tank Model
-  TankConfig tank_model_config;
-  tank_model_config.motor_list = m_all_motor_names;
-  tank_model_config.wheel_radius = 2.75 / 2.0; //in
-  tank_model_config.wheel_gear_ratio = 20.0 / 23.0;
-  tank_model_config.wheel_dist = 7.5; //in
-  m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
-
   node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
   m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
   std::cout << "radius: " << m_search_radius << std::endl;
@@ -224,10 +232,18 @@ void TankRobotPlugin::initTankModel()
 
   double motor_ticks_per_rotation = node_ptr_->get_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation").as_double();
   double drive_gear_ratio = node_ptr_->get_parameter("tank_robot_plugin.drive_gear_ratio").as_double();
-  double wheel_size_inches = node_ptr_->get_parameter("tank_robot_plugin.drive_wheel_size_inches").as_double();
+  double wheel_rad_in = node_ptr_->get_parameter("tank_robot_plugin.drive_wheel_rad_in").as_double();
   double wheel_base_inches = node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
 
-  m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
+  TankConfig tank_model_config;
+  tank_model_config.motor_list = m_all_motor_names;
+  tank_model_config.wheel_radius = wheel_rad_in; //in
+  tank_model_config.wheel_gear_ratio = 1.0/drive_gear_ratio;
+  tank_model_config.wheel_dist = wheel_base_inches/2.0; //in
+
+  m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
+
+  m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
   // m_odom_ptr->resetPose();
 
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.5);
@@ -392,14 +408,24 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data)
     ground_pickup_current = 0;
   }
 
+  m_conveyor_position = std::fmod(rhi_ptr_->getMotorPosition("conveyor_motor"), m_conveyor_ticks_per_loop);
+  m_conveyor_position += (m_conveyor_position < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
+  bool conveyor_loop_incremented = (m_conveyor_position < m_conveyor_last_position);
+  m_conveyor_last_position = m_conveyor_position;
+
+
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
+  double hook_fraction = std::fmod(m_conveyor_position, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_loop;
   if (joy_data->btn_r1) {
     conveyor_power = 1.0;
     conveyor_current = 2500;
   } else if (joy_data->btn_l1) {
     conveyor_power = -1.0;
     conveyor_current = 2500;
+  // } else if (joy_data->btn_r2 && hook_fraction > m_conveyor_hook_align_threshold) {
+  //   conveyor_power = m_conveyor_hook_align_power;
+  //   ground_pickup_current = 1000;
   } else {
     conveyor_power = 0.0;
     conveyor_current = 0;
@@ -650,8 +676,8 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   search_radius_marker.id = 1;
   search_radius_marker.type = 3;   // cylinder type
   search_radius_marker.action = 0;
-  search_radius_marker.scale.x = 2*m_search_radius;
-  search_radius_marker.scale.y = 2*m_search_radius;
+  search_radius_marker.scale.x = 2 * m_search_radius;
+  search_radius_marker.scale.y = 2 * m_search_radius;
   search_radius_marker.scale.z = 0.01;
   search_radius_marker.color.b = 1.0;
   search_radius_marker.color.a = 0.3;
@@ -776,7 +802,7 @@ void TankRobotPlugin::movePointToPoint()
   Eigen::Vector3d error = goal - m_tank_model_ptr->getWorldPose();
   error.z() = ghost_util::SmallestAngleDistRad(goal.z(), m_tank_model_ptr->getWorldPose().z());
   publishErrorPose(error);
-  
+
   // command = command.normalized();
   auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
   auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);

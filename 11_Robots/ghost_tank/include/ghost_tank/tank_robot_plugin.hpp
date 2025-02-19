@@ -67,6 +67,7 @@ protected:
   // Initialization
   void initROSComms();
   void initEstimation();
+  void initIntake();
   void initTankModel();
   void initAutonomy();
 
@@ -175,6 +176,14 @@ protected:
   bool m_clamp_closed{false};
   bool m_bite_closed{false};
 
+  // Conveyor
+  double m_conveyor_ticks_per_loop;
+  double m_conveyor_ticks_per_hook;
+  double m_conveyor_hook_align_threshold;
+  double m_conveyor_hook_align_power;
+  double m_conveyor_position;
+  double m_conveyor_last_position;
+
   // Digital IO
   std::vector<bool> m_digital_io;
   std::unordered_map<std::string, size_t> m_digital_io_name_map;
@@ -182,6 +191,7 @@ protected:
   // Bag Recorder
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
+
 
   // Field vs Robot Oriented Control
   bool m_toggle_tank_field_control_btn_pressed = false;
