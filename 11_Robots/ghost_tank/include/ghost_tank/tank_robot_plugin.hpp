@@ -216,7 +216,6 @@ protected:
 
 
   double m_conveyor_hook_throw_fraction{0.0};
-  double m_conveyor_hook_throw_threshold{0.0};
   double m_conveyor_hook_throw_duration{0.0};
   double m_conveyor_throw_start_time{0.0};
   bool m_conveyor_hook_is_ejecting{false};

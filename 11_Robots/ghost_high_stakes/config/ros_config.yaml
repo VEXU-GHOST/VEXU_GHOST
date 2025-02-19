@@ -67,7 +67,6 @@ competition_state_machine_node:
       conveyor_hook_align_power: 0.5
 
       conveyor_hook_throw_fraction: 0.5
-      conveyor_hook_throw_threshold: 0.05
       conveyor_hook_throw_duration: 0.25
 
       # motion planning

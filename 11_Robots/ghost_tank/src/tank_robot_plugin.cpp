@@ -241,10 +241,8 @@ void TankRobotPlugin::initIntake()
   m_conveyor_hook_align_power = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_power").as_double();
 
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_fraction", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_threshold", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_duration", 0.0);
   m_conveyor_hook_throw_fraction = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_fraction").as_double();
-  m_conveyor_hook_throw_threshold = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_threshold").as_double();
   m_conveyor_hook_throw_duration = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_duration").as_double();
 }
 
