@@ -226,7 +226,7 @@ void TankRobotPlugin::initTankModel()
 
   node_ptr_->declare_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.drive_gear_ratio", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.drive_wheel_size_inches", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.drive_wheel_rad_in", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.wheel_base_inches", 0.0);
 
   double motor_ticks_per_rotation = node_ptr_->get_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation").as_double();

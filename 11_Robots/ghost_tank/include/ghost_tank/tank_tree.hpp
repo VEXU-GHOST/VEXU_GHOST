@@ -28,6 +28,7 @@
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
 #include "ghost_tank/bt_nodes/moveToPoseBoomerang.hpp"
 #include "ghost_tank/bt_nodes/moveToPosePurepursuit.hpp"
+#include "ghost_tank/bt_nodes/biteCmd.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 
 #include "ghost_tank/tank_model.hpp"

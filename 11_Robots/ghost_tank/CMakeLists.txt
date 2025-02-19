@@ -164,6 +164,7 @@ set(NODES
   autonTimer
   moveToPoseBoomerang
   moveToPosePurepursuit
+  biteCmd
 )
 
 foreach(NODE ${NODES})
