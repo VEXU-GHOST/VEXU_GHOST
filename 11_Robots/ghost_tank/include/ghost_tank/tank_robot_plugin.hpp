@@ -72,6 +72,7 @@ protected:
   void initAutonomy();
 
   // onNewSensorData
+  void updateConveyorPositionSensing();
   void publishIMUData();
   void updateAndPublishOdometry();
   void publishBaseTwist();
@@ -177,12 +178,12 @@ protected:
   bool m_bite_closed{false};
 
   // Conveyor
-  double m_conveyor_ticks_per_loop;
-  double m_conveyor_ticks_per_hook;
-  double m_conveyor_hook_align_threshold;
-  double m_conveyor_hook_align_power;
-  double m_conveyor_position;
-  double m_conveyor_last_position;
+  double m_conveyor_ticks_per_loop{0.0};
+  double m_conveyor_ticks_per_hook{0.0};
+  double m_conveyor_hook_align_threshold{0.0};
+  double m_conveyor_hook_align_power{0.0};
+  double m_conveyor_position{0.0};
+  double m_hook_fraction{0.0};
 
   // Digital IO
   std::vector<bool> m_digital_io;

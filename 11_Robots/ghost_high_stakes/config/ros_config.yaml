@@ -62,7 +62,7 @@ competition_state_machine_node:
       conveyor_num_links: 69.0
       conveyor_sprocket_teeth: 12.0
       conveyor_num_hooks: 3.0
-      conveyor_hook_align_threshold: 0.2
+      conveyor_hook_align_threshold: 0.85
       conveyor_hook_align_power: 0.5
 
       # motion planning
