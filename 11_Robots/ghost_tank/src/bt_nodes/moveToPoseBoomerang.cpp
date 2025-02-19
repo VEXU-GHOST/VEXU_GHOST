@@ -96,6 +96,8 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold_deg");
 	int timeout = BT_Util::get_input<int>(this, "timeout_ms");
 	bool use_theta = BT_Util::get_input<bool>(this, "use_theta");
+	bool backwards = BT_Util::get_input<bool>(this, "backwards");
+
 	double tile_to_meters = 0.6096;
 	posX *= tile_to_meters;
 	posY *= tile_to_meters;
@@ -103,8 +105,15 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	theta *= ghost_util::DEG_TO_RAD;
 	angle_threshold *= ghost_util::DEG_TO_RAD;
 
+	if(backwards){
+		theta = ghost_util::FlipAnglePI(theta);
+	}
+
 	double dist_err = sqrt((posX - tank_model_ptr_->getWorldPose().x()) * (posX - tank_model_ptr_->getWorldPose().x()) + 
 	(posY - tank_model_ptr_->getWorldPose().y()) * (posY - tank_model_ptr_->getWorldPose().y()));
+
+	std::cout << "dist_err: " << dist_err << std::endl;
+	std::cout << "ang_err:  " << ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())*ghost_util::RAD_TO_DEG << std::endl;
 
 	if (use_theta){
 		if(dist_err < threshold && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold))
