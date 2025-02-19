@@ -26,6 +26,7 @@
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_msgs/msg/robot_trajectory.hpp"
 #include "ghost_tank/boomerang.hpp"
+#include "ghost_tank/pdcontrol.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_util/angle_util.hpp"
 #include "ghost_util/unit_conversion_utils.hpp"
@@ -71,6 +72,12 @@ private:
 	BT::Blackboard::Ptr blackboard_;
 
   bool started_;
+  int past_index_;
+  std::shared_ptr<PDControl> pd_control_ptr_;
+	ghost_planners::RobotTrajectory robot_trajectory_;
+
+  void PurePursuit();
+  void GeneratePath();
 };
 
 } // namespace ghost_tank {

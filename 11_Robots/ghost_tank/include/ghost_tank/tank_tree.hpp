@@ -28,6 +28,7 @@
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
 #include "ghost_tank/bt_nodes/moveToPoseBoomerang.hpp"
 #include "ghost_tank/bt_nodes/moveToPosePurepursuit.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
 
 #include "ghost_tank/tank_model.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
@@ -50,6 +51,15 @@ public:
 			// std::cout << "Set bt variable:" << name << std::endl;
 		} else {
 			std::cout << "ERROR: Tried to set BT variable before the BT constructor" << std::endl;
+		}
+	}
+	template<typename T>
+	bool get_variable(std::string name, T & value){
+		if(!global_blackboard_){
+			std::cout << "ERROR: Tried to get BT variable before the BT constructor" << std::endl;
+			return false;
+		} else {
+			return global_blackboard_->get<T>(name, value);
 		}
 	}
 private:

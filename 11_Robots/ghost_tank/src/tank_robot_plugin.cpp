@@ -223,7 +223,6 @@ void TankRobotPlugin::initTankModel()
 {
   node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
   m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
-  std::cout << "radius: " << m_search_radius << std::endl;
 
   node_ptr_->declare_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.drive_gear_ratio", 0.0);
@@ -274,7 +273,8 @@ void TankRobotPlugin::initAutonomy()
   bt_ = std::make_shared<TankTree>(bt_path);
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
-  bt_->set_variable("node_ptr", node_ptr_);// have to move this in front of bt somehow
+  bt_->set_variable("node_ptr", node_ptr_);
+  bt_->set_variable("pd_control_ptr", m_pd_control);
   bt_->init_tree();
 }
 
@@ -330,14 +330,26 @@ void TankRobotPlugin::autonomous(double current_time)
   bt_->tick_tree();
 
   // Get best state estimate
-  auto curr_pose = m_tank_model_ptr->getWorldPose();
+  // auto curr_pose = m_tank_model_ptr->getWorldPose();
   auto curr_twist = m_tank_model_ptr->getWorldTwist();
-
-  movePointToPoint();
 
   publishCurrentTwist(curr_twist);
   // publishDesiredTwist(m_desired_twist);
-  publishDesiredPose(m_desired_pose);
+
+  if(bt_->get_variable("desired_pose", m_desired_pose)){
+    publishDesiredPose(m_desired_pose);
+  }
+  double fwd_cmd = 0.0;
+  double turn_cmd = 0.0;
+  if(bt_->get_variable("fwd_cmd", fwd_cmd)){
+  }
+  if(bt_->get_variable("turn_cmd", turn_cmd)){
+  }
+
+  geometry_msgs::msg::Twist msg{};
+	msg.linear.x = fwd_cmd;
+	msg.angular.z = turn_cmd;
+	m_base_twist_cmd_pub->publish(msg);
 }
 
 void TankRobotPlugin::teleop(double current_time)
@@ -727,91 +739,6 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   msg.markers.push_back(carrot);
   msg.markers.push_back(marker);
   m_trajectory_viz_pub->publish(msg);
-}
-
-void TankRobotPlugin::movePointToPoint()
-{
-  double search_radius = m_search_radius;
-  double current_x = m_tank_model_ptr->getWorldPose().x();
-  double current_y = m_tank_model_ptr->getWorldPose().y();
-  double current_angle = m_tank_model_ptr->getWorldAngleRad();
-
-  if (!robot_trajectory_ptr_->isNotEmpty()) {
-    std::cout << "[TankRobotPlugin::movePointToPoint] Warning: robot_trajectory_ptr_ is empty!" << std::endl;
-    return;
-  }
-
-  auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
-  auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
-
-
-  if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::PUREPURSUIT) {
-    // std::cout << "Purepursuit" << std::endl;
-    auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
-    auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
-    auto theta_values = robot_trajectory_ptr_->theta_trajectory.position_vector;
-
-    static double last_start_time = 0;
-    if (trajectory_start_time_ != last_start_time) {
-      last_start_time = trajectory_start_time_;
-      m_past_index = 0;
-      m_next_index = 0;
-    }
-
-    for (int i = m_past_index; i < x_values.size(); ++i) {//find farthest point in radius
-      double distance = sqrt(
-        pow((current_x - x_values[i]), 2) +
-        pow((current_y - y_values[i]), 2));
-      if (distance < search_radius) {
-        m_next_index = i;
-      }
-    }
-    m_past_index = m_next_index;
-
-    m_desired_pose = Eigen::Vector3d(x_values[m_next_index], y_values[m_next_index], 0.0);
-    m_final_pose = Eigen::Vector3d(x_values[x_values.size() - 1], y_values[y_values.size() - 1], theta_values[theta_values.size() - 1]);
-
-  } else if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::BOOMERANG) {
-    m_desired_pose = Eigen::Vector3d(
-      robot_trajectory_ptr_->x_trajectory.getPosition(search_radius),
-      robot_trajectory_ptr_->y_trajectory.getPosition(search_radius),
-      0.0);
-    m_final_pose = Eigen::Vector3d(
-      robot_trajectory_ptr_->x_trajectory.getPosition(1.0),
-      robot_trajectory_ptr_->y_trajectory.getPosition(1.0),
-      robot_trajectory_ptr_->theta_trajectory.getPosition(1.0));
-  }
-
-  // std::cout << "despos_x " << m_desired_pose.x() << std::endl;
-  // std::cout << "despos_y " << m_desired_pose.y() << std::endl;
-
-  geometry_msgs::msg::Twist msg{};
-
-  Eigen::Vector2d command;
-
-  double dist_err = sqrt(((m_final_pose.x() - current_x) * (m_final_pose.x() - current_x) + (m_final_pose.y() - current_y) * (m_final_pose.y() - current_y)));
-
-  Eigen::Vector3d goal;
-
-  if (dist_err < threshold_xy) {
-    goal = m_final_pose;
-  } else {
-    goal = m_desired_pose;
-  }
-  command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), goal);
-  Eigen::Vector3d error = goal - m_tank_model_ptr->getWorldPose();
-  error.z() = ghost_util::SmallestAngleDistRad(goal.z(), m_tank_model_ptr->getWorldPose().z());
-  publishErrorPose(error);
-
-  // command = command.normalized();
-  auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
-  auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
-
-  msg.linear.x = fwd_cmd;
-  msg.angular.z = turn_cmd;
-  m_base_twist_cmd_pub->publish(msg);
-  m_tank_model_ptr->driveCommand(fwd_cmd, turn_cmd);
-
 }
 
 } // namespace ghost_tank
