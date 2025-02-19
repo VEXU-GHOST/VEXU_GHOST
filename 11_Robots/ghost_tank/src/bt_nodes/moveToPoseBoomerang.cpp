@@ -65,6 +65,8 @@ BT::PortsList MoveToPoseBoomerang::providedPorts(){
 		BT::InputPort<double>("search_radius_m"),
 	    BT::InputPort<double>("threshold_m"),
 	    BT::InputPort<double>("angle_threshold_deg"),
+		BT::InputPort<double>("threshold_vel_mps"),
+	    BT::InputPort<double>("angle_threshold_vel_dps"),
 	    BT::InputPort<double>("lead"),
 		BT::InputPort<double>("max_speed_linear_pct"),
 		BT::InputPort<double>("max_speed_angular_pct"),
@@ -94,6 +96,8 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	double theta = BT_Util::get_input<double>(this, "theta_deg");
 	double threshold = BT_Util::get_input<double>(this, "threshold_m");
 	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold_deg");
+	double threshold_vel = BT_Util::get_input<double>(this, "threshold_vel_mps");
+	double angle_threshold_vel = BT_Util::get_input<double>(this, "angle_threshold_vel_dps");
 	int timeout = BT_Util::get_input<int>(this, "timeout_ms");
 	bool use_theta = BT_Util::get_input<bool>(this, "use_theta");
 	bool backwards = BT_Util::get_input<bool>(this, "backwards");
@@ -112,17 +116,19 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	double dist_err = sqrt((posX - tank_model_ptr_->getWorldPose().x()) * (posX - tank_model_ptr_->getWorldPose().x()) + 
 	(posY - tank_model_ptr_->getWorldPose().y()) * (posY - tank_model_ptr_->getWorldPose().y()));
 
-	std::cout << "dist_err: " << dist_err << std::endl;
-	std::cout << "ang_err:  " << ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())*ghost_util::RAD_TO_DEG << std::endl;
+	// std::cout << "dist_err: " << dist_err << std::endl;
+	// std::cout << "ang_err:  " << ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())*ghost_util::RAD_TO_DEG << std::endl;
 
 	if (use_theta){
-		if(dist_err < threshold && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold))
+		if(dist_err < threshold && (abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())) < angle_threshold)
+		&& (abs(tank_model_ptr_->getWorldTwist().x()) < threshold_vel) && (abs(tank_model_ptr_->getWorldTwist().z())*ghost_util::RAD_TO_DEG < angle_threshold_vel))
 		{
 			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
 			return BT::NodeStatus::SUCCESS;
 		}
 	} else {
-		if(dist_err < threshold)
+		if(dist_err < threshold
+		&& (abs(tank_model_ptr_->getWorldTwist().x()) < threshold_vel) && (abs(tank_model_ptr_->getWorldTwist().z())*ghost_util::RAD_TO_DEG < angle_threshold_vel))
 		{
 			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBoomerang: Success");
 			return BT::NodeStatus::SUCCESS;
