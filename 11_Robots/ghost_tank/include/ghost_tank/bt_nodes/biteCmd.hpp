@@ -21,39 +21,37 @@
  *   SOFTWARE.
  */
 
-#include <ghost_util/angle_util.hpp>
+#pragma once
+
+#include <string>
+#include "behaviortree_cpp/behavior_tree.h"
+#include "rclcpp/rclcpp.hpp"
 #include "ghost_tank/tank_tree.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
+namespace ghost_tank {
 
-// file that contains the custom nodes definitions
-// #include "dummy_nodes.h"
-// using namespace DummyNodes;
-
-namespace ghost_tank
+class BiteCmd : public BT::DecoratorNode
 {
+public:
+  // If your Node has ports, you must use this constructor signature
+  BiteCmd(
+    const std::string & name, const BT::NodeConfig & config);
 
-TankTree::TankTree(std::string bt_path) :
-	bt_path_(bt_path){
-	global_blackboard_ = BT::Blackboard::create();
-}
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
 
-void TankTree::init_tree(){
-	BT::BehaviorTreeFactory factory;
+  // Override the virtual function tick()
+  BT::NodeStatus tick() override;
 
-	// add all nodes here
-	factory.registerNodeType<LoggingNode>("Logging");
-	factory.registerNodeType<AutoDone>("AutoDone");
-	factory.registerNodeType<AutonTimer>("AutonTimer");
-	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
-	factory.registerNodeType<BiteCmd>("BiteCmd"); 
+  void halt() override;
 
-    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
-}
+private:
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+	std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+  BT::Blackboard::Ptr blackboard_;
+};
 
-void TankTree::tick_tree()
-{
-  tree_.tickExactlyOnce();
-}
-
-} // namespace ghost_tank
+} // ghost_tank
