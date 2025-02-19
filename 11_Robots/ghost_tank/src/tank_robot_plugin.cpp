@@ -481,8 +481,8 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
     conveyor_current = 0;
   }
 
-  // Auto Align conveyor when Ground Pickup is active
-  if (joy_data->btn_r2) {
+  // Align Vonveyor when Ground Pickup is active and there are no commands going to regular Conveyor control
+  if (joy_data->btn_r2 && !joy_data->btn_r1) {
     m_conveyor_hook_is_aligned = !(m_hook_fraction < m_conveyor_hook_align_threshold);
     if (m_conveyor_hook_is_aligned) {
       m_conveyor_last_aligned_position = m_conveyor_position_abs;
