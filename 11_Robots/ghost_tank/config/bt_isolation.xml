@@ -4,7 +4,7 @@
   <BehaviorTree ID="main">
     <Sequence>
       <Logging message="test"/>
-      <BiteCmd bite_closed="true">
+      <ClampCmd clamp_closed="true">
         <MoveToPoseBoomerang posX_tiles="2.0"
                             posY_tiles="1.0"
                             theta_deg="0.0"
@@ -17,8 +17,8 @@
                             timeout_ms="5000"
                             use_theta="true"
                             backwards="false"/>
-      </BiteCmd>
-      <BiteCmd bite_closed="true">
+      </ClampCmd>
+      <ClampCmd clamp_closed="false">
         <MoveToPoseBoomerang posX_tiles="2.0"
                             posY_tiles="1.0"
                             theta_deg="0.0"
@@ -31,7 +31,7 @@
                             timeout_ms="5000"
                             use_theta="true"
                             backwards="false"/>
-      </BiteCmd>
+      </ClampCmd>
       <Logging message="testover"/>
       <Sleep msec="1000000"/>
     </Sequence>
@@ -64,6 +64,14 @@
             editable="true">
       <input_port name="message"/>
     </Action>
+    <Decorator ID="BiteCmd"
+               editable="true">
+      <input_port name="bite_closed"/>
+    </Decorator>
+    <Decorator ID="ClampCmd"
+               editable="true">
+      <input_port name="clamp_closed"/>
+    </Decorator>
     <Action ID="MoveToPoseBoomerang"
             editable="true">
       <input_port name="posX_tiles"/>
@@ -89,7 +97,7 @@
                   default="5000">ms</input_port>
       <input_port name="use_theta"
                   default="false"/>
-      </Action>
+    </Action>
   </TreeNodesModel>
 
 </root>

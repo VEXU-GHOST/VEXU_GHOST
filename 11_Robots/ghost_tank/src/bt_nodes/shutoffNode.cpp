@@ -21,41 +21,46 @@
  *   SOFTWARE.
  */
 
-#include <ghost_util/angle_util.hpp>
-#include "ghost_tank/tank_tree.hpp"
+#include "ghost_tank/bt_nodes/shutoffNode.hpp"
+#include "ghost_tank/pdcontrol.hpp"
 
-
-// file that contains the custom nodes definitions
-// #include "dummy_nodes.h"
-// using namespace DummyNodes;
+using std::placeholders::_1;
 
 namespace ghost_tank
 {
 
-TankTree::TankTree(std::string bt_path) :
-	bt_path_(bt_path){
-	global_blackboard_ = BT::Blackboard::create();
+// If your Node has ports, you must use this constructor signature
+ShutoffNode::ShutoffNode(const std::string& name, const BT::NodeConfig& config):
+	BT::StatefulActionNode(name, config){
+  	std::cout << "[ShutoffNode::ShutoffNode]" << std::endl;
+		
+	blackboard_ = config.blackboard;
+	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
 }
 
-void TankTree::init_tree(){
-	BT::BehaviorTreeFactory factory;
-
-	// add all nodes here
-	factory.registerNodeType<LoggingNode>("Logging");
-	factory.registerNodeType<AutoDone>("AutoDone");
-	factory.registerNodeType<AutonTimer>("AutonTimer");
-	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
-	factory.registerNodeType<BiteCmd>("BiteCmd"); 
-	factory.registerNodeType<ClampCmd>("ClampCmd");
-	factory.registerNodeType<ShutoffNode>("ShutoffNode");
-
-    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
+// It is mandatory to define this STATIC method.
+BT::PortsList ShutoffNode::providedPorts(){
+	return {
+	};
 }
 
-void TankTree::tick_tree()
-{
-  tree_.tickExactlyOnce();
+/// Method called once, when transitioning from the state IDLE.
+/// If it returns RUNNING, this becomes an asynchronous node.
+BT::NodeStatus ShutoffNode::onStart(){
+	return BT::NodeStatus::RUNNING;
+}
+
+/// when the method halt() is called and the action is RUNNING, this method is invoked.
+/// This is a convenient place todo a cleanup, if needed.
+void ShutoffNode::onHalted(){
+	resetStatus();
+}
+
+BT::NodeStatus ShutoffNode::onRunning() {
+	tank_model_ptr_->driveCommand(0.0, 0.0);
+	
+  	return BT::NodeStatus::RUNNING;
 }
 
 } // namespace ghost_tank

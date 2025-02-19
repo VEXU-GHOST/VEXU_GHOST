@@ -165,6 +165,8 @@ set(NODES
   moveToPoseBoomerang
   moveToPosePurepursuit
   biteCmd
+  clampCmd
+  shutoffNode
 )
 
 foreach(NODE ${NODES})
