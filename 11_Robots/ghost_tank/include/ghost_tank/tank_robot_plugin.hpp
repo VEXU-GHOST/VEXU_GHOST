@@ -84,7 +84,7 @@ protected:
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
-  void resetPose(double x, double y, double theta);
+  void resetWorldPose(double x, double y, double theta);
  
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
@@ -98,6 +98,9 @@ protected:
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_err_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
+
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_ekf_pub;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_pf_pub;
 
   void publishDesiredTwist(Eigen::Vector3d twist);
   void publishCurrentTwist(Eigen::Vector3d twist);

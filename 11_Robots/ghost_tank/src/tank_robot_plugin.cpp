@@ -130,6 +130,12 @@ void TankRobotPlugin::initROSComms()
   std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
   m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(odom_topic, 10);
 
+  node_ptr_->declare_parameter("reset_pf_pose_topic","particle_filter.rviz_set_pose_topic");
+  std::string pf_pose_topic = node_ptr_->get_parameter("reset_pf_pose_topic").as_string();
+  m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, 10);
+
+  m_reset_ekf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/set_pose", 10);
+
   // Subscriptions
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
@@ -587,6 +593,24 @@ void TankRobotPlugin::updateAndPublishOdometry()
   m_odom_pub->publish(msg);
 
   m_last_odom_pose = m_curr_odom_pose;
+}
+
+void TankRobotPlugin::resetWorldPose(double x, double y, double theta){
+  geometry_msgs::msg::Quaternion quat{};
+  ghost_util::yawToQuaternionRad(theta, quat.w, quat.x, quat.y, quat.z);
+
+  geometry_msgs::msg::PoseWithCovarianceStamped new_pose{};
+  new_pose.header.frame_id = "map";
+  new_pose.header.stamp = node_ptr_->get_clock()->now();
+  new_pose.pose.pose.position.x = x;
+  new_pose.pose.pose.position.y = y;
+  new_pose.pose.pose.orientation = quat;
+
+  // Publish to Particle Filter
+  m_reset_pf_pub->publish(new_pose);
+
+  // Publish to map_ekf/odometry and reset covariances
+  m_reset_ekf_pub->publish(new_pose);
 }
 
 void TankRobotPlugin::publishCurrentTwist(
