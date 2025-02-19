@@ -86,7 +86,7 @@ protected:
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
-  void resetWorldPose(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void resetWorldPose();
  
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
@@ -175,8 +175,7 @@ protected:
   double m_init_world_x = 0.0;
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
-  static constexpr size_t m_cov_n = 15*15;
-  static constexpr size_t m_pose_n = 3*3;
+  static constexpr size_t m_cov_n = 6*6;
 
   std::vector<double> m_reset_pose;
   std::vector<double> m_initial_estimate_covariance;

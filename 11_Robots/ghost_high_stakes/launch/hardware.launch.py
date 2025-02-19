@@ -163,7 +163,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         serial_node,
-        competition_state_machine_node,
         bag_recorder_service,
         ekf_pf_node,
         # realsense_node,
@@ -171,6 +170,7 @@ def generate_launch_description():
         odom_ekf_node,
         map_ekf_node,
         rplidar_node,
+        competition_state_machine_node,
         color_classifier_node,
         color_sensor_node
     ])

@@ -173,8 +173,10 @@ void TankRobotPlugin::initEstimation()
 
   node_ptr_->declare_parameter("set_pf_pose_topic", "/set_pf_pose");
   std::string pf_pose_topic = node_ptr_->get_parameter("set_pf_pose_topic").as_string();
-  m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, 10);
-  m_reset_ekf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/set_pose", 10);
+
+  rclcpp::QoS qos_profile(1);
+  qos_profile.transient_local();
+  m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, qos_profile);
 
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
@@ -217,8 +219,8 @@ void TankRobotPlugin::initEstimation()
   m_initial_estimate_covariance = node_ptr_->get_parameter("map_ekf.initial_estimate_covariance").as_double_array();
   m_reset_pose = node_ptr_->get_parameter("map_ekf.initial_state").as_double_array();
 
-  std::cout << "m_initial_estimate_covariance: " << m_initial_estimate_covariance.size() << std::endl;
-  std::cout << "m_reset_pose: " << m_reset_pose.size() << std::endl;
+  std::cout << "[TankRobotPlugin::initEstimation] m_initial_estimate_covariance: " << m_initial_estimate_covariance.size() << std::endl;
+  std::cout << "[TankRobotPlugin::initEstimation] m_reset_pose: " << m_reset_pose.size() << std::endl;
 }
 
 void TankRobotPlugin::initIntake()
@@ -312,6 +314,12 @@ void TankRobotPlugin::initAutonomy()
 /////////////////////
 void TankRobotPlugin::onNewSensorData()
 {
+  static bool first_loop = true;
+  if (first_loop) {
+    resetWorldPose();
+    first_loop = false;
+  }
+
   updateConveyorPositionSensing();
   publishIMUData();
   updateAndPublishOdometry();
@@ -403,7 +411,6 @@ void TankRobotPlugin::teleop(double current_time)
   updateBite(joy_data);
   updateClamp(joy_data);
   updateDrivetrain(joy_data);
-  resetWorldPose(joy_data);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
@@ -678,42 +685,28 @@ void TankRobotPlugin::updateAndPublishOdometry()
   m_last_odom_pose = m_curr_odom_pose;
 }
 
-void TankRobotPlugin::resetWorldPose(std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::resetWorldPose()
 {
-  static bool reset_world_pose_button = false;
-  if (joy_data->btn_d && !reset_world_pose_button) {
-    reset_world_pose_button = true;
-    m_reset_world_pose = true;
-  } else if (!joy_data->btn_d) {
-    reset_world_pose_button = false;
+  // Copy yaml vectors to array
+  std::array<double, m_cov_n> m_initial_estimate_covariance_arr;
+  for (int i = 0; i < m_initial_estimate_covariance.size(); i++) {
+    m_initial_estimate_covariance_arr[i] = m_initial_estimate_covariance[i];
   }
-  if (m_reset_world_pose) {
-    // Copy yaml vectors to array
-    std::array<double, m_cov_n> m_initial_estimate_covariance_arr;
-    for (int i = 0; i < m_initial_estimate_covariance.size(); i++) {
-      std::cout << m_initial_estimate_covariance[i] << std::endl;
-      m_initial_estimate_covariance_arr[i] = m_initial_estimate_covariance[i];
-    }
 
-    geometry_msgs::msg::Quaternion quat{};
-    ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
+  geometry_msgs::msg::Quaternion quat{};
+  ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
 
-    geometry_msgs::msg::PoseWithCovarianceStamped new_pose{};
-    new_pose.header.frame_id = "map";
-    new_pose.header.stamp = node_ptr_->get_clock()->now();
-    new_pose.pose.pose.position.x = m_reset_pose[0];
-    new_pose.pose.pose.position.y = m_reset_pose[1];
-    new_pose.pose.pose.orientation = quat;
-    new_pose.pose.covariance = m_initial_estimate_covariance_arr;
+  geometry_msgs::msg::PoseWithCovarianceStamped new_pose{};
+  new_pose.header.frame_id = "map";
+  new_pose.header.stamp = node_ptr_->get_clock()->now();
+  new_pose.pose.pose.position.x = m_reset_pose[0];
+  new_pose.pose.pose.position.y = m_reset_pose[1];
+  new_pose.pose.pose.orientation = quat;
+  new_pose.pose.covariance = m_initial_estimate_covariance_arr;
 
-    // Publish to Particle Filter
-    m_reset_pf_pub->publish(new_pose);
-
-    // Publish to map_ekf/odometry and reset covariances
-    m_reset_ekf_pub->publish(new_pose);
-    std::cout << "Done reset" << std::endl;
-    m_reset_world_pose = false;
-  }
+  // Publish to Particle Filter
+  m_reset_pf_pub->publish(new_pose);
+  std::cout << "Done reset" << std::endl;
 }
 
 void TankRobotPlugin::publishCurrentTwist(
