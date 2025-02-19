@@ -453,7 +453,7 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
 
 void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
 {
-  // Regular Ground Pickup control
+  // Manual Ground Pickup control
   double ground_pickup_power = 0;
   int32_t ground_pickup_current = 0;
   if (joy_data->btn_r2) {
@@ -467,21 +467,24 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
     ground_pickup_current = 0;
   }
 
-  // Regular Conveyor control
+  // Manual Conveyor control
+  // We assume any manual conveyor control misaligns the hooks
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
   if (joy_data->btn_r1) {
     conveyor_power = 1.0;
     conveyor_current = 2500;
-  } else if (joy_data->btn_l1) {
+    m_conveyor_hook_is_aligned = false;
+  } else if (joy_data->btn_l1 && !joy_data->btn_r2) {
     conveyor_power = -1.0;
     conveyor_current = 2500;
+    m_conveyor_hook_is_aligned = false;
   } else {
     conveyor_power = 0.0;
     conveyor_current = 0;
   }
 
-  // Align Vonveyor when Ground Pickup is active and there are no commands going to regular Conveyor control
+  // Align Conveyor when Ground Pickup is active and there are no commands going to regular Conveyor control
   if (joy_data->btn_r2 && !joy_data->btn_r1) {
     m_conveyor_hook_is_aligned = !(m_hook_fraction < m_conveyor_hook_align_threshold);
     if (m_conveyor_hook_is_aligned) {
@@ -494,18 +497,20 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
     }
   }
 
-  // if (joy_data->btn_r2 && joy_data->btn_l1 && m_conveyor_hook_is_aligned) {
-  //   m_conveyor_hook_is_ejecting = true;
-  //   m_conveyor_hook_is_aligned = false;
-  // } else if (m_conveyor_hook_is_ejecting) {
-  //   double throw_dist_rel = (1 + m_conveyor_hook_throw_threshold ) * m_conveyor_ticks_per_hook;
-  //   if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) < throw_dist_rel && !m_conveyor_is_throwing) {
-  //     m_conveyor_is_throwing = true;
-  //     m_conveyor_throw_start_time = current_time;
-  //   }
-  //   conveyor_power = 1.0;
-  //   conveyor_current = 2500;
-  // }
+  if (joy_data->btn_r2 && joy_data->btn_l1 && m_conveyor_hook_is_aligned) {
+    m_conveyor_hook_is_ejecting = true;
+    m_conveyor_hook_is_aligned = false;
+  }
+
+  if (m_conveyor_hook_is_ejecting) {
+    double throw_dist_rel = (1 + m_conveyor_hook_throw_threshold ) * m_conveyor_ticks_per_hook;
+    if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) < throw_dist_rel && !m_conveyor_is_throwing) {
+      m_conveyor_is_throwing = true;
+      m_conveyor_throw_start_time = current_time;
+    }
+    conveyor_power = 1.0;
+    conveyor_current = 2500;
+  }
 
   // if (m_conveyor_is_throwing) {
   //   conveyor_power = -0.1;
