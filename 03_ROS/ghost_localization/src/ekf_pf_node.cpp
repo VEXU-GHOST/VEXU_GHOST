@@ -72,13 +72,8 @@ EkfPfNode::EkfPfNode()
 
   LoadROSParams();
 
-  using namespace std::chrono_literals;
-  std::this_thread::sleep_for(5000ms);
-
   rclcpp::QoS qos_profile(1);
   qos_profile.transient_local();
-  // qos_profile.reliability(RMW_QOS_POLICY_RELIABILITY_RELIABLE);  // Reliable communication
-  // qos_profile.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL); // Ensures late joiners get last message
 
   set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
     "/set_pf_pose",
