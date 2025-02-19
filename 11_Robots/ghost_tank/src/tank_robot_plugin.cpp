@@ -323,6 +323,17 @@ void TankRobotPlugin::autonomous(double current_time)
   if(bt_->get_variable("desired_pose", m_desired_pose)){
     publishDesiredPose(m_desired_pose);
   }
+  double fwd_cmd = 0.0;
+  double turn_cmd = 0.0;
+  if(bt_->get_variable("fwd_cmd", fwd_cmd)){
+  }
+  if(bt_->get_variable("turn_cmd", turn_cmd)){
+  }
+
+  geometry_msgs::msg::Twist msg{};
+	msg.linear.x = fwd_cmd;
+	msg.angular.z = turn_cmd;
+	m_base_twist_cmd_pub->publish(msg);
 }
 
 void TankRobotPlugin::teleop(double current_time)

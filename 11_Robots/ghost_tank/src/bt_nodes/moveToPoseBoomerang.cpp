@@ -233,10 +233,8 @@ void MoveToPoseBoomerang::PurePursuit(){
     final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], theta_trajectory[theta_trajectory.size() - 1]);
 	BT_Util::put_in_blackboard(blackboard_, "desired_pose", desired_pose);
 
-	// geometry_msgs::msg::Twist msg{};
-
 	Eigen::Vector2d command;
-
+	
 	double dist_err = sqrt(((final_pose.x() - current_x) * (final_pose.x() - current_x) + (final_pose.y() - current_y) * (final_pose.y() - current_y)));
 
 	Eigen::Vector3d goal;
@@ -254,9 +252,9 @@ void MoveToPoseBoomerang::PurePursuit(){
 	auto fwd_cmd = ghost_util::clamp(command[0], -max_speed_linear, max_speed_linear);
 	auto turn_cmd = ghost_util::clamp(command[1], -max_speed_angular, max_speed_angular);
 
-	// msg.linear.x = fwd_cmd;
-	// msg.angular.z = turn_cmd;
-	// m_base_twist_cmd_pub->publish(msg);
+	BT_Util::put_in_blackboard(blackboard_, "fwd_cmd", fwd_cmd);
+	BT_Util::put_in_blackboard(blackboard_, "turn_cmd", turn_cmd);
+
 	tank_model_ptr_->driveCommand(fwd_cmd, turn_cmd);
 }
 
