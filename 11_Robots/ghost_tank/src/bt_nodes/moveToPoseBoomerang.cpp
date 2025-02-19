@@ -151,6 +151,7 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
   	}
 
 	PurePursuit();
+	publishTrajectoryVisualization();
 
   	return BT::NodeStatus::RUNNING;
 }
@@ -256,6 +257,76 @@ void MoveToPoseBoomerang::PurePursuit(){
 	BT_Util::put_in_blackboard(blackboard_, "turn_cmd", turn_cmd);
 
 	tank_model_ptr_->driveCommand(fwd_cmd, turn_cmd);
+}
+
+void MoveToPoseBoomerang::publishTrajectoryVisualization()
+{
+	visualization_msgs::msg::MarkerArray msg{};
+
+	double search_radius = BT_Util::get_input<double>(this, "search_radius_m");
+	
+	Eigen::Vector3d desired_pose;
+	BT_Util::get_from_blackboard(blackboard_, "desired_pose", desired_pose);
+
+	visualization_msgs::msg::Marker search_radius_marker{};
+	search_radius_marker.header.frame_id = "base_link";
+	search_radius_marker.header.stamp = node_ptr_->get_clock()->now();
+	search_radius_marker.id = 1;
+	search_radius_marker.type = 3;   // cylinder type
+	search_radius_marker.action = 0;
+	search_radius_marker.scale.x = 2 * search_radius;
+	search_radius_marker.scale.y = 2 * search_radius;
+	search_radius_marker.scale.z = 0.01;
+	search_radius_marker.color.b = 1.0;
+	search_radius_marker.color.a = 0.3;
+
+	visualization_msgs::msg::Marker carrot{};
+	carrot.header.frame_id = "map";
+	carrot.header.stamp = node_ptr_->get_clock()->now();
+	carrot.id = 2;
+	carrot.type = 4;   // line type
+	carrot.action = 0;
+	carrot.scale.x = 0.01;
+	carrot.scale.y = 1.0;
+	carrot.scale.z = 1.0;
+	carrot.color.g = 1.0;
+	carrot.color.a = 0.5;
+	geometry_msgs::msg::Point p_robot;
+	p_robot.x = tank_model_ptr_->getWorldPose().x();
+	p_robot.y = tank_model_ptr_->getWorldPose().y();
+	p_robot.z = 0.0;
+	geometry_msgs::msg::Point p_carrot;
+	p_carrot.set__x(desired_pose.x());
+	p_carrot.set__y(desired_pose.y());
+	p_carrot.z = 0.0;
+	carrot.points.push_back(p_robot);
+	carrot.points.push_back(p_carrot);
+
+	visualization_msgs::msg::Marker marker{};
+	marker.header.frame_id = "map";
+	marker.header.stamp = node_ptr_->get_clock()->now();
+	marker.id = 0;
+	marker.type = 8;   // points type
+	marker.action = 0;
+	marker.scale.x = 0.025;
+	marker.scale.y = 0.025;
+	marker.scale.z = 0.1;
+	marker.color.r = 1.0;
+	marker.color.a = 1.0;
+
+	for (int i = 0; i < robot_trajectory_.x_trajectory.position_vector.size(); i += 5) {
+		geometry_msgs::msg::Point p;
+		p.x = robot_trajectory_.x_trajectory.position_vector[i];
+		p.y = robot_trajectory_.y_trajectory.position_vector[i];
+		p.z = 0.0;
+		marker.points.push_back(p);
+	}
+	msg.markers.push_back(search_radius_marker);
+	msg.markers.push_back(carrot);
+	msg.markers.push_back(marker);
+
+	BT_Util::get_from_blackboard(blackboard_, "trajectory_viz_pub", trajectory_viz_pub_);
+	trajectory_viz_pub_->publish(msg);
 }
 
 } // namespace ghost_tank
