@@ -15,7 +15,8 @@
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
                             timeout_ms="5000"
-                            use_theta="true"/>
+                            use_theta="true"
+                            backwards="false"/>
       </BiteCmd>
       <BiteCmd bite_closed="true">
         <MoveToPoseBoomerang posX_tiles="2.0"
@@ -28,7 +29,8 @@
                             max_speed_linear_pct="0.6"
                             max_speed_angular_pct="0.6"
                             timeout_ms="5000"
-                            use_theta="true"/>
+                            use_theta="true"
+                            backwards="false"/>
       </BiteCmd>
       <Logging message="testover"/>
       <Sleep msec="1000000"/>
