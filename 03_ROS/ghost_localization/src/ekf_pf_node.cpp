@@ -73,7 +73,7 @@ EkfPfNode::EkfPfNode()
   LoadROSParams();
 
   set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    rviz_set_pose_topic_,
+    "/set_pf_pose",
     10,
     std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
   );
@@ -96,9 +96,6 @@ void EkfPfNode::LoadROSParams()
 
   declare_parameter("particle_filter.world_frame", "");
   config_params.world_frame = get_parameter("particle_filter.world_frame").as_string();
-
-  declare_parameter("particle_filter.rviz_set_pose_topic", "");
-  rviz_set_pose_topic_ = get_parameter("particle_filter.rviz_set_pose_topic").as_string();
 
   declare_parameter("particle_filter.map", "");
   config_params.map = get_parameter("particle_filter.map").as_string();

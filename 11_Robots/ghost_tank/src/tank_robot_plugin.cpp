@@ -132,12 +132,6 @@ void TankRobotPlugin::initROSComms()
   std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
   m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(odom_topic, 10);
 
-  node_ptr_->declare_parameter("reset_pf_pose_topic", "particle_filter.rviz_set_pose_topic");
-  std::string pf_pose_topic = node_ptr_->get_parameter("reset_pf_pose_topic").as_string();
-  m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, 10);
-
-  m_reset_ekf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/set_pose", 10);
-
   // Subscriptions
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
@@ -176,6 +170,12 @@ void TankRobotPlugin::initROSComms()
 void TankRobotPlugin::initEstimation()
 {
   std::cout << "[TankRobotPlugin::initEstimation]" << std::endl;
+
+  node_ptr_->declare_parameter("set_pf_pose_topic", "/set_pf_pose");
+  std::string pf_pose_topic = node_ptr_->get_parameter("set_pf_pose_topic").as_string();
+  m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, 10);
+  m_reset_ekf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/set_pose", 10);
+
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
 

@@ -56,7 +56,7 @@ competition_state_machine_node:
     odom_topic: "/sensors/wheel_odom"
     backup_pose_topic: "/odom_ekf/odometry"
     pose_topic: "/map_ekf/odometry"
-
+    set_pf_pose_topic: "/set_pf_pose"
 
     tank_robot_plugin:
       conveyor_num_links: 69.0
@@ -101,13 +101,12 @@ competition_state_machine_node:
   ros__parameters:
     particle_filter:
       world_frame: "map"
-      rviz_set_pose_topic: "/set_pf_pose"
       map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
 
       # Initial position
-      init_x: 0.56
-      init_y: 0.28
-      init_r: 0.0
+      # init_x: 0.56
+      # init_y: 0.28
+      # init_r: 0.0
       
       # Initial cloud distribution
       init_x_sigma: 0.05 #
