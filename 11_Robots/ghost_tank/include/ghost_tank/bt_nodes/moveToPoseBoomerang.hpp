@@ -31,6 +31,9 @@
 #include "ghost_util/angle_util.hpp"
 #include "ghost_util/unit_conversion_utils.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+#include "visualization_msgs/msg/marker.hpp"
+#include <visualization_msgs/msg/marker_array.hpp>
+
 #include "rclcpp/rclcpp.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 
@@ -75,9 +78,11 @@ private:
   int past_index_;
   std::shared_ptr<PDControl> pd_control_ptr_;
 	ghost_planners::RobotTrajectory robot_trajectory_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub_;
 
   void PurePursuit();
   void GeneratePath();
+  void publishTrajectoryVisualization();
 };
 
 } // namespace ghost_tank {
