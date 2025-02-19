@@ -89,9 +89,7 @@ protected:
    * Holding R alone outtakes the Ground Pickup
    * Holding R1 intakes the Conveyor
    * Holding L1 alone outtakes the Conveyor
-   * 
    * Holding R2 and L1 will initiate the ejector sequence for the current ring
-   * 
    * 
    * @param R2 
    * @param R1 
