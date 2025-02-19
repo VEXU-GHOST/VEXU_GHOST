@@ -62,8 +62,13 @@ competition_state_machine_node:
       conveyor_num_links: 69.0
       conveyor_sprocket_teeth: 12.0
       conveyor_num_hooks: 3.0
+
       conveyor_hook_align_threshold: 0.85
       conveyor_hook_align_power: 0.5
+
+      conveyor_hook_throw_fraction: 0.45
+      conveyor_hook_throw_threshold: 0.05
+      conveyor_hook_throw_duration: 0.25
 
       # motion planning
       move_to_pose_kp_xy: 1.5
@@ -147,6 +152,22 @@ competition_state_machine_node:
     
     use_sim_time: false
     should_record: false
+
+    color_classification:
+      blue:
+        hue_center: 200 
+        hue_range: 30
+        sat_min: 0.2
+        sat_max: 1.0
+        val_min: 0.02
+        val_max: 1.0
+      red:
+        hue_center: 0
+        hue_range: 20
+        sat_min: 0.5
+        sat_max: 1.0
+        val_min: 0.01
+        val_max: 1.0
 
 # If you are using the sweve model and you are tuning the k1-9 parameters,
 # the swerve model plugin has its own duplicate (11_Robots/ghost_high_stakes/config/ros_config.yaml) of the k1-9 parameters that must

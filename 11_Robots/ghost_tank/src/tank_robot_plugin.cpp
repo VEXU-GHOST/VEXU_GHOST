@@ -222,6 +222,13 @@ void TankRobotPlugin::initIntake()
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_power", 0.0);
   m_conveyor_hook_align_threshold = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_threshold").as_double();
   m_conveyor_hook_align_power = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_power").as_double();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_fraction", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_threshold", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_duration", 0.0);
+  m_conveyor_hook_throw_fraction = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_fraction").as_double();
+  m_conveyor_hook_throw_threshold = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_threshold").as_double();
+  m_conveyor_hook_throw_duration = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_duration").as_double();
 }
 
 void TankRobotPlugin::initTankModel()
@@ -375,7 +382,7 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   toggleBagRecorder(joy_data);
-  updateIntake(joy_data);
+  updateIntake(joy_data, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
   updateDrivetrain(joy_data);
@@ -418,7 +425,7 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
   }
 }
 
-void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
 {
   double ground_pickup_power = 0;
   int32_t ground_pickup_current = 0;
@@ -435,7 +442,27 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data)
 
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
-  if (joy_data->btn_r1) {
+  if (m_conveyor_is_throwing) {
+    conveyor_power = -0.1;
+    conveyor_current = 500;
+    if (current_time > m_conveyor_throw_start_time + m_conveyor_hook_throw_duration) {
+      m_conveyor_is_throwing = false;
+    }
+
+  } else if (joy_data->btn_r1 && joy_data->btn_l1) {
+    static bool first_pass = false;
+    if (std::fabs(m_conveyor_hook_throw_fraction - m_hook_fraction) < m_conveyor_hook_throw_threshold && !m_conveyor_is_throwing) {
+      if (!first_pass) {
+        first_pass = true;
+      } else {
+        m_conveyor_is_throwing = true;
+        m_conveyor_throw_start_time = current_time;
+        first_pass = false;
+      }
+    }
+    conveyor_power = 1.0;
+    conveyor_current = 2500;
+  } else if (joy_data->btn_r1) {
     conveyor_power = 1.0;
     conveyor_current = 2500;
   } else if (joy_data->btn_l1) {

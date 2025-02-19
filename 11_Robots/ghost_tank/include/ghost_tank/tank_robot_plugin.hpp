@@ -81,13 +81,13 @@ protected:
   // Teleop
   bool runAutonFromDriver(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
   void toggleBagRecorder(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateIntake(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateIntake(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   void resetPose(double x, double y, double theta);
- 
+
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_tank_viz_pub;
@@ -184,6 +184,12 @@ protected:
   double m_conveyor_hook_align_power{0.0};
   double m_conveyor_position{0.0};
   double m_hook_fraction{0.0};
+
+  double m_conveyor_hook_throw_fraction{0.0};
+  double m_conveyor_hook_throw_threshold{0.0};
+  double m_conveyor_hook_throw_duration{0.0};
+  double m_conveyor_throw_start_time{0.0};
+  bool m_conveyor_is_throwing{false};
 
   // Digital IO
   std::vector<bool> m_digital_io;

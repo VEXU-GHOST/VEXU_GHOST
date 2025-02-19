@@ -171,6 +171,6 @@ def generate_launch_description():
         odom_ekf_node,
         map_ekf_node,
         rplidar_node,
-        # color_classifier_node,
-        # color_sensor_node
+        color_classifier_node,
+        color_sensor_node
     ])
