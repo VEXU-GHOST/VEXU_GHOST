@@ -300,6 +300,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("node_ptr", node_ptr_);
   bt_->set_variable("pd_control_ptr", m_pd_control);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
+  bt_->set_variable("digital_io_port_map", digital_io_port_map);
   bt_->init_tree();
 }
 
