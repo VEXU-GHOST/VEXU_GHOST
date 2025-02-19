@@ -231,6 +231,7 @@ void MoveToPoseBoomerang::PurePursuit(){
 
     desired_pose = Eigen::Vector3d(x_trajectory[past_index_], y_trajectory[past_index_], 0.0);
     final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], theta_trajectory[theta_trajectory.size() - 1]);
+	BT_Util::put_in_blackboard(blackboard_, "desired_pose", desired_pose);
 
 	// geometry_msgs::msg::Twist msg{};
 
