@@ -469,8 +469,8 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
   if (joy_data->btn_r2 && joy_data->btn_l1) {
-    double throw_dist_rel = m_conveyor_hook_throw_threshold * (1 + m_conveyor_ticks_per_hook);
-    if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) < throw_dist_rel  && !m_conveyor_is_throwing) {
+    double throw_dist_rel = (1 + m_conveyor_hook_throw_threshold ) * m_conveyor_ticks_per_hook;
+    if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) < throw_dist_rel && !m_conveyor_is_throwing) {
       m_conveyor_is_throwing = true;
       m_conveyor_throw_start_time = current_time;
     }
@@ -483,6 +483,7 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data,
     } else {
       m_conveyor_hook_is_aligned = true;
       m_conveyor_last_aligned_position = m_conveyor_position_abs;
+      std::cout << "m_conveyor_last_aligned_position: " << m_conveyor_last_aligned_position << std::endl;
       conveyor_power = 0;
       ground_pickup_current = 0;
     }
