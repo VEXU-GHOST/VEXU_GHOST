@@ -175,8 +175,8 @@ protected:
   double m_init_world_x = 0.0;
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
-  static const size_t m_cov_n = 36;
-  static const size_t m_pose_n = 9;
+  static constexpr size_t m_cov_n = 15*15;
+  static constexpr size_t m_pose_n = 3*3;
 
   std::vector<double> m_reset_pose;
   std::vector<double> m_initial_estimate_covariance;

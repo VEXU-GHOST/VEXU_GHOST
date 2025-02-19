@@ -210,6 +210,15 @@ void TankRobotPlugin::initEstimation()
   m_init_sigma_x = node_ptr_->get_parameter("particle_filter.init_sigma_x").as_double();
   m_init_sigma_y = node_ptr_->get_parameter("particle_filter.init_sigma_y").as_double();
   m_init_sigma_theta = node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
+
+  node_ptr_->declare_parameter("map_ekf.initial_estimate_covariance", std::vector<double>());
+  node_ptr_->declare_parameter("map_ekf.initial_state", std::vector<double>());
+
+  m_initial_estimate_covariance = node_ptr_->get_parameter("map_ekf.initial_estimate_covariance").as_double_array();
+  m_reset_pose = node_ptr_->get_parameter("map_ekf.initial_state").as_double_array();
+
+  std::cout << "m_initial_estimate_covariance: " << m_initial_estimate_covariance.size() << std::endl;
+  std::cout << "m_reset_pose: " << m_reset_pose.size() << std::endl;
 }
 
 void TankRobotPlugin::initIntake()
@@ -274,12 +283,6 @@ void TankRobotPlugin::initTankModel()
   float kd_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
   m_max_speed_linear = node_ptr_->get_parameter("tank_robot_plugin.max_speed_linear").as_double();
   m_max_speed_angular = node_ptr_->get_parameter("tank_robot_plugin.max_speed_angular").as_double();
-
-  node_ptr_->declare_parameter("map_ekf.initial_estimate_covariance", std::vector<double>());
-  node_ptr_->declare_parameter("map_ekf.initial_state", std::vector<double>());
-
-  m_initial_estimate_covariance = node_ptr_->get_parameter("map_ekf.initial_estimate_covariance").as_double_array();
-  m_reset_pose = node_ptr_->get_parameter("map_ekf.initial_state").as_double_array();
 
   m_boomerang = std::make_shared<Boomerang>();
   m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta);
@@ -679,14 +682,15 @@ void TankRobotPlugin::resetWorldPose(std::shared_ptr<JoystickDeviceData> joy_dat
   static bool reset_world_pose_button = false;
   if (joy_data->btn_d && !reset_world_pose_button) {
     reset_world_pose_button = true;
-    m_reset_world_pose = !m_reset_world_pose;
+    m_reset_world_pose = true;
   } else if (!joy_data->btn_d) {
     reset_world_pose_button = false;
   }
   if (m_reset_world_pose) {
     // Copy yaml vectors to array
     std::array<double, m_cov_n> m_initial_estimate_covariance_arr;
-    for (int i = 0; i > m_initial_estimate_covariance.size(); i++) {
+    for (int i = 0; i < m_initial_estimate_covariance.size(); i++) {
+      std::cout << m_initial_estimate_covariance[i] << std::endl;
       m_initial_estimate_covariance_arr[i] = m_initial_estimate_covariance[i];
     }
 
@@ -706,6 +710,8 @@ void TankRobotPlugin::resetWorldPose(std::shared_ptr<JoystickDeviceData> joy_dat
 
     // Publish to map_ekf/odometry and reset covariances
     m_reset_ekf_pub->publish(new_pose);
+    std::cout << "Done reset" << std::endl;
+    m_reset_world_pose = false;
   }
 }
 
