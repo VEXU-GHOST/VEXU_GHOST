@@ -30,7 +30,7 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 ClampCmd::ClampCmd(
   const std::string & name, const BT::NodeConfig & config)
-: BT::DecoratorNode(name, config)
+: BT::StatefulActionNode(name, config)
 {
   blackboard_ = config.blackboard;
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
@@ -47,32 +47,25 @@ BT::PortsList ClampCmd::providedPorts()
   };
 }
 
-void ClampCmd::halt()
-{
-  haltChild();
+/// Method called once, when transitioning from the state IDLE.
+/// If it returns RUNNING, this becomes an asynchronous node.
+BT::NodeStatus ClampCmd::onStart(){
+	return BT::NodeStatus::RUNNING;
 }
 
-// Override the virtual function tick()
-BT::NodeStatus ClampCmd::tick()
+/// when the method halt() is called and the action is RUNNING, this method is invoked.
+/// This is a convenient place todo a cleanup, if needed.
+void ClampCmd::onHalted(){
+	resetStatus();
+}
+
+BT::NodeStatus ClampCmd::onRunning()
 {
   bool clamp_closed = BT_Util::get_input<bool>(this, "clamp_closed");
 
   std::unordered_map<std::string, int> digital_io_port_map;
   BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], clamp_closed);
-
-  switch (child()->executeTick()) {
-    case BT::NodeStatus::SUCCESS:
-      haltChild();
-      break;
-    case BT::NodeStatus::FAILURE:
-      haltChild();
-      return BT::NodeStatus::FAILURE;
-    case BT::NodeStatus::RUNNING:
-      return BT::NodeStatus::RUNNING;
-    default:
-      throw BT::LogicError("A child node must never return IDLE");
-  }
 
   return BT::NodeStatus::SUCCESS;
 }

@@ -32,20 +32,27 @@
 
 namespace ghost_tank {
 
-class BiteCmd : public BT::DecoratorNode
-{
+class BiteCmd : public BT::StatefulActionNode {
 public:
   // If your Node has ports, you must use this constructor signature
-  BiteCmd(
-    const std::string & name, const BT::NodeConfig & config);
+  BiteCmd(const std::string& name, const BT::NodeConfig& config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
-  // Override the virtual function tick()
-  BT::NodeStatus tick() override;
+  /// Method called once, when transitioning from the state IDLE.
+  /// If it returns RUNNING, this becomes an asynchronous node.
+  BT::NodeStatus onStart();
 
-  void halt() override;
+  /// method invoked when the action is already in the RUNNING state.
+  BT::NodeStatus onRunning();
+
+  /// when the method halt() is called and the action is RUNNING, this method is invoked.
+  /// This is a convenient place todo a cleanup, if needed.
+  void onHalted();
+
+  // Override the virtual function tick()
+  // BT::NodeStatus tick() override;
 
 private:
   std::shared_ptr<rclcpp::Node> node_ptr_;

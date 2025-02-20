@@ -30,7 +30,7 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 IntakeCmd::IntakeCmd(
   const std::string & name, const BT::NodeConfig & config)
-: BT::DecoratorNode(name, config)
+: BT::StatefulActionNode(name, config)
 {
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
@@ -60,31 +60,24 @@ BT::PortsList IntakeCmd::providedPorts()
   };
 }
 
-void IntakeCmd::halt()
-{
-  haltChild();
+/// Method called once, when transitioning from the state IDLE.
+/// If it returns RUNNING, this becomes an asynchronous node.
+BT::NodeStatus IntakeCmd::onStart(){
+	return BT::NodeStatus::RUNNING;
 }
 
-// Override the virtual function tick()
-BT::NodeStatus IntakeCmd::tick()
+/// when the method halt() is called and the action is RUNNING, this method is invoked.
+/// This is a convenient place todo a cleanup, if needed.
+void IntakeCmd::onHalted(){
+	resetStatus();
+}
+
+BT::NodeStatus IntakeCmd::onRunning()
 {
   bool lower = BT_Util::get_input<bool>(this, "lower");
   bool hook = BT_Util::get_input<bool>(this, "hook");
 
   updateIntake(lower, hook);
-
-  switch (child()->executeTick()) {
-    case BT::NodeStatus::SUCCESS:
-      haltChild();
-      break;
-    case BT::NodeStatus::FAILURE:
-      haltChild();
-      return BT::NodeStatus::FAILURE;
-    case BT::NodeStatus::RUNNING:
-      return BT::NodeStatus::RUNNING;
-    default:
-      throw BT::LogicError("A child node must never return IDLE");
-  }
 
   return BT::NodeStatus::SUCCESS;
 }
