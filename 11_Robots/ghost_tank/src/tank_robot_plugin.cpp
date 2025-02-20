@@ -410,6 +410,7 @@ void TankRobotPlugin::teleop(double current_time)
   updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_r, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
+  updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
 }
 
@@ -561,6 +562,18 @@ void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
     clamp_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
+}
+
+void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  static bool goal_rush_btn_pressed = false;
+  if (joy_data->btn_a && !goal_rush_btn_pressed) {
+    goal_rush_btn_pressed = true;
+    m_goal_rush_active = !m_goal_rush_active;
+  } else if (!joy_data->btn_a) {
+    goal_rush_btn_pressed = false;
+  }
+  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
 }
 
 void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)

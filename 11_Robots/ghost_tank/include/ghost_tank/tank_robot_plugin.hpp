@@ -101,6 +101,7 @@ protected:
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   void resetWorldPose();
 
@@ -200,6 +201,7 @@ protected:
   bool m_reset_world_pose = false;
   bool m_clamp_closed{false};
   bool m_bite_closed{false};
+  bool m_goal_rush_active{false};
 
   // Conveyor
   double m_conveyor_ticks_per_loop{0.0};
