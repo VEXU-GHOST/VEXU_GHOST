@@ -98,8 +98,8 @@ competition_state_machine_node:
     map_ekf:
       initial_state:
         [
-          1.524, 0.28, 0.0,
-          0.0,  0.0,  -2.356,
+          1.2, 0.508, 0.0,
+          0.0,  0.0,  1.8326,
           0.0,  0.0,  0.0,
           0.0,  0.0,  0.0,
           0.0,  0.0,  0.0,
@@ -119,7 +119,7 @@ competition_state_machine_node:
       map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
 
       # Initial position
-      # init_x: 0.56
+      # init_x: 0.508
       # init_y: 0.28
       # init_r: 0.0
       
@@ -485,8 +485,8 @@ map_ekf_node:
 
     initial_state:
       [
-        1.524, 0.28, 0.0,
-        0.0,  0.0,  -2.356,
+        1.2, 0.508,  0.0,
+        0.0,  0.0,  1.8326,
         0.0,  0.0,  0.0,
         0.0,  0.0,  0.0,
         0.0,  0.0,  0.0,

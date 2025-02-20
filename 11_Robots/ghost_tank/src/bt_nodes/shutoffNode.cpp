@@ -60,7 +60,7 @@ void ShutoffNode::onHalted(){
 BT::NodeStatus ShutoffNode::onRunning() {
 	tank_model_ptr_->driveCommand(0.0, 0.0);
 	
-  	return BT::NodeStatus::RUNNING;
+  	return BT::NodeStatus::SUCCESS;
 }
 
 } // namespace ghost_tank

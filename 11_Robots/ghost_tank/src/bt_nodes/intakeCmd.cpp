@@ -30,7 +30,7 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 IntakeCmd::IntakeCmd(
   const std::string & name, const BT::NodeConfig & config)
-: BT::StatefulActionNode(name, config)
+: BT::SyncActionNode(name, config)
 {
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
@@ -60,19 +60,7 @@ BT::PortsList IntakeCmd::providedPorts()
   };
 }
 
-/// Method called once, when transitioning from the state IDLE.
-/// If it returns RUNNING, this becomes an asynchronous node.
-BT::NodeStatus IntakeCmd::onStart(){
-	return BT::NodeStatus::RUNNING;
-}
-
-/// when the method halt() is called and the action is RUNNING, this method is invoked.
-/// This is a convenient place todo a cleanup, if needed.
-void IntakeCmd::onHalted(){
-	resetStatus();
-}
-
-BT::NodeStatus IntakeCmd::onRunning()
+BT::NodeStatus IntakeCmd::tick()
 {
   bool lower = BT_Util::get_input<bool>(this, "lower");
   bool hook = BT_Util::get_input<bool>(this, "hook");

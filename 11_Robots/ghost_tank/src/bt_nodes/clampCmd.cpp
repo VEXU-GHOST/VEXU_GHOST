@@ -30,7 +30,7 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 ClampCmd::ClampCmd(
   const std::string & name, const BT::NodeConfig & config)
-: BT::StatefulActionNode(name, config)
+: BT::SyncActionNode(name, config)
 {
   blackboard_ = config.blackboard;
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
@@ -47,19 +47,7 @@ BT::PortsList ClampCmd::providedPorts()
   };
 }
 
-/// Method called once, when transitioning from the state IDLE.
-/// If it returns RUNNING, this becomes an asynchronous node.
-BT::NodeStatus ClampCmd::onStart(){
-	return BT::NodeStatus::RUNNING;
-}
-
-/// when the method halt() is called and the action is RUNNING, this method is invoked.
-/// This is a convenient place todo a cleanup, if needed.
-void ClampCmd::onHalted(){
-	resetStatus();
-}
-
-BT::NodeStatus ClampCmd::onRunning()
+BT::NodeStatus ClampCmd::tick()
 {
   bool clamp_closed = BT_Util::get_input<bool>(this, "clamp_closed");
 

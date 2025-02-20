@@ -1,36 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="win_point">
+      main_tree_to_execute="goal_rush">
   <BehaviorTree ID="goal_rush">
     <Sequence>
       <Logging message="goal_rush"/>
       <ReactiveSequence>
-        <Fallback>
-          <Timeout msec="2000">
-            <ClampCmd clamp_closed="false"/>
-          </Timeout>
-          <ClampCmd clamp_closed="true"/>
-        </Fallback>
-        <MoveToPoseBoomerang posY_tiles="2.7"
-                             theta_deg="90.0"
+        <GoalRushCmd arm_down="false"/>
+        <MoveToPoseBoomerang posX_tiles="1.5"
+                             posY_tiles="2.25"
+                             theta_deg="120.0"
                              search_radius_m="0.5"
-                             threshold_m="0.10"
+                             threshold_m="0.20"
                              angle_threshold_deg="5.0"
-                             threshold_vel_mps="0.05"
-                             angle_threshold_vel_dps="5.0"
-                             lead="0.5"
+                             threshold_vel_mps="100.0"
+                             angle_threshold_vel_dps="1000.0"
+                             lead="0.0"
                              max_speed_linear_pct="1.0"
                              max_speed_angular_pct="1.0"
-                             timeout_ms="3000"
-                             use_theta="true"
-                             backwards="true"/>
+                             timeout_ms="-3000"
+                             use_theta="false"
+                             backwards="false"/>
       </ReactiveSequence>
+      <ShutoffNode/>
+      <Logging message="goal_rushed"/>
+      <Delay delay_msec="500">
       <ReactiveSequence>
-        <ClampCmd clamp_closed="true"/>
+        <Logging message="goal grab"/>
+        <GoalRushCmd arm_down="true"/>
         <BiteCmd bite_closed="true"/>
         <IntakeCmd lower="true"
                    hook="false"/>
-        <MoveToPoseBoomerang posY_tiles="1.0"
+        <MoveToPoseBoomerang posX_tiles="1.0"
+                             posY_tiles="1.0"
                              theta_deg="-90.0"
                              search_radius_m="0.3"
                              threshold_m="0.10"
@@ -42,8 +43,11 @@
                              max_speed_angular_pct="1.0"
                              timeout_ms="5000"
                              use_theta="true"
-                             backwards="false"/>
+                             backwards="true"/>
       </ReactiveSequence>
+      </Delay>
+      <GoalRushCmd arm_down="false"/>
+
       <Logging message="testover"/>
       <ShutoffNode/>
     </Sequence>
@@ -53,6 +57,12 @@
     <Sequence>
       <ReactiveSequence>
         <Logging message="test"/>
+        <Fallback>
+          <Timeout msec="5000">
+            <GoalRushCmd arm_down="true"/>
+          </Timeout>
+          <GoalRushCmd arm_down="false"/>
+        </Fallback>
         <ClampCmd clamp_closed="true"/>
         <MoveToPoseBoomerang posY_tiles="1.0"
                              theta_deg="0.0"
@@ -88,8 +98,8 @@
 
   <BehaviorTree ID="win_point">
     <Sequence>
-      <SetBlackboard value="true"
-                     output_key="mirrored"/>
+      <!-- <SetBlackboard value="0" -->
+                     <!-- output_key="mirrored"/> -->
       <Logging message="win_point"/>
       <ReactiveSequence>
         <ClampCmd clamp_closed="false"/>
@@ -178,6 +188,7 @@
     </Action>
     <Action ID="MoveToPoseBoomerang"
             editable="true">
+      <input_port name="posX_tiles"/>
       <input_port name="posY_tiles"/>
       <input_port name="theta_deg"/>
       <input_port name="search_radius_m"/>

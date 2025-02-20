@@ -275,6 +275,7 @@ void MoveToPoseBoomerang::PurePursuit(){
 	// Eigen::Vector3d error = goal - tank_model_ptr_->getWorldPose();
 	// error.z() = ghost_util::SmallestAngleDistRad(goal.z(), tank_model_ptr_->getWorldPose().z());
 	// publishErrorPose(error);
+	std::cout << "des angle: " << goal.z() << std::endl;
 	
 	auto fwd_cmd = ghost_util::clamp(command[0], -max_speed_linear, max_speed_linear);
 	auto turn_cmd = ghost_util::clamp(command[1], -max_speed_angular, max_speed_angular);

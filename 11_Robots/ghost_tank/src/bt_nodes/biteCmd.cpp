@@ -30,7 +30,7 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 BiteCmd::BiteCmd(
   const std::string & name, const BT::NodeConfig & config)
-: BT::StatefulActionNode(name, config)
+: BT::SyncActionNode(name, config)
 {
   blackboard_ = config.blackboard;
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
@@ -47,19 +47,7 @@ BT::PortsList BiteCmd::providedPorts()
   };
 }
 
-/// Method called once, when transitioning from the state IDLE.
-/// If it returns RUNNING, this becomes an asynchronous node.
-BT::NodeStatus BiteCmd::onStart(){
-	return BT::NodeStatus::RUNNING;
-}
-
-/// when the method halt() is called and the action is RUNNING, this method is invoked.
-/// This is a convenient place todo a cleanup, if needed.
-void BiteCmd::onHalted(){
-	resetStatus();
-}
-
-BT::NodeStatus BiteCmd::onRunning()
+BT::NodeStatus BiteCmd::tick()
 {
   bool bite_closed = BT_Util::get_input<bool>(this, "bite_closed");
 
