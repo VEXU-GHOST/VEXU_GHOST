@@ -24,6 +24,47 @@
       <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
+  <BehaviorTree ID="goal_rush">
+    <Sequence>
+      <Logging message="goal_rush"/>
+      <ClampCmd clamp_closed="false">
+        <MoveToPoseBoomerang posX_tiles="1.0"
+                            posY_tiles="2.7"
+                            theta_deg="90.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="0.05"
+                            angle_threshold_vel_dps="5.0"
+                            lead="0.5"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-3000"
+                            use_theta="true"
+                            backwards="true"/>
+      </ClampCmd>
+      <ClampCmd clamp_closed="true">
+      <BiteCmd bite_closed="true">
+        <MoveToPoseBoomerang posX_tiles="1.0"
+                            posY_tiles="1.0"
+                            theta_deg="-90.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="0.05"
+                            angle_threshold_vel_dps="5.0"
+                            lead="0.5"
+                            max_speed_linear_pct="0.5"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="false"/>
+      </BiteCmd>
+      </ClampCmd>
+      <Logging message="testover"/>
+      <ShutoffNode/>
+    </Sequence>
+  </BehaviorTree>
   <BehaviorTree ID="side">
     <Sequence>
       <Logging message="test"/>
