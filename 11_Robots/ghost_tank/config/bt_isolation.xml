@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main">
+      main_tree_to_execute="win_point">
   <BehaviorTree ID="main">
     <Sequence>
       <Logging message="test"/>
@@ -24,13 +24,13 @@
       <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
-  <BehaviorTree ID="goal_rush">
+  <BehaviorTree ID="win_point">
     <Sequence>
-      <Logging message="goal_rush"/>
+      <Logging message="win_point"/>
       <ClampCmd clamp_closed="false">
-        <MoveToPoseBoomerang posX_tiles="1.0"
-                            posY_tiles="2.7"
-                            theta_deg="90.0"
+        <MoveToPoseBoomerang posX_tiles="2.8"
+                            posY_tiles="0.8"
+                            theta_deg="45.0"
                             search_radius_m="0.3"
                             threshold_m="0.10"
                             angle_threshold_deg="5.0"
@@ -43,11 +43,15 @@
                             use_theta="true"
                             backwards="true"/>
       </ClampCmd>
+      <Logging message="grabbing goal"/>
+      <Logging message="going to rings at 1,1"/>
       <ClampCmd clamp_closed="true">
       <BiteCmd bite_closed="true">
+      <IntakeCmd lower="true"
+                 hook="true">
         <MoveToPoseBoomerang posX_tiles="1.0"
                             posY_tiles="1.0"
-                            theta_deg="-90.0"
+                            theta_deg="135.0"
                             search_radius_m="0.3"
                             threshold_m="0.10"
                             angle_threshold_deg="5.0"
@@ -59,6 +63,73 @@
                             timeout_ms="-5000"
                             use_theta="true"
                             backwards="false"/>
+      </IntakeCmd>
+      </BiteCmd>
+      </ClampCmd>
+      <Logging message="going to rings at 1,2"/>
+      <ClampCmd clamp_closed="true">
+      <BiteCmd bite_closed="true">
+      <IntakeCmd lower="true"
+                 hook="false">
+        <MoveToPoseBoomerang posX_tiles="1.0"
+                            posY_tiles="2.0"
+                            theta_deg="90.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="0.05"
+                            angle_threshold_vel_dps="5.0"
+                            lead="0.5"
+                            max_speed_linear_pct="0.5"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="false"/>
+      </IntakeCmd>
+      </BiteCmd>
+      </ClampCmd>
+      <Logging message="testover"/>
+      <ShutoffNode/>
+    </Sequence>
+  </BehaviorTree>
+  <BehaviorTree ID="goal_rush">
+    <Sequence>
+      <Logging message="goal_rush"/>
+      <ClampCmd clamp_closed="false">
+        <MoveToPoseBoomerang posX_tiles="1.0"
+                            posY_tiles="2.7"
+                            theta_deg="90.0"
+                            search_radius_m="0.5"
+                            threshold_m="0.10"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="0.05"
+                            angle_threshold_vel_dps="5.0"
+                            lead="0.5"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="3000"
+                            use_theta="true"
+                            backwards="true"/>
+      </ClampCmd>
+      <ClampCmd clamp_closed="true">
+      <BiteCmd bite_closed="true">
+      <IntakeCmd lower="true"
+                 hook="false">
+        <MoveToPoseBoomerang posX_tiles="1.0"
+                            posY_tiles="1.0"
+                            theta_deg="-90.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="0.05"
+                            angle_threshold_vel_dps="5.0"
+                            lead="0.5"
+                            max_speed_linear_pct="0.5"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="5000"
+                            use_theta="true"
+                            backwards="false"/>
+      </IntakeCmd>
       </BiteCmd>
       </ClampCmd>
       <Logging message="testover"/>
