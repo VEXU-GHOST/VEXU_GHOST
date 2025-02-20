@@ -168,6 +168,7 @@ set(NODES
   clampCmd
   shutoffNode
   intakeCmd
+  goalRushCmd
 )
 
 foreach(NODE ${NODES})

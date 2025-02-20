@@ -23,6 +23,7 @@
 
 #pragma once
 #include "behaviortree_cpp/bt_factory.h"
+
 #include "ghost_tank/bt_nodes/loggingNode.hpp"
 #include "ghost_tank/bt_nodes/autoDone.hpp"
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
@@ -32,6 +33,7 @@
 #include "ghost_tank/bt_nodes/clampCmd.hpp"
 #include "ghost_tank/bt_nodes/shutoffNode.hpp"
 #include "ghost_tank/bt_nodes/intakeCmd.hpp"
+#include "ghost_tank/bt_nodes/goalRushCmd.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 
 #include "ghost_tank/tank_model.hpp"

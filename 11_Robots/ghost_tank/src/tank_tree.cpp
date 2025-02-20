@@ -50,6 +50,7 @@ void TankTree::init_tree(){
 	factory.registerNodeType<ClampCmd>("ClampCmd");
 	factory.registerNodeType<ShutoffNode>("ShutoffNode");
 	factory.registerNodeType<IntakeCmd>("IntakeCmd");
+	factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
 
     tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
 }

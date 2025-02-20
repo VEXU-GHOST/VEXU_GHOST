@@ -88,6 +88,8 @@
 
   <BehaviorTree ID="win_point">
     <Sequence>
+      <SetBlackboard value="true"
+                     output_key="mirrored"/>
       <Logging message="win_point"/>
       <ReactiveSequence>
         <ClampCmd clamp_closed="false"/>
@@ -156,6 +158,10 @@
     <Action ID="BiteCmd"
             editable="true">
       <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+            editable="true">
+      <input_port name="arm_down"/>
     </Action>
     <Action ID="ClampCmd"
             editable="true">
