@@ -8,6 +8,7 @@ Panels:
         - /pf_pose1/Covariance1
         - /pf_pose1/Covariance1/Position1
         - /pf_pose1/Covariance1/Orientation1
+        - /map_ekf1
         - /map_ekf1/Shape1
         - /map_ekf1/Covariance1
         - /map_ekf1/Covariance1/Position1
@@ -86,7 +87,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz_default_plugins/PoseArray
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: particle_cloud
@@ -100,12 +101,12 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /particle_cloud
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: map
       Namespaces:
-        {}
+        "": true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -187,10 +188,10 @@ Visualization Manager:
         Axes Length: 1
         Axes Radius: 0.10000000149011612
         Color: 38; 162; 105
-        Head Length: 0.10000000149011612
-        Head Radius: 0.10000000149011612
-        Shaft Length: 0.30000001192092896
-        Shaft Radius: 0.05000000074505806
+        Head Length: 0.05000000074505806
+        Head Radius: 0.05000000074505806
+        Shaft Length: 0.10000000149011612
+        Shaft Radius: 0.009999999776482582
         Value: Arrow
       Topic:
         Depth: 5
@@ -204,7 +205,7 @@ Visualization Manager:
       Enabled: true
       Name: move_to_pose
       Namespaces:
-        {}
+        "": true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -336,25 +337,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 4.477582931518555
+      Distance: 3.0513951778411865
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.1995564699172974
-        Y: 0.8582761287689209
-        Z: 0.4242478609085083
+        X: 1.0180226564407349
+        Y: 0.8067926168441772
+        Z: 0.3047812581062317
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.270397424697876
+      Pitch: 1.0053976774215698
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.3822379112243652
+      Yaw: 3.352238178253174
     Saved: ~
 Window Geometry:
   Displays:

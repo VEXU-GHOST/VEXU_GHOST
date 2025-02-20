@@ -98,8 +98,6 @@
 
   <BehaviorTree ID="win_point">
     <Sequence>
-      <!-- <SetBlackboard value="0" -->
-                     <!-- output_key="mirrored"/> -->
       <Logging message="win_point"/>
       <ReactiveSequence>
         <ClampCmd clamp_closed="false"/>

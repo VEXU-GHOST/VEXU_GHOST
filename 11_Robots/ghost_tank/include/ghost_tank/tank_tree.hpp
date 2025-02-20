@@ -34,6 +34,8 @@
 #include "ghost_tank/bt_nodes/shutoffNode.hpp"
 #include "ghost_tank/bt_nodes/intakeCmd.hpp"
 #include "ghost_tank/bt_nodes/goalRushCmd.hpp"
+#include "ghost_tank/bt_nodes/setMirrored.hpp"
+
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 
 #include "ghost_tank/tank_model.hpp"

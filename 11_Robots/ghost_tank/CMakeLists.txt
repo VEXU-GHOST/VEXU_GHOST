@@ -169,6 +169,7 @@ set(NODES
   shutoffNode
   intakeCmd
   goalRushCmd
+  setMirrored
 )
 
 foreach(NODE ${NODES})
