@@ -29,7 +29,7 @@
         <GoalRushCmd arm_down="true"/>
         <BiteCmd bite_closed="true"/>
         <IntakeCmd lower="true"
-                   hook="false"/>
+                   red="false"/>
         <MoveToPoseBoomerang posX_tiles="1.0"
                              posY_tiles="1.0"
                              theta_deg="-90.0"
@@ -121,7 +121,7 @@
         <ClampCmd clamp_closed="true"/>
         <BiteCmd bite_closed="true"/>
         <IntakeCmd lower="true"
-                   hook="true"/>
+                   red="false"/>
         <MoveToPoseBoomerang posY_tiles="1.0"
                              theta_deg="135.0"
                              search_radius_m="0.3"
@@ -141,7 +141,7 @@
         <ClampCmd clamp_closed="true"/>
         <BiteCmd bite_closed="true"/>
         <IntakeCmd lower="true"
-                   hook="false"/>
+                   red="false"/>
         <MoveToPoseBoomerang posY_tiles="2.0"
                              theta_deg="90.0"
                              search_radius_m="0.3"
@@ -178,7 +178,7 @@
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="lower"/>
-      <input_port name="hook"/>
+      <input_port name="red"/>
     </Action>
     <Action ID="Logging"
             editable="true">

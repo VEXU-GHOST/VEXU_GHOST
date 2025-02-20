@@ -26,6 +26,7 @@
 #include <string>
 #include "behaviortree_cpp/behavior_tree.h"
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "ghost_tank/tank_tree.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
@@ -46,9 +47,11 @@ private:
   std::shared_ptr<rclcpp::Node> node_ptr_;
 	std::shared_ptr<TankModel> tank_model_ptr_;
   std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr color_sub_;
   BT::Blackboard::Ptr blackboard_;
 
-  void updateIntake(bool lower, bool hook);
+  void updateIntake(bool lower, bool hook, bool eject);
+  void colorCallback(const std_msgs::msg::String::SharedPtr msg);
 
   double m_conveyor_ticks_per_loop;
   double m_conveyor_ticks_per_hook;
@@ -59,6 +62,8 @@ private:
   double m_conveyor_hook_throw_fraction;
   double m_conveyor_hook_throw_duration;
 
+  bool m_ring_found;
+  int m_ring_color;
 };
 
 } // ghost_tank
