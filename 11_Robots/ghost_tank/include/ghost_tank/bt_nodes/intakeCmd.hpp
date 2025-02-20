@@ -21,42 +21,49 @@
  *   SOFTWARE.
  */
 
-#include <ghost_util/angle_util.hpp>
+#pragma once
+
+#include <string>
+#include "behaviortree_cpp/behavior_tree.h"
+#include "rclcpp/rclcpp.hpp"
 #include "ghost_tank/tank_tree.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
+namespace ghost_tank {
 
-// file that contains the custom nodes definitions
-// #include "dummy_nodes.h"
-// using namespace DummyNodes;
-
-namespace ghost_tank
+class IntakeCmd : public BT::DecoratorNode
 {
+public:
+  // If your Node has ports, you must use this constructor signature
+  IntakeCmd(
+    const std::string & name, const BT::NodeConfig & config);
 
-TankTree::TankTree(std::string bt_path) :
-	bt_path_(bt_path){
-	global_blackboard_ = BT::Blackboard::create();
-}
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
 
-void TankTree::init_tree(){
-	BT::BehaviorTreeFactory factory;
+  // Override the virtual function tick()
+  BT::NodeStatus tick() override;
 
-	// add all nodes here
-	factory.registerNodeType<LoggingNode>("Logging");
-	factory.registerNodeType<AutoDone>("AutoDone");
-	factory.registerNodeType<AutonTimer>("AutonTimer");
-	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
-	factory.registerNodeType<BiteCmd>("BiteCmd"); 
-	factory.registerNodeType<ClampCmd>("ClampCmd");
-	factory.registerNodeType<ShutoffNode>("ShutoffNode");
-	factory.registerNodeType<IntakeCmd>("IntakeCmd");
+  void halt() override;
 
-    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
-}
+private:
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+	std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+  BT::Blackboard::Ptr blackboard_;
 
-void TankTree::tick_tree()
-{
-  tree_.tickExactlyOnce();
-}
+  void updateIntake(bool lower, bool hook);
 
-} // namespace ghost_tank
+  double m_conveyor_ticks_per_loop;
+  double m_conveyor_ticks_per_hook;
+
+  double m_conveyor_hook_align_threshold;
+  double m_conveyor_hook_align_power;
+
+  double m_conveyor_hook_throw_fraction;
+  double m_conveyor_hook_throw_duration;
+
+};
+
+} // ghost_tank

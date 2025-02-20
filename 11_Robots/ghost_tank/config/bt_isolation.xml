@@ -92,6 +92,11 @@
                editable="true">
       <input_port name="clamp_closed"/>
     </Decorator>
+    <Decorator ID="IntakeCmd"
+               editable="true">
+      <input_port name="lower"/>
+      <input_port name="hook"/>
+    </Decorator>
     <Action ID="MoveToPoseBoomerang"
             editable="true">
       <input_port name="posY_tiles"/>

@@ -167,6 +167,7 @@ set(NODES
   biteCmd
   clampCmd
   shutoffNode
+  intakeCmd
 )
 
 foreach(NODE ${NODES})
