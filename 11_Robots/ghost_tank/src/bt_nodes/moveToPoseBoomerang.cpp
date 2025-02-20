@@ -91,6 +91,9 @@ void MoveToPoseBoomerang::onHalted(){
 }
 
 BT::NodeStatus MoveToPoseBoomerang::onRunning() {
+	bool mirrored = false;
+	BT_Util::get_from_blackboard(blackboard_, "mirrored", mirrored);
+
 	double posX = BT_Util::get_input<double>(this, "posX_tiles");
 	double posY = BT_Util::get_input<double>(this, "posY_tiles");
 	double theta = BT_Util::get_input<double>(this, "theta_deg");
@@ -102,12 +105,18 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	bool use_theta = BT_Util::get_input<bool>(this, "use_theta");
 	bool backwards = BT_Util::get_input<bool>(this, "backwards");
 
+	if (mirrored){
+		posX = 6.0 - posX;
+		theta = 180.0 - theta;
+	}
+
 	double tile_to_meters = 0.6096;
 	posX *= tile_to_meters;
 	posY *= tile_to_meters;
-
+	
 	theta *= ghost_util::DEG_TO_RAD;
 	angle_threshold *= ghost_util::DEG_TO_RAD;
+	
 
 	if(backwards){
 		theta = ghost_util::FlipAnglePI(theta);
