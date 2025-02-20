@@ -271,7 +271,7 @@ void MoveToPoseBoomerang::PurePursuit(){
 		command = pd_control_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), goal);
 	} else {
 		goal = desired_pose;
-		command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), goal, backwards);
+		command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), goal, final_pose, backwards);
 	}
 	// Eigen::Vector3d error = goal - tank_model_ptr_->getWorldPose();
 	// error.z() = ghost_util::SmallestAngleDistRad(goal.z(), tank_model_ptr_->getWorldPose().z());

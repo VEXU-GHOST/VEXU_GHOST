@@ -17,10 +17,12 @@ PDControl::PDControl(float kp_xy,
 {
 }
 
-Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d & end_pos, bool backwards)
+Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d & end_pos, Eigen::Vector3d final_pos, bool backwards)
 {
-  float error_x = end_pos.x() - cur_pos.x();
-  float error_y = end_pos.y() - cur_pos.y();
+  // float error_x = end_pos.x() - cur_pos.x();
+  // float error_y = end_pos.y() - cur_pos.y();
+  float error_x = final_pos.x() - cur_pos.x(); // final point
+  float error_y = final_pos.y() - cur_pos.y(); // final point
   float error_xy = sqrt(pow(error_x, 2) + pow(error_y, 2));
   float end_theta = atan2(error_y, error_x);
   float error_theta;
