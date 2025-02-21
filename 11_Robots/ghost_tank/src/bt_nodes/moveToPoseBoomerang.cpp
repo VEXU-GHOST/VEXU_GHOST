@@ -125,6 +125,12 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	double dist_err = sqrt((posX - tank_model_ptr_->getWorldPose().x()) * (posX - tank_model_ptr_->getWorldPose().x()) + 
 	(posY - tank_model_ptr_->getWorldPose().y()) * (posY - tank_model_ptr_->getWorldPose().y()));
 
+	if (dist_err < threshold){
+		std::cout << "meeting dist threshold" << std::endl;
+	}
+	if (abs(tank_model_ptr_->getWorldTwist().z())*ghost_util::RAD_TO_DEG < angle_threshold_vel){
+		std::cout << "meeting angle threshold" << std::endl;
+	}
 	// std::cout << "dist_err: " << dist_err << std::endl;
 	// std::cout << "ang_err:  " << ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad())*ghost_util::RAD_TO_DEG << std::endl;
 
@@ -256,8 +262,13 @@ void MoveToPoseBoomerang::PurePursuit(){
       }
     }
 
+	if(backwards){
+		final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], ghost_util::FlipAnglePI(theta_trajectory[theta_trajectory.size() - 1]));
+	} else {
+		final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], theta_trajectory[theta_trajectory.size() - 1]);
+	}
+	
     desired_pose = Eigen::Vector3d(x_trajectory[past_index_], y_trajectory[past_index_], 0.0);
-    final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], theta_trajectory[theta_trajectory.size() - 1]);
 	BT_Util::put_in_blackboard(blackboard_, "desired_pose", desired_pose);
 
 	Eigen::Vector2d command;
