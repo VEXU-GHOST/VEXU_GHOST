@@ -76,6 +76,13 @@ BT::NodeStatus IntakeCmd::tick()
 {
   bool lower = BT_Util::get_input<bool>(this, "lower");
   bool want_red = BT_Util::get_input<bool>(this, "red");
+
+  bool mirrored = false;
+  BT_Util::get_from_blackboard(blackboard_, "mirroed", mirrored);
+  if (mirrored){
+    want_red = !want_red;
+  }
+
   static double last_input_time = 0.0;
   static double ring_found_time = 0.0;
   double current_time = 0.0;
