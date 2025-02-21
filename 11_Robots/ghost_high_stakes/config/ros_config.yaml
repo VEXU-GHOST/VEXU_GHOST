@@ -70,9 +70,9 @@ competition_state_machine_node:
       conveyor_hook_throw_duration: 0.25
 
       # motion planning
-      move_to_pose_kp_xy: 2.0
-      move_to_pose_kd_xy: 0.0
-      move_to_pose_kp_theta: 2.5
+      move_to_pose_kp_xy: 1.25
+      move_to_pose_kd_xy: 0.1
+      move_to_pose_kp_theta: 1.2
       move_to_pose_kd_theta: 0.2
 
       drive_motor_ticks_per_rotation: 360.0
