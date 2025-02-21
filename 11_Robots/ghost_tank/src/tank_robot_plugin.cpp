@@ -412,6 +412,12 @@ void TankRobotPlugin::teleop(double current_time)
   updateClamp(joy_data);
   updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
+
+  if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
+    joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
+  {
+    std::system("echo 1 | sudo -S shutdown now");
+  }
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
