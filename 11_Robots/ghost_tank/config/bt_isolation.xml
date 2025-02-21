@@ -6,15 +6,15 @@
       <SetMirrored mirrored="false"/>
       <Logging message="goal_rush"/>
       <GoalRushCmd arm_down="false"/>
-      <MoveToPoseBoomerang posX_tiles="1.5"
+      <MoveToPoseBoomerang  posX_tiles="1.6"
                             posY_tiles="2.4"
-                            theta_deg="110.0"
-                            search_radius_m="0.5"
+                            theta_deg="120.0"
+                            search_radius_m="0.4"
                             threshold_m="0.1"
                             angle_threshold_deg="5.0"
                             threshold_vel_mps="100.0"
                             angle_threshold_vel_dps="1000.0"
-                            lead="0.0"
+                            lead="0.3"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
                             timeout_ms="-2000"
@@ -22,7 +22,7 @@
                             backwards="false"/>
       <GoalRushCmd arm_down="true"/>
       <ShutoffNode/>
-      <Delay delay_msec="100">
+      <Delay delay_msec="200">
       <ShutoffNode/>
       </Delay>
       <Logging message="pulling_back"/>
