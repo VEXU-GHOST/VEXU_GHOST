@@ -170,6 +170,7 @@ set(NODES
   intakeCmd
   goalRushCmd
   setMirrored
+  conveyorCmd
 )
 
 foreach(NODE ${NODES})

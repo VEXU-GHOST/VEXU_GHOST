@@ -394,6 +394,10 @@
             editable="true">
       <input_port name="clamp_closed"/>
     </Action>
+    <Action ID="ConveyorCmd"
+            editable="true">
+      <input_port name="fwd"/>
+    </Action>
     <Action ID="GoalRushCmd"
             editable="true">
       <input_port name="arm_down"/>
