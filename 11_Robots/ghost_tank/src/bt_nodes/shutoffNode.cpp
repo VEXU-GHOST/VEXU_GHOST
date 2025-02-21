@@ -21,46 +21,37 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/shutoffNode.hpp"
-#include "ghost_tank/pdcontrol.hpp"
+ #include "ghost_tank/bt_nodes/shutoffNode.hpp"
 
-using std::placeholders::_1;
-
-namespace ghost_tank
-{
-
-// If your Node has ports, you must use this constructor signature
-ShutoffNode::ShutoffNode(const std::string& name, const BT::NodeConfig& config):
-	BT::StatefulActionNode(name, config){
-  	std::cout << "[ShutoffNode::ShutoffNode]" << std::endl;
-		
-	blackboard_ = config.blackboard;
-	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
-}
-
-// It is mandatory to define this STATIC method.
-BT::PortsList ShutoffNode::providedPorts(){
-	return {
-	};
-}
-
-/// Method called once, when transitioning from the state IDLE.
-/// If it returns RUNNING, this becomes an asynchronous node.
-BT::NodeStatus ShutoffNode::onStart(){
-	return BT::NodeStatus::RUNNING;
-}
-
-/// when the method halt() is called and the action is RUNNING, this method is invoked.
-/// This is a convenient place todo a cleanup, if needed.
-void ShutoffNode::onHalted(){
-	resetStatus();
-}
-
-BT::NodeStatus ShutoffNode::onRunning() {
+ namespace ghost_tank
+ {
+ 
+ // SyncActionNode (synchronous action) with an input port.
+ // If your Node has ports, you must use this constructor signature
+ ShutoffNode::ShutoffNode(
+   const std::string & name, const BT::NodeConfig & config)
+ : BT::SyncActionNode(name, config)
+ {
+   blackboard_ = config.blackboard;
+	 BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+	 BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+   BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
+ }
+ 
+ // It is mandatory to define this STATIC method.
+ BT::PortsList ShutoffNode::providedPorts()
+ {
+   // This action has a single input port called "message"
+   return {
+   };
+ }
+ 
+ BT::NodeStatus ShutoffNode::tick()
+ {
 	tank_model_ptr_->driveCommand(0.0, 0.0);
-	
-  	return BT::NodeStatus::SUCCESS;
-}
 
-} // namespace ghost_tank
+	return BT::NodeStatus::SUCCESS;
+ }
+ 
+ } // ghost_tank
+ 
