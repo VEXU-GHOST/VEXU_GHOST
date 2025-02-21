@@ -65,17 +65,42 @@ BT::PortsList IntakeCmd::providedPorts()
   };
 }
 
+static std::map<std::string, int> color_map =
+{
+  { "red", 1 },
+  { "blue", 2 },
+  { "unknown", 0 }
+};
+
 BT::NodeStatus IntakeCmd::tick()
 {
   bool lower = BT_Util::get_input<bool>(this, "lower");
   bool want_red = BT_Util::get_input<bool>(this, "red");
-  bool hook = m_ring_found;
+  static double last_input_time = 0.0;
+  static double ring_found_time = 0.0;
+  double current_time = 0.0;
+  BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
+  static bool running = false;
+
+  if (m_ring_found && !running){
+    ring_found_time = current_time;
+    running = true;
+  } else if (!m_ring_found) {
+    running = false;
+  }
+  bool ring_prewaited = (current_time - ring_found_time > 0.3) && m_ring_found;
+  bool hook = ring_prewaited || (current_time - last_input_time < 0.5);
+  if (ring_prewaited){
+    last_input_time = current_time;
+  }
+
   bool eject = false;
   if(want_red){
-    eject = (m_ring_color == 1);
+    eject = (m_ring_color == color_map["blue"]) && ring_prewaited;
   } else {
-    eject = (m_ring_color == 2);
+    eject = (m_ring_color == color_map["red"]) && ring_prewaited;
   }
+
   updateIntake(lower, hook, eject);
 
   return BT::NodeStatus::SUCCESS;
@@ -83,6 +108,10 @@ BT::NodeStatus IntakeCmd::tick()
 
 void IntakeCmd::updateIntake(bool lower, bool hook, bool eject)
 {
+  if(eject){
+    hook = false;
+  }
+
   // Manual Ground Pickup control
   double ground_pickup_power = 0;
   int32_t ground_pickup_current = 0;
@@ -100,10 +129,10 @@ void IntakeCmd::updateIntake(bool lower, bool hook, bool eject)
   } /*else if (R) {
     ground_pickup_power = -1.0;
     ground_pickup_current = 2500;
-  }*/ /*else {
+  }*/ else {
     ground_pickup_power = 0.0;
     ground_pickup_current = 0;
-  }*/
+  }
 
   // Conveyor control
   // We assume any manual conveyor control misaligns the hooks
@@ -117,10 +146,10 @@ void IntakeCmd::updateIntake(bool lower, bool hook, bool eject)
     conveyor_power = -1.0;
     conveyor_current = 2500;
     conveyor_hook_is_aligned = false;
-  } else {
+  }*/ else {
     conveyor_power = 0.0;
     conveyor_current = 0;
-  }*/
+  }
 
   static double conveyor_throw_start_time = 0.0;
   static bool conveyor_hook_is_ejecting = false;
@@ -184,18 +213,12 @@ void IntakeCmd::updateIntake(bool lower, bool hook, bool eject)
   rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor", conveyor_current);
 }
 
-std::map<std::string, int> color_map =
-{
-  { "red", 1 },
-  { "blue", 2 },
-  { "unknown", 0 }
-};
 void IntakeCmd::colorCallback(const std_msgs::msg::String::SharedPtr msg)
 {
   m_ring_found = color_map[msg->data] != 0;
-  if (m_ring_found){
-    m_ring_color = color_map[msg->data];
-  }
+  // if (m_ring_found){
+  m_ring_color = color_map[msg->data];
+  // }
 }
 
 } // ghost_tank

@@ -43,7 +43,7 @@ BT::PortsList SetMirrored::providedPorts()
 {
   // This action has a single input port called "message"
   return {
-    BT::InputPort<bool>("clamp_closed"),
+    BT::InputPort<bool>("mirrored"),
   };
 }
 
