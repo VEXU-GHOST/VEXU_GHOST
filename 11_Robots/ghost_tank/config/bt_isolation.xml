@@ -149,7 +149,7 @@
           </Sequence>
       </ReactiveSequence>
 
-      <Delay delay_msec="500">
+      <Delay delay_msec="2000">
         <ShutoffNode/>
       </Delay>
         <ReactiveSequence>
