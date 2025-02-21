@@ -9,14 +9,21 @@
         <Action ID="ClampCmd" editable="true">
             <input_port name="clamp_closed"/>
         </Action>
+        <Action ID="ConveyorCmd" editable="true">
+            <input_port name="fwd"/>
+        </Action>
+        <Action ID="GoalRushCmd" editable="true">
+            <input_port name="arm_down"/>
+        </Action>
         <Action ID="IntakeCmd" editable="true">
             <input_port name="lower"/>
-            <input_port name="hook"/>
+            <input_port name="red"/>
         </Action>
         <Action ID="Logging" editable="true">
             <input_port name="message"/>
         </Action>
         <Action ID="MoveToPoseBoomerang" editable="true">
+            <input_port name="posX_tiles"/>
             <input_port name="posY_tiles"/>
             <input_port name="theta_deg"/>
             <input_port name="search_radius_m"/>
@@ -37,6 +44,9 @@
             <input_port name="threshold" default="0.025">m</input_port>
             <input_port name="timeout" default="5000">ms</input_port>
             <input_port name="use_theta" default="false"/>
+        </Action>
+        <Action ID="SetMirrored" editable="true">
+            <input_port name="mirrored"/>
         </Action>
         <Action ID="ShutoffNode" editable="true"/>
     </TreeNodesModel>
