@@ -17,12 +17,12 @@
                             lead="0.0"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
-                            timeout_ms="-20000"
+                            timeout_ms="-2000"
                             use_theta="true"
                             backwards="false"/>
       <GoalRushCmd arm_down="true"/>
       <ShutoffNode/>
-      <Delay delay_msec="300">
+      <Delay delay_msec="100">
       <ShutoffNode/>
       </Delay>
       <Logging message="pulling_back"/>
@@ -37,12 +37,12 @@
                             lead="0.0"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
-                            timeout_ms="-20000"
+                            timeout_ms="-1000"
                             use_theta="true"
                             backwards="true"/>
         <GoalRushCmd arm_down="false"/>
         <ShutoffNode/>
-        <Delay delay_msec="500">
+        <Delay delay_msec="300">
         <ShutoffNode/>
         </Delay>
         <BiteCmd bite_closed="true"/>
@@ -57,7 +57,7 @@
                               lead="1.0"
                               max_speed_linear_pct="1.0"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-20000"
+                              timeout_ms="-2000"
                               use_theta="true"
                               backwards="true"/>
         <ShutoffNode/>
@@ -73,9 +73,9 @@
                               threshold_vel_mps="100.0"
                               angle_threshold_vel_dps="1000.0"
                               lead="1.0"
-                              max_speed_linear_pct="0.2"
+                              max_speed_linear_pct="0.6"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-20000"
+                              timeout_ms="-1000"
                               use_theta="true"
                               backwards="true"/>
         <ShutoffNode/>
@@ -87,8 +87,9 @@
         <!-- </Delay> -->
 
         <ReactiveSequence>
-        <IntakeCmd lower="true"
-        red="false"/>
+        <ConveyorCmd fwd="true"/>
+        <!-- <IntakeCmd lower="true" -->
+        <!-- red="false"/> -->
         <MoveToPoseBoomerang posX_tiles="3.5"
                               posY_tiles="1.0"
                               theta_deg="0.0"
@@ -98,9 +99,9 @@
                               threshold_vel_mps="100.0"
                               angle_threshold_vel_dps="1000.0"
                               lead="1.0"
-                              max_speed_linear_pct="0.2"
+                              max_speed_linear_pct="0.6"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-20000"
+                              timeout_ms="-1000"
                               use_theta="true"
                               backwards="true"/>
         </ReactiveSequence>
@@ -111,6 +112,7 @@
         <ReactiveSequence>
         <IntakeCmd lower="true"
         red="false"/>
+        <Sequence>
         <MoveToPoseBoomerang posX_tiles="3.0"
                               posY_tiles="0.5"
                               theta_deg="-90.0"
@@ -122,16 +124,15 @@
                               lead="0.5"
                               max_speed_linear_pct="0.4"
                               max_speed_angular_pct="0.5"
-                              timeout_ms="-20000"
+                              timeout_ms="-1000"
                               use_theta="true"
                               backwards="false"/>
-        </ReactiveSequence>
         <ShutoffNode/>
         
         <ReactiveSequence>
           <IntakeCmd lower="true"
           red="false"/>
-          <Delay delay_msec="2000">
+          <Delay delay_msec="500">
           <ShutoffNode/>
           </Delay>
         </ReactiveSequence>
@@ -148,9 +149,9 @@
                               threshold_vel_mps="100.0"
                               angle_threshold_vel_dps="1000.0"
                               lead="1.0"
-                              max_speed_linear_pct="0.2"
+                              max_speed_linear_pct="0.6"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-20000"
+                              timeout_ms="-1000"
                               use_theta="true"
                               backwards="true"/>
         </ReactiveSequence>
@@ -170,9 +171,9 @@
                               threshold_vel_mps="100.0"
                               angle_threshold_vel_dps="1000.0"
                               lead="1.0"
-                              max_speed_linear_pct="0.2"
+                              max_speed_linear_pct="1.0"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-20000"
+                              timeout_ms="-1000"
                               use_theta="true"
                               backwards="false"/>
         </ReactiveSequence>
@@ -184,7 +185,7 @@
         <ReactiveSequence>
           <IntakeCmd lower="true"
           red="false"/>
-          <Delay delay_msec="2000">
+          <Delay delay_msec="1000">
           <ShutoffNode/>
           </Delay>
         </ReactiveSequence>
@@ -203,7 +204,7 @@
                               lead="1.0"
                               max_speed_linear_pct="0.4"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-20000"
+                              timeout_ms="-2000"
                               use_theta="true"
                               backwards="false"/>
         </ReactiveSequence>
@@ -221,9 +222,67 @@
                               threshold_vel_mps="100.0"
                               angle_threshold_vel_dps="1000.0"
                               lead="1.0"
-                              max_speed_linear_pct="0.2"
+                              max_speed_linear_pct="1.0"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-20000"
+                              timeout_ms="-1000"
+                              use_theta="true"
+                              backwards="true"/>
+        </ReactiveSequence>
+        <ShutoffNode/>
+
+        <ReactiveSequence>
+          <IntakeCmd lower="true"
+          red="false"/>
+          <Delay delay_msec="1000">
+          <ShutoffNode/>
+          </Delay>
+        </ReactiveSequence>
+
+        <ReactiveSequence>
+        <BiteCmd bite_closed="false"/>
+        <IntakeCmd lower="true"
+        red="false"/>
+        <MoveToPoseBoomerang posX_tiles="1.2"
+                              posY_tiles="1.8"
+                              theta_deg="45.0"
+                              search_radius_m="0.3"
+                              threshold_m="0.10"
+                              angle_threshold_deg="5.0"
+                              threshold_vel_mps="100.0"
+                              angle_threshold_vel_dps="1000.0"
+                              lead="1.0"
+                              max_speed_linear_pct="0.6"
+                              max_speed_angular_pct="1.0"
+                              timeout_ms="-1000"
+                              use_theta="true"
+                              backwards="false"/>
+        </ReactiveSequence>
+        <ShutoffNode/>
+
+        <ReactiveSequence>
+          <BiteCmd bite_closed="true"/>
+          <IntakeCmd lower="true"
+          red="false"/>
+          <Delay delay_msec="1000">
+          <ShutoffNode/>
+          </Delay>
+        </ReactiveSequence>
+
+        <ReactiveSequence>
+        <IntakeCmd lower="true"
+        red="false"/>
+        <MoveToPoseBoomerang posX_tiles="1.5"
+                              posY_tiles="1.5"
+                              theta_deg="-45.0"
+                              search_radius_m="0.3"
+                              threshold_m="0.10"
+                              angle_threshold_deg="5.0"
+                              threshold_vel_mps="100.0"
+                              angle_threshold_vel_dps="1000.0"
+                              lead="1.0"
+                              max_speed_linear_pct="1.0"
+                              max_speed_angular_pct="1.0"
+                              timeout_ms="-1000"
                               use_theta="true"
                               backwards="true"/>
         </ReactiveSequence>
@@ -233,8 +292,28 @@
         <IntakeCmd lower="true"
         red="false"/>
         <MoveToPoseBoomerang posX_tiles="1.0"
-                              posY_tiles="2.5"
-                              theta_deg="90.0"
+                              posY_tiles="1.0"
+                              theta_deg="-135.0"
+                              search_radius_m="0.3"
+                              threshold_m="0.10"
+                              angle_threshold_deg="5.0"
+                              threshold_vel_mps="100.0"
+                              angle_threshold_vel_dps="1000.0"
+                              lead="1.0"
+                              max_speed_linear_pct="1.0"
+                              max_speed_angular_pct="1.0"
+                              timeout_ms="-1000"
+                              use_theta="true"
+                              backwards="false"/>
+        </ReactiveSequence>
+        <ShutoffNode/>
+        <Repeat num_cycles="4">
+        <Sequence>
+        <ReactiveSequence>
+        <BiteCmd bite_closed="true"/>
+        <MoveToPoseBoomerang posX_tiles="0.3"
+                              posY_tiles="0.3"
+                              theta_deg="-135.0"
                               search_radius_m="0.3"
                               threshold_m="0.10"
                               angle_threshold_deg="5.0"
@@ -243,209 +322,36 @@
                               lead="1.0"
                               max_speed_linear_pct="0.4"
                               max_speed_angular_pct="1.0"
-                              timeout_ms="-20000"
+                              timeout_ms="-2000"
                               use_theta="true"
                               backwards="false"/>
         </ReactiveSequence>
         <ShutoffNode/>
 
-        <ReactiveSequence>
-          <IntakeCmd lower="true"
-          red="false"/>
-          <Delay delay_msec="2000">
-          <ShutoffNode/>
-          </Delay>
-        </ReactiveSequence>
-
-        <ReactiveSequence>
-        <IntakeCmd lower="true"
-          red="false"/>
-        <Delay delay_msec="1000">
+        <MoveToPoseBoomerang posX_tiles="1.0"
+                              posY_tiles="1.0"
+                              theta_deg="45.0"
+                              search_radius_m="0.3"
+                              threshold_m="0.10"
+                              angle_threshold_deg="5.0"
+                              threshold_vel_mps="100.0"
+                              angle_threshold_vel_dps="1000.0"
+                              lead="1.0"
+                              max_speed_linear_pct="1.0"
+                              max_speed_angular_pct="1.0"
+                              timeout_ms="-2000"
+                              use_theta="true"
+                              backwards="true"/>
         <ShutoffNode/>
-        </Delay>
-        </ReactiveSequence>
+        </Sequence>
 
+        </Repeat>
+        </Sequence>
+        </ReactiveSequence>
 
         <Delay delay_msec="50000">
         <ShutoffNode/>
         </Delay>
-
-
-
-
-        
-      <Logging message="goal grab"/>
-      <Delay delay_msec="5000">
-        <ReactiveSequence>
-          <BiteCmd bite_closed="true"/>
-          <ClampCmd clamp_closed="true"/>
-          <GoalRushCmd arm_down="false"/>
-          <MoveToPoseBoomerang posX_tiles="2.7"
-                               posY_tiles="1.3"
-                               theta_deg="-45.0"
-                               search_radius_m="0.3"
-                               threshold_m="0.10"
-                               angle_threshold_deg="5.0"
-                               threshold_vel_mps="100.0"
-                               angle_threshold_vel_dps="1000.0"
-                               lead="0.5"
-                               max_speed_linear_pct="1.0"
-                               max_speed_angular_pct="1.0"
-                               timeout_ms="-3000"
-                               use_theta="true"
-                               backwards="false"/>
-        </ReactiveSequence>
-      </Delay>
-      <Logging message="turning around"/>
-      <Delay delay_msec="500">
-        <ReactiveSequence>
-          <BiteCmd bite_closed="true"/>
-          <IntakeCmd lower="true"
-                  red="false"/>
-          <ClampCmd clamp_closed="true"/>
-          <GoalRushCmd arm_down="false"/>
-          <MoveToPoseBoomerang posX_tiles="2.7"
-                               posY_tiles="1.3"
-                               theta_deg="-45.0"
-                               search_radius_m="0.3"
-                               threshold_m="0.10"
-                               angle_threshold_deg="5.0"
-                               threshold_vel_mps="100.0"
-                               angle_threshold_vel_dps="1000.0"
-                               lead="0.5"
-                               max_speed_linear_pct="1.0"
-                               max_speed_angular_pct="1.0"
-                               timeout_ms="-3000"
-                               use_theta="true"
-                               backwards="false"/>
-        </ReactiveSequence>
-      </Delay>
-      <Logging message="going for rings"/>
-      <Delay delay_msec="500">
-        <ReactiveSequence>
-          <BiteCmd bite_closed="true"/>
-          <IntakeCmd lower="true"
-                  red="false"/>
-          <ClampCmd clamp_closed="true"/>
-          <GoalRushCmd arm_down="false"/>
-          <MoveToPoseBoomerang posX_tiles="3.0"
-                               posY_tiles="0.5"
-                               theta_deg="-90.0"
-                               search_radius_m="0.3"
-                               threshold_m="0.10"
-                               angle_threshold_deg="5.0"
-                               threshold_vel_mps="100.0"
-                               angle_threshold_vel_dps="1000.0"
-                               lead="0.5"
-                               max_speed_linear_pct="1.0"
-                               max_speed_angular_pct="1.0"
-                               timeout_ms="-3000"
-                               use_theta="true"
-                               backwards="false"/>
-        </ReactiveSequence>
-      </Delay>
-      <Logging message="backing up"/>
-      <Delay delay_msec="500">
-        <ReactiveSequence>
-          <BiteCmd bite_closed="true"/>
-          <IntakeCmd lower="true"
-                  red="false"/>
-          <ClampCmd clamp_closed="true"/>
-          <GoalRushCmd arm_down="false"/>
-          <MoveToPoseBoomerang posX_tiles="2.7"
-                               posY_tiles="1.3"
-                               theta_deg="0.0"
-                               search_radius_m="0.3"
-                               threshold_m="0.10"
-                               angle_threshold_deg="5.0"
-                               threshold_vel_mps="100.0"
-                               angle_threshold_vel_dps="1000.0"
-                               lead="0.5"
-                               max_speed_linear_pct="1.0"
-                               max_speed_angular_pct="1.0"
-                               timeout_ms="-3000"
-                               use_theta="true"
-                               backwards="true"/>
-        </ReactiveSequence>
-      </Delay>
-      <Logging message="going for rings 2"/>
-      <Delay delay_msec="500">
-        <ReactiveSequence>
-          <BiteCmd bite_closed="true"/>
-          <IntakeCmd lower="true"
-                  red="false"/>
-          <ClampCmd clamp_closed="true"/>
-          <GoalRushCmd arm_down="false"/>
-          <MoveToPoseBoomerang posX_tiles="0.5"
-                               posY_tiles="2.0"
-                               theta_deg="180.0"
-                               search_radius_m="0.3"
-                               threshold_m="0.10"
-                               angle_threshold_deg="5.0"
-                               threshold_vel_mps="100.0"
-                               angle_threshold_vel_dps="1000.0"
-                               lead="0.5"
-                               max_speed_linear_pct="1.0"
-                               max_speed_angular_pct="1.0"
-                               timeout_ms="-3000"
-                               use_theta="true"
-                               backwards="false"/>
-        </ReactiveSequence>
-      </Delay>
-      <Logging message="backing up"/>
-      <Delay delay_msec="500">
-        <ReactiveSequence>
-          <BiteCmd bite_closed="true"/>
-          <IntakeCmd lower="true"
-                  red="false"/>
-          <ClampCmd clamp_closed="true"/>
-          <GoalRushCmd arm_down="false"/>
-          <MoveToPoseBoomerang posX_tiles="2.0"
-                               posY_tiles="2.0"
-                               theta_deg="0.0"
-                               search_radius_m="0.3"
-                               threshold_m="0.10"
-                               angle_threshold_deg="5.0"
-                               threshold_vel_mps="100.0"
-                               angle_threshold_vel_dps="1000.0"
-                               lead="0.5"
-                               max_speed_linear_pct="1.0"
-                               max_speed_angular_pct="1.0"
-                               timeout_ms="-3000"
-                               use_theta="true"
-                               backwards="true"/>
-        </ReactiveSequence>
-      </Delay>
-      <Logging message="going for rings 3"/>
-      <Delay delay_msec="500">
-        <ReactiveSequence>
-          <BiteCmd bite_closed="true"/>
-          <IntakeCmd lower="true"
-                  red="false"/>
-          <ClampCmd clamp_closed="true"/>
-          <GoalRushCmd arm_down="false"/>
-          <MoveToPoseBoomerang posX_tiles="1.0"
-                               posY_tiles="1.0"
-                               theta_deg="-135.0"
-                               search_radius_m="0.3"
-                               threshold_m="0.10"
-                               angle_threshold_deg="5.0"
-                               threshold_vel_mps="100.0"
-                               angle_threshold_vel_dps="1000.0"
-                               lead="0.5"
-                               max_speed_linear_pct="1.0"
-                               max_speed_angular_pct="1.0"
-                               timeout_ms="-4000"
-                               use_theta="true"
-                               backwards="false"/>
-        </ReactiveSequence>
-      </Delay>
-      <BiteCmd bite_closed="true"/>
-      <IntakeCmd lower="true"
-                  red="false"/>
-      <GoalRushCmd arm_down="false"/>
-      <Logging message="testover"/>
-      <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
 
