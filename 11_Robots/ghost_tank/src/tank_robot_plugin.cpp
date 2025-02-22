@@ -159,6 +159,9 @@ void TankRobotPlugin::initROSComms()
   node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
   std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
   m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(des_pos_topic, 10);
+
+  m_tts_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
+  m_music_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/music", 1);
 }
 
 void TankRobotPlugin::initEstimation()
@@ -297,6 +300,12 @@ void TankRobotPlugin::disabled()
 
 void TankRobotPlugin::autonomous(double current_time)
 {
+ static bool run_yet = 0;
+  if (!run_yet) {
+    playTTS("starting autonomous");
+  run_yet = 1;
+  }
+
   std::cout << "Autonomous: " << current_time << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
 
@@ -321,6 +330,12 @@ void TankRobotPlugin::autonomous(double current_time)
 
 void TankRobotPlugin::teleop(double current_time)
 {
+  static bool run_yet = 0;
+  if (!run_yet) {
+    playMusic("hello_there");
+    run_yet = 1;
+  }
+
   auto joy_data = rhi_ptr_->getMainJoystickData();
 
   bool running_auton = runAutonFromDriver(joy_data, current_time);
@@ -333,6 +348,7 @@ void TankRobotPlugin::teleop(double current_time)
   updateBite(joy_data);
   updateClamp(joy_data);
   updateDrivetrain(joy_data);
+  updateMusic(current_time, joy_data);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
@@ -429,6 +445,15 @@ void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
     clamp_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
+}
+
+void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  static double btn_pressed = 0;
+  if (joy_data->btn_d && btn_pressed < (current_time - 1)){
+    btn_pressed = current_time;
+    playMusic(""); // should play random when empty
+  }
 }
 
 void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)
@@ -646,6 +671,20 @@ void TankRobotPlugin::publishTrajectoryVisualization()
 
   msg.markers.push_back(marker);
   m_trajectory_viz_pub->publish(msg);
+}
+
+void TankRobotPlugin::playMusic(std::string musicFileName)
+{
+  auto message = std_msgs::msg::String();
+  message.data = musicFileName;
+  m_music_pub->publish(message);
+}
+
+void TankRobotPlugin::playTTS(std::string musicFileName)
+{
+  auto message = std_msgs::msg::String();
+  message.data = musicFileName;
+  m_tts_pub->publish(message);
 }
 
 void TankRobotPlugin::readPathFromFile(const std::string & filename)

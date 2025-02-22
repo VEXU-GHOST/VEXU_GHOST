@@ -83,9 +83,14 @@ protected:
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   void readPathFromFile(const std::string & filename);
   void resetPose(double x, double y, double theta);
+
+  // Output
+  void playMusic(std::string m);
+  void playTTS(std::string m);
 
  
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
@@ -99,6 +104,9 @@ protected:
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_cur_twist_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
+
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_tts_pub;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_music_pub;
 
   void publishDesiredTwist(Eigen::Vector3d twist);
   void publishCurrentTwist(Eigen::Vector3d twist);

@@ -5,6 +5,10 @@ log
 *.pyc
 .cache/*
 
+# Voice Models
+*.onnx
+*.onnx.json
+
 # These are symlinked from 01_Libraries (and thus duplicated)
 02_V5/ghost_pros/include/ghost_v5_interfaces/**
 02_V5/ghost_pros/include/ghost_serial/**

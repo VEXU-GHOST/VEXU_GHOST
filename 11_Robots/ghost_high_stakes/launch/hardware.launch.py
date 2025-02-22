@@ -114,6 +114,14 @@ def generate_launch_description():
         parameters=[ros_config_file],
     )
 
+    tts_music_node = Node(
+        package="ghost_io_py",
+        executable="ghost_tts",
+        name="tts_music_node_0",
+        output="screen",
+        parameters=[ros_config_file],
+    )
+
     # realsense_node = IncludeLaunchDescription(
     #     PythonLaunchDescriptionSource(
     #         os.path.join(
@@ -172,6 +180,7 @@ def generate_launch_description():
         map_ekf_node,
         rplidar_node,
         color_classifier_node,
-        color_sensor_node
+        color_sensor_node,
+        tts_music_node
 
     ])
