@@ -33,6 +33,7 @@
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <std_msgs/msg/float64.hpp>
 
 #include "rclcpp/rclcpp.hpp"
 #include "tf2/LinearMath/Quaternion.h"
@@ -79,6 +80,11 @@ private:
   std::shared_ptr<PDControl> pd_control_ptr_;
 	ghost_planners::RobotTrajectory robot_trajectory_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr curr_angle_pub;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr des_angle_pub;
+
+  double des_angle_;
+  double curr_angle_;
 
   void PurePursuit();
   void GeneratePath();

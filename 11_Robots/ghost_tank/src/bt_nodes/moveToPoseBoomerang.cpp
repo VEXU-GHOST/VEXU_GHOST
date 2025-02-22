@@ -51,6 +51,9 @@ MoveToPoseBoomerang::MoveToPoseBoomerang(const std::string& name, const BT::Node
 		boomerang_planner_topic,
 		10);
 
+	curr_angle_pub = node_ptr_->create_publisher<std_msgs::msg::Float64>("/test/curr_angle", 10);
+	des_angle_pub = node_ptr_->create_publisher<std_msgs::msg::Float64>("/test/des_angle", 10);
+
 	started_ = false;
 
 	boomerang_ = std::make_shared<Boomerang>();
@@ -223,8 +226,9 @@ void MoveToPoseBoomerang::GeneratePath(){
         y_trajectory.push_back(vec.y());
 		theta_trajectory.push_back(theta);
     }
-	for (int i = 0; i <= 50; i++){
-		time_vector.push_back(i * 1.0/50.0);
+	int num_points = 250;
+	for (int i = 0; i <= num_points; i++){
+		time_vector.push_back(i / static_cast<double>(num_points));
 	}
 
 	robot_trajectory_.x_trajectory.position_vector = x_trajectory;
@@ -284,6 +288,9 @@ void MoveToPoseBoomerang::PurePursuit(){
 
 	Eigen::Vector3d carrot;
 
+	des_angle_ = final_pose.z();
+	curr_angle_ = tank_model_ptr_->getWorldPose().z();
+
 	if (dist_err < threshold_xy) {
 		carrot = final_pose;
 		command = pd_control_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose);
@@ -303,6 +310,14 @@ void MoveToPoseBoomerang::PurePursuit(){
 
 void MoveToPoseBoomerang::publishTrajectoryVisualization()
 {
+	std_msgs::msg::Float64 curr_angle_msg;
+	curr_angle_msg.data = curr_angle_;
+	curr_angle_pub->publish(curr_angle_msg);
+
+	std_msgs::msg::Float64 des_angle_msg;
+	des_angle_msg.data = des_angle_;
+	des_angle_pub->publish(des_angle_msg);
+
 	visualization_msgs::msg::MarkerArray msg{};
 
 	double search_radius = BT_Util::get_input<double>(this, "search_radius_m");
