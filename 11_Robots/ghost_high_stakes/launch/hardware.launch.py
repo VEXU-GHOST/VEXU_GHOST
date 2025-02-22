@@ -173,7 +173,7 @@ def generate_launch_description():
         serial_node,
         competition_state_machine_node,
         bag_recorder_service,
-        ekf_pf_node, # THIS ONE
+        ekf_pf_node,
         # realsense_node,
         imu_filter_node,
         odom_ekf_node,
@@ -182,5 +182,4 @@ def generate_launch_description():
         color_classifier_node,
         color_sensor_node,
         tts_music_node
-
     ])

@@ -17,13 +17,16 @@ PDControl::PDControl(float kp_xy,
 {
 }
 
-Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos)
+Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d & end_pos)
 {
   float error_x = end_pos.x() - cur_pos.x();
   float error_y = end_pos.y() - cur_pos.y();
   float error_xy = sqrt(pow(error_x, 2) + pow(error_y, 2));
   float end_theta = atan2(error_y, error_x);
   float error_theta = ghost_util::SmallestAngleDistRad(end_theta, cur_pos.z());
+
+  //debugging
+  end_pos.z() = end_theta;
 
   float bias = 0;
   float derivative;
@@ -46,7 +49,7 @@ Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur
   output_linear = kp_xy_ * error_xy + kd_xy_* derivative + bias;
   output_linear = ghost_util::clamp(output_linear, -1.0f, 1.0f);
 
-  return Eigen::Vector2d(output_linear, output_angular).normalized();
+  return Eigen::Vector2d(output_linear, output_angular);
 }
 
 Eigen::Vector2d PDControl::theta_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos)

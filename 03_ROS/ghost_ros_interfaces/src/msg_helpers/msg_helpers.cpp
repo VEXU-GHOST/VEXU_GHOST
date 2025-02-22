@@ -398,6 +398,8 @@ void fromROSMsg(
   auto theta_trajectory_ptr = std::make_shared<ghost_planners::RobotTrajectory::Trajectory>();
   fromROSMsg(*theta_trajectory_ptr, robot_trajectory_msg.theta_trajectory);
   robot_trajectory.theta_trajectory = *theta_trajectory_ptr;
+
+  robot_trajectory.trajectory_type = static_cast<ghost_planners::RobotTrajectory::TrajectoryType>(robot_trajectory_msg.trajectory_type);
 }
 
 void fromROSMsg(
@@ -427,6 +429,8 @@ void toROSMsg(
   auto theta_trajectory_msg_ptr = std::make_shared<ghost_msgs::msg::Trajectory>();
   toROSMsg(robot_trajectory.x_trajectory, *theta_trajectory_msg_ptr);
   robot_trajectory_msg.x_trajectory = *theta_trajectory_msg_ptr;
+
+  robot_trajectory_msg.trajectory_type = robot_trajectory.trajectory_type;
 }
 
 void toROSMsg(

@@ -160,6 +160,10 @@ void TankRobotPlugin::initROSComms()
   std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
   m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(des_pos_topic, 10);
 
+  node_ptr_->declare_parameter("tank_robot_plugin.err_pos_topic", "/err_pos");
+  std::string err_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.err_pos_topic").as_string();
+  m_err_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(err_pos_topic, 10);
+  
   m_tts_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
   m_music_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/music", 1);
 }
@@ -212,8 +216,9 @@ void TankRobotPlugin::initTankModel()
   tank_model_config.wheel_dist = 7.5; //in
   m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
 
-  node_ptr_->declare_parameter("tank_robot_plugin.search_radius", 0.0);
-  double m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
+  node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
+  m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
+  std::cout << "radius: " << m_search_radius << std::endl;
 
   node_ptr_->declare_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.drive_gear_ratio", 0.0);
@@ -226,7 +231,7 @@ void TankRobotPlugin::initTankModel()
   double wheel_base_inches = node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
 
   m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
-  m_odom_ptr->resetPose();
+  // m_odom_ptr->resetPose();
 
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy", 0.5);
@@ -312,7 +317,7 @@ void TankRobotPlugin::autonomous(double current_time)
   static bool first_loop = true;
   if (first_loop) {
     first_loop = false;
-    m_odom_ptr->resetPose();
+    // m_odom_ptr->resetPose();
   }
 
   bt_->tick_tree();
@@ -643,32 +648,82 @@ void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d pose)
   m_des_pos_pub->publish(msg);
 }
 
+void TankRobotPlugin::publishErrorPose(Eigen::Vector3d pose)
+{
+  geometry_msgs::msg::Pose msg{};
+  msg.position.x = pose.x();
+  msg.position.y = pose.y();
+  ghost_util::yawToQuaternionRad(
+    pose.z(),
+    msg.orientation.w,
+    msg.orientation.x,
+    msg.orientation.y,
+    msg.orientation.z);
+  m_err_pos_pub->publish(msg);
+}
+
 void TankRobotPlugin::publishTrajectoryVisualization()
 {
   if (!robot_trajectory_ptr_->isNotEmpty()) {
     return;
   }
   visualization_msgs::msg::MarkerArray msg{};
+
+  visualization_msgs::msg::Marker search_radius_marker{};
+  search_radius_marker.header.frame_id = "base_link";
+  search_radius_marker.header.stamp = node_ptr_->get_clock()->now();
+  search_radius_marker.id = 1;
+  search_radius_marker.type = 3;   // cylinder type
+  search_radius_marker.action = 0;
+  search_radius_marker.scale.x = 2*m_search_radius;
+  search_radius_marker.scale.y = 2*m_search_radius;
+  search_radius_marker.scale.z = 0.01;
+  search_radius_marker.color.b = 1.0;
+  search_radius_marker.color.a = 0.3;
+
+  visualization_msgs::msg::Marker carrot{};
+  carrot.header.frame_id = "map";
+  carrot.header.stamp = node_ptr_->get_clock()->now();
+  carrot.id = 2;
+  carrot.type = 4;   // line type
+  carrot.action = 0;
+  carrot.scale.x = 0.01;
+  carrot.scale.y = 1.0;
+  carrot.scale.z = 1.0;
+  carrot.color.g = 1.0;
+  carrot.color.a = 0.5;
+  geometry_msgs::msg::Point p_robot;
+  p_robot.x = m_tank_model_ptr->getWorldPose().x();
+  p_robot.y = m_tank_model_ptr->getWorldPose().y();
+  p_robot.z = 0.0;
+  geometry_msgs::msg::Point p_carrot;
+  p_carrot.set__x(m_desired_pose.x());
+  p_carrot.set__y(m_desired_pose.y());
+  p_carrot.z = 0.0;
+  carrot.points.push_back(p_robot);
+  carrot.points.push_back(p_carrot);
+
   visualization_msgs::msg::Marker marker{};
   marker.header.frame_id = "map";
   marker.header.stamp = node_ptr_->get_clock()->now();
   marker.id = 0;
   marker.type = 8;   // points type
   marker.action = 0;
-  marker.scale.x = 0.1;
-  marker.scale.y = 0.1;
+  marker.scale.x = 0.025;
+  marker.scale.y = 0.025;
   marker.scale.z = 0.1;
   marker.color.r = 1.0;
   marker.color.a = 1.0;
 
-  for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); ++i) {
+  for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); i += 5) {
     geometry_msgs::msg::Point p;
     p.x = robot_trajectory_ptr_->x_trajectory.position_vector[i];
     p.y = robot_trajectory_ptr_->y_trajectory.position_vector[i];
     p.z = 0.0;
     marker.points.push_back(p);
   }
-
+  msg.markers.push_back(search_radius_marker);
+  msg.markers.push_back(carrot);
   msg.markers.push_back(marker);
   m_trajectory_viz_pub->publish(msg);
 }
@@ -694,9 +749,7 @@ void TankRobotPlugin::readPathFromFile(const std::string & filename)
 
 void TankRobotPlugin::movePointToPoint()
 {
-  float search_radius = m_search_radius;
-  static int past_index = 0;
-  static int next_index = 0;
+  double search_radius = m_search_radius;
   double current_x = m_tank_model_ptr->getWorldPose().x();
   double current_y = m_tank_model_ptr->getWorldPose().y();
   double current_angle = m_tank_model_ptr->getWorldAngleRad();
@@ -705,28 +758,47 @@ void TankRobotPlugin::movePointToPoint()
     return;
   }
 
-  auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
-  auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
   auto threshold_xy = robot_trajectory_ptr_->x_trajectory.threshold;
   auto threshold_theta = robot_trajectory_ptr_->theta_trajectory.threshold;
 
-  if (past_index == x_values.size() - 1) {
-    return;
-  }
 
-  if (x_values.size() != y_values.size()) {
-    std::cout << "x_values and y_values must be the same size" << std::endl;
-    throw std::runtime_error("x_values and y_values must be the same size");
-  }
-  for (int i = past_index; i < x_values.size(); ++i) {//find farthest point in radius
-    double distance = sqrt(pow((current_x - x_values[i]), 2) + pow((current_y - y_values[i]), 2));
-    if (distance < search_radius) {
-      next_index = i;
+  if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::PUREPURSUIT) {
+    std::cout << "Purepursuit" << std::endl;
+    auto x_values = robot_trajectory_ptr_->x_trajectory.position_vector;
+    auto y_values = robot_trajectory_ptr_->y_trajectory.position_vector;
+    auto theta_values = robot_trajectory_ptr_->theta_trajectory.position_vector;
+
+    static double last_start_time = 0;
+    if (trajectory_start_time_ != last_start_time) {
+      last_start_time = trajectory_start_time_;
+      m_past_index = 0;
+      m_next_index = 0;
     }
+
+    for (int i = m_past_index; i < x_values.size(); ++i) {//find farthest point in radius
+      double distance = sqrt(
+        pow((current_x - x_values[i]), 2) +
+        pow((current_y - y_values[i]), 2));
+      if (distance < search_radius) {
+        m_next_index = i;
+      }
+    }
+    m_past_index = m_next_index;
+
+    m_desired_pose = Eigen::Vector3d(x_values[m_next_index], y_values[m_next_index], 0.0);
+    m_final_pose = Eigen::Vector3d(x_values[x_values.size() - 1], y_values[y_values.size() - 1], theta_values[theta_values.size() - 1]);
+
+  } else if (robot_trajectory_ptr_->trajectory_type == RobotTrajectory::TrajectoryType::BOOMERANG) {
+    m_desired_pose = Eigen::Vector3d(
+      robot_trajectory_ptr_->x_trajectory.getPosition(search_radius),
+      robot_trajectory_ptr_->y_trajectory.getPosition(search_radius),
+      0.0);
+    m_final_pose = Eigen::Vector3d(
+      robot_trajectory_ptr_->x_trajectory.getPosition(1.0),
+      robot_trajectory_ptr_->y_trajectory.getPosition(1.0),
+      robot_trajectory_ptr_->theta_trajectory.getPosition(1.0));
   }
 
-  m_desired_pose = Eigen::Vector3d(x_values[next_index], y_values[next_index], 0.0);
-  auto final_pose = Eigen::Vector3d(x_values[x_values.size() - 1], y_values[y_values.size() - 1], 0.0);
   std::cout << "despos_x " << m_desired_pose.x() << std::endl;
   std::cout << "despos_y " << m_desired_pose.y() << std::endl;
 
@@ -734,19 +806,28 @@ void TankRobotPlugin::movePointToPoint()
 
   Eigen::Vector2d command;
 
-  if (threshold_xy > abs(m_desired_pose.x() - current_x) && threshold_xy > abs(m_desired_pose.y() - current_y)) {
-    command = m_pd_control->theta_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), final_pose);
+  double dist_err = sqrt(((m_final_pose.x() - current_x) * (m_final_pose.x() - current_x) + (m_final_pose.y() - current_y) * (m_final_pose.y() - current_y)));
+
+  Eigen::Vector3d goal;
+
+  if (dist_err < threshold_xy) {
+    goal = m_final_pose;
   } else {
-    command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), m_desired_pose);
+    goal = m_desired_pose;
   }
-  command = command.normalized();
+  command = m_pd_control->tank_pid(m_tank_model_ptr->getWorldPose(), m_tank_model_ptr->getWorldTwist(), goal);
+  Eigen::Vector3d error = goal - m_tank_model_ptr->getWorldPose();
+  error.z() = ghost_util::SmallestAngleDistRad(goal.z(), m_tank_model_ptr->getWorldPose().z());
+  publishErrorPose(error);
+  
+  // command = command.normalized();
   auto fwd_cmd = ghost_util::clamp(command[0], -m_max_speed_linear, m_max_speed_linear);
   auto turn_cmd = ghost_util::clamp(command[1], -m_max_speed_angular, m_max_speed_angular);
 
   msg.linear.x = fwd_cmd;
   msg.angular.z = turn_cmd;
   m_base_twist_cmd_pub->publish(msg);
-  m_tank_model_ptr->driveCommand(command[0], command[1]);
+  m_tank_model_ptr->driveCommand(fwd_cmd, turn_cmd);
 
 }
 

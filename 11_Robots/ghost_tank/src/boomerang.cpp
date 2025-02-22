@@ -24,8 +24,8 @@ Boomerang::Boomerang()
 void Boomerang::find_carrot(Eigen::Vector3d cur_pos)
 {
   float hyp = sqrt(pow(cur_pos.x() - end_x_, 2) + pow(cur_pos.y() - end_y_, 2));
-  carrot_x_ = end_x_ - hyp * std::sin(end_radians_) * lead_;
-  carrot_y_ = end_y_ - hyp * std::cos(end_radians_) * lead_;
+  carrot_x_ = end_x_ - hyp * std::sin(-end_radians_) * lead_;
+  carrot_y_ = end_y_ - hyp * std::cos(-end_radians_) * lead_;
 }
 
 // map the curve with 10 points
@@ -37,7 +37,7 @@ void Boomerang::map_curve(Eigen::Vector3d cur_pos)
   float x_next;
   float y_next;
 
-  for (float t = 0; t <= 1; t += 0.05) {
+  for (float t = 0; t <= 1; t += 1.0/50.0) {
     x_next = (1 - t) * ((1 - t) * cur_pos.x() + t * carrot_x_) + t * ((1 - t) * carrot_x_ + t * end_x_);
     y_next = (1 - t) * ((1 - t) * cur_pos.y() + t * carrot_y_) + t * ((1 - t) * carrot_y_ + t * end_y_);
     points_.push_back({x_next, y_next});

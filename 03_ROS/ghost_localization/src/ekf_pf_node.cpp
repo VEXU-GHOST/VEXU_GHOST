@@ -188,6 +188,11 @@ void EkfPfNode::LoadROSParams()
 
 void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
+  // static int msg_count = 0;
+  // if (msg_count++ % 10 == 0) {
+  //   RCLCPP_INFO(this->get_logger(), "[EkfPfNode::LaserCallback] Received LIDAR Msg");
+  // }
+
   if (!laser_msg_received_) {
     laser_msg_received_ = true;
   }
@@ -205,7 +210,7 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     if (publish_tf_) {
       PublishWorldTransform();
     }
-  } catch (std::exception& e) {
+  } catch (std::exception & e) {
     RCLCPP_ERROR(this->get_logger(), "Laser : %s ", e.what());
   }
 }
@@ -235,7 +240,7 @@ void EkfPfNode::InitialPoseCallback(
     }
     PublishVisualization();
     PublishMapViz();
-  } catch (std::exception& e) {
+  } catch (std::exception & e) {
     RCLCPP_ERROR(this->get_logger(), "Initial Pose:%s ", e.what());
   }
 }
@@ -243,6 +248,11 @@ void EkfPfNode::InitialPoseCallback(
 // Odometry
 void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
+  // static int msg_count = 0;
+  // if (msg_count++ % 30 == 0) {
+  //   RCLCPP_INFO(this->get_logger(), "[EkfPfNode::EkfCallback] Received Odometry Msg");
+  // }
+
   this->last_filtered_odom_msg_ = *msg;
   odom_loc_ = Eigen::Vector2f(
     last_filtered_odom_msg_.pose.pose.position.x,
@@ -265,7 +275,7 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     if (publish_tf_) {
       PublishWorldTransform();
     }
-  } catch (std::exception& e) {
+  } catch (std::exception & e) {
     RCLCPP_ERROR(this->get_logger(), "Odom: %s", e.what());
   }
 }
