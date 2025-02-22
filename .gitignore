@@ -4,6 +4,9 @@ log
 .vscode
 *.pyc
 .cache/*
+sound_effects
+*.wav
+*.mp3
 
 # Voice Models
 *.onnx

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# thanks chat, https://chatgpt.com/share/67b95b69-6e78-800c-a0a8-64583e95fa80
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -28,7 +29,7 @@ class TTSMusicNode(Node):
         self.declare_parameter("download_dir", "")
         self.declare_parameter("update_voices", False)
         self.declare_parameter("use_cuda", False)
-        self.declare_parameter("music_folder", "~/Downloads/sound effects")
+        self.declare_parameter("music_folder", "~/VEXU_GHOST/sound_effects")
 
         model: str = self.get_parameter("model").value
         config: str = self.get_parameter("config").value
