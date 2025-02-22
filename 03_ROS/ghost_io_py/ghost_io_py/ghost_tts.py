@@ -15,7 +15,6 @@ from typing import Any, Dict, Optional, List
 from piper import PiperVoice
 from piper.download import ensure_voice_exists, find_voice, get_voices
 
-
 class TTSMusicNode(Node):
     def __init__(self) -> None:
         super().__init__('tts_music_node')
@@ -77,6 +76,8 @@ class TTSMusicNode(Node):
             "noise_w": 0.8,
             "sentence_silence": 0.5,
         }
+        #pactl set-sink-volume @DEFAULT_SINK@ 100%
+        subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "100%"], capture_output=True, text  = True)
 
         # Create subscriptions for TTS and music topics.
         self.create_subscription(String, "/io/speaker/tts", self.tts_callback, 10)
