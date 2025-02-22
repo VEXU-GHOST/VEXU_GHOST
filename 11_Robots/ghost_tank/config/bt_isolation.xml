@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="goal_rush">
+      main_tree_to_execute="skills">
   <BehaviorTree ID="goal_rush">
     <Sequence>
       <SetMirrored mirrored="false"/>
@@ -566,14 +566,14 @@
     </KeepRunningUntilFailure>
   </BehaviorTree>
 
-  <BehaviorTree ID="win_point">
+  <BehaviorTree ID="skills">
     <Sequence>
       <Logging message="win_point"/>
       <ReactiveSequence>
         <ClampCmd clamp_closed="false"/>
-        <MoveToPoseBoomerang posX_tiles="2.8"
-                             posY_tiles="0.8"
-                             theta_deg="45.0"
+        <MoveToPoseBoomerang posX_tiles="1"
+                             posY_tiles="2"
+                             theta_deg="-45"
                              search_radius_m="0.3"
                              threshold_m="0.10"
                              angle_threshold_deg="3.0"
@@ -592,10 +592,10 @@
         <ClampCmd clamp_closed="true"/>
         <BiteCmd bite_closed="true"/>
         <IntakeCmd lower="true"
-                   red="false"/>
-        <MoveToPoseBoomerang posX_tiles="1.0"
-                             posY_tiles="1.0"
-                             theta_deg="135.0"
+                   red="true"/>
+        <MoveToPoseBoomerang posX_tiles="2"
+                             posY_tiles="2"
+                             theta_deg="0"
                              search_radius_m="0.3"
                              threshold_m="0.10"
                              angle_threshold_deg="3.0"
@@ -610,6 +610,86 @@
       </ReactiveSequence>
       <Logging message="going to rings at 1,2"/>
       <ReactiveSequence>
+        <ClampCmd clamp_closed="true"/>
+        <BiteCmd bite_closed="true"/>
+        <IntakeCmd lower="true"
+                   red="true"/>
+        <MoveToPoseBoomerang posX_tiles="3"
+                             posY_tiles="1"
+                             theta_deg="45"
+                             search_radius_m="0.3"
+                             threshold_m="0.10"
+                             angle_threshold_deg="3.0"
+                             threshold_vel_mps="0.1"
+                             angle_threshold_vel_dps="1.0"
+                             lead="0.5"
+                             max_speed_linear_pct="0.5"
+                             max_speed_angular_pct="1.0"
+                             timeout_ms="-5000"
+                             use_theta="true"
+                             backwards="false"/>
+      </ReactiveSequence>
+      <ReactiveSequence>
+        <ClampCmd clamp_closed="true"/>
+        <BiteCmd bite_closed="true"/>
+        <IntakeCmd lower="true"
+                   red="true"/>
+        <MoveToPoseBoomerang posX_tiles="5"
+                             posY_tiles="1"
+                             theta_deg="0"
+                             search_radius_m="0.3"
+                             threshold_m="0.10"
+                             angle_threshold_deg="3.0"
+                             threshold_vel_mps="0.1"
+                             angle_threshold_vel_dps="1.0"
+                             lead="0.5"
+                             max_speed_linear_pct="0.5"
+                             max_speed_angular_pct="1.0"
+                             timeout_ms="-5000"
+                             use_theta="true"
+                             backwards="false"/>
+      </ReactiveSequence>
+
+      <ReactiveSequence>
+        <ClampCmd clamp_closed="true"/>
+        <BiteCmd bite_closed="true"/>
+        
+        <MoveToPoseBoomerang posX_tiles="5"
+                             posY_tiles="1"
+                             theta_deg="180"
+                             search_radius_m="0.3"
+                             threshold_m="0.10"
+                             angle_threshold_deg="3.0"
+                             threshold_vel_mps="0.1"
+                             angle_threshold_vel_dps="1.0"
+                             lead="0.5"
+                             max_speed_linear_pct="0.5"
+                             max_speed_angular_pct="1.0"
+                             timeout_ms="-5000"
+                             use_theta="true"
+                             backwards="false"/>
+      </ReactiveSequence>
+    <ReactiveSequence>
+        <ClampCmd clamp_closed="true"/>
+        <BiteCmd bite_closed="true"/>
+        
+        <MoveToPoseBoomerang posX_tiles="6"
+                             posY_tiles="0"
+                             theta_deg="215"
+                             search_radius_m="0.3"
+                             threshold_m="0.10"
+                             angle_threshold_deg="3.0"
+                             threshold_vel_mps="0.1"
+                             angle_threshold_vel_dps="1.0"
+                             lead="0.5"
+                             max_speed_linear_pct="0.5"
+                             max_speed_angular_pct="1.0"
+                             timeout_ms="-3000"
+                             use_theta="true"
+                             backwards="true"/>
+      </ReactiveSequence>
+
+      <!--ReactiveSequence>
         <ClampCmd clamp_closed="true"/>
         <BiteCmd bite_closed="true"/>
         <IntakeCmd lower="true"
@@ -628,7 +708,7 @@
                              timeout_ms="-5000"
                              use_theta="true"
                              backwards="false"/>
-      </ReactiveSequence>
+      </ReactiveSequence-->
       <Logging message="testover"/>
       <ShutoffNode/>
     </Sequence>
