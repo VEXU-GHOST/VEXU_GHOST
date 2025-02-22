@@ -116,7 +116,7 @@ competition_state_machine_node:
         ]
     particle_filter:
       world_frame: "map"
-      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldZeroLH.txt"
 
       # Initial position
       # init_x: 0.508
@@ -207,12 +207,14 @@ ekf_pf_node:
       sigma_observation: 0.2 # Prof recommends 0.15-0.2 based on sensor specs
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
-      # min_update_dist: 0.05 #0.05
-      # min_update_angle: 10.0 #0.005
-      # max_update_angular_velocity: 1.0
-      min_update_dist: 10000.0 #0.05
-      min_update_angle: 10000.0 #0.005
-      max_update_angular_velocity: 0.0
+      min_update_dist: 0.05 #0.05
+      min_update_angle: 10.0 #0.005
+      max_update_angular_velocity: 1.0
+
+      # Disables LIDAR Updates for pure-odom auton testing
+      # min_update_dist: 10000.0 #0.05
+      # min_update_angle: 10000.0 #0.005
+      # max_update_angular_velocity: 0.0
 
       # Computation Factors
       num_particles: 200 # Increase until computation runs out
