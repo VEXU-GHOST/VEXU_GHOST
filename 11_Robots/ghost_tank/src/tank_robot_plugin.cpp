@@ -742,10 +742,10 @@ void TankRobotPlugin::playTTS(std::string musicFileName)
   m_tts_pub->publish(message);
 }
 
-void TankRobotPlugin::readPathFromFile(const std::string & filename)
-{
-  // ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
-}
+//void TankRobotPlugin::readPathFromFile(const std::string & filename)
+//{
+//  // ghost_util::readPathFromFile(filename, x_values, y_values, angle_values);
+//}
 
 void TankRobotPlugin::movePointToPoint()
 {
