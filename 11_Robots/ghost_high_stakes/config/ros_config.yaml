@@ -72,7 +72,7 @@ competition_state_machine_node:
       # motion planning
       move_to_pose_kp_xy: 1.75
       move_to_pose_kd_xy: 0.3
-      move_to_pose_kp_theta: 2.0
+      move_to_pose_kp_theta: 1.75
       move_to_pose_kd_theta: 0.2
 
       drive_motor_ticks_per_rotation: 360.0

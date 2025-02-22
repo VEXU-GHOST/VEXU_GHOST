@@ -129,17 +129,17 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	(posY - tank_model_ptr_->getWorldPose().y()) * (posY - tank_model_ptr_->getWorldPose().y()));
 	double theta_err = abs(ghost_util::SmallestAngleDistRad(theta, tank_model_ptr_->getWorldAngleRad()));
 
-	if (dist_err < threshold){
-		std::cout << "meeting dist threshold" << std::endl;
-	}
-	if (theta_err < angle_threshold){
-		std::cout << "meeting angle threshold" << std::endl;
-	}
-	if ((abs(tank_model_ptr_->getWorldTwist().x()) < threshold_vel) && (abs(tank_model_ptr_->getWorldTwist().z())*ghost_util::RAD_TO_DEG < angle_threshold_vel)){
-		std::cout << "velocity met" << std::endl;
-	}
-	std::cout << "dist_err: " << dist_err << std::endl;
-	std::cout << "theta_err: " << theta_err << std::endl;
+	// if (dist_err < threshold){
+	// 	std::cout << "meeting dist threshold" << std::endl;
+	// }
+	// if (theta_err < angle_threshold){
+	// 	std::cout << "meeting angle threshold" << std::endl;
+	// }
+	// if ((abs(tank_model_ptr_->getWorldTwist().x()) < threshold_vel) && (abs(tank_model_ptr_->getWorldTwist().z())*ghost_util::RAD_TO_DEG < angle_threshold_vel)){
+	// 	std::cout << "velocity met" << std::endl;
+	// }
+	// std::cout << "dist_err: " << dist_err << std::endl;
+	// std::cout << "theta_err: " << theta_err << std::endl;
 
 	if (use_theta){
 		if(dist_err < threshold && theta_err < angle_threshold

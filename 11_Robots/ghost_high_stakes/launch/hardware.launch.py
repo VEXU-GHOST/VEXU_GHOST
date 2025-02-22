@@ -34,6 +34,7 @@ def generate_launch_description():
     config_path = os.path.join(ghost_tank_share_dir, "config")
 
     mtp_test = os.path.join(ghost_tank_share_dir, "config", "move_to_pose_test.xml")
+    
     ########################
     ### Node Definitions ###
     ########################

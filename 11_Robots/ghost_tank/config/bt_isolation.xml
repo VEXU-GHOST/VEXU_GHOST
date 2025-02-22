@@ -11,9 +11,9 @@
                             theta_deg="120.0"
                             search_radius_m="0.3"
                             threshold_m="0.1"
-                            angle_threshold_deg="8.0"
-                            threshold_vel_mps="100.0"
-                            angle_threshold_vel_dps="1000.0"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
                             lead="0.25"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
@@ -32,9 +32,9 @@
                             theta_deg="-70.0"
                             search_radius_m="0.3"
                             threshold_m="0.20"
-                            angle_threshold_deg="10.0"
-                            threshold_vel_mps="100.0"
-                            angle_threshold_vel_dps="1000.0"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
                             lead="0.75"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
@@ -51,9 +51,9 @@
                             theta_deg="-90.0"
                             search_radius_m="0.3"
                             threshold_m="0.10"
-                            angle_threshold_deg="10.0"
-                            threshold_vel_mps="100.0"
-                            angle_threshold_vel_dps="20.0"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
                             lead="0.75"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
@@ -69,9 +69,9 @@
                             theta_deg="0.0"
                             search_radius_m="0.3"
                             threshold_m="0.10"
-                            angle_threshold_deg="5.0"
-                            threshold_vel_mps="100.0"
-                            angle_threshold_vel_dps="20.0"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
                             lead="1.0"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
@@ -87,9 +87,9 @@
                             theta_deg="0.0"
                             search_radius_m="0.3"
                             threshold_m="0.10"
-                            angle_threshold_deg="5.0"
-                            threshold_vel_mps="100.0"
-                            angle_threshold_vel_dps="1000.0"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
                             lead="1.0"
                             max_speed_linear_pct="0.4"
                             max_speed_angular_pct="1.0"
@@ -110,9 +110,9 @@
                               theta_deg="45.0"
                               search_radius_m="0.3"
                               threshold_m="0.05"
-                              angle_threshold_deg="5.0"
-                              threshold_vel_mps="100.0"
-                              angle_threshold_vel_dps="20.0"
+                              angle_threshold_deg="3.0"
+                              threshold_vel_mps="0.1"
+                              angle_threshold_vel_dps="1.0"
                               lead="1.0"
                               max_speed_linear_pct="0.6"
                               max_speed_angular_pct="1.0"
@@ -134,9 +134,9 @@
                                 theta_deg="-135.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.10"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="0.5"
                                 max_speed_linear_pct="0.4"
                                 max_speed_angular_pct="0.5"
@@ -156,9 +156,9 @@
                           theta_deg="45.0"
                           search_radius_m="0.3"
                           threshold_m="0.10"
-                          angle_threshold_deg="5.0"
-                          threshold_vel_mps="100.0"
-                          angle_threshold_vel_dps="1000.0"
+                          angle_threshold_deg="3.0"
+                          threshold_vel_mps="0.1"
+                          angle_threshold_vel_dps="1.0"
                           lead="1.0"
                           max_speed_linear_pct="1.0"
                           max_speed_angular_pct="1.0"
@@ -183,9 +183,9 @@
                                 theta_deg="180.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.05"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="30.0"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="0.5"
                                 max_speed_linear_pct="1.0"
                                 max_speed_angular_pct="1.0"
@@ -203,9 +203,9 @@
                                 theta_deg="180.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.05"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="0.0"
                                 max_speed_linear_pct="0.5"
                                 max_speed_angular_pct="1.0"
@@ -230,9 +230,9 @@
                                 theta_deg="0.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.05"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="0.0"
                                 max_speed_linear_pct="0.5"
                                 max_speed_angular_pct="1.0"
@@ -247,9 +247,9 @@
                                 theta_deg="180.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.05"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="0.0"
                                 max_speed_linear_pct="0.3"
                                 max_speed_angular_pct="1.0"
@@ -268,9 +268,9 @@
                                 theta_deg="90.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.2"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
+                                angle_threshold_deg="1.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="1.0"
                                 max_speed_linear_pct="0.3"
                                 max_speed_angular_pct="1.0"
@@ -287,9 +287,9 @@
                                 theta_deg="90.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.05"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
+                                angle_threshold_deg="1.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="1.0"
                                 max_speed_linear_pct="0.3"
                                 max_speed_angular_pct="1.0"
@@ -303,7 +303,7 @@
 
           <Logging message="Bite"/>
           <BiteCmd bite_closed="true"/>
-          <Delay delay_msec="375">
+          <Delay delay_msec="750">
             <ShutoffNode/>
           </Delay>
 
@@ -313,9 +313,9 @@
                                 theta_deg="135.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.05"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="0.5"
                                 max_speed_linear_pct="0.3"
                                 max_speed_angular_pct="1.0"
@@ -330,9 +330,9 @@
                                 theta_deg="225.0"
                                 search_radius_m="0.3"
                                 threshold_m="0.05"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
                                 lead="0.5"
                                 max_speed_linear_pct="1.0"
                                 max_speed_angular_pct="1.0"
@@ -343,174 +343,167 @@
         </Sequence>
       </ReactiveSequence>
 
-      <IntakeCmd lower="false" red="false"/>
-      
-        <!-- <ShutoffNode/>
-        <Delay delay_msec="5000">
-          <ShutoffNode/>
-        </Delay>
-
-        <ReactiveSequence>
-          <IntakeCmd lower="true"
-          red="false"/>
-          <Delay delay_msec="1000">
-            <ShutoffNode/>
-          </Delay>
-        </ReactiveSequence>
-
-        <ReactiveSequence>
-          <IntakeCmd lower="true" red="false"/>
-          <MoveToPoseBoomerang posX_tiles="0.5"
-                                posY_tiles="1.0"
-                                theta_deg="180.0"
-                                search_radius_m="0.3"
-                                threshold_m="0.10"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
-                                lead="1.0"
-                                max_speed_linear_pct="0.4"
-                                max_speed_angular_pct="1.0"
-                                timeout_ms="-2000"
-                                use_theta="true"
-                                backwards="false"/>
-        </ReactiveSequence>
-        <ShutoffNode/>
-
-        <ReactiveSequence>
-          <IntakeCmd lower="true" red="false"/>
-          <MoveToPoseBoomerang posX_tiles="1.75"
-                                posY_tiles="1.0"
-                                theta_deg="0.0"
-                                search_radius_m="0.3"
-                                threshold_m="0.10"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
-                                lead="1.0"
-                                max_speed_linear_pct="1.0"
-                                max_speed_angular_pct="1.0"
-                                timeout_ms="-1000"
-                                use_theta="true"
-                                backwards="true"/>
-        </ReactiveSequence>
-        <ShutoffNode/>
-
-        <ReactiveSequence>
-          <IntakeCmd lower="true"
-          red="false"/>
-          <Delay delay_msec="1000">
-          <ShutoffNode/>
-          </Delay>
-        </ReactiveSequence>
-
-        <ReactiveSequence>
-          <BiteCmd bite_closed="false"/>
-          <IntakeCmd lower="true"
-          red="false"/>
-          <MoveToPoseBoomerang posX_tiles="1.2"
-                                posY_tiles="1.8"
-                                theta_deg="45.0"
-                                search_radius_m="0.3"
-                                threshold_m="0.10"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
-                                lead="1.0"
-                                max_speed_linear_pct="0.6"
-                                max_speed_angular_pct="1.0"
-                                timeout_ms="-1000"
-                                use_theta="true"
-                                backwards="false"/>
-          </ReactiveSequence>
-        <ShutoffNode/>
-
-        <ReactiveSequence>
-          <BiteCmd bite_closed="true"/>
-          <IntakeCmd lower="true"
-          red="false"/>
-          <Delay delay_msec="1000">
-          <ShutoffNode/>
-          </Delay>
-        </ReactiveSequence>
-
-        <ReactiveSequence>
-          <IntakeCmd lower="true"
-          red="false"/>
-          <MoveToPoseBoomerang posX_tiles="1.5"
-                                posY_tiles="1.5"
-                                theta_deg="-45.0"
-                                search_radius_m="0.3"
-                                threshold_m="0.10"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
-                                lead="1.0"
-                                max_speed_linear_pct="1.0"
-                                max_speed_angular_pct="1.0"
-                                timeout_ms="-1000"
-                                use_theta="true"
-                                backwards="true"/>
-          </ReactiveSequence>
-        <ShutoffNode/>
-
-        <ReactiveSequence>
-          <IntakeCmd lower="true"
-          red="false"/>
-          <MoveToPoseBoomerang posX_tiles="1.0"
-                                posY_tiles="1.0"
-                                theta_deg="-135.0"
-                                search_radius_m="0.3"
-                                threshold_m="0.10"
-                                angle_threshold_deg="5.0"
-                                threshold_vel_mps="100.0"
-                                angle_threshold_vel_dps="1000.0"
-                                lead="1.0"
-                                max_speed_linear_pct="1.0"
-                                max_speed_angular_pct="1.0"
-                                timeout_ms="-1000"
-                                use_theta="true"
-                                backwards="false"/>
-        </ReactiveSequence>
-        <ShutoffNode/>
-        <Sequence>
-          <Repeat num_cycles="4">
-            <ReactiveSequence>
-              <BiteCmd bite_closed="true"/>
-              <MoveToPoseBoomerang posX_tiles="0.3"
-                                    posY_tiles="0.3"
-                                    theta_deg="-135.0"
-                                    search_radius_m="0.3"
-                                    threshold_m="0.10"
-                                    angle_threshold_deg="5.0"
-                                    threshold_vel_mps="100.0"
-                                    angle_threshold_vel_dps="1000.0"
-                                    lead="1.0"
-                                    max_speed_linear_pct="0.4"
+      <Logging message="Processing Corner Stack"/>
+      <ReactiveSequence>
+        <IntakeCmd lower="true" red="false"/>
+        <Repeat num_cycles="3">
+          <Sequence>
+            <MoveToPoseBoomerang posX_tiles="0.6"
+                                    posY_tiles="0.6"
+                                    theta_deg="225.0"
+                                    search_radius_m="0.05"
+                                    threshold_m="0.02"
+                                    angle_threshold_deg="3.0"
+                                    threshold_vel_mps="0.1"
+                                    angle_threshold_vel_dps="1.0"
+                                    lead="0.5"
+                                    max_speed_linear_pct="0.2"
                                     max_speed_angular_pct="1.0"
-                                    timeout_ms="-2000"
-                                    use_theta="true"
+                                    timeout_ms="-1000"
+                                    use_theta="false"
                                     backwards="false"/>
-            </ReactiveSequence>
+              <ShutoffNode/>
+              <Delay delay_msec="500">
+                <ShutoffNode/>
+              </Delay>
+
+              <MoveToPoseBoomerang
+                posX_tiles="0.7"
+                posY_tiles="0.7"
+                theta_deg="45.0"
+                search_radius_m="0.05"
+                threshold_m="0.02"
+                angle_threshold_deg="3.0"
+                threshold_vel_mps="0.1"
+                angle_threshold_vel_dps="1.0"
+                lead="0.5"
+                max_speed_linear_pct="0.2"
+                max_speed_angular_pct="1.0"
+                timeout_ms="-1000"
+                use_theta="false"
+                backwards="true"/>
             <ShutoffNode/>
-            <MoveToPoseBoomerang posX_tiles="1.0"
-                                  posY_tiles="1.0"
-                                  theta_deg="45.0"
-                                  search_radius_m="0.3"
-                                  threshold_m="0.10"
-                                  angle_threshold_deg="5.0"
-                                  threshold_vel_mps="100.0"
-                                  angle_threshold_vel_dps="1000.0"
-                                  lead="1.0"
-                                  max_speed_linear_pct="1.0"
-                                  max_speed_angular_pct="1.0"
-                                  timeout_ms="-2000"
-                                  use_theta="true"
-                                  backwards="true"/>
-            <ShutoffNode/>
-          </Repeat>
-        </Sequence>
-        </ReactiveSequence> -->
+            <Delay delay_msec="500">
+              <ShutoffNode/>
+            </Delay>
+          </Sequence>
+        </Repeat>
+      </ReactiveSequence>
+
+      <MoveToPoseBoomerang
+        posX_tiles="1.0"
+        posY_tiles="1.0"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.02"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="true"/>
+      <ShutoffNode/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="1.0"
+        posY_tiles="1.0"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="false"/>
+      <ShutoffNode/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="0.25"
+        posY_tiles="0.25"
+        theta_deg="225.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="true"/>
+      <ShutoffNode/>
+      <ClampCmd clamp_closed="false"/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="1.0"
+        posY_tiles="1.0"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="false"/>
+      <ShutoffNode/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="2.5"
+        posY_tiles="1.5"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-2000"
+        use_theta="true"
+        backwards="false"/>
+      <ShutoffNode/>
+
+      <MoveToPoseBoomerang
+        posX_tiles="3.25"
+        posY_tiles="2.25"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="0.2"
+        max_speed_angular_pct="0.2"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="false"/>
+      <ShutoffNode/>
 
       <Logging message="Auton Complete"/>
       <Delay delay_msec="50000">
@@ -535,9 +528,9 @@
                              theta_deg="0.0"
                              search_radius_m="0.3"
                              threshold_m="0.10"
-                             angle_threshold_deg="5.0"
-                             threshold_vel_mps="0.05"
-                             angle_threshold_vel_dps="5.0"
+                             angle_threshold_deg="3.0"
+                             threshold_vel_mps="0.1"
+                             angle_threshold_vel_dps="1.0"
                              lead="0.5"
                              max_speed_linear_pct="1.0"
                              max_speed_angular_pct="1.0"
@@ -583,9 +576,9 @@
                              theta_deg="45.0"
                              search_radius_m="0.3"
                              threshold_m="0.10"
-                             angle_threshold_deg="5.0"
-                             threshold_vel_mps="0.05"
-                             angle_threshold_vel_dps="5.0"
+                             angle_threshold_deg="3.0"
+                             threshold_vel_mps="0.1"
+                             angle_threshold_vel_dps="1.0"
                              lead="0.5"
                              max_speed_linear_pct="1.0"
                              max_speed_angular_pct="1.0"
@@ -605,9 +598,9 @@
                              theta_deg="135.0"
                              search_radius_m="0.3"
                              threshold_m="0.10"
-                             angle_threshold_deg="5.0"
-                             threshold_vel_mps="0.05"
-                             angle_threshold_vel_dps="5.0"
+                             angle_threshold_deg="3.0"
+                             threshold_vel_mps="0.1"
+                             angle_threshold_vel_dps="1.0"
                              lead="0.5"
                              max_speed_linear_pct="0.5"
                              max_speed_angular_pct="1.0"
@@ -626,9 +619,9 @@
                              theta_deg="90.0"
                              search_radius_m="0.3"
                              threshold_m="0.10"
-                             angle_threshold_deg="5.0"
-                             threshold_vel_mps="0.05"
-                             angle_threshold_vel_dps="5.0"
+                             angle_threshold_deg="3.0"
+                             threshold_vel_mps="0.1"
+                             angle_threshold_vel_dps="1.0"
                              lead="0.5"
                              max_speed_linear_pct="0.5"
                              max_speed_angular_pct="1.0"
