@@ -4,7 +4,85 @@
 
   <BehaviorTree ID="main">
     <Sequence>
-      <Logging message="test">
+      <SetMirrored mirrored="false"/>
+      <Logging message="prog_red"/>
+      <BiteCmd bite_closed="true"/>
+      <MoveToPoseBoomerang posX_tiles="2.02"
+                           posY_tiles="3.01"
+                           theta_deg="300.0"
+                           search_radius_m="0.4"
+                           threshold_m="0.1"
+                           angle_threshold_deg="5.0"
+                           threshold_vel_mps="100.0"
+                           angle_threshold_vel_dps="1000.0"
+                           lead="0.3"
+                           max_speed_linear_pct="1.0"
+                           max_speed_angular_pct="1.0"
+                           timeout_ms="-2000"
+                           use_theta="true"
+                           backwards="false"/>
+      <ShutoffNode/>
+      <ClampCmd clamp_closed="true"/>
+      <Delay delay_msec="200">
+        <ShutoffNode/>
+      </Delay>
+      <Logging message="head_towards_donut"/>
+      <MoveToPoseBoomerang posX_tiles="2.73"
+                           posY_tiles="5.74"
+                           theta_deg="240.0"
+                           search_radius_m="0.3"
+                           threshold_m="0.10"
+                           angle_threshold_deg="5.0"
+                           threshold_vel_mps="100.0"
+                           angle_threshold_vel_dps="1000.0"
+                           lead="0.0"
+                           max_speed_linear_pct="1.0"
+                           max_speed_angular_pct="1.0"
+                           timeout_ms="-1000"
+                           use_theta="true"
+                           backwards="false"/>
+      <ShutoffNode/>
+      <Delay delay_msec="300">
+        <ShutoffNode/>
+      </Delay>
+      <ReactiveSequence>
+            <IntakeCmd lower="true"
+                       red="false"/>
+            <Delay delay_msec="500">
+              <ShutoffNode/>
+            </Delay>
+      </ReactiveSequence>
+      <MoveToPoseBoomerang posX_tiles="2.29"
+                           posY_tiles="5.008"
+                           theta_deg="60.0"
+                           search_radius_m="0.3"
+                           threshold_m="0.10"
+                           angle_threshold_deg="5.0"
+                           threshold_vel_mps="100.0"
+                           angle_threshold_vel_dps="1000.0"
+                           lead="1.0"
+                           max_speed_linear_pct="1.0"
+                           max_speed_angular_pct="1.0"
+                           timeout_ms="-2000"
+                           use_theta="true"
+                           backwards="false"/>
+      <ShutoffNode/>
+      <MoveToPoseBoomerang posX_tiles="2.74"
+                           posY_tiles="5.787"
+                           theta_deg="240.0"
+                           search_radius_m="0.3"
+                           threshold_m="0.10"
+                           angle_threshold_deg="5.0"
+                           threshold_vel_mps="100.0"
+                           angle_threshold_vel_dps="1000.0"
+                           lead="1.0"
+                           max_speed_linear_pct="0.6"
+                           max_speed_angular_pct="1.0"
+                           timeout_ms="-1000"
+                           use_theta="true"
+                           backwards="true"/>
+      <ShutoffNode/>
+      <ClampCmd clamp_closed="fasle"/>
     </Sequence>
   </BehaviorTree>
 

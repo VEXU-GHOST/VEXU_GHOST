@@ -33,6 +33,8 @@ def generate_launch_description():
     bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
     config_path = os.path.join(ghost_tank_share_dir, "config")
 
+    bt_path = os.path.join(ghost_tank_share_dir,"config", "bt_skills.xml" )
+
     ########################
     ### Node Definitions ###
     ########################
