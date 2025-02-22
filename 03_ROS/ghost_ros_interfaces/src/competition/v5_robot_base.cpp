@@ -94,6 +94,10 @@ void V5RobotBase::loadRobotHardwareInterface()
 
 void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg)
 {
+  if(!configured_){
+    return;
+  }
+  
   // Update Competition State Machine
   updateCompetitionState(
     msg->competition_status.is_disabled,

@@ -1,3 +1,4 @@
+
 /*
  *   Copyright (c) 2024 Maxx Wilson
  *   All rights reserved.
@@ -86,6 +87,7 @@ void TankRobotPlugin::populateMotorNames()
 void TankRobotPlugin::populateDigitalIONames()
 {
   digital_io_port_map["conveyor_switch"] = 0;
+  digital_io_port_map["goal_rush"] = 5;
   digital_io_port_map["clamp"] = 6;
   digital_io_port_map["bite"] = 7;
 }
@@ -98,12 +100,14 @@ void TankRobotPlugin::initialize()
 {
   initROSComms();
   initEstimation();
+  initIntake();
   initTankModel();
   initAutonomy();
 }
 
 void TankRobotPlugin::initROSComms()
 {
+  std::cout << "[TankRobotPlugin::initROSComms]" << std::endl;
   // Services
   node_ptr_->declare_parameter("bag_recorder_start_topic", "bag_recorder/start");
   std::string bag_recorder_start_topic = node_ptr_->get_parameter("bag_recorder_start_topic").as_string();
@@ -170,6 +174,15 @@ void TankRobotPlugin::initROSComms()
 
 void TankRobotPlugin::initEstimation()
 {
+  std::cout << "[TankRobotPlugin::initEstimation]" << std::endl;
+
+  node_ptr_->declare_parameter("set_pf_pose_topic", "/set_pf_pose");
+  std::string pf_pose_topic = node_ptr_->get_parameter("set_pf_pose_topic").as_string();
+
+  rclcpp::QoS qos_profile(1);
+  qos_profile.transient_local();
+  m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, qos_profile);
+
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
 
@@ -204,41 +217,71 @@ void TankRobotPlugin::initEstimation()
   m_init_sigma_x = node_ptr_->get_parameter("particle_filter.init_sigma_x").as_double();
   m_init_sigma_y = node_ptr_->get_parameter("particle_filter.init_sigma_y").as_double();
   m_init_sigma_theta = node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
+
+  node_ptr_->declare_parameter("map_ekf.initial_estimate_covariance", std::vector<double>());
+  node_ptr_->declare_parameter("map_ekf.initial_state", std::vector<double>());
+
+  m_initial_estimate_covariance = node_ptr_->get_parameter("map_ekf.initial_estimate_covariance").as_double_array();
+  m_reset_pose = node_ptr_->get_parameter("map_ekf.initial_state").as_double_array();
+
+  std::cout << "[TankRobotPlugin::initEstimation] m_initial_estimate_covariance: " << m_initial_estimate_covariance.size() << std::endl;
+  std::cout << "[TankRobotPlugin::initEstimation] m_reset_pose: " << m_reset_pose.size() << std::endl;
+}
+
+void TankRobotPlugin::initIntake()
+{
+  std::cout << "[TankRobotPlugin::initIntake]" << std::endl;
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_links", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_sprocket_teeth", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_hooks", 0.0);
+  double conveyor_num_links = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_links").as_double();
+  double conveyor_sprocket_teeth = node_ptr_->get_parameter("tank_robot_plugin.conveyor_sprocket_teeth").as_double();
+  double conveyor_num_hooks = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_hooks").as_double();
+  m_conveyor_ticks_per_loop = 360.0 * conveyor_num_links / conveyor_sprocket_teeth;
+  m_conveyor_ticks_per_hook = m_conveyor_ticks_per_loop / conveyor_num_hooks;
+
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_threshold", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_power", 0.0);
+  m_conveyor_hook_align_threshold = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_threshold").as_double();
+  m_conveyor_hook_align_power = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_power").as_double();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_fraction", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_duration", 0.0);
+  m_conveyor_hook_throw_fraction = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_fraction").as_double();
+  m_conveyor_hook_throw_duration = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_duration").as_double();
 }
 
 void TankRobotPlugin::initTankModel()
 {
-  // Setup tank Model
-  TankConfig tank_model_config;
-  tank_model_config.motor_list = m_all_motor_names;
-  tank_model_config.wheel_radius = 2.75 / 2.0; //in
-  tank_model_config.wheel_gear_ratio = 20.0 / 23.0;
-  tank_model_config.wheel_dist = 7.5; //in
-  m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
-
-  node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
-  m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
-  std::cout << "radius: " << m_search_radius << std::endl;
-
+  std::cout << "[TankRobotPlugin::initTankModel]" << std::endl;
   node_ptr_->declare_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.drive_gear_ratio", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.drive_wheel_size_inches", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.drive_wheel_rad_in", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.wheel_base_inches", 0.0);
 
   double motor_ticks_per_rotation = node_ptr_->get_parameter("tank_robot_plugin.drive_motor_ticks_per_rotation").as_double();
   double drive_gear_ratio = node_ptr_->get_parameter("tank_robot_plugin.drive_gear_ratio").as_double();
-  double wheel_size_inches = node_ptr_->get_parameter("tank_robot_plugin.drive_wheel_size_inches").as_double();
+  double wheel_rad_in = node_ptr_->get_parameter("tank_robot_plugin.drive_wheel_rad_in").as_double();
   double wheel_base_inches = node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
 
-  m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_size_inches * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
+  TankConfig tank_model_config;
+  tank_model_config.motor_list = m_all_motor_names;
+  tank_model_config.wheel_radius = wheel_rad_in; //in
+  tank_model_config.wheel_gear_ratio = 1.0 / drive_gear_ratio;
+  tank_model_config.wheel_dist = wheel_base_inches / 2.0; //in
+
+  m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
+  m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
   // m_odom_ptr->resetPose();
 
+  node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.max_speed_linear", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.max_speed_angular", 0.5);
+  m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
   float kp_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
   float kd_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
   float kp_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
@@ -252,6 +295,7 @@ void TankRobotPlugin::initTankModel()
 
 void TankRobotPlugin::initAutonomy()
 {
+  std::cout << "[TankRobotPlugin::initAutonomy]" << std::endl;
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
@@ -261,8 +305,15 @@ void TankRobotPlugin::initAutonomy()
   bt_ = std::make_shared<TankTree>(bt_path);
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
-  bt_->set_variable("node_ptr", node_ptr_);// have to move this in front of bt somehow
-  bt_->init_tree();
+  bt_->set_variable("node_ptr", node_ptr_);
+  bt_->set_variable("pd_control_ptr", m_pd_control);
+  bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
+  bt_->set_variable("digital_io_port_map", digital_io_port_map);
+  try {
+    bt_->init_tree();
+  } catch (std::exception &e) {
+    std::cout << "Error init_tree: " << e.what() << std::endl;
+  }
 }
 
 /////////////////////
@@ -270,9 +321,24 @@ void TankRobotPlugin::initAutonomy()
 /////////////////////
 void TankRobotPlugin::onNewSensorData()
 {
+  static bool first_loop = true;
+  if (first_loop) {
+    resetWorldPose();
+    first_loop = false;
+  }
+
+  updateConveyorPositionSensing();
   publishIMUData();
   updateAndPublishOdometry();
   publishTrajectoryVisualization();
+}
+
+void TankRobotPlugin::updateConveyorPositionSensing()
+{
+  m_conveyor_position_abs = rhi_ptr_->getMotorPosition("conveyor_motor");
+  m_conveyor_position_rel = std::fmod(m_conveyor_position_abs, m_conveyor_ticks_per_loop);
+  m_conveyor_position_rel += (m_conveyor_position_rel < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
+  m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
 }
 
 void TankRobotPlugin::publishIMUData()
@@ -311,7 +377,7 @@ void TankRobotPlugin::autonomous(double current_time)
   run_yet = 1;
   }
 
-  std::cout << "Autonomous: " << current_time << std::endl;
+  // std::cout << "Autonomous: " << current_time << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
 
   static bool first_loop = true;
@@ -320,17 +386,33 @@ void TankRobotPlugin::autonomous(double current_time)
     // m_odom_ptr->resetPose();
   }
 
-  bt_->tick_tree();
+  try {
+    bt_->tick_tree();
+  } catch (std::exception &e) {
+    std::cout << "Error tick_tree: " << e.what() << std::endl;
+  }
 
   // Get best state estimate
-  auto curr_pose = m_tank_model_ptr->getWorldPose();
+  // auto curr_pose = m_tank_model_ptr->getWorldPose();
   auto curr_twist = m_tank_model_ptr->getWorldTwist();
-
-  movePointToPoint();
 
   publishCurrentTwist(curr_twist);
   // publishDesiredTwist(m_desired_twist);
-  publishDesiredPose(m_desired_pose);
+
+  if (bt_->get_variable("desired_pose", m_desired_pose)) {
+    publishDesiredPose(m_desired_pose);
+  }
+  double fwd_cmd = 0.0;
+  double turn_cmd = 0.0;
+  if (bt_->get_variable("fwd_cmd", fwd_cmd)) {
+  }
+  if (bt_->get_variable("turn_cmd", turn_cmd)) {
+  }
+
+  geometry_msgs::msg::Twist msg{};
+  msg.linear.x = fwd_cmd;
+  msg.angular.z = turn_cmd;
+  m_base_twist_cmd_pub->publish(msg);
 }
 
 void TankRobotPlugin::teleop(double current_time)
@@ -342,16 +424,23 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
-
+  if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
+    joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
+  {
+    std::cout << "SHUTFOWN" << std::endl;
+    std::system("echo 1 | sudo -S shutdown now");
+    return;
+  }
   bool running_auton = runAutonFromDriver(joy_data, current_time);
   if (running_auton) {
     return;
   }
 
   toggleBagRecorder(joy_data);
-  updateIntake(joy_data);
+  updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_r, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
+  updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
   updateMusic(current_time, joy_data);
 }
@@ -393,14 +482,15 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
   }
 }
 
-void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
 {
+  // Manual Ground Pickup control
   double ground_pickup_power = 0;
   int32_t ground_pickup_current = 0;
-  if (joy_data->btn_r2) {
+  if (R2) {
     ground_pickup_power = 1.0;
     ground_pickup_current = 2500;
-  } else if (joy_data->btn_r) {
+  } else if (R) {
     ground_pickup_power = -1.0;
     ground_pickup_current = 2500;
   } else {
@@ -408,17 +498,70 @@ void TankRobotPlugin::updateIntake(std::shared_ptr<JoystickDeviceData> joy_data)
     ground_pickup_current = 0;
   }
 
+  // Conveyor control
+  // We assume any manual conveyor control misaligns the hooks
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
-  if (joy_data->btn_r1) {
+  if (R1) {
     conveyor_power = 1.0;
     conveyor_current = 2500;
-  } else if (joy_data->btn_l1) {
+    m_conveyor_hook_is_aligned = false;
+  } else if (L1 && !R2) {
     conveyor_power = -1.0;
     conveyor_current = 2500;
+    m_conveyor_hook_is_aligned = false;
   } else {
     conveyor_power = 0.0;
     conveyor_current = 0;
+  }
+
+  // Align Conveyor when Ground Pickup is active and there are no commands going to manual Conveyor control
+  if (R2 && !R1 && !m_conveyor_hook_is_ejecting) {
+    m_conveyor_hook_is_aligned = !(m_hook_fraction < m_conveyor_hook_align_threshold);
+    if (m_conveyor_hook_is_aligned) {
+      m_conveyor_last_aligned_position = m_conveyor_position_abs;
+      conveyor_power = 0;
+      conveyor_current = 0;
+    } else {
+      conveyor_power = m_conveyor_hook_align_power;
+      conveyor_current = 1000;
+    }
+  }
+
+  // Transition to ejection mode
+  static double ejecting_start_time = 0.0;
+  if (R2 && L1 && m_conveyor_hook_is_aligned && !m_conveyor_hook_is_ejecting) {
+    ejecting_start_time = current_time;
+    m_conveyor_hook_is_ejecting = true;
+    m_conveyor_hook_is_aligned = false;
+  }
+
+  // Max timeout on ejection
+  if (m_conveyor_hook_is_ejecting && current_time > ejecting_start_time + 1.5) {
+    m_conveyor_hook_is_ejecting = false;
+  }
+
+  // During ejection, run until we reach throw position, then transition to throw
+  if (m_conveyor_hook_is_ejecting) {
+    double throw_dist_rel = (1 + m_conveyor_hook_throw_fraction) * m_conveyor_ticks_per_hook;
+    if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) > throw_dist_rel && !m_conveyor_is_throwing) {
+      m_conveyor_is_throwing = true;
+      m_conveyor_hook_is_ejecting = false;
+      m_conveyor_throw_start_time = current_time;
+    }
+    conveyor_power = 1.0;
+    conveyor_current = 2500;
+  }
+
+  // Throw reverses for set duration and then zeros conveyor and returns to manual control
+  if (m_conveyor_is_throwing) {
+    conveyor_power = -0.1;
+    conveyor_current = 500;
+    if (current_time > m_conveyor_throw_start_time + m_conveyor_hook_throw_duration) {
+      m_conveyor_is_throwing = false;
+      conveyor_power = 0.0;
+      conveyor_current = 0;
+    }
   }
 
   rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
@@ -459,6 +602,17 @@ void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickD
     btn_pressed = current_time;
     playMusic(""); // should play random when empty
   }
+
+void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  static bool goal_rush_btn_pressed = false;
+  if (joy_data->btn_a && !goal_rush_btn_pressed) {
+    goal_rush_btn_pressed = true;
+    m_goal_rush_active = !m_goal_rush_active;
+  } else if (!joy_data->btn_a) {
+    goal_rush_btn_pressed = false;
+  }
+  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
 }
 
 void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)
@@ -614,6 +768,30 @@ void TankRobotPlugin::updateAndPublishOdometry()
   m_last_odom_pose = m_curr_odom_pose;
 }
 
+void TankRobotPlugin::resetWorldPose()
+{
+  // Copy yaml vectors to array
+  std::array<double, m_cov_n> m_initial_estimate_covariance_arr;
+  for (int i = 0; i < m_initial_estimate_covariance.size(); i++) {
+    m_initial_estimate_covariance_arr[i] = m_initial_estimate_covariance[i];
+  }
+
+  geometry_msgs::msg::Quaternion quat{};
+  ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
+
+  geometry_msgs::msg::PoseWithCovarianceStamped new_pose{};
+  new_pose.header.frame_id = "map";
+  new_pose.header.stamp = node_ptr_->get_clock()->now();
+  new_pose.pose.pose.position.x = m_reset_pose[0];
+  new_pose.pose.pose.position.y = m_reset_pose[1];
+  new_pose.pose.pose.orientation = quat;
+  new_pose.pose.covariance = m_initial_estimate_covariance_arr;
+
+  // Publish to Particle Filter
+  m_reset_pf_pub->publish(new_pose);
+  std::cout << "Done reset" << std::endl;
+}
+
 void TankRobotPlugin::publishCurrentTwist(
   Eigen::Vector3d twist)
 {
@@ -675,8 +853,8 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   search_radius_marker.id = 1;
   search_radius_marker.type = 3;   // cylinder type
   search_radius_marker.action = 0;
-  search_radius_marker.scale.x = 2*m_search_radius;
-  search_radius_marker.scale.y = 2*m_search_radius;
+  search_radius_marker.scale.x = 2 * m_search_radius;
+  search_radius_marker.scale.y = 2 * m_search_radius;
   search_radius_marker.scale.z = 0.01;
   search_radius_marker.color.b = 1.0;
   search_radius_marker.color.a = 0.3;
@@ -727,7 +905,6 @@ void TankRobotPlugin::publishTrajectoryVisualization()
   msg.markers.push_back(marker);
   m_trajectory_viz_pub->publish(msg);
 }
-
 void TankRobotPlugin::playMusic(std::string musicFileName)
 {
   auto message = std_msgs::msg::String();
@@ -830,6 +1007,7 @@ void TankRobotPlugin::movePointToPoint()
   m_tank_model_ptr->driveCommand(fwd_cmd, turn_cmd);
 
 }
+
 
 } // namespace ghost_tank
 

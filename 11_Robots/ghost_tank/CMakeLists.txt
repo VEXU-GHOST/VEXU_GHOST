@@ -164,6 +164,13 @@ set(NODES
   autonTimer
   moveToPoseBoomerang
   moveToPosePurepursuit
+  biteCmd
+  clampCmd
+  shutoffNode
+  intakeCmd
+  goalRushCmd
+  setMirrored
+  conveyorCmd
 )
 
 foreach(NODE ${NODES})

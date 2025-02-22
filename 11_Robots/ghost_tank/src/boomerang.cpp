@@ -37,7 +37,7 @@ void Boomerang::map_curve(Eigen::Vector3d cur_pos)
   float x_next;
   float y_next;
 
-  for (float t = 0; t <= 1; t += 1.0/50.0) {
+  for (float t = 0; t <= 1; t += 1.0/250.0) {
     x_next = (1 - t) * ((1 - t) * cur_pos.x() + t * carrot_x_) + t * ((1 - t) * carrot_x_ + t * end_x_);
     y_next = (1 - t) * ((1 - t) * cur_pos.y() + t * carrot_y_) + t * ((1 - t) * carrot_y_ + t * end_y_);
     points_.push_back({x_next, y_next});
@@ -49,7 +49,7 @@ void Boomerang::set_end_point(float x, float y, float radians)
 {
   end_x_ = x;
   end_y_ = y;
-  end_radians_ = radians;
+  end_radians_ = ghost_util::WrapAngle2PI(radians - 1.5708);
 }
 
 // sets the lead distance

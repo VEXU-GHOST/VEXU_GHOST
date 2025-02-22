@@ -27,4 +27,9 @@ void get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T &val
     }
 }
 
-} // namespace ghost_tank
+template<typename T>
+void put_in_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T value){
+    blackboard->set<T>(key, value);
+}
+
+} // namespace BT_Util

@@ -21,45 +21,32 @@
  *   SOFTWARE.
  */
 
-#include <ghost_util/angle_util.hpp>
+#pragma once
+
+#include <string>
+#include "behaviortree_cpp/behavior_tree.h"
+#include "rclcpp/rclcpp.hpp"
 #include "ghost_tank/tank_tree.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
+namespace ghost_tank {
 
-// file that contains the custom nodes definitions
-// #include "dummy_nodes.h"
-// using namespace DummyNodes;
+class SetMirrored : public BT::SyncActionNode {
+public:
+  // If your Node has ports, you must use this constructor signature
+  SetMirrored(const std::string& name, const BT::NodeConfig& config);
 
-namespace ghost_tank
-{
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
 
-TankTree::TankTree(std::string bt_path) :
-	bt_path_(bt_path){
-	global_blackboard_ = BT::Blackboard::create();
-}
+  BT::NodeStatus tick();
 
-void TankTree::init_tree(){
-	BT::BehaviorTreeFactory factory;
+private:
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+	std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+  BT::Blackboard::Ptr blackboard_;
+};
 
-	// add all nodes here
-	factory.registerNodeType<LoggingNode>("Logging");
-	factory.registerNodeType<AutoDone>("AutoDone");
-	factory.registerNodeType<AutonTimer>("AutonTimer");
-	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
-	factory.registerNodeType<BiteCmd>("BiteCmd"); 
-	factory.registerNodeType<ClampCmd>("ClampCmd");
-	factory.registerNodeType<ShutoffNode>("ShutoffNode");
-	factory.registerNodeType<IntakeCmd>("IntakeCmd");
-	factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
-	factory.registerNodeType<SetMirrored>("SetMirrored");
-	factory.registerNodeType<ConveyorCmd>("ConveyorCmd");
-
-    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
-}
-
-void TankTree::tick_tree()
-{
-  tree_.tickExactlyOnce();
-}
-
-} // namespace ghost_tank
+} // ghost_tank

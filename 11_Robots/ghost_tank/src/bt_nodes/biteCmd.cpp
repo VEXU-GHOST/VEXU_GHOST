@@ -21,45 +21,41 @@
  *   SOFTWARE.
  */
 
-#include <ghost_util/angle_util.hpp>
-#include "ghost_tank/tank_tree.hpp"
-
-
-// file that contains the custom nodes definitions
-// #include "dummy_nodes.h"
-// using namespace DummyNodes;
+#include "ghost_tank/bt_nodes/biteCmd.hpp"
 
 namespace ghost_tank
 {
 
-TankTree::TankTree(std::string bt_path) :
-	bt_path_(bt_path){
-	global_blackboard_ = BT::Blackboard::create();
-}
-
-void TankTree::init_tree(){
-	BT::BehaviorTreeFactory factory;
-
-	// add all nodes here
-	factory.registerNodeType<LoggingNode>("Logging");
-	factory.registerNodeType<AutoDone>("AutoDone");
-	factory.registerNodeType<AutonTimer>("AutonTimer");
-	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
-	factory.registerNodeType<BiteCmd>("BiteCmd"); 
-	factory.registerNodeType<ClampCmd>("ClampCmd");
-	factory.registerNodeType<ShutoffNode>("ShutoffNode");
-	factory.registerNodeType<IntakeCmd>("IntakeCmd");
-	factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
-	factory.registerNodeType<SetMirrored>("SetMirrored");
-	factory.registerNodeType<ConveyorCmd>("ConveyorCmd");
-
-    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
-}
-
-void TankTree::tick_tree()
+// SyncActionNode (synchronous action) with an input port.
+// If your Node has ports, you must use this constructor signature
+BiteCmd::BiteCmd(
+  const std::string & name, const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
 {
-  tree_.tickExactlyOnce();
+  blackboard_ = config.blackboard;
+	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
 }
 
-} // namespace ghost_tank
+// It is mandatory to define this STATIC method.
+BT::PortsList BiteCmd::providedPorts()
+{
+  // This action has a single input port called "message"
+  return {
+    BT::InputPort<bool>("bite_closed"),
+  };
+}
+
+BT::NodeStatus BiteCmd::tick()
+{
+  bool bite_closed = BT_Util::get_input<bool>(this, "bite_closed");
+
+  std::unordered_map<std::string, int> digital_io_port_map;
+  BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bite_closed);
+
+  return BT::NodeStatus::SUCCESS;
+}
+
+} // ghost_tank

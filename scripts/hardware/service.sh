@@ -45,6 +45,8 @@ ExecStart=-/sbin/agetty --autologin ghost --keep-baud 115200,57600,38400,9600 %I
 EOF
 	sudo systemctl daemon-reload
 	sudo systemctl restart serial-getty@ttyTCU0.service
+	echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/nopasswd-$USER
+
 	;;
     *)
         echo "Usage: service.sh [restart/stop/kill/shutdown/install]"
