@@ -32,7 +32,7 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 MoveToPoseBoomerang::MoveToPoseBoomerang(const std::string& name, const BT::NodeConfig& config):
 	BT::StatefulActionNode(name, config){
-  	std::cout << "[MoveToPoseBoomerang::MoveToPoseBoomerang]" << std::endl;
+  	// std::cout << "[MoveToPoseBoomerang::MoveToPoseBoomerang]" << std::endl;
 		
 	blackboard_ = config.blackboard;
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
@@ -121,9 +121,9 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	angle_threshold *= ghost_util::DEG_TO_RAD;
 	
 
-	if(backwards){
-		theta = ghost_util::FlipAnglePI(theta);
-	}
+	// if(backwards){
+	// 	theta = ghost_util::FlipAnglePI(theta);
+	// }
 
 	double dist_err = sqrt((posX - tank_model_ptr_->getWorldPose().x()) * (posX - tank_model_ptr_->getWorldPose().x()) + 
 	(posY - tank_model_ptr_->getWorldPose().y()) * (posY - tank_model_ptr_->getWorldPose().y()));
@@ -273,11 +273,11 @@ void MoveToPoseBoomerang::PurePursuit(){
       }
     }
 
-	if(backwards){
-		final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], ghost_util::FlipAnglePI(theta_trajectory[theta_trajectory.size() - 1]));
-	} else {
-		final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], theta_trajectory[theta_trajectory.size() - 1]);
-	}
+	// if(backwards){
+		// final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], ghost_util::FlipAnglePI(theta_trajectory[theta_trajectory.size() - 1]));
+	// } else {
+	final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], theta_trajectory[theta_trajectory.size() - 1]);
+	// }
 	
     desired_pose = Eigen::Vector3d(x_trajectory[past_index_], y_trajectory[past_index_], 0.0);
 	BT_Util::put_in_blackboard(blackboard_, "desired_pose", desired_pose);
