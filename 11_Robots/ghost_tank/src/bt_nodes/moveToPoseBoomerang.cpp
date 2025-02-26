@@ -100,13 +100,13 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning() {
 	double posX = BT_Util::get_input<double>(this, "posX_tiles");
 	double posY = BT_Util::get_input<double>(this, "posY_tiles");
 	double theta = BT_Util::get_input<double>(this, "theta_deg");
-	double threshold = BT_Util::get_input<double>(this, "threshold_m");
-	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold_deg");
-	double threshold_vel = BT_Util::get_input<double>(this, "threshold_vel_mps");
-	double angle_threshold_vel = BT_Util::get_input<double>(this, "angle_threshold_vel_dps");
+	double threshold = BT_Util::get_input<double>(this, "threshold_m", 0.1);
+	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold_deg", 5.0);
+	double threshold_vel = BT_Util::get_input<double>(this, "threshold_vel_mps", 100.0);
+	double angle_threshold_vel = BT_Util::get_input<double>(this, "angle_threshold_vel_dps", 1000.0);
 	int timeout = BT_Util::get_input<int>(this, "timeout_ms");
-	bool use_theta = BT_Util::get_input<bool>(this, "use_theta");
-	bool backwards = BT_Util::get_input<bool>(this, "backwards");
+	bool use_theta = BT_Util::get_input<bool>(this, "use_theta", true);
+	bool backwards = BT_Util::get_input<bool>(this, "backwards", false);
 
 	if (mirrored){
 		posX = 6.0 - posX;
@@ -201,8 +201,8 @@ void MoveToPoseBoomerang::GeneratePath(){
 	double posX = BT_Util::get_input<double>(this, "posX_tiles");
 	double posY = BT_Util::get_input<double>(this, "posY_tiles");
 	double theta = BT_Util::get_input<double>(this, "theta_deg");
-	double threshold_xy = BT_Util::get_input<double>(this, "threshold_m");
-	double threshold_theta = BT_Util::get_input<double>(this, "angle_threshold_deg");
+	double threshold_xy = BT_Util::get_input<double>(this, "threshold_m", 0.1);
+	double threshold_theta = BT_Util::get_input<double>(this, "angle_threshold_deg", 5.0);
 	double lead = BT_Util::get_input<double>(this, "lead");
 
 	double tile_to_meters = 0.6096;
@@ -243,10 +243,10 @@ void MoveToPoseBoomerang::GeneratePath(){
 }
 
 void MoveToPoseBoomerang::PurePursuit(){
-	double search_radius = BT_Util::get_input<double>(this, "search_radius_m");
-	double max_speed_linear = BT_Util::get_input<double>(this, "max_speed_linear_pct");
-	double max_speed_angular = BT_Util::get_input<double>(this, "max_speed_angular_pct");
-	bool backwards = BT_Util::get_input<bool>(this, "backwards");
+	double search_radius = BT_Util::get_input<double>(this, "search_radius_m", 0.3);
+	double max_speed_linear = BT_Util::get_input<double>(this, "max_speed_linear_pct", 1.0);
+	double max_speed_angular = BT_Util::get_input<double>(this, "max_speed_angular_pct", 1.0);
+	bool backwards = BT_Util::get_input<bool>(this, "backwards", false);
 
 	double current_x = tank_model_ptr_->getWorldPose().x();
 	double current_y = tank_model_ptr_->getWorldPose().y();

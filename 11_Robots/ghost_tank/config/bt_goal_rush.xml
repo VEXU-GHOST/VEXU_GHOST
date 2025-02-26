@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="goal_rush">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <Logging message="goal_rush"/>
+      <GoalRushCmd arm_down="false"/>
+      <MoveToPoseBoomerang  posX_tiles="1.5"
+                            posY_tiles="2.35"
+                            theta_deg="120.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.1"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.25"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="false"/>
+      <GoalRushCmd arm_down="true"/>
+      <ShutoffNode/>
+      <Delay delay_msec="250">
+        <ShutoffNode/>
+      </Delay>
+
+      <Logging message="pulling_back"/>
+      <MoveToPoseBoomerang posX_tiles="1.9"
+                            posY_tiles="1.75"
+                            theta_deg="-70.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.20"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.75"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+
+      <Logging message="retract arm"/>
+      <GoalRushCmd arm_down="false"/>
+
+      <MoveToPoseBoomerang posX_tiles="2.0"
+                            posY_tiles="1.0"
+                            theta_deg="-90.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.75"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+
+      <Logging message="Going to goal"/>
+      <BiteCmd bite_closed="true"/>
+      <MoveToPoseBoomerang posX_tiles="2.2"
+                            posY_tiles="1.0"
+                            theta_deg="0.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="1.0"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+      <BiteCmd bite_closed="true"/>
+
+      <Logging message="Back Up Further and Clamp Goal"/>
+      <MoveToPoseBoomerang posX_tiles="3.2"
+                            posY_tiles="1.0"
+                            theta_deg="0.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="1.0"
+                            max_speed_linear_pct="0.4"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-1000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+      <ClampCmd clamp_closed="true"/>
+      <Delay delay_msec="250">
+        <ShutoffNode/>
+      </Delay>
+
+      <Logging message="Turn to face stack"/>
+      <ReactiveSequence>
+        <ConveyorCmd fwd="true"/>
+        <MoveToPoseBoomerang posX_tiles="3.5"
+                              posY_tiles="1.0"
+                              theta_deg="45.0"
+                              search_radius_m="0.3"
+                              threshold_m="0.05"
+                              angle_threshold_deg="3.0"
+                              threshold_vel_mps="0.1"
+                              angle_threshold_vel_dps="1.0"
+                              lead="1.0"
+                              max_speed_linear_pct="0.6"
+                              max_speed_angular_pct="1.0"
+                              timeout_ms="-1000"
+                              use_theta="true"
+                              backwards="true"/>
+      </ReactiveSequence>
+      <ConveyorCmd fwd="false"/>
+
+      <Logging message="Grab Stack"/>
+      <ReactiveSequence>
+        <IntakeCmd lower="true" red="false"/>
+        <Sequence>
+          <Delay delay_msec="250">
+            <ShutoffNode/>
+          </Delay>  
+          <MoveToPoseBoomerang posX_tiles="3.0"
+                                posY_tiles="0.5"
+                                theta_deg="-135.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.10"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="0.5"
+                                max_speed_linear_pct="0.4"
+                                max_speed_angular_pct="0.5"
+                                timeout_ms="-1000"
+                                use_theta="true"
+                                backwards="false"/>
+          <ShutoffNode/>
+
+          <Logging message="Wait for Ring"/>
+          <Delay delay_msec="500">
+            <ShutoffNode/>
+          </Delay>  
+
+          <Logging message="Backup"/>
+          <MoveToPoseBoomerang posX_tiles="3.5"
+                          posY_tiles="1.0"
+                          theta_deg="45.0"
+                          search_radius_m="0.3"
+                          threshold_m="0.10"
+                          angle_threshold_deg="3.0"
+                          threshold_vel_mps="0.1"
+                          angle_threshold_vel_dps="1.0"
+                          lead="1.0"
+                          max_speed_linear_pct="1.0"
+                          max_speed_angular_pct="1.0"
+                          timeout_ms="-1000"
+                          use_theta="true"
+                          backwards="true"/>
+        </Sequence>
+      </ReactiveSequence>
+      <ShutoffNode/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <Logging message="Go to stack"/>
+      <BiteCmd bite_closed="false"/>
+      <ReactiveSequence>
+        <IntakeCmd lower="true" red="false"/>
+        <Sequence>
+          <Logging message="Go to next stack"/>
+          <MoveToPoseBoomerang posX_tiles="2.2"
+                                posY_tiles="1.0"
+                                theta_deg="180.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.05"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="0.5"
+                                max_speed_linear_pct="1.0"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-2000"
+                                use_theta="true"
+                                backwards="false"/>
+          <ShutoffNode/>
+          <Delay delay_msec="1000">
+            <ShutoffNode/>
+          </Delay>
+
+          <Logging message="Approach Stack slowly"/>
+          <MoveToPoseBoomerang posX_tiles="1.45"
+                                posY_tiles="1.0"
+                                theta_deg="180.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.05"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="0.0"
+                                max_speed_linear_pct="0.5"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="true"
+                                backwards="false"/>
+          <ShutoffNode/>
+          <Delay delay_msec="250">
+            <ShutoffNode/>
+          </Delay>
+
+
+          <Logging message="Bite top ring"/>
+          <BiteCmd bite_closed="true"/>
+          <Delay delay_msec="375">
+            <ShutoffNode/>
+          </Delay>
+
+          <Logging message="Backup"/>
+          <MoveToPoseBoomerang posX_tiles="2.0"
+                                posY_tiles="1.0"
+                                theta_deg="0.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.05"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="0.0"
+                                max_speed_linear_pct="0.5"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="false"
+                                backwards="true"/>
+          <ShutoffNode/>
+
+          <Logging message="Grab Blue Ring"/>
+          <MoveToPoseBoomerang posX_tiles="1.0"
+                                posY_tiles="1.0"
+                                theta_deg="180.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.05"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="0.0"
+                                max_speed_linear_pct="0.3"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="false"
+                                backwards="false"/>
+          <ShutoffNode/>
+          <Delay delay_msec="1000">
+            <ShutoffNode/>
+          </Delay>
+
+          <Logging message="Turn to Next Stack"/>
+          <BiteCmd bite_closed="false"/>
+          <MoveToPoseBoomerang posX_tiles="1.0"
+                                posY_tiles="1.0"
+                                theta_deg="85.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.2"
+                                angle_threshold_deg="1.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="1.0"
+                                max_speed_linear_pct="0.6"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="true"
+                                backwards="false"/>
+          <ShutoffNode/>
+          <Delay delay_msec="250">
+            <ShutoffNode/>
+          </Delay>
+
+          <MoveToPoseBoomerang posX_tiles="1.0"
+                                posY_tiles="1.65"
+                                theta_deg="90.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.05"
+                                angle_threshold_deg="1.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="1.0"
+                                max_speed_linear_pct="0.3"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="true"
+                                backwards="false"/>
+          <ShutoffNode/>
+          <Delay delay_msec="250">
+            <ShutoffNode/>
+          </Delay>
+
+          <Logging message="Bite"/>
+          <BiteCmd bite_closed="true"/>
+          <Delay delay_msec="750">
+            <ShutoffNode/>
+          </Delay>
+
+          <Logging message="Pull Back"/>
+          <MoveToPoseBoomerang posX_tiles="1.0"
+                                posY_tiles="1.0"
+                                theta_deg="135.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.05"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="0.5"
+                                max_speed_linear_pct="0.3"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="true"
+                                backwards="false"/>
+          <ShutoffNode/>
+
+          <Logging message="Go to corner stack"/>
+          <MoveToPoseBoomerang posX_tiles="0.75"
+                                posY_tiles="0.75"
+                                theta_deg="225.0"
+                                search_radius_m="0.3"
+                                threshold_m="0.05"
+                                angle_threshold_deg="3.0"
+                                threshold_vel_mps="0.1"
+                                angle_threshold_vel_dps="1.0"
+                                lead="0.5"
+                                max_speed_linear_pct="1.0"
+                                max_speed_angular_pct="1.0"
+                                timeout_ms="-1000"
+                                use_theta="false"
+                                backwards="false"/>
+          <ShutoffNode/>
+        </Sequence>
+      </ReactiveSequence>
+
+      <Logging message="Processing Corner Stack"/>
+      <ReactiveSequence>
+        <IntakeCmd lower="true" red="false"/>
+        <Repeat num_cycles="3">
+          <Sequence>
+            <MoveToPoseBoomerang posX_tiles="0.6"
+                                    posY_tiles="0.6"
+                                    theta_deg="225.0"
+                                    search_radius_m="0.05"
+                                    threshold_m="0.02"
+                                    angle_threshold_deg="3.0"
+                                    threshold_vel_mps="0.1"
+                                    angle_threshold_vel_dps="1.0"
+                                    lead="0.5"
+                                    max_speed_linear_pct="0.2"
+                                    max_speed_angular_pct="1.0"
+                                    timeout_ms="-1000"
+                                    use_theta="false"
+                                    backwards="false"/>
+              <ShutoffNode/>
+              <Delay delay_msec="500">
+                <ShutoffNode/>
+              </Delay>
+
+              <MoveToPoseBoomerang
+                posX_tiles="0.7"
+                posY_tiles="0.7"
+                theta_deg="45.0"
+                search_radius_m="0.05"
+                threshold_m="0.02"
+                angle_threshold_deg="3.0"
+                threshold_vel_mps="0.1"
+                angle_threshold_vel_dps="1.0"
+                lead="0.5"
+                max_speed_linear_pct="0.2"
+                max_speed_angular_pct="1.0"
+                timeout_ms="-1000"
+                use_theta="false"
+                backwards="true"/>
+            <ShutoffNode/>
+            <Delay delay_msec="500">
+              <ShutoffNode/>
+            </Delay>
+          </Sequence>
+        </Repeat>
+      </ReactiveSequence>
+
+      <MoveToPoseBoomerang
+        posX_tiles="1.0"
+        posY_tiles="1.0"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.02"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="true"/>
+      <ShutoffNode/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="1.0"
+        posY_tiles="1.0"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="false"/>
+      <ShutoffNode/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="0.25"
+        posY_tiles="0.25"
+        theta_deg="225.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="true"/>
+      <ShutoffNode/>
+      <ClampCmd clamp_closed="false"/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="1.0"
+        posY_tiles="1.0"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="false"/>
+      <ShutoffNode/>
+      <Delay delay_msec="500">
+        <ShutoffNode/>
+      </Delay>
+
+      <MoveToPoseBoomerang
+        posX_tiles="2.5"
+        posY_tiles="1.5"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="1.0"
+        max_speed_angular_pct="1.0"
+        timeout_ms="-2000"
+        use_theta="true"
+        backwards="false"/>
+      <ShutoffNode/>
+
+      <MoveToPoseBoomerang
+        posX_tiles="3.25"
+        posY_tiles="2.25"
+        theta_deg="45.0"
+        search_radius_m="0.3"
+        threshold_m="0.2"
+        angle_threshold_deg="3.0"
+        threshold_vel_mps="0.1"
+        angle_threshold_vel_dps="1.0"
+        lead="0.5"
+        max_speed_linear_pct="0.2"
+        max_speed_angular_pct="0.2"
+        timeout_ms="-1000"
+        use_theta="true"
+        backwards="false"/>
+      <ShutoffNode/>
+
+      <Logging message="Auton Complete"/>
+      <Delay delay_msec="50000">
+      <ShutoffNode/>
+      </Delay>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+            editable="true">
+      <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="ClampCmd"
+            editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
+    <Action ID="ConveyorCmd"
+            editable="true">
+      <input_port name="fwd"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+            editable="true">
+      <input_port name="arm_down"/>
+    </Action>
+    <Action ID="SetMirrored"
+            editable="true">
+      <input_port name="mirrored"/>
+    </Action>
+    <Action ID="IntakeCmd"
+            editable="true">
+      <input_port name="lower"/>
+      <input_port name="red"/>
+    </Action>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPoseBoomerang"
+            editable="true">
+      <input_port name="posX_tiles"/>
+      <input_port name="posY_tiles"/>
+      <input_port name="theta_deg"/>
+      <input_port name="search_radius_m"/>
+      <input_port name="threshold_m"/>
+      <input_port name="angle_threshold_deg"/>
+      <input_port name="threshold_vel_mps"/>
+      <input_port name="angle_threshold_vel_dps"/>
+      <input_port name="lead"/>
+      <input_port name="max_speed_linear_pct"/>
+      <input_port name="max_speed_angular_pct"/>
+      <input_port name="timeout_ms"/>
+      <input_port name="use_theta"/>
+      <input_port name="backwards"/>
+    </Action>
+    <Action ID="MoveToPosePurepursuit"
+            editable="true">
+      <input_port name="fileName"/>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+      <input_port name="use_theta"
+                  default="false"/>
+    </Action>
+    <Action ID="ShutoffNode"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>
