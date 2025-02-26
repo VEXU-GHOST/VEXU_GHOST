@@ -425,8 +425,8 @@ void TankRobotPlugin::teleop(double current_time)
   updateBite(joy_data);
   updateClamp(joy_data);
   updateGoalRush(joy_data);
+  updateNeutralStake(joy_data);
   updateDrivetrain(joy_data);
-
 
 }
 
@@ -465,6 +465,26 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
   } else if (!(joy_data->btn_y && joy_data->btn_x)) {
     m_recording_btn_pressed = false;
   }
+}
+
+void TankRobotPlugin::updateNeutralStake(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  double power = 0.0;
+  double current = 0.0;
+  if (joy_data->btn_u) {
+    power = 1.0;
+    current = 2500;
+  } else if (joy_data->btn_d) {
+    power = -1.0;
+    current = 2500;
+  } else {
+    power = 0.0;
+    current = 0;
+  }
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_motor_l", current);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_motor_r", current);
+  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_motor_l", power);
+  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_motor_r", power);
 }
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)

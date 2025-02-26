@@ -171,6 +171,7 @@ set(NODES
   goalRushCmd
   setMirrored
   conveyorCmd
+  waitCmd
 )
 
 foreach(NODE ${NODES})

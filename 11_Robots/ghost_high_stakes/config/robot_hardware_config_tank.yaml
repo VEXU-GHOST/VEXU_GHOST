@@ -15,6 +15,16 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: intake_motor_config
+        neutral_stake_motor_l:
+            port: 9
+            type: MOTOR
+            reversed: false
+            config: intake_motor_config
+        neutral_stake_motor_r:
+            port: 10
+            type: MOTOR
+            reversed: true
+            config: intake_motor_config
         imu:
             port: 14
             type: INERTIAL_SENSOR
