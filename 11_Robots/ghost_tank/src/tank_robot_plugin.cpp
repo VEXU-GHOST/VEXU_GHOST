@@ -411,7 +411,7 @@ void TankRobotPlugin::teleop(double current_time)
   if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
     joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
   {
-    std::cout << "SHUTFOWN" << std::endl;
+    std::cout << "SHUTDOWN" << std::endl;
     std::system("echo 1 | sudo -S shutdown now");
     return;
   }
