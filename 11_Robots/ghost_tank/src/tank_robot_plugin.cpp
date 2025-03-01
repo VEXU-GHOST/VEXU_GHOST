@@ -277,6 +277,10 @@ void TankRobotPlugin::initTankModel()
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.max_speed_linear", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.max_speed_angular", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy_fine", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy_fine", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta_fine", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta_fine", 0.5);
   m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
   float kp_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
   float kd_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
@@ -284,9 +288,14 @@ void TankRobotPlugin::initTankModel()
   float kd_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
   m_max_speed_linear = node_ptr_->get_parameter("tank_robot_plugin.max_speed_linear").as_double();
   m_max_speed_angular = node_ptr_->get_parameter("tank_robot_plugin.max_speed_angular").as_double();
+  float kp_xy_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
+  float kd_xy_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
+  float kp_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
+  float kd_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
 
   m_boomerang = std::make_shared<Boomerang>();
   m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta);
+  m_pd_control_threshold = std::make_shared<PDControl>(kp_xy_fine, kd_xy_fine, kp_theta_fine, kd_theta_fine);
 }
 
 void TankRobotPlugin::initAutonomy()
@@ -303,6 +312,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
   bt_->set_variable("node_ptr", node_ptr_);
   bt_->set_variable("pd_control_ptr", m_pd_control);
+  bt_->set_variable("pd_control_threshold_ptr", m_pd_control_threshold);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
   try {

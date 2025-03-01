@@ -267,6 +267,7 @@ protected:
 
   std::shared_ptr<Boomerang> m_boomerang;
   std::shared_ptr<PDControl> m_pd_control;
+  std::shared_ptr<PDControl> m_pd_control_threshold;
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;

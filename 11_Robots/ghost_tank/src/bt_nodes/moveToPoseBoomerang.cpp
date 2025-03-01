@@ -38,6 +38,7 @@ MoveToPoseBoomerang::MoveToPoseBoomerang(const std::string& name, const BT::Node
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
 	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
 	BT_Util::get_from_blackboard(blackboard_, "pd_control_ptr", pd_control_ptr_);
+	BT_Util::get_from_blackboard(blackboard_, "pd_control_threshold_ptr", pd_control_threshold_ptr_);
 
 	if(!node_ptr_->has_parameter("behavior_tree.trajectory_topic")){
 		node_ptr_->declare_parameter(
@@ -293,7 +294,7 @@ void MoveToPoseBoomerang::PurePursuit(){
 
 	if (dist_err < threshold_xy) {
 		carrot = final_pose;
-		command = pd_control_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose);
+		command = pd_control_threshold_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose);
 	} else {
 		carrot = desired_pose;
 		command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), carrot, final_pose, backwards);
