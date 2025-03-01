@@ -84,13 +84,23 @@ TEST(testV5CurrentLimiting, testSubsetOfMotorsLimitedToNonZeroValue) {
   std::vector<double> active_current_limits(num_limited, current_limit);
   auto result = calculateCurrentLimits(active_current_limits, num_motors);
 
-  for(int i = 0; i < num_motors; i++){
-    if(i < num_limited){
+  for (int i = 0; i < num_motors; i++) {
+    if (i < num_limited) {
       EXPECT_FLOAT_EQ(result[i], current_limit);
-    }
-    else{
+    } else {
       EXPECT_FLOAT_EQ(result[i], 1962.257);
     }
   }
+}
 
+TEST(testV5CurrentLimiting, testCurrentLimitsOverRegulatedAreIgnored) {
+  int num_motors = 16;
+  int num_limited = 2;
+  double current_limit = 1870;
+  std::vector<double> active_current_limits(num_limited, current_limit);
+  auto result = calculateCurrentLimits(active_current_limits, num_motors);
+
+  for (int i = 0; i < num_motors; i++) {
+    EXPECT_FLOAT_EQ(result[i], 1859.266);
+  }
 }
