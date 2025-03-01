@@ -68,6 +68,7 @@ protected:
   void initROSComms();
   void initEstimation();
   void initIntake();
+  void initNeutralStakeArm();
   void initTankModel();
   void initAutonomy();
 
@@ -102,7 +103,7 @@ protected:
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateNeutralStake(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   void resetWorldPose();
 
@@ -217,12 +218,22 @@ protected:
   double m_conveyor_last_aligned_position{0.0};
   bool m_conveyor_hook_is_aligned{false};
 
-
   double m_conveyor_hook_throw_fraction{0.0};
   double m_conveyor_hook_throw_duration{0.0};
   double m_conveyor_throw_start_time{0.0};
   bool m_conveyor_hook_is_ejecting{false};
   bool m_conveyor_is_throwing{false};
+
+  // Neutral Stake Arm
+  double m_neutral_stake_arm_kp{0.0};
+  double m_neutral_stake_arm_kd{0.0};
+  double m_neutral_stake_arm_gear_ratio{0.0};
+  double m_neutral_stake_arm_rest_pos_deg{0.0};
+  double m_neutral_stake_arm_load_pos_deg{0.0};
+  double m_neutral_stake_arm_loaded_pos_deg{0.0};
+  double m_neutral_stake_arm_limit_pos_deg{0.0};
+  double m_neutral_stake_arm_des_pos{0.0};
+  bool m_neutral_stake_active{false};
 
   // Digital IO
   std::vector<bool> m_digital_io;
