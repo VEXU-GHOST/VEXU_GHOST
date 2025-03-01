@@ -232,7 +232,6 @@ protected:
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
 
-
   // Field vs Robot Oriented Control
   bool m_toggle_tank_field_control_btn_pressed = false;
 
@@ -273,6 +272,10 @@ protected:
   std::vector<std::string> m_all_motor_names;
 
   std::unordered_map<std::string, int> digital_io_port_map;
+
+  // Current Limiting
+  std::vector<double> m_loop_current_limits;
+  int m_num_motors{16};
 };
 
 } // namespace ghost_tank

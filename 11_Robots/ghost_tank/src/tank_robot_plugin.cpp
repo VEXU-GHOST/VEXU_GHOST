@@ -31,6 +31,7 @@
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <ghost_util/read_path.hpp>
+#include <ghost_control/models/v5_current_limiting.hpp>
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -47,7 +48,6 @@ TankRobotPlugin::TankRobotPlugin()
 {
   populateMotorNames();
   populateDigitalIONames();
-
 }
 
 void TankRobotPlugin::populateMotorNames()
@@ -323,6 +323,9 @@ void TankRobotPlugin::onNewSensorData()
     first_loop = false;
   }
 
+  // Clear current limits at start of loop
+  m_loop_current_limits.clear();
+
   updateConveyorPositionSensing();
   publishIMUData();
   updateAndPublishOdometry();
@@ -484,6 +487,9 @@ void TankRobotPlugin::updateNeutralStake(std::shared_ptr<JoystickDeviceData> joy
   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_motor_r", current);
   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_motor_l", power);
   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_motor_r", power);
+
+  m_loop_current_limits.push_back(current);
+  m_loop_current_limits.push_back(current);
 }
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
@@ -573,6 +579,9 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
 
   rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor", conveyor_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor", conveyor_current);
+
+  m_loop_current_limits.push_back(ground_pickup_current);
+  m_loop_current_limits.push_back(conveyor_current);
 }
 
 void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)
@@ -615,6 +624,13 @@ void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_d
 {
   m_tank_model_ptr->driveCommandJoystick(joy_data->left_y, -joy_data->right_x, 0.05);
 
+  double drive_curr_lim = ghost_control::v5_current_limiting::getRemainingCurrentLimitsUnthrottled(m_loop_current_limits, m_num_motors);
+  for (const auto & name : m_right_drive_motor_names) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
+  }
+  for (const auto & name : m_left_drive_motor_names) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
+  }
 }
 
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
