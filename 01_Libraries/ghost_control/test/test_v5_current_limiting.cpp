@@ -30,7 +30,7 @@ using namespace ghost_control::v5_current_limiting;
 TEST(testV5CurrentLimiting, testLessThanEightMotorsAreFullPower) {
   std::vector<double> active_current_limits;
   for (int i = 1; i < 9; i++) {
-    auto result = calculateCurrentLimits(active_current_limits, i);
+    auto result = calculateAllCurrentLimits(active_current_limits, i);
     EXPECT_EQ(result.size(), i);
     for (const auto & lim : result) {
       EXPECT_FLOAT_EQ(lim, 2500.0);
@@ -41,7 +41,7 @@ TEST(testV5CurrentLimiting, testLessThanEightMotorsAreFullPower) {
 TEST(testV5CurrentLimiting, testMoreThanEightMotorsAreLimitedEqually) {
   std::vector<double> active_current_limits;
   for (int i = 9; i < 21; i++) {
-    auto result = calculateCurrentLimits(active_current_limits, i);
+    auto result = calculateAllCurrentLimits(active_current_limits, i);
     EXPECT_EQ(result.size(), i);
     for (const auto & lim : result) {
       EXPECT_FLOAT_EQ(lim, convertBatteryToMotorCurrent(MAX_CURRENT / i));
@@ -57,7 +57,7 @@ TEST(testV5CurrentLimiting, testMotorsLimitedToZero) {
       double num_unlimited = num_motors - num_limited;
 
       std::vector<double> active_current_limits(num_limited, 0.0);
-      auto result = calculateCurrentLimits(active_current_limits, num_motors);
+      auto result = calculateAllCurrentLimits(active_current_limits, num_motors);
 
       for (int k = 0; k < result.size(); k++) {
         if (k < num_limited) {
@@ -82,7 +82,7 @@ TEST(testV5CurrentLimiting, testSubsetOfMotorsLimitedToNonZeroValue) {
   int num_limited = 2;
   double current_limit = 250.0;
   std::vector<double> active_current_limits(num_limited, current_limit);
-  auto result = calculateCurrentLimits(active_current_limits, num_motors);
+  auto result = calculateAllCurrentLimits(active_current_limits, num_motors);
 
   for (int i = 0; i < num_motors; i++) {
     if (i < num_limited) {
@@ -98,9 +98,40 @@ TEST(testV5CurrentLimiting, testCurrentLimitsOverRegulatedAreIgnored) {
   int num_limited = 2;
   double current_limit = 1870;
   std::vector<double> active_current_limits(num_limited, current_limit);
-  auto result = calculateCurrentLimits(active_current_limits, num_motors);
+  auto result = calculateAllCurrentLimits(active_current_limits, num_motors);
 
   for (int i = 0; i < num_motors; i++) {
     EXPECT_FLOAT_EQ(result[i], 1859.266);
   }
+}
+
+
+TEST(testV5CurrentLimiting, testGetRemainingCurrentLimitsUnthrottled) {
+  int num_motors = 16;
+  std::vector<double> active_current_limits{2500.0, 2500.0};
+  EXPECT_FLOAT_EQ(1716.8187, getRemainingCurrentLimitsUnthrottled(active_current_limits, num_motors));
+}
+
+TEST(testV5CurrentLimiting, testGetRemainingCurrentLimitsUnthrottledUneven) {
+  int num_motors = 20;
+  std::vector<double> active_current_limits{1450.0, 118.0, 2485.0};
+  EXPECT_FLOAT_EQ(1627.9312, getRemainingCurrentLimitsUnthrottled(active_current_limits, num_motors));
+}
+
+TEST(testV5CurrentLimiting, testBelowCurrentLimits) {
+  int num_motors = 6;
+  std::vector<double> active_current_limits{2500.0};
+  EXPECT_FLOAT_EQ(2500.0, getRemainingCurrentLimitsUnthrottled(active_current_limits, num_motors));
+}
+
+TEST(testV5CurrentLimiting, testAtCurrentLimits) {
+  int num_motors = 8;
+  std::vector<double> active_current_limits{2500.0};
+  EXPECT_FLOAT_EQ(2500.0, getRemainingCurrentLimitsUnthrottled(active_current_limits, num_motors));
+}
+
+TEST(testV5CurrentLimiting, testAboveCurrentLimitZeroed) {
+  int num_motors = 9;
+  std::vector<double> active_current_limits{0.0};
+  EXPECT_FLOAT_EQ(2492.6480, getRemainingCurrentLimitsUnthrottled(active_current_limits, num_motors));
 }

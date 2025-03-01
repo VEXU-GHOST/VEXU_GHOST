@@ -24,7 +24,7 @@
 #pragma once
 #include <math.h>
 #include <vector>
-#include <algorithm>
+#include <numeric>
 #include <ghost_util/math_util.hpp>
 
 namespace ghost_control
@@ -32,50 +32,58 @@ namespace ghost_control
 
 namespace v5_current_limiting
 {
-
 constexpr double MAX_CURRENT = 12800.0;
 
-double convertMotorToBatteryCurrent(double current)
-{
-  return exp(((current / 1000) + 4.324) / 0.925);
-}
-double convertBatteryToMotorCurrent(double current)
-{
-  return (0.925 * log(current) - 4.324) * 1000;
-}
+double convertMotorToBatteryCurrent(double current);
 
-std::vector<double> calculateCurrentLimits(std::vector<double> active_current_limits_ma, int num_motors)
-{
+double convertBatteryToMotorCurrent(double current);
 
-  double default_current_limit_amps = convertBatteryToMotorCurrent(MAX_CURRENT / num_motors) / 1000.0;
-  default_current_limit_amps = ghost_util::clamp(default_current_limit_amps, 0.0, 2.5);
+/**
+ * @brief This replicates the current limiting logic implemented in VEX OS, as described on this page: https://wiki.purduesigbots.com/vex-electronics/vex-electronics/motors.
+ * 
+ * This is a weird black-box function, and is not user friendly at all, so we include other functions in this module to assist.
+ * This is intended just to replicate the existing logic upstream.
+ * 
+ * 
+ * Observations/Notes:
+ * If there are less than 9 motors plugged in, they all get the full 2500mA.
+ * If there are nine or more, the limits decrease.
+ * If there are 8 motors, and N additional motors with current limits set to zero, THEY STILL DECREASE, albiet by a very small amount.
+ * If there are nine or more motors plugged in, and a subset are limited to a value higher thatn the nominal decreased limit, then they are throttled to the adjusted limit.
+ * 
+ * @param active_current_limits_ma Vector containing any active current limits
+ * @param num_motors Number of motors plugged in to the brain
+ * @return std::vector<double> vector of all current limits, where first N are equal to the active current limits passed in (IF the active limits are less than the adjusted current limit)
+ */
+std::vector<double> calculateAllCurrentLimits(std::vector<double> active_current_limits_ma, int num_motors);
 
-  // Sum Current Limits
-  double limited_sum = 0.0;
-  int num_limited = 0;
-  for (const auto & lim_milliamps : active_current_limits_ma) {
-    double lim_amps = lim_milliamps / 1000.0;
-    if (lim_amps < default_current_limit_amps) {
-      limited_sum += convertMotorToBatteryCurrent(lim_milliamps);
-      num_limited++;
-    }
-  }
-
-  int num_unlimited = num_motors - num_limited;
-  double battery_current_per_motor = (MAX_CURRENT - limited_sum) / num_unlimited;
-
-  double adjusted_current_limit = convertBatteryToMotorCurrent(battery_current_per_motor);
-  adjusted_current_limit = ghost_util::clamp(adjusted_current_limit, 0.0, 2500.0);
-
-  std::vector<double> final_current_limits(num_motors, adjusted_current_limit);
-
-  for (int i = 0; i < active_current_limits_ma.size(); i++) {
-    if (active_current_limits_ma[i] < adjusted_current_limit) {
-      final_current_limits[i] = active_current_limits_ma[i];
-    }
-  }
-  return final_current_limits;
-}
+/**
+ * @brief Given N motors plugged into the brain, and M current limits in milliAmps, this method returns what value we should limit all other motors to such that VEX OS will not throttle
+ * the desired/"active" motors.
+ * 
+ * Issue:
+ *  We have 20 motors plugged in. The following is completely ignored, because no motor can exceed the adjusted current limit without first lowering other motor values.
+ *  ```
+ *  motor_1.setCurrentLimit(2500.0);
+ *  ```
+ * 
+ * Solution:
+ *  ```
+ *  motor1.setCurrentLimit(2500.0);
+ *  
+ *  lim = getRemainingCurrentLimitsUnthrottled(std::vector<double>(2500.0), 20);
+ *  motor2.setCurrentLimit(lim);
+ *  ...
+ *  motorN.setCurrentLimit(lim);
+ *  ```
+ * 
+ * Now all motors are properly throttled such that motor 1 can run at full power
+ * 
+ * @param active_current_limits_ma Vector containing any active current limits
+ * @param num_motors Number of motors plugged in to the brain
+ * @return double   Single value which can be set for all other motors to avoid throttling active current limits
+ */
+double getRemainingCurrentLimitsUnthrottled(std::vector<double> active_current_limits_ma, int num_motors);
 
 } // namespace v5_current_limiting
 } // namespace ghost_control

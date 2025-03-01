@@ -68,6 +68,25 @@ install(
   INCLUDES DESTINATION include
 )
 
+# Current Limiting
+add_library(v5_current_limiting SHARED src/models/v5_current_limiting.cpp)
+ament_target_dependencies(v5_current_limiting
+${DEPENDENCIES}
+)
+target_include_directories(v5_current_limiting
+PUBLIC
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+$<INSTALL_INTERFACE:include>)
+ament_export_targets(v5_current_limiting HAS_LIBRARY_TARGET)
+install(
+  TARGETS v5_current_limiting
+  EXPORT v5_current_limiting
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 #################
 #### Install ####
 #################
@@ -86,10 +105,8 @@ target_link_libraries(test_dc_motor_model
 )
 
 ament_add_gtest(test_v5_current_limiting test/test_v5_current_limiting.cpp)
-ament_target_dependencies(test_v5_current_limiting
-  ${DEPENDENCIES}
-)
 target_link_libraries(test_v5_current_limiting
+  v5_current_limiting  
   gtest_main
 )
 
