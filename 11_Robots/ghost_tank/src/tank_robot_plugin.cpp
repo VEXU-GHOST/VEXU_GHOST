@@ -427,7 +427,6 @@ void TankRobotPlugin::teleop(double current_time)
   updateGoalRush(joy_data);
   updateNeutralStake(joy_data);
   updateDrivetrain(joy_data);
-
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)

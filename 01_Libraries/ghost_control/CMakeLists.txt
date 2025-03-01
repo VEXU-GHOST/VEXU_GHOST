@@ -85,4 +85,12 @@ target_link_libraries(test_dc_motor_model
   gtest
 )
 
+ament_add_gtest(test_v5_current_limiting test/test_v5_current_limiting.cpp)
+ament_target_dependencies(test_v5_current_limiting
+  ${DEPENDENCIES}
+)
+target_link_libraries(test_v5_current_limiting
+  gtest_main
+)
+
 ament_package()
