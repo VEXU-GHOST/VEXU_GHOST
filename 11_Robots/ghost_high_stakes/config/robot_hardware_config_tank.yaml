@@ -15,12 +15,12 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: intake_motor_config
-        neutral_stake_l:
+        neutral_stake_r:
             port: 9
             type: MOTOR
             reversed: false
             config: neutral_stake_motor_config
-        neutral_stake_r:
+        neutral_stake_l:
             port: 10
             type: MOTOR
             reversed: true
