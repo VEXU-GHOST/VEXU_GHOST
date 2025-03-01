@@ -69,18 +69,15 @@ void TankRobotPlugin::populateMotorNames()
     "drive_l6",
   };
 
-  m_all_motor_names.insert(
-    m_all_motor_names.end(),
+  m_all_drive_motor_names.insert(
+    m_all_drive_motor_names.end(),
     m_left_drive_motor_names.begin(),
     m_left_drive_motor_names.end());
 
-  m_all_motor_names.insert(
-    m_all_motor_names.end(),
+  m_all_drive_motor_names.insert(
+    m_all_drive_motor_names.end(),
     m_right_drive_motor_names.begin(),
     m_right_drive_motor_names.end());
-
-  m_all_motor_names.push_back("ground_pickup_motor");
-  m_all_motor_names.push_back("conveyor_motor");
 }
 
 void TankRobotPlugin::populateDigitalIONames()
@@ -286,7 +283,7 @@ void TankRobotPlugin::initTankModel()
   double wheel_base_inches = node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
 
   TankConfig tank_model_config;
-  tank_model_config.motor_list = m_all_motor_names;
+  tank_model_config.motor_list = m_all_drive_motor_names;
   tank_model_config.wheel_radius = wheel_rad_in; //in
   tank_model_config.wheel_gear_ratio = 1.0 / drive_gear_ratio;
   tank_model_config.wheel_dist = wheel_base_inches / 2.0; //in
@@ -449,7 +446,7 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   toggleBagRecorder(joy_data);
-  // updateNeutralStakeArm(joy_data);
+  updateNeutralStakeArm(joy_data);
   updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_r, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
@@ -496,8 +493,8 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
 
 void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
 {
-  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_motor_l");
-  double curr_vel = rhi_ptr_->getMotorVelocityRPM("neutral_stake_motor_l");
+  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_l");
+  double curr_vel = rhi_ptr_->getMotorVelocityRPM("neutral_stake_l");
 
   double power = 0.0;
   if (joy_data->btn_d) {
@@ -517,26 +514,27 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
     m_neutral_stake_active = false;
   }
 
-  double current_ma;
+  int32_t current_ma;
   if (m_neutral_stake_active) {
     power = m_neutral_stake_arm_kp * (m_neutral_stake_arm_des_pos - curr_pos) + m_neutral_stake_arm_kd * (0.0 - curr_vel);
-    current_ma = 2500.0;
+    current_ma = 2500;
   } else {
     power = 0.0;
-    current_ma = 0.0;
+    current_ma = 0;
+    current_ma = 0;
   }
 
   if(curr_pos > m_neutral_stake_arm_limit_pos_deg){
     power = ghost_util::clamp(power, -1.0, 0.0);
   }
 
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_motor_l", current_ma);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_motor_r", current_ma);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_l", current_ma);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_r", current_ma);
   m_loop_current_limits.push_back(current_ma);
   m_loop_current_limits.push_back(current_ma);
 
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_motor_l", power);
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_motor_r", power);
+  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_l", power);
+  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_r", power);
 }
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
@@ -671,11 +669,12 @@ void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_d
 {
   m_tank_model_ptr->driveCommandJoystick(joy_data->left_y, -joy_data->right_x, 0.05);
 
-  double drive_curr_lim = ghost_control::v5_current_limiting::getRemainingCurrentLimitsUnthrottled(m_loop_current_limits, m_num_motors);
-  for (const auto & name : m_right_drive_motor_names) {
-    rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
+  int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentLimitsUnthrottled(m_loop_current_limits, m_num_motors));
+  if(std::fabs(joy_data->left_y / 127.0) < 0.05 && std::fabs(-joy_data->right_x / 127.0) < 0.05){
+    drive_curr_lim = 0;
   }
-  for (const auto & name : m_left_drive_motor_names) {
+
+  for (const auto & name : m_all_drive_motor_names) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
   }
 }

@@ -87,19 +87,29 @@ void update_actuators()
     m.second->updateInterface();
   }
 
-  static int count = 0;
+  // static int count = 0;
 
-  if (count++ % 100 == 0) {
+  // if (count++ % 100 == 0) {
 
-    auto drive_current_lim = v5_globals::motor_interfaces["drive_l1"]->getMotorInterfacePtr()->get_current_limit();
-    v5_globals::screen_interface_ptr->addToPrintQueue("drive_l1: ", drive_current_lim);
+  //   auto drive_current_lim = v5_globals::motor_interfaces["drive_l1"]->getMotorInterfacePtr()->get_current_limit();
+  //   auto drive_current_draw = v5_globals::motor_interfaces["drive_l1"]->getMotorInterfacePtr()->get_current_draw();
+  //   v5_globals::screen_interface_ptr->addToPrintQueue("drive_l1: ", drive_current_lim, "\t", drive_current_draw);
 
-    auto drive_current_lim = v5_globals::motor_interfaces["conveyor_motor"]->getMotorInterfacePtr()->get_current_limit();
-    v5_globals::screen_interface_ptr->addToPrintQueue("conveyor_motor: ", drive_current_lim);
+  //   auto conveyor_current_lim = v5_globals::motor_interfaces["conveyor_motor"]->getMotorInterfacePtr()->get_current_limit();
+  //   auto conveyor_current_draw = v5_globals::motor_interfaces["conveyor_motor"]->getMotorInterfacePtr()->get_current_limit();
+  //   v5_globals::screen_interface_ptr->addToPrintQueue("conveyor_motor: ", conveyor_current_lim, "\t", conveyor_current_draw);
 
-    auto drive_current_lim = v5_globals::motor_interfaces["ground_pickup_motor"]->getMotorInterfacePtr()->get_current_limit();
-    v5_globals::screen_interface_ptr->addToPrintQueue("ground_pickup_motor: ", drive_current_lim);
-  }
+  //   auto ground_pickup_current_lim = v5_globals::motor_interfaces["ground_pickup_motor"]->getMotorInterfacePtr()->get_current_limit();
+  //   auto ground_pickup_current_draw = v5_globals::motor_interfaces["ground_pickup_motor"]->getMotorInterfacePtr()->get_current_limit();
+  //   v5_globals::screen_interface_ptr->addToPrintQueue("ground_pickup_motor: ", ground_pickup_current_lim, "\t", ground_pickup_current_draw);
+
+  //   auto nsml_current_lim = v5_globals::motor_interfaces["neutral_stake_l"]->getMotorInterfacePtr()->get_current_limit();
+  //   v5_globals::screen_interface_ptr->addToPrintQueue("neutral_stake_l: ", nsml_current_lim);
+
+  //   auto nsmr_current_lim = v5_globals::motor_interfaces["neutral_stake_r"]->getMotorInterfacePtr()->get_current_limit();
+  //   v5_globals::screen_interface_ptr->addToPrintQueue("neutral_stake_r: ", nsmr_current_lim);
+  //   v5_globals::screen_interface_ptr->addToPrintQueue("");
+  // }
 
   actuator_lock.unlock();
 }
@@ -353,19 +363,19 @@ void opcontrol()
 
 // void opcontrol(){
 //      uint32_t loop_time = pros::millis();
-//      auto m1 = pros::Motor(11, pros::motor_gearset_e_t::E_MOTOR_GEAR_600);
+//      auto m1 = pros::Motor(1, pros::motor_gearset_e_t::E_MOTOR_GEAR_600);
 //      pros::Controller joy (pros::E_CONTROLLER_MASTER);
 
-//      std::cout << "Voltage, Velocity, Current, Torque, Power, Efficiency, Temperature" << std::endl;
-
 //      while(!pros::competition::is_autonomous() && !pros::competition::is_disabled()){
-//              m1.move_voltage(joy.get_analog(ANALOG_RIGHT_Y) / 127.0 * 12000.0);
-
-//              std::cout << m1.get_voltage() << ", " << m1.get_actual_velocity() << ", " << m1.get_current_draw()
-//                        << ", " << m1.get_torque() << ", " << m1.get_power() << ", " << m1.get_efficiency() << ", "
-//                        << m1.get_temperature() << std::endl;
-
-
+//              if(joy.get_digital(DIGITAL_A)){
+//               m1.set_current_limit(0);
+//               std::cout << m1.get_current_limit() << std::endl;
+//              }
+//              else{
+//               m1.set_current_limit(2500);
+//               std::cout << m1.get_current_limit() << std::endl;
+//               m1.move_voltage(joy.get_analog(ANALOG_RIGHT_Y) / 127.0 * 12000.0);
+//              }
 //              pros::c::task_delay_until(&loop_time, 10);
 //      }
 // }
