@@ -99,6 +99,7 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char> & buffer)
       case device_type_e::MOTOR:
         {
           auto motor_device_data_ptr = device_data_ptr->as<MotorDeviceData>();
+          v5_globals::motor_interfaces.at(name)->setCurrentLimit(0);
           current_limits.push_back(std::pair<std::string, int32_t>(name, motor_device_data_ptr->current_limit));
 
           v5_globals::motor_interfaces.at(name)->setMotorCommand(
