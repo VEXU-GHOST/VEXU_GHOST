@@ -307,7 +307,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
   try {
     bt_->init_tree();
-  } catch (std::exception &e) {
+  } catch (std::exception & e) {
     std::cout << "Error init_tree: " << e.what() << std::endl;
   }
 }
@@ -378,7 +378,7 @@ void TankRobotPlugin::autonomous(double current_time)
 
   try {
     bt_->tick_tree();
-  } catch (std::exception &e) {
+  } catch (std::exception & e) {
     std::cout << "Error tick_tree: " << e.what() << std::endl;
   }
 

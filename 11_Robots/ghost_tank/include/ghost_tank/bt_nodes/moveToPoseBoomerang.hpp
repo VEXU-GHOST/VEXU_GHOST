@@ -44,10 +44,11 @@ namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
-class MoveToPoseBoomerang : public BT::StatefulActionNode {
+class MoveToPoseBoomerang : public BT::StatefulActionNode
+{
 public:
-	// If your Node has ports, you must use this constructor signature
-	MoveToPoseBoomerang(const std::string& name, const BT::NodeConfig& config);
+  // If your Node has ports, you must use this constructor signature
+  MoveToPoseBoomerang(const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -73,12 +74,12 @@ private:
   std::chrono::time_point<std::chrono::system_clock> plan_time_;
   std::shared_ptr<rclcpp::Node> node_ptr_;
   std::shared_ptr<Boomerang> boomerang_;
-	BT::Blackboard::Ptr blackboard_;
+  BT::Blackboard::Ptr blackboard_;
 
   bool started_;
   int past_index_;
   std::shared_ptr<PDControl> pd_control_ptr_;
-	ghost_planners::RobotTrajectory robot_trajectory_;
+  ghost_planners::RobotTrajectory robot_trajectory_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr curr_angle_pub;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr des_angle_pub;
