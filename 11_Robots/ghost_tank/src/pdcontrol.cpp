@@ -67,7 +67,7 @@ Eigen::Vector2d PDControl::theta_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cu
 
   float error_theta = ghost_util::SmallestAngleDistRad(end_pos.z(), cur_pos.z());
   float derivative_theta = -cur_twist.z();
-  integral_theta_ += ghost_util::clamp(error_theta + integral_theta_, -integral_limit_, integral_limit_);
+  integral_theta_ = ghost_util::clamp(error_theta + integral_theta_, -integral_limit_, integral_limit_);
 
   float output_angular = kp_theta_ * error_theta + kd_theta_ * derivative_theta + ki_theta_ * integral_theta_;
   output_angular = ghost_util::clamp(output_angular, -1.0f, 1.0f);
