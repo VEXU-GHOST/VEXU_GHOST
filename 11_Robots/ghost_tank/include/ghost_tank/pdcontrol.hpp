@@ -11,18 +11,25 @@ class PDControl
 
 public:
   //constructor
-  PDControl(float kp_xy_,
-    float kd_xy_,
-    float kp_theta_,
-    float kd_theta_);
+  PDControl(float kp_xy,
+    float kd_xy,
+    float kp_theta,
+    float kd_theta,
+    float ki_theta,
+    float integral_limit);
   Eigen::Vector2d tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d & carrot_pos, Eigen::Vector3d final_pos, bool backwards);
   Eigen::Vector2d theta_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos);
+  Eigen::Vector2d theta_pd(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos);
 
 private:
   float kp_xy_;
   float kd_xy_;
   float kp_theta_;
   float kd_theta_;
+  float ki_theta_;
+  float integral_limit_;
+  float integral_theta_ = 0.0;
+  Eigen::Vector3d prev_final_pos_;
 };
 
 } // namespace ghost_tank

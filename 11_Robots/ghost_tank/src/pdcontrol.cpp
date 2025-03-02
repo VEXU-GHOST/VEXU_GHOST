@@ -13,9 +13,12 @@ PDControl::PDControl(
   float kp_xy,
   float kd_xy,
   float kp_theta,
-  float kd_theta)
-: kp_xy_(kp_xy), kd_xy_(kd_xy), kp_theta_(kp_theta), kd_theta_(kd_theta)
+  float kd_theta,
+  float ki_theta,
+  float integral_limit)
+: kp_xy_(kp_xy), kd_xy_(kd_xy), kp_theta_(kp_theta), kd_theta_(kd_theta), ki_theta_(ki_theta), integral_limit_(integral_limit)
 {
+  integral_theta_ = 0.0;
 }
 
 Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d & carrot_pos, Eigen::Vector3d final_pos, bool backwards)
@@ -44,11 +47,29 @@ Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur
   return Eigen::Vector2d(output_linear, output_angular);
 }
 
-Eigen::Vector2d PDControl::theta_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos)
+Eigen::Vector2d PDControl::theta_pd(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos)
 {
   float error_theta = ghost_util::SmallestAngleDistRad(end_pos.z(), cur_pos.z());
   float derivative_theta = -cur_twist.z();
   float output_angular = kp_theta_ * error_theta + kd_theta_ * derivative_theta;
+  output_angular = ghost_util::clamp(output_angular, -1.0f, 1.0f);
+
+  return Eigen::Vector2d(0.0, output_angular);
+}
+
+Eigen::Vector2d PDControl::theta_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos)
+{
+  if (prev_final_pos_ != end_pos)
+  {
+    integral_theta_ = 0.0;
+    prev_final_pos_ = end_pos;
+  }
+
+  float error_theta = ghost_util::SmallestAngleDistRad(end_pos.z(), cur_pos.z());
+  float derivative_theta = -cur_twist.z();
+  integral_theta_ += ghost_util::clamp(error_theta + integral_theta_, -integral_limit_, integral_limit_);
+
+  float output_angular = kp_theta_ * error_theta + kd_theta_ * derivative_theta + ki_theta_ * integral_theta_;
   output_angular = ghost_util::clamp(output_angular, -1.0f, 1.0f);
 
   return Eigen::Vector2d(0.0, output_angular);
