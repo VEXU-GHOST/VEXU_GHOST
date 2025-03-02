@@ -68,6 +68,7 @@ protected:
   void initROSComms();
   void initEstimation();
   void initIntake();
+  void initNeutralStakeArm();
   void initTankModel();
   void initAutonomy();
 
@@ -102,7 +103,7 @@ protected:
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateNeutralStake(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   void resetWorldPose();
 
@@ -217,12 +218,23 @@ protected:
   double m_conveyor_last_aligned_position{0.0};
   bool m_conveyor_hook_is_aligned{false};
 
-
   double m_conveyor_hook_throw_fraction{0.0};
   double m_conveyor_hook_throw_duration{0.0};
   double m_conveyor_throw_start_time{0.0};
   bool m_conveyor_hook_is_ejecting{false};
   bool m_conveyor_is_throwing{false};
+
+  // Neutral Stake Arm
+  double m_neutral_stake_arm_kp{0.0};
+  double m_neutral_stake_arm_gear_ratio{0.0};
+  double m_neutral_stake_arm_rest_pos_deg{0.0};
+  double m_neutral_stake_arm_loading_pos_deg{0.0};
+  double m_neutral_stake_arm_loaded_pos_deg{0.0};
+  double m_neutral_stake_arm_score_neutral_pos_deg{0.0};
+  double m_neutral_stake_arm_score_alliance_pos_deg{0.0};
+  double m_neutral_stake_arm_down_pos_deg{0.0};
+  double m_neutral_stake_arm_des_pos{0.0};
+  int m_arm_mode{0};
 
   // Digital IO
   std::vector<bool> m_digital_io;
@@ -270,9 +282,13 @@ protected:
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
-  std::vector<std::string> m_all_motor_names;
+  std::vector<std::string> m_all_drive_motor_names;
 
   std::unordered_map<std::string, int> digital_io_port_map;
+
+  // Current Limiting
+  std::vector<double> m_loop_current_limits;
+  int m_num_motors{16};
 };
 
 } // namespace ghost_tank

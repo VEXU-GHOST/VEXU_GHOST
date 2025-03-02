@@ -31,6 +31,7 @@
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <ghost_util/read_path.hpp>
+#include <ghost_control/models/v5_current_limiting.hpp>
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -47,7 +48,6 @@ TankRobotPlugin::TankRobotPlugin()
 {
   populateMotorNames();
   populateDigitalIONames();
-
 }
 
 void TankRobotPlugin::populateMotorNames()
@@ -69,18 +69,15 @@ void TankRobotPlugin::populateMotorNames()
     "drive_l6",
   };
 
-  m_all_motor_names.insert(
-    m_all_motor_names.end(),
+  m_all_drive_motor_names.insert(
+    m_all_drive_motor_names.end(),
     m_left_drive_motor_names.begin(),
     m_left_drive_motor_names.end());
 
-  m_all_motor_names.insert(
-    m_all_motor_names.end(),
+  m_all_drive_motor_names.insert(
+    m_all_drive_motor_names.end(),
     m_right_drive_motor_names.begin(),
     m_right_drive_motor_names.end());
-
-  m_all_motor_names.push_back("ground_pickup_motor");
-  m_all_motor_names.push_back("conveyor_motor");
 }
 
 void TankRobotPlugin::populateDigitalIONames()
@@ -100,6 +97,7 @@ void TankRobotPlugin::initialize()
   initROSComms();
   initEstimation();
   initIntake();
+  initNeutralStakeArm();
   initTankModel();
   initAutonomy();
 }
@@ -247,6 +245,32 @@ void TankRobotPlugin::initIntake()
   m_conveyor_hook_throw_duration = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_duration").as_double();
 }
 
+void TankRobotPlugin::initNeutralStakeArm()
+{
+  std::cout << "[TankRobotPlugin::initNeutralStakeArm]" << std::endl;
+
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_kp", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_gear_ratio", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_rest_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_loading_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_loaded_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_score_neutral_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_score_alliance_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_down_pos_deg", 0.0);
+
+  m_neutral_stake_arm_kp = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_kp").as_double();
+  m_neutral_stake_arm_gear_ratio = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_gear_ratio").as_double();
+  m_neutral_stake_arm_rest_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_rest_pos_deg").as_double();
+  m_neutral_stake_arm_loading_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_loading_pos_deg").as_double();
+  m_neutral_stake_arm_loaded_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_loaded_pos_deg").as_double();
+  m_neutral_stake_arm_score_neutral_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_score_neutral_pos_deg").as_double();
+  m_neutral_stake_arm_score_alliance_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_score_alliance_pos_deg").as_double();
+  m_neutral_stake_arm_down_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_down_pos_deg").as_double();
+
+  m_neutral_stake_arm_des_pos = m_neutral_stake_arm_rest_pos_deg;
+}
+
+
 void TankRobotPlugin::initTankModel()
 {
   std::cout << "[TankRobotPlugin::initTankModel]" << std::endl;
@@ -261,7 +285,7 @@ void TankRobotPlugin::initTankModel()
   double wheel_base_inches = node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
 
   TankConfig tank_model_config;
-  tank_model_config.motor_list = m_all_motor_names;
+  tank_model_config.motor_list = m_all_drive_motor_names;
   tank_model_config.wheel_radius = wheel_rad_in; //in
   tank_model_config.wheel_gear_ratio = 1.0 / drive_gear_ratio;
   tank_model_config.wheel_dist = wheel_base_inches / 2.0; //in
@@ -322,6 +346,9 @@ void TankRobotPlugin::onNewSensorData()
     resetWorldPose();
     first_loop = false;
   }
+
+  // Clear current limits at start of loop
+  m_loop_current_limits.clear();
 
   updateConveyorPositionSensing();
   publishIMUData();
@@ -421,11 +448,11 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   toggleBagRecorder(joy_data);
+  updateNeutralStakeArm(joy_data);
   updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_r, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
   updateGoalRush(joy_data);
-  updateNeutralStake(joy_data);
   updateDrivetrain(joy_data);
 
 }
@@ -467,24 +494,74 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
   }
 }
 
-void TankRobotPlugin::updateNeutralStake(std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
 {
+  std::vector<double> arm_mode_position_map{
+    m_neutral_stake_arm_rest_pos_deg,
+    m_neutral_stake_arm_loading_pos_deg,
+    m_neutral_stake_arm_loaded_pos_deg,
+    m_neutral_stake_arm_score_neutral_pos_deg,
+    m_neutral_stake_arm_score_alliance_pos_deg,
+    m_neutral_stake_arm_down_pos_deg
+  };
+
+  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_l") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
-  double current = 0.0;
-  if (joy_data->btn_u) {
-    power = 1.0;
-    current = 2500;
-  } else if (joy_data->btn_d) {
-    power = -1.0;
-    current = 2500;
-  } else {
-    power = 0.0;
-    current = 0;
+
+  static bool btn_l_pressed = false;
+  static bool btn_d_pressed = false;
+
+  if (joy_data->btn_l && m_arm_mode != 5 && !btn_l_pressed) {
+    m_arm_mode++;
+    btn_l_pressed = true;
+  } else if (!joy_data->btn_l) {
+    btn_l_pressed = false;
   }
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_motor_l", current);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_motor_r", current);
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_motor_l", power);
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_motor_r", power);
+
+  if (joy_data->btn_d && m_arm_mode != 0 && !btn_d_pressed) {
+    m_arm_mode--;
+    btn_d_pressed = true;
+  } else if (!joy_data->btn_d) {
+    btn_d_pressed = false;
+  }
+
+  m_neutral_stake_arm_des_pos = arm_mode_position_map[m_arm_mode];
+
+  int32_t current_ma;
+  double position_error = (m_neutral_stake_arm_des_pos - curr_pos);
+  if (m_arm_mode == 0 && std::fabs(position_error) < 1) {
+    power = 0.0;
+    current_ma = 0;
+  } else {
+    current_ma = 2500;
+    power = m_neutral_stake_arm_kp * (m_neutral_stake_arm_des_pos - curr_pos);
+  }
+
+  // Don't exert positive power at upper limit
+  if (curr_pos > m_neutral_stake_arm_down_pos_deg) {
+    power = ghost_util::clamp(power, -1.0, 0.0);
+  }
+
+  // Don't exert negative power at lower limit
+  if (curr_pos < m_neutral_stake_arm_rest_pos_deg) {
+    power = ghost_util::clamp(power, 0.0, 1.0);
+  }
+
+  if (m_arm_mode == 4) {
+    power = ghost_util::clamp(power, -0.2, 0.2);
+  }
+
+   if (m_arm_mode == 5) {
+    power = ghost_util::clamp(power, -0.4, 0.4);
+  }
+
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_l", current_ma);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_r", current_ma);
+  m_loop_current_limits.push_back(current_ma);
+  m_loop_current_limits.push_back(current_ma);
+
+  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_l", power);
+  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_r", power);
 }
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
@@ -574,6 +651,9 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
 
   rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor", conveyor_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor", conveyor_current);
+
+  m_loop_current_limits.push_back(ground_pickup_current);
+  m_loop_current_limits.push_back(conveyor_current);
 }
 
 void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)
@@ -616,6 +696,14 @@ void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_d
 {
   m_tank_model_ptr->driveCommandJoystick(joy_data->left_y, -joy_data->right_x, 0.05);
 
+  int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
+  if (std::fabs(joy_data->left_y / 127.0) < 0.05 && std::fabs(-joy_data->right_x / 127.0) < 0.05) {
+    drive_curr_lim = 0;
+  }
+
+  for (const auto & name : m_all_drive_motor_names) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
+  }
 }
 
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
