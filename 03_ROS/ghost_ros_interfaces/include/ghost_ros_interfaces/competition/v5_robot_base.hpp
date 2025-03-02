@@ -25,6 +25,7 @@
 
 #include <chrono>
 #include <memory>
+#include <atomic>
 
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
@@ -145,7 +146,7 @@ private:
   void updateCompetitionState(bool is_disabled, bool is_autonomous);
   void trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg);
 
-  bool configured_ = false;
+  std::atomic_bool configured_ = false;
   bool should_record_ = false;
   robot_state_e last_comp_state_ = robot_state_e::TELEOP;
   robot_state_e curr_comp_state_ = robot_state_e::TELEOP;

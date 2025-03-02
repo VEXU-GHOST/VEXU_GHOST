@@ -67,10 +67,12 @@ protected:
   // Initialization
   void initROSComms();
   void initEstimation();
+  void initIntake();
   void initTankModel();
   void initAutonomy();
 
   // onNewSensorData
+  void updateConveyorPositionSensing();
   void publishIMUData();
   void updateAndPublishOdometry();
   void publishBaseTwist();
@@ -79,13 +81,31 @@ protected:
   // Teleop
   bool runAutonFromDriver(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
   void toggleBagRecorder(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateIntake(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+
+  /**
+   * @brief Handles intaking logic
+   *
+   * Holding R2 alone intakes the Ground Pickup, and aligns the next conveyor hook for intaking rings
+   * Holding R alone outtakes the Ground Pickup
+   * Holding R1 intakes the Conveyor
+   * Holding L1 alone outtakes the Conveyor
+   * Holding R2 and L1 will initiate the ejector sequence for the current ring
+   *
+   * @param R2
+   * @param R1
+   * @param L1
+   * @param R
+   * @param current_time
+   */
+  void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateNeutralStake(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
-  void resetPose(double x, double y, double theta);
- 
+  void resetWorldPose();
+
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_tank_viz_pub;
@@ -98,6 +118,9 @@ protected:
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_err_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
+
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_ekf_pub;
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_pf_pub;
 
   void publishDesiredTwist(Eigen::Vector3d twist);
   void publishCurrentTwist(Eigen::Vector3d twist);
@@ -170,10 +193,36 @@ protected:
   double m_init_world_x = 0.0;
   double m_init_world_y = 0.0;
   double m_init_world_theta = 0.0;
-  bool m_use_backup_estimator = false;
+  static constexpr size_t m_cov_n = 6 * 6;
 
+  std::vector<double> m_reset_pose;
+  std::vector<double> m_initial_estimate_covariance;
+
+  bool m_use_backup_estimator = false;
+  bool m_reset_world_pose = false;
   bool m_clamp_closed{false};
   bool m_bite_closed{false};
+  bool m_goal_rush_active{false};
+
+  // Conveyor
+  double m_conveyor_ticks_per_loop{0.0};
+  double m_conveyor_ticks_per_hook{0.0};
+
+  double m_conveyor_position_abs{0.0};
+  double m_conveyor_position_rel{0.0};
+  double m_hook_fraction{0.0};
+
+  double m_conveyor_hook_align_threshold{0.0};
+  double m_conveyor_hook_align_power{0.0};
+  double m_conveyor_last_aligned_position{0.0};
+  bool m_conveyor_hook_is_aligned{false};
+
+
+  double m_conveyor_hook_throw_fraction{0.0};
+  double m_conveyor_hook_throw_duration{0.0};
+  double m_conveyor_throw_start_time{0.0};
+  bool m_conveyor_hook_is_ejecting{false};
+  bool m_conveyor_is_throwing{false};
 
   // Digital IO
   std::vector<bool> m_digital_io;
@@ -182,6 +231,7 @@ protected:
   // Bag Recorder
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
+
 
   // Field vs Robot Oriented Control
   bool m_toggle_tank_field_control_btn_pressed = false;

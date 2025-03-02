@@ -1,6 +1,7 @@
 port_configuration:
     digital_io:
         A: IN
+        F: OUT
         G: OUT
         H: OUT
     devices:
@@ -13,6 +14,16 @@ port_configuration:
             port: 2
             type: MOTOR
             reversed: false
+            config: intake_motor_config
+        neutral_stake_motor_l:
+            port: 9
+            type: MOTOR
+            reversed: false
+            config: intake_motor_config
+        neutral_stake_motor_r:
+            port: 10
+            type: MOTOR
+            reversed: true
             config: intake_motor_config
         imu:
             port: 14
