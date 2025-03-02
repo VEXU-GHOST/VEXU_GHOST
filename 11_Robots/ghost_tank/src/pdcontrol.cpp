@@ -21,22 +21,21 @@ PDControl::PDControl(
   integral_theta_ = 0.0;
 }
 
-Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d & carrot_pos, Eigen::Vector3d final_pos, bool backwards)
+Eigen::Vector2d PDControl::tank_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & carrot_pos, const Eigen::Vector3d & final_pos, bool backwards)
 {
   float output_linear = 0.0;
   float output_angular = 0.0;
 
   // Translational PD, always goes to Final Pose
   float dist_err = (final_pos.head<2>() - cur_pos.head<2>()).norm();
-  float derivative_err_linear = -sqrt(pow(cur_twist.x(), 2) + pow(cur_twist.y(), 2));
+  float derivative_err_linear = -cur_twist.head<2>().norm();
   output_linear = kp_xy_ * dist_err + kd_xy_ * derivative_err_linear;
   output_linear = ghost_util::clamp(output_linear, -1.0f, 1.0f);
   output_linear *= (backwards) ? -1.0 : 1.0;
 
   // Angular PD, chases Carrot Pose
-  float carrot_rel_x = carrot_pos.x() - cur_pos.x();
-  float carrot_rel_y = carrot_pos.y() - cur_pos.y();
-  float des_theta = atan2(carrot_rel_y, carrot_rel_x);
+  Eigen::Vector2d carrot_rel = carrot_pos.head<2>() - cur_pos.head<2>();
+  float des_theta = atan2(carrot_rel.y(), carrot_rel.x());
   float curr_angle = (backwards) ? 3.1415 + cur_pos.z() : cur_pos.z();
   float error_theta = ghost_util::SmallestAngleDistRad(des_theta, curr_angle);
 
@@ -47,7 +46,7 @@ Eigen::Vector2d PDControl::tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur
   return Eigen::Vector2d(output_linear, output_angular);
 }
 
-Eigen::Vector2d PDControl::theta_pd(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos)
+Eigen::Vector2d PDControl::theta_pd(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & end_pos)
 {
   float error_theta = ghost_util::SmallestAngleDistRad(end_pos.z(), cur_pos.z());
   float derivative_theta = -cur_twist.z();

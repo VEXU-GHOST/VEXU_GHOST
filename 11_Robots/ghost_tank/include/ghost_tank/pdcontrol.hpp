@@ -11,15 +11,16 @@ class PDControl
 
 public:
   //constructor
-  PDControl(float kp_xy,
+  PDControl(
+    float kp_xy,
     float kd_xy,
     float kp_theta,
     float kd_theta,
     float ki_theta,
     float integral_limit);
-  Eigen::Vector2d tank_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d & carrot_pos, Eigen::Vector3d final_pos, bool backwards);
-  Eigen::Vector2d theta_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos);
-  Eigen::Vector2d theta_pd(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos);
+  Eigen::Vector2d tank_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & carrot_pos, const Eigen::Vector3d & final_pos, bool backwards);
+  Eigen::Vector2d theta_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & end_pos);
+  Eigen::Vector2d theta_pd(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & end_pos);
 
 private:
   float kp_xy_;

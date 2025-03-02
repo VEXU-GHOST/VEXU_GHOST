@@ -86,6 +86,7 @@ void update_actuators()
   for (auto & m : v5_globals::motor_interfaces) {
     m.second->updateInterface();
   }
+
   actuator_lock.unlock();
 }
 
@@ -338,19 +339,19 @@ void opcontrol()
 
 // void opcontrol(){
 //      uint32_t loop_time = pros::millis();
-//      auto m1 = pros::Motor(11, pros::motor_gearset_e_t::E_MOTOR_GEAR_600);
+//      auto m1 = pros::Motor(1, pros::motor_gearset_e_t::E_MOTOR_GEAR_600);
 //      pros::Controller joy (pros::E_CONTROLLER_MASTER);
 
-//      std::cout << "Voltage, Velocity, Current, Torque, Power, Efficiency, Temperature" << std::endl;
-
 //      while(!pros::competition::is_autonomous() && !pros::competition::is_disabled()){
-//              m1.move_voltage(joy.get_analog(ANALOG_RIGHT_Y) / 127.0 * 12000.0);
-
-//              std::cout << m1.get_voltage() << ", " << m1.get_actual_velocity() << ", " << m1.get_current_draw()
-//                        << ", " << m1.get_torque() << ", " << m1.get_power() << ", " << m1.get_efficiency() << ", "
-//                        << m1.get_temperature() << std::endl;
-
-
+//              if(joy.get_digital(DIGITAL_A)){
+//               m1.set_current_limit(0);
+//               std::cout << m1.get_current_limit() << std::endl;
+//              }
+//              else{
+//               m1.set_current_limit(2500);
+//               std::cout << m1.get_current_limit() << std::endl;
+//               m1.move_voltage(joy.get_analog(ANALOG_RIGHT_Y) / 127.0 * 12000.0);
+//              }
 //              pros::c::task_delay_until(&loop_time, 10);
 //      }
 // }
