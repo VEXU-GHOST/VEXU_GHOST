@@ -56,7 +56,7 @@ Eigen::Vector2d PDControl::theta_pd(const Eigen::Vector3d & cur_pos, const Eigen
   return Eigen::Vector2d(0.0, output_angular);
 }
 
-Eigen::Vector2d PDControl::theta_pid(Eigen::Vector3d cur_pos, Eigen::Vector3d cur_twist, Eigen::Vector3d end_pos)
+Eigen::Vector2d PDControl::theta_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & end_pos)
 {
   if (prev_final_pos_ != end_pos)
   {
