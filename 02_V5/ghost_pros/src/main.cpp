@@ -94,11 +94,11 @@ void update_actuators()
     auto drive_current_lim = v5_globals::motor_interfaces["drive_l1"]->getMotorInterfacePtr()->get_current_limit();
     v5_globals::screen_interface_ptr->addToPrintQueue("drive_l1: ", drive_current_lim);
 
-    auto drive_current_lim = v5_globals::motor_interfaces["conveyor_motor"]->getMotorInterfacePtr()->get_current_limit();
-    v5_globals::screen_interface_ptr->addToPrintQueue("conveyor_motor: ", drive_current_lim);
+    auto conveyor_current_lim = v5_globals::motor_interfaces["conveyor_motor"]->getMotorInterfacePtr()->get_current_limit();
+    v5_globals::screen_interface_ptr->addToPrintQueue("conveyor_motor: ", conveyor_current_lim);
 
-    auto drive_current_lim = v5_globals::motor_interfaces["ground_pickup_motor"]->getMotorInterfacePtr()->get_current_limit();
-    v5_globals::screen_interface_ptr->addToPrintQueue("ground_pickup_motor: ", drive_current_lim);
+    auto ground_pickup_current_lim = v5_globals::motor_interfaces["ground_pickup_motor"]->getMotorInterfacePtr()->get_current_limit();
+    v5_globals::screen_interface_ptr->addToPrintQueue("ground_pickup_motor: ", ground_pickup_current_lim);
   }
 
   actuator_lock.unlock();

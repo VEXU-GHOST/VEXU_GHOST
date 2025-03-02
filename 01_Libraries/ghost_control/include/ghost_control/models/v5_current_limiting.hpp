@@ -69,21 +69,22 @@ std::vector<double> calculateAllCurrentLimits(std::vector<double> active_current
  * 
  * Solution:
  *  ```
- *  motor1.setCurrentLimit(2500.0);
  *  
- *  lim = getRemainingCurrentLimitsUnthrottled(std::vector<double>(2500.0), 20);
+ *  lim = getRemainingCurrentDistributed(std::vector<double>(2500.0), 20);
  *  motor2.setCurrentLimit(lim);
  *  ...
  *  motorN.setCurrentLimit(lim);
+ *  motor1.setCurrentLimit(2500.0);
  *  ```
  * 
- * Now all motors are properly throttled such that motor 1 can run at full power
+ * Now all motors are properly throttled such that motor 1 can run at full power.
+ * If some motors are disabled, they can also be added to the input vector to increase the calculated value.
  * 
- * @param active_current_limits_ma Vector containing any active current limits
+ * @param active_current_limits_ma Vector containing any active current limits (either low or high)
  * @param num_motors Number of motors plugged in to the brain
  * @return double   Single value which can be set for all other motors to avoid throttling active current limits
  */
-double getRemainingCurrentLimitsUnthrottled(std::vector<double> active_current_limits_ma, int num_motors);
+double getRemainingCurrentDistributed(std::vector<double> active_current_limits_ma, int num_motors);
 
 } // namespace v5_current_limiting
 } // namespace ghost_control

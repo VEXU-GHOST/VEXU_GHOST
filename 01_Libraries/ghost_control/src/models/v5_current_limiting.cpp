@@ -69,13 +69,44 @@ std::vector<double> calculateAllCurrentLimits(std::vector<double> active_current
   return final_current_limits;
 }
 
-double getRemainingCurrentLimitsUnthrottled(std::vector<double> active_current_limits_ma, int num_motors)
+double getRemainingCurrentDistributed(std::vector<double> active_current_limits_ma, int num_motors)
 {
-  double limited_sum = 0.0;
+  // Calculate the naive default limit
+  double default_current_limit_milliamps = convertBatteryToMotorCurrent(MAX_CURRENT / num_motors);
+  default_current_limit_milliamps = ghost_util::clamp(default_current_limit_milliamps, 0.0, 2500.0);
+
+  int num_distributed = num_motors - active_current_limits_ma.size();
+
+  // Gather necessary metrics on the active current limits
+  int num_over = 0;
+  double max_over_current = 0.0;
+  std::vector<double> under_currents;
   for (const auto & lim : active_current_limits_ma) {
-    limited_sum += convertMotorToBatteryCurrent(lim);
+    if (lim < default_current_limit_milliamps) {
+      under_currents.push_back(lim);
+    } else {
+      num_over++;
+      max_over_current = std::max(max_over_current, lim);
+    }
   }
-  return std::min(2500.0, convertBatteryToMotorCurrent((MAX_CURRENT - limited_sum) / (num_motors - active_current_limits_ma.size())));
+
+  // Get the battery current per unregulated motor
+  // Note: motors are divided based on whether they exceed the naive threshold or not, so if the threshold is 1500, then there is
+  // no different at the motor if we were to request 2000mA or 2500mA. This is why we take the max instead of an average.
+  auto battery_current_per_motor = convertMotorToBatteryCurrent(max_over_current);
+
+  // Invert the distributing operation and determine what all the limited motors need to add up to.
+  auto lim_current_sum = MAX_CURRENT - battery_current_per_motor * num_over;
+
+  // Remove user-specified under currents individually after transforming through exponential to battery.
+  for (const auto & current : under_currents) {
+    lim_current_sum -= convertMotorToBatteryCurrent(current);
+  }
+
+  // Finally, we have the sum of all the unspecified limited motors.
+  // We can divide to get the individual currents at the battery, and then convert to the requested motor limits.
+  lim_current_sum /= num_distributed;
+  return std::min(2500.0, convertBatteryToMotorCurrent(lim_current_sum));
 }
 
 } // namespace v5_current_limiting

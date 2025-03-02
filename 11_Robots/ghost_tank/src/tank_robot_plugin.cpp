@@ -671,7 +671,7 @@ void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_d
 {
   m_tank_model_ptr->driveCommandJoystick(joy_data->left_y, -joy_data->right_x, 0.05);
 
-  double drive_curr_lim = ghost_control::v5_current_limiting::getRemainingCurrentLimitsUnthrottled(m_loop_current_limits, m_num_motors);
+  double drive_curr_lim = ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors);
   for (const auto & name : m_right_drive_motor_names) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
   }

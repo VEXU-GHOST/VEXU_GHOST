@@ -87,6 +87,11 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_executable(current_limit_sandbox test/current_limit_sandbox.cpp)
+target_link_libraries(current_limit_sandbox
+  v5_current_limiting
+)
+
 #################
 #### Install ####
 #################
