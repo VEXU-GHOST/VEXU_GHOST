@@ -21,6 +21,7 @@
  *   SOFTWARE.
  */
 #include <ghost_control/models/v5_current_limiting.hpp>
+#include <iostream>
 
 namespace ghost_control
 {
@@ -92,7 +93,7 @@ double getRemainingCurrentDistributed(std::vector<double> active_current_limits_
 
   // Get the battery current per unregulated motor
   // Note: motors are divided based on whether they exceed the naive threshold or not, so if the threshold is 1500, then there is
-  // no different at the motor if we were to request 2000mA or 2500mA. This is why we take the max instead of an average.
+  // no difference at the motor if we were to request 2000mA or 2500mA. This is why we take the max instead of an average.
   auto battery_current_per_motor = convertMotorToBatteryCurrent(max_over_current);
 
   // Invert the distributing operation and determine what all the limited motors need to add up to.
@@ -106,7 +107,27 @@ double getRemainingCurrentDistributed(std::vector<double> active_current_limits_
   // Finally, we have the sum of all the unspecified limited motors.
   // We can divide to get the individual currents at the battery, and then convert to the requested motor limits.
   lim_current_sum /= num_distributed;
-  return std::min(2500.0, convertBatteryToMotorCurrent(lim_current_sum));
+  auto distributed_current_limit = convertBatteryToMotorCurrent(lim_current_sum);
+
+  // Clamp to max current
+  distributed_current_limit = std::min(2500.0, distributed_current_limit);
+
+  // This is a patch for the corner case where we call this without any over current motors (which is non-sensical).
+  // Regardless, in that case, we want to return the correct answer, which ignores the default current limiting below.
+  if(num_over == 0){
+    return distributed_current_limit;
+  }
+
+  // For the individual limits to be valid, they must be below the nominal limit, otherwise they won't trigger the algorithm.
+  // We drop 1mA to satisfy the strict inequality.
+  distributed_current_limit = std::min(default_current_limit_milliamps-1, distributed_current_limit);
+
+  // If we ended up with 1mA below 2500.0, we aren't actually doing any current limiting, so just return full power. 
+  if(std::fabs(distributed_current_limit - 2499.0) < std::numeric_limits<float>::epsilon()){
+    return 2500.0;
+  }
+
+  return distributed_current_limit;
 }
 
 } // namespace v5_current_limiting

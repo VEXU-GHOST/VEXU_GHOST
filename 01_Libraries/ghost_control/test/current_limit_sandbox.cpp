@@ -28,8 +28,8 @@ using namespace ghost_control::v5_current_limiting;
 
 int main(int argc, char * argv[])
 {
-  int num_motors = 16;
-  std::vector<double> active_current_limits{2500.0, 2000.0, 2500.0, 0.0, 120.0};
+  int num_motors = 9;
+  std::vector<double> active_current_limits{0.0};
   auto throttled = getRemainingCurrentDistributed(active_current_limits, num_motors);
   std::cout << "Remaining Unthrottled: " << throttled << std::endl;
 

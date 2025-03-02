@@ -129,10 +129,28 @@ TEST(testV5CurrentLimiting, testAtCurrentLimits) {
   EXPECT_FLOAT_EQ(2500.0, getRemainingCurrentDistributed(active_current_limits, num_motors));
 }
 
+TEST(testV5CurrentLimiting, testBelowCurrentLimitsZeroed) {
+  int num_motors = 6;
+  std::vector<double> active_current_limits{0.0};
+  EXPECT_FLOAT_EQ(2500.0, getRemainingCurrentDistributed(active_current_limits, num_motors));
+}
+
+TEST(testV5CurrentLimiting, testAtCurrentLimitsZeroed) {
+  int num_motors = 8;
+  std::vector<double> active_current_limits{0.0};
+  EXPECT_FLOAT_EQ(2500.0, getRemainingCurrentDistributed(active_current_limits, num_motors));
+}
+
 TEST(testV5CurrentLimiting, testAboveCurrentLimitZeroed) {
   int num_motors = 9;
   std::vector<double> active_current_limits{0.0};
   EXPECT_FLOAT_EQ(2492.6480, getRemainingCurrentDistributed(active_current_limits, num_motors));
+}
+
+TEST(testV5CurrentLimiting, testAboveCurrentLimitZeroed2) {
+  int num_motors = 14;
+  std::vector<double> active_current_limits{0.0};
+  EXPECT_FLOAT_EQ(2043.554, getRemainingCurrentDistributed(active_current_limits, num_motors));
 }
 
 TEST(testV5CurrentLimiting, testCurrentLimitInversion1) {
@@ -173,6 +191,48 @@ TEST(testV5CurrentLimiting, testCurrentLimitInversion2) {
       EXPECT_FLOAT_EQ(result[i], active_current_limits[i]);
     } else {
       EXPECT_FLOAT_EQ(result[i], throttled_current);
+    }
+  }
+}
+
+TEST(testV5CurrentLimiting, testCurrentLimitInversion3) {
+  int num_motors = 16;
+  std::vector<double> active_current_limits{2500.0, 0.0, 0.0, 0.0};
+  auto throttled_current = getRemainingCurrentDistributed(active_current_limits, num_motors);
+
+  std::vector<double> throttled_current_limits;
+  throttled_current_limits.insert(throttled_current_limits.end(), active_current_limits.begin(), active_current_limits.end());
+  for (int i = throttled_current_limits.size(); i < num_motors; i++) {
+    throttled_current_limits.push_back(throttled_current);
+  }
+  auto result = calculateAllCurrentLimits(throttled_current_limits, num_motors);
+
+  for (int i = 0; i < num_motors; i++) {
+    if (i < active_current_limits.size()) {
+      EXPECT_FLOAT_EQ(result[i], active_current_limits[i]);
+    } else {
+      EXPECT_FLOAT_EQ(result[i], convertBatteryToMotorCurrent(MAX_CURRENT / num_motors) - 1);
+    }
+  }
+}
+
+TEST(testV5CurrentLimiting, testCurrentLimitInversionNoOverMotors) {
+  int num_motors = 16;
+  std::vector<double> active_current_limits{0.0, 0.0, 0.0, 0.0};
+  auto throttled_current = getRemainingCurrentDistributed(active_current_limits, num_motors);
+
+  std::vector<double> throttled_current_limits;
+  throttled_current_limits.insert(throttled_current_limits.end(), active_current_limits.begin(), active_current_limits.end());
+  for (int i = throttled_current_limits.size(); i < num_motors; i++) {
+    throttled_current_limits.push_back(throttled_current);
+  }
+  auto result = calculateAllCurrentLimits(throttled_current_limits, num_motors);
+
+  for (int i = 0; i < num_motors; i++) {
+    if (i < active_current_limits.size()) {
+      EXPECT_FLOAT_EQ(result[i], active_current_limits[i]);
+    } else {
+      EXPECT_FLOAT_EQ(result[i], 2093.857); // Grabbed from Purdue Wiki
     }
   }
 }
