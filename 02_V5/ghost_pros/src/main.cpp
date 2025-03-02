@@ -87,21 +87,6 @@ void update_actuators()
     m.second->updateInterface();
   }
 
-  static int count = 0;
-
-  if (count++ % 100 == 0) {
-
-    auto drive_current_lim = v5_globals::motor_interfaces["drive_l1"]->getMotorInterfacePtr()->get_current_limit();
-    auto drive_current_draw = v5_globals::motor_interfaces["drive_l1"]->getMotorInterfacePtr()->get_current_draw();
-    v5_globals::screen_interface_ptr->addToPrintQueue("drive_l1: ", drive_current_lim, "\t", drive_current_draw);
-
-    auto conveyor_current_lim = v5_globals::motor_interfaces["conveyor_motor"]->getMotorInterfacePtr()->get_current_limit();
-    v5_globals::screen_interface_ptr->addToPrintQueue("conveyor_motor: ", conveyor_current_lim);
-
-    auto ground_pickup_current_lim = v5_globals::motor_interfaces["ground_pickup_motor"]->getMotorInterfacePtr()->get_current_limit();
-    v5_globals::screen_interface_ptr->addToPrintQueue("ground_pickup_motor: ", ground_pickup_current_lim);
-  }
-
   actuator_lock.unlock();
 }
 

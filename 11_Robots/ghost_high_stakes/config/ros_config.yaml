@@ -69,13 +69,14 @@ competition_state_machine_node:
       conveyor_hook_throw_fraction: 0.5
       conveyor_hook_throw_duration: 0.25
 
-      neutral_stake_arm_kp: 0.0
-      neutral_stake_arm_kd: 0.0
+      neutral_stake_arm_kp: 0.04
       neutral_stake_arm_gear_ratio: 3.0
       neutral_stake_arm_rest_pos_deg: 0.0
-      neutral_stake_arm_load_pos_deg: 0.0
-      neutral_stake_arm_loaded_pos_deg: 0.0
-      neutral_stake_arm_limit_pos_deg: 0.0
+      neutral_stake_arm_loading_pos_deg: 25.0
+      neutral_stake_arm_loaded_pos_deg: 70.0
+      neutral_stake_arm_score_neutral_pos_deg: 110.0
+      neutral_stake_arm_score_alliance_pos_deg: 170.0
+      neutral_stake_arm_down_pos_deg: 220.0
 
       # motion planning
       move_to_pose_kp_xy: 2.2

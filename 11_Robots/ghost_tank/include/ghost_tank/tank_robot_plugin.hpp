@@ -226,14 +226,15 @@ protected:
 
   // Neutral Stake Arm
   double m_neutral_stake_arm_kp{0.0};
-  double m_neutral_stake_arm_kd{0.0};
   double m_neutral_stake_arm_gear_ratio{0.0};
   double m_neutral_stake_arm_rest_pos_deg{0.0};
-  double m_neutral_stake_arm_load_pos_deg{0.0};
+  double m_neutral_stake_arm_loading_pos_deg{0.0};
   double m_neutral_stake_arm_loaded_pos_deg{0.0};
-  double m_neutral_stake_arm_limit_pos_deg{0.0};
+  double m_neutral_stake_arm_score_neutral_pos_deg{0.0};
+  double m_neutral_stake_arm_score_alliance_pos_deg{0.0};
+  double m_neutral_stake_arm_down_pos_deg{0.0};
   double m_neutral_stake_arm_des_pos{0.0};
-  bool m_neutral_stake_active{false};
+  int m_arm_mode{0};
 
   // Digital IO
   std::vector<bool> m_digital_io;

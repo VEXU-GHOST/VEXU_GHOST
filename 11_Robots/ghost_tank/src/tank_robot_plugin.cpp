@@ -250,20 +250,22 @@ void TankRobotPlugin::initNeutralStakeArm()
   std::cout << "[TankRobotPlugin::initNeutralStakeArm]" << std::endl;
 
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_kp", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_kd", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_gear_ratio", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_rest_pos_deg", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_load_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_loading_pos_deg", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_loaded_pos_deg", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_limit_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_score_neutral_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_score_alliance_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_down_pos_deg", 0.0);
 
   m_neutral_stake_arm_kp = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_kp").as_double();
-  m_neutral_stake_arm_kd = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_kd").as_double();
   m_neutral_stake_arm_gear_ratio = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_gear_ratio").as_double();
   m_neutral_stake_arm_rest_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_rest_pos_deg").as_double();
-  m_neutral_stake_arm_load_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_load_pos_deg").as_double();
+  m_neutral_stake_arm_loading_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_loading_pos_deg").as_double();
   m_neutral_stake_arm_loaded_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_loaded_pos_deg").as_double();
-  m_neutral_stake_arm_limit_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_limit_pos_deg").as_double();
+  m_neutral_stake_arm_score_neutral_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_score_neutral_pos_deg").as_double();
+  m_neutral_stake_arm_score_alliance_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_score_alliance_pos_deg").as_double();
+  m_neutral_stake_arm_down_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_down_pos_deg").as_double();
 
   m_neutral_stake_arm_des_pos = m_neutral_stake_arm_rest_pos_deg;
 }
@@ -493,39 +495,63 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
 
 void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
 {
-  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_l");
-  double curr_vel = rhi_ptr_->getMotorVelocityRPM("neutral_stake_l");
+  std::vector<double> arm_mode_position_map{
+    m_neutral_stake_arm_rest_pos_deg,
+    m_neutral_stake_arm_loading_pos_deg,
+    m_neutral_stake_arm_loaded_pos_deg,
+    m_neutral_stake_arm_score_neutral_pos_deg,
+    m_neutral_stake_arm_score_alliance_pos_deg,
+    m_neutral_stake_arm_down_pos_deg
+  };
 
+  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_l") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
-  if (joy_data->btn_d) {
-    m_neutral_stake_active = true;
-    if (joy_data->btn_r2) {
-      m_neutral_stake_arm_des_pos = m_neutral_stake_arm_load_pos_deg;
-    } else if (joy_data->btn_r1) {
-      m_neutral_stake_arm_des_pos = m_neutral_stake_arm_loaded_pos_deg;
-    } else if (joy_data->btn_l1) {
-      m_neutral_stake_arm_des_pos = m_neutral_stake_arm_limit_pos_deg;
-    }
-  } else {
-    m_neutral_stake_arm_des_pos = m_neutral_stake_arm_rest_pos_deg;
+
+  static bool btn_l_pressed = false;
+  static bool btn_d_pressed = false;
+
+  if (joy_data->btn_l && m_arm_mode != 5 && !btn_l_pressed) {
+    m_arm_mode++;
+    btn_l_pressed = true;
+  } else if (!joy_data->btn_l) {
+    btn_l_pressed = false;
   }
 
-  if (joy_data->btn_l) {
-    m_neutral_stake_active = false;
+  if (joy_data->btn_d && m_arm_mode != 0 && !btn_d_pressed) {
+    m_arm_mode--;
+    btn_d_pressed = true;
+  } else if (!joy_data->btn_d) {
+    btn_d_pressed = false;
   }
+
+  m_neutral_stake_arm_des_pos = arm_mode_position_map[m_arm_mode];
 
   int32_t current_ma;
-  if (m_neutral_stake_active) {
-    power = m_neutral_stake_arm_kp * (m_neutral_stake_arm_des_pos - curr_pos) + m_neutral_stake_arm_kd * (0.0 - curr_vel);
-    current_ma = 2500;
-  } else {
+  double position_error = (m_neutral_stake_arm_des_pos - curr_pos);
+  if (m_arm_mode == 0 && std::fabs(position_error) < 1) {
     power = 0.0;
     current_ma = 0;
-    current_ma = 0;
+  } else {
+    current_ma = 2500;
+    power = m_neutral_stake_arm_kp * (m_neutral_stake_arm_des_pos - curr_pos);
   }
 
-  if(curr_pos > m_neutral_stake_arm_limit_pos_deg){
+  // Don't exert positive power at upper limit
+  if (curr_pos > m_neutral_stake_arm_down_pos_deg) {
     power = ghost_util::clamp(power, -1.0, 0.0);
+  }
+
+  // Don't exert negative power at lower limit
+  if (curr_pos < m_neutral_stake_arm_rest_pos_deg) {
+    power = ghost_util::clamp(power, 0.0, 1.0);
+  }
+
+  if (m_arm_mode == 4) {
+    power = ghost_util::clamp(power, -0.2, 0.2);
+  }
+
+   if (m_arm_mode == 5) {
+    power = ghost_util::clamp(power, -0.4, 0.4);
   }
 
   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_l", current_ma);
@@ -670,7 +696,7 @@ void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_d
   m_tank_model_ptr->driveCommandJoystick(joy_data->left_y, -joy_data->right_x, 0.05);
 
   int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
-  if(std::fabs(joy_data->left_y / 127.0) < 0.05 && std::fabs(-joy_data->right_x / 127.0) < 0.05){
+  if (std::fabs(joy_data->left_y / 127.0) < 0.05 && std::fabs(-joy_data->right_x / 127.0) < 0.05) {
     drive_curr_lim = 0;
   }
 
