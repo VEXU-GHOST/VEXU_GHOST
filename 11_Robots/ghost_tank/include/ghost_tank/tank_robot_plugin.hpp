@@ -280,7 +280,7 @@ protected:
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
-  std::vector<std::string> m_all_motor_names;
+  std::vector<std::string> m_all_drive_motor_names;
 
   std::unordered_map<std::string, int> digital_io_port_map;
 
