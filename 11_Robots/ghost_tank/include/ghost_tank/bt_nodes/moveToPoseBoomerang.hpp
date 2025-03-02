@@ -87,6 +87,7 @@ private:
 
   double des_angle_;
   double curr_angle_;
+  Eigen::Vector3d final_pose_ = Eigen::Vector3d::Zero();
 
   void PurePursuit();
   void GeneratePath();
