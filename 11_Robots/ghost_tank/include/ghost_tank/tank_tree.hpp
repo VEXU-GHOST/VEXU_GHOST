@@ -27,6 +27,7 @@
 #include "ghost_tank/bt_nodes/loggingNode.hpp"
 #include "ghost_tank/bt_nodes/autoDone.hpp"
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
+#include "ghost_tank/bt_nodes/moveToPoseBezier.hpp"
 #include "ghost_tank/bt_nodes/moveToPoseBoomerang.hpp"
 #include "ghost_tank/bt_nodes/moveToPosePurepursuit.hpp"
 #include "ghost_tank/bt_nodes/biteCmd.hpp"
