@@ -208,6 +208,11 @@ foreach(NODE ${NODES})
   ament_target_dependencies(${NODE}
     ${DEPENDENCIES}
   )
+  target_link_libraries(${NODE}
+    boomerang
+    bezier_curve
+    pdcontrol
+  )
   ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
   install(
     TARGETS ${NODE}
