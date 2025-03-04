@@ -434,6 +434,17 @@ void TankRobotPlugin::autonomous(double current_time)
   if (bt_->get_variable("desired_pose", m_desired_pose)) {
     publishDesiredPose(m_desired_pose);
   }
+
+  bool lower_intake_active = false;
+  bool hook_intake_active = false;
+  bool ring_eject_active = false;
+  if (bt_->get_variable("lower_intake", lower_intake_active) 
+    && bt_->get_variable("hook_intake", hook_intake_active) 
+    && bt_->get_variable("ring_eject", ring_eject_active))
+  {
+    updateIntake(lower_intake_active, hook_intake_active, ring_eject_active, false, current_time);
+  }
+
   double fwd_cmd = 0.0;
   double turn_cmd = 0.0;
   if (bt_->get_variable("fwd_cmd", fwd_cmd)) {

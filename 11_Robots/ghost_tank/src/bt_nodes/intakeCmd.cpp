@@ -108,7 +108,14 @@ BT::NodeStatus IntakeCmd::tick()
     eject = (m_ring_color == color_map["red"]) && ring_prewaited;
   }
 
-  updateIntake(lower, hook, eject);
+  if(eject){
+    hook = false;
+  }
+  
+  BT_Util::put_in_blackboard(blackboard_, "lower_intake", lower);
+  BT_Util::put_in_blackboard(blackboard_, "hook_intake", hook);
+  BT_Util::put_in_blackboard(blackboard_, "ring_eject", eject);
+  // updateIntake(lower, hook, eject);
 
   return BT::NodeStatus::SUCCESS;
 }
