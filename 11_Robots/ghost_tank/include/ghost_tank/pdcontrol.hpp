@@ -30,6 +30,7 @@ private:
   float ki_theta_;
   float integral_limit_;
   float integral_theta_ = 0.0;
+  float prev_error_theta_ = 0.0;
   Eigen::Vector3d prev_final_pos_;
 };
 

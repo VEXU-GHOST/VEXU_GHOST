@@ -84,8 +84,8 @@ void TankRobotPlugin::populateDigitalIONames()
 {
   digital_io_port_map["conveyor_switch"] = 0;
   digital_io_port_map["goal_rush"] = 5;
-  digital_io_port_map["clamp"] = 6;
-  digital_io_port_map["bite"] = 7;
+  digital_io_port_map["bite"] = 6;
+  digital_io_port_map["clamp"] = 7;
 }
 
 //////////////////////

@@ -19,6 +19,7 @@ PDControl::PDControl(
 : kp_xy_(kp_xy), kd_xy_(kd_xy), kp_theta_(kp_theta), kd_theta_(kd_theta), ki_theta_(ki_theta), integral_limit_(integral_limit)
 {
   integral_theta_ = 0.0;
+  prev_error_theta_ = 0.0;
 }
 
 Eigen::Vector2d PDControl::tank_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & carrot_pos, const Eigen::Vector3d & final_pos, bool backwards)
@@ -63,10 +64,15 @@ Eigen::Vector2d PDControl::theta_pid(const Eigen::Vector3d & cur_pos, const Eige
     integral_theta_ = 0.0;
     prev_final_pos_ = end_pos;
   }
-
+  
   float error_theta = ghost_util::SmallestAngleDistRad(end_pos.z(), cur_pos.z());
   float derivative_theta = -cur_twist.z();
   integral_theta_ = ghost_util::clamp(error_theta + integral_theta_, -integral_limit_, integral_limit_);
+  
+  if (prev_error_theta_ * error_theta < 0){
+    integral_theta_ = 0.0;
+  }
+  prev_error_theta_ = error_theta;
 
   float output_angular = kp_theta_ * error_theta + kd_theta_ * derivative_theta + ki_theta_ * integral_theta_;
   output_angular = ghost_util::clamp(output_angular, -1.0f, 1.0f);

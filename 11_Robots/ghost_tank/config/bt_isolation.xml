@@ -4,9 +4,47 @@
   <include path="bt_goal_rush.xml"/>
   <BehaviorTree ID="main_tree">
     <Sequence>
+      <SetMirrored mirrored="false"/>
       <!-- <Logging message="test"/> -->
       <!-- <Logging/> -->
       <SubTree ID="goal_rush" _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test_integral">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <!-- <Logging message="test"/> -->
+      <MoveToPoseBezier  posX_tiles="1.0"
+                          posY_tiles="2.0"
+                          theta_deg="45.0"
+                          search_radius_m="0.2"
+                          threshold_m="0.05"
+                          angle_threshold_deg="1.0"
+                          lead="0.8"
+                          max_speed_linear_pct="0.3"
+                          max_speed_angular_pct="0.3"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="false"/>
+      <WaitCmd seconds="2.0"
+                shutoff_motors="true"/>
+      <MoveToPoseBezier  posX_tiles="1.0"
+                          posY_tiles="1.0"
+                          theta_deg="135.0"
+                          search_radius_m="0.2"
+                          threshold_m="0.1"
+                          angle_threshold_deg="1.0"
+                          lead="0.8"
+                          max_speed_linear_pct="0.3"
+                          max_speed_angular_pct="0.3"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="true"/>
+      <WaitCmd seconds="2.0"
+                shutoff_motors="true"/>
+      <!-- <SubTree ID="goal_rush" _autoremap="true"/> -->
+      
     </Sequence>
   </BehaviorTree>
 
@@ -41,7 +79,7 @@
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="side">
+  <BehaviorTree ID="jerryiotest">
     <Sequence>
       <Logging message="test"/>
       <MoveToPosePurepursuit fileName="~/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
@@ -49,84 +87,6 @@
                              threshold="0.2"
                              timeout="1000"
                              use_theta="false"/>
-      <Logging message="testover"/>
-      <ShutoffNode/>
-    </Sequence>
-  </BehaviorTree>
-
-  <BehaviorTree ID="test_intake">
-    <KeepRunningUntilFailure>
-      <ReactiveSequence>
-        <IntakeCmd lower="true" red="false"/>
-        <ClampCmd clamp_closed="true"/>
-        <BiteCmd bite_closed="true"/>
-      </ReactiveSequence>
-    </KeepRunningUntilFailure>
-  </BehaviorTree>
-
-  <BehaviorTree ID="win_point">
-    <Sequence>
-      <Logging message="win_point"/>
-      <ReactiveSequence>
-        <ClampCmd clamp_closed="false"/>
-        <MoveToPoseBoomerang posX_tiles="2.8"
-                             posY_tiles="0.8"
-                             theta_deg="45.0"
-                             search_radius_m="0.3"
-                             threshold_m="0.10"
-                             angle_threshold_deg="3.0"
-                             threshold_vel_mps="0.1"
-                             angle_threshold_vel_dps="1.0"
-                             lead="0.5"
-                             max_speed_linear_pct="1.0"
-                             max_speed_angular_pct="1.0"
-                             timeout_ms="-3000"
-                             use_theta="true"
-                             backwards="true"/>
-      </ReactiveSequence>
-      <Logging message="grabbing goal"/>
-      <Logging message="going to rings at 1,1"/>
-      <ReactiveSequence>
-        <ClampCmd clamp_closed="true"/>
-        <BiteCmd bite_closed="true"/>
-        <IntakeCmd lower="true"
-                   red="false"/>
-        <MoveToPoseBoomerang posX_tiles="1.0"
-                             posY_tiles="1.0"
-                             theta_deg="135.0"
-                             search_radius_m="0.3"
-                             threshold_m="0.10"
-                             angle_threshold_deg="3.0"
-                             threshold_vel_mps="0.1"
-                             angle_threshold_vel_dps="1.0"
-                             lead="0.5"
-                             max_speed_linear_pct="0.5"
-                             max_speed_angular_pct="1.0"
-                             timeout_ms="-5000"
-                             use_theta="true"
-                             backwards="false"/>
-      </ReactiveSequence>
-      <Logging message="going to rings at 1,2"/>
-      <ReactiveSequence>
-        <ClampCmd clamp_closed="true"/>
-        <BiteCmd bite_closed="true"/>
-        <IntakeCmd lower="true"
-                   red="false"/>
-        <MoveToPoseBoomerang posX_tiles="1.0"
-                             posY_tiles="2.0"
-                             theta_deg="90.0"
-                             search_radius_m="0.3"
-                             threshold_m="0.10"
-                             angle_threshold_deg="3.0"
-                             threshold_vel_mps="0.1"
-                             angle_threshold_vel_dps="1.0"
-                             lead="0.5"
-                             max_speed_linear_pct="0.5"
-                             max_speed_angular_pct="1.0"
-                             timeout_ms="-5000"
-                             use_theta="true"
-                             backwards="false"/>
-      </ReactiveSequence>
       <Logging message="testover"/>
       <ShutoffNode/>
     </Sequence>

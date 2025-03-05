@@ -340,10 +340,12 @@
    carrot.id = 2;
    carrot.type = 4;         // line type
    carrot.action = 0;
+   carrot.pose.position.z = 0.01;
    carrot.scale.x = 0.01;
    carrot.scale.y = 1.0;
    carrot.scale.z = 1.0;
-   carrot.color.g = 1.0;
+   carrot.color.r = 1.0;
+   carrot.color.b = 1.0;
    carrot.color.a = 0.5;
    geometry_msgs::msg::Point p_robot;
    p_robot.x = tank_model_ptr_->getWorldPose().x();
@@ -362,13 +364,13 @@
    marker.id = 0;
    marker.type = 8;         // points type
    marker.action = 0;
-   marker.scale.x = 0.025;
-   marker.scale.y = 0.025;
+   marker.scale.x = 0.01;
+   marker.scale.y = 0.01;
    marker.scale.z = 0.1;
    marker.color.r = 1.0;
-   marker.color.a = 1.0;
+   marker.color.a = 0.5;
    
-   for (int i = 0; i < robot_trajectory_.x_trajectory.position_vector.size(); i += 5) {
+   for (int i = 0; i < robot_trajectory_.x_trajectory.position_vector.size(); i += 25) {
      geometry_msgs::msg::Point p;
      p.x = robot_trajectory_.x_trajectory.position_vector[i];
      p.y = robot_trajectory_.y_trajectory.position_vector[i];
