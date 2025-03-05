@@ -135,11 +135,11 @@ void TankRobotPlugin::initROSComms()
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
   m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
-
+  
   node_ptr_->declare_parameter("backup_pose_topic", "/odom_ekf/odometry");
   std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
   m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
-
+  
   // Tank-Specific Publishers
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
   std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
@@ -243,6 +243,16 @@ void TankRobotPlugin::initIntake()
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_duration", 0.0);
   m_conveyor_hook_throw_fraction = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_fraction").as_double();
   m_conveyor_hook_throw_duration = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_duration").as_double();
+
+  m_color_map =
+  {
+    { "red", 1 },
+    { "blue", 2 },
+    { "unknown", 0 }
+  };
+
+  m_ring_found = false;
+  m_ring_color = m_color_map["unknown"];
 }
 
 void TankRobotPlugin::initNeutralStakeArm()
@@ -435,6 +445,15 @@ void TankRobotPlugin::autonomous(double current_time)
   if (bt_->get_variable("desired_pose", m_desired_pose)) {
     publishDesiredPose(m_desired_pose);
   }
+
+  bool ring_detector_active = false;
+  bool want_red = false;
+  if (bt_->get_variable("ring_detector_active", ring_detector_active)
+    && bt_->get_variable("want_red", want_red))
+  {
+    ringDetector(ring_detector_active, current_time, want_red);
+  }
+
   double fwd_cmd = 0.0;
   double turn_cmd = 0.0;
   if (bt_->get_variable("fwd_cmd", fwd_cmd)) {
@@ -470,6 +489,43 @@ void TankRobotPlugin::teleop(double current_time)
   updateClamp(joy_data);
   updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
+}
+
+void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red){
+  if (!active){
+    return;
+  }
+  m_ring_found = m_color_map[m_color] != 0;
+  m_ring_color = m_color_map[m_color];
+
+  static double last_input_time = 0.0;
+  static double ring_found_time = 0.0;
+  static bool running = false;
+
+  if (m_ring_found && !running){
+    ring_found_time = current_time;
+    running = true;
+  } else if (!m_ring_found) {
+    running = false;
+  }
+  bool ring_prewaited = (current_time - ring_found_time > 0.3) && m_ring_found;
+  bool hook = ring_prewaited || (current_time - last_input_time < 0.5);
+  if (ring_prewaited){
+    last_input_time = current_time;
+  }
+
+  bool eject = false;
+  if(want_red){
+    eject = (m_ring_color == m_color_map["blue"]) && ring_prewaited;
+  } else {
+    eject = (m_ring_color == m_color_map["red"]) && ring_prewaited;
+  }
+
+  if(eject){
+    hook = false;
+  }
+
+  updateIntake(true, hook, eject, false, current_time);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)

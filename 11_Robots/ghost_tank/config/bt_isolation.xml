@@ -116,8 +116,8 @@
     </Action>
     <Action ID="IntakeCmd"
             editable="true">
-      <input_port name="lower"/>
-      <input_port name="red"/>
+      <input_port name="active"/>
+      <input_port name="target_red"/>
     </Action>
     <Action ID="Logging"
             editable="true">
