@@ -57,7 +57,7 @@
   <BehaviorTree ID="test_intake">
     <KeepRunningUntilFailure>
       <ReactiveSequence>
-        <IntakeCmd lower="true" red="false"/>
+        <IntakeCmd active="true" target_red="false"/>
         <ClampCmd clamp_closed="true"/>
         <BiteCmd bite_closed="true"/>
       </ReactiveSequence>
@@ -89,8 +89,8 @@
       <ReactiveSequence>
         <ClampCmd clamp_closed="true"/>
         <BiteCmd bite_closed="true"/>
-        <IntakeCmd lower="true"
-                   red="false"/>
+        <IntakeCmd active="true"
+                   target_red="false"/>
         <MoveToPoseBoomerang posX_tiles="1.0"
                              posY_tiles="1.0"
                              theta_deg="135.0"
@@ -110,8 +110,8 @@
       <ReactiveSequence>
         <ClampCmd clamp_closed="true"/>
         <BiteCmd bite_closed="true"/>
-        <IntakeCmd lower="true"
-                   red="false"/>
+        <IntakeCmd active="true"
+                   target_red="false"/>
         <MoveToPoseBoomerang posX_tiles="1.0"
                              posY_tiles="2.0"
                              theta_deg="90.0"
@@ -156,8 +156,8 @@
     </Action>
     <Action ID="IntakeCmd"
             editable="true">
-      <input_port name="lower"/>
-      <input_port name="red"/>
+      <input_port name="active"/>
+      <input_port name="target_red"/>
     </Action>
     <Action ID="Logging"
             editable="true">

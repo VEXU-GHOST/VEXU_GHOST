@@ -104,6 +104,7 @@ protected:
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void ringDetector(bool active, double current_time, bool want_red);
 
   void resetWorldPose();
 
@@ -153,7 +154,6 @@ protected:
   std::shared_ptr<TankModel> m_tank_model_ptr;
 
   // Autonomy
-  void movePointToPoint();
   std::string bt_path_;
   std::shared_ptr<TankTree> bt_;
   std::shared_ptr<TankTree> bt_interaction;
@@ -289,6 +289,11 @@ protected:
   // Current Limiting
   std::vector<double> m_loop_current_limits;
   int m_num_motors{16};
+
+  // ring detection
+  bool m_ring_found = false;
+  int m_ring_color = 0;
+  std::map<std::string, int> m_color_map;
 };
 
 } // namespace ghost_tank
