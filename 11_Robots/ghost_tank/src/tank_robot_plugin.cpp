@@ -1021,10 +1021,10 @@ void TankRobotPlugin::playMusic(std::string musicFileName)
   m_music_pub->publish(message);
 }
 
-void TankRobotPlugin::playTTS(std::string musicFileName)
+void TankRobotPlugin::playTTS(std::string textString)
 {
   auto message = std_msgs::msg::String();
-  message.data = musicFileName;
+  message.data = textString;
   m_tts_pub->publish(message);
 }
 
