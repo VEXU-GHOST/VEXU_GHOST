@@ -119,7 +119,7 @@ def generate_launch_description():
     tts_music_node = Node(
         package="ghost_io_py",
         executable="ghost_tts",
-        name="tts_music_node_0",
+        name="tts_music_node",
         output="screen",
         parameters=[ros_config_file],
     )

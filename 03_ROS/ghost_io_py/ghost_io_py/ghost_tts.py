@@ -29,6 +29,7 @@ class TTSMusicNode(Node):
         self.declare_parameter("update_voices", False)
         self.declare_parameter("use_cuda", False)
         self.declare_parameter("music_folder", "~/VEXU_GHOST/sound_effects")
+        self.declare_parameter("volume", 10)
 
         model: str = self.get_parameter("model").value
         config: str = self.get_parameter("config").value
@@ -36,6 +37,7 @@ class TTSMusicNode(Node):
         download_dir: str = self.get_parameter("download_dir").value
         update_voices: bool = self.get_parameter("update_voices").value
         use_cuda: bool = self.get_parameter("use_cuda").value
+        volume: int = self.get_parameter("volume").value
 
         if not download_dir:
             download_dir = data_dir[0]
@@ -76,9 +78,10 @@ class TTSMusicNode(Node):
             "noise_w": 0.8,
             "sentence_silence": 0.5,
         }
+        self.get_logger().info(f"Setting volume to: {volume}%")
         command = (
             "sink=$(pactl list sinks short | awk '/usb/ {print $2; exit}'); "
-            'pactl set-default-sink "$sink" && pactl set-sink-volume "$sink" 100%'
+            'pactl set-default-sink "$sink" && pactl set-sink-volume "$sink" ' + str(volume)+ '%'
         )
 
         subprocess.run(command, shell=True)

@@ -698,7 +698,7 @@ void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
 void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static double btn_pressed = 0;
-  if (joy_data->btn_d && btn_pressed < (current_time - 1)){
+  if (joy_data->btn_u && btn_pressed < (current_time - 5)){
     btn_pressed = current_time;
     playMusic(""); // should play random when empty
   }
