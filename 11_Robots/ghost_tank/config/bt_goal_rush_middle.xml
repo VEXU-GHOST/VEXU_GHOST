@@ -1,38 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-    <BehaviorTree ID="test_mirrored">
+  <BehaviorTree ID="goal_rush_middle">
     <Sequence>
-      <SetMirrored mirrored="true"/>
-      <!-- <Logging message="test"/> -->
-      <IntakeCmd active="true" target_red="false"/>
-      <MoveToPoseBezier  posX_tiles="4.0"
-                          posY_tiles="2.0"
-                          theta_deg="135.0"
-                          search_radius_m="0.2"
-                          threshold_m="0.05"
-                          angle_threshold_deg="1.0"
-                          lead="0.8"
-                          max_speed_linear_pct="0.3"
-                          max_speed_angular_pct="0.3"
-                          timeout_ms="-5000"
-                          use_theta="true"
-                          backwards="false"/>
-      <WaitCmd seconds="2.0"
+      <Logging message="goal_rush"/>
+      <GoalRushCmd arm_down="false"/>
+      <MoveToPoseBezier  posX_tiles="2.5"
+                            posY_tiles="2.5"
+                            theta_deg="40.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.1"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.7"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="false"/>
+      <GoalRushCmd arm_down="true"/>
+      <WaitCmd seconds="0.100"
                 shutoff_motors="true"/>
-      <MoveToPoseBezier  posX_tiles="5.0"
-                          posY_tiles="1.0"
-                          theta_deg="135.0"
-                          search_radius_m="0.2"
-                          threshold_m="0.1"
-                          angle_threshold_deg="1.0"
-                          lead="0.8"
-                          max_speed_linear_pct="0.3"
-                          max_speed_angular_pct="0.3"
-                          timeout_ms="-5000"
-                          use_theta="true"
-                          backwards="true"/>
-      <WaitCmd seconds="2.0"
-                shutoff_motors="true"/>
+
+      <Logging message="pulling_back"/>
+      <MoveToPoseBezier posX_tiles="2.1"
+                            posY_tiles="2.0"
+                            theta_deg="40.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.20"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.75"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+
+      <Logging message="retract arm"/>
+      <GoalRushCmd arm_down="false"/>
     </Sequence>
   </BehaviorTree>
 

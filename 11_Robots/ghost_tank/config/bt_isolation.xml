@@ -2,16 +2,13 @@
 <root BTCPP_format="4"
       main_tree_to_execute="main_tree">
   <include path="bt_goal_rush.xml"/>
-  <include path="bt_goal_rush_right.xml"/>
+  <include path="bt_goal_rush_middle.xml"/>
+  <include path="bt_pos_corner.xml"/>
   <BehaviorTree ID="main_tree">
     <Sequence>
       <SetMirrored mirrored="false"/>
-      <!-- <KeepRunningUntilFailure> -->
-        <!-- <IntakeCmd active="true" target_red="false"/> -->
-      <!-- </KeepRunningUntilFailure> -->
-      <!-- <Logging message="test"/> -->
-      <!-- <Logging/> -->
-      <SubTree ID="goal_rush" _autoremap="true"/>
+      <SubTree ID="goal_rush_middle" _autoremap="true"/>
+      <SubTree ID="pos_corner" _autoremap="true"/>
     </Sequence>
   </BehaviorTree>
 
@@ -72,34 +69,39 @@
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="main">
+  <BehaviorTree ID="test_mirrored">
     <Sequence>
-      <ReactiveSequence>
-        <Logging message="test"/>
-        <Fallback>
-          <Timeout msec="5000">
-            <GoalRushCmd arm_down="true"/>
-          </Timeout>
-          <GoalRushCmd arm_down="false"/>
-        </Fallback>
-        <ClampCmd clamp_closed="true"/>
-        <MoveToPoseBoomerang posX_tiles=""
-                             posY_tiles="1.0"
-                             theta_deg="0.0"
-                             search_radius_m="0.3"
-                             threshold_m="0.10"
-                             angle_threshold_deg="3.0"
-                             threshold_vel_mps="0.1"
-                             angle_threshold_vel_dps="1.0"
-                             lead="0.5"
-                             max_speed_linear_pct="1.0"
-                             max_speed_angular_pct="1.0"
-                             timeout_ms="5000"
-                             use_theta="true"
-                             backwards="true"/>
-      </ReactiveSequence>
-      <Logging message="testover"/>
-      <ShutoffNode/>
+      <SetMirrored mirrored="true"/>
+      <!-- <Logging message="test"/> -->
+      <IntakeCmd active="true" target_red="false"/>
+      <MoveToPoseBezier  posX_tiles="4.0"
+                          posY_tiles="2.0"
+                          theta_deg="135.0"
+                          search_radius_m="0.2"
+                          threshold_m="0.05"
+                          angle_threshold_deg="1.0"
+                          lead="0.8"
+                          max_speed_linear_pct="0.3"
+                          max_speed_angular_pct="0.3"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="false"/>
+      <WaitCmd seconds="2.0"
+                shutoff_motors="true"/>
+      <MoveToPoseBezier  posX_tiles="5.0"
+                          posY_tiles="1.0"
+                          theta_deg="135.0"
+                          search_radius_m="0.2"
+                          threshold_m="0.1"
+                          angle_threshold_deg="1.0"
+                          lead="0.8"
+                          max_speed_linear_pct="0.3"
+                          max_speed_angular_pct="0.3"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="true"/>
+      <WaitCmd seconds="2.0"
+                shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
 
