@@ -104,6 +104,12 @@ protected:
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+
+  // Output
+  void playMusic(std::string m);
+  void playTTS(std::string m);
+ 
 
   void resetWorldPose();
 
@@ -119,6 +125,9 @@ protected:
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_err_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
+
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_tts_pub;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_music_pub;
 
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_ekf_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_pf_pub;
@@ -153,7 +162,6 @@ protected:
   std::shared_ptr<TankModel> m_tank_model_ptr;
 
   // Autonomy
-  void movePointToPoint();
   std::string bt_path_;
   std::shared_ptr<TankTree> bt_;
   std::shared_ptr<TankTree> bt_interaction;
