@@ -61,16 +61,17 @@ MoveToPoseBoomerang::MoveToPoseBoomerang(const std::string & name, const BT::Nod
 }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList MoveToPoseBoomerang::providedPorts(){
-	return {
-	  BT::InputPort<double>("posX_tiles"),
-	  BT::InputPort<double>("posY_tiles"),
-	  BT::InputPort<double>("theta_deg"),
-		BT::InputPort<double>("search_radius_m"),
-	  BT::InputPort<double>("threshold_m"),
-	  BT::InputPort<double>("angle_threshold_deg"),
-		BT::InputPort<double>("threshold_vel_mps"),
-	  BT::InputPort<double>("angle_threshold_vel_dps"),
+BT::PortsList MoveToPoseBoomerang::providedPorts()
+{
+  return {
+    BT::InputPort<double>("posX_tiles"),
+    BT::InputPort<double>("posY_tiles"),
+    BT::InputPort<double>("theta_deg"),
+    BT::InputPort<double>("search_radius_m"),
+    BT::InputPort<double>("threshold_m"),
+    BT::InputPort<double>("angle_threshold_deg"),
+    BT::InputPort<double>("threshold_vel_mps"),
+    BT::InputPort<double>("angle_threshold_vel_dps"),
     BT::InputPort<double>("lead"),
     BT::InputPort<double>("max_speed_linear_pct"),
     BT::InputPort<double>("max_speed_angular_pct"),
@@ -88,6 +89,7 @@ BT::NodeStatus MoveToPoseBoomerang::onStart()
   // plan_time_ = std::chrono::();
   return BT::NodeStatus::RUNNING;
 }
+
 /// when the method halt() is called and the action is RUNNING, this method is invoked.
 /// This is a convenient place todo a cleanup, if needed.
 void MoveToPoseBoomerang::onHalted()
