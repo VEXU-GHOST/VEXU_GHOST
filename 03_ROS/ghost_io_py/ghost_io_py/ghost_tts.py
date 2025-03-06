@@ -76,8 +76,12 @@ class TTSMusicNode(Node):
             "noise_w": 0.8,
             "sentence_silence": 0.5,
         }
-        #pactl set-sink-volume @DEFAULT_SINK@ 100%
-        subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", "100%"], capture_output=True, text  = True)
+        command = (
+            "sink=$(pactl list sinks short | awk '/usb/ {print $2; exit}'); "
+            'pactl set-default-sink "$sink" && pactl set-sink-volume "$sink" 100%'
+        )
+
+        subprocess.run(command, shell=True)
 
         # Create subscriptions for TTS and music topics.
         self.create_subscription(String, "/io/speaker/tts", self.tts_callback, 10)

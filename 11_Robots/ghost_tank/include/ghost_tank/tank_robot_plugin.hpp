@@ -103,8 +103,6 @@ protected:
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
-  void resetPose(double x, double y, double theta);
-
   // Output
   void playMusic(std::string m);
   void playTTS(std::string m);
@@ -163,7 +161,6 @@ protected:
   std::shared_ptr<TankModel> m_tank_model_ptr;
 
   // Autonomy
-  void movePointToPoint();
   std::string bt_path_;
   std::shared_ptr<TankTree> bt_;
   std::shared_ptr<TankTree> bt_interaction;
