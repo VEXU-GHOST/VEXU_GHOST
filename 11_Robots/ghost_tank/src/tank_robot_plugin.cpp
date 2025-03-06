@@ -140,6 +140,8 @@ void TankRobotPlugin::initROSComms()
   std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
   m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
   
+  m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensor_0/color", 10, std::bind(&TankRobotPlugin::colorCallback, this, _1));
+
   // Tank-Specific Publishers
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
   std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
@@ -492,40 +494,96 @@ void TankRobotPlugin::teleop(double current_time)
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red){
+  static double last_input_time = 0.0;
+  static double ring_found_time = 0.0;
+  static double stuck_detection_time = 0.0;
+  static bool running = false;
+  static bool retry_mode = false;
+  static double retry_start_time = 0.0;
+  
+  // Constants (adjust as needed for your specific system)
+  const double STUCK_TIMEOUT = 1.5;      // Time to consider a ring stuck
+  const double RETRY_DURATION = 0.8;     // How long to attempt the retry
+  const double COOLDOWN_PERIOD = 0.2;    // Brief pause between retry attempts
+
   if (!active){
+    last_input_time = 0.0;
+    ring_found_time = 0.0;
+    stuck_detection_time = 0.0;
+    retry_mode = false;
+    retry_start_time = 0.0;
+    running = false;
     return;
   }
+  
   m_ring_found = m_color_map[m_color] != 0;
   m_ring_color = m_color_map[m_color];
 
-  static double last_input_time = 0.0;
-  static double ring_found_time = 0.0;
-  static bool running = false;
-
+  // Initial ring detection
   if (m_ring_found && !running){
     ring_found_time = current_time;
+    stuck_detection_time = current_time;
     running = true;
+    retry_mode = false;
   } else if (!m_ring_found) {
     running = false;
+    retry_mode = false;
+  } 
+  
+  // Stuck ring detection logic
+  if (running && m_ring_found) {
+    if (!retry_mode && (current_time - stuck_detection_time > STUCK_TIMEOUT)) {
+      // Ring has been detected for too long - initiate retry sequence
+      retry_mode = true;
+      retry_start_time = current_time;
+    } else if (current_time - ring_found_time > 1.0){
+      ring_found_time = current_time;
+    }
   }
-  bool ring_prewaited = (current_time - ring_found_time > 0.3) && m_ring_found;
-  bool hook = ring_prewaited || (current_time - last_input_time < 0.5);
+  
+  // Handle retry cycle
+  if (retry_mode) {
+    double retry_elapsed = current_time - retry_start_time;
+    
+    if (retry_elapsed > RETRY_DURATION) {
+      // End retry attempt and go back to normal operation
+      retry_mode = false;
+      stuck_detection_time = current_time; // Reset stuck timer
+    }
+  }
+
+  // Normal processing
+  bool ring_prewaited = (current_time - ring_found_time > 0.3) && m_ring_found && !retry_mode;
   if (ring_prewaited){
     last_input_time = current_time;
   }
+  
+  // Determine hook and eject status
+  bool hook = false;
+  if (retry_mode) {
+    // During retry: alternate between hook on/off with a small cooldown period
+    double retry_cycle = fmod(current_time - retry_start_time, COOLDOWN_PERIOD * 2);
+    hook = (retry_cycle < COOLDOWN_PERIOD);
+  } else {
+    // Normal hook logic
+    hook = ring_prewaited || (current_time - last_input_time < 0.5);
+  }
 
   bool eject = false;
-  if(want_red){
-    eject = (m_ring_color == m_color_map["blue"]) && ring_prewaited;
-  } else {
-    eject = (m_ring_color == m_color_map["red"]) && ring_prewaited;
+  if (!retry_mode) {  // Don't eject during retry attempts
+    if(want_red){
+      eject = (m_ring_color == m_color_map["blue"]) && ring_prewaited;
+    } else {
+      eject = (m_ring_color == m_color_map["red"]) && ring_prewaited;
+    }
+
+    if(eject){
+      hook = false;
+    }
   }
 
-  if(eject){
-    hook = false;
-  }
-
-  updateIntake(true, hook, eject, false, current_time);
+  // Call motor control with determined states
+  updateIntake(true, hook, eject, !hook && retry_mode, current_time);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)

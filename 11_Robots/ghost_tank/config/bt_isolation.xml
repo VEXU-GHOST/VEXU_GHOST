@@ -2,12 +2,17 @@
 <root BTCPP_format="4"
       main_tree_to_execute="main_tree">
   <include path="bt_goal_rush.xml"/>
+  <include path="bt_goal_rush_right.xml"/>
   <BehaviorTree ID="main_tree">
     <Sequence>
       <SetMirrored mirrored="false"/>
+      <!-- <KeepRunningUntilFailure> -->
+        <!-- <IntakeCmd active="true" target_red="false"/> -->
+      <!-- </KeepRunningUntilFailure> -->
       <!-- <Logging message="test"/> -->
       <!-- <Logging/> -->
-      <SubTree ID="goal_rush" _autoremap="true"/>
+      <SubTree ID="test_mirrored" _autoremap="true"/>
+      <!-- <SubTree ID="goal_rush" _autoremap="true"/> -->
     </Sequence>
   </BehaviorTree>
 
@@ -15,8 +20,17 @@
     <Sequence>
       <SetMirrored mirrored="false"/>
       <!-- <Logging message="test"/> -->
-      <MoveToPoseBezier  posX_tiles="1.0"
-                          posY_tiles="2.0"
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="600">
+            <KeepRunningUntilFailure>
+              <ClampCmd clamp_closed="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ClampCmd clamp_closed="true"/>
+        </Fallback>
+      <MoveToPoseBezier  posX_tiles="2.0"
+                          posY_tiles="1.0"
                           theta_deg="45.0"
                           search_radius_m="0.2"
                           threshold_m="0.05"
@@ -27,9 +41,19 @@
                           timeout_ms="-5000"
                           use_theta="true"
                           backwards="false"/>
+      </ParallelAll>
       <WaitCmd seconds="2.0"
                 shutoff_motors="true"/>
-      <MoveToPoseBezier  posX_tiles="1.0"
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="600">
+            <KeepRunningUntilFailure>
+              <ClampCmd clamp_closed="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ClampCmd clamp_closed="true"/>
+        </Fallback>
+        <MoveToPoseBezier  posX_tiles="2.0"
                           posY_tiles="1.0"
                           theta_deg="135.0"
                           search_radius_m="0.2"
@@ -41,6 +65,7 @@
                           timeout_ms="-5000"
                           use_theta="true"
                           backwards="true"/>
+      </ParallelAll>
       <WaitCmd seconds="2.0"
                 shutoff_motors="true"/>
       <!-- <SubTree ID="goal_rush" _autoremap="true"/> -->

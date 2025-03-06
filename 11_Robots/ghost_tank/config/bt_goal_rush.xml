@@ -10,7 +10,7 @@
                             theta_deg="115.0"
                             search_radius_m="0.3"
                             threshold_m="0.1"
-                            angle_threshold_deg="3.0"
+                            angle_threshold_deg="5.0"
                             threshold_vel_mps="0.1"
                             angle_threshold_vel_dps="1.0"
                             lead="0.25"
@@ -49,7 +49,7 @@
                             theta_deg="90.0"
                             search_radius_m="0.3"
                             threshold_m="0.05"
-                            angle_threshold_deg="3.0"
+                            angle_threshold_deg="5.0"
                             threshold_vel_mps="0.1"
                             angle_threshold_vel_dps="1.0"
                             lead="0.75"
@@ -80,7 +80,16 @@
       <BiteCmd bite_closed="true"/>
 
       <Logging message="Back Up Further and Clamp Goal"/>
-      <MoveToPoseBezier posX_tiles="3.2"
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="700">
+            <KeepRunningUntilFailure>
+              <ClampCmd clamp_closed="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ClampCmd clamp_closed="true"/>
+        </Fallback>
+        <MoveToPoseBezier posX_tiles="3.2"
                             posY_tiles="0.9"
                             theta_deg="180.0"
                             search_radius_m="0.3"
@@ -89,22 +98,29 @@
                             threshold_vel_mps="0.1"
                             angle_threshold_vel_dps="1.0"
                             lead="1.0"
-                            max_speed_linear_pct="0.6"
+                            max_speed_linear_pct="0.5"
                             max_speed_angular_pct="1.0"
                             timeout_ms="-1000"
                             use_theta="true"
                             backwards="true"/>
+      </ParallelAll>
       <ClampCmd clamp_closed="true"/>
-      <WaitCmd seconds="0.250"
-                shutoff_motors="true"/>
+
       <WaitCmd seconds="0.250"
                 shutoff_motors="true"/>
 
       <Logging message="Turn to face stack"/>
-      <ReactiveSequence>
-        <ConveyorCmd fwd="true"/>
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="200">
+            <KeepRunningUntilFailure>
+              <ConveyorCmd fwd="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ConveyorCmd fwd="true"/>
+        </Fallback>
         <MoveToPoseBezier posX_tiles="3.5"
-                              posY_tiles="1.0"
+                              posY_tiles="1.2"
                               theta_deg="-135.0"
                               search_radius_m="0.3"
                               threshold_m="0.05"
@@ -117,12 +133,11 @@
                               timeout_ms="-1000"
                               use_theta="true"
                               backwards="true"/>
-      </ReactiveSequence>
+      </ParallelAll>
       <ConveyorCmd fwd="false"/>
 
-      <Logging message="Grab Stack"/>
       <IntakeCmd active="true" target_red="false"/>
-      <Sequence>
+      <Logging message="Grab Stack"/>
         <WaitCmd seconds="0.250"
                 shutoff_motors="true"/>  
         <MoveToPoseBezier posX_tiles="3.0"
@@ -139,28 +154,25 @@
                               timeout_ms="-1000"
                               use_theta="true"
                               backwards="false"/>
-        <ShutoffNode/>
+        <Logging message="Wait for Ring"/>
+        <WaitCmd seconds="0.250"
+              shutoff_motors="true"/> 
 
-          <Logging message="Wait for Ring"/>
-          <WaitCmd seconds="0.250"
-                shutoff_motors="true"/> 
-
-          <Logging message="Backup"/>
-          <MoveToPoseBezier posX_tiles="3.5"
-                          posY_tiles="1.0"
-                          theta_deg="-135.0"
-                          search_radius_m="0.3"
-                          threshold_m="0.10"
-                          angle_threshold_deg="3.0"
-                          threshold_vel_mps="0.1"
-                          angle_threshold_vel_dps="1.0"
-                          lead="1.0"
-                          max_speed_linear_pct="1.0"
-                          max_speed_angular_pct="1.0"
-                          timeout_ms="-1000"
-                          use_theta="true"
-                          backwards="true"/>
-        </Sequence>
+        <Logging message="Backup"/>
+        <MoveToPoseBezier posX_tiles="3.5"
+                        posY_tiles="1.0"
+                        theta_deg="-135.0"
+                        search_radius_m="0.3"
+                        threshold_m="0.10"
+                        angle_threshold_deg="3.0"
+                        threshold_vel_mps="0.1"
+                        angle_threshold_vel_dps="1.0"
+                        lead="1.0"
+                        max_speed_linear_pct="1.0"
+                        max_speed_angular_pct="1.0"
+                        timeout_ms="-1000"
+                        use_theta="true"
+                        backwards="true"/>
       <ShutoffNode/>
 
       <Logging message="Go to stack"/>
