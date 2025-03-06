@@ -1,4 +1,3 @@
-
 /*
  *   Copyright (c) 2024 Maxx Wilson
  *   All rights reserved.
