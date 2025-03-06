@@ -11,8 +11,7 @@
       <!-- </KeepRunningUntilFailure> -->
       <!-- <Logging message="test"/> -->
       <!-- <Logging/> -->
-      <SubTree ID="test_mirrored" _autoremap="true"/>
-      <!-- <SubTree ID="goal_rush" _autoremap="true"/> -->
+      <SubTree ID="goal_rush" _autoremap="true"/>
     </Sequence>
   </BehaviorTree>
 

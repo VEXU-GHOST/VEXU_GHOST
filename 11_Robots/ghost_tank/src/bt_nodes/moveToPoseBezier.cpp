@@ -196,6 +196,13 @@
    double lead = BT_Util::get_input<double>(this, "lead");
    bool backwards = BT_Util::get_input<bool>(this, "backwards", false);
  
+   bool mirrored = false;
+   BT_Util::get_from_blackboard(blackboard_, "mirrored", mirrored);
+   if (mirrored) {
+     posX = 6.0 - posX;
+     theta = ghost_util::WrapAngle360(180.0 - theta);
+   }
+
    double tile_to_meters = 0.6096;
    posX *= tile_to_meters;
    posY *= tile_to_meters;

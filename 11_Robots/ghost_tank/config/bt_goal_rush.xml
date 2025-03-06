@@ -2,7 +2,6 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="goal_rush">
     <Sequence>
-      <SetMirrored mirrored="false"/>
       <Logging message="goal_rush"/>
       <GoalRushCmd arm_down="false"/>
       <MoveToPoseBezier  posX_tiles="1.5"
