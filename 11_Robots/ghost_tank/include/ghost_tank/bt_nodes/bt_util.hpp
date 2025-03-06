@@ -21,9 +21,30 @@ T get_input(BT::TreeNode* node, std::string key)
 }
 
 template<typename T>
-void get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T &value){
+T get_input(BT::TreeNode* node, std::string key, T default_value)
+{
+  BT::Expected<T> input = node->getInput<T>(key);
+  // Check if expected is valid. If not, return default value
+  if (!input) {
+    return default_value;
+  }
+  return input.value();
+}
+
+template<typename T>
+bool get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T &value){
     if(!blackboard->get(key, value)){
         std::cout << key << " not found in blackboard" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+template<typename T>
+void get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T &value, T default_value){
+    if(!blackboard->get(key, value)){
+        std::cout << key << " not found in blackboard" << std::endl;
+        value = default_value;
     }
 }
 

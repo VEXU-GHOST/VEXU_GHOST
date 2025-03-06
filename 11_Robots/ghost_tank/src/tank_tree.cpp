@@ -53,8 +53,10 @@ void TankTree::init_tree(){
 	factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
 	factory.registerNodeType<SetMirrored>("SetMirrored");
 	factory.registerNodeType<ConveyorCmd>("ConveyorCmd");
+	factory.registerNodeType<WaitCmd>("WaitCmd");
 
     tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
+	std::cout << "Tree created: " << bt_path_ << std::endl;
 }
 
 void TankTree::tick_tree()

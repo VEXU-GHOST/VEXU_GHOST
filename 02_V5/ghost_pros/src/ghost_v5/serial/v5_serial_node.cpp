@@ -90,6 +90,7 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char> & buffer)
 {
   hardware_interface_ptr_->deserialize(buffer);
 
+  std::vector<std::pair<std::string, int32_t>> current_limits;
   for (const auto & name : *hardware_interface_ptr_) {
     auto device_data_ptr = hardware_interface_ptr_->getDeviceData<DeviceData>(name);
     auto device_config_ptr = hardware_interface_ptr_->getDeviceConfig<DeviceConfig>(name);
@@ -98,7 +99,8 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char> & buffer)
       case device_type_e::MOTOR:
         {
           auto motor_device_data_ptr = device_data_ptr->as<MotorDeviceData>();
-          v5_globals::motor_interfaces.at(name)->setCurrentLimit(motor_device_data_ptr->current_limit);
+          v5_globals::motor_interfaces.at(name)->setCurrentLimit(0);
+          current_limits.push_back(std::pair<std::string, int32_t>(name, motor_device_data_ptr->current_limit));
 
           v5_globals::motor_interfaces.at(name)->setMotorCommand(
             motor_device_data_ptr->position_command,
@@ -160,6 +162,20 @@ void V5SerialNode::updateActuatorCommands(std::vector<unsigned char> & buffer)
         break;
     }
   }
+
+  // Sort current limits smallest to largest
+  std::sort(
+    current_limits.begin(),
+    current_limits.end(),
+    [](std::pair<std::string, int32_t> a, std::pair<std::string, int32_t> b) {
+      return a.second > b.second;
+    });
+
+  // Set current limits from smallest to largest to avoid built-in current regulation overriding requested values
+  for (int i = 0; i < current_limits.size(); i++) {
+    v5_globals::motor_interfaces.at(current_limits[i].first)->setCurrentLimit(current_limits[i].second);
+  }
+
 }
 
 void V5SerialNode::writeV5StateUpdate()

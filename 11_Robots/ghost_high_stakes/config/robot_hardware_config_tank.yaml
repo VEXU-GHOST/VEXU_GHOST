@@ -15,6 +15,16 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: intake_motor_config
+        neutral_stake_r:
+            port: 9
+            type: MOTOR
+            reversed: true
+            config: neutral_stake_motor_config
+        neutral_stake_l:
+            port: 10
+            type: MOTOR
+            reversed: false
+            config: neutral_stake_motor_config
         imu:
             port: 14
             type: INERTIAL_SENSOR
@@ -121,6 +131,19 @@ port_configuration:
                 ff_vel_gain: 0.0
                 ff_torque_gain: 0.0
             serial:
-                send_position_command: true
+                send_position_command: false
+                send_velocity_command: false
+                send_voltage_command: true
+        neutral_stake_motor_config:
+            gearset: 200
+            brake_mode: BRAKE
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 0.0
+                ff_vel_gain: 0.0
+                ff_torque_gain: 0.0
+            serial:
+                send_position_command: false
                 send_velocity_command: false
                 send_voltage_command: true
