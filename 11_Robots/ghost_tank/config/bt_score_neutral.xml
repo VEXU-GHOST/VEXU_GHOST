@@ -17,6 +17,20 @@
                         timeout_ms="-5000"
                         use_theta="true"
                         backwards="false"/>
+      <MoveToPoseBezier posX_tiles="3.0"
+                        posY_tiles="0.6"
+                        theta_deg="-95.0"
+                        search_radius_m="0.3"
+                        threshold_m="0.05"
+                        angle_threshold_deg="5.0"
+                        threshold_vel_mps="0.1"
+                        angle_threshold_vel_dps="1.0"
+                        lead="0.4"
+                        max_speed_linear_pct="1.0"
+                        max_speed_angular_pct="1.0"
+                        timeout_ms="-5000"
+                        use_theta="true"
+                        backwards="false"/>
       <ShutoffNode/>
       <Logging message="load ring"/>
       <NeutralStakeCmd state="1"
@@ -24,12 +38,13 @@
       <ConveyorCmd fwd="true"/>
       <WaitCmd seconds="0.500"
                 shutoff_motors="true"/>
+      <ConveyorCmd fwd="false"/>
       <NeutralStakeCmd state="3"
-                       timeout="0.500"/>
+                       timeout="1.00"/>
       <NeutralStakeCmd state="4"
                        timeout="0.500"/>
       <NeutralStakeCmd state="5"
-                       timeout="0.500"/>
+                       timeout="0.800"/>
       <NeutralStakeCmd state="0"
                        timeout="0.500"/>
     </Sequence>
@@ -60,7 +75,6 @@
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="active"/>
-      <input_port name="target_red"/>
     </Action>
     <Action ID="Logging"
             editable="true">

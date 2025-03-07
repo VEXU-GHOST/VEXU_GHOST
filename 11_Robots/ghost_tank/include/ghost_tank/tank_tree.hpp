@@ -36,6 +36,7 @@
 #include "ghost_tank/bt_nodes/intakeCmd.hpp"
 #include "ghost_tank/bt_nodes/goalRushCmd.hpp"
 #include "ghost_tank/bt_nodes/setMirrored.hpp"
+#include "ghost_tank/bt_nodes/setColorTarget.hpp"
 #include "ghost_tank/bt_nodes/conveyorCmd.hpp"
 #include "ghost_tank/bt_nodes/waitCmd.hpp"
 #include "ghost_tank/bt_nodes/neutralStakeCmd.hpp"

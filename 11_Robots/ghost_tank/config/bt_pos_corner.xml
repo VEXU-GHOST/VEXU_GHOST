@@ -97,7 +97,7 @@
       </ParallelAll>
       <ConveyorCmd fwd="false"/>
 
-      <IntakeCmd active="true" target_red="false"/>
+      <IntakeCmd active="true"/>
       <Logging message="Grab Stack"/>
         <WaitCmd seconds="0.250"
                 shutoff_motors="true"/>  

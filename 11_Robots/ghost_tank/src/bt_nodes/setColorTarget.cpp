@@ -21,41 +21,36 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/intakeCmd.hpp"
+#include "ghost_tank/bt_nodes/setColorTarget.hpp"
 
 namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
-IntakeCmd::IntakeCmd(
+SetColorTarget::SetColorTarget(
   const std::string & name, const BT::NodeConfig & config)
 : BT::SyncActionNode(name, config)
 {
   blackboard_ = config.blackboard;
-  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-  BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
 }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList IntakeCmd::providedPorts()
+BT::PortsList SetColorTarget::providedPorts()
 {
   // This action has a single input port called "message"
   return {
-    BT::InputPort<bool>("active"),
+    BT::InputPort<bool>("target_red"),
   };
 }
 
-BT::NodeStatus IntakeCmd::tick()
+BT::NodeStatus SetColorTarget::tick()
 {
-  bool active = BT_Util::get_input<bool>(this, "active");
-
-  bool target_red = false;
-  BT_Util::get_from_blackboard(blackboard_, "target_red", target_red);
-
-  BT_Util::put_in_blackboard(blackboard_, "want_red", target_red);
-  BT_Util::put_in_blackboard(blackboard_, "ring_detector_active", active);
+  bool target_red = BT_Util::get_input<bool>(this, "target_red");
+  BT_Util::put_in_blackboard(blackboard_, "target_red", target_red);
 
   return BT::NodeStatus::SUCCESS;
 }

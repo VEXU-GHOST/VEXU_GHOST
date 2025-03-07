@@ -9,12 +9,13 @@
   <BehaviorTree ID="main_tree">
     <Sequence>
       <SetMirrored mirrored="false"/>
-      <SubTree ID="score_neutral" _autoremap="true"/>
-      <!-- <SubTree ID="goal_rush" _autoremap="true"/> -->
-      <!-- <SubTree ID="neg_corner" _autoremap="true"/> -->
-      <!-- <Logging message="Auton Complete"/> -->
-      <!-- <WaitCmd seconds="500.0" -->
-                <!-- shutoff_motors="true"/> -->
+      <SetColorTarget target_red="false"/>
+      <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
+      <SubTree ID="goal_rush" _autoremap="true"/>
+      <SubTree ID="pos_corner" _autoremap="true"/>
+      <Logging message="Auton Complete"/>
+      <WaitCmd seconds="500.0"
+                shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
 
@@ -79,7 +80,7 @@
     <Sequence>
       <SetMirrored mirrored="true"/>
       <!-- <Logging message="test"/> -->
-      <IntakeCmd active="true" target_red="false"/>
+      <IntakeCmd active="true"/>
       <MoveToPoseBezier  posX_tiles="4.0"
                           posY_tiles="2.0"
                           theta_deg="135.0"
@@ -146,10 +147,13 @@
             editable="true">
       <input_port name="mirrored"/>
     </Action>
+    <Action ID="SetColorTarget"
+            editable="true">
+      <input_port name="target_red"/>
+    </Action>
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="active"/>
-      <input_port name="target_red"/>
     </Action>
     <Action ID="Logging"
             editable="true">

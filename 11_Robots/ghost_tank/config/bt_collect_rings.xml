@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
   <BehaviorTree ID="collect_rings">
-    <Sequence>    
-      <IntakeCmd active="true" target_red="true"/>
-      
+    <Sequence>          
       <Logging message="Go to stack"/>
       <BiteCmd bite_closed="false"/>
-      <IntakeCmd active="true" target_red="true"/>
+      <IntakeCmd active="true"/>
         <WaitCmd seconds="0.250"
                 shutoff_motors="true"/>
 
@@ -158,7 +156,6 @@
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="active"/>
-      <input_port name="target_red"/>
     </Action>
     <Action ID="Logging"
             editable="true">

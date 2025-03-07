@@ -196,6 +196,7 @@ set(NODES
   conveyorCmd
   waitCmd
   neutralStakeCmd
+  setColorTarget
 )
 
 foreach(NODE ${NODES})

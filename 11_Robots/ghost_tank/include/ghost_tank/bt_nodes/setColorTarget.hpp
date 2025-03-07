@@ -21,43 +21,32 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/intakeCmd.hpp"
+#pragma once
 
-namespace ghost_tank
-{
+#include <string>
+#include "behaviortree_cpp/behavior_tree.h"
+#include "rclcpp/rclcpp.hpp"
+#include "ghost_tank/tank_tree.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
-// SyncActionNode (synchronous action) with an input port.
-// If your Node has ports, you must use this constructor signature
-IntakeCmd::IntakeCmd(
-  const std::string & name, const BT::NodeConfig & config)
-: BT::SyncActionNode(name, config)
-{
-  blackboard_ = config.blackboard;
-  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-  BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
-  BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
-}
+namespace ghost_tank {
 
-// It is mandatory to define this STATIC method.
-BT::PortsList IntakeCmd::providedPorts()
-{
-  // This action has a single input port called "message"
-  return {
-    BT::InputPort<bool>("active"),
-  };
-}
+class SetColorTarget : public BT::SyncActionNode {
+public:
+  // If your Node has ports, you must use this constructor signature
+  SetColorTarget(const std::string& name, const BT::NodeConfig& config);
 
-BT::NodeStatus IntakeCmd::tick()
-{
-  bool active = BT_Util::get_input<bool>(this, "active");
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
 
-  bool target_red = false;
-  BT_Util::get_from_blackboard(blackboard_, "target_red", target_red);
+  BT::NodeStatus tick();
 
-  BT_Util::put_in_blackboard(blackboard_, "want_red", target_red);
-  BT_Util::put_in_blackboard(blackboard_, "ring_detector_active", active);
-
-  return BT::NodeStatus::SUCCESS;
-}
+private:
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+	std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+  BT::Blackboard::Ptr blackboard_;
+};
 
 } // ghost_tank

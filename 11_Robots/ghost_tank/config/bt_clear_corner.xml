@@ -22,7 +22,7 @@
       <!-- <WaitCmd seconds="100.00" -->
                 <!-- shutoff_motors="true"/> -->
       <Logging message="Processing Corner Stack"/>
-      <IntakeCmd active="true" target_red="true"/>
+      <IntakeCmd active="true"/>
       <Repeat num_cycles="2">
         <Sequence>
           <MoveToPoseBezier posX_tiles="0.375"
@@ -173,7 +173,6 @@
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="active"/>
-      <input_port name="target_red"/>
     </Action>
     <Action ID="Logging"
             editable="true">
