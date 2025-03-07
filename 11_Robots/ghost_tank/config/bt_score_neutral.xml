@@ -3,7 +3,7 @@
   <BehaviorTree ID="score_neutral">
     <Sequence>
       <Logging message="score neutral stake"/>
-      <MoveToPoseBezier posX_tiles="3.0"
+      <MoveToPoseBezier posX_tiles="2.9"
                         posY_tiles="1.0"
                         theta_deg="-90.0"
                         search_radius_m="0.3"
@@ -11,18 +11,18 @@
                         angle_threshold_deg="5.0"
                         threshold_vel_mps="0.1"
                         angle_threshold_vel_dps="1.0"
-                        lead="0.4"
+                        lead="0.2"
                         max_speed_linear_pct="1.0"
                         max_speed_angular_pct="1.0"
                         timeout_ms="-5000"
                         use_theta="true"
                         backwards="false"/>
-      <MoveToPoseBezier posX_tiles="3.0"
-                        posY_tiles="0.6"
-                        theta_deg="-95.0"
+      <MoveToPoseBezier posX_tiles="2.9"
+                        posY_tiles="0.75"
+                        theta_deg="-90.0"
                         search_radius_m="0.3"
-                        threshold_m="0.05"
-                        angle_threshold_deg="5.0"
+                        threshold_m="0.03"
+                        angle_threshold_deg="1.0"
                         threshold_vel_mps="0.1"
                         angle_threshold_vel_dps="1.0"
                         lead="0.4"
@@ -39,12 +39,30 @@
       <WaitCmd seconds="0.500"
                 shutoff_motors="true"/>
       <ConveyorCmd fwd="false"/>
-      <NeutralStakeCmd state="3"
+      <NeutralStakeCmd state="2"
                        timeout="1.00"/>
-      <NeutralStakeCmd state="4"
+      <NeutralStakeCmd state="3"
                        timeout="0.500"/>
-      <NeutralStakeCmd state="5"
-                       timeout="0.800"/>
+      <ParallelAll>
+        <NeutralStakeCmd state="4"
+                        timeout="1.200"/>
+        <Delay delay_msec="200">
+        <MoveToPoseBezier posX_tiles="3.0"
+                          posY_tiles="1.4"
+                          theta_deg="-90.0"
+                          search_radius_m="0.3"
+                          threshold_m="0.1"
+                          angle_threshold_deg="5.0"
+                          threshold_vel_mps="0.1"
+                          angle_threshold_vel_dps="1.0"
+                          lead="0.4"
+                          max_speed_linear_pct="0.2"
+                          max_speed_angular_pct="1.0"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="true"/>
+        </Delay>
+      </ParallelAll>
       <NeutralStakeCmd state="0"
                        timeout="0.500"/>
     </Sequence>

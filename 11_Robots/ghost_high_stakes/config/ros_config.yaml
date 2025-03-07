@@ -72,8 +72,7 @@ competition_state_machine_node:
       neutral_stake_arm_kp: 0.03
       neutral_stake_arm_gear_ratio: 3.0
       neutral_stake_arm_rest_pos_deg: 0.0
-      neutral_stake_arm_loading_pos_deg: 25.0
-      neutral_stake_arm_loaded_pos_deg: 70.0
+      neutral_stake_arm_loading_pos_deg: 35.0
       neutral_stake_arm_score_neutral_pos_deg: 110.0
       neutral_stake_arm_score_alliance_pos_deg: 170.0
       neutral_stake_arm_down_pos_deg: 220.0
@@ -114,8 +113,8 @@ competition_state_machine_node:
     map_ekf:
       initial_state:
         [
-          # 1.8,  0.6,  0.0,
-          # 0.0,  0.0,  -1.57,
+          # 1.2,  0.6,  0.0,
+          # 0.0,  0.0,  0.0,
           1.2, 0.508, 0.0,
           0.0,  0.0,  1.75,
           0.0,  0.0,  0.0,

@@ -9,7 +9,7 @@
   <BehaviorTree ID="main_tree">
     <Sequence>
       <SetMirrored mirrored="false"/>
-      <SetColorTarget target_red="false"/>
+      <SetColorTarget target_red="true"/>
       <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
       <SubTree ID="goal_rush" _autoremap="true"/>
       <SubTree ID="pos_corner" _autoremap="true"/>

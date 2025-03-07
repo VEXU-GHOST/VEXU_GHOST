@@ -84,8 +84,8 @@ void TankRobotPlugin::populateDigitalIONames()
 {
   digital_io_port_map["conveyor_switch"] = 0;
   digital_io_port_map["goal_rush"] = 5;
-  digital_io_port_map["bite"] = 6;
-  digital_io_port_map["clamp"] = 7;
+  digital_io_port_map["clamp"] = 6;
+  digital_io_port_map["bite"] = 7;
 }
 
 //////////////////////
@@ -491,7 +491,7 @@ void TankRobotPlugin::teleop(double current_time)
 
   toggleBagRecorder(joy_data);
   updateNeutralStakeArm(joy_data);
-  updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_r, current_time);
+  updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
   updateGoalRush(joy_data);
@@ -633,7 +633,6 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
   std::vector<double> arm_mode_position_map{
     m_neutral_stake_arm_rest_pos_deg,
     m_neutral_stake_arm_loading_pos_deg,
-    m_neutral_stake_arm_loaded_pos_deg,
     m_neutral_stake_arm_score_neutral_pos_deg,
     m_neutral_stake_arm_score_alliance_pos_deg,
     m_neutral_stake_arm_down_pos_deg
@@ -667,12 +666,12 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
     power = ghost_util::clamp(power, 0.0, 1.0);
   }
 
-  if (m_arm_mode == 4) {
-    power = ghost_util::clamp(power, -0.2, 0.2);
+  if (m_arm_mode == 3) {
+    power = ghost_util::clamp(power, -0.4, 0.4);
   }
 
-  if (m_arm_mode == 5) {
-    power = ghost_util::clamp(power, -0.4, 0.4);
+  if (m_arm_mode == 4) {
+    power = ghost_util::clamp(power, -0.8, 0.8);
   }
 
   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
@@ -683,15 +682,15 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 
 void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
 {
-  static bool btn_l_pressed = false;
+  static bool btn_b_pressed = false;
   static bool btn_d_pressed = false;
   
   // Increment arm mode with button L
-  if (joy_data->btn_l && m_arm_mode != 5 && !btn_l_pressed) {
+  if (joy_data->btn_b && m_arm_mode != 4 && !btn_b_pressed) {
     m_arm_mode++;
-    btn_l_pressed = true;
-  } else if (!joy_data->btn_l) {
-    btn_l_pressed = false;
+    btn_b_pressed = true;
+  } else if (!joy_data->btn_b) {
+    btn_b_pressed = false;
   }
 
   // Decrement arm mode with button D
@@ -813,10 +812,10 @@ void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)
 void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool clamp_btn_pressed = false;
-  if (joy_data->btn_l2 && !clamp_btn_pressed) {
+  if (joy_data->btn_a && !clamp_btn_pressed) {
     clamp_btn_pressed = true;
     m_clamp_closed = !m_clamp_closed;
-  } else if (!joy_data->btn_l2) {
+  } else if (!joy_data->btn_a) {
     clamp_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
