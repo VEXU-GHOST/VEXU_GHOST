@@ -181,17 +181,17 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        #serial_node,
+        serial_node,
         bag_recorder_service,
-        #ekf_pf_node,
-        ## realsense_node,
-        #imu_filter_node,
-        #odom_ekf_node,
-        #map_ekf_node,
-        #rplidar_node,
-        #color_classifier_node,
-        #color_sensor_node,
-        #tts_music_node,
-        #competition_state_machine_node,
+        ekf_pf_node,
+        # realsense_node,
+        imu_filter_node,
+        odom_ekf_node,
+        map_ekf_node,
+        rplidar_node,
+        color_classifier_node,
+        color_sensor_node,
+        tts_music_node,
+        competition_state_machine_node,
         gpio_expander,
     ])
