@@ -22,7 +22,7 @@
  */
 
  #pragma once
-
+ #include <math.h>
  #include "behaviortree_cpp/behavior_tree.h"
  #include "ghost_msgs/msg/robot_trajectory.hpp"
  #include "ghost_tank/bezier_curve.hpp"
@@ -91,6 +91,7 @@
  
    void PurePursuit();
    void GeneratePath();
+   void OnlySpinPath(); // Only for testing!
    void publishTrajectoryVisualization();
  };
  

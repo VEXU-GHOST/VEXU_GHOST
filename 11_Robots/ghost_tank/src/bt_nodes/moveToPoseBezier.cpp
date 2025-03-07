@@ -160,6 +160,7 @@
          RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPoseBezier Timeout: %i ms elapsed", time_elapsed);
          start_time_ = std::chrono::system_clock::now();
          GeneratePath();
+
          RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseBezier: Replanned");
        }
      } else {          // negative timeout means how long to wait until move on to the next command
@@ -174,7 +175,6 @@
      start_time_ = std::chrono::system_clock::now();
      started_ = true;
      GeneratePath();
- 
      RCLCPP_INFO(node_ptr_->get_logger(), "posX: %f", posX);
      RCLCPP_INFO(node_ptr_->get_logger(), "posY: %f", posY);
      RCLCPP_INFO(node_ptr_->get_logger(), "theta: %f", theta);
@@ -184,6 +184,69 @@
    publishTrajectoryVisualization();
  
    return BT::NodeStatus::RUNNING;
+ }
+  // For testing theta gains
+  void MoveToPoseBezier::OnlySpinPath()
+ {
+   double posX = BT_Util::get_input<double>(this, "posX_tiles");
+   double posY = BT_Util::get_input<double>(this, "posY_tiles");
+   double theta = BT_Util::get_input<double>(this, "theta_deg");
+   double threshold_xy = BT_Util::get_input<double>(this, "threshold_m", 0.1);
+   double threshold_theta = BT_Util::get_input<double>(this, "angle_threshold_deg", 5.0);
+   double lead = BT_Util::get_input<double>(this, "lead");
+   bool backwards = BT_Util::get_input<bool>(this, "backwards", false);
+ 
+   bool mirrored = false;
+   BT_Util::get_from_blackboard(blackboard_, "mirrored", mirrored);
+   if (mirrored) {
+     posX = 6.0 - posX;
+     theta = ghost_util::WrapAngle360(180.0 - theta);
+   }
+
+   double tile_to_meters = 0.6096;
+   posX *= tile_to_meters;
+   posY *= tile_to_meters;
+ 
+   theta *= ghost_util::DEG_TO_RAD;
+   threshold_theta *= ghost_util::DEG_TO_RAD;
+   
+   bezier_->set_lead(lead);
+   if (!backwards){
+     bezier_->set_end_point(posX, posY, theta);
+     bezier_->map_curve(tank_model_ptr_->getWorldPose());
+   } else {
+     bezier_->set_end_point(posX, posY, ghost_util::FlipAnglePI(theta));
+     auto pose = tank_model_ptr_->getWorldPose();
+     pose.z() = ghost_util::FlipAnglePI(pose.z());
+     bezier_->map_curve(pose);
+   }
+   auto points = bezier_->get_points();
+   std::vector<double> x_trajectory;
+   std::vector<double> y_trajectory;
+   std::vector<double> theta_trajectory;
+   std::vector<double> time_vector;
+ 
+   int it = 0;
+   for (const auto & vec : points) {
+     x_trajectory.push_back(4.0);
+     y_trajectory.push_back(3.0);
+     theta_trajectory.push_back(sin(it + sqrt(2) / 2));
+     it += 0.1;
+   }
+   int num_points = 250;
+   for (int i = 0; i <= num_points; i++) {
+     time_vector.push_back(i / static_cast<double>(num_points));
+   }
+ 
+   robot_trajectory_.x_trajectory.position_vector = x_trajectory;
+   robot_trajectory_.y_trajectory.position_vector = y_trajectory;
+   robot_trajectory_.theta_trajectory.position_vector = theta_trajectory;
+   robot_trajectory_.x_trajectory.threshold = threshold_xy;
+   robot_trajectory_.y_trajectory.threshold = threshold_xy;
+   robot_trajectory_.theta_trajectory.threshold = threshold_theta;
+   robot_trajectory_.x_trajectory.time_vector = time_vector;
+   robot_trajectory_.y_trajectory.time_vector = time_vector;
+   robot_trajectory_.theta_trajectory.time_vector = time_vector;
  }
  
  void MoveToPoseBezier::GeneratePath()

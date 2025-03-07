@@ -1,31 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-  <BehaviorTree ID="goal_rush_middle">
+  <include path="bt_clear_corner.xml"/>
+  <include path="bt_collect_rings.xml"/>
+  <BehaviorTree ID="neg_corner">
     <Sequence>
-      <Logging message="goal_rush"/>
-      <GoalRushCmd arm_down="false"/>
-      <MoveToPoseBezier  posX_tiles="2.5"
-                            posY_tiles="2.5"
-                            theta_deg="40.0"
-                            search_radius_m="0.3"
-                            threshold_m="0.1"
-                            angle_threshold_deg="5.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
-                            lead="0.3"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-5000"
-                            use_theta="true"
-                            backwards="false"/>
-      <GoalRushCmd arm_down="true"/>
-      <WaitCmd seconds="0.100"
-                shutoff_motors="true"/>
-
-      <Logging message="pulling_back"/>
-      <MoveToPoseBezier posX_tiles="2.1"
-                            posY_tiles="2.0"
-                            theta_deg="40.0"
+      <Logging message="negative corner left"/>
+      <MoveToPoseBezier posX_tiles="1.9"
+                            posY_tiles="1.75"
+                            theta_deg="-70.0"
                             search_radius_m="0.3"
                             threshold_m="0.20"
                             angle_threshold_deg="3.0"
@@ -37,10 +19,71 @@
                             timeout_ms="-5000"
                             use_theta="true"
                             backwards="true"/>
-      <ShutoffNode/>
+      <Logging message="Back Up and Clamp Goal"/>
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="1000">
+            <KeepRunningUntilFailure>
+              <ClampCmd clamp_closed="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ClampCmd clamp_closed="true"/>
+        </Fallback>
+        <MoveToPoseBezier posX_tiles="1.1"
+                            posY_tiles="2.9"
+                            theta_deg="-70.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.05"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="1.0"
+                            max_speed_linear_pct="0.8"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-3000"
+                            use_theta="true"
+                            backwards="true"/>
+      </ParallelAll>
+      <ClampCmd clamp_closed="true"/>
 
-      <Logging message="retract arm"/>
-      <GoalRushCmd arm_down="false"/>
+      <ConveyorCmd fwd="true"/>
+      <MoveToPoseBezier posX_tiles="2.0"
+                            posY_tiles="0.90"
+                            theta_deg="-90.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.05"
+                            angle_threshold_deg="5.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.75"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="false"/>
+      <ShutoffNode/>
+      
+      <Logging message="Going to goal"/>
+      <BiteCmd bite_closed="true"/>
+      <MoveToPoseBezier posX_tiles="2.2"
+                            posY_tiles="1.0"
+                            theta_deg="180.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.10"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="1.0"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+      <ConveyorCmd fwd="false"/>
+
+      <SubTree ID="collect_rings" _autoremap="true"/>
+      <SubTree ID="clear_corner" _autoremap="true"/>
     </Sequence>
   </BehaviorTree>
 

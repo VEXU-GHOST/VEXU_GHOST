@@ -31,6 +31,7 @@ private:
   float integral_limit_;
   float integral_theta_ = 0.0;
   float prev_error_theta_ = 0.0;
+  float last_twist_z_;
   Eigen::Vector3d prev_final_pos_;
 };
 

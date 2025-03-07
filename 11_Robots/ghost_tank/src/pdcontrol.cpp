@@ -20,6 +20,7 @@ PDControl::PDControl(
 {
   integral_theta_ = 0.0;
   prev_error_theta_ = 0.0;
+  last_twist_z_ = 0.0;
 }
 
 Eigen::Vector2d PDControl::tank_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & carrot_pos, const Eigen::Vector3d & final_pos, bool backwards)

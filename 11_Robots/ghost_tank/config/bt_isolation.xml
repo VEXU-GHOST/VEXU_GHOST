@@ -4,11 +4,15 @@
   <include path="bt_goal_rush.xml"/>
   <include path="bt_goal_rush_middle.xml"/>
   <include path="bt_pos_corner.xml"/>
+  <include path="bt_neg_corner.xml"/>
   <BehaviorTree ID="main_tree">
     <Sequence>
       <SetMirrored mirrored="false"/>
-      <SubTree ID="goal_rush_middle" _autoremap="true"/>
-      <SubTree ID="pos_corner" _autoremap="true"/>
+      <SubTree ID="goal_rush" _autoremap="true"/>
+      <SubTree ID="neg_corner" _autoremap="true"/>
+      <Logging message="Auton Complete"/>
+      <WaitCmd seconds="500.0"
+                shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
 
