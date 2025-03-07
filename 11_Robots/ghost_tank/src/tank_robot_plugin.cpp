@@ -628,6 +628,7 @@ bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy
 
 void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_data)
 {
+  return;
   if (joy_data->btn_y && joy_data->btn_x && !m_recording_btn_pressed) {
     m_recording_btn_pressed = true;
     if (!m_recording) {
@@ -841,9 +842,37 @@ void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
 void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static double btn_pressed = 0;
-  if (joy_data->btn_u && btn_pressed < (current_time - 5)){
-    btn_pressed = current_time;
-    playMusic(""); // should play random when empty
+  if (true && btn_pressed < (current_time - 5))
+  {
+    static double btn_pressed = 0;
+    if (btn_pressed < (current_time - 2))
+    {
+      if (joy_data->btn_b)
+      {
+        btn_pressed = current_time;
+        playMusic("rand");
+      }
+      else if (joy_data->btn_x)
+      {
+        btn_pressed = current_time;
+        playMusic("seinfeld");
+      }
+      else if (false)
+      {
+        btn_pressed = current_time;
+        playMusic("awesome");
+      }
+      else if (joy_data->btn_u)
+      {
+        btn_pressed = current_time;
+        playMusic("emotional");
+      }
+      else if (joy_data->btn_a)
+      {
+        btn_pressed = current_time;
+        playMusic("feminominon");
+      }
+    }
   }
 }
 

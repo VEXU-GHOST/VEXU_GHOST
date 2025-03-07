@@ -98,6 +98,15 @@ def generate_launch_description():
         output="screen",
         parameters=[ros_config_file],
     )
+    gpio_expander = Node(
+        package="ghost_io",
+        executable="gpio_expander",
+        name="gpio_expander",
+        output="screen",
+        parameters=[ros_config_file, {
+            "system_i2c_bus_path" : "/dev/i2c-7"
+        }],
+    )
 
     color_sensor_node = Node(
         package="ghost_sensing",
@@ -184,4 +193,5 @@ def generate_launch_description():
         color_sensor_node,
         tts_music_node,
         competition_state_machine_node,
+        gpio_expander,
     ])
