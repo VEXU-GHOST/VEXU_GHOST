@@ -709,15 +709,19 @@ void TankRobotPlugin::updateMusic(double current_time, bool mainButton, std::sha
       btn_pressed = current_time;
       playMusic("rand");
     } else if (partner_joy_data->btn_l1) {
+      btn_pressed = current_time;
       playMusic("seinfeld");
     }
     else if (partner_joy_data->btn_l2) {
+      btn_pressed = current_time;
       playMusic("awesome");
     }
     else if (partner_joy_data->btn_r1) {
+      btn_pressed = current_time;
       playMusic("emotional");
     }
     else if (partner_joy_data->btn_r2) {
+      btn_pressed = current_time;
       playMusic("feminominon");
     }
   }
