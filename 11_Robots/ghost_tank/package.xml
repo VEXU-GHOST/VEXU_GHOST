@@ -14,6 +14,7 @@
   <depend>ghost_ros_interfaces</depend>
   <depend>ghost_util</depend>
   <depend>ghost_estimation</depend>
+  <depend>ghost_io_py</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>nav_msgs</depend>

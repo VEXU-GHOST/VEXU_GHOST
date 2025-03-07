@@ -133,7 +133,7 @@ competition_state_machine_node:
         ]
     particle_filter:
       world_frame: "map"
-      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldZeroLH.txt"
 
       # Initial position
       # init_x: 0.508
@@ -745,3 +745,6 @@ map_ekf_node:
       ]
 
     dynamic_process_noise_covariance: true
+tts_music_node:
+  ros__parameters:
+    volume: 11  # set to 0 to turn off, set to 100 at comp

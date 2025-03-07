@@ -106,6 +106,12 @@ protected:
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArmPosition(int arm_mode);
   void ringDetector(bool active, double current_time, bool want_red);
+  void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+
+  // Output
+  void playMusic(std::string m);
+  void playTTS(std::string m);
+ 
 
   void resetWorldPose();
 
@@ -121,6 +127,9 @@ protected:
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_des_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr m_err_pos_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_set_pose_publisher;
+
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_tts_pub;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_music_pub;
 
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_ekf_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_pf_pub;
@@ -244,6 +253,7 @@ protected:
   // Bag Recorder
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
+
 
   // Field vs Robot Oriented Control
   bool m_toggle_tank_field_control_btn_pressed = false;
