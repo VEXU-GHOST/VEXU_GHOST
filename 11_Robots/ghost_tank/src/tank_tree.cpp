@@ -57,6 +57,7 @@ void TankTree::init_tree(){
 	factory.registerNodeType<ConveyorCmd>("ConveyorCmd");
 	factory.registerNodeType<WaitCmd>("WaitCmd");
 	factory.registerNodeType<NeutralStakeCmd>("NeutralStakeCmd");
+	factory.registerNodeType<GoalRushDetected>("GoalRushDetected");
 
     tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
 	std::cout << "Tree created: " << bt_path_ << std::endl;

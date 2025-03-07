@@ -21,44 +21,51 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/goalRushCmd.hpp"
+#include "ghost_tank/bt_nodes/conveyorCmd.hpp"
 
 namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
-GoalRushCmd::GoalRushCmd(
+ConveyorCmd::ConveyorCmd(
   const std::string & name, const BT::NodeConfig & config)
 : BT::SyncActionNode(name, config)
 {
   blackboard_ = config.blackboard;
-	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
 }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList GoalRushCmd::providedPorts()
+BT::PortsList ConveyorCmd::providedPorts()
 {
   // This action has a single input port called "message"
   return {
-    BT::InputPort<bool>("arm_down"),
-    BT::InputPort<bool>("clamp", true, "true means closed"),
   };
 }
 
-BT::NodeStatus GoalRushCmd::tick()
+BT::NodeStatus ConveyorCmd::tick()
 {
-  bool arm_down = BT_Util::get_input<bool>(this, "arm_down");
-  bool clamp = BT_Util::get_input<bool>(this, "clamp");
+  // double timeout = BT_Util::get_input<double>(this, "timeout");
+  // if (start_time_ == 0.0) {
+    // BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", start_time_);
+  // }
+  // double current_time = 0.0;
+  // BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
+  // if (current_time - start_time_ > timeout) {
+    // return BT::NodeStatus::SUCCESS;
+  // }
 
   std::unordered_map<std::string, int> digital_io_port_map;
   BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], arm_down);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_clamp"], clamp);
+  bool goal_detected = rhi_ptr_->getDigitalIOValue(digital_io_port_map["goal_rush_sensor"]);
+  if (goal_detected) {
+    return BT::NodeStatus::SUCCESS;
+  }
 
-  return BT::NodeStatus::SUCCESS;
+  return BT::NodeStatus::FAILURE;
 }
 
 } // ghost_tank

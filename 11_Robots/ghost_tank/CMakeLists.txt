@@ -197,6 +197,7 @@ set(NODES
   waitCmd
   neutralStakeCmd
   setColorTarget
+  goalRushDetected
 )
 
 foreach(NODE ${NODES})

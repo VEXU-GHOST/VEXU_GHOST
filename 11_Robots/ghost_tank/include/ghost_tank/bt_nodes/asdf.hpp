@@ -21,44 +21,48 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/goalRushCmd.hpp"
+#pragma once
+
+#include "behaviortree_cpp/behavior_tree.h"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+
+#include "rclcpp/rclcpp.hpp"
+
+using std::placeholders::_1;
 
 namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
-// If your Node has ports, you must use this constructor signature
-GoalRushCmd::GoalRushCmd(
-  const std::string & name, const BT::NodeConfig & config)
-: BT::SyncActionNode(name, config)
-{
-  blackboard_ = config.blackboard;
-	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
-  BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
-}
+class GoalRushDetected : public BT::StatefulActionNode {
+public:
+	// If your Node has ports, you must use this constructor signature
+	GoalRushDetected(const std::string& name, const BT::NodeConfig& config);
 
-// It is mandatory to define this STATIC method.
-BT::PortsList GoalRushCmd::providedPorts()
-{
-  // This action has a single input port called "message"
-  return {
-    BT::InputPort<bool>("arm_down"),
-    BT::InputPort<bool>("clamp", true, "true means closed"),
-  };
-}
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
 
-BT::NodeStatus GoalRushCmd::tick()
-{
-  bool arm_down = BT_Util::get_input<bool>(this, "arm_down");
-  bool clamp = BT_Util::get_input<bool>(this, "clamp");
+  /// Method called once, when transitioning from the state IDLE.
+  /// If it returns RUNNING, this becomes an asynchronous node.
+  BT::NodeStatus onStart();
 
-  std::unordered_map<std::string, int> digital_io_port_map;
-  BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], arm_down);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_clamp"], clamp);
+  /// method invoked when the action is already in the RUNNING state.
+  BT::NodeStatus onRunning();
 
-  return BT::NodeStatus::SUCCESS;
-}
+  /// when the method halt() is called and the action is RUNNING, this method is invoked.
+  /// This is a convenient place todo a cleanup, if needed.
+  void onHalted();
 
-} // ghost_tank
+  // Override the virtual function tick()
+  // BT::NodeStatus tick() override;
+
+private:
+  std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+	BT::Blackboard::Ptr blackboard_;
+  
+  double start_time_;
+};
+
+} // namespace ghost_tank {

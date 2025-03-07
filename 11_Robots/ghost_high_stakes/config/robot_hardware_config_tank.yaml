@@ -1,6 +1,7 @@
 port_configuration:
     digital_io:
-        A: IN
+        D: IN
+        E: OUT
         F: OUT
         G: OUT
         H: OUT

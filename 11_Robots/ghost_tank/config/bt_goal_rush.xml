@@ -3,8 +3,11 @@
   <BehaviorTree ID="goal_rush">
     <Sequence>
       <Logging message="goal_rush"/>
-      <GoalRushCmd arm_down="false"/>
-      <MoveToPoseBezier  posX_tiles="1.5"
+      <GoalRushCmd arm_down="true"
+                  clamp="false"/>
+      <ReactiveFallback>
+        <GoalRushDetected>
+        <MoveToPoseBezier  posX_tiles="1.5"
                             posY_tiles="2.4"
                             theta_deg="110.0"
                             search_radius_m="0.3"
@@ -18,10 +21,12 @@
                             timeout_ms="-5000"
                             use_theta="true"
                             backwards="false"/>
-      <GoalRushCmd arm_down="true"/>
+      </ReactiveFallback>
+      <GoalRushCmd arm_down="true"
+                  clamp = "true"/>
       <ShutoffNode/>
-      <WaitCmd seconds="0.100"
-                shutoff_motors="true"/>
+      <!-- <WaitCmd seconds="0.100" -->
+                <!-- shutoff_motors="true"/> -->
 
       <Logging message="pulling_back"/>
       <MoveToPoseBezier posX_tiles="1.9"
@@ -41,7 +46,8 @@
       <ShutoffNode/>
 
       <Logging message="retract arm"/>
-      <GoalRushCmd arm_down="false"/>
+      <GoalRushCmd arm_down="false"
+                  clamp="false"/>
     </Sequence>
   </BehaviorTree>
 
@@ -62,6 +68,7 @@
     <Action ID="GoalRushCmd"
             editable="true">
       <input_port name="arm_down"/>
+      <input_port name="clamp"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">
@@ -105,6 +112,8 @@
                   default="false"/>
     </Action>
     <Action ID="ShutoffNode"
+            editable="true"/>
+    <Action ID="GoalRushDetected"
             editable="true"/>
   </TreeNodesModel>
 
