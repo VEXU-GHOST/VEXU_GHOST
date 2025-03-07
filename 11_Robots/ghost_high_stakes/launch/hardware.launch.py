@@ -98,6 +98,15 @@ def generate_launch_description():
         output="screen",
         parameters=[ros_config_file],
     )
+    gpio_expander = Node(
+        package="ghost_io",
+        executable="gpio_expander",
+        name="gpio_expander",
+        output="screen",
+        parameters=[ros_config_file, {
+            "system_i2c_bus_path" : "/dev/i2c-7"
+        }],
+    )
 
     color_sensor_node = Node(
         package="ghost_sensing",
@@ -172,16 +181,17 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        serial_node,
-        bag_recorder_service,
-        ekf_pf_node,
-        # realsense_node,
-        imu_filter_node,
-        odom_ekf_node,
-        map_ekf_node,
-        rplidar_node,
-        color_classifier_node,
-        color_sensor_node,
-        tts_music_node,
-        competition_state_machine_node,
+        #serial_node,
+        #bag_recorder_service,
+        #ekf_pf_node,
+        ## realsense_node,
+        #imu_filter_node,
+        #odom_ekf_node,
+        #map_ekf_node,
+        #rplidar_node,
+        #color_classifier_node,
+        #color_sensor_node,
+        #tts_music_node,
+        #competition_state_machine_node,
+        gpio_expander,
     ])

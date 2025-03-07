@@ -740,3 +740,12 @@ map_ekf_node:
 tts_music_node:
   ros__parameters:
     volume: 11  # set to 0 to turn off, set to 100 at comp
+gpio_expander:
+  ros__parameters:
+    gpio:
+      "/io/led": 
+        pins: [9,10,11,12]
+        output: True
+      "/io/buttons/bag":
+        pins: [1]
+        output: False
