@@ -164,7 +164,7 @@ void TankRobotPlugin::initROSComms()
   node_ptr_->declare_parameter("tank_robot_plugin.err_pos_topic", "/err_pos");
   std::string err_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.err_pos_topic").as_string();
   m_err_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(err_pos_topic, 10);
-  
+
   m_tts_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
   m_music_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/music", 1);
 }
@@ -393,14 +393,19 @@ void TankRobotPlugin::publishIMUData()
 
 void TankRobotPlugin::disabled()
 {
+  static bool run_yet = 0;
+  if (!run_yet) {
+    playMusic("hello_there");
+    run_yet = 1;
+  }
 }
 
 void TankRobotPlugin::autonomous(double current_time)
 {
- static bool run_yet = 0;
+  static bool run_yet = 0;
   if (!run_yet) {
     playTTS("starting autonomous");
-  run_yet = 1;
+    run_yet = 1;
   }
 
   // std::cout << "Autonomous: " << current_time << std::endl;
@@ -450,6 +455,7 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
+  auto partner_joy_data = rhi_ptr_->getPartnerJoystickData();
   if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
     joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
   {
@@ -469,7 +475,7 @@ void TankRobotPlugin::teleop(double current_time)
   updateClamp(joy_data);
   updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
-  updateMusic(current_time, joy_data);
+  updateMusic(current_time, joy_data->btn_u, partner_joy_data);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
@@ -566,7 +572,7 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
     power = ghost_util::clamp(power, -0.2, 0.2);
   }
 
-   if (m_arm_mode == 5) {
+  if (m_arm_mode == 5) {
     power = ghost_util::clamp(power, -0.4, 0.4);
   }
 
@@ -695,12 +701,25 @@ void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
 }
 
-void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateMusic(double current_time, bool mainButton, std::shared_ptr<JoystickDeviceData> partner_joy_data)
 {
   static double btn_pressed = 0;
-  if (joy_data->btn_u && btn_pressed < (current_time - 5)){
-    btn_pressed = current_time;
-    playMusic(""); // should play random when empty
+  if (btn_pressed < (current_time - 5)) {
+    if (mainButton) {
+      btn_pressed = current_time;
+      playMusic("rand");
+    } else if (partner_joy_data->btn_l1) {
+      playMusic("seinfeld");
+    }
+    else if (partner_joy_data->btn_l2) {
+      playMusic("awesome");
+    }
+    else if (partner_joy_data->btn_r1) {
+      playMusic("emotional");
+    }
+    else if (partner_joy_data->btn_r2) {
+      playMusic("feminominon");
+    }
   }
 }
 

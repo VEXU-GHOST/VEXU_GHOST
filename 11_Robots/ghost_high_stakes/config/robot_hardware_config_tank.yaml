@@ -1,4 +1,5 @@
 port_configuration:
+    use_partner_joystick: True
     digital_io:
         A: IN
         F: OUT

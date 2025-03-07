@@ -104,7 +104,7 @@ protected:
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateMusic(double current_time, bool mainButton, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> partner_joy_data);
 
   // Output
   void playMusic(std::string m);
