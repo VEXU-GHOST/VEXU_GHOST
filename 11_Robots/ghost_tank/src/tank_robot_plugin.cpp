@@ -456,6 +456,11 @@ void TankRobotPlugin::autonomous(double current_time)
     ringDetector(ring_detector_active, current_time, want_red);
   }
 
+  int neutral_stake_pos = 0;
+  if (bt_->get_variable("neutral_stake_pos", neutral_stake_pos)) {
+    updateNeutralStakeArmPosition(neutral_stake_pos);
+  }
+
   double fwd_cmd = 0.0;
   double turn_cmd = 0.0;
   if (bt_->get_variable("fwd_cmd", fwd_cmd)) {
@@ -623,7 +628,7 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
   }
 }
 
-void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 {
   std::vector<double> arm_mode_position_map{
     m_neutral_stake_arm_rest_pos_deg,
@@ -637,23 +642,9 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
   double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_l") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
 
-  static bool btn_l_pressed = false;
-  static bool btn_d_pressed = false;
-
-  if (joy_data->btn_l && m_arm_mode != 5 && !btn_l_pressed) {
-    m_arm_mode++;
-    btn_l_pressed = true;
-  } else if (!joy_data->btn_l) {
-    btn_l_pressed = false;
-  }
-
-  if (joy_data->btn_d && m_arm_mode != 0 && !btn_d_pressed) {
-    m_arm_mode--;
-    btn_d_pressed = true;
-  } else if (!joy_data->btn_d) {
-    btn_d_pressed = false;
-  }
-
+  // Ensure arm_mode is within valid bounds
+  m_arm_mode = std::max(0, std::min(static_cast<int>(arm_mode_position_map.size() - 1), arm_mode));
+  
   m_neutral_stake_arm_des_pos = arm_mode_position_map[m_arm_mode];
 
   int32_t current_ma;
@@ -663,7 +654,7 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
     current_ma = 0;
   } else {
     current_ma = 2500;
-    power = m_neutral_stake_arm_kp * (m_neutral_stake_arm_des_pos - curr_pos);
+    power = m_neutral_stake_arm_kp * position_error;
   }
 
   // Don't exert positive power at upper limit
@@ -680,7 +671,7 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
     power = ghost_util::clamp(power, -0.2, 0.2);
   }
 
-   if (m_arm_mode == 5) {
+  if (m_arm_mode == 5) {
     power = ghost_util::clamp(power, -0.4, 0.4);
   }
 
@@ -691,6 +682,31 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
 
   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_l", power);
   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_r", power);
+}
+
+void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  static bool btn_l_pressed = false;
+  static bool btn_d_pressed = false;
+  
+  // Increment arm mode with button L
+  if (joy_data->btn_l && m_arm_mode != 5 && !btn_l_pressed) {
+    m_arm_mode++;
+    btn_l_pressed = true;
+  } else if (!joy_data->btn_l) {
+    btn_l_pressed = false;
+  }
+
+  // Decrement arm mode with button D
+  if (joy_data->btn_d && m_arm_mode != 0 && !btn_d_pressed) {
+    m_arm_mode--;
+    btn_d_pressed = true;
+  } else if (!joy_data->btn_d) {
+    btn_d_pressed = false;
+  }
+
+  // Call the position update function with the current arm mode
+  updateNeutralStakeArmPosition(m_arm_mode);
 }
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)

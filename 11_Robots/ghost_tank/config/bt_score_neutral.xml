@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="score_neutral">
+    <Sequence>
+      <Logging message="score neutral stake"/>
+      <MoveToPoseBezier posX_tiles="3.0"
+                        posY_tiles="1.0"
+                        theta_deg="-90.0"
+                        search_radius_m="0.3"
+                        threshold_m="0.1"
+                        angle_threshold_deg="5.0"
+                        threshold_vel_mps="0.1"
+                        angle_threshold_vel_dps="1.0"
+                        lead="0.4"
+                        max_speed_linear_pct="1.0"
+                        max_speed_angular_pct="1.0"
+                        timeout_ms="-5000"
+                        use_theta="true"
+                        backwards="false"/>
+      <ShutoffNode/>
+      <Logging message="load ring"/>
+      <NeutralStakeCmd state="1"
+                       timeout="0.500"/>
+      <ConveyorCmd fwd="true"/>
+      <WaitCmd seconds="0.500"
+                shutoff_motors="true"/>
+      <NeutralStakeCmd state="3"
+                       timeout="0.500"/>
+      <NeutralStakeCmd state="4"
+                       timeout="0.500"/>
+      <NeutralStakeCmd state="5"
+                       timeout="0.500"/>
+      <NeutralStakeCmd state="0"
+                       timeout="0.500"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+            editable="true">
+      <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="ClampCmd"
+            editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
+    <Action ID="ConveyorCmd"
+            editable="true">
+      <input_port name="fwd"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+            editable="true">
+      <input_port name="arm_down"/>
+    </Action>
+    <Action ID="SetMirrored"
+            editable="true">
+      <input_port name="mirrored"/>
+    </Action>
+    <Action ID="IntakeCmd"
+            editable="true">
+      <input_port name="active"/>
+      <input_port name="target_red"/>
+    </Action>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPoseBezier"
+            editable="true">
+      <input_port name="posX_tiles"/>
+      <input_port name="posY_tiles"/>
+      <input_port name="theta_deg"/>
+      <input_port name="search_radius_m"/>
+      <input_port name="threshold_m"/>
+      <input_port name="angle_threshold_deg"/>
+      <input_port name="threshold_vel_mps"/>
+      <input_port name="angle_threshold_vel_dps"/>
+      <input_port name="lead"/>
+      <input_port name="max_speed_linear_pct"/>
+      <input_port name="max_speed_angular_pct"/>
+      <input_port name="timeout_ms"/>
+      <input_port name="use_theta"/>
+      <input_port name="backwards"/>
+    </Action>
+    <Action ID="MoveToPosePurepursuit"
+            editable="true">
+      <input_port name="fileName"/>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+      <input_port name="use_theta"
+                  default="false"/>
+    </Action>
+    <Action ID="ShutoffNode"
+            editable="true"/>
+    <Action ID="NeutralStakeCmd"
+            editable="true">
+      <input_port name="state"/>
+      <input_port name="timeout"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

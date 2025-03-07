@@ -38,6 +38,7 @@
 #include "ghost_tank/bt_nodes/setMirrored.hpp"
 #include "ghost_tank/bt_nodes/conveyorCmd.hpp"
 #include "ghost_tank/bt_nodes/waitCmd.hpp"
+#include "ghost_tank/bt_nodes/neutralStakeCmd.hpp"
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 

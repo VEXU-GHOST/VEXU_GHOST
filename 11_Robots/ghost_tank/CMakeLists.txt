@@ -195,6 +195,7 @@ set(NODES
   setMirrored
   conveyorCmd
   waitCmd
+  neutralStakeCmd
 )
 
 foreach(NODE ${NODES})
