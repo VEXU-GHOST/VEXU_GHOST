@@ -12,10 +12,10 @@ GPIOExpander::GPIOExpander()
 : Node("gpio_expander", "",
     rclcpp::NodeOptions()
     .allow_undeclared_parameters(true)
-    //.automatically_declare_parameters_from_overrides(true)
+    .automatically_declare_parameters_from_overrides(true)
 )
 {
-  declare_parameter("system_i2c_bus_path", "/dev/i2c-null"); // required argument
+  //declare_parameter("system_i2c_bus_path", "/dev/i2c-null"); // required argument
   declare_parameter("address", 0x20); // required argument
   declare_parameter("poll_frequency", 25.);
 
@@ -32,13 +32,24 @@ GPIOExpander::GPIOExpander()
   load_gpio_parameters();
 
   for (auto & device : m_gpio_map) {
+    auto topic_name = device.first;
     if (device.second.output) {
-      // device.second.pub = this->create_publisher<std_msgs::msg::Int64>(
-      //   device.first, 10);
-    } else {
-      //device.second.sub = this->create_subscription<std_msgs::msg::Int64>(
-      //  device.first, 10,
-      //  std::bind(&GPIOExpander::callback, this, std::placeholders::_1, device.first));
+    //  device.second.sub = this->create_subscription<std_msgs::msg::Int64>(
+    //    topic_name, 10,
+    //    std::bind(&GPIOExpander::callback, this, std::placeholders::_1, topic_name));
+    std::cout << "subscribe to " << topic_name << std::endl;
+        device.second.sub = this->create_subscription<std_msgs::msg::Int64>(
+  topic_name, 10,
+  [this, topic_name](const std_msgs::msg::Int64::SharedPtr msg) {
+    this->callback(msg, topic_name);
+  });
+
+
+   } else {
+    std::cout << "pub " << topic_name << std::endl;
+       device.second.pub = this->create_publisher<std_msgs::msg::Int64>(
+         topic_name, 10);
+ 
     }
   }
 
@@ -56,11 +67,14 @@ GPIOExpander::GPIOExpander()
 void GPIOExpander::load_gpio_parameters()
 {
   // List all parameter names with the prefix "gpio"
-  auto param_list = this->list_parameters({"gpio"}, 3);
-  std::set<std::string> device_names;
-  const std::string prefix = "gpio.";
+  auto param_list = this->list_parameters({"gpio"}, 4);
+
   //std::cout << param_list.names.size() << std::endl;
   //std::cout << param_list.prefixes.size() << std::endl;
+
+  std::set<std::string> device_names;
+  const std::string prefix = "gpio.";
+
 
   // The parameters are flattened. For example:
   //   "gpio_expander.gpio./io/led.pins"
@@ -79,7 +93,7 @@ void GPIOExpander::load_gpio_parameters()
   }
   for (const auto & prefix : param_list.prefixes) {
 
-    std::cout << prefix << std::endl;
+    //std::cout << prefix << std::endl;
   }
 
   RCLCPP_INFO(this->get_logger(), "Loading GPIO devices:");
@@ -126,8 +140,10 @@ void GPIOExpander::callback(const std_msgs::msg::Int64::SharedPtr in, std::strin
 {
   int64_t data = in->data;
   auto pins = m_gpio_map[name].pins;
+  std::cout << name << " " << std::endl;
   for (int i = pins.size() - 1; i >= 0; i--) {
-    chip->setPin(pins[i], data & 1);
+  std::cout << pins[i] << " " << std::to_string(data & 1) << std::endl;
+    chip->setPin(pins[i], !(data & 1));
     data >>= 1;
   }
 }
@@ -145,8 +161,8 @@ void GPIOExpander::poll()
       for (auto & p : pins) {
         bool value;
         chip->getPin(p, value);
-        data |= value;
         data <<= 1;
+        data |= value;
       }
 
       std_msgs::msg::Int64 msg;

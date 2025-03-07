@@ -182,7 +182,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         #serial_node,
-        #bag_recorder_service,
+        bag_recorder_service,
         #ekf_pf_node,
         ## realsense_node,
         #imu_filter_node,

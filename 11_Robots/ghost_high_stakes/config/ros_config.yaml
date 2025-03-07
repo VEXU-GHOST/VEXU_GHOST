@@ -743,9 +743,12 @@ tts_music_node:
 gpio_expander:
   ros__parameters:
     gpio:
-      "/io/led": 
-        pins: [9,10,11,12]
+      "/io/leds/other": 
+        pins: [8, 9,10]
+        output: True
+      "/io/leds/bag": 
+        pins: [11]
         output: True
       "/io/buttons/bag":
-        pins: [1]
+        pins: [0]
         output: False
