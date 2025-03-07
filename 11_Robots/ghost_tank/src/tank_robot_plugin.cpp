@@ -639,7 +639,7 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
     m_neutral_stake_arm_down_pos_deg
   };
 
-  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_l") / m_neutral_stake_arm_gear_ratio;
+  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
 
   // Ensure arm_mode is within valid bounds
@@ -675,13 +675,10 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
     power = ghost_util::clamp(power, -0.4, 0.4);
   }
 
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_l", current_ma);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_r", current_ma);
-  m_loop_current_limits.push_back(current_ma);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
   m_loop_current_limits.push_back(current_ma);
 
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_l", power);
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_r", power);
+  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
 }
 
 void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
