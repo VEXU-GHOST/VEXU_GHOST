@@ -24,6 +24,7 @@
 #include <spawn.h>
 #include "ghost_msgs/srv/start_recorder.hpp"
 #include "ghost_msgs/srv/stop_recorder.hpp"
+#include "std_msgs/msg/int64.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "unistd.h"
 
@@ -55,6 +56,12 @@ public:
       disk_check_period_,
       std::bind(&BagRecorderNode::EnforceFreeDiskSpace, this));
 
+    // Create subscription to /io/buttons/bag and publisher to /io/leds/bag
+    button_subscriber_ = this->create_subscription<std_msgs::msg::Int64>(
+      "/io/buttons/bag", 10,
+      std::bind(&BagRecorderNode::ButtonCallback, this, _1));
+    led_publisher_ = this->create_publisher<std_msgs::msg::Int64>("/io/leds/bag", 10);
+
     std::string startup_string;
     startup_string += "Service Created.\n";
     startup_string += "\tDisk Space Required (KB):    " + std::to_string(disk_space_required_) +
@@ -70,16 +77,23 @@ public:
   void SpawnRecorderProcess();
   void KillRecorderProcess();
   void EnforceFreeDiskSpace();
+  void ButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
+  void PublishLedStatus(int64_t status);
 
 private:
   rclcpp::Service<StartRecorder>::SharedPtr start_service_;
   rclcpp::Service<StopRecorder>::SharedPtr stop_service_;
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr button_subscriber_;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr led_publisher_;
+
+
   bool recording_ = false;
   pid_t recorderPID_ = -1;
   unsigned long disk_space_required_;
   FILE * disk_check_output_;
   std::chrono::seconds disk_check_period_;
   rclcpp::TimerBase::SharedPtr disk_check_timer;
+  int64_t last_button_state_ = -1;  // Initialized to an invalid state
 };
 
 void BagRecorderNode::StartCallback(
@@ -99,6 +113,7 @@ void BagRecorderNode::StopCallback(
 
 void BagRecorderNode::SpawnRecorderProcess()
 {
+  PublishLedStatus(1);  // Turn LED on
   if (recording_) {
     RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Unable to start recorder; one already exists.");
     return;
@@ -113,6 +128,7 @@ void BagRecorderNode::SpawnRecorderProcess()
       "/bin/sh", "sh", "-c", "exec ros2 bag record -a -o ~/bags/$(date +%m_%d_%Y-%H_%M_%S)",
       NULL);
   }
+
 }
 
 void BagRecorderNode::KillRecorderProcess()
@@ -134,6 +150,8 @@ void BagRecorderNode::KillRecorderProcess()
 
   std::string cmd_string = "kill -s INT " + std::to_string(recorderPID_);
   std::system(cmd_string.c_str());
+
+  PublishLedStatus(0);  // Turn LED on
 }
 
 void BagRecorderNode::EnforceFreeDiskSpace()
@@ -154,6 +172,34 @@ void BagRecorderNode::EnforceFreeDiskSpace()
       "Not enough disk space to safely continue recording.");
     KillRecorderProcess();
   }
+}
+
+// Subscription callback for /io/buttons/bag
+void BagRecorderNode::ButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
+{
+  if (msg->data != last_button_state_) {
+    RCLCPP_INFO(this->get_logger(), "Button state changed from %ld to %ld", last_button_state_, msg->data);
+    
+    if (msg->data == 1) {
+      SpawnRecorderProcess();
+    } else if (msg->data == 0) {
+      KillRecorderProcess();
+    } else {
+      RCLCPP_WARN(this->get_logger(), "Received unknown button command: %ld", msg->data);
+    }
+    
+    // Update the last button state to the current value
+    last_button_state_ = msg->data;
+  }
+}
+
+// Helper function to publish LED status on /io/leds/bag
+void BagRecorderNode::PublishLedStatus(int64_t status)
+{
+  std_msgs::msg::Int64 led_msg;
+  led_msg.data = status;
+  led_publisher_->publish(led_msg);
+  RCLCPP_INFO(this->get_logger(), "Published LED status: %ld", led_msg.data);
 }
 
 int main(int argc, char ** argv)

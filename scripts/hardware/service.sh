@@ -11,7 +11,7 @@ case "$1" in
         ;;
     "stop")
         systemctl --user stop 'ghost*service'
-        pkill -f -e ros
+        pkill -f -e /ros
         pkill -f -e ros2
         pkill -f -e gz
         ;;
