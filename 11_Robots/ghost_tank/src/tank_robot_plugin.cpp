@@ -701,7 +701,7 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool btn_b_pressed = false;
-  static bool 11_Robots/ghost_tank/src/tank_robot_plugin.cppbtn_d_pressed = false;
+  static bool btn_d_pressed = false;
   
   // Increment arm mode with button L
   if (joy_data->btn_b && m_arm_mode != 4 && !btn_b_pressed) {
@@ -847,7 +847,7 @@ void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickD
     static double btn_pressed = 0;
     if (btn_pressed < (current_time - 2))
     {
-      if (joy_data->btn_b)
+      if (joy_data->btn_l)
       {
         btn_pressed = current_time;
         playMusic("rand");
@@ -867,7 +867,7 @@ void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickD
         btn_pressed = current_time;
         playMusic("emotional");
       }
-      else if (joy_data->btn_a)
+      else if (joy_data->btn_r)
       {
         btn_pressed = current_time;
         playMusic("feminominon");
