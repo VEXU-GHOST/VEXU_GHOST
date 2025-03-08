@@ -505,6 +505,8 @@ void TankRobotPlugin::teleop(double current_time)
     return;
   }
 
+  updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
+
   toggleBagRecorder(joy_data);
   updateNeutralStakeArm(joy_data);
   updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
@@ -512,7 +514,6 @@ void TankRobotPlugin::teleop(double current_time)
   updateClamp(joy_data);
   updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
-  updateMusic(current_time, joy_data);
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red){
@@ -839,44 +840,49 @@ void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
 }
 
+// pressing u takes over all right buttons
 void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static double btn_pressed = 0;
   if (true && btn_pressed < (current_time - 5))
   {
     static double btn_pressed = 0;
-    if (btn_pressed < (current_time - 2))
-    {
-      if (joy_data->btn_l)
+    if (joy_data->btn_u){
+      if (btn_pressed < (current_time - 2))
       {
-        btn_pressed = current_time;
-        playMusic("rand");
+        if (joy_data->btn_x)
+        {
+          btn_pressed = current_time;
+          playMusic("rand");
+        }
+        else if (joy_data->btn_y)
+        {
+          btn_pressed = current_time;
+          playMusic("seinfeld");
+        }
+        else if (joy_data->btn_a)
+        {
+          btn_pressed = current_time;
+          playMusic("awesome");
+        }
+        else if (joy_data->btn_b)
+        {
+          btn_pressed = current_time;
+          playMusic("objection");
+        }
+        else if (joy_data->btn_r1)
+        {
+          btn_pressed = current_time;
+          playMusic("emotional");
+        }
+        else if (joy_data->btn_r2)
+        {
+          btn_pressed = current_time;
+          playMusic("feminominon");
+        }
+
       }
-      else if (joy_data->btn_x)
-      {
-        btn_pressed = current_time;
-        playMusic("seinfeld");
-      }
-      else if (false)
-      {
-        btn_pressed = current_time;
-        playMusic("awesome");
-      }
-      else if (false)
-      {
-        btn_pressed = current_time;
-        playMusic("awesome");
-      }
-      else if (joy_data->btn_u)
-      {
-        btn_pressed = current_time;
-        playMusic("emotional");
-      }
-      else if (joy_data->btn_r)
-      {
-        btn_pressed = current_time;
-        playMusic("feminominon");
-      }
+      joy_data->btn_x = joy_data->btn_y = joy_data->btn_a = joy_data->btn_b = joy_data->btn_r1 = joy_data->btn_r2 = false;
     }
   }
 }
