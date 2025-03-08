@@ -104,6 +104,8 @@ protected:
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateNeutralStakeArmPosition(int arm_mode);
+  void ringDetector(bool active, double current_time, bool want_red);
   void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   // Output
@@ -287,6 +289,7 @@ protected:
 
   std::shared_ptr<Boomerang> m_boomerang;
   std::shared_ptr<PDControl> m_pd_control;
+  std::shared_ptr<PDControl> m_pd_control_threshold;
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
@@ -297,6 +300,11 @@ protected:
   // Current Limiting
   std::vector<double> m_loop_current_limits;
   int m_num_motors{16};
+
+  // ring detection
+  bool m_ring_found = false;
+  int m_ring_color = 0;
+  std::map<std::string, int> m_color_map;
 };
 
 } // namespace ghost_tank

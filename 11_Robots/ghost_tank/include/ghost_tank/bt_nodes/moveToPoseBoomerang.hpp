@@ -79,13 +79,15 @@ private:
   bool started_;
   int past_index_;
   std::shared_ptr<PDControl> pd_control_ptr_;
-  ghost_planners::RobotTrajectory robot_trajectory_;
+  std::shared_ptr<PDControl> pd_control_threshold_ptr_;
+	ghost_planners::RobotTrajectory robot_trajectory_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr curr_angle_pub;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr des_angle_pub;
 
   double des_angle_;
   double curr_angle_;
+  Eigen::Vector3d final_pose_ = Eigen::Vector3d::Zero();
 
   void PurePursuit();
   void GeneratePath();

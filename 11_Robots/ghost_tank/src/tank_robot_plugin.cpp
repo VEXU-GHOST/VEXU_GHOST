@@ -82,7 +82,8 @@ void TankRobotPlugin::populateMotorNames()
 
 void TankRobotPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["conveyor_switch"] = 0;
+  digital_io_port_map["goal_rush_sensor"] = 3;
+  digital_io_port_map["goal_rush_clamp"] = 4;
   digital_io_port_map["goal_rush"] = 5;
   digital_io_port_map["clamp"] = 6;
   digital_io_port_map["bite"] = 7;
@@ -135,10 +136,12 @@ void TankRobotPlugin::initROSComms()
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
   m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
-
+  
   node_ptr_->declare_parameter("backup_pose_topic", "/odom_ekf/odometry");
   std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
   m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
+  
+  m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensor_0/color", 10, std::bind(&TankRobotPlugin::colorCallback, this, _1));
 
   // Tank-Specific Publishers
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
@@ -246,6 +249,16 @@ void TankRobotPlugin::initIntake()
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_duration", 0.0);
   m_conveyor_hook_throw_fraction = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_fraction").as_double();
   m_conveyor_hook_throw_duration = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_throw_duration").as_double();
+
+  m_color_map =
+  {
+    { "red", 1 },
+    { "blue", 2 },
+    { "unknown", 0 }
+  };
+
+  m_ring_found = false;
+  m_ring_color = m_color_map["unknown"];
 }
 
 void TankRobotPlugin::initNeutralStakeArm()
@@ -302,18 +315,33 @@ void TankRobotPlugin::initTankModel()
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_ki_theta", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.max_speed_linear", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.max_speed_angular", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy_fine", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy_fine", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta_fine", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta_fine", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_ki_theta_fine", 0.5);
+  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_integral_limit", 0.5);
   m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
   float kp_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
   float kd_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
   float kp_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
   float kd_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
+  float ki_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
   m_max_speed_linear = node_ptr_->get_parameter("tank_robot_plugin.max_speed_linear").as_double();
   m_max_speed_angular = node_ptr_->get_parameter("tank_robot_plugin.max_speed_angular").as_double();
+  float kp_xy_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy_fine").as_double();
+  float kd_xy_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy_fine").as_double();
+  float kp_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta_fine").as_double();
+  float kd_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta_fine").as_double();
+  float ki_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_ki_theta_fine").as_double();
+  float integral_limit = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_integral_limit").as_double();
 
   m_boomerang = std::make_shared<Boomerang>();
-  m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta);
+  m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta, ki_theta, integral_limit);
+  m_pd_control_threshold = std::make_shared<PDControl>(kp_xy_fine, kd_xy_fine, kp_theta_fine, kd_theta_fine, ki_theta_fine, integral_limit);
 }
 
 void TankRobotPlugin::initAutonomy()
@@ -330,6 +358,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
   bt_->set_variable("node_ptr", node_ptr_);
   bt_->set_variable("pd_control_ptr", m_pd_control);
+  bt_->set_variable("pd_control_threshold_ptr", m_pd_control_threshold);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
   try {
@@ -428,6 +457,20 @@ void TankRobotPlugin::autonomous(double current_time)
   if (bt_->get_variable("desired_pose", m_desired_pose)) {
     publishDesiredPose(m_desired_pose);
   }
+
+  bool ring_detector_active = false;
+  bool want_red = false;
+  if (bt_->get_variable("ring_detector_active", ring_detector_active)
+    && bt_->get_variable("want_red", want_red))
+  {
+    ringDetector(ring_detector_active, current_time, want_red);
+  }
+
+  int neutral_stake_pos = 0;
+  if (bt_->get_variable("neutral_stake_pos", neutral_stake_pos)) {
+    updateNeutralStakeArmPosition(neutral_stake_pos);
+  }
+
   double fwd_cmd = 0.0;
   double turn_cmd = 0.0;
   if (bt_->get_variable("fwd_cmd", fwd_cmd)) {
@@ -464,12 +507,105 @@ void TankRobotPlugin::teleop(double current_time)
 
   toggleBagRecorder(joy_data);
   updateNeutralStakeArm(joy_data);
-  updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_r, current_time);
+  updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
   updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
   updateMusic(current_time, joy_data);
+}
+
+void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red){
+  static double last_input_time = 0.0;
+  static double ring_found_time = 0.0;
+  static double stuck_detection_time = 0.0;
+  static bool running = false;
+  static bool retry_mode = false;
+  static double retry_start_time = 0.0;
+  
+  // Constants (adjust as needed for your specific system)
+  const double STUCK_TIMEOUT = 1.5;      // Time to consider a ring stuck
+  const double RETRY_DURATION = 0.8;     // How long to attempt the retry
+  const double COOLDOWN_PERIOD = 0.2;    // Brief pause between retry attempts
+
+  if (!active){
+    last_input_time = 0.0;
+    ring_found_time = 0.0;
+    stuck_detection_time = 0.0;
+    retry_mode = false;
+    retry_start_time = 0.0;
+    running = false;
+    return;
+  }
+  
+  m_ring_found = m_color_map[m_color] != 0;
+  m_ring_color = m_color_map[m_color];
+
+  // Initial ring detection
+  if (m_ring_found && !running){
+    ring_found_time = current_time;
+    stuck_detection_time = current_time;
+    running = true;
+    retry_mode = false;
+  } else if (!m_ring_found) {
+    running = false;
+    retry_mode = false;
+  } 
+  
+  // Stuck ring detection logic
+  if (running && m_ring_found) {
+    if (!retry_mode && (current_time - stuck_detection_time > STUCK_TIMEOUT)) {
+      // Ring has been detected for too long - initiate retry sequence
+      retry_mode = true;
+      retry_start_time = current_time;
+    } else if (current_time - ring_found_time > 1.0){
+      ring_found_time = current_time;
+    }
+  }
+  
+  // Handle retry cycle
+  if (retry_mode) {
+    double retry_elapsed = current_time - retry_start_time;
+    
+    if (retry_elapsed > RETRY_DURATION) {
+      // End retry attempt and go back to normal operation
+      retry_mode = false;
+      stuck_detection_time = current_time; // Reset stuck timer
+    }
+  }
+
+  // Normal processing
+  bool ring_prewaited = (current_time - ring_found_time > 0.3) && m_ring_found && !retry_mode;
+  if (ring_prewaited){
+    last_input_time = current_time;
+  }
+  
+  // Determine hook and eject status
+  bool hook = false;
+  if (retry_mode) {
+    // During retry: alternate between hook on/off with a small cooldown period
+    double retry_cycle = fmod(current_time - retry_start_time, COOLDOWN_PERIOD * 2);
+    hook = (retry_cycle < COOLDOWN_PERIOD);
+  } else {
+    // Normal hook logic
+    hook = ring_prewaited || (current_time - last_input_time < 0.5);
+  }
+
+  bool eject = false;
+  if (!retry_mode) {  // Don't eject during retry attempts
+    if(want_red){
+      eject = (m_ring_color == m_color_map["blue"]) && ring_prewaited;
+    } else {
+      eject = (m_ring_color == m_color_map["red"]) && ring_prewaited;
+    }
+
+    if(eject){
+      hook = false;
+    }
+  }
+
+  // Call motor control with determined states
+  updateIntake(true, hook, eject, !hook && retry_mode, current_time);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
@@ -510,37 +646,22 @@ void TankRobotPlugin::toggleBagRecorder(std::shared_ptr<JoystickDeviceData> joy_
   }
 }
 
-void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 {
   std::vector<double> arm_mode_position_map{
     m_neutral_stake_arm_rest_pos_deg,
     m_neutral_stake_arm_loading_pos_deg,
-    m_neutral_stake_arm_loaded_pos_deg,
     m_neutral_stake_arm_score_neutral_pos_deg,
     m_neutral_stake_arm_score_alliance_pos_deg,
     m_neutral_stake_arm_down_pos_deg
   };
 
-  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_l") / m_neutral_stake_arm_gear_ratio;
+  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
 
-  static bool btn_l_pressed = false;
-  static bool btn_d_pressed = false;
-
-  if (joy_data->btn_l && m_arm_mode != 5 && !btn_l_pressed) {
-    m_arm_mode++;
-    btn_l_pressed = true;
-  } else if (!joy_data->btn_l) {
-    btn_l_pressed = false;
-  }
-
-  if (joy_data->btn_d && m_arm_mode != 0 && !btn_d_pressed) {
-    m_arm_mode--;
-    btn_d_pressed = true;
-  } else if (!joy_data->btn_d) {
-    btn_d_pressed = false;
-  }
-
+  // Ensure arm_mode is within valid bounds
+  m_arm_mode = std::max(0, std::min(static_cast<int>(arm_mode_position_map.size() - 1), arm_mode));
+  
   m_neutral_stake_arm_des_pos = arm_mode_position_map[m_arm_mode];
 
   int32_t current_ma;
@@ -550,7 +671,7 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
     current_ma = 0;
   } else {
     current_ma = 2500;
-    power = m_neutral_stake_arm_kp * (m_neutral_stake_arm_des_pos - curr_pos);
+    power = m_neutral_stake_arm_kp * position_error;
   }
 
   // Don't exert positive power at upper limit
@@ -563,21 +684,43 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
     power = ghost_util::clamp(power, 0.0, 1.0);
   }
 
-  if (m_arm_mode == 4) {
-    power = ghost_util::clamp(power, -0.2, 0.2);
-  }
-
-   if (m_arm_mode == 5) {
+  if (m_arm_mode == 3) {
     power = ghost_util::clamp(power, -0.4, 0.4);
   }
 
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_l", current_ma);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_r", current_ma);
-  m_loop_current_limits.push_back(current_ma);
+  if (m_arm_mode == 4) {
+    power = ghost_util::clamp(power, -0.8, 0.8);
+  }
+
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
   m_loop_current_limits.push_back(current_ma);
 
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_l", power);
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_r", power);
+  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
+}
+
+void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
+{
+  static bool btn_b_pressed = false;
+  static bool 11_Robots/ghost_tank/src/tank_robot_plugin.cppbtn_d_pressed = false;
+  
+  // Increment arm mode with button L
+  if (joy_data->btn_b && m_arm_mode != 4 && !btn_b_pressed) {
+    m_arm_mode++;
+    btn_b_pressed = true;
+  } else if (!joy_data->btn_b) {
+    btn_b_pressed = false;
+  }
+
+  // Decrement arm mode with button D
+  if (joy_data->btn_d && m_arm_mode != 0 && !btn_d_pressed) {
+    m_arm_mode--;
+    btn_d_pressed = true;
+  } else if (!joy_data->btn_d) {
+    btn_d_pressed = false;
+  }
+
+  // Call the position update function with the current arm mode
+  updateNeutralStakeArmPosition(m_arm_mode);
 }
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
@@ -687,10 +830,10 @@ void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)
 void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool clamp_btn_pressed = false;
-  if (joy_data->btn_l2 && !clamp_btn_pressed) {
+  if (joy_data->btn_a && !clamp_btn_pressed) {
     clamp_btn_pressed = true;
     m_clamp_closed = !m_clamp_closed;
-  } else if (!joy_data->btn_l2) {
+  } else if (!joy_data->btn_a) {
     clamp_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);

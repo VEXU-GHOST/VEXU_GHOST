@@ -33,10 +33,10 @@
 
 namespace ghost_tank {
 
-class IntakeCmd : public BT::SyncActionNode {
+class GoalRushDetected : public BT::SyncActionNode {
 public:
   // If your Node has ports, you must use this constructor signature
-  IntakeCmd(const std::string& name, const BT::NodeConfig& config);
+  GoalRushDetected(const std::string& name, const BT::NodeConfig& config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -48,6 +48,8 @@ private:
 	std::shared_ptr<TankModel> tank_model_ptr_;
   std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
   BT::Blackboard::Ptr blackboard_;
+
+  double start_time_ = 0.0;
 };
 
 } // ghost_tank

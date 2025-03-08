@@ -21,33 +21,38 @@
  *   SOFTWARE.
  */
 
-#pragma once
+#include "ghost_tank/bt_nodes/setColorTarget.hpp"
 
-#include <string>
-#include "behaviortree_cpp/behavior_tree.h"
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
-#include "ghost_tank/tank_tree.hpp"
-#include "ghost_tank/bt_nodes/bt_util.hpp"
-#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+namespace ghost_tank
+{
 
-namespace ghost_tank {
+// SyncActionNode (synchronous action) with an input port.
+// If your Node has ports, you must use this constructor signature
+SetColorTarget::SetColorTarget(
+  const std::string & name, const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+  blackboard_ = config.blackboard;
+	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
+}
 
-class IntakeCmd : public BT::SyncActionNode {
-public:
-  // If your Node has ports, you must use this constructor signature
-  IntakeCmd(const std::string& name, const BT::NodeConfig& config);
+// It is mandatory to define this STATIC method.
+BT::PortsList SetColorTarget::providedPorts()
+{
+  // This action has a single input port called "message"
+  return {
+    BT::InputPort<bool>("target_red"),
+  };
+}
 
-  // It is mandatory to define this STATIC method.
-  static BT::PortsList providedPorts();
+BT::NodeStatus SetColorTarget::tick()
+{
+  bool target_red = BT_Util::get_input<bool>(this, "target_red");
+  BT_Util::put_in_blackboard(blackboard_, "target_red", target_red);
 
-  BT::NodeStatus tick();
-  
-private:
-  std::shared_ptr<rclcpp::Node> node_ptr_;
-	std::shared_ptr<TankModel> tank_model_ptr_;
-  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
-  BT::Blackboard::Ptr blackboard_;
-};
+  return BT::NodeStatus::SUCCESS;
+}
 
 } // ghost_tank

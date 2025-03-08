@@ -21,43 +21,63 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/intakeCmd.hpp"
+ #include "ghost_tank/bt_nodes/neutralStakeCmd.hpp"
+ #include "ghost_tank/pdcontrol.hpp"
+
+using std::placeholders::_1;
 
 namespace ghost_tank
 {
 
-// SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
-IntakeCmd::IntakeCmd(
-  const std::string & name, const BT::NodeConfig & config)
-: BT::SyncActionNode(name, config)
+NeutralStakeCmd::NeutralStakeCmd(const std::string & name, const BT::NodeConfig & config)
+: BT::StatefulActionNode(name, config)
 {
+  std::cout << "[NeutralStakeCmd::NeutralStakeCmd]" << std::endl;
+
   blackboard_ = config.blackboard;
+
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
-  BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
 }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList IntakeCmd::providedPorts()
+BT::PortsList NeutralStakeCmd::providedPorts()
 {
-  // This action has a single input port called "message"
   return {
-    BT::InputPort<bool>("active"),
+    BT::InputPort<int>("state"),
+    BT::InputPort<double>("timeout"),
   };
 }
 
-BT::NodeStatus IntakeCmd::tick()
+/// Method called once, when transitioning from the state IDLE.
+/// If it returns RUNNING, this becomes an asynchronous node.
+BT::NodeStatus NeutralStakeCmd::onStart()
 {
-  bool active = BT_Util::get_input<bool>(this, "active");
-
-  bool target_red = false;
-  BT_Util::get_from_blackboard(blackboard_, "target_red", target_red);
-
-  BT_Util::put_in_blackboard(blackboard_, "want_red", target_red);
-  BT_Util::put_in_blackboard(blackboard_, "ring_detector_active", active);
-
-  return BT::NodeStatus::SUCCESS;
+  BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", start_time_);
+  return BT::NodeStatus::RUNNING;
 }
 
-} // ghost_tank
+/// when the method halt() is called and the action is RUNNING, this method is invoked.
+/// This is a convenient place todo a cleanup, if needed.
+void NeutralStakeCmd::onHalted()
+{
+  resetStatus();
+}
+
+BT::NodeStatus NeutralStakeCmd::onRunning()
+{
+  int state = BT_Util::get_input<int>(this, "state");
+  double timeout = BT_Util::get_input<double>(this, "timeout");
+  double current_time = 0.0;
+  BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
+  BT_Util::put_in_blackboard(blackboard_, "neutral_stake_pos", state);
+
+  if (timeout > (current_time - start_time_)) {
+    return BT::NodeStatus::RUNNING;
+  } else {
+    return BT::NodeStatus::SUCCESS;
+  }
+}
+
+}  // namespace ghost_tank

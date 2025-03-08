@@ -27,6 +27,7 @@
 #include "ghost_tank/bt_nodes/loggingNode.hpp"
 #include "ghost_tank/bt_nodes/autoDone.hpp"
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
+#include "ghost_tank/bt_nodes/moveToPoseBezier.hpp"
 #include "ghost_tank/bt_nodes/moveToPoseBoomerang.hpp"
 #include "ghost_tank/bt_nodes/moveToPosePurepursuit.hpp"
 #include "ghost_tank/bt_nodes/biteCmd.hpp"
@@ -35,8 +36,11 @@
 #include "ghost_tank/bt_nodes/intakeCmd.hpp"
 #include "ghost_tank/bt_nodes/goalRushCmd.hpp"
 #include "ghost_tank/bt_nodes/setMirrored.hpp"
+#include "ghost_tank/bt_nodes/setColorTarget.hpp"
 #include "ghost_tank/bt_nodes/conveyorCmd.hpp"
 #include "ghost_tank/bt_nodes/waitCmd.hpp"
+#include "ghost_tank/bt_nodes/neutralStakeCmd.hpp"
+#include "ghost_tank/bt_nodes/goalRushDetected.hpp"
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 

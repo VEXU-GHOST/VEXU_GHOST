@@ -26,23 +26,22 @@
 #include <string>
 #include "behaviortree_cpp/behavior_tree.h"
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
 #include "ghost_tank/tank_tree.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
 namespace ghost_tank {
 
-class IntakeCmd : public BT::SyncActionNode {
+class SetColorTarget : public BT::SyncActionNode {
 public:
   // If your Node has ports, you must use this constructor signature
-  IntakeCmd(const std::string& name, const BT::NodeConfig& config);
+  SetColorTarget(const std::string& name, const BT::NodeConfig& config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
   BT::NodeStatus tick();
-  
+
 private:
   std::shared_ptr<rclcpp::Node> node_ptr_;
 	std::shared_ptr<TankModel> tank_model_ptr_;

@@ -39,6 +39,7 @@ MoveToPoseBoomerang::MoveToPoseBoomerang(const std::string & name, const BT::Nod
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "pd_control_ptr", pd_control_ptr_);
+	BT_Util::get_from_blackboard(blackboard_, "pd_control_threshold_ptr", pd_control_threshold_ptr_);
 
   if (!node_ptr_->has_parameter("behavior_tree.trajectory_topic")) {
     node_ptr_->declare_parameter(
@@ -70,8 +71,8 @@ BT::PortsList MoveToPoseBoomerang::providedPorts()
     BT::InputPort<double>("search_radius_m"),
     BT::InputPort<double>("threshold_m"),
     BT::InputPort<double>("angle_threshold_deg"),
-    BT::InputPort<double>("threshold_vel_mps"),
-    BT::InputPort<double>("angle_threshold_vel_dps"),
+    BT::InputPort<double>("threshold_vel_mps", 1000.0, ""),
+    BT::InputPort<double>("angle_threshold_vel_dps", 1000.0, ""),
     BT::InputPort<double>("lead"),
     BT::InputPort<double>("max_speed_linear_pct"),
     BT::InputPort<double>("max_speed_angular_pct"),
@@ -115,7 +116,7 @@ BT::NodeStatus MoveToPoseBoomerang::onRunning()
 
   if (mirrored) {
     posX = 6.0 - posX;
-    theta = 180.0 - theta;
+    theta = ghost_util::WrapAngle360(180.0 - theta);
   }
 
   double tile_to_meters = 0.6096;
@@ -193,6 +194,7 @@ void MoveToPoseBoomerang::GeneratePath()
   double threshold_xy = BT_Util::get_input<double>(this, "threshold_m", 0.1);
   double threshold_theta = BT_Util::get_input<double>(this, "angle_threshold_deg", 5.0);
   double lead = BT_Util::get_input<double>(this, "lead");
+  bool backwards = BT_Util::get_input<bool>(this, "backwards", false);
 
   double tile_to_meters = 0.6096;
   posX *= tile_to_meters;
@@ -201,7 +203,11 @@ void MoveToPoseBoomerang::GeneratePath()
   theta *= ghost_util::DEG_TO_RAD;
   threshold_theta *= ghost_util::DEG_TO_RAD;
 
-  boomerang_->set_end_point(posX, posY, theta);
+  if (!backwards){
+    boomerang_->set_end_point(posX, posY, theta);
+  } else {
+    boomerang_->set_end_point(posX, posY, ghost_util::FlipAnglePI(theta));
+  }
   boomerang_->set_lead(lead);
   boomerang_->map_curve(tank_model_ptr_->getWorldPose());
   auto points = boomerang_->get_points();
@@ -265,6 +271,7 @@ void MoveToPoseBoomerang::PurePursuit()
   }
 
   final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], theta_trajectory[theta_trajectory.size() - 1]);
+  final_pose_ = final_pose;
 
   desired_pose = Eigen::Vector3d(x_trajectory[past_index_], y_trajectory[past_index_], 0.0);
   BT_Util::put_in_blackboard(blackboard_, "desired_pose", desired_pose);
@@ -280,7 +287,7 @@ void MoveToPoseBoomerang::PurePursuit()
 
   if (dist_err < threshold_xy) {
     carrot = final_pose;
-    command = pd_control_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose);
+    command = pd_control_threshold_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose);
   } else {
     carrot = desired_pose;
     command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), carrot, final_pose, backwards);
@@ -357,7 +364,7 @@ void MoveToPoseBoomerang::publishTrajectoryVisualization()
   marker.scale.z = 0.1;
   marker.color.r = 1.0;
   marker.color.a = 1.0;
-
+  
   for (int i = 0; i < robot_trajectory_.x_trajectory.position_vector.size(); i += 5) {
     geometry_msgs::msg::Point p;
     p.x = robot_trajectory_.x_trajectory.position_vector[i];
@@ -365,9 +372,28 @@ void MoveToPoseBoomerang::publishTrajectoryVisualization()
     p.z = 0.0;
     marker.points.push_back(p);
   }
+
+  visualization_msgs::msg::Marker end_marker{};
+  end_marker.header.frame_id = "map";
+  end_marker.header.stamp = node_ptr_->get_clock()->now();
+  end_marker.id = 4;
+  end_marker.type = 0;         // arrow type
+  end_marker.action = 0;
+  end_marker.pose.position.x = final_pose_.x();
+  end_marker.pose.position.y = final_pose_.y();
+  ghost_util::yawToQuaternionRad(
+    final_pose_.z(), end_marker.pose.orientation.w, end_marker.pose.orientation.x,
+    end_marker.pose.orientation.y, end_marker.pose.orientation.z);
+  end_marker.scale.x = 0.1;
+  end_marker.scale.y = 0.025;
+  end_marker.scale.z = 0.025;
+  end_marker.color.r = 1.0;
+  end_marker.color.a = 1.0;
+
   msg.markers.push_back(search_radius_marker);
   msg.markers.push_back(carrot);
   msg.markers.push_back(marker);
+  msg.markers.push_back(end_marker);
 
   BT_Util::get_from_blackboard(blackboard_, "trajectory_viz_pub", trajectory_viz_pub_);
   trajectory_viz_pub_->publish(msg);

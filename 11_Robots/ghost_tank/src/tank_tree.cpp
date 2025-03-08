@@ -44,6 +44,7 @@ void TankTree::init_tree(){
 	factory.registerNodeType<LoggingNode>("Logging");
 	factory.registerNodeType<AutoDone>("AutoDone");
 	factory.registerNodeType<AutonTimer>("AutonTimer");
+	factory.registerNodeType<MoveToPoseBezier>("MoveToPoseBezier");
 	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
 	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
 	factory.registerNodeType<BiteCmd>("BiteCmd"); 
@@ -51,9 +52,12 @@ void TankTree::init_tree(){
 	factory.registerNodeType<ShutoffNode>("ShutoffNode");
 	factory.registerNodeType<IntakeCmd>("IntakeCmd");
 	factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
+	factory.registerNodeType<SetColorTarget>("SetColorTarget");
 	factory.registerNodeType<SetMirrored>("SetMirrored");
 	factory.registerNodeType<ConveyorCmd>("ConveyorCmd");
 	factory.registerNodeType<WaitCmd>("WaitCmd");
+	factory.registerNodeType<NeutralStakeCmd>("NeutralStakeCmd");
+	factory.registerNodeType<GoalRushDetected>("GoalRushDetected");
 
     tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
 	std::cout << "Tree created: " << bt_path_ << std::endl;
