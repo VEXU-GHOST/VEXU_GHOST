@@ -747,7 +747,7 @@ map_ekf_node:
     dynamic_process_noise_covariance: true
 tts_music_node:
   ros__parameters:
-    volume: 60  # set to 0 to turn off, set to 100 at comp
+    volume: 10  # set to 0 to turn off, set to 100 at comp
 gpio_expander:
   ros__parameters:
     gpio:

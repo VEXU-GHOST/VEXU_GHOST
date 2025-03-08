@@ -85,8 +85,8 @@ void TankRobotPlugin::populateDigitalIONames()
   digital_io_port_map["goal_rush_sensor"] = 3;
   digital_io_port_map["goal_rush_clamp"] = 4;
   digital_io_port_map["goal_rush"] = 5;
-  digital_io_port_map["clamp"] = 6;
-  digital_io_port_map["bite"] = 7;
+  digital_io_port_map["clamp"] = 7;
+  digital_io_port_map["bite"] = 6;
 }
 
 //////////////////////
@@ -884,13 +884,22 @@ void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickD
 void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool goal_rush_btn_pressed = false;
-  if (joy_data->btn_a && !goal_rush_btn_pressed) {
+  if (joy_data->btn_x && !goal_rush_btn_pressed) {
     goal_rush_btn_pressed = true;
     m_goal_rush_active = !m_goal_rush_active;
-  } else if (!joy_data->btn_a) {
+  } else if (!joy_data->btn_x) {
     goal_rush_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
+
+  static bool goal_rush_clamp_btn_pressed = false;
+  if (joy_data->btn_r && !goal_rush_clamp_btn_pressed) {
+    goal_rush_clamp_btn_pressed = true;
+    m_goal_rush_clamp_active = !m_goal_rush_clamp_active;
+  } else if (!joy_data->btn_r) {
+    goal_rush_clamp_btn_pressed = false;
+  }
+  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_clamp"], m_goal_rush_clamp_active);
 }
 
 void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)
