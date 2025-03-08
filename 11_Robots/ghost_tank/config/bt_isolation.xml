@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main_tree">
+      main_tree_to_execute="test_rush">
   <include path="bt_goal_rush.xml"/>
   <include path="bt_goal_rush_middle.xml"/>
   <include path="bt_pos_corner.xml"/>
@@ -111,6 +111,26 @@
                 shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
+
+  <BehaviorTree ID="test_rush">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <!-- <Logging message="test"/> -->
+      <GoalRushCmd arm_down="true"
+                  clamp="false"/>
+      <WaitCmd seconds="1.0"
+                shutoff_motors="true"/>
+      <GoalRushCmd arm_down="true"
+                  clamp="true"/>
+      <WaitCmd seconds="1.0"
+                shutoff_motors="true"/>
+      <GoalRushCmd arm_down="false"
+                  clamp="true"/>
+      <WaitCmd seconds="1.0"
+                shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
 
   <BehaviorTree ID="jerryiotest">
     <Sequence>

@@ -862,6 +862,11 @@ void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickD
         btn_pressed = current_time;
         playMusic("awesome");
       }
+      else if (false)
+      {
+        btn_pressed = current_time;
+        playMusic("awesome");
+      }
       else if (joy_data->btn_u)
       {
         btn_pressed = current_time;
