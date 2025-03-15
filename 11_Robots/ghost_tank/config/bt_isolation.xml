@@ -1,22 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main_tree">
+      main_tree_to_execute="skills">
   <include path="bt_goal_rush.xml"/>
   <include path="bt_goal_rush_middle.xml"/>
   <include path="bt_pos_corner.xml"/>
   <include path="bt_neg_corner.xml"/>
   <include path="bt_score_neutral.xml"/>
+  <include path="bt_skills.xml"/>
   <BehaviorTree ID="main_tree">
+        <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
+
     <Sequence>
-      <SetMirrored mirrored="false"/>
-      <SetColorTarget target_red="false"/>
-      <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
+      <SetMirrored mirrored="true"/>
+      <SetColorTarget target_red="true"/>
       <SubTree ID="goal_rush" _autoremap="true"/>
       <SubTree ID="pos_corner" _autoremap="true"/>
       <Logging message="Auton Complete"/>
       <WaitCmd seconds="500.0"
                 shutoff_motors="true"/>
     </Sequence>
+    <!-- <Sequence>
+      <SetMirrored mirrored="true"/>
+      <SetColorTarget target_red="true"/>
+      <SubTree ID="goal_rush" _autoremap="true"/>
+      <SubTree ID="pos_corner" _autoremap="true"/>
+      <Logging message="Auton Complete"/>
+      <WaitCmd seconds="500.0"
+                shutoff_motors="true"/>
+    </Sequence> -->
   </BehaviorTree>
 
   <BehaviorTree ID="test_integral">
@@ -118,14 +129,13 @@
       <!-- <Logging message="test"/> -->
       <GoalRushCmd arm_down="true"
                   clamp="false"/>
-      <WaitCmd seconds="1.0"
+      <ReactiveFallback>
+        <GoalRushDetected/>
+        <WaitCmd seconds="3.0"
                 shutoff_motors="true"/>
-      <GoalRushCmd arm_down="true"
-                  clamp="true"/>
-      <WaitCmd seconds="1.0"
-                shutoff_motors="true"/>
+      </ReactiveFallback>
       <GoalRushCmd arm_down="false"
-                  clamp="true"/>
+                  clamp = "true"/>
       <WaitCmd seconds="1.0"
                 shutoff_motors="true"/>
     </Sequence>

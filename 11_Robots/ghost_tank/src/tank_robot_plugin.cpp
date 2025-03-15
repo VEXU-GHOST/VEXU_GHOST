@@ -82,8 +82,7 @@ void TankRobotPlugin::populateMotorNames()
 
 void TankRobotPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["goal_rush_sensor"] = 3;
-  digital_io_port_map["goal_rush_clamp"] = 4;
+  digital_io_port_map["goal_rush_sensor"] = 4;
   digital_io_port_map["goal_rush"] = 5;
   digital_io_port_map["clamp"] = 7;
   digital_io_port_map["bite"] = 6;
@@ -136,11 +135,11 @@ void TankRobotPlugin::initROSComms()
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
   m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
-  
+
   node_ptr_->declare_parameter("backup_pose_topic", "/odom_ekf/odometry");
   std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
   m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
-  
+
   m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensor_0/color", 10, std::bind(&TankRobotPlugin::colorCallback, this, _1));
 
   // Tank-Specific Publishers
@@ -167,7 +166,7 @@ void TankRobotPlugin::initROSComms()
   node_ptr_->declare_parameter("tank_robot_plugin.err_pos_topic", "/err_pos");
   std::string err_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.err_pos_topic").as_string();
   m_err_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(err_pos_topic, 10);
-  
+
   m_tts_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
   m_music_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/music", 1);
 }
@@ -252,9 +251,9 @@ void TankRobotPlugin::initIntake()
 
   m_color_map =
   {
-    { "red", 1 },
-    { "blue", 2 },
-    { "unknown", 0 }
+    {"red", 1},
+    {"blue", 2},
+    {"unknown", 0}
   };
 
   m_ring_found = false;
@@ -426,10 +425,10 @@ void TankRobotPlugin::disabled()
 
 void TankRobotPlugin::autonomous(double current_time)
 {
- static bool run_yet = 0;
+  static bool run_yet = 0;
   if (!run_yet) {
     playTTS("starting autonomous");
-  run_yet = 1;
+    run_yet = 1;
   }
 
   // std::cout << "Autonomous: " << current_time << std::endl;
@@ -460,8 +459,8 @@ void TankRobotPlugin::autonomous(double current_time)
 
   bool ring_detector_active = false;
   bool want_red = false;
-  if (bt_->get_variable("ring_detector_active", ring_detector_active)
-    && bt_->get_variable("want_red", want_red))
+  if (bt_->get_variable("ring_detector_active", ring_detector_active) &&
+    bt_->get_variable("want_red", want_red))
   {
     ringDetector(ring_detector_active, current_time, want_red);
   }
@@ -516,20 +515,21 @@ void TankRobotPlugin::teleop(double current_time)
   updateDrivetrain(joy_data);
 }
 
-void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red){
+void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red)
+{
   static double last_input_time = 0.0;
   static double ring_found_time = 0.0;
   static double stuck_detection_time = 0.0;
   static bool running = false;
   static bool retry_mode = false;
   static double retry_start_time = 0.0;
-  
+
   // Constants (adjust as needed for your specific system)
   const double STUCK_TIMEOUT = 1.5;      // Time to consider a ring stuck
   const double RETRY_DURATION = 0.8;     // How long to attempt the retry
   const double COOLDOWN_PERIOD = 0.2;    // Brief pause between retry attempts
 
-  if (!active){
+  if (!active) {
     last_input_time = 0.0;
     ring_found_time = 0.0;
     stuck_detection_time = 0.0;
@@ -538,12 +538,12 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
     running = false;
     return;
   }
-  
+
   m_ring_found = m_color_map[m_color] != 0;
   m_ring_color = m_color_map[m_color];
 
   // Initial ring detection
-  if (m_ring_found && !running){
+  if (m_ring_found && !running) {
     ring_found_time = current_time;
     stuck_detection_time = current_time;
     running = true;
@@ -551,23 +551,23 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   } else if (!m_ring_found) {
     running = false;
     retry_mode = false;
-  } 
-  
+  }
+
   // Stuck ring detection logic
   if (running && m_ring_found) {
     if (!retry_mode && (current_time - stuck_detection_time > STUCK_TIMEOUT)) {
       // Ring has been detected for too long - initiate retry sequence
       retry_mode = true;
       retry_start_time = current_time;
-    } else if (current_time - ring_found_time > 1.0){
+    } else if (current_time - ring_found_time > 1.0) {
       ring_found_time = current_time;
     }
   }
-  
+
   // Handle retry cycle
   if (retry_mode) {
     double retry_elapsed = current_time - retry_start_time;
-    
+
     if (retry_elapsed > RETRY_DURATION) {
       // End retry attempt and go back to normal operation
       retry_mode = false;
@@ -577,10 +577,10 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
 
   // Normal processing
   bool ring_prewaited = (current_time - ring_found_time > 0.3) && m_ring_found && !retry_mode;
-  if (ring_prewaited){
+  if (ring_prewaited) {
     last_input_time = current_time;
   }
-  
+
   // Determine hook and eject status
   bool hook = false;
   if (retry_mode) {
@@ -594,13 +594,13 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
 
   bool eject = false;
   if (!retry_mode) {  // Don't eject during retry attempts
-    if(want_red){
+    if (want_red) {
       eject = (m_ring_color == m_color_map["blue"]) && ring_prewaited;
     } else {
       eject = (m_ring_color == m_color_map["red"]) && ring_prewaited;
     }
 
-    if(eject){
+    if (eject) {
       hook = false;
     }
   }
@@ -662,7 +662,7 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 
   // Ensure arm_mode is within valid bounds
   m_arm_mode = std::max(0, std::min(static_cast<int>(arm_mode_position_map.size() - 1), arm_mode));
-  
+
   m_neutral_stake_arm_des_pos = arm_mode_position_map[m_arm_mode];
 
   int32_t current_ma;
@@ -703,7 +703,7 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
 {
   static bool btn_b_pressed = false;
   static bool btn_d_pressed = false;
-  
+
   // Increment arm mode with button L
   if (joy_data->btn_b && m_arm_mode != 4 && !btn_b_pressed) {
     m_arm_mode++;
@@ -844,39 +844,26 @@ void TankRobotPlugin::updateClamp(std::shared_ptr<JoystickDeviceData> joy_data)
 void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static double btn_pressed = 0;
-  if (true && btn_pressed < (current_time - 5))
-  {
+  if (true && btn_pressed < (current_time - 5)) {
     static double btn_pressed = 0;
-    if (joy_data->btn_u){
-      if (btn_pressed < (current_time - 2))
-      {
-        if (joy_data->btn_x)
-        {
+    if (joy_data->btn_u) {
+      if (btn_pressed < (current_time - 2)) {
+        if (joy_data->btn_x) {
           btn_pressed = current_time;
           playMusic("rand");
-        }
-        else if (joy_data->btn_y)
-        {
+        } else if (joy_data->btn_y) {
           btn_pressed = current_time;
           playMusic("seinfeld");
-        }
-        else if (joy_data->btn_a)
-        {
+        } else if (joy_data->btn_a) {
           btn_pressed = current_time;
           playMusic("awesome");
-        }
-        else if (joy_data->btn_b)
-        {
+        } else if (joy_data->btn_b) {
           btn_pressed = current_time;
           playMusic("objection");
-        }
-        else if (joy_data->btn_r1)
-        {
+        } else if (joy_data->btn_r1) {
           btn_pressed = current_time;
           playMusic("emotional");
-        }
-        else if (joy_data->btn_r2)
-        {
+        } else if (joy_data->btn_r2) {
           btn_pressed = current_time;
           playMusic("feminominon");
         }
@@ -897,15 +884,6 @@ void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_dat
     goal_rush_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
-
-  static bool goal_rush_clamp_btn_pressed = false;
-  if (joy_data->btn_r && !goal_rush_clamp_btn_pressed) {
-    goal_rush_clamp_btn_pressed = true;
-    m_goal_rush_clamp_active = !m_goal_rush_clamp_active;
-  } else if (!joy_data->btn_r) {
-    goal_rush_clamp_btn_pressed = false;
-  }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_clamp"], m_goal_rush_clamp_active);
 }
 
 void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)

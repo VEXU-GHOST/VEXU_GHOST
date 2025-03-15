@@ -191,7 +191,7 @@ def generate_launch_description():
         rplidar_node,
         color_classifier_node,
         color_sensor_node,
-        tts_music_node,
+         tts_music_node,
         competition_state_machine_node,
         gpio_expander,
     ])

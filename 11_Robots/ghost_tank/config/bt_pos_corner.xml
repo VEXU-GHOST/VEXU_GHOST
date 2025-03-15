@@ -5,6 +5,8 @@
   <BehaviorTree ID="pos_corner">
     <Sequence>
       <Logging message="positive corner left"/>
+      <GoalRushCmd arm_down="true"
+                  clamp="false"/>
       <MoveToPoseBezier posX_tiles="2.0"
                             posY_tiles="0.90"
                             theta_deg="90.0"
@@ -16,11 +18,12 @@
                             lead="0.75"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
-                            timeout_ms="-5000"
+                            timeout_ms="-2000"
                             use_theta="true"
                             backwards="true"/>
       <ShutoffNode/>
-      
+      <GoalRushCmd arm_down="false"
+                  clamp="false"/>
       <Logging message="Going to goal"/>
       <BiteCmd bite_closed="true"/>
       <MoveToPoseBezier posX_tiles="2.2"
@@ -34,7 +37,7 @@
                             lead="1.0"
                             max_speed_linear_pct="1.0"
                             max_speed_angular_pct="1.0"
-                            timeout_ms="-5000"
+                            timeout_ms="-2000"
                             use_theta="true"
                             backwards="true"/>
       <ShutoffNode/>
@@ -158,7 +161,7 @@
 
       <MoveToPoseBezier
         posX_tiles="2.0"
-        posY_tiles="3.0"
+        posY_tiles="2.7"
         theta_deg="90.0"
         search_radius_m="0.3"
         threshold_m="0.2"
@@ -171,7 +174,7 @@
         timeout_ms="-1000"
         use_theta="true"
         backwards="false"/>
-      <ShutoffNode/>
+      <!-- <ShutoffNode/> -->
     </Sequence>
   </BehaviorTree>
 
