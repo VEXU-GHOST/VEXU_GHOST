@@ -389,7 +389,7 @@ void TankRobotPlugin::onNewSensorData()
 
 void TankRobotPlugin::updateConveyorPositionSensing()
 {
-  m_conveyor_position_abs = rhi_ptr_->getMotorPosition("conveyor_motor");
+  m_conveyor_position_abs = rhi_ptr_->getMotorPosition("conveyor_motor_bottom");
   m_conveyor_position_rel = std::fmod(m_conveyor_position_abs, m_conveyor_ticks_per_loop);
   m_conveyor_position_rel += (m_conveyor_position_rel < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
   m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
@@ -785,7 +785,7 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
 
   // During ejection, run until we reach throw position, then transition to throw
   if (m_conveyor_hook_is_ejecting) {
-    double throw_dist_rel = (1 + m_conveyor_hook_throw_fraction) * m_conveyor_ticks_per_hook;
+    double throw_dist_rel = m_conveyor_hook_throw_fraction * m_conveyor_ticks_per_hook;
     if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) > throw_dist_rel && !m_conveyor_is_throwing) {
       m_conveyor_is_throwing = true;
       m_conveyor_hook_is_ejecting = false;
@@ -809,8 +809,10 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
   rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
 
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor", conveyor_current);
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
 
   m_loop_current_limits.push_back(ground_pickup_current);
   m_loop_current_limits.push_back(conveyor_current);

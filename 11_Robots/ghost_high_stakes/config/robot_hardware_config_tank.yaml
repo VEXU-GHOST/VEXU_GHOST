@@ -5,10 +5,15 @@ port_configuration:
         G: OUT
         H: OUT
     devices:
-        conveyor_motor:
+        conveyor_motor_bottom:
             port: 1
             type: MOTOR
             reversed: true
+            config: intake_motor_config
+        conveyor_motor_top:
+            port: 9
+            type: MOTOR
+            reversed: false
             config: intake_motor_config
         ground_pickup_motor:
             port: 2

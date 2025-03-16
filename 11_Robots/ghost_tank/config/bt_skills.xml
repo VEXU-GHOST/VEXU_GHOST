@@ -2,7 +2,7 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="skills">
     <Sequence>
-      <SetMirrored mirrored="true"/>
+      <SetMirrored mirrored="false"/>
       <SetColorTarget target_red="true"/>
       <MoveToPoseBezier  posX_tiles="1.5"
                           posY_tiles="1.5"

@@ -133,26 +133,29 @@ def generate_launch_description():
         parameters=[ros_config_file],
     )
 
-    # realsense_node = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(
-    #             get_package_share_directory("realsense2_camera"),
-    #             "launch",
-    #             "rs_launch.py",
-    #         )
-    #     ),
-    #     launch_arguments={
-    #         "unite_imu_method": "2",
-    #         "enable_depth": "true",
-    #         "enable_color": "true",
-    #         "enable_sync": "true",
-    #         "enable_gyro": "true",
-    #         "enable_accel": "true",
-    #         "initial_reset": "true",
-    #         "gyro_fps": "200",  # 200 or 400
-    #         "accel_fps": "63",  # 63 or 250
-    #     }.items(),
-    # )
+    realsense_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("realsense2_camera"),
+                "launch",
+                "rs_launch.py",
+            )
+        ),
+        launch_arguments={
+            "unite_imu_method": "2",
+            "enable_depth": "true",
+            "enable_color": "true",
+            "enable_sync": "true",
+            "enable_gyro": "true",
+            "enable_accel": "true",
+            "initial_reset": "true",
+            "gyro_fps": "200",  # 200 or 400
+            "accel_fps": "63",  # 63 or 250
+                    "color_fps": "1",
+        "color_width": "640",
+        "color_height": "480",
+        }.items(),
+    )
 
     odom_ekf_node = Node(
         package="robot_localization",
@@ -184,7 +187,7 @@ def generate_launch_description():
         serial_node,
         bag_recorder_service,
         ekf_pf_node,
-        # realsense_node,
+        realsense_node,
         imu_filter_node,
         odom_ekf_node,
         map_ekf_node,
