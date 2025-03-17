@@ -592,21 +592,31 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
     hook = ring_prewaited || (current_time - last_input_time < 0.5);
   }
 
+  bool ejecting = false;
+  static double last_eject_time = 0.0;
   bool eject = false;
   if (!retry_mode) {  // Don't eject during retry attempts
     if (want_red) {
-      eject = (m_ring_color == m_color_map["blue"]) && ring_prewaited;
+      eject = (m_ring_color == m_color_map["blue"]); //&& ring_prewaited;
     } else {
-      eject = (m_ring_color == m_color_map["red"]) && ring_prewaited;
-    }
-
-    if (eject) {
-      hook = false;
+      eject = (m_ring_color == m_color_map["red"]); //&& ring_prewaited;
     }
   }
-
+  
+  if (eject) {
+    last_eject_time = current_time;
+  }
+  if (current_time - last_eject_time < 0.0){
+    last_eject_time = 0.0;
+  }
+  if (current_time - last_eject_time < 1.0){
+    ejecting = true;
+  }
+  if (ejecting){
+    hook = false;
+  }
   // Call motor control with determined states
-  updateIntake(true, hook, eject, !hook && retry_mode, current_time);
+  updateIntake(true, hook, ejecting, !hook && retry_mode, current_time);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy_data, double current_time)
