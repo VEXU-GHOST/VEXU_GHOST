@@ -5,11 +5,20 @@
       <Logging message="goal_rush"/>
       <GoalRushCmd arm_down="true"
                   clamp="false"/>
-      <!-- <ReactiveFallback> -->
-        <!-- <GoalRushDetected/> -->
-        <MoveToPoseBezier  posX_tiles="1.55"
-                            posY_tiles="2.4"
-                            theta_deg="115.0"
+      <IntakeCmd auto="false"
+                 ground_intake="true"/>
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="300">
+            <KeepRunningUntilFailure>
+              <BiteCmd bite_closed="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <BiteCmd bite_closed="true"/>
+        </Fallback>
+        <MoveToPoseBezier  posX_tiles="1.05"
+                            posY_tiles="2.2"
+                            theta_deg="112.5"
                             search_radius_m="0.25"
                             threshold_m="0.1"
                             angle_threshold_deg="5.0"
@@ -21,6 +30,7 @@
                             timeout_ms="-1150"
                             use_theta="true"
                             backwards="false"/>
+      </ParallelAll>
       <!-- </ReactiveFallback> -->
       <GoalRushCmd arm_down="false"
                   clamp = "true"/>
@@ -48,6 +58,8 @@
       <Logging message="retract arm"/>
       <GoalRushCmd arm_down="true"
                   clamp="false"/>
+      <IntakeCmd auto="false"
+                 ground_intake="false"/>
     </Sequence>
   </BehaviorTree>
 
@@ -76,7 +88,8 @@
     </Action>
     <Action ID="IntakeCmd"
             editable="true">
-      <input_port name="active"/>
+      <input_port name="auto"/>
+      <input_port name="ground_intake"/>
     </Action>
     <Action ID="Logging"
             editable="true">

@@ -81,7 +81,8 @@
     <Sequence>
       <SetMirrored mirrored="true"/>
       <!-- <Logging message="test"/> -->
-      <IntakeCmd active="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <MoveToPoseBezier  posX_tiles="4.0"
                           posY_tiles="2.0"
                           theta_deg="135.0"
@@ -135,7 +136,8 @@
     <Sequence>
       <SetMirrored mirrored="false"/>
       <Logging message="test"/>
-      <IntakeCmd active="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <WaitCmd seconds="500.0"
                shutoff_motors="true"/>
     </Sequence>
@@ -183,7 +185,8 @@
     </Action>
     <Action ID="IntakeCmd"
             editable="true">
-      <input_port name="active"/>
+      <input_port name="auto"/>
+      <input_port name="ground_intake"/>
     </Action>
     <Action ID="Logging"
             editable="true">

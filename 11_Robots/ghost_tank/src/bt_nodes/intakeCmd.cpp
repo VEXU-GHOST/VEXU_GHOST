@@ -43,19 +43,22 @@ BT::PortsList IntakeCmd::providedPorts()
 {
   // This action has a single input port called "message"
   return {
-    BT::InputPort<bool>("active"),
+    BT::InputPort<bool>("auto"),
+    BT::InputPort<bool>("ground_intake"),
   };
 }
 
 BT::NodeStatus IntakeCmd::tick()
 {
-  bool active = BT_Util::get_input<bool>(this, "active");
+  bool automatic = BT_Util::get_input<bool>(this, "auto");
+  bool ground_intake = BT_Util::get_input<bool>(this, "ground_intake");
 
   bool target_red = false;
   BT_Util::get_from_blackboard(blackboard_, "target_red", target_red);
 
   BT_Util::put_in_blackboard(blackboard_, "want_red", target_red);
-  BT_Util::put_in_blackboard(blackboard_, "ring_detector_active", active);
+  BT_Util::put_in_blackboard(blackboard_, "ring_detector_active", automatic);
+  BT_Util::put_in_blackboard(blackboard_, "ground_intake_active", ground_intake);
 
   return BT::NodeStatus::SUCCESS;
 }

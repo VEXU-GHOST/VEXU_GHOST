@@ -42,7 +42,8 @@
                           backwards="true"/>
       <ClampCmd clamp_closed="true"/>
       <BiteCmd bite_closed="true"/>
-      <IntakeCmd active="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <MoveToPoseBezier  posX_tiles="1.0"
                           posY_tiles="1.0"
                           theta_deg="-135.0"

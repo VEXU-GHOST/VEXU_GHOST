@@ -465,6 +465,12 @@ void TankRobotPlugin::autonomous(double current_time)
     ringDetector(ring_detector_active, current_time, want_red);
   }
 
+  bool ground_intake_active = false;
+  if (bt_->get_variable("ground_intake_active", ground_intake_active) && !ring_detector_active)
+  {
+    updateIntake(ground_intake_active, false, false, false, current_time);
+  }
+
   int neutral_stake_pos = 0;
   if (bt_->get_variable("neutral_stake_pos", neutral_stake_pos)) {
     updateNeutralStakeArmPosition(neutral_stake_pos);
@@ -736,18 +742,26 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
 {
+  static bool first_r2 = true;
+  static bool first_r2_started = false;
   // Manual Ground Pickup control
   double ground_pickup_power = 0;
   int32_t ground_pickup_current = 0;
   if (R2) {
     ground_pickup_power = 1.0;
     ground_pickup_current = 2500;
+    if (first_r2){
+      first_r2_started = true;
+    }
   } else if (R) {
     ground_pickup_power = -1.0;
     ground_pickup_current = 2500;
   } else {
     ground_pickup_power = 0.0;
     ground_pickup_current = 0;
+    if (first_r2_started){
+      first_r2 = false;
+    }
   }
 
   // Conveyor control
@@ -770,7 +784,7 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
   // Align Conveyor when Ground Pickup is active and there are no commands going to manual Conveyor control
   if (R2 && !R1 && !m_conveyor_hook_is_ejecting) {
     m_conveyor_hook_is_aligned = !(m_hook_fraction < m_conveyor_hook_align_threshold);
-    if (m_conveyor_hook_is_aligned) {
+    if (m_conveyor_hook_is_aligned || first_r2) {
       m_conveyor_last_aligned_position = m_conveyor_position_abs;
       conveyor_power = 0;
       conveyor_current = 0;

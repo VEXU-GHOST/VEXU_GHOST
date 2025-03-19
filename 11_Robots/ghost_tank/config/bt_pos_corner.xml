@@ -100,7 +100,8 @@
       </ParallelAll>
       <ConveyorCmd fwd="false"/>
 
-      <IntakeCmd active="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <Logging message="Grab Stack"/>
         <WaitCmd seconds="0.250"
                 shutoff_motors="true"/>  
@@ -245,8 +246,8 @@
     </Action>
     <Action ID="IntakeCmd"
             editable="true">
-      <input_port name="active"/>
-      <input_port name="target_red"/>
+      <input_port name="auto"/>
+      <input_port name="ground_intake"/>
     </Action>
     <Action ID="Logging"
             editable="true">
