@@ -25,16 +25,16 @@
                   clamp="false"/>
       <Logging message="Back Up and Clamp Goal"/>
       <ParallelAll>
-        <!-- <Fallback> -->
+        <Fallback>
           <Delay delay_msec="1000">
             <!-- <KeepRunningUntilFailure> -->
-              <!-- <ClampCmd clamp_closed="false"/> -->
+              <ClampCmd clamp_closed="false"/>
             <!-- </KeepRunningUntilFailure> -->
-            <ClampCmd clamp_closed="true"/>
           </Delay>
-        <!-- </Fallback> -->
+            <ClampCmd clamp_closed="true"/>
+        </Fallback>
         <MoveToPoseBezier posX_tiles="1.7"
-                            posY_tiles="2.5"
+                            posY_tiles="2.7"
                             theta_deg="-90.0"
                             search_radius_m="0.3"
                             threshold_m="0.05"

@@ -9,9 +9,13 @@
                  ground_intake="true"/>
       <ParallelAll>
         <Fallback>
-          <Timeout msec="300">
+          <Timeout msec="600">
             <KeepRunningUntilFailure>
-              <BiteCmd bite_closed="false"/>
+              <Sequence>
+                <GoalRushCmd arm_down="true"
+                          clamp="false"/>
+                <BiteCmd bite_closed="false"/>
+              </Sequence>
             </KeepRunningUntilFailure>
           </Timeout>
           <BiteCmd bite_closed="true"/>
