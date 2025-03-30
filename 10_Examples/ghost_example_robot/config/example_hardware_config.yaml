@@ -1,15 +1,15 @@
 port_configuration:
-  digital_io:
-    A: IN
-    B: OUT
+  # digital_io:
+    # A: IN
+    # B: OUT
   devices:
     left_motor:
-      port: 1
+      port: 15
       type: MOTOR
       reversed: false
       config: drive_motor_config
     right_motor:
-      port: 2
+      port: 5
       type: MOTOR
       reversed: true
       config: drive_motor_config

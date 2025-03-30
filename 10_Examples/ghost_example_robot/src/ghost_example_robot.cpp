@@ -58,6 +58,9 @@ void GhostExampleRobot::autonomous(double current_time)
   std::cout << "Autonomous" << current_time << std::endl;
 }
 
+bool modeA = true;
+bool modeB = false;
+
 void GhostExampleRobot::teleop(double current_time)
 {
   static int loop_count = 0;
@@ -103,37 +106,59 @@ void GhostExampleRobot::teleop(double current_time)
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    // double left_wheel_power = joy_data->left_y / 127.0;
-    // double right_wheel_power = joy_data->right_y / 127.0;
 
-    double forward_vel = joy_data->left_y / 127.0;
-    double angular_vel = joy_data->right_x / 127.0;
-
-
-    double threshold = 0.05;
-    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
-
-
-    double left_wheel_power = forward_vel + angular_vel;
-    double right_wheel_power = forward_vel - angular_vel;
-
-
-    if (left_wheel_power > 1.0) {
-      left_wheel_power = 1.0;
-    }
-    else if (left_wheel_power < -1.0) {
-      left_wheel_power = -1.0;
+    if (joy_data->btn_a) {
+      modeA = true;
+      modeB = false;
+      std::cout << "Change A" << std::endl;
     }
 
-    if (right_wheel_power > 1.0) {
-      right_wheel_power = 1.0;
+    if (joy_data->btn_b) {
+      modeA = false;
+      modeB = true;
+      std::cout << "Change B" << std::endl;
+    }
 
+    double left_wheel_power;
+    double right_wheel_power;
+
+    if (modeA) {
+      left_wheel_power = joy_data->left_y / 127.0;
+      right_wheel_power = joy_data->right_y / 127.0;
     }
-    else if (right_wheel_power < -1.0) {
-      right_wheel_power = -1.0;
+
+
+    if (modeB) {
+      double forward_vel = joy_data->left_y / 127.0;
+      double angular_vel = joy_data->right_x / 127.0;
+
+
+      double threshold = 0.05;
+      forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+      angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+
+
+      left_wheel_power = forward_vel + angular_vel;
+      right_wheel_power = forward_vel - angular_vel;
+
+
+      if (left_wheel_power > 1.0) {
+        left_wheel_power = 1.0;
+      } else if (left_wheel_power < -1.0) {
+        left_wheel_power = -1.0;
+      }
+
+      if (right_wheel_power > 1.0) {
+        right_wheel_power = 1.0;
+
+      } else if (right_wheel_power < -1.0) {
+        right_wheel_power = -1.0;
+      }
+
+      // double temp = right_wheel_power;
+      // right_wheel_power = left_wheel_power;
+      // left_wheel_power = temp;
     }
-   
 
 
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
