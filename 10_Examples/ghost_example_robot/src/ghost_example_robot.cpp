@@ -103,12 +103,21 @@ void GhostExampleRobot::teleop(double current_time)
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double left_wheel_power = joy_data->left_y / 127.0;
-    double right_wheel_power = joy_data->right_y / 127.0;
+    double forward_val = joy_data->left_y / 127.0;
+    double angular_val = joy_data->right_x / 127.0;
+    double threashold = 0.05;
 
+    if(std::abs(forward_val) < threashold) {
+      forward_val = 0.0;
+    }
+
+    if(std::abs(angular_val) > threashold) {
+      angular_val = 0.0;
+    }
+    
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", forward_val + angular_val);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", forward_val - angular_val);
 
     // Each motor has a current limit that defaults to zero.
     // This is so we can carefully allocate battery power between systems.
