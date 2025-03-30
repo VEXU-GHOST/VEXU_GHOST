@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="Project">
+    <include path="bt_isolation.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="BiteCmd" editable="true">
+            <input_port name="bite_closed"/>
+        </Action>
+        <Action ID="ClampCmd" editable="true">
+            <input_port name="clamp_closed"/>
+        </Action>
+        <Action ID="IntakeCmd" editable="true">
+            <input_port name="lower"/>
+            <input_port name="hook"/>
+        </Action>
+        <Action ID="Logging" editable="true">
+            <input_port name="message"/>
+        </Action>
+        <Action ID="MoveToPoseBoomerang" editable="true">
+            <input_port name="posY_tiles"/>
+            <input_port name="theta_deg"/>
+            <input_port name="search_radius_m"/>
+            <input_port name="threshold_m"/>
+            <input_port name="angle_threshold_deg"/>
+            <input_port name="threshold_vel_mps"/>
+            <input_port name="angle_threshold_vel_dps"/>
+            <input_port name="lead"/>
+            <input_port name="max_speed_linear_pct"/>
+            <input_port name="max_speed_angular_pct"/>
+            <input_port name="timeout_ms"/>
+            <input_port name="use_theta"/>
+            <input_port name="backwards"/>
+        </Action>
+        <Action ID="MoveToPosePurepursuit" editable="true">
+            <input_port name="fileName"/>
+            <input_port name="angle_threshold" default="5.0">m</input_port>
+            <input_port name="threshold" default="0.025">m</input_port>
+            <input_port name="timeout" default="5000">ms</input_port>
+            <input_port name="use_theta" default="false"/>
+        </Action>
+        <Action ID="ShutoffNode" editable="true"/>
+    </TreeNodesModel>
+</root>

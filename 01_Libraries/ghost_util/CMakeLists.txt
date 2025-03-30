@@ -46,6 +46,25 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_library(eigen_util SHARED
+  src/eigen_util.cpp
+)
+target_include_directories(eigen_util
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(eigen_util HAS_LIBRARY_TARGET)
+install(
+  TARGETS eigen_util
+  EXPORT eigen_util
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+
+
 add_library(angle_util SHARED
   src/angle_util.cpp
 )
@@ -112,5 +131,11 @@ target_link_libraries(test_math_util
   gtest
   math_util
 )
+
+# TODO: Re-enable this
+# ament_add_gtest(test_read test/test_read.cpp)
+# target_link_libraries(test_read
+#   gtest
+# )
 
 ament_package()

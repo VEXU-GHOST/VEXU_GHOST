@@ -72,9 +72,12 @@ EkfPfNode::EkfPfNode()
 
   LoadROSParams();
 
+  rclcpp::QoS qos_profile(1);
+  qos_profile.transient_local();
+
   set_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    rviz_set_pose_topic_,
-    10,
+    "/set_pf_pose",
+    qos_profile,
     std::bind(&EkfPfNode::InitialPoseCallback, this, _1)
   );
 
@@ -83,7 +86,6 @@ EkfPfNode::EkfPfNode()
   laser_msg_received_ = false;
 
   const Vector2f init_loc(config_params.init_x, config_params.init_y);
-  const float init_angle = config_params.init_r;
 
   odom_loc_ = Eigen::Vector2f(config_params.init_x, config_params.init_y);
   odom_angle_ = config_params.init_r;
@@ -97,9 +99,6 @@ void EkfPfNode::LoadROSParams()
 
   declare_parameter("particle_filter.world_frame", "");
   config_params.world_frame = get_parameter("particle_filter.world_frame").as_string();
-
-  declare_parameter("particle_filter.rviz_set_pose_topic", "");
-  rviz_set_pose_topic_ = get_parameter("particle_filter.rviz_set_pose_topic").as_string();
 
   declare_parameter("particle_filter.map", "");
   config_params.map = get_parameter("particle_filter.map").as_string();
@@ -189,6 +188,11 @@ void EkfPfNode::LoadROSParams()
 
 void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
+  // static int msg_count = 0;
+  // if (msg_count++ % 10 == 0) {
+  //   RCLCPP_INFO(this->get_logger(), "[EkfPfNode::LaserCallback] Received LIDAR Msg");
+  // }
+
   if (!laser_msg_received_) {
     laser_msg_received_ = true;
   }
@@ -206,8 +210,8 @@ void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     if (publish_tf_) {
       PublishWorldTransform();
     }
-  } catch (std::exception e) {
-    RCLCPP_ERROR(this->get_logger(), "Laser : % s ", e.what());
+  } catch (std::exception & e) {
+    RCLCPP_ERROR(this->get_logger(), "Laser : %s ", e.what());
   }
 }
 
@@ -223,7 +227,7 @@ void EkfPfNode::InitialPoseCallback(
 
     RCLCPP_INFO(
       this->get_logger(),
-      "Initialize : % s (% f,% f) % f\u00b0 \n ",
+      "Initialize : %s (%f,%f) %f\u00b0 \n ",
       config_params.map.c_str(),
       init_loc.x(),
       init_loc.y(),
@@ -236,14 +240,19 @@ void EkfPfNode::InitialPoseCallback(
     }
     PublishVisualization();
     PublishMapViz();
-  } catch (std::exception e) {
-    RCLCPP_ERROR(this->get_logger(), "Initial Pose:% s ", e.what());
+  } catch (std::exception & e) {
+    RCLCPP_ERROR(this->get_logger(), "Initial Pose:%s ", e.what());
   }
 }
 
 // Odometry
 void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
+  // static int msg_count = 0;
+  // if (msg_count++ % 30 == 0) {
+  //   RCLCPP_INFO(this->get_logger(), "[EkfPfNode::EkfCallback] Received Odometry Msg");
+  // }
+
   this->last_filtered_odom_msg_ = *msg;
   odom_loc_ = Eigen::Vector2f(
     last_filtered_odom_msg_.pose.pose.position.x,
@@ -266,7 +275,7 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     if (publish_tf_) {
       PublishWorldTransform();
     }
-  } catch (std::exception e) {
+  } catch (std::exception & e) {
     RCLCPP_ERROR(this->get_logger(), "Odom: %s", e.what());
   }
 }

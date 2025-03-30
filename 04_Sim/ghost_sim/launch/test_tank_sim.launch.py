@@ -25,7 +25,7 @@ def launch_setup(context, *args, **kwargs):
     doc = xml.toprettyxml(indent="  ")
 
     spawn_entity_args = (
-        "-x 0.0 -y 0.0 -z 1.0 -R 0.0 -P 0.0 -Y 0.0 -entity ghost1 -topic robot_description"
+        "-x 0.3 -y 0.4 -z 1.0 -R 0.0 -P 0.0 -Y 1.5708 -entity ghost1 -topic robot_description"
     ).split()
 
     # Node to spawn robot model in Gazebo
@@ -67,6 +67,7 @@ def generate_launch_description():
     ghost_ros_share_dir = get_package_share_directory("ghost_ros_interfaces")
     ghost_sim_share_dir = get_package_share_directory("ghost_sim")
     ghost_localization_share_dir = get_package_share_directory("ghost_localization")
+    ghost_high_stakes_share_dir = get_package_share_directory("ghost_high_stakes")
 
     home_dir = os.path.expanduser("~")
     ghost_ros_base_dir = os.path.join(
@@ -74,7 +75,7 @@ def generate_launch_description():
     )
 
     world_file = os.path.join(ghost_sim_share_dir, "worlds", "spin_up.world")
-    rviz_config_path = os.path.join(ghost_localization_share_dir, "rviz/ekf_pf.rviz")
+    rviz_config_path = os.path.join(ghost_high_stakes_share_dir, "rviz/world_config.rviz")
 
     # Simulator (Doesn't launch Simulator GUI by default, use CLI Arg "sim_gui" for debugging)
     simulation = IncludeLaunchDescription(
@@ -111,24 +112,35 @@ def generate_launch_description():
         name="ekf_localization_node",
         output="screen",
         parameters=[ghost_ros_base_dir + "/config/robot_localization_config.yaml"],
-        remappings=[("/sensors/wheel_odom", "/odom")],
+        remappings=[("/sensors/wheel_odom", "/odom"),]
+                    # ("/odometry/filtered", "/map_ekf/odometry")],
     )
 
     plot_juggler_node = Node(
         package="plotjuggler", executable="plotjuggler", name="plot_juggler"
     )
 
+    sensor_update_spoofer_node = Node(
+        package="ghost_sim",
+        executable="sensor_update_spoofer",
+        name="sensor_update_spoofer",
+        output="screen",
+        parameters=[ghost_high_stakes_share_dir + "/config/ros_config.yaml",
+            {"use_sim_time": True}],
+    )
+
     return LaunchDescription(
         [
             DeclareLaunchArgument(name="use_joy", default_value="false"),
             DeclareLaunchArgument(name="channel_id", default_value="1"),
-            DeclareLaunchArgument("sim_gui", default_value="false"),
+            DeclareLaunchArgument("sim_gui", default_value="true"),
             DeclareLaunchArgument("verbose", default_value="true"),
             simulation,
             ekf_pf_node,
             rviz_node,
-            plot_juggler_node,
+            # plot_juggler_node,
             robot_localization_node,
+            sensor_update_spoofer_node,
             OpaqueFunction(function=launch_setup),
         ]
     )

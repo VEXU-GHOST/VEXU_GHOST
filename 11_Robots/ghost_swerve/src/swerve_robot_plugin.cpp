@@ -310,9 +310,9 @@ void SwerveRobotPlugin::initialize()
     "/des_pos",
     10);
 
-	// resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
-	
-	bt_ = std::make_shared<SwerveTree>(bt_path, bt_path_interaction, rhi_ptr_, m_swerve_model_ptr, node_ptr_);
+  // resetPose(m_init_world_x, m_init_world_y, m_init_world_theta);
+
+  bt_ = std::make_shared<SwerveTree>(bt_path, bt_path_interaction, rhi_ptr_, m_swerve_model_ptr, node_ptr_);
 }
 
 void SwerveRobotPlugin::onNewSensorData()
@@ -401,7 +401,7 @@ void SwerveRobotPlugin::autonomous(double current_time)
   //    m_recording = true;
   // }
 
-  if (!m_is_first_auton_loop){
+  if (!m_is_first_auton_loop) {
     bt_->tick_tree_interaction();
   } else {
     bt_->tick_tree();
@@ -478,10 +478,10 @@ void SwerveRobotPlugin::autonomous(double current_time)
     // std::cout << "vel cmd y: " << vel_cmd_y << std::endl;
   }
 
-  if(m_swerve_model_ptr->getAutoStatus()){
-     vel_cmd_x = 0.0;
-     vel_cmd_y = 0.0;
-     vel_cmd_theta = 0.0;
+  if (m_swerve_model_ptr->getAutoStatus()) {
+    vel_cmd_x = 0.0;
+    vel_cmd_y = 0.0;
+    vel_cmd_theta = 0.0;
   }
 
   m_swerve_model_ptr->calculateKinematicSwerveControllerVelocity(
@@ -761,7 +761,7 @@ void SwerveRobotPlugin::teleop(double current_time)
     m_digital_io[m_digital_io_name_map["tail"]] = tail_down;
     m_digital_io[m_digital_io_name_map["claw"]] = !m_claw_open;
 
-    rhi_ptr_->setDigitalIO(m_digital_io);
+    // rhi_ptr_->setDigitalIO(m_digital_io);
 
     // If INTAKE_MOTOR stalling, update state and timer
     if ((intake_command) &&

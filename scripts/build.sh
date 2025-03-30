@@ -15,7 +15,7 @@ then
     exit -1
 fi
 
-pkill ros -f
+$VEXU_HOME/scripts/hardware/service.sh stop
 
 # Get processor architecture to determine if we should build simulator or not (not on robot hardware)
 arch=$(uname -p)
@@ -30,6 +30,9 @@ skip=(
     btcpp_ros2_interfaces
     btcpp_ros2_samples
     rplidar_ros
+    ghost_swerve
+    plotjuggler
+    plotjuggler_ros
 )
 
 # Build ignores simulator packages on embedded devices
@@ -40,12 +43,14 @@ fi
 
 if [ "$arch" == 'aarch64' ];
 then 
-    colcon build --symlink-install --packages-skip ${skip[@]} ghost_sim ghost_sim_examples ghost_viz plotjuggler plotjuggler-ros-plugins --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
+    colcon build --symlink-install --packages-skip ${skip[@]} ghost_sim ghost_sim_examples ghost_viz plotjuggler plotjuggler_ros --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
 fi
 
-if [ "$1" != "-r" ];
+if ! command -v pros 2>&1 >/dev/null
 then
-  cd $VEXU_HOME
-  echo
-  bash scripts/pros_upload.sh
+    exit;
 fi
+
+cd $VEXU_HOME
+echo
+bash scripts/pros_upload.sh

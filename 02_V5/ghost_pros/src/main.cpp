@@ -75,10 +75,6 @@ void zero_actuators()
     m.second->setMotorCommand(0.0, 0.0, 0.0, 0.0);
   }
 
-  // // Zero Pneumatics
-  // for(int i = 0; i < 8; i++){
-  //    v5_globals::adi_ports[i].set_value(false);
-  // }
   actuator_lock.unlock();
 }
 
@@ -91,10 +87,6 @@ void update_actuators()
     m.second->updateInterface();
   }
 
-  // Update Pneumatics
-  for (int i = 0; i < 8; i++) {
-    v5_globals::adi_ports[i].set_value(v5_globals::digital_out_cmds[i]);
-  }
   actuator_lock.unlock();
 }
 
@@ -218,6 +210,26 @@ void initialize()
           // Do nothing, these are initialized already
           break;
 
+        case device_type_e::DIGITAL_IO:
+          {
+            auto digital_io_config_ptr = config_ptr->as<const DigitalIODeviceConfig>();
+            auto input_mask_vector = unpackByte(digital_io_config_ptr->input_mask);
+            auto output_mask_vector = unpackByte(digital_io_config_ptr->output_mask);
+
+            for (int i = 0; i < 8; i++) {
+              auto port_name = v5_globals::adi_ports_name_map[i];
+              if (input_mask_vector[i]) {
+                v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Input on port ", port_name);
+                v5_globals::digital_inputs[port_name] = std::make_shared<pros::ADIDigitalIn>(i + 1);
+
+              } else if (output_mask_vector[i]) {
+                v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Output on port ", port_name);
+                v5_globals::digital_outputs[port_name] = std::make_shared<pros::ADIDigitalOut>(i + 1);
+              }
+            }
+          }
+          break;
+
         case device_type_e::INVALID:
           {
             std::string err_string = "ERROR: Device type is listed as INVALID for device_name: ";
@@ -241,9 +253,6 @@ void initialize()
     }
 
     zero_actuators();
-    for (int i = 0; i < 8; i++) {
-      v5_globals::adi_ports[i].set_value(false);
-    }
     v5_globals::serial_node_ptr->initSerial();
     pros::Task reader_thread(reader_loop, "reader thread");
     pros::Task actuator_timeout_thread(actuator_timeout_loop, "actuator timeout thread");
@@ -330,19 +339,19 @@ void opcontrol()
 
 // void opcontrol(){
 //      uint32_t loop_time = pros::millis();
-//      auto m1 = pros::Motor(11, pros::motor_gearset_e_t::E_MOTOR_GEAR_600);
+//      auto m1 = pros::Motor(1, pros::motor_gearset_e_t::E_MOTOR_GEAR_600);
 //      pros::Controller joy (pros::E_CONTROLLER_MASTER);
 
-//      std::cout << "Voltage, Velocity, Current, Torque, Power, Efficiency, Temperature" << std::endl;
-
 //      while(!pros::competition::is_autonomous() && !pros::competition::is_disabled()){
-//              m1.move_voltage(joy.get_analog(ANALOG_RIGHT_Y) / 127.0 * 12000.0);
-
-//              std::cout << m1.get_voltage() << ", " << m1.get_actual_velocity() << ", " << m1.get_current_draw()
-//                        << ", " << m1.get_torque() << ", " << m1.get_power() << ", " << m1.get_efficiency() << ", "
-//                        << m1.get_temperature() << std::endl;
-
-
+//              if(joy.get_digital(DIGITAL_A)){
+//               m1.set_current_limit(0);
+//               std::cout << m1.get_current_limit() << std::endl;
+//              }
+//              else{
+//               m1.set_current_limit(2500);
+//               std::cout << m1.get_current_limit() << std::endl;
+//               m1.move_voltage(joy.get_analog(ANALOG_RIGHT_Y) / 127.0 * 12000.0);
+//              }
 //              pros::c::task_delay_until(&loop_time, 10);
 //      }
 // }
