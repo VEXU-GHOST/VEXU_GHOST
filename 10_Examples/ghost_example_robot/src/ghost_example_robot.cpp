@@ -251,7 +251,7 @@ void GhostExampleRobot::teleop(double current_time)
       double derivative_right = error_right - prev_error_right;
 
       double kP = 0.003; // Temporary value, should change
-      double kD = 0.001; // Temporary value, should change
+      double kD = 0.003; // Temporary value, should change
 
       left_wheel_power = -(kP * error_left + kD * derivative_left);
       right_wheel_power = (kP * error_right + kD * derivative_right);
@@ -304,24 +304,70 @@ void GhostExampleRobot::teleop(double current_time)
 
 
     if (modeR && driving) {
-        double turn_distance_in = (M_PI * wheelDist) * (turnDeg/ 360.0); 
-        double target_deg = turn_distance_in * inchToDeg;
+      double turn_distance_in = (M_PI * wheelDist) * (turnDeg / 360.0); 
+      double target_deg = turn_distance_in * inchToDeg;
+
+      double current_left = rhi_ptr_->getMotorPosition("left_motor");
+      double current_right = rhi_ptr_->getMotorPosition("right_motor");
+
+      double delta_left = std::abs(current_left - start_left_pos);
+      double delta_right = std::abs(current_right - start_right_pos);
+
+      double error_left = target_deg - delta_left;
+      double error_right = target_deg - delta_right;
+
+      double derivative_left = error_left - prev_error_left;
+      double derivative_right = error_right - prev_error_right;
+
+      double kP = 0.003; // Temporary value, should change
+      double kD = 0.003; // Temporary value, should change
+
+      left_wheel_power = (kP * error_left + kD * derivative_left);
+      right_wheel_power = -(kP * error_right + kD * derivative_right);
+
+      if (left_wheel_power > 0.5) {
+        left_wheel_power = 0.5;
+      } else if (left_wheel_power < -0.5) {
+        left_wheel_power = -0.5;
+      }
       
-        double current_left = rhi_ptr_->getMotorPosition("left_motor");
-        double current_right = rhi_ptr_->getMotorPosition("right_motor");
-      
-        double delta_left = std::abs(start_left_pos - current_left);
-        double delta_right = std::abs(current_right - start_right_pos);
-      
-        if (delta_left < target_deg && delta_right < target_deg) {
-          left_wheel_power = 0.5;
-          right_wheel_power = -0.5;
-        } else {
+      if (right_wheel_power > 0.5) {
+        right_wheel_power = 0.5;
+      } else if (right_wheel_power < -0.5) {
+        right_wheel_power = -0.5;
+      }
+
+      prev_error_left = error_left;
+      prev_error_right = error_right;
+
+      // Chose random value, should change
+      if (error_left < 3.0 && error_right < 3.0) {
           left_wheel_power = 0.0;
           right_wheel_power = 0.0;
           driving = false;
-          modeR = false;
-        }
+          modeL = false;
+
+          prev_error_left = 0.0;
+          prev_error_right = 0.0;
+      }
+        // double turn_distance_in = (M_PI * wheelDist) * (turnDeg/ 360.0); 
+        // double target_deg = turn_distance_in * inchToDeg;
+      
+        // double current_left = rhi_ptr_->getMotorPosition("left_motor");
+        // double current_right = rhi_ptr_->getMotorPosition("right_motor");
+      
+        // double delta_left = std::abs(start_left_pos - current_left);
+        // double delta_right = std::abs(current_right - start_right_pos);
+      
+        // if (delta_left < target_deg && delta_right < target_deg) {
+        //   left_wheel_power = 0.5;
+        //   right_wheel_power = -0.5;
+        // } else {
+        //   left_wheel_power = 0.0;
+        //   right_wheel_power = 0.0;
+        //   driving = false;
+        //   modeR = false;
+        // }
     }
 
 
