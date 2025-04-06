@@ -13,7 +13,8 @@
       <SetMirrored mirrored="true"/>
       <SetColorTarget target_red="false"/>
       <SubTree ID="goal_rush" _autoremap="true"/>
-      <SubTree ID="neg_corner" _autoremap="true"/>
+      
+      <SubTree ID="pos_corner" _autoremap="true"/>
       <Logging message="Auton Complete"/>
       <WaitCmd seconds="500.0"
                 shutoff_motors="true"/>
