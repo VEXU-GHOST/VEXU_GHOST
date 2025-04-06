@@ -110,17 +110,30 @@ def generate_launch_description():
 
     color_sensor_node = Node(
         package="ghost_sensing",
-        executable="tcs_color_sensor",
-        name="tcs_color_sensor_0",
+        executable="avago_color_sensor",
+        name="avago_color_sensor_0",
         output="screen",
+        namespace="/sensors/color_sensor_0",
         parameters=[ros_config_file, {
-            "system_i2c_bus_path" : "/dev/i2c-7"
+            "address": 0x39
+        }],
+    )
+
+    color_sensor_node_2 = Node(
+        package="ghost_sensing",
+        executable="avago_color_sensor",
+        name="avago_color_sensor_1",
+        output="screen",
+        namespace="/sensors/color_sensor_1",
+        parameters=[ros_config_file, {
+            "address": 0x39 ^ (1 << 6), # both address translator switches on so ^ 1<<6
         }],
     )
     color_classifier_node = Node(
         package="ghost_sensing",
         executable="color_classifier",
         name="color_classifier_0",
+        namespace="/sensors/color_sensor_0",
         output="screen",
         parameters=[ros_config_file],
     )
@@ -181,17 +194,18 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        serial_node,
-        bag_recorder_service,
-        ekf_pf_node,
-        # realsense_node,
-        imu_filter_node,
-        odom_ekf_node,
-        map_ekf_node,
-        rplidar_node,
-        color_classifier_node,
+        # serial_node,
+        # bag_recorder_service,
+        # ekf_pf_node,
+        # # realsense_node,
+        # imu_filter_node,
+        # odom_ekf_node,
+        # map_ekf_node,
+        # rplidar_node,
         color_sensor_node,
-        tts_music_node,
-        competition_state_machine_node,
-        gpio_expander,
+        color_classifier_node,
+        color_sensor_node_2,
+        # tts_music_node,
+        # competition_state_machine_node,
+        # gpio_expander,
     ])

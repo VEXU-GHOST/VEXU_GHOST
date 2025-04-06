@@ -701,7 +701,7 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool btn_b_pressed = false;
-  static bool 11_Robots/ghost_tank/src/tank_robot_plugin.cppbtn_d_pressed = false;
+  static bool btn_d_pressed = false;
   
   // Increment arm mode with button L
   if (joy_data->btn_b && m_arm_mode != 4 && !btn_b_pressed) {
