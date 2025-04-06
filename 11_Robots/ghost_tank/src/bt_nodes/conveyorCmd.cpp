@@ -63,8 +63,10 @@ BT::NodeStatus ConveyorCmd::tick()
     conveyor_current = 2500;
   }
   
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor", conveyor_current);
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
 
   return BT::NodeStatus::SUCCESS;
 }

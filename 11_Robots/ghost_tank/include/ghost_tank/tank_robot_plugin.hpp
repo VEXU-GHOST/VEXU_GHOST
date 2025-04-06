@@ -211,9 +211,10 @@ protected:
 
   bool m_use_backup_estimator = false;
   bool m_reset_world_pose = false;
-  bool m_clamp_closed{false};
-  bool m_bite_closed{false};
+  bool m_clamp_closed{true};
+  bool m_bite_closed{true};
   bool m_goal_rush_active{false};
+  bool m_goal_rush_clamp_active{false};
 
   // Conveyor
   double m_conveyor_ticks_per_loop{0.0};

@@ -6,13 +6,14 @@
   <include path="bt_pos_corner.xml"/>
   <include path="bt_neg_corner.xml"/>
   <include path="bt_score_neutral.xml"/>
+  <include path="bt_skills.xml"/>
   <BehaviorTree ID="main_tree">
+        <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
     <Sequence>
-      <SetMirrored mirrored="false"/>
-      <SetColorTarget target_red="true"/>
-      <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
+      <SetMirrored mirrored="true"/>
+      <SetColorTarget target_red="false"/>
       <SubTree ID="goal_rush" _autoremap="true"/>
-      <SubTree ID="pos_corner" _autoremap="true"/>
+      <SubTree ID="neg_corner" _autoremap="true"/>
       <Logging message="Auton Complete"/>
       <WaitCmd seconds="500.0"
                 shutoff_motors="true"/>
@@ -80,7 +81,8 @@
     <Sequence>
       <SetMirrored mirrored="true"/>
       <!-- <Logging message="test"/> -->
-      <IntakeCmd active="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <MoveToPoseBezier  posX_tiles="4.0"
                           posY_tiles="2.0"
                           theta_deg="135.0"
@@ -111,6 +113,36 @@
                 shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
+
+  <BehaviorTree ID="test_rush">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <!-- <Logging message="test"/> -->
+      <GoalRushCmd arm_down="true"
+                  clamp="false"/>
+      <ReactiveFallback>
+        <GoalRushDetected/>
+        <WaitCmd seconds="3.0"
+                shutoff_motors="true"/>
+      </ReactiveFallback>
+      <GoalRushCmd arm_down="false"
+                  clamp = "true"/>
+      <WaitCmd seconds="1.0"
+                shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test_intake">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <Logging message="test"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
+      <WaitCmd seconds="500.0"
+               shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
 
   <BehaviorTree ID="jerryiotest">
     <Sequence>
@@ -153,7 +185,8 @@
     </Action>
     <Action ID="IntakeCmd"
             editable="true">
-      <input_port name="active"/>
+      <input_port name="auto"/>
+      <input_port name="ground_intake"/>
     </Action>
     <Action ID="Logging"
             editable="true">

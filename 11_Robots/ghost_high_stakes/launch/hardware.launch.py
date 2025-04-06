@@ -151,6 +151,9 @@ def generate_launch_description():
     #         "initial_reset": "true",
     #         "gyro_fps": "200",  # 200 or 400
     #         "accel_fps": "63",  # 63 or 250
+    #                 "color_fps": "1",
+    #     "color_width": "640",
+    #     "color_height": "480",
     #     }.items(),
     # )
 
@@ -191,7 +194,7 @@ def generate_launch_description():
         rplidar_node,
         color_classifier_node,
         color_sensor_node,
-        tts_music_node,
+         tts_music_node,
         competition_state_machine_node,
         gpio_expander,
     ])
