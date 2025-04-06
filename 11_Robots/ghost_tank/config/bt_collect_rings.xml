@@ -4,7 +4,8 @@
     <Sequence>          
       <Logging message="Go to stack"/>
       <BiteCmd bite_closed="false"/>
-      <IntakeCmd active="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
         <WaitCmd seconds="0.250"
                 shutoff_motors="true"/>
 

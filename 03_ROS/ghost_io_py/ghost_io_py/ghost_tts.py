@@ -48,14 +48,14 @@ class TTSMusicNode(Node):
             self.get_logger().info(f"Model '{model}' not found locally. Initiating auto-download.")
             try:
                 voices_info: Dict[str, Any] = get_voices(download_dir, update_voices=update_voices)
-                aliases_info: Dict[str, Any] = {}
-                for voice_info in voices_info.values():
-                    for voice_alias in voice_info.get("aliases", []):
-                        aliases_info[voice_alias] = {"_is_alias": True, **voice_info}
-                voices_info.update(aliases_info)
-                ensure_voice_exists(model, data_dir, download_dir, voices_info)
-                model, config = find_voice(model, data_dir)
-                self.get_logger().info(f"Model downloaded and resolved: {model}")
+                # aliases_info: Dict[str, Any] = {}
+                # for voice_info in voices_info.values():
+                #     for voice_alias in voice_info.get("aliases", []):
+                #         aliases_info[voice_alias] = {"_is_alias": True, **voice_info}
+                # voices_info.update(aliases_info)
+                # ensure_voice_exists(model, data_dir, download_dir, voices_info)
+                # model, config = find_voice(model, data_dir)
+                # self.get_logger().info(f"Model downloaded and resolved: {model}")
             except Exception as e:
                 model, config = find_voice(model, data_dir)
                 self.get_logger().error(f"Auto-download failed: {e}")
@@ -64,7 +64,7 @@ class TTSMusicNode(Node):
             self.get_logger().info(f"Using local model: {model}")
 
         try:
-            self.voice: PiperVoice = PiperVoice.load(model, config_path=config, use_cuda=use_cuda)
+            #self.voice: PiperVoice = PiperVoice.load(model, config_path=config, use_cuda=use_cuda)
             self.get_logger().info("PiperVoice loaded successfully.")
         except Exception as e:
             self.get_logger().error(f"Failed to load PiperVoice: {e}")
@@ -106,11 +106,11 @@ class TTSMusicNode(Node):
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
                 tmp_filename: str = tmp_file.name
 
-            with wave.open(tmp_filename, "wb") as wav_file:
-                self.voice.synthesize(text, wav_file, **self.synthesize_args)
+            #with wave.open(tmp_filename, "wb") as wav_file:
+            #    self.voice.synthesize(text, wav_file, **self.synthesize_args)
 
             # Play the synthesized audio using an external audio player.
-            subprocess.run(["play", tmp_filename], capture_output=True, text  = True)
+            #subprocess.run(["play", tmp_filename], capture_output=True, text  = True)
         except Exception as e:
             self.get_logger().warn(f"Error during TTS synthesis: {e}")
 

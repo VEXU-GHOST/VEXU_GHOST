@@ -21,14 +21,14 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/conveyorCmd.hpp"
+#include "ghost_tank/bt_nodes/goalRushDetected.hpp"
 
 namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
-ConveyorCmd::ConveyorCmd(
+GoalRushDetected::GoalRushDetected(
   const std::string & name, const BT::NodeConfig & config)
 : BT::SyncActionNode(name, config)
 {
@@ -39,28 +39,37 @@ ConveyorCmd::ConveyorCmd(
 }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList ConveyorCmd::providedPorts()
+BT::PortsList GoalRushDetected::providedPorts()
 {
   // This action has a single input port called "message"
   return {
   };
 }
 
-BT::NodeStatus ConveyorCmd::tick()
+BT::NodeStatus GoalRushDetected::tick()
 {
+
+  static int count = 0;
   // double timeout = BT_Util::get_input<double>(this, "timeout");
   // if (start_time_ == 0.0) {
-    // BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", start_time_);
+  // BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", start_time_);
   // }
   // double current_time = 0.0;
   // BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
   // if (current_time - start_time_ > timeout) {
-    // return BT::NodeStatus::SUCCESS;
+  // return BT::NodeStatus::SUCCESS;
   // }
-
   std::unordered_map<std::string, int> digital_io_port_map;
   BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
-  bool goal_detected = rhi_ptr_->getDigitalIOValue(digital_io_port_map["goal_rush_sensor"]);
+
+  if (rhi_ptr_->getDigitalIOValue(digital_io_port_map["goal_rush_sensor"])) {
+    std::cout << "Increment!" << std::endl;
+    count++;
+  } else {
+    count = 0;
+  }
+
+  bool goal_detected = (count >= 1);
   if (goal_detected) {
     return BT::NodeStatus::SUCCESS;
   }

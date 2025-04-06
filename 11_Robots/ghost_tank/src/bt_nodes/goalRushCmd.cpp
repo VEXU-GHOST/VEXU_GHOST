@@ -33,8 +33,8 @@ GoalRushCmd::GoalRushCmd(
 : BT::SyncActionNode(name, config)
 {
   blackboard_ = config.blackboard;
-	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
 }
 
@@ -56,7 +56,6 @@ BT::NodeStatus GoalRushCmd::tick()
   std::unordered_map<std::string, int> digital_io_port_map;
   BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], arm_down);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_clamp"], clamp);
 
   return BT::NodeStatus::SUCCESS;
 }
