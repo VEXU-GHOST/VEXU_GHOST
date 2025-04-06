@@ -105,7 +105,7 @@ protected:
   void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArmPosition(int arm_mode);
-  void ringDetector(bool active, double current_time, bool want_red);
+  void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
   void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   // Output

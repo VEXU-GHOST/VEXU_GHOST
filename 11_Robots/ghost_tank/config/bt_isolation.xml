@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main_tree">
+      main_tree_to_execute="test_intake">
   <include path="bt_goal_rush.xml"/>
   <include path="bt_goal_rush_middle.xml"/>
   <include path="bt_pos_corner.xml"/>
@@ -135,9 +135,11 @@
   <BehaviorTree ID="test_intake">
     <Sequence>
       <SetMirrored mirrored="false"/>
+      <SetColorTarget target_red="false"/>
       <Logging message="test"/>
       <IntakeCmd auto="true"
-                 ground_intake="false"/>
+                 ground_intake="false"
+                 store_ring="true"/>
       <WaitCmd seconds="500.0"
                shutoff_motors="true"/>
     </Sequence>
