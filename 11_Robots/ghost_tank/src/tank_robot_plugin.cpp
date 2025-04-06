@@ -395,6 +395,7 @@ void TankRobotPlugin::updateConveyorPositionSensing()
   m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
 }
 
+
 void TankRobotPlugin::publishIMUData()
 {
   sensor_msgs::msg::Imu imu_msg{};
@@ -513,12 +514,19 @@ void TankRobotPlugin::teleop(double current_time)
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
 
   toggleBagRecorder(joy_data);
+  if (joy_data->btn_b ==1){
   updateNeutralStakeArm(joy_data);
-  updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
+  updateIntake(false, joy_data->btn_r1, false, false, current_time);
+  }
+  else{
+    updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
+  }
+  //updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
   updateBite(joy_data);
   updateClamp(joy_data);
   updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
+  updateNewButtons(joy_data);
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red)
@@ -717,19 +725,19 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 
 void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
 {
-  static bool btn_b_pressed = false;
-  static bool btn_d_pressed = false;
+  static bool btn_l1_pressed = false;
+  static bool btn_l2_pressed = false;
 
-  // Increment arm mode with button L
-  if (joy_data->btn_b && m_arm_mode != 4 && !btn_b_pressed) {
+  // Increment arm mode with button l1
+  if (joy_data->btn_l1 && m_arm_mode != 4 && !btn_r1_pressed) {
     m_arm_mode++;
     btn_b_pressed = true;
   } else if (!joy_data->btn_b) {
     btn_b_pressed = false;
   }
 
-  // Decrement arm mode with button D
-  if (joy_data->btn_d && m_arm_mode != 0 && !btn_d_pressed) {
+  // Decrement arm mode with button l2
+  if (joy_data->btn_l2 && m_arm_mode != 0 && !btn_r2_pressed) {
     m_arm_mode--;
     btn_d_pressed = true;
   } else if (!joy_data->btn_d) {
@@ -840,6 +848,39 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
 
   m_loop_current_limits.push_back(ground_pickup_current);
   m_loop_current_limits.push_back(conveyor_current);
+}
+
+uint32_t test =0;
+void TankRobotPlugin::updateNewButtons(std::shared_ptr<JoystickDeviceData> joy_data){
+  while(joy_data->btn_b ==1){
+    if(joy_data->btn_r1 ==1){
+      test=1; 
+    }
+    if(joy_data->btn_r2 ==1){
+      test=2; 
+    }
+    if(joy_data->btn_l1 ==1){
+      test=3; 
+    }
+    if(joy_data->btn_l2 ==1){
+      test=4; 
+    }
+  }
+  if((joy_data->btn_d)==1){
+    if(joy_data->btn_r1 ==1){
+      test=1; 
+    }
+    if(joy_data->btn_r2 ==1){
+      test=2; 
+    }
+    if(joy_data->btn_l1 ==1){
+      test=3; 
+    }
+    if(joy_data->btn_l2 ==1){
+      test=4; 
+    }
+  }
+
 }
 
 void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)

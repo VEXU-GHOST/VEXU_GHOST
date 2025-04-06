@@ -107,6 +107,7 @@ protected:
   void updateNeutralStakeArmPosition(int arm_mode);
   void ringDetector(bool active, double current_time, bool want_red);
   void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateNewButtons(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   // Output
   void playMusic(std::string m);
