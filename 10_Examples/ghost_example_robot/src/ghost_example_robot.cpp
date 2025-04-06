@@ -60,6 +60,24 @@ void GhostExampleRobot::autonomous(double current_time)
 
 bool modeA = true;
 bool modeB = false;
+bool modeU = false;
+bool modeD = false;
+bool modeL = false;
+bool modeR = false;
+
+double diameter = 4.0;
+double wheelDist = 8.0;
+double turnDeg = 90.0;
+double inchToDeg = 360.0 / (M_PI * diameter);
+
+double start_left_pos = 0.0;
+double start_right_pos = 0.0;
+bool driving = false;
+
+double prev_error_left = 0.0;
+double prev_error_right = 0.0;
+
+
 
 void GhostExampleRobot::teleop(double current_time)
 {
@@ -110,13 +128,61 @@ void GhostExampleRobot::teleop(double current_time)
     if (joy_data->btn_a) {
       modeA = true;
       modeB = false;
-      std::cout << "Change A" << std::endl;
+      modeU = false;
+      modeD = false;
+      modeL = false;
+      modeR = false;
     }
 
     if (joy_data->btn_b) {
       modeA = false;
       modeB = true;
-      std::cout << "Change B" << std::endl;
+      modeU = false;
+      modeD = false;
+      modeL = false;
+      modeR = false;
+    }
+
+    if (joy_data->btn_u) {
+      modeA = false;
+      modeB = false;
+      modeU = true;
+      modeD = false;
+      modeL = false;
+      modeR = false;
+    }
+
+    if (joy_data->btn_d) {
+      modeA = false;
+      modeB = false;
+      modeU = false;
+      modeD = true;
+      modeL = false;
+      modeR = false;
+    }
+
+    if (joy_data->btn_l) {
+      modeA = false;
+      modeB = false;
+      modeU = false;
+      modeD = false;
+      modeL = true;
+      modeR = false;
+      driving = true;
+      start_left_pos = rhi_ptr_->getMotorPosition("left_motor");
+      start_right_pos = rhi_ptr_->getMotorPosition("right_motor");
+    }
+
+    if (joy_data->btn_r) {
+      modeA = false;
+      modeB = false;
+      modeU = false;
+      modeD = false;
+      modeL = false;
+      modeR = true;
+      driving = true;
+      start_left_pos = rhi_ptr_->getMotorPosition("left_motor");
+      start_right_pos = rhi_ptr_->getMotorPosition("right_motor");
     }
 
     double left_wheel_power;
@@ -158,6 +224,104 @@ void GhostExampleRobot::teleop(double current_time)
       // double temp = right_wheel_power;
       // right_wheel_power = left_wheel_power;
       // left_wheel_power = temp;
+    }
+
+    if (modeU) {
+
+    }
+
+    if (modeD) {
+
+    }
+
+    if (modeL && driving) {
+      double turn_distance_in = (M_PI * wheelDist) * (turnDeg / 360.0); 
+      double target_deg = turn_distance_in * inchToDeg;
+
+      double current_left = rhi_ptr_->getMotorPosition("left_motor");
+      double current_right = rhi_ptr_->getMotorPosition("right_motor");
+
+      double delta_left = std::abs(current_left - start_left_pos);
+      double delta_right = std::abs(current_right - start_right_pos);
+
+      double error_left = target_deg - delta_left;
+      double error_right = target_deg - delta_right;
+
+      double derivative_left = error_left - prev_error_left;
+      double derivative_right = error_right - prev_error_right;
+
+      double kP = 0.003; // Temporary value, should change
+      double kD = 0.001; // Temporary value, should change
+
+      left_wheel_power = -(kP * error_left + kD * derivative_left);
+      right_wheel_power = (kP * error_right + kD * derivative_right);
+
+      if (left_wheel_power > 0.5) {
+        left_wheel_power = 0.5;
+      } else if (left_wheel_power < -0.5) {
+        left_wheel_power = -0.5;
+      }
+      
+      if (right_wheel_power > 0.5) {
+        right_wheel_power = 0.5;
+      } else if (right_wheel_power < -0.5) {
+        right_wheel_power = -0.5;
+      }
+
+      prev_error_left = error_left;
+      prev_error_right = error_right;
+
+      // Chose random value, should change
+      if (error_left < 3.0 && error_right < 3.0) {
+          left_wheel_power = 0.0;
+          right_wheel_power = 0.0;
+          driving = false;
+          modeL = false;
+
+          prev_error_left = 0.0;
+          prev_error_right = 0.0;
+      }
+
+        // double turn_distance_in = (M_PI * wheelDist) * (turnDeg/ 360.0); 
+        // double target_deg = turn_distance_in * inchToDeg;
+      
+        // double current_left = rhi_ptr_->getMotorPosition("left_motor");
+        // double current_right = rhi_ptr_->getMotorPosition("right_motor");
+      
+        // double delta_left = std::abs(start_left_pos - current_left);
+        // double delta_right = std::abs(current_right - start_right_pos);
+      
+        // if (delta_left < target_deg && delta_right < target_deg) {
+        //   left_wheel_power = -0.5;
+        //   right_wheel_power = 0.5;
+        // } else {
+        //   left_wheel_power = 0.0;
+        //   right_wheel_power = 0.0;
+        //   driving = false;
+        //   modeL = false;
+        // }
+    }
+
+
+    if (modeR && driving) {
+        double turn_distance_in = (M_PI * wheelDist) * (turnDeg/ 360.0); 
+        double target_deg = turn_distance_in * inchToDeg;
+      
+        double current_left = rhi_ptr_->getMotorPosition("left_motor");
+        double current_right = rhi_ptr_->getMotorPosition("right_motor");
+      
+        double delta_left = std::abs(start_left_pos - current_left);
+        double delta_right = std::abs(current_right - start_right_pos);
+      
+        if (delta_left < target_deg && delta_right < target_deg) {
+          left_wheel_power = 0.5;
+          right_wheel_power = -0.5;
+        } else {
+          left_wheel_power = 0.0;
+          right_wheel_power = 0.0;
+          driving = false;
+          modeR = false;
+        }
     }
 
 
