@@ -729,19 +729,19 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
   static bool btn_l2_pressed = false;
 
   // Increment arm mode with button l1
-  if (joy_data->btn_l1 && m_arm_mode != 4 && !btn_r1_pressed) {
+  if (joy_data->btn_l1 && m_arm_mode != 4 && !btn_l1_pressed) {
     m_arm_mode++;
-    btn_b_pressed = true;
+    btn_l1_pressed = true;
   } else if (!joy_data->btn_b) {
-    btn_b_pressed = false;
+    btn_l1_pressed = false;
   }
 
   // Decrement arm mode with button l2
-  if (joy_data->btn_l2 && m_arm_mode != 0 && !btn_r2_pressed) {
+  if (joy_data->btn_l2 && m_arm_mode != 0 && !btn_l2_pressed) {
     m_arm_mode--;
-    btn_d_pressed = true;
+    btn_l2_pressed = true;
   } else if (!joy_data->btn_d) {
-    btn_d_pressed = false;
+    btn_l2_pressed = false;
   }
 
   // Call the position update function with the current arm mode
