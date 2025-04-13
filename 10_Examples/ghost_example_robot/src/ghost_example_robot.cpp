@@ -66,8 +66,8 @@ void GhostExampleRobot::teleop(double current_time)
   double b = 45/16;
   double c = -75/16;
   double d = 35/16;
-  double kd = 0;
-  double kp = 0;
+  double kd = 0.01;
+  double kp = 0.1;
 
   double est_position(double time) {
     return a*t*t*t + b*t*t + c*t + d;
@@ -212,7 +212,7 @@ void GhostExampleRobot::teleop(double current_time)
     double pos_in = pos_degrees / 360 * 4 * 3.141593;
     double vel_in = rhi_ptr_->getMotorVelocityRPM * 60 * 4 * 3.141593;
     double torque = est_acceleration(current_time) + kd * (vel_in - est_velocity(current_time)) + kp * (pos_in - est_position(current_time));
-    double mortor_percentage = torque/(8.4375+2.8125-1.875);
+    double mortor_percentage = torque/(8.4375 + kd * 2.8125 - kp * 1.875);
     rhi_ptr_->setMotorVoltageCommandPercent("left_mortor", mortor_percentage);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", mortor_percentage);
     } while(rhi_ptr_->abs(getMotorCurrentMA) > threashold);
