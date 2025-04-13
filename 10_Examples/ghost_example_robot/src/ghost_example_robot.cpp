@@ -69,14 +69,68 @@ void GhostExampleRobot::teleop(double current_time)
 
   if (joy_data->btn_a) {
     std::cout << "Button A!" << std::endl;
+
+    //joystick values from 127 to -127 so we normalize it
+    double threshold = 0.05;
+    double left_wheel_power = joy_data->left_y / 127.0;
+    double right_wheel_power = joy_data->right_y / 127.0;
+
+    left_wheel_power = (std::fabs(left_wheel_power) < threshold) ? 0.0 : left_wheel_power;
+    right_wheel_power = (std::fabs(right_wheel_power) < threshold) ? 0.0 : right_wheel_power;
+
+    
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+
+    //each motor has a current limit that defaults to zero to allocate battery power
+    // between systems. the max voltage motor can use is 2500 milliAmps. 
+    // we set the motors we want to use to the maximum while in use 
+    rhi_ptr_ ->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_ ->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    std::cout << std::endl;
+
   } else if (joy_data->btn_b) {
     std::cout << "Button B!" << std::endl;
+
+    double forward_vel = joy_data->left_y / 127.0;
+    double angular_vel = joy_data->right_x / 127.0;
+    double turn = 0.5; //turn factor tells robot how much to rotate
+
+    double threshold = 0.05;
+    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel + turn;
+    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel - turn;
+
+    //motors move at different velocities which causes a turn
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", forward_vel);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", angular_vel);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    // Now we can get motor data and print it.
+    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    std::cout << std::endl;
+    
   } else if (joy_data->btn_x) {
     std::cout << "Button X!" << std::endl;
   } else if (joy_data->btn_y) {
     std::cout << "Button Y!" << std::endl;
   } else if (joy_data->btn_u) {
     std::cout << "Button U!" << std::endl;
+
+    
   } else if (joy_data->btn_d) {
     std::cout << "Button D!" << std::endl;
   } else if (joy_data->btn_l) {

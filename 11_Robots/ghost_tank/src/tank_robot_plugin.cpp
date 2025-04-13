@@ -302,7 +302,7 @@ void TankRobotPlugin::autonomous(double current_time)
   auto curr_twist = m_tank_model_ptr->getWorldTwist();
   auto curr_vel_x = curr_twist.x();
   auto curr_vel_y = curr_twist.y();
-  auto curr_vel_theta = curr_twist.z();
+  auto curr_vel_theta = curr_twist.z(); 
 
   publishCurrentTwist(curr_twist);
   // publishDesiredTwist(des_vel_x, des_vel_y, des_vel_theta);
@@ -555,6 +555,286 @@ void TankRobotPlugin::publishDesiredPose(Eigen::Vector3d twist)
     msg.orientation.y,
     msg.orientation.z);
   m_des_pos_pub->publish(msg);
+}
+
+
+void TankRobotPlugin::teleop(double current_time)
+{
+  static int loop_count = 0;
+  if (loop_count++ % 100 == 0) {
+    std::cout << "Teleop " << current_time << std::endl;
+  }
+
+  auto joy_data = rhi_ptr_->getMainJoystickData();
+
+  if (joy_data->btn_a) {
+    std::cout << "Button A!" << std::endl;
+
+    //joystick values from 127 to -127 so we normalize it
+    double threshold = 0.05;
+    double left_wheel_power = joy_data->left_y / 127.0;
+    double right_wheel_power = joy_data->right_y / 127.0;
+
+    left_wheel_power = (std::fabs(left_wheel_power) < threshold) ? 0.0 : left_wheel_power;
+    right_wheel_power = (std::fabs(right_wheel_power) < threshold) ? 0.0 : right_wheel_power;
+
+    
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+
+    //each motor has a current limit that defaults to zero to allocate battery power
+    // between systems. the max voltage motor can use is 2500 milliAmps. 
+    // we set the motors we want to use to the maximum while in use 
+    rhi_ptr_ ->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_ ->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    std::cout << std::endl;
+
+  } else if (joy_data->btn_b) {
+    std::cout << "Button B!" << std::endl;
+
+    double forward_vel = joy_data->left_y / 127.0;
+    double angular_vel = joy_data->right_x / 127.0;
+    double turn = 0.5; //turn factor tells robot how much to rotate
+
+    double threshold = 0.05;
+    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel + turn;
+    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel - turn;
+
+    //motors move at different velocities which causes a turn
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", forward_vel);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", angular_vel);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    // Now we can get motor data and print it.
+    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    std::cout << std::endl;
+    
+  } else if (joy_data->btn_x) {
+    std::cout << "Button X!" << std::endl;
+  } else if (joy_data->btn_y) {
+    std::cout << "Button Y!" << std::endl;
+  } else if (joy_data->btn_u) {
+    std::cout << "Button U!" << std::endl;
+
+    double current_x = m_curr_odom_pose.position.x;
+    double current_y = m_curr_odom_pose.position.y;
+    double end_pos_y = current_y + 0.254;
+    double motor_speed = 0.2;
+    
+
+    while (current_y < end_pos_y){
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    current_x = m_curr_odom_pose.position.x;
+    current_y = m_curr_odom_pose.position.y;
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "x position: " << current_x << " m" << std::endl;
+    std::cout << "y position: " << current_y << " m" << std::endl;
+    std::cout << std::endl;
+    ros::Duration(0.1).sleep();
+    }
+
+    std::cout << "target position reached!" << std::endl;
+
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+
+
+    
+  } else if (joy_data->btn_d) {
+    std::cout << "Button D!" << std::endl;
+
+    double current_x = m_curr_odom_pose.position.x;
+    double current_y = m_curr_odom_pose.position.y;
+    double end_pos_y = current_y + 0.254;
+    double motor_speed = -0.2;
+    
+
+    while (current_y < end_pos_y){
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    current_x = m_curr_odom_pose.position.x;
+    current_y = m_curr_odom_pose.position.y;
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "x position: " << current_x << " m" << std::endl;
+    std::cout << "y position: " << current_y << " m" << std::endl;
+    std::cout << std::endl;
+    ros::Duration(0.1).sleep();
+    }
+
+    std::cout << "target position reached!" << std::endl;
+
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+    
+  } else if (joy_data->btn_l) {
+    std::cout << "Button L!" << std::endl;
+
+    double curr_theta = ghost_util::quaternionToYawRad(
+      m_odom_msg.pose.pose.orientation.w,
+      m_odom_msg.pose.pose.orientation.x,
+      m_odom_msg.pose.pose.orientation.y,
+      m_odom_msg.pose.pose.orientation.z
+    );
+
+    double start_theta = curr_theta;
+
+    double goal_theta = curr_theta + M_PI/2;
+    double motor_speed = 0.2;
+
+  while(curr_theta < goal_theta){
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", -motor_speed);
+
+    curr_theta= ghost_util::quaternionToYawRad(
+      m_odom_msg.pose.pose.orientation.w,
+      m_odom_msg.pose.pose.orientation.x,
+      m_odom_msg.pose.pose.orientation.y,
+      m_odom_msg.pose.pose.orientation.z
+    );
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "degree turned: " << (curr_theta - start_theta) *  (180/M_PI) << std::endl;
+    std::cout << std::endl;
+    ros::Duration(0.1).sleep();
+    }
+
+    std::cout << "target angle reached!" << std::endl;
+
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+
+
+  } else if (joy_data->btn_r) {
+    std::cout << "Button R!" << std::endl;
+
+
+    double curr_theta = ghost_util::quaternionToYawRad(
+      m_odom_msg.pose.pose.orientation.w,
+      m_odom_msg.pose.pose.orientation.x,
+      m_odom_msg.pose.pose.orientation.y,
+      m_odom_msg.pose.pose.orientation.z
+    );
+
+    double start_theta = curr_theta;
+
+    double goal_theta = curr_theta + M_PI/2*3;
+    double motor_speed = 0.2;
+
+  while(curr_theta < goal_theta){
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", -motor_speed);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
+
+    curr_theta= ghost_util::quaternionToYawRad(
+      m_odom_msg.pose.pose.orientation.w,
+      m_odom_msg.pose.pose.orientation.x,
+      m_odom_msg.pose.pose.orientation.y,
+      m_odom_msg.pose.pose.orientation.z
+    );
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "degree turned: " << (curr_theta - start_theta) *  (180/M_PI) << std::endl;
+    std::cout << std::endl;
+    ros::Duration(0.1).sleep();
+    }
+
+    std::cout << "target angle reached!" << std::endl;
+
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+
+
+  } else if (joy_data->btn_l1) {
+    std::cout << "Button L1!" << std::endl;
+  } else if (joy_data->btn_l2) {
+    std::cout << "Button L2!" << std::endl;
+  }
+
+  // Print joystick data!
+  if (joy_data->btn_r1) {
+    // Left joystick up-down axis is "left_y", left-right axis is "left_x"
+    // Right joystick up-down axis is "right_y", left-right axis is "right_x"
+    std::cout << "Left X: " << joy_data->left_x << std::endl;
+    std::cout << "Left Y: " << joy_data->left_y << std::endl;
+    std::cout << "Right X: " << joy_data->right_x << std::endl;
+    std::cout << "Right Y: " << joy_data->right_y << std::endl;
+    std::cout << std::endl;
+  }
+
+  // While holding button R2, send motor commands based on joystick values
+  if (joy_data->btn_r2) {
+    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
+    double left_wheel_power = joy_data->left_y / 127.0;
+    double right_wheel_power = joy_data->right_y / 127.0;
+
+    // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+
+    // Each motor has a current limit that defaults to zero.
+    // This is so we can carefully allocate battery power between systems.
+    // If we don't set these, the motors will be extremely weak, if they move at all.
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    // Now we can get motor data and print it.
+    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    std::cout << std::endl;
+  } else {
+    // Don't forget to turn motors off!
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+  }
 }
 
 } // namespace ghost_tank
