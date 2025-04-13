@@ -168,7 +168,8 @@ void TankRobotPlugin::initialize()
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_twist_topic", "/cmd_vel");
-  std::string cmd_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
+  std::string cmd_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
   m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     cmd_twist_topic,
     10);
@@ -186,11 +187,12 @@ void TankRobotPlugin::initialize()
     bag_recorder_stop_topic);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
-  std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
+  std::string cmd_pose_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
   m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
     cmd_pose_topic,
     10);
-    
+
   node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
   std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
   imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(
@@ -198,19 +200,22 @@ void TankRobotPlugin::initialize()
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
-  std::string des_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
+  std::string des_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
   m_des_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     des_twist_topic,
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.cur_twist_topic", "/cur_vel");
-  std::string cur_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
+  std::string cur_twist_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
   m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
     cur_twist_topic,
     10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
-  std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
+  std::string des_pos_topic =
+    node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
   m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(
     des_pos_topic,
     10);
@@ -302,7 +307,7 @@ void TankRobotPlugin::autonomous(double current_time)
   auto curr_twist = m_tank_model_ptr->getWorldTwist();
   auto curr_vel_x = curr_twist.x();
   auto curr_vel_y = curr_twist.y();
-  auto curr_vel_theta = curr_twist.z(); 
+  auto curr_vel_theta = curr_twist.z();
 
   publishCurrentTwist(curr_twist);
   // publishDesiredTwist(des_vel_x, des_vel_y, des_vel_theta);
@@ -315,71 +320,71 @@ void TankRobotPlugin::autonomous(double current_time)
   m_base_twist_cmd_pub->publish(msg);
 }
 
-void TankRobotPlugin::teleop(double current_time)
-{
-  auto joy_data = rhi_ptr_->getMainJoystickData();
-  // std::cout << "Teleop: " << current_time << std::endl;
+// void TankRobotPlugin::teleop2(double current_time)
+// {
+//   auto joy_data = rhi_ptr_->getMainJoystickData();
+//   // std::cout << "Teleop: " << current_time << std::endl;
 
-  if (joy_data->btn_u) {
-    if (!m_auton_button_pressed) {
-      m_auton_button_pressed = true;
-      m_is_first_auton_loop = true;
-      m_auton_start_time = current_time;
-      m_auton_index = 0;
-    }
-    autonomous(current_time - m_auton_start_time);
-  } else {
-    m_auton_button_pressed = false;
+//   if (joy_data->btn_u) {
+//     if (!m_auton_button_pressed) {
+//       m_auton_button_pressed = true;
+//       m_is_first_auton_loop = true;
+//       m_auton_start_time = current_time;
+//       m_auton_index = 0;
+//     }
+//     autonomous(current_time - m_auton_start_time);
+//   } else {
+//     m_auton_button_pressed = false;
 
-    // Toggle Bag Recorder
-    if (joy_data->btn_y && !m_recording_btn_pressed) {
-      m_recording_btn_pressed = true;
+//     // Toggle Bag Recorder
+//     if (joy_data->btn_y && !m_recording_btn_pressed) {
+//       m_recording_btn_pressed = true;
 
-      if (!m_recording) {
-        auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
-        m_start_recorder_client->async_send_request(req);
-      } else {
-        auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
-        m_stop_recorder_client->async_send_request(req);
-      }
+//       if (!m_recording) {
+//         auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+//         m_start_recorder_client->async_send_request(req);
+//       } else {
+//         auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+//         m_stop_recorder_client->async_send_request(req);
+//       }
 
-      m_recording = !m_recording;
-    } else if (!joy_data->btn_y) {
-      m_recording_btn_pressed = false;
-    }
+//       m_recording = !m_recording;
+//     } else if (!joy_data->btn_y) {
+//       m_recording_btn_pressed = false;
+//     }
 
-    m_tank_model_ptr->driveCommandJoystick(
-      joy_data->left_y, joy_data->right_x, 0.05);
+//     m_tank_model_ptr->driveCommandJoystick(
+//       joy_data->left_y, joy_data->right_x, 0.05);
 
-    double intake_power = 0;
-    if (joy_data->btn_r2) {
-      intake_power = 1.0;
-    } else if (joy_data->btn_r1) {
-      intake_power = -1.0;
-    } else {
-      intake_power = 0.0;
-    }
+//     double intake_power = 0;
+//     if (joy_data->btn_r2) {
+//       intake_power = 1.0;
+//     } else if (joy_data->btn_r1) {
+//       intake_power = -1.0;
+//     } else {
+//       intake_power = 0.0;
+//     }
 
-    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
-    // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
+//     // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[5], intake_power);
+//     // rhi_ptr_->setMotorVoltageCommandPercent(motor_list[6], intake_power);
 
-    static bool forklift_pressed = false;
-    static bool forklift_up = false;
+//     static bool forklift_pressed = false;
+//     static bool forklift_up = false;
 
-    if (joy_data->btn_l1 && !forklift_pressed) {
-      forklift_pressed = true;
-      forklift_up = !forklift_up;
-    } else if (!joy_data->btn_l1) {
-      forklift_pressed = false;
-    }
+//     if (joy_data->btn_l1 && !forklift_pressed) {
+//       forklift_pressed = true;
+//       forklift_up = !forklift_up;
+//     } else if (!joy_data->btn_l1) {
+//       forklift_pressed = false;
+//     }
 
-    m_digital_io[1] = forklift_up; // forklift
-    m_digital_io[2] = joy_data->btn_l2; // pooper
-    rhi_ptr_->setDigitalIO(m_digital_io);
+//     m_digital_io[1] = forklift_up; // forklift
+//     m_digital_io[2] = joy_data->btn_l2; // pooper
+//     rhi_ptr_->setDigitalIO(m_digital_io);
 
-    // updateDrivetrainMotors();
-  }
-}
+//     // updateDrivetrainMotors();
+//   }
+// }
 
 void TankRobotPlugin::worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
@@ -446,7 +451,7 @@ void TankRobotPlugin::publishOdometry()
   msg.pose.pose.position.x = m_curr_odom_pose.x();
   msg.pose.pose.position.y = m_curr_odom_pose.y();
   msg.pose.pose.position.z = 0.0;
-  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)){
+  if (!(m_curr_odom_pose.z() < 1 && m_curr_odom_pose.z() > -1)) {
     printf("ROBOT MOVED ANGLE IS %f\n", m_curr_odom_pose.z());
   }
   ghost_util::yawToQuaternionRad(
@@ -578,15 +583,15 @@ void TankRobotPlugin::teleop(double current_time)
     left_wheel_power = (std::fabs(left_wheel_power) < threshold) ? 0.0 : left_wheel_power;
     right_wheel_power = (std::fabs(right_wheel_power) < threshold) ? 0.0 : right_wheel_power;
 
-    
+
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
 
     //each motor has a current limit that defaults to zero to allocate battery power
-    // between systems. the max voltage motor can use is 2500 milliAmps. 
-    // we set the motors we want to use to the maximum while in use 
-    rhi_ptr_ ->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
-    rhi_ptr_ ->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+    // between systems. the max voltage motor can use is 2500 milliAmps.
+    // we set the motors we want to use to the maximum while in use
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
 
     double left_position = rhi_ptr_->getMotorPosition("left_motor");
     double right_position = rhi_ptr_->getMotorPosition("right_motor");
@@ -622,7 +627,7 @@ void TankRobotPlugin::teleop(double current_time)
     std::cout << "Left Motor: " << left_position << " deg" << std::endl;
     std::cout << "Right Motor: " << right_position << " deg" << std::endl;
     std::cout << std::endl;
-    
+
   } else if (joy_data->btn_x) {
     std::cout << "Button X!" << std::endl;
   } else if (joy_data->btn_y) {
@@ -630,28 +635,50 @@ void TankRobotPlugin::teleop(double current_time)
   } else if (joy_data->btn_u) {
     std::cout << "Button U!" << std::endl;
 
-    double current_x = m_curr_odom_pose.position.x;
-    double current_y = m_curr_odom_pose.position.y;
-    double end_pos_y = current_y + 0.254;
+    double current_x = 0;
+    double current_y = 0;
+    double end_pos_y = 10;
     double motor_speed = 0.2;
-    
+    double error = end_pos_y - current_y;
 
-    while (current_y < end_pos_y){
+    double wheel_circumference = 2.76/2.0*2*M_PI;
+    double dist_traveled = 0;
+    double count = 0;
+    double kP = 0.05;
+    double kD = 0.05;
 
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
+    double prev_error = 0;
 
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+    while (error != 0) {
+      double angle = rhi_ptr_->getMotorPosition("left_motor");
 
-    current_x = m_curr_odom_pose.position.x;
-    current_y = m_curr_odom_pose.position.y;
+      if(angle > 360){
+        angle = std::fmod(angle, 360.0);
+        count = count + 1;
+      }
 
-    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
-    std::cout << "x position: " << current_x << " m" << std::endl;
-    std::cout << "y position: " << current_y << " m" << std::endl;
-    std::cout << std::endl;
-    ros::Duration(0.1).sleep();
+      prev_error = error;
+      error = (error - wheel_circumference * angle/360  + count * wheel_circumference) / 10;
+      motor_speed = kP * error + kD * (error - prev_error);
+
+      if(motor_speed > 1){
+        motor_speed = 1;
+      }
+      else if(motor_speed < -1){
+        motor_speed = -1;
+      }
+
+      rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
+      rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
+
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+      // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+      // std::cout << "x position: " << current_x << " m" << std::endl;
+      // std::cout << "y position: " << current_y << " m" << std::endl;
+      // std::cout << std::endl;
+      // ros::Duration(0.1).sleep();
     }
 
     std::cout << "target position reached!" << std::endl;
@@ -663,130 +690,130 @@ void TankRobotPlugin::teleop(double current_time)
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
 
+  }
+  // } else if (joy_data->btn_d) {
+  //   std::cout << "Button D!" << std::endl;
 
-    
-  } else if (joy_data->btn_d) {
-    std::cout << "Button D!" << std::endl;
-
-    double current_x = m_curr_odom_pose.position.x;
-    double current_y = m_curr_odom_pose.position.y;
-    double end_pos_y = current_y + 0.254;
-    double motor_speed = -0.2;
-    
-
-    while (current_y < end_pos_y){
-
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
-
-    current_x = m_curr_odom_pose.position.x;
-    current_y = m_curr_odom_pose.position.y;
-
-    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
-    std::cout << "x position: " << current_x << " m" << std::endl;
-    std::cout << "y position: " << current_y << " m" << std::endl;
-    std::cout << std::endl;
-    ros::Duration(0.1).sleep();
-    }
-
-    std::cout << "target position reached!" << std::endl;
+  //   double current_x = m_curr_odom_pose.position.x;
+  //   double current_y = m_curr_odom_pose.position.y;
+  //   double end_pos_y = current_y + 0.254;
+  //   double motor_speed = -0.2;
 
 
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+  //   while (current_y < end_pos_y) {
 
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
-    
-  } else if (joy_data->btn_l) {
-    std::cout << "Button L!" << std::endl;
+  //     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
+  //     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
 
-    double curr_theta = ghost_util::quaternionToYawRad(
-      m_odom_msg.pose.pose.orientation.w,
-      m_odom_msg.pose.pose.orientation.x,
-      m_odom_msg.pose.pose.orientation.y,
-      m_odom_msg.pose.pose.orientation.z
-    );
+  //     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+  //     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
 
-    double start_theta = curr_theta;
+  //     current_x = m_curr_odom_pose.position.x;
+  //     current_y = m_curr_odom_pose.position.y;
 
-    double goal_theta = curr_theta + M_PI/2;
-    double motor_speed = 0.2;
+  //     // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+  //     std::cout << "x position: " << current_x << " m" << std::endl;
+  //     std::cout << "y position: " << current_y << " m" << std::endl;
+  //     std::cout << std::endl;
+  //     ros::Duration(0.1).sleep();
+  //   }
 
-  while(curr_theta < goal_theta){
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", -motor_speed);
-
-    curr_theta= ghost_util::quaternionToYawRad(
-      m_odom_msg.pose.pose.orientation.w,
-      m_odom_msg.pose.pose.orientation.x,
-      m_odom_msg.pose.pose.orientation.y,
-      m_odom_msg.pose.pose.orientation.z
-    );
-
-    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
-    std::cout << "degree turned: " << (curr_theta - start_theta) *  (180/M_PI) << std::endl;
-    std::cout << std::endl;
-    ros::Duration(0.1).sleep();
-    }
-
-    std::cout << "target angle reached!" << std::endl;
+  //   std::cout << "target position reached!" << std::endl;
 
 
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
 
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
 
+  // } else if (joy_data->btn_l) {
+  //   std::cout << "Button L!" << std::endl;
 
-  } else if (joy_data->btn_r) {
-    std::cout << "Button R!" << std::endl;
+  //   double curr_theta = ghost_util::quaternionToYawRad(
+  //     m_odom_msg.pose.pose.orientation.w,
+  //     m_odom_msg.pose.pose.orientation.x,
+  //     m_odom_msg.pose.pose.orientation.y,
+  //     m_odom_msg.pose.pose.orientation.z
+  //   );
 
+  //   double start_theta = curr_theta;
 
-    double curr_theta = ghost_util::quaternionToYawRad(
-      m_odom_msg.pose.pose.orientation.w,
-      m_odom_msg.pose.pose.orientation.x,
-      m_odom_msg.pose.pose.orientation.y,
-      m_odom_msg.pose.pose.orientation.z
-    );
+  //   double goal_theta = curr_theta + M_PI / 2;
+  //   double motor_speed = 0.2;
 
-    double start_theta = curr_theta;
+  //   while (curr_theta < goal_theta) {
+  //     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_speed);
+  //     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", -motor_speed);
 
-    double goal_theta = curr_theta + M_PI/2*3;
-    double motor_speed = 0.2;
+  //     curr_theta = ghost_util::quaternionToYawRad(
+  //       m_odom_msg.pose.pose.orientation.w,
+  //       m_odom_msg.pose.pose.orientation.x,
+  //       m_odom_msg.pose.pose.orientation.y,
+  //       m_odom_msg.pose.pose.orientation.z
+  //     );
 
-  while(curr_theta < goal_theta){
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", -motor_speed);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
+  //     // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+  //     std::cout << "degree turned: " << (curr_theta - start_theta) * (180 / M_PI) << std::endl;
+  //     std::cout << std::endl;
+  //     ros::Duration(0.1).sleep();
+  //   }
 
-    curr_theta= ghost_util::quaternionToYawRad(
-      m_odom_msg.pose.pose.orientation.w,
-      m_odom_msg.pose.pose.orientation.x,
-      m_odom_msg.pose.pose.orientation.y,
-      m_odom_msg.pose.pose.orientation.z
-    );
-
-    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
-    std::cout << "degree turned: " << (curr_theta - start_theta) *  (180/M_PI) << std::endl;
-    std::cout << std::endl;
-    ros::Duration(0.1).sleep();
-    }
-
-    std::cout << "target angle reached!" << std::endl;
+  //   std::cout << "target angle reached!" << std::endl;
 
 
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
 
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
 
 
-  } else if (joy_data->btn_l1) {
+  // } else if (joy_data->btn_r) {
+  //   std::cout << "Button R!" << std::endl;
+
+
+  //   double curr_theta = ghost_util::quaternionToYawRad(
+  //     m_odom_msg.pose.pose.orientation.w,
+  //     m_odom_msg.pose.pose.orientation.x,
+  //     m_odom_msg.pose.pose.orientation.y,
+  //     m_odom_msg.pose.pose.orientation.z
+  //   );
+
+  //   double start_theta = curr_theta;
+
+  //   double goal_theta = curr_theta + M_PI / 2 * 3;
+  //   double motor_speed = 0.2;
+
+  //   while (curr_theta < goal_theta) {
+  //     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", -motor_speed);
+  //     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_speed);
+
+  //     curr_theta = ghost_util::quaternionToYawRad(
+  //       m_odom_msg.pose.pose.orientation.w,
+  //       m_odom_msg.pose.pose.orientation.x,
+  //       m_odom_msg.pose.pose.orientation.y,
+  //       m_odom_msg.pose.pose.orientation.z
+  //     );
+
+  //     // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+  //     std::cout << "degree turned: " << (curr_theta - start_theta) * (180 / M_PI) << std::endl;
+  //     std::cout << std::endl;
+  //     ros::Duration(0.1).sleep();
+  //   }
+
+  //   std::cout << "target angle reached!" << std::endl;
+
+
+  //   rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+
+
+  // } 
+  else if (joy_data->btn_l1) {
     std::cout << "Button L1!" << std::endl;
   } else if (joy_data->btn_l2) {
     std::cout << "Button L2!" << std::endl;
