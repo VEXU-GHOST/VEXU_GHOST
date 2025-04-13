@@ -60,7 +60,29 @@ void GhostExampleRobot::autonomous(double current_time)
 
 void GhostExampleRobot::teleop(double current_time)
 {
+  static char control_scheme = '';
   static int loop_count = 0;
+  double a = -5/16;
+  double b = 45/16;
+  double c = -75/16;
+  double d = 35/16;
+  double kd = 0;
+  double kp = 0;
+
+  double est_position(double time) {
+    return a*t*t*t + b*t*t + c*t + d;
+  }
+  double est_velocity(double time) {
+    return 3*a*t*t + 2*b*t + c;
+  }
+  double est_acceleration(double time) {
+    return 6*a*t + 2*b;
+  }
+  
+
+
+
+
   if (loop_count++ % 100 == 0) {
     std::cout << "Teleop " << current_time << std::endl;
   }
@@ -100,8 +122,49 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << std::endl;
   }
 
-  // While holding button R2, send motor commands based on joystick values
-  if (joy_data->btn_r2) {
+  //updata control scheme
+  if(joy_data->btn_a) {
+    control_scheme = 'a';
+  } else if(joy_data->btn_b) {
+    control_scheme = 'b';
+  }
+
+
+  // Tank drive if button a is pressed
+  if (control_scheme == 'a') {
+    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
+    double left_wheel_power = joy_data->left_y / 127.0;
+    double right_wheel_power = joy_data->right_y / 127.0;
+
+    // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+
+    // Each motor has a current limit that defaults to zero.
+    // This is so we can carefully allocate battery power between systems.
+    // If we don't set these, the motors will be extremely weak, if they move at all.
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    // Now we can get motor data and print it.
+    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    std::cout << std::endl;
+  } else {
+    // Don't forget to turn motors off!
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+  }
+
+  // Arcade drive if button b is pressed
+  if (control_scheme == 'b') {
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
     double forward_val = joy_data->left_y / 127.0;
     double angular_val = joy_data->right_x / 127.0;
@@ -111,7 +174,7 @@ void GhostExampleRobot::teleop(double current_time)
       forward_val = 0.0;
     }
 
-    if(std::abs(angular_val) > threashold) {
+    if(std::abs(angular_val) < threashold) {
       angular_val = 0.0;
     }
     
@@ -140,6 +203,19 @@ void GhostExampleRobot::teleop(double current_time)
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+  }
+  //pd forward 10 inches
+  if(joy_data->btn_u) {
+    double threashold = 0.5;
+    do{
+    double pos_degrees = rhi_ptr_->getMotorPosition * 3;
+    double pos_in = pos_degrees / 360 * 4 * 3.141593;
+    double vel_in = rhi_ptr_->getMotorVelocityRPM * 60 * 4 * 3.141593;
+    double torque = est_acceleration(current_time) + kd * (vel_in - est_velocity(current_time)) + kp * (pos_in - est_position(current_time));
+    double mortor_percentage = torque/(8.4375+2.8125-1.875);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_mortor", mortor_percentage);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", mortor_percentage);
+    } while(rhi_ptr_->abs(getMotorCurrentMA) > threashold);
   }
 }
 } // namespace ghost_example_robot
