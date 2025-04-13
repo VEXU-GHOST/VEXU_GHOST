@@ -34,11 +34,11 @@
 namespace ghost_tank
 {
 
-class GoalDetected : public BT::SyncActionNode
+class GoalFightDetected : public BT::SyncActionNode
 {
 public:
   // If your Node has ports, you must use this constructor signature
-  GoalDetected(const std::string & name, const BT::NodeConfig & config);
+  GoalFightDetected(const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -54,4 +54,4 @@ private:
   double start_time_ = 0.0;
 };
 
-}  // ghost_tank
+}     // ghost_tank

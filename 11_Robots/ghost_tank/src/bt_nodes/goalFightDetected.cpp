@@ -21,14 +21,16 @@
  *   SOFTWARE.
  */
 
- #include "ghost_tank/bt_nodes/goalDetected.hpp"
+ #include "ghost_tank/bt_nodes/goalFightDetected.hpp"
+ #include <cmath>
+ #include "ghost_tank/bt_nodes/bt_util.hpp"
 
 namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
-ConveyorCmd::ConveyorCmd(
+GoalFightDetected::GoalFightDetected(
   const std::string & name, const BT::NodeConfig & config)
 : BT::SyncActionNode(name, config)
 {
@@ -39,14 +41,15 @@ ConveyorCmd::ConveyorCmd(
 }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList ConveyorCmd::providedPorts()
+BT::PortsList GoalFightDetected::providedPorts()
 {
   // This action has a single input port called "message"
   return {
+    BT::InputPort<double>("velo_threshold"),
   };
 }
 
-BT::NodeStatus ConveyorCmd::tick()
+BT::NodeStatus GoalFightDetected::tick()
 {
   // double timeout = BT_Util::get_input<double>(this, "timeout");
   // if (start_time_ == 0.0) {
@@ -58,11 +61,37 @@ BT::NodeStatus ConveyorCmd::tick()
   // return BT::NodeStatus::SUCCESS;
   // }
 
-  std::unordered_map<std::string, int> digital_io_port_map;
-  BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
-  bool goal_detected = rhi_ptr_->getDigitalIOValue(digital_io_port_map["goal_rush_clamp"]);
-  if (goal_detected) {
-    return BT::NodeStatus::SUCCESS;
+//   std::unordered_map<std::string, int> digital_io_port_map;
+//   BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
+//   bool goal_detected = rhi_ptr_->getDigitalIOValue(digital_io_port_map["goal_rush_clamp"]);
+//   if (goal_detected) {
+//     return BT::NodeStatus::SUCCESS;
+//   }
+
+
+  //tank_model_ptr_->getWorldTwist();
+  //BT_Util::put_in_blackboard(blackboard_, "fwd_cmd", fwd_cmd);
+
+  double velo_threshold = BT_Util::get_input<double>(this, "velo_threshold");
+
+  double initial_time;
+  double current_time;
+  double fwd_cmd;
+  double curr_vel;
+
+  BT_Util::get_from_blackboard(blackboard_, "fwd_cmd", fwd_cmd);
+
+  BT_Util::get_from_blackboard(blackboard_, "current_time", initial_time);
+  auto twist = tank_model_ptr_->getWorldTwist();
+  curr_vel = pow(((twist.x() * twist.x()) + twist.y() * twist.y()), (1 / 2));
+
+  while ((abs(fwd_cmd - curr_vel)) > velo_threshold) {
+    BT_Util::get_from_blackboard(blackboard_, "current_time", current_time);
+    if (current_time - initial_time > 3) {
+      return BT::NodeStatus::SUCCESS;
+    }
+    twist = tank_model_ptr_->getWorldTwist();
+    curr_vel = std::pow(((twist.x() * twist.x()) + twist.y() * twist.y()), (1 / 2));
   }
 
   return BT::NodeStatus::FAILURE;
