@@ -33,6 +33,7 @@ LoggingNode::LoggingNode(
 	  if(!blackboard_->get("node_ptr", node_ptr_)){
         std::cout << name << ": node_ptr not found in blackboard" << std::endl;
     }
+    tts_pub_ = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
 }
 
 // It is mandatory to define this STATIC method.
@@ -40,7 +41,8 @@ BT::PortsList LoggingNode::providedPorts()
 {
   // This action has a single input port called "message"
   return {
-    BT::InputPort<std::string>("message")
+    BT::InputPort<std::string>("message"),
+    BT::InputPort<bool>("use_tts", false, "")
   };
 }
 
@@ -48,9 +50,16 @@ BT::PortsList LoggingNode::providedPorts()
 BT::NodeStatus LoggingNode::tick()
 {
   std::string msg = BT_Util::get_input<std::string>(this, "message");
+  bool use_tts = BT_Util::get_input<bool>(this, "use_tts");
 
   // use the method value() to extract the valid message.
   RCLCPP_INFO(node_ptr_->get_logger(), msg.c_str());
+
+  if (use_tts){
+    //do tts
+  }
+  
   // std::this_thread::sleep_for(std::chrono::milliseconds(100));
   return BT::NodeStatus::SUCCESS;
 }
+

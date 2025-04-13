@@ -27,6 +27,7 @@
 #include "behaviortree_cpp/behavior_tree.h"
 #include "rclcpp/rclcpp.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
+#include <std_msgs/msg/string.hpp>
 
 // SyncActionNode (synchronous action) with an input port.
 class LoggingNode : public BT::SyncActionNode
@@ -45,4 +46,5 @@ public:
 private:
 	BT::Blackboard::Ptr blackboard_;
   std::shared_ptr<rclcpp::Node> node_ptr_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr tts_pub_;
 };

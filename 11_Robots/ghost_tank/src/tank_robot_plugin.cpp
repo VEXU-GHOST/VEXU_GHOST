@@ -457,6 +457,16 @@ void TankRobotPlugin::autonomous(double current_time)
     publishDesiredPose(m_desired_pose);
   }
 
+  std::string message = "";
+  static std::string prev_message = "";
+  if (bt_->get_variable("tts_message", message))
+  {
+    if (message != prev_message){
+      playTTS(message);
+      prev_message = message;
+    }
+  }
+
   bool ring_detector_active = false;
   bool want_red = false;
   if (bt_->get_variable("ring_detector_active", ring_detector_active) &&
