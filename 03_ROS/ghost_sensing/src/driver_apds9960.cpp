@@ -44,6 +44,7 @@ bool color_sensor_apds9960::init() {
         !writeRegister(WTIME, DEFAULT_WTIME) ||  // Set wait time
         !writeRegister(PPULSE, DEFAULT_PPULSE) || // Set proximity pulse count
         !writeRegister(CONFIG1, DEFAULT_CONFIG1) ||
+        !writeRegister(CONTROL, DEFAULT_CONTROL) ||
         !writeRegister(PILT, DEFAULT_PILT) ||
         !writeRegister(PIHT, DEFAULT_PIHT) ||
         !writeRegister(PERS, DEFAULT_PERS) ||
@@ -51,7 +52,6 @@ bool color_sensor_apds9960::init() {
         !writeRegister(CONFIG3, DEFAULT_CONFIG3)) {
         return false;
     }
-    
     return true;
 }
 

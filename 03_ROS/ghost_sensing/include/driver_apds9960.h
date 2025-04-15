@@ -66,9 +66,10 @@ public:
 
     // Default values
     static const uint8_t DEFAULT_ATIME  = 255;    // 2.78ms
-    static const uint8_t DEFAULT_WTIME  = 246;    // 27ms
+    static const uint8_t DEFAULT_WTIME  = 0;    // A lot, so we'll know if its stuck/slow
     static const uint8_t DEFAULT_PPULSE = 0x87;   // 16us, 8 pulses
     static const uint8_t DEFAULT_CONFIG1 = 0x60;
+    static const uint8_t DEFAULT_CONTROL = 0x03;
     static const uint8_t DEFAULT_PILT   = 0;      // Proximity low threshold
     static const uint8_t DEFAULT_PIHT   = 50;     // Proximity high threshold
     static const uint8_t DEFAULT_PERS   = 0x11;   // 2 consecutive prox or ALS for int.
