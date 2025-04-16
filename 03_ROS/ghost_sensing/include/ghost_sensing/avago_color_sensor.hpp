@@ -30,6 +30,7 @@ public:
   AvagoColorSensorNode();
 
   void timer_poll_color_sensor();
+  int init();
 
   double m_poll_freq;
 };

@@ -101,7 +101,6 @@ AvagoColorSensorNode::AvagoColorSensorNode()
   int address = get_parameter("address").as_int();
 
 
-
   uint8_t res;
 
   auto iface = std::make_shared<tcs_i2c_interface>(i2c_bus_path, this->get_logger());
@@ -119,12 +118,10 @@ AvagoColorSensorNode::AvagoColorSensorNode()
     std::chrono::seconds(1) / m_poll_freq,
     std::bind(&AvagoColorSensorNode::timer_poll_color_sensor, this));
 
-
-  m_sensor->init(); // TODO handle + rerun on crash
-  m_sensor->enableProximitySensor(); // TODO handle + rerun on crash
-  m_sensor->enableLightSensor(); // TODO handle + rerun on crash
-  m_sensor->enablePower(); // TODO handle + rerun on crash
-
+  int success = init();
+  if (!success) {
+    RCLCPP_WARN(this->get_logger(), "avago color sensor: init failed.\n");
+  }
   // to change topic names (perhaps when using multiple color sensors), use the ros remap function
   m_rgb_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("rgb", 10);   // whats 10, doesn't matter other nodes also use it
   m_hsv_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("hsv", 10);
@@ -133,6 +130,14 @@ AvagoColorSensorNode::AvagoColorSensorNode()
   printf("INIT FINISHED\n");
 }
 
+int AvagoColorSensorNode::init()
+{
+  int success = m_sensor->init() && // TODO handle + rerun on crash
+    m_sensor->enableProximitySensor() && // TODO handle + rerun on crash
+    m_sensor->enableLightSensor() && // TODO handle + rerun on crash
+    m_sensor->enablePower(); // TODO handle + rerun on crash
+  return success;
+}
 void AvagoColorSensorNode::timer_poll_color_sensor()
 {
   const float max_color_val = (1 << 16) - 1;
@@ -144,7 +149,7 @@ void AvagoColorSensorNode::timer_poll_color_sensor()
   auto msg_prox = std_msgs::msg::Float32();
   ghost_sensing::color_sensor_apds9960::sensor_data_t s = {0};
   bool success = m_sensor->readAllSensors(s);
-
+  RCLCPP_INFO(this->get_logger(), "YO success: %d valid: %d red: %d green: %d blue: %d proximity: %d", success, s.valid, s.red, s.green, s.blue, s.proximity);
 
 
   //rgbc = 0, r = 1 << 12, g =0 , b = 1<<16 - 1; // for testing only
@@ -152,8 +157,8 @@ void AvagoColorSensorNode::timer_poll_color_sensor()
     // could not communicate or got all zeros which should realistically never happen since we dont clear the registers
     // there might be a better way to check uninitalized sensor, but simple solution rn is that values are all 0 which will never happen unless its perfectly dark which it will never be
     // TODO
-    int res = m_sensor->init();
-    if (res != 0) {
+    int success = init();
+    if (!success) {
       RCLCPP_WARN(this->get_logger(), "avago color sensor: init failed.\n");
     }
     m_delay_loops = 100;
@@ -164,7 +169,7 @@ void AvagoColorSensorNode::timer_poll_color_sensor()
   msg_rgb.g = s.green / max_color_val;
   msg_rgb.b = s.blue / max_color_val;
   msg_rgb.a = s.clear / max_color_val;
-  msg_prox.data = s.proximity/max_prox_val;
+  msg_prox.data = s.proximity / max_prox_val;
 
   auto msg_hsv = rgbc2hsv(msg_rgb);
 
