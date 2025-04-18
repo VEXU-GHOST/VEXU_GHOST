@@ -99,7 +99,7 @@ protected:
    * @param current_time
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
-  void updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool R, double current_time);
+  void updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool R, double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateClampController(bool shift1, bool shift2 ,std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
  

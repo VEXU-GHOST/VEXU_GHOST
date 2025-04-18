@@ -518,16 +518,30 @@ void TankRobotPlugin::teleop(double current_time)
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
 
   toggleBagRecorder(joy_data);
-
-  
-
-  //updateNeutralStakeArm(joy_data);
-  updateNeutralStakeArmController(shift1, shift2, joy_data);
-  updateIntakeController(shift1, shift2,joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time);
+// CONDITIONAL control mode dispatching
+if (shift1) {
+  updateNeutralStakeArmController(shift1, shift2, joy_data); // Y-held mode
+  updateIntakeController(shift1, shift2,
+    joy_data->btn_r2, joy_data->btn_r1,
+    joy_data->btn_l1, joy_data->btn_l2,
+    current_time, joy_data);
+} else if (shift2) {
+  updateClampController(shift1, shift2, joy_data);           // R-held mode
+  updateGoalRush(joy_data);  
+} else {
+  updateIntakeController(shift1, shift2,
+                         joy_data->btn_r2, joy_data->btn_r1,
+                         joy_data->btn_l1, joy_data->btn_l2,
+                         current_time, joy_data);            // Default mode 
   updateBite(joy_data);
-  updateClampController(shift1, shift2, joy_data);
-  updateGoalRush(joy_data);
   updateDrivetrain(joy_data);
+  updateNeutralStakeArmController(shift1, shift2, joy_data);            
+}
+  updateBite(joy_data);
+  updateDrivetrain(joy_data);
+
+
+
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red)
@@ -726,113 +740,77 @@ void TankRobotPlugin::updateNeutralStakeArmPosition(int arm_mode)
 
 
 
-void TankRobotPlugin::updateNeutralStakeArmPositionController( std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateNeutralStakeArmPositionController(std::shared_ptr<JoystickDeviceData> joy_data)
 {
-  std::vector<double> arm_mode_position_map{
-    m_neutral_stake_arm_rest_pos_deg,
-    m_neutral_stake_arm_loading_pos_deg,
-    m_neutral_stake_arm_score_neutral_pos_deg,
-    m_neutral_stake_arm_score_alliance_pos_deg,
-    m_neutral_stake_arm_down_pos_deg
-  };
-
   double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
+  int32_t current_ma = 0;
 
-  // Ensure arm_mode is within valid bounds
-
-  m_neutral_stake_arm_des_pos = arm_mode_position_map[m_arm_mode];
-
-  int32_t current_ma;
-  double position_error = (m_neutral_stake_arm_des_pos - curr_pos);
-  double final_error = (m_neutral_stake_arm_down_pos_deg-curr_pos);
-  if(joy_data->btn_l2){
-    curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
-    final_error = (m_neutral_stake_arm_down_pos_deg-curr_pos);
-    if (std::fabs(final_error) < 1) {
-      power = 0.0;
-      current_ma = 0;
-    } else {
+  bool command_given = false;
+  if(joy_data->btn_y){
+  
+  // ---- Manual Control ----
+    if (joy_data->btn_l2) {
+      // Move forward (toward down)
+      power = 0.3;  // Tune this value
       current_ma = 2500;
-      power = m_neutral_stake_arm_kp * position_error;
-    }
-
-    if (curr_pos > m_neutral_stake_arm_down_pos_deg) {
-      power = ghost_util::clamp(power, -1.0, 0.0);
-    }
-    // Don't exert negative power at lower limit
-    if (curr_pos < m_neutral_stake_arm_rest_pos_deg) {
-      power = ghost_util::clamp(power, 0.0, 1.0);
-    }
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-  m_loop_current_limits.push_back(current_ma);
-
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
-  }else if(joy_data->btn_l1){
-    curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
-    final_error = (m_neutral_stake_arm_loading_pos_deg-curr_pos);
-    if (std::fabs(final_error) < 1) {
-      power = 0.0;
-      current_ma = 0;
-    } else {
+      command_given = true;
+    } 
+    else if (joy_data->btn_l1) {
+      // Move backward (toward up)
+      power = -0.3;
       current_ma = 2500;
-      power = m_neutral_stake_arm_kp * position_error;
-    }
-
-    if (curr_pos > m_neutral_stake_arm_down_pos_deg) {
-      power = ghost_util::clamp(power, -1.0, 0.0);
-    }
-    // Don't exert negative power at lower limit
-    if (curr_pos < m_neutral_stake_arm_rest_pos_deg) {
-      power = ghost_util::clamp(power, 0.0, 1.0);
-    }
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-  m_loop_current_limits.push_back(current_ma);
-
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
-  }else{
-    double begin_error = (m_neutral_stake_arm_loading_pos_deg-curr_pos);
-    power = m_neutral_stake_arm_kp * position_error;
-    current_ma = 2500;
+      command_given = true;
+    }else{
     
-    if (std::fabs(begin_error) < 1) {
-      power = 0.0;
-      current_ma = 0;
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-  m_loop_current_limits.push_back(current_ma);
+      double position_error = (m_neutral_stake_arm_loading_pos_deg - curr_pos);
+      current_ma = 2500;
+      power = m_neutral_stake_arm_kp * position_error;
+      command_given = true; 
+  }
+    
 
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
+    // ---- Send Command ----
+    if (command_given) {
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
+      m_loop_current_limits.push_back(current_ma);
+      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
+    } 
+    else {
+      // Stop motor if no command needed
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", 0);
+      m_loop_current_limits.push_back(0);
+      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
     }
-   
+  }else{
+      double position_error =(m_neutral_stake_arm_rest_pos_deg - curr_pos-45);
+      current_ma = 2500;
+      power = m_neutral_stake_arm_kp * position_error;
+      command_given = true; 
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
+      m_loop_current_limits.push_back(current_ma);
+      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
+
   }
 
-
-
- 
-
- 
+  
 }
 
 
 void TankRobotPlugin::updateNeutralStakeArmController(bool shift1, bool shift2, std::shared_ptr<JoystickDeviceData> joy_data)
 {
-  static bool btn_l1_pressed = false;
-  static bool btn_l2_pressed = false;
-
 
   // Increment arm mode with button l1
-  if(shift1==1){
-    if(joy_data->btn_l2){
+
+
        updateNeutralStakeArmPositionController(joy_data); 
-    }
+
+    
   
-    // Decrement arm mode with button l2
-    if (joy_data->btn_l1) {
-      updateNeutralStakeArmPositionController(joy_data); 
-    }
-  }
+
+
+   
+
 
   // Call the position update function with the current arm mode
 
@@ -964,7 +942,7 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
   m_loop_current_limits.push_back(conveyor_current);
 }
 
-void TankRobotPlugin::updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool L2, double current_time)
+void TankRobotPlugin::updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool L2, double current_time,std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool first_r2 = true;
   static bool first_r2_started = false;
@@ -973,7 +951,7 @@ void TankRobotPlugin::updateIntakeController(bool shift1, bool shift2, bool R2, 
   int32_t ground_pickup_current = 0;
   double conveyor_power = 0;
   int32_t conveyor_current = 0;
-  if(shift1==0){
+  if(joy_data->btn_y==false){
     if (R2) {
       ground_pickup_power = 1.0;
       ground_pickup_current = 2500;
@@ -1116,16 +1094,21 @@ void TankRobotPlugin::updateClampController(bool shift1, bool shift2, std::share
   // } else if (!joy_data->btn_a) {
   //   clamp_btn_pressed = false;
   // }
-  if(shift2 ==1){
-    if (joy_data->btn_r2 && !clamp_btn_pressed) {
-      clamp_btn_pressed = true;
-      m_clamp_closed = !m_clamp_closed;
-    } else if (joy_data->btn_l2) {
-      clamp_btn_pressed = false;
+
+
+    // Close on R2 rising edge
+    if (joy_data->btn_r2) {
+      m_clamp_closed = true;
     }
-  }
+
+    // Open on L2 rising edge
+    if (joy_data->btn_l2) {
+      m_clamp_closed = false;
+    }
+  
 
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
+
 }
 
 
