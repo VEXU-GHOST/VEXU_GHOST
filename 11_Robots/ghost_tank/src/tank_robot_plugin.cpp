@@ -500,8 +500,8 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
-  bool shift1 = joy_data-> btn_y; 
-  bool shift2 = joy_data-> btn_r; 
+  bool shift1 = joy_data->btn_y; 
+  bool shift2 = joy_data->btn_r; 
 
   if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
     joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
@@ -518,30 +518,23 @@ void TankRobotPlugin::teleop(double current_time)
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
 
   toggleBagRecorder(joy_data);
-// CONDITIONAL control mode dispatching
-if (shift1) {
-  updateNeutralStakeArmController(shift1, shift2, joy_data); // Y-held mode
-  updateIntakeController(shift1, shift2,
-    joy_data->btn_r2, joy_data->btn_r1,
-    joy_data->btn_l1, joy_data->btn_l2,
-    current_time, joy_data);
-} else if (shift2) {
-  updateClampController(shift1, shift2, joy_data);           // R-held mode
-  updateGoalRush(joy_data);  
-} else {
-  updateIntakeController(shift1, shift2,
-                         joy_data->btn_r2, joy_data->btn_r1,
-                         joy_data->btn_l1, joy_data->btn_l2,
-                         current_time, joy_data);            // Default mode 
+  // CONDITIONAL control mode dispatching
+  if (shift1) {
+    updateNeutralStakeArmController(shift1, shift2, joy_data); // Y-held mode
+    updateIntake(joy_data->btn_r2, joy_data->btn_r1,
+      false, false,
+      current_time);
+  } else if (shift2) {
+    updateClampController(shift1, shift2, joy_data);           // R-held mode
+    updateGoalRush(joy_data);
+  } else {
+    updateIntake(joy_data->btn_r2, joy_data->btn_r1,
+                joy_data->btn_l1, joy_data->btn_l2,
+                current_time);            // Default mode 
+    updateNeutralStakeArmController(shift1, shift2, joy_data);            
+  }
   updateBite(joy_data);
   updateDrivetrain(joy_data);
-  updateNeutralStakeArmController(shift1, shift2, joy_data);            
-}
-  updateBite(joy_data);
-  updateDrivetrain(joy_data);
-
-
-
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red)
@@ -752,13 +745,13 @@ void TankRobotPlugin::updateNeutralStakeArmPositionController(std::shared_ptr<Jo
   // ---- Manual Control ----
     if (joy_data->btn_l2) {
       // Move forward (toward down)
-      power = 0.3;  // Tune this value
+      power = 1;  // Tune this value
       current_ma = 2500;
       command_given = true;
     } 
     else if (joy_data->btn_l1) {
       // Move backward (toward up)
-      power = -0.3;
+      power = -1;
       current_ma = 2500;
       command_given = true;
     }else{
@@ -801,18 +794,7 @@ void TankRobotPlugin::updateNeutralStakeArmController(bool shift1, bool shift2, 
 {
 
   // Increment arm mode with button l1
-
-
-       updateNeutralStakeArmPositionController(joy_data); 
-
-    
-  
-
-
-   
-
-
-  // Call the position update function with the current arm mode
+  updateNeutralStakeArmPositionController(joy_data); 
 
 }
 
@@ -942,144 +924,13 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
   m_loop_current_limits.push_back(conveyor_current);
 }
 
-void TankRobotPlugin::updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool L2, double current_time,std::shared_ptr<JoystickDeviceData> joy_data)
-{
-  static bool first_r2 = true;
-  static bool first_r2_started = false;
-  // Manual Ground Pickup control
-  double ground_pickup_power = 0;
-  int32_t ground_pickup_current = 0;
-  double conveyor_power = 0;
-  int32_t conveyor_current = 0;
-  if(joy_data->btn_y==false){
-    if (R2) {
-      ground_pickup_power = 1.0;
-      ground_pickup_current = 2500;
-      if (first_r2){
-        first_r2_started = true;
-      }
-    } else if (L2) {
-      ground_pickup_power = -1.0;
-      ground_pickup_current = 2500;
-    } else {
-      ground_pickup_power = 0.0;
-      ground_pickup_current = 0;
-      if (first_r2_started){
-        first_r2 = false;
-      }
-    }
-    // Conveyor control
-    // We assume any manual conveyor control misaligns the hooks
-    
-    if (R1) {
-      conveyor_power = 1.0;
-      conveyor_current = 2500;
-      m_conveyor_hook_is_aligned = false;
-    } else if (L1 && !R2) {
-      conveyor_power = -1.0;
-      conveyor_current = 2500;
-      m_conveyor_hook_is_aligned = false;
-    } else {
-      conveyor_power = 0.0;
-      conveyor_current = 0;
-    }
-
-    // Align Conveyor when Ground Pickup is active and there are no commands going to manual Conveyor control
-    if (R2 && !R1 && !m_conveyor_hook_is_ejecting) {
-      m_conveyor_hook_is_aligned = !(m_hook_fraction < m_conveyor_hook_align_threshold);
-      if (m_conveyor_hook_is_aligned || first_r2) {
-        m_conveyor_last_aligned_position = m_conveyor_position_abs;
-        conveyor_power = 0;
-        conveyor_current = 0;
-      } else {
-        conveyor_power = m_conveyor_hook_align_power;
-        conveyor_current = 1000;
-      }
-    }
-
-    // Transition to ejection mode
-    static double ejecting_start_time = 0.0;
-    if (R2 && L1 && m_conveyor_hook_is_aligned && !m_conveyor_hook_is_ejecting) {
-      ejecting_start_time = current_time;
-      m_conveyor_hook_is_ejecting = true;
-      m_conveyor_hook_is_aligned = false;
-    }
-
-    // Max timeout on ejection
-    if (m_conveyor_hook_is_ejecting && current_time > ejecting_start_time + 1.5) {
-      m_conveyor_hook_is_ejecting = false;
-    }
-
-    // During ejection, run until we reach throw position, then transition to throw
-    if (m_conveyor_hook_is_ejecting) {
-      double throw_dist_rel = m_conveyor_hook_throw_fraction * m_conveyor_ticks_per_hook;
-      if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) > throw_dist_rel && !m_conveyor_is_throwing) {
-        m_conveyor_is_throwing = true;
-        m_conveyor_hook_is_ejecting = false;
-        m_conveyor_throw_start_time = current_time;
-      }
-      conveyor_power = 1.0;
-      conveyor_current = 2500;
-    }
-
-    // Throw reverses for set duration and then zeros conveyor and returns to manual control
-    if (m_conveyor_is_throwing) {
-      conveyor_power = -0.1;
-      conveyor_current = 500;
-      if (current_time > m_conveyor_throw_start_time + m_conveyor_hook_throw_duration) {
-        m_conveyor_is_throwing = false;
-        conveyor_power = 0.0;
-        conveyor_current = 0;
-      }
-    }
-    
-    //shift 
-  }else{
- 
-    if (R2) {
-      ground_pickup_power = 1.0;
-      ground_pickup_current = 2500;
-      if (first_r2){
-        first_r2_started = true;
-      }
-    } else {
-      ground_pickup_power = 0.0;
-      ground_pickup_current = 0;
-      if (first_r2_started){
-        first_r2 = false;
-      }
-    }
-    // Conveyor control
-    // We assume any manual conveyor control misaligns the hooks
-    if (R1) {
-      conveyor_power = 1.0;
-      conveyor_current = 2500;
-      m_conveyor_hook_is_aligned = false;
-    }else {
-      conveyor_power = 0.0;
-      conveyor_current = 0;
-    }
-  }
-
-  rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
-
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
-
-  m_loop_current_limits.push_back(ground_pickup_current);
-  m_loop_current_limits.push_back(conveyor_current);
-}
-
 void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool bite_btn_pressed = false;
-  if (joy_data->btn_y && !bite_btn_pressed) {
+  if (joy_data->btn_x && !bite_btn_pressed) {
     bite_btn_pressed = true;
     m_bite_closed = !m_bite_closed;
-  } else if (!joy_data->btn_y) {
+  } else if (!joy_data->btn_x) {
     bite_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
@@ -1149,10 +1000,10 @@ void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickD
 void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data)
 {
   static bool goal_rush_btn_pressed = false;
-  if (joy_data->btn_x && !goal_rush_btn_pressed) {
+  if (joy_data->btn_l1 && !goal_rush_btn_pressed) {
     goal_rush_btn_pressed = true;
     m_goal_rush_active = !m_goal_rush_active;
-  } else if (!joy_data->btn_x) {
+  } else if (!joy_data->btn_l1) {
     goal_rush_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
