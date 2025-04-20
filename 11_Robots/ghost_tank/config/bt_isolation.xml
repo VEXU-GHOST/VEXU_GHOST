@@ -22,11 +22,12 @@
 
   <BehaviorTree ID="test_color_sensor">
     <Sequence>
+      <Logging message="Starting test_color_sensor tree"/>
       <SetMirrored mirrored="false"/>
       <GoalRushCmd arm_down="true"
                   clamp="false"/>
  
-      <GoalRushDetected right="false" threshold="100"/>
+      <GoalRushDetected right="false" threshold="0.5"/>
       <GoalRushCmd arm_down="false"
                   clamp="true"/>
       <WaitCmd seconds="200.0"
@@ -134,7 +135,7 @@
       <GoalRushCmd arm_down="true"
                   clamp="false"/>
       <ReactiveFallback>
-        <GoalRushDetected/>
+        <!-- <GoalRushDetected/> -->
         <WaitCmd seconds="3.0"
                 shutoff_motors="true"/>
       </ReactiveFallback>

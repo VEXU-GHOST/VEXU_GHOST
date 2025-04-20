@@ -131,7 +131,10 @@
     <Action ID="ShutoffNode"
             editable="true"/>
     <Action ID="GoalRushDetected"
-            editable="true"/>
+            editable="true">
+      <input_port name="threshold"/>
+      <input_port name="right"/>
+    </Action>
   </TreeNodesModel>
 
 </root>

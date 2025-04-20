@@ -149,7 +149,7 @@ void AvagoColorSensorNode::timer_poll_color_sensor()
   auto msg_prox = std_msgs::msg::Float32();
   ghost_sensing::color_sensor_apds9960::sensor_data_t s = {0};
   bool success = m_sensor->readAllSensors(s);
-  RCLCPP_INFO(this->get_logger(), "YO success: %d valid: %d red: %d green: %d blue: %d proximity: %d", success, s.valid, s.red, s.green, s.blue, s.proximity);
+  //RCLCPP_INFO(this->get_logger(), "YO success: %d valid: %d red: %d green: %d blue: %d proximity: %d", success, s.valid, s.red, s.green, s.blue, s.proximity);
 
 
   //rgbc = 0, r = 1 << 12, g =0 , b = 1<<16 - 1; // for testing only

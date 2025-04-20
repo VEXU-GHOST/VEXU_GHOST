@@ -40,12 +40,12 @@ GoalRushDetected::GoalRushDetected(
 
   goal_rush_proxmity_sub_l_ =
     node_ptr_->create_subscription<std_msgs::msg::Float32>(
-    "/sensors/color_sensor/goal_rush_l/proximity", 10,
+    "/sensors/color_sensors/goal_rush_l/proximity", 10,
     [this](const std_msgs::msg::Float32::SharedPtr msg) {this->proxUpdate(msg, false);});
 
   goal_rush_proxmity_sub_r_ =
     node_ptr_->create_subscription<std_msgs::msg::Float32>(
-    "/sensors/color_sensor/goal_rush_r/proximity", 10,
+    "/sensors/color_sensors/goal_rush_r/proximity", 10,
     [this](const std_msgs::msg::Float32::SharedPtr msg) {this->proxUpdate(msg, true);});
 
 }

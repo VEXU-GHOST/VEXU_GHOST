@@ -59,7 +59,7 @@ def generate_launch_description():
             {
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
-                "bt_path_interaction": bt_path_interaction,
+                "bt_path_interaction": bt_path,
                 "config_path": config_path,
             },
         ],
@@ -128,7 +128,7 @@ def generate_launch_description():
     color_sensor_goal_rush_l = Node(
         package="ghost_sensing",
         executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush",
+        name="avago_color_sensor_goal_rush_l",
         output="screen",
         namespace="/sensors/color_sensors/goal_rush_l",
         parameters=[ros_config_file, {
@@ -138,11 +138,11 @@ def generate_launch_description():
     color_sensor_goal_rush_r = Node(
         package="ghost_sensing",
         executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush",
+        name="avago_color_sensor_goal_rush_r",
         output="screen",
         namespace="/sensors/color_sensors/goal_rush_r",
         parameters=[ros_config_file, {
-            "address": 0x39, # both address translator switches on so ^ 1<<6
+            "address": 0x39 ^ (1<<6), # both address translator switches on so ^ 1<<6
         }],
     )
     # no need for color classifier, since we only use proximity for goal rush
