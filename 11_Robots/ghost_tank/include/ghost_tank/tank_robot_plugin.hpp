@@ -39,6 +39,7 @@
 #include <std_msgs/msg/string.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <std_msgs/msg/int64.hpp>
 
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
@@ -118,6 +119,9 @@ protected:
   // Output
   void playMusic(std::string m);
   void playTTS(std::string m);
+
+  void colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
+  void mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
  
 
   void resetWorldPose();
@@ -162,6 +166,9 @@ protected:
   }
   std::string m_color;
   double m_first_color_detect_inches = INFINITY;
+
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_color_target_sub;
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_mirrored_sub;
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
@@ -283,6 +290,8 @@ protected:
   // Auton States
   bool m_auton_button_pressed = false;
   int m_auton_index = 0;
+  bool m_color_target_red = false;
+  bool m_mirrored = false;
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;

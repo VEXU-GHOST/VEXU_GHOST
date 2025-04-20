@@ -169,6 +169,13 @@ void TankRobotPlugin::initROSComms()
 
   m_tts_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
   m_music_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/music", 1);
+
+  m_button_color_target_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
+    "/io/buttons/color_target", 10,
+    std::bind(&TankRobotPlugin::colorTargetButtonCallback, this, _1));
+  m_button_mirrored_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
+    "/io/buttons/mirrored", 10,
+    std::bind(&TankRobotPlugin::mirroredButtonCallback, this, _1));
 }
 
 void TankRobotPlugin::initEstimation()
@@ -434,6 +441,7 @@ void TankRobotPlugin::autonomous(double current_time)
 
   // std::cout << "Autonomous: " << current_time << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
+  bt_->set_variable("mirrored", m_mirrored);
 
   static bool first_loop = true;
   if (first_loop) {
@@ -459,9 +467,11 @@ void TankRobotPlugin::autonomous(double current_time)
   }
 
   bool ring_detector_active = false;
-  bool want_red = false;
-  if (bt_->get_variable("ring_detector_active", ring_detector_active) &&
-    bt_->get_variable("want_red", want_red))
+  bool want_red = m_color_target_red;
+  // bool want_red = false;
+  if (bt_->get_variable("ring_detector_active", ring_detector_active) 
+    // && bt_->get_variable("want_red", want_red)
+  )
   {
     ringDetector(ring_detector_active, current_time, want_red);
   }
@@ -1311,6 +1321,28 @@ void TankRobotPlugin::playTTS(std::string textString)
   auto message = std_msgs::msg::String();
   message.data = textString;
   m_tts_pub->publish(message);
+}
+
+void TankRobotPlugin::colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
+{
+  if (msg->data == 1) {
+    m_color_target_red = true;
+  } else if (msg->data == 0) {
+    m_color_target_red = false;
+  } else {
+    RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
+  }
+}
+
+void TankRobotPlugin::mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
+{
+  if (msg->data == 1) {
+    m_mirrored = true;
+  } else if (msg->data == 0) {
+    m_mirrored = false;
+  } else {
+    RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
+  }
 }
 
 } // namespace ghost_tank
