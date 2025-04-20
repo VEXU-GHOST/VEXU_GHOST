@@ -115,8 +115,8 @@ TCSColorSensorNode::TCSColorSensorNode()
 
 
   // to change topic names (perhaps when using multiple color sensors), use the ros remap function
-  m_rgb_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("/sensors/color_sensor_0/rgb", 10);   // whats 10, doesn't matter other nodes also use it
-  m_hsv_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("/sensors/color_sensor_0/hsv", 10);
+  m_rgb_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("rgb", 10);   // whats 10, doesn't matter other nodes also use it
+  m_hsv_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("hsv", 10);
 
   printf("INIT FINISHED\n");
 }

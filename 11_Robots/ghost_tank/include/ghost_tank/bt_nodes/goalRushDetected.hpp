@@ -30,26 +30,37 @@
 #include "ghost_tank/tank_tree.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/float32.hpp"
 
-namespace ghost_tank {
+namespace ghost_tank
+{
 
-class GoalRushDetected : public BT::SyncActionNode {
+class GoalRushDetected : public BT::SyncActionNode
+{
 public:
   // If your Node has ports, you must use this constructor signature
-  GoalRushDetected(const std::string& name, const BT::NodeConfig& config);
+  GoalRushDetected(const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
   BT::NodeStatus tick();
-  
+  void proxUpdate(const std_msgs::msg::Float32::SharedPtr v, bool right);
+
 private:
   std::shared_ptr<rclcpp::Node> node_ptr_;
-	std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<TankModel> tank_model_ptr_;
   std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
   BT::Blackboard::Ptr blackboard_;
 
+  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr goal_rush_proxmity_sub_l_;
+  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr goal_rush_proxmity_sub_r_;
+
+
   double start_time_ = 0.0;
+  float goal_rush_l_ = 0;
+  float goal_rush_r_ = 0;
 };
 
 } // ghost_tank

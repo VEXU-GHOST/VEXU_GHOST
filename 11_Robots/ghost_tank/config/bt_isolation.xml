@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main_tree">
+      main_tree_to_execute="test_color_sensor">
   <include path="bt_goal_rush.xml"/>
   <include path="bt_goal_rush_middle.xml"/>
   <include path="bt_pos_corner.xml"/>
@@ -20,6 +20,19 @@
     </Sequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="test_color_sensor">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <GoalRushCmd arm_down="true"
+                  clamp="false"/>
+ 
+      <GoalRushDetected right="false" threshold="100"/>
+      <GoalRushCmd arm_down="false"
+                  clamp="true"/>
+      <WaitCmd seconds="200.0"
+                shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
   <BehaviorTree ID="test_integral">
     <Sequence>
       <SetMirrored mirrored="false"/>
