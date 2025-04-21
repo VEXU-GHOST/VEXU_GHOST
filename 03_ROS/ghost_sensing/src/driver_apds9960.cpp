@@ -6,7 +6,6 @@ namespace ghost_sensing {
 color_sensor_apds9960::color_sensor_apds9960(std::shared_ptr<tcs_i2c_interface> iface, uint8_t address)
 : m_i2c_communication(iface), address(address)
 {
-    // ...existing code...
 }
 
 color_sensor_apds9960::~color_sensor_apds9960()
