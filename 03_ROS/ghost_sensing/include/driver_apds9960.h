@@ -150,7 +150,6 @@ private:
         uint8_t index;
     } gesture_data_;
 
-    // ...additional private members and helper functions as needed...
 };
 
 } // namespace ghost_sensing
