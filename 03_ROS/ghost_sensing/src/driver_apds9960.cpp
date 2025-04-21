@@ -10,7 +10,6 @@ color_sensor_apds9960::color_sensor_apds9960(std::shared_ptr<tcs_i2c_interface> 
 
 color_sensor_apds9960::~color_sensor_apds9960()
 {
-    // ...existing code...
 }
 
 bool color_sensor_apds9960::writeRegister(uint8_t reg, uint8_t data) {
