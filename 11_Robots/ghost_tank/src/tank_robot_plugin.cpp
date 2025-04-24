@@ -923,7 +923,7 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
   rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
 
   m_loop_current_limits.push_back(ground_pickup_current);
-  m_loop_current_limits.push_back(conveyor_current);
+  m_loop_current_limits.push_back(conveyor_current*2.0);
 }
 
 void TankRobotPlugin::updateBite(std::shared_ptr<JoystickDeviceData> joy_data)
