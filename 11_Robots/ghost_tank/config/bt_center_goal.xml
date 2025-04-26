@@ -69,7 +69,7 @@
           </Timeout>
           <ConveyorCmd fwd="true"/>
         </Fallback>
-        <MoveToPoseBezier posX_tiles="3.5"
+        <MoveToPoseBezier posX_tiles="3.7"
                               posY_tiles="1.4"
                               theta_deg="-135.0"
                               search_radius_m="0.3"

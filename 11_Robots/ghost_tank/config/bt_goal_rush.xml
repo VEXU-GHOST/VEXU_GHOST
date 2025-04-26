@@ -43,9 +43,9 @@
                 <!-- shutoff_motors="true"/> -->
 
       <Logging message="pulling_back"/>
-      <MoveToPoseBezier posX_tiles="1.9"
-                            posY_tiles="1.75"
-                            theta_deg="110.0"
+      <MoveToPoseBezier posX_tiles="1.5"
+                            posY_tiles="1.5"
+                            theta_deg="135.0"
                             search_radius_m="0.3"
                             threshold_m="0.20"
                             angle_threshold_deg="3.0"

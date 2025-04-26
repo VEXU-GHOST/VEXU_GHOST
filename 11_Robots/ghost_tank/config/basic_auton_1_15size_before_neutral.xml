@@ -107,7 +107,7 @@
       <MoveToPoseBezier posX_tiles="1.0"
                               posY_tiles="1.0"
                               theta_deg="180.0"
-                              search_radius_m="0.05"
+                              search_radius_m="0.3"
                               threshold_m="0.02"
                               angle_threshold_deg="1.0"
                               threshold_vel_mps="0.1"

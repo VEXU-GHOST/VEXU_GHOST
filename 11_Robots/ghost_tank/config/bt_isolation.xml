@@ -19,7 +19,7 @@
       <SubTree ID="basic_auton_1" _autoremap="true"/>
       <SubTree ID="basic_auton_1_end" _autoremap="true"/>
       
-      <!-- <SubTree ID="neutral_stake" _autoremap="true"/> -->
+      <SubTree ID="neutral_stake" _autoremap="true"/>
       
       <!-- <SubTree ID="pos_corner" _autoremap="true"/> -->
       <Logging message="Auton Complete"/>
@@ -143,6 +143,7 @@
   <BehaviorTree ID="test_intake">
     <Sequence>
       <SetMirrored mirrored="false"/>
+      <SetColorTarget target_red="false"/>
       <Logging message="test"/>
       <IntakeCmd auto="true"
                  ground_intake="false"/>
