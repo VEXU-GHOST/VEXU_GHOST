@@ -3,7 +3,9 @@
   <BehaviorTree ID="center_goal">
     <Sequence>
       <Logging message="Going to goal"/>
-      <BiteCmd bite_closed="true"/>
+      <BiteCmd bite_closed="false"/>
+      <ClampCmd clamp_closed="false"/>
+
       <MoveToPoseBezier posX_tiles="2.2"
                             posY_tiles="1.0"
                             theta_deg="180.0"
@@ -18,22 +20,33 @@
                             timeout_ms="-2000"
                             use_theta="true"
                             backwards="true"/>
-      <ShutoffNode/>
+      <!-- Move closer to goal again slower for precision -->
+        <!-- <MoveToPoseBezier posX_tiles="3.3"
+                        posY_tiles="1.1"
+                        theta_deg="180.0"
+                        search_radius_m="0.3"
+                        threshold_m="0.10"
+                        angle_threshold_deg="3.0"
+                        threshold_vel_mps="0.1"
+                        angle_threshold_vel_dps="1.0"
+                        lead="1.0"
+                        max_speed_linear_pct="0.3"
+                        max_speed_angular_pct="1.0"
+                        timeout_ms="-2000"
+                        use_theta="true"
+                        backwards="true"/>
+      <ClampCmd clamp_closed="true"/> -->
       <BiteCmd bite_closed="true"/>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="false"/>
 
       <Logging message="Back Up Further and Clamp Goal"/>
       <ParallelAll>
         <Fallback>
-          <Timeout msec="700">
+          <Timeout msec="1000">
             <KeepRunningUntilFailure>
               <Sequence>
                 <ClampCmd clamp_closed="false"/>
-                <GoalRushCmd arm_down="false"
-                    clamp="false"/>
+                <GoalRushCmd arm_down="false"/>
               </Sequence>
             </KeepRunningUntilFailure>
           </Timeout>
@@ -42,7 +55,7 @@
         <MoveToPoseBezier posX_tiles="3.2"
                             posY_tiles="0.9"
                             theta_deg="180.0"
-                            search_radius_m="0.3"
+                            search_radius_m= "0.1"
                             threshold_m="0.05"
                             angle_threshold_deg="3.0"
                             threshold_vel_mps="0.1"

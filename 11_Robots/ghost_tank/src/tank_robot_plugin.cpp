@@ -510,8 +510,8 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
-  bool shift1 = joy_data->btn_y; 
-  bool shift2 = joy_data->btn_r; 
+  bool shift1 = joy_data->btn_b; 
+  bool shift2 = joy_data->btn_d; 
 
   if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
     joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
