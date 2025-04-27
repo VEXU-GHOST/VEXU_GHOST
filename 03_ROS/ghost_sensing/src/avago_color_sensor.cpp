@@ -36,12 +36,13 @@
  */
 
 // To run: colcon build --symlink-install --packages-up-to ghost_sensing && ros2 run ghost_sensing tcs_color_sensor --ros-args -p system_i2c_bus_path:=/dev/i2c-7
-#include <ghost_sensing/tcs_color_sensor.hpp>
+#include <ghost_sensing/avago_color_sensor.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 // https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
 // https://chatgpt.com/share/679f0740-6d9c-800c-98c3-25346862aadc
 std_msgs::msg::ColorRGBA rgbc2hsv(std_msgs::msg::ColorRGBA rgb)
+// TODO DEDUPE FROM TCS
 {
   auto hsv = std_msgs::msg::ColorRGBA();
 
@@ -86,8 +87,8 @@ std_msgs::msg::ColorRGBA rgbc2hsv(std_msgs::msg::ColorRGBA rgb)
 using std::chrono_literals::operator""s;
 namespace ghost_sensing
 {
-TCSColorSensorNode::TCSColorSensorNode()
-: rclcpp::Node("tcs_color_sensor_node")
+AvagoColorSensorNode::AvagoColorSensorNode()
+: rclcpp::Node("avago_color_sensor_node")
 {
   declare_parameter("system_i2c_bus_path", "/dev/i2c-null"); // required argument
   auto i2c_bus_path = get_parameter("system_i2c_bus_path").as_string();
@@ -96,78 +97,92 @@ TCSColorSensorNode::TCSColorSensorNode()
   m_poll_freq = get_parameter("poll_frequency").as_double();
 
 
+  declare_parameter("address", -1);
+  int address = get_parameter("address").as_int();
+
+
   uint8_t res;
 
   auto iface = std::make_shared<tcs_i2c_interface>(i2c_bus_path, this->get_logger());
   res = iface->init();
   if (res == 1) {
     RCLCPP_FATAL(
-      this->get_logger(), "tcs34725 color sensor: %s bus does not exist\n", i2c_bus_path.c_str());
+      this->get_logger(), "avago color sensor: %s bus does not exist\n", i2c_bus_path.c_str());
     rclcpp::shutdown();
   }
 
-  m_sensor = std::make_shared<color_sensor_tcs34725>(iface);
+  m_sensor = std::make_shared<color_sensor_apds9960>(iface, address);
 
   m_publish_timer =
     this->create_wall_timer(
     std::chrono::seconds(1) / m_poll_freq,
-    std::bind(&TCSColorSensorNode::timer_poll_color_sensor, this));
+    std::bind(&AvagoColorSensorNode::timer_poll_color_sensor, this));
 
-
+  int success = init();
+  if (!success) {
+    RCLCPP_WARN(this->get_logger(), "avago color sensor: init failed.\n");
+  }
   // to change topic names (perhaps when using multiple color sensors), use the ros remap function
   m_rgb_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("rgb", 10);   // whats 10, doesn't matter other nodes also use it
   m_hsv_pub = this->create_publisher<std_msgs::msg::ColorRGBA>("hsv", 10);
+  m_prox_pub = this->create_publisher<std_msgs::msg::Float32>("proximity", 10);
 
   printf("INIT FINISHED\n");
 }
 
-void TCSColorSensorNode::timer_poll_color_sensor()
+int AvagoColorSensorNode::init()
 {
-  const float max_sensor_val = (1 << 16) - 1;
+  int success = m_sensor->init() && // TODO handle + rerun on crash
+    m_sensor->enableProximitySensor() && // TODO handle + rerun on crash
+    m_sensor->enableLightSensor() && // TODO handle + rerun on crash
+    m_sensor->enablePower(); // TODO handle + rerun on crash
+  return success;
+}
+void AvagoColorSensorNode::timer_poll_color_sensor()
+{
+  const float max_color_val = (1 << 16) - 1;
+  const float max_prox_val = (1 << 8) - 1; // TODO, this should be dynamic based on sizeof prox, sizeof color val
   if (m_delay_loops-- > 0) {
     return;
   }
   auto msg_rgb = std_msgs::msg::ColorRGBA();
-  uint16_t r = 0, g = 0, b = 0, c = 0;
-  int rgbc = m_sensor->read_rgbc(&r, &g, &b, &c);
+  auto msg_prox = std_msgs::msg::Float32();
+  ghost_sensing::color_sensor_apds9960::sensor_data_t s = {0};
+  bool success = m_sensor->readAllSensors(s);
+  //RCLCPP_INFO(this->get_logger(), "YO success: %d valid: %d red: %d green: %d blue: %d proximity: %d", success, s.valid, s.red, s.green, s.blue, s.proximity);
+
 
   //rgbc = 0, r = 1 << 12, g =0 , b = 1<<16 - 1; // for testing only
-  if (rgbc == 1 || (r == 0 && g == 0 && b == 0 && c == 0)) {
+  if (success == false || (s.red == 0 && s.green == 0 && s.blue == 0 && s.clear == 0 && s.proximity == 0)) {
     // could not communicate or got all zeros which should realistically never happen since we dont clear the registers
     // there might be a better way to check uninitalized sensor, but simple solution rn is that values are all 0 which will never happen unless its perfectly dark which it will never be
     // TODO
-    int res = m_sensor->init();
-    if (res != 0) {
-      RCLCPP_WARN(this->get_logger(), "tcs34725 color sensor: init failed.\n");
+    int success = init();
+    if (!success) {
+      RCLCPP_WARN(this->get_logger(), "avago color sensor: init failed.\n");
     }
     m_delay_loops = 100;
     return;
-  } else if (rgbc == 4) {
-    // data not ready yet
-    return;
   }
 
-  msg_rgb.r = r / max_sensor_val;
-  msg_rgb.g = g / max_sensor_val;
-  msg_rgb.b = b / max_sensor_val;
-  msg_rgb.a = c / max_sensor_val;
+  msg_rgb.r = s.red / max_color_val;
+  msg_rgb.g = s.green / max_color_val;
+  msg_rgb.b = s.blue / max_color_val;
+  msg_rgb.a = s.clear / max_color_val;
+  msg_prox.data = s.proximity / max_prox_val;
 
   auto msg_hsv = rgbc2hsv(msg_rgb);
 
   m_rgb_pub->publish(msg_rgb);
   m_hsv_pub->publish(msg_hsv);
-
-  //printf(
-  //  "r: %f g: %f b: %f a: %f | h: %f s: %f v: %f a: %f\n",
-  //  msg_rgb.r, msg_rgb.g, msg_rgb.b, msg_rgb.a,
-  //  msg_hsv.r, msg_hsv.g, msg_hsv.b, msg_hsv.a);
+  m_prox_pub->publish(msg_prox);
 }
 
 }
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ghost_sensing::TCSColorSensorNode>());
+  rclcpp::spin(std::make_shared<ghost_sensing::AvagoColorSensorNode>());
   rclcpp::shutdown();
   return 0;
 }

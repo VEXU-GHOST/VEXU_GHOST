@@ -200,6 +200,8 @@ competition_state_machine_node:
         val_min: 0.01
         val_max: 1.0
 
+    system_i2c_bus_path: "/dev/i2c-7"
+
 # If you are using the sweve model and you are tuning the k1-9 parameters,
 # the swerve model plugin has its own duplicate (11_Robots/ghost_high_stakes/config/ros_config.yaml) of the k1-9 parameters that must
 # be changed as well as this file. TODO: make a class for this

@@ -26,16 +26,37 @@
 namespace ghost_tank
 {
 
+using std::placeholders::_1;
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
 GoalRushDetected::GoalRushDetected(
   const std::string & name, const BT::NodeConfig & config)
-: BT::SyncActionNode(name, config)
+: BT::SyncActionNode(name, config), goal_rush_l_(0), goal_rush_r_(0)
 {
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
+
+  goal_rush_proxmity_sub_l_ =
+    node_ptr_->create_subscription<std_msgs::msg::Float32>(
+    "/sensors/color_sensors/goal_rush_l/proximity", 10,
+    [this](const std_msgs::msg::Float32::SharedPtr msg) {this->proxUpdate(msg, false);});
+
+  goal_rush_proxmity_sub_r_ =
+    node_ptr_->create_subscription<std_msgs::msg::Float32>(
+    "/sensors/color_sensors/goal_rush_r/proximity", 10,
+    [this](const std_msgs::msg::Float32::SharedPtr msg) {this->proxUpdate(msg, true);});
+
+}
+
+void GoalRushDetected::proxUpdate(const std_msgs::msg::Float32::SharedPtr v, bool right)
+{
+  if (right) {
+    goal_rush_r_ = v->data;
+  } else {
+    goal_rush_l_ = v->data;
+  }
 }
 
 // It is mandatory to define this STATIC method.
@@ -43,6 +64,8 @@ BT::PortsList GoalRushDetected::providedPorts()
 {
   // This action has a single input port called "message"
   return {
+    BT::InputPort<float>("threshold"),
+    BT::InputPort<bool>("right"),
   };
 }
 
@@ -50,27 +73,10 @@ BT::NodeStatus GoalRushDetected::tick()
 {
 
   static int count = 0;
-  // double timeout = BT_Util::get_input<double>(this, "timeout");
-  // if (start_time_ == 0.0) {
-  // BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", start_time_);
-  // }
-  // double current_time = 0.0;
-  // BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
-  // if (current_time - start_time_ > timeout) {
-  // return BT::NodeStatus::SUCCESS;
-  // }
-  std::unordered_map<std::string, int> digital_io_port_map;
-  BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
+  float thresh = BT_Util::get_input<float>(this, "threshold");
+  float val = BT_Util::get_input<bool>(this, "right") ? goal_rush_r_ : goal_rush_l_;
 
-  if (rhi_ptr_->getDigitalIOValue(digital_io_port_map["goal_rush_sensor"])) {
-    std::cout << "Increment!" << std::endl;
-    count++;
-  } else {
-    count = 0;
-  }
-
-  bool goal_detected = (count >= 1);
-  if (goal_detected) {
+  if (val > thresh) {
     return BT::NodeStatus::SUCCESS;
   }
 
