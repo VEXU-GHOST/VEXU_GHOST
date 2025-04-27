@@ -24,7 +24,10 @@
       <SetMirrored mirrored="false"/>
       <Logging message="Auton stated"/>
       <ReactiveFallback>
-        <GoalFightDetected velo_threshold="0.01"/>
+        <GoalFightDetected velo_threshold_mps="0.01"
+                          logging="true"
+                          time_threshold_seconds="2.0"
+                          fight_detected="{goal_rush_fighting}"/>
         <MoveToPoseBezier  posX_tiles="-1.0"
                             posY_tiles="0.0"
                             theta_deg="0.0"
@@ -38,7 +41,14 @@
                             use_theta="true"
                             backwards="true"/>
       </ReactiveFallback>
-      
+
+      <Sequence _skipIf="goal_rush_fighting==false">
+        <Logging message="test"/>
+      </Sequence>
+
+
+
+      <!-- <Logging message="{goal_rush_fighting}"/> -->
       <Logging message="Auton Complete"/>
       <WaitCmd seconds="500.0"
                 shutoff_motors="true"/>

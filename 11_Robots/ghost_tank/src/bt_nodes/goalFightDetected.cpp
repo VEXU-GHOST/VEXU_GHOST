@@ -47,7 +47,10 @@ BT::PortsList GoalFightDetected::providedPorts()
 {
   // This action has a single input port called "message"
   return {
-    BT::InputPort<double>("velo_threshold"),
+    BT::InputPort<double>("velo_threshold_mps"),
+    BT::InputPort<double>("time_threshold_seconds"),
+    BT::InputPort<bool>("logging", false, "whether to log"),
+    BT::OutputPort<bool>("fight_detected"),
   };
 }
 
@@ -74,37 +77,43 @@ BT::NodeStatus GoalFightDetected::tick()
   //tank_model_ptr_->getWorldTwist();
   //BT_Util::put_in_blackboard(blackboard_, "fwd_cmd", fwd_cmd);
 
-  double velo_threshold = BT_Util::get_input<double>(this, "velo_threshold");//gets value from xml input
+  double velo_threshold = BT_Util::get_input<double>(this, "velo_threshold_mps");//gets value from xml input
+  double time_threshold = BT_Util::get_input<double>(this, "time_threshold_seconds");//gets value from xml input
+  bool logging = BT_Util::get_input<bool>(this, "logging");//gets value from xml input
   static bool initial_time_bool = false;
   double initial_time;
   double current_time;
   double fwd_cmd;
   double curr_vel;
 
-  if (initial_time_bool != true) {
-    initial_time_bool = true;
-    BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", initial_time);
-  }
-
+  
   BT_Util::get_from_blackboard(blackboard_, "fwd_cmd", fwd_cmd, 0.0);
-
+  
   auto twist = tank_model_ptr_->getWorldTwist();
   curr_vel = pow(((twist.x() * twist.x()) + twist.y() * twist.y()), 0.5);
   double max_linearspeed = tank_model_ptr_->getMaxBaseLinearVelocity();
   double supposed_speed = fwd_cmd * max_linearspeed;
-
-  // RCLCPP_INFO(node_ptr_->get_logger(), "looking for fight: %f - %f", supposed_speed, curr_vel);
-
+  
+  if (logging){
+    RCLCPP_INFO(node_ptr_->get_logger(), "looking for fight: %f - %f", supposed_speed, curr_vel);
+  }
+  
   if ((abs(abs(supposed_speed) - curr_vel)) > velo_threshold) {//how fast its suppose to go vs how fast its going rn vs threshold
-    RCLCPP_INFO(node_ptr_->get_logger(), "moving too slow: %f", abs(supposed_speed - curr_vel));
-
-    BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
-    RCLCPP_INFO(node_ptr_->get_logger(), "for: %f sec", current_time - initial_time);
-    if (current_time - initial_time > 3) {
-      return BT::NodeStatus::SUCCESS;
+    if (initial_time_bool != true) {
+      initial_time_bool = true;
+      BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", initial_time);
+    } else {
+      BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
+      if (logging){
+        RCLCPP_INFO(node_ptr_->get_logger(), "moving too slow: %f", abs(supposed_speed - curr_vel));
+        RCLCPP_INFO(node_ptr_->get_logger(), "for: %f sec", current_time - initial_time);
+      }
+      if (current_time - initial_time > time_threshold) {
+        return BT::NodeStatus::SUCCESS;
+      }
     }
-    // twist = tank_model_ptr_->getWorldTwist();
-    //curr_vel = std::pow(((twist.x() * twist.x()) + twist.y() * twist.y()), (1 / 2));
+  } else {
+    initial_time_bool = false;
   }
 
   return BT::NodeStatus::FAILURE;
