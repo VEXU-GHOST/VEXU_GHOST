@@ -30,6 +30,7 @@
  #include "ghost_tank/tank_tree.hpp"
  #include "ghost_tank/bt_nodes/bt_util.hpp"
  #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+ #include "ghost_tank/tank_model.hpp"
 
 namespace ghost_tank
 {
