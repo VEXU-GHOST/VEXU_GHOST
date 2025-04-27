@@ -31,6 +31,7 @@ using std::placeholders::_1;
 
 namespace ghost_example_robot
 {
+}
 
 GhostExampleRobot::GhostExampleRobot()
 {
@@ -60,28 +61,14 @@ void GhostExampleRobot::autonomous(double current_time)
 
 void GhostExampleRobot::teleop(double current_time)
 {
-  static char control_scheme = '';
+  static char control_scheme = ' ';
   static int loop_count = 0;
-  double a = -5/16;
-  double b = 45/16;
-  double c = -75/16;
-  double d = 35/16;
+  static bool moving_forward = false;
+  static bool moving_backward = false;
+  static double move_start_time = 0.0;
+  static double move_duration = 4.0; //complete pd move in 4 sec
   double kd = 0.01;
   double kp = 0.1;
-
-  double est_position(double time) {
-    return a*t*t*t + b*t*t + c*t + d;
-  }
-  double est_velocity(double time) {
-    return 3*a*t*t + 2*b*t + c;
-  }
-  double est_acceleration(double time) {
-    return 6*a*t + 2*b;
-  }
-  
-
-
-
 
   if (loop_count++ % 100 == 0) {
     std::cout << "Teleop " << current_time << std::endl;
@@ -89,46 +76,12 @@ void GhostExampleRobot::teleop(double current_time)
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
 
-  if (joy_data->btn_a) {
-    std::cout << "Button A!" << std::endl;
-  } else if (joy_data->btn_b) {
-    std::cout << "Button B!" << std::endl;
-  } else if (joy_data->btn_x) {
-    std::cout << "Button X!" << std::endl;
-  } else if (joy_data->btn_y) {
-    std::cout << "Button Y!" << std::endl;
-  } else if (joy_data->btn_u) {
-    std::cout << "Button U!" << std::endl;
-  } else if (joy_data->btn_d) {
-    std::cout << "Button D!" << std::endl;
-  } else if (joy_data->btn_l) {
-    std::cout << "Button L!" << std::endl;
-  } else if (joy_data->btn_r) {
-    std::cout << "Button R!" << std::endl;
-  } else if (joy_data->btn_l1) {
-    std::cout << "Button L1!" << std::endl;
-  } else if (joy_data->btn_l2) {
-    std::cout << "Button L2!" << std::endl;
-  }
-
-  // Print joystick data!
-  if (joy_data->btn_r1) {
-    // Left joystick up-down axis is "left_y", left-right axis is "left_x"
-    // Right joystick up-down axis is "right_y", left-right axis is "right_x"
-    std::cout << "Left X: " << joy_data->left_x << std::endl;
-    std::cout << "Left Y: " << joy_data->left_y << std::endl;
-    std::cout << "Right X: " << joy_data->right_x << std::endl;
-    std::cout << "Right Y: " << joy_data->right_y << std::endl;
-    std::cout << std::endl;
-  }
-
   //updata control scheme
   if(joy_data->btn_a) {
     control_scheme = 'a';
   } else if(joy_data->btn_b) {
     control_scheme = 'b';
   }
-
 
   // Tank drive if button a is pressed
   if (control_scheme == 'a') {
@@ -146,57 +99,26 @@ void GhostExampleRobot::teleop(double current_time)
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
 
-    // Now we can get motor data and print it.
-    double left_position = rhi_ptr_->getMotorPosition("left_motor");
-    double right_position = rhi_ptr_->getMotorPosition("right_motor");
-
-    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
-    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
-    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
-    std::cout << std::endl;
-  } else {
-    // Don't forget to turn motors off!
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
   }
-
-  // Arcade drive if button b is pressed
-  if (control_scheme == 'b') {
-    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
+  else if (control_scheme == 'b') {
     double forward_val = joy_data->left_y / 127.0;
     double angular_val = joy_data->right_x / 127.0;
-    double threashold = 0.05;
+    double threshold = 0.05;
 
-    if(std::abs(forward_val) < threashold) {
+    if (std::abs(forward_val) < threshold) {
       forward_val = 0.0;
     }
-
-    if(std::abs(angular_val) < threashold) {
+    if (std::abs(angular_val) < threshold) {
       angular_val = 0.0;
     }
-    
-    // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
+
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", forward_val + angular_val);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", forward_val - angular_val);
 
-    // Each motor has a current limit that defaults to zero.
-    // This is so we can carefully allocate battery power between systems.
-    // If we don't set these, the motors will be extremely weak, if they move at all.
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
-
-    // Now we can get motor data and print it.
-    double left_position = rhi_ptr_->getMotorPosition("left_motor");
-    double right_position = rhi_ptr_->getMotorPosition("right_motor");
-
-    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
-    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
-    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
-    std::cout << std::endl;
-  } else {
+  }
+  else {
     // Don't forget to turn motors off!
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
@@ -204,20 +126,72 @@ void GhostExampleRobot::teleop(double current_time)
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
   }
-  //pd forward 10 inches
-  if(joy_data->btn_u) {
-    double threashold = 0.5;
-    do{
-    double pos_degrees = rhi_ptr_->getMotorPosition * 3;
-    double pos_in = pos_degrees / 360 * 4 * 3.141593;
-    double vel_in = rhi_ptr_->getMotorVelocityRPM * 60 * 4 * 3.141593;
-    double torque = est_acceleration(current_time) + kd * (vel_in - est_velocity(current_time)) + kp * (pos_in - est_position(current_time));
-    double mortor_percentage = torque/(8.4375 + kd * 2.8125 - kp * 1.875);
-    rhi_ptr_->setMotorVoltageCommandPercent("left_mortor", mortor_percentage);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", mortor_percentage);
-    } while(rhi_ptr_->abs(getMotorCurrentMA) > threashold);
+
+  auto est_position = [](double t, bool forward) {
+    double a = forward ? -5.0 / 16.0 : 5.0 / 16.0;
+    double b = forward ? 15.0 / 8.0 : -15.0 / 8.0;
+    double c = 0;
+    double d = 0;
+    return a * t * t * t + b * t * t + c * t + d;
+  };
+
+  auto est_velocity = [](double t, bool forward) {
+    double a = forward ? -5.0 / 16.0 : 5.0 / 16.0;
+    double b = forward ? 15.0 / 8.0 : -15.0 / 8.0;
+    double c = 0;
+    return 3 * a * t * t + 2 * b * t + c;
+  };
+
+  auto est_acceleration = [](double t, bool forward) {
+    double a = forward ? -5.0 / 16.0 : 5.0 / 16.0;
+    double b = forward ? 15.0 / 8.0 : -15.0 / 8.0;
+    return 6 * a * t * t +  2 * b;
+  };
+
+  if(joy_data->btn_u && !moving_forward && !moving_backward) {
+    moving_forward = true;
+    move_start_time = current_time;
   }
-}
+
+  if(joy_data->btn_d && !moving_forward && !moving_backward) {
+    moving_backward = true;
+    move_start_time = current_time;
+  }
+
+  if(moving_forward || moving_backward) {
+    double t = current_time - move_start_time;
+    bool forward = moving_forward; //moving forward if true, moving backward if false.
+
+    double goal_pos = est_position(t, forward);
+    double goal_vel = est_velocity(t, forward);
+    double goal_acc = est_acceleration(t, forward); 
+
+    double pos_degrees = rhi_ptr_->getMotorPosition("left_motor");
+    double pos_in = pos_degrees / 360.0 * 2.75 * 3.14159;
+    double vel_rpm = rhi_ptr_->getMotorVelocityRPM("left_motor");
+    double vel-in = vel_rpm / 60.0  * 2.75 * 3.14159;
+
+    double error_pos = goal_pos - pos_in;
+    double error_vel = goal_vel - vel_in; 
+
+    double output = goal_acc + error_vel * kd + error_pos * kp;
+    double factor = 3.75 + 0 * kd - kp * 10;
+    double final_percentage = output/factor;
+    double torque = std::max(std::min(final_percentage, 1.0), -1.0); //Limit percentage from -1.0 to 1.0
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", motor_percentage);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", motor_percentage);
+
+    //stop when motion profile reaches end
+    if(t > move_duration) {
+      moving_forward = false;
+      moving_backward = false;
+      rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+      rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+    }
+  }
 } // namespace ghost_example_robot
 
 PLUGINLIB_EXPORT_CLASS(
