@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+      main_tree_to_execute="main">
+
+  <BehaviorTree ID="main">
+    <Sequence>
+      <Logging message="test"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Decorator ID="AutonTimer"
+            editable="true">
+      <input_port name="seconds"/>
+    </Decorator>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+      main_tree_to_execute="main_tree">
+  <include path="bt_goal_rush.xml"/>
+  <include path="bt_goal_rush_middle.xml"/>
+  <include path="bt_pos_corner.xml"/>
+  <include path="bt_neg_corner.xml"/>
+  <include path="bt_score_neutral.xml"/>
+  <include path="bt_skills.xml"/>
+  <include path="bt_neutral_stake.xml"/>
+  <include path="basic_auton_1_15size_before_neutral.xml"/>
+  <include path="basic_auton_1_15size_end.xml"/>
+  <BehaviorTree ID="main_tree">
+        <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
+    <Sequence>
+      <SetMirrored mirrored="true"/>
+      <SetColorTarget target_red="false"/>
+      <SubTree ID="goal_rush" _autoremap="true"/>
+      <SubTree ID="basic_auton_1" _autoremap="true"/>
+      <SubTree ID="basic_auton_1_end" _autoremap="true"/>
+      
+      <SubTree ID="neutral_stake" _autoremap="true"/>
+      
+      <!-- <SubTree ID="pos_corner" _autoremap="true"/> -->
+      <Logging message="Auton Complete"/>
+      <WaitCmd seconds="500.0"
+                shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test_integral">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <!-- <Logging message="test"/> -->
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="600">
+            <KeepRunningUntilFailure>
+              <ClampCmd clamp_closed="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ClampCmd clamp_closed="true"/>
+        </Fallback>
+      <MoveToPoseBezier  posX_tiles="2.0"
+                          posY_tiles="1.0"
+                          theta_deg="45.0"
+                          search_radius_m="0.2"
+                          threshold_m="0.05"
+                          angle_threshold_deg="1.0"
+                          lead="0.8"
+                          max_speed_linear_pct="0.3"
+                          max_speed_angular_pct="0.3"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="false"/>
+      </ParallelAll>
+      <WaitCmd seconds="2.0"
+                shutoff_motors="true"/>
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="600">
+            <KeepRunningUntilFailure>
+              <ClampCmd clamp_closed="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ClampCmd clamp_closed="true"/>
+        </Fallback>
+        <MoveToPoseBezier  posX_tiles="2.0"
+                          posY_tiles="1.0"
+                          theta_deg="135.0"
+                          search_radius_m="0.2"
+                          threshold_m="0.1"
+                          angle_threshold_deg="1.0"
+                          lead="0.8"
+                          max_speed_linear_pct="0.3"
+                          max_speed_angular_pct="0.3"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="true"/>
+      </ParallelAll>
+      <WaitCmd seconds="2.0"
+                shutoff_motors="true"/>
+      <!-- <SubTree ID="goal_rush" _autoremap="true"/> -->
+      
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test_mirrored">
+    <Sequence>
+      <SetMirrored mirrored="true"/>
+      <!-- <Logging message="test"/> -->
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
+      <MoveToPoseBezier  posX_tiles="4.0"
+                          posY_tiles="2.0"
+                          theta_deg="135.0"
+                          search_radius_m="0.2"
+                          threshold_m="0.05"
+                          angle_threshold_deg="1.0"
+                          lead="0.8"
+                          max_speed_linear_pct="0.3"
+                          max_speed_angular_pct="0.3"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="false"/>
+      <WaitCmd seconds="2.0"
+                shutoff_motors="true"/>
+      <MoveToPoseBezier  posX_tiles="5.0"
+                          posY_tiles="1.0"
+                          theta_deg="135.0"
+                          search_radius_m="0.2"
+                          threshold_m="0.1"
+                          angle_threshold_deg="1.0"
+                          lead="0.8"
+                          max_speed_linear_pct="0.3"
+                          max_speed_angular_pct="0.3"
+                          timeout_ms="-5000"
+                          use_theta="true"
+                          backwards="true"/>
+      <WaitCmd seconds="2.0"
+                shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test_rush">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <!-- <Logging message="test"/> -->
+      <GoalRushCmd arm_down="true"
+                  clamp="false"/>
+      <ReactiveFallback>
+        <GoalRushDetected/>
+        <WaitCmd seconds="3.0"
+                shutoff_motors="true"/>
+      </ReactiveFallback>
+      <GoalRushCmd arm_down="false"
+                  clamp = "true"/>
+      <WaitCmd seconds="1.0"
+                shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test_intake">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <SetColorTarget target_red="false"/>
+      <Logging message="test"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
+      <WaitCmd seconds="500.0"
+               shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="jerryiotest">
+    <Sequence>
+      <Logging message="test"/>
+      <MoveToPosePurepursuit fileName="~/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
+                             angle_threshold="165.0"
+                             threshold="0.2"
+                             timeout="1000"
+                             use_theta="false"/>
+      <Logging message="testover"/>
+      <ShutoffNode/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+            editable="true">
+      <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="ClampCmd"
+            editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
+    <Action ID="ConveyorCmd"
+            editable="true">
+      <input_port name="fwd"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+            editable="true">
+      <input_port name="arm_down"/>
+    </Action>
+    <Action ID="SetMirrored"
+            editable="true">
+      <input_port name="mirrored"/>
+    </Action>
+    <Action ID="SetColorTarget"
+            editable="true">
+      <input_port name="target_red"/>
+    </Action>
+    <Action ID="IntakeCmd"
+            editable="true">
+      <input_port name="auto"/>
+      <input_port name="ground_intake"/>
+    </Action>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPoseBoomerang"
+            editable="true">
+      <input_port name="posX_tiles"/>
+      <input_port name="posY_tiles"/>
+      <input_port name="theta_deg"/>
+      <input_port name="search_radius_m"/>
+      <input_port name="threshold_m"/>
+      <input_port name="angle_threshold_deg"/>
+      <input_port name="threshold_vel_mps"/>
+      <input_port name="angle_threshold_vel_dps"/>
+      <input_port name="lead"/>
+      <input_port name="max_speed_linear_pct"/>
+      <input_port name="max_speed_angular_pct"/>
+      <input_port name="timeout_ms"/>
+      <input_port name="use_theta"/>
+      <input_port name="backwards"/>
+    </Action>
+    <Action ID="MoveToPoseBezier"
+            editable="true">
+      <input_port name="posX_tiles"/>
+      <input_port name="posY_tiles"/>
+      <input_port name="theta_deg"/>
+      <input_port name="search_radius_m"/>
+      <input_port name="threshold_m"/>
+      <input_port name="angle_threshold_deg"/>
+      <input_port name="threshold_vel_mps"/>
+      <input_port name="angle_threshold_vel_dps"/>
+      <input_port name="lead"/>
+      <input_port name="max_speed_linear_pct"/>
+      <input_port name="max_speed_angular_pct"/>
+      <input_port name="timeout_ms"/>
+      <input_port name="use_theta"/>
+      <input_port name="backwards"/>
+    </Action>
+    <Action ID="MoveToPosePurepursuit"
+            editable="true">
+      <input_port name="fileName"/>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+      <input_port name="use_theta"
+                  default="false"/>
+    </Action>
+    <Action ID="ShutoffNode"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>
