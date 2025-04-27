@@ -199,6 +199,7 @@ set(NODES
   setColorTarget
   goalRushDetected
   goalFightDetected
+  goalDetected
 )
 
 foreach(NODE ${NODES})

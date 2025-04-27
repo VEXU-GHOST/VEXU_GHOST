@@ -6,7 +6,7 @@
       <GoalRushCmd arm_down="true"
                   clamp="false"/>
       <ReactiveFallback>
-        <GoalRushDetected>
+        <GoalRushDetected/>
         <MoveToPoseBezier  posX_tiles="1.5"
                             posY_tiles="2.4"
                             theta_deg="110.0"

@@ -28,7 +28,7 @@ namespace ghost_tank
 
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
-ConveyorCmd::ConveyorCmd(
+GoalDetected::GoalDetected(
   const std::string & name, const BT::NodeConfig & config)
 : BT::SyncActionNode(name, config)
 {
@@ -39,14 +39,14 @@ ConveyorCmd::ConveyorCmd(
 }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList ConveyorCmd::providedPorts()
+BT::PortsList GoalDetected::providedPorts()
 {
   // This action has a single input port called "message"
   return {
   };
 }
 
-BT::NodeStatus ConveyorCmd::tick()
+BT::NodeStatus GoalDetected::tick()
 {
   // double timeout = BT_Util::get_input<double>(this, "timeout");
   // if (start_time_ == 0.0) {

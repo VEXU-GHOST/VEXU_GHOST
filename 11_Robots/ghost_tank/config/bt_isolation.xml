@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main_tree">
+      main_tree_to_execute="test_fight">
   <include path="bt_goal_rush.xml"/>
   <include path="bt_goal_rush_middle.xml"/>
   <include path="bt_pos_corner.xml"/>
@@ -18,6 +18,33 @@
                 shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
+
+  <BehaviorTree ID="test_fight">
+    <Sequence>
+      <SetMirrored mirrored="false"/>
+      <Logging message="Auton stated"/>
+      <ReactiveFallback>
+        <GoalFightDetected velo_threshold="0.01"/>
+        <MoveToPoseBezier  posX_tiles="-1.0"
+                            posY_tiles="0.0"
+                            theta_deg="0.0"
+                            search_radius_m="0.2"
+                            threshold_m="0.05"
+                            angle_threshold_deg="1.0"
+                            lead="0.8"
+                            max_speed_linear_pct="0.3"
+                            max_speed_angular_pct="0.3"
+                            timeout_ms="5000"
+                            use_theta="true"
+                            backwards="true"/>
+      </ReactiveFallback>
+      
+      <Logging message="Auton Complete"/>
+      <WaitCmd seconds="500.0"
+                shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
 
   <BehaviorTree ID="test_integral">
     <Sequence>
