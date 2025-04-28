@@ -24,7 +24,9 @@
       <SetMirrored mirrored="false"/>
       <Logging message="Auton stated"/>
       <ReactiveFallback>
-        <GoalFightDetected velo_threshold_mps="0.01"
+        <GoalFightDetected _onSuccess="goal_rush_fighting:=true"
+                          _onFailure="goal_rush_fighting:=false"
+                          velo_threshold_mps="0.01"
                           logging="true"
                           time_threshold_seconds="2.0"
                           fight_detected="{goal_rush_fighting}"/>
@@ -41,7 +43,7 @@
                             use_theta="true"
                             backwards="true"/>
       </ReactiveFallback>
-
+      <!-- <Script code="goal_rush_fighting:={goal_rush_fighting}"/> -->
       <Sequence _skipIf="goal_rush_fighting==false">
         <Logging message="test"/>
       </Sequence>
