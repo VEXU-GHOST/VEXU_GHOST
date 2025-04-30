@@ -471,8 +471,8 @@ void TankRobotPlugin::autonomous(double current_time)
   // bool want_red = false;
   bool store_ring = false;
   if (bt_->get_variable("ring_detector_active", ring_detector_active) 
-    // && bt_->get_variable("want_red", want_red) &&
-    bt_->get_variable("store_ring", store_ring)
+    // && bt_->get_variable("want_red", want_red)
+    && bt_->get_variable("store_ring", store_ring)
   )
   {
     ringDetector(ring_detector_active, current_time, want_red, store_ring);
@@ -488,6 +488,18 @@ void TankRobotPlugin::autonomous(double current_time)
   if (bt_->get_variable("neutral_stake_pos", neutral_stake_pos)) {
     updateNeutralStakeArmPosition(neutral_stake_pos);
   }
+
+  if (bt_->get_variable("bite_closed", m_bite_closed)) {
+  }
+  if (bt_->get_variable("clamp_closed", m_clamp_closed)) {
+  }
+  if (bt_->get_variable("arm_down", m_goal_rush_active)) {
+  }
+
+  auto joy_data = rhi_ptr_->getMainJoystickData();
+  updateBite(joy_data);
+  updateClamp(joy_data);
+  updateGoalRush(joy_data);
 
   double fwd_cmd = 0.0;
   double turn_cmd = 0.0;
