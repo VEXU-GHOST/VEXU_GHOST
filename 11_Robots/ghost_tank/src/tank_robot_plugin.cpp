@@ -469,11 +469,13 @@ void TankRobotPlugin::autonomous(double current_time)
   bool ring_detector_active = false;
   bool want_red = m_color_target_red;
   // bool want_red = false;
+  bool store_ring = false;
   if (bt_->get_variable("ring_detector_active", ring_detector_active) 
-    // && bt_->get_variable("want_red", want_red)
+    // && bt_->get_variable("want_red", want_red) &&
+    bt_->get_variable("store_ring", store_ring)
   )
   {
-    ringDetector(ring_detector_active, current_time, want_red);
+    ringDetector(ring_detector_active, current_time, want_red, store_ring);
   }
 
   bool ground_intake_active = false;
@@ -547,7 +549,7 @@ void TankRobotPlugin::teleop(double current_time)
   updateDrivetrain(joy_data);
 }
 
-void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red)
+void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
 {
   static double last_input_time = 0.0;
   static double ring_found_time = 0.0;
@@ -621,7 +623,13 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
     hook = (retry_cycle < COOLDOWN_PERIOD);
   } else {
     // Normal hook logic
-    hook = ring_prewaited || (current_time - last_input_time < 0.5);
+    if (store_ring) {
+      // should not score the ring, will be stored in the center of the robot
+      hook = ring_prewaited;
+    } else {
+      // If not storing, keep hooks moving for an extra period of time to ensure scoring
+      hook = ring_prewaited || (current_time - last_input_time < 0.5);
+    }
   }
 
   bool ejecting = false;

@@ -147,7 +147,8 @@
       <SetColorTarget target_red="false"/>
       <Logging message="test"/>
       <IntakeCmd auto="true"
-                 ground_intake="false"/>
+                 ground_intake="false"
+                 store_ring="true"/>
       <WaitCmd seconds="500.0"
                shutoff_motors="true"/>
     </Sequence>
