@@ -75,7 +75,7 @@ competition_state_machine_node:
       neutral_stake_arm_loading_pos_deg: 35.0
       neutral_stake_arm_score_neutral_pos_deg: 110.0
       neutral_stake_arm_score_alliance_pos_deg: 170.0
-      neutral_stake_arm_down_pos_deg: 220.0
+      neutral_stake_arm_down_pos_deg: 240.0
 
       # motion planning
       move_to_pose_kp_xy: 2.2
@@ -133,7 +133,7 @@ competition_state_machine_node:
         ]
     particle_filter:
       world_frame: "map"
-      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldZeroLH.txt"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
 
       # Initial position
       # init_x: 0.508

@@ -6,17 +6,17 @@
     <Sequence>
       <Logging message="move to clear corner start pos"/>
       <MoveToPoseBezier posX_tiles="1.0"
-                            posY_tiles="1.0"
-                            theta_deg="-45.0" 
+                            posY_tiles="0.6"
+                            theta_deg="-135.0" 
                             search_radius_m="0.3"
                             threshold_m="0.05"
                             angle_threshold_deg="3.0"
                             threshold_vel_mps="0.1"
                             angle_threshold_vel_dps="1.0"
                             lead="0.5"
-                            max_speed_linear_pct="1.0"
+                            max_speed_linear_pct="0.6"
                             max_speed_angular_pct="1.0"
-                            timeout_ms="-2000"
+                            timeout_ms="-3000"
                             use_theta="false"
                             backwards="false"/>
       <!-- <ClampCmd clamp_closed= "true"/>   -->

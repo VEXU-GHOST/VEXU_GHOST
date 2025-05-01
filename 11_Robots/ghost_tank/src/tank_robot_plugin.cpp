@@ -498,8 +498,8 @@ void TankRobotPlugin::autonomous(double current_time)
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
   updateBite(joy_data);
-  updateClamp(joy_data);
-  updateGoalRush(joy_data);
+  updateClampController(false, false, joy_data);
+  updateGoalRush(joy_data, true);
 
   double fwd_cmd = 0.0;
   double turn_cmd = 0.0;
@@ -544,18 +544,19 @@ void TankRobotPlugin::teleop(double current_time)
   toggleBagRecorder(joy_data);
   // CONDITIONAL control mode dispatching
   if (shift1) {
-    updateNeutralStakeArmJoystick(true, shift2, joy_data); // Y-held mode
+    updateNeutralStakeArmJoystick(true, false, joy_data); // Y-held mode
     updateIntake(joy_data->btn_r2, joy_data->btn_r1,
       false, false,
       current_time);
   } else if (shift2) {
     updateClampController(shift1, shift2, joy_data);           // R-held mode
-    updateGoalRush(joy_data);
+    updateGoalRush(joy_data, true);
   } else {
     updateIntake(joy_data->btn_r2, joy_data->btn_r1,
                 joy_data->btn_l1, joy_data->btn_l2,
                 current_time);            // Default mode 
-    updateNeutralStakeArmJoystick(false, shift2, joy_data);            
+    updateNeutralStakeArmJoystick(false, false, joy_data);            
+    updateGoalRush(joy_data, false);
   }
   updateBite(joy_data);
   updateDrivetrain(joy_data);
@@ -769,46 +770,44 @@ void TankRobotPlugin::updateNeutralStakeArmPositionController(bool active, bool 
   double power = 0.0;
   int32_t current_ma = 0;
 
+  double position_error;
   bool command_given = false;
   if(active){
     // ---- Manual Control ----
     if (down_btn) {
       // Move forward (toward down)
-      power = 1;  // Tune this value
-      current_ma = 2500;
+      position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
       command_given = true;
     } else if (up_btn) {
       // Move backward (toward up)
-      power = -1;
-      current_ma = 2500;
+      position_error = (m_neutral_stake_arm_down_pos_deg - curr_pos);
       command_given = true;
     } else {
-      double position_error = (m_neutral_stake_arm_loading_pos_deg - curr_pos);
-      current_ma = 2500;
-      power = m_neutral_stake_arm_kp * position_error;
-      command_given = true; 
+      position_error = (m_neutral_stake_arm_loading_pos_deg - curr_pos);
+      if (abs(position_error) < 45.0){
+        command_given = true;
+      }
     }
-  } else {
-    double position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
     current_ma = 2500;
     power = m_neutral_stake_arm_kp * position_error;
-    command_given = true; 
-    // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-    // m_loop_current_limits.push_back(current_ma);
-    // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
+  } else {
+    position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
+    current_ma = 2500;
+    power = m_neutral_stake_arm_kp * position_error;
+    command_given = true;
   }
   // ---- Send Command ----
-  // if (command_given) {
+  if (command_given) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
     m_loop_current_limits.push_back(current_ma);
     rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
-  // } 
-  // else {
-  //   // Stop motor if no command needed
-  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", 0);
-  //   m_loop_current_limits.push_back(0);
-  //   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
-  // }
+  } 
+  else {
+    // Stop motor if no command needed
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", 0);
+    m_loop_current_limits.push_back(0);
+    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
+  }
 }
 
 
@@ -847,7 +846,7 @@ void TankRobotPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> 
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
 {
-  static bool first_r2 = false;
+  static bool first_r2 = true;
   static bool first_r2_started = false;
   // Manual Ground Pickup control
   double ground_pickup_power = 0;
@@ -968,20 +967,17 @@ void TankRobotPlugin::updateClampController(bool shift1, bool shift2, std::share
   //   clamp_btn_pressed = false;
   // }
 
+  // Close on R2 rising edge
+  if (joy_data->btn_r2) {
+    m_clamp_closed = true;
+  }
 
-    // Close on R2 rising edge
-    if (joy_data->btn_r2) {
-      m_clamp_closed = true;
-    }
-
-    // Open on L2 rising edge
-    if (joy_data->btn_l2) {
-      m_clamp_closed = false;
-    }
-  
+  // Open on L2 rising edge
+  if (joy_data->btn_l2) {
+    m_clamp_closed = false;
+  }
 
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
-
 }
 
 // pressing u takes over all right buttons
@@ -1018,14 +1014,21 @@ void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickD
   }
 }
 
-void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data)
+void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data, bool shift)
 {
-  static bool goal_rush_btn_pressed = false;
-  if (joy_data->btn_l1 && !goal_rush_btn_pressed) {
-    goal_rush_btn_pressed = true;
-    m_goal_rush_active = !m_goal_rush_active;
-  } else if (!joy_data->btn_l1) {
-    goal_rush_btn_pressed = false;
+  // static bool goal_rush_btn_pressed = false;
+  // if (joy_data->btn_l1 && !goal_rush_btn_pressed) {
+  //   goal_rush_btn_pressed = true;
+  //   m_goal_rush_active = !m_goal_rush_active;
+  // } else if (!joy_data->btn_l1) {
+  //   goal_rush_btn_pressed = false;
+  // }
+  if (shift){
+    if (joy_data->btn_l1){
+      m_goal_rush_active = true;
+    }
+  } else {
+    m_goal_rush_active = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
 }

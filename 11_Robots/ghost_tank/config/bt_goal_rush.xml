@@ -3,8 +3,7 @@
   <BehaviorTree ID="goal_rush">
     <Sequence>
       <Logging message="goal_rush"/>
-      <GoalRushCmd arm_down="true"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="true"/>
       <IntakeCmd auto="false"
                  ground_intake="true"/>
       <ParallelAll>

@@ -106,7 +106,7 @@ protected:
  
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, bool shift);
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
@@ -225,8 +225,8 @@ protected:
 
   bool m_use_backup_estimator = false;
   bool m_reset_world_pose = false;
-  bool m_clamp_closed{true};
-  bool m_bite_closed{true};
+  bool m_clamp_closed{false};
+  bool m_bite_closed{false};
   bool m_goal_rush_active{false};
   bool m_goal_rush_clamp_active{false};
 

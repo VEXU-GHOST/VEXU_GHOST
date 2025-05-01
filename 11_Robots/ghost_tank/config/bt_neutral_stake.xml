@@ -2,21 +2,42 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="neutral_stake">
     <Sequence>
+      <BiteCmd bite_closed="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"
+                 store_ring="true"/>
+      <MoveToPoseBezier  posX_tiles="3.0"
+                          posY_tiles="0.6"
+                          theta_deg="0.0"
+                          search_radius_m="0.25"
+                          threshold_m="0.02"
+                          angle_threshold_deg="5.0"
+                          threshold_vel_mps="0.1"
+                          angle_threshold_vel_dps="1.0"
+                          lead="0.3"
+                          max_speed_linear_pct="0.4"
+                          max_speed_angular_pct="1.0"
+                          timeout_ms="-3000"
+                          use_theta="true"
+                          backwards="false"/>
+      <IntakeCmd auto="false"
+                 ground_intake="false"
+                 store_ring="false"/>
       <Logging message="neutral stake"/>
-        <MoveToPoseBezier  posX_tiles="3.0"
-                            posY_tiles="1.0"
-                            theta_deg="90.0"
-                            search_radius_m="0.25"
-                            threshold_m="0.02"
-                            angle_threshold_deg="5.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
-                            lead="0.3"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-3000"
-                            use_theta="true"
-                            backwards="false"/>
+      <MoveToPoseBezier  posX_tiles="3.0"
+                          posY_tiles="0.6"
+                          theta_deg="90.0"
+                          search_radius_m="0.25"
+                          threshold_m="0.02"
+                          angle_threshold_deg="5.0"
+                          threshold_vel_mps="0.1"
+                          angle_threshold_vel_dps="1.0"
+                          lead="0.3"
+                          max_speed_linear_pct="0.4"
+                          max_speed_angular_pct="0.6"
+                          timeout_ms="-2000"
+                          use_theta="true"
+                          backwards="false"/>
       <ShutoffNode/>
       <Logging message="pulling_back"/>
       <MoveToPoseBezier posX_tiles="3.0"
@@ -34,12 +55,15 @@
                             use_theta="true"
                             backwards="true"/>
       <ShutoffNode/>
-
+      <IntakeCmd auto="false"
+                 ground_intake="false"/>
       <Logging message="scoring"/>
-      <ConveyorCmd fwd="true"/>
-      <WaitCmd seconds="0.500"
+      <ParallelAll>
+        <ConveyorCmd fwd="true"/>
+        <WaitCmd seconds="1.00"
                 shutoff_motors="false"/>
-      <ConveyorCmd fwd="true"/>
+      </ParallelAll>
+      <ConveyorCmd fwd="false"/>
       <MoveToPoseBezier posX_tiles="3.0"
                             posY_tiles="1.0"
                             theta_deg="90.0"
@@ -74,7 +98,6 @@
     <Action ID="GoalRushCmd"
             editable="true">
       <input_port name="arm_down"/>
-      <input_port name="clamp"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">
