@@ -484,12 +484,6 @@ void TankRobotPlugin::autonomous(double current_time)
     updateIntake(ground_intake_active, false, false, false, current_time);
   }
 
-  bool ground_intake_active = false;
-  if (bt_->get_variable("ground_intake_active", ground_intake_active) && !ring_detector_active)
-  {
-    updateIntake(ground_intake_active, false, false, false, current_time);
-  }
-
   int neutral_stake_pos = 0;
   if (bt_->get_variable("neutral_stake_pos", neutral_stake_pos)) {
     updateNeutralStakeArmPosition(neutral_stake_pos);
