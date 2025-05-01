@@ -140,7 +140,7 @@ void TankRobotPlugin::initROSComms()
   std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
   m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
 
-  m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensor_0/color", 10, std::bind(&TankRobotPlugin::colorCallback, this, _1));
+  m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensors/intake/color", 10, std::bind(&TankRobotPlugin::colorCallback, this, _1));
 
   // Tank-Specific Publishers
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
@@ -476,6 +476,12 @@ void TankRobotPlugin::autonomous(double current_time)
   )
   {
     ringDetector(ring_detector_active, current_time, want_red, store_ring);
+  }
+
+  bool ground_intake_active = false;
+  if (bt_->get_variable("ground_intake_active", ground_intake_active) && !ring_detector_active)
+  {
+    updateIntake(ground_intake_active, false, false, false, current_time);
   }
 
   bool ground_intake_active = false;
@@ -983,7 +989,6 @@ void TankRobotPlugin::updateClampController(bool shift1, bool shift2, std::share
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
 
 }
-
 
 // pressing u takes over all right buttons
 void TankRobotPlugin::updateMusic(double current_time, std::shared_ptr<JoystickDeviceData> joy_data)
