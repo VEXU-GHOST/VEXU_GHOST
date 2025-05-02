@@ -140,7 +140,7 @@ namespace ghost_tank
     std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
     m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, 10, std::bind(&AlphaJerryPlugin::worldOdometryUpdateCallbackBackup, this, _1));
 
-    m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensor_0/color", 10, std::bind(&AlphaJerryPlugin::colorCallback, this, _1));
+    m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensors/intake/color", 10, std::bind(&AlphaJerryPlugin::colorCallback, this, _1));
 
     // Tank-Specific Publishers
     node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
@@ -513,8 +513,8 @@ namespace ghost_tank
 
     auto joy_data = rhi_ptr_->getMainJoystickData();
     updateBite(joy_data);
-    updateClamp(joy_data);
-    updateGoalRush(joy_data);
+    updateClampController(false, false, joy_data);
+    updateGoalRush(joy_data, true);
 
     double fwd_cmd = 0.0;
     double turn_cmd = 0.0;
@@ -563,7 +563,7 @@ namespace ghost_tank
     // CONDITIONAL control mode dispatching
     if (shift1)
     {
-      updateNeutralStakeArmJoystick(true, shift2, joy_data); // Y-held mode
+      updateNeutralStakeArmJoystick(true, false, joy_data); // Y-held mode
       updateIntake(joy_data->btn_r2, joy_data->btn_r1,
                    false, false,
                    current_time);
@@ -571,14 +571,15 @@ namespace ghost_tank
     else if (shift2)
     {
       updateClampController(shift1, shift2, joy_data); // R-held mode
-      updateGoalRush(joy_data);
+      updateGoalRush(joy_data, true);
     }
     else
     {
       updateIntake(joy_data->btn_r2, joy_data->btn_r1,
                    joy_data->btn_l1, joy_data->btn_l2,
                    current_time); // Default mode
-      updateNeutralStakeArmJoystick(false, shift2, joy_data);
+      updateNeutralStakeArmJoystick(false, false, joy_data);
+      updateGoalRush(joy_data, false);
     }
     updateBite(joy_data);
     updateDrivetrain(joy_data);
@@ -828,6 +829,7 @@ namespace ghost_tank
     double power = 0.0;
     int32_t current_ma = 0;
 
+    double position_error;
     bool command_given = false;
     if (active)
     {
@@ -835,47 +837,47 @@ namespace ghost_tank
       if (down_btn)
       {
         // Move forward (toward down)
-        power = 1; // Tune this value
-        current_ma = 2500;
+        position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
         command_given = true;
       }
       else if (up_btn)
       {
         // Move backward (toward up)
-        power = -1;
-        current_ma = 2500;
+        position_error = (m_neutral_stake_arm_down_pos_deg - curr_pos);
         command_given = true;
       }
       else
       {
-        double position_error = (m_neutral_stake_arm_loading_pos_deg - curr_pos);
-        current_ma = 2500;
-        power = m_neutral_stake_arm_kp * position_error;
-        command_given = true;
+        position_error = (m_neutral_stake_arm_loading_pos_deg - curr_pos);
+        if (abs(position_error) < 45.0)
+        {
+          command_given = true;
+        }
       }
+      current_ma = 2500;
+      power = m_neutral_stake_arm_kp * position_error;
     }
     else
     {
-      double position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
+      position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
       current_ma = 2500;
       power = m_neutral_stake_arm_kp * position_error;
       command_given = true;
-      // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-      // m_loop_current_limits.push_back(current_ma);
-      // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
     }
     // ---- Send Command ----
-    // if (command_given) {
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-    m_loop_current_limits.push_back(current_ma);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
-    // }
-    // else {
-    //   // Stop motor if no command needed
-    //   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", 0);
-    //   m_loop_current_limits.push_back(0);
-    //   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
-    // }
+    if (command_given)
+    {
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
+      m_loop_current_limits.push_back(current_ma);
+      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
+    }
+    else
+    {
+      // Stop motor if no command needed
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", 0);
+      m_loop_current_limits.push_back(0);
+      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
+    }
   }
 
   void AlphaJerryPlugin::updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<JoystickDeviceData> joy_data)
@@ -919,7 +921,7 @@ namespace ghost_tank
 
   void AlphaJerryPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
   {
-    static bool first_r2 = false;
+    static bool first_r2 = true;
     static bool first_r2_started = false;
     // Manual Ground Pickup control
     double ground_pickup_power = 0;
@@ -1127,17 +1129,25 @@ namespace ghost_tank
     }
   }
 
-  void AlphaJerryPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data)
+  void AlphaJerryPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data, bool shift)
   {
-    static bool goal_rush_btn_pressed = false;
-    if (joy_data->btn_l1 && !goal_rush_btn_pressed)
+    // static bool goal_rush_btn_pressed = false;
+    // if (joy_data->btn_l1 && !goal_rush_btn_pressed) {
+    //   goal_rush_btn_pressed = true;
+    //   m_goal_rush_active = !m_goal_rush_active;
+    // } else if (!joy_data->btn_l1) {
+    //   goal_rush_btn_pressed = false;
+    // }
+    if (shift)
     {
-      goal_rush_btn_pressed = true;
-      m_goal_rush_active = !m_goal_rush_active;
+      if (joy_data->btn_l1)
+      {
+        m_goal_rush_active = true;
+      }
     }
-    else if (!joy_data->btn_l1)
+    else
     {
-      goal_rush_btn_pressed = false;
+      m_goal_rush_active = false;
     }
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
   }
