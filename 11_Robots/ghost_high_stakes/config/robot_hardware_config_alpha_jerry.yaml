@@ -19,7 +19,7 @@ port_configuration:
             port: 15
             type: MOTOR
             reversed: true
-            config: neutral_stake_motor_config
+            config: scissor_motor_config
         ground_pickup_motor:
             port: 16
             type: MOTOR

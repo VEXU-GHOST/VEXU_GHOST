@@ -22,7 +22,7 @@ def generate_launch_description():
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
     robot_config_yaml_path = os.path.join(
-        ghost_high_stakes_base_dir, "config/robot_hardware_config_tank.yaml"
+        ghost_high_stakes_base_dir, "config/robot_hardware_config_alpha_jerry.yaml"
     )
 
     plugin_type = "ghost_tank::AlphaJerryPlugin"
