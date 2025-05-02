@@ -101,16 +101,14 @@ void TankModel::driveCommand(double fwd_pct, double ang_pct){
     double left_cmd = fwd_pct - ang_pct;
     double right_cmd = fwd_pct + ang_pct;
 
-    for (const auto motor_name: m_config.motor_list) {
+    for (const auto motor_name: m_config.motor_list_left) {
       rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+      rhi_ptr_->setMotorVoltageCommandPercent(motor_name, left_cmd);
     }
 
-    for (int i = 0; i < 6; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(m_config.motor_list[i], left_cmd);
-    }
-
-    for (int i = 6; i < 12; i++) {
-      rhi_ptr_->setMotorVoltageCommandPercent(m_config.motor_list[i], right_cmd);
+    for (const auto motor_name: m_config.motor_list_right) {
+      rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+      rhi_ptr_->setMotorVoltageCommandPercent(motor_name, right_cmd);
     }
 }
 

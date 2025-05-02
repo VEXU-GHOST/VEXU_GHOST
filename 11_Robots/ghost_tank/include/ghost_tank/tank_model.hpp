@@ -42,7 +42,8 @@ namespace ghost_tank
 
 struct TankConfig
 {
-  std::vector<std::string> motor_list;
+  std::vector<std::string> motor_list_left;
+  std::vector<std::string> motor_list_right;
   double wheel_radius;
   double wheel_gear_ratio;
   double wheel_dist;

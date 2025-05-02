@@ -179,6 +179,35 @@ RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
+add_library(alpha_jerry_plugin SHARED src/alpha_jerry_plugin.cpp)
+target_include_directories(alpha_jerry_plugin
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+  target_link_libraries(alpha_jerry_plugin
+    tank_model
+    tank_odom
+    tank_tree
+    boomerang
+    bezier_curve
+    pdcontrol
+  )
+ament_target_dependencies(alpha_jerry_plugin
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  alpha_jerry_plugin
+)
+ament_export_targets(alpha_jerry_plugin HAS_LIBRARY_TARGET)
+install(
+TARGETS alpha_jerry_plugin
+EXPORT alpha_jerry_plugin
+LIBRARY DESTINATION lib
+ARCHIVE DESTINATION lib
+RUNTIME DESTINATION bin
+INCLUDES DESTINATION include
+)
+
 # bt node libraries
 set(NODES
   loggingNode

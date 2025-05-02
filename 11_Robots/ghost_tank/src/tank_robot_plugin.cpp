@@ -307,7 +307,8 @@ void TankRobotPlugin::initTankModel()
   double wheel_base_inches = node_ptr_->get_parameter("tank_robot_plugin.wheel_base_inches").as_double();
 
   TankConfig tank_model_config;
-  tank_model_config.motor_list = m_all_drive_motor_names;
+  tank_model_config.motor_list_left = m_left_drive_motor_names;
+  tank_model_config.motor_list_right = m_right_drive_motor_names;
   tank_model_config.wheel_radius = wheel_rad_in; //in
   tank_model_config.wheel_gear_ratio = 1.0 / drive_gear_ratio;
   tank_model_config.wheel_dist = wheel_base_inches / 2.0; //in

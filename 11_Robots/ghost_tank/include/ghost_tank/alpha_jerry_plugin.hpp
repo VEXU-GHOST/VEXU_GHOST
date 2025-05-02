@@ -41,18 +41,18 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <std_msgs/msg/int64.hpp>
 
-#include <alpha_jerry/tank_tree.hpp>
-#include <alpha_jerry/tank_odom.hpp>
-#include <alpha_jerry/pdcontrol.hpp>
-#include <alpha_jerry/boomerang.hpp>
+#include <ghost_tank/tank_tree.hpp>
+#include <ghost_tank/tank_odom.hpp>
+#include <ghost_tank/pdcontrol.hpp>
+#include <ghost_tank/boomerang.hpp>
 
-namespace alpha_jerry
+namespace ghost_tank
 {
 
-class TankRobotPlugin : public ghost_ros_interfaces::V5RobotBase
+class AlphaJerryPlugin : public ghost_ros_interfaces::V5RobotBase
 {
 public:
-  TankRobotPlugin();
+  AlphaJerryPlugin();
 
   void initialize() override;
   void disabled() override;
@@ -324,4 +324,4 @@ protected:
   std::map<std::string, int> m_color_map;
 };
 
-} // namespace alpha_jerry
+} // namespace ghost_tank
