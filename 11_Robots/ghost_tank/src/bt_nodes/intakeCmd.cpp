@@ -45,6 +45,7 @@ BT::PortsList IntakeCmd::providedPorts()
   return {
     BT::InputPort<bool>("auto"),
     BT::InputPort<bool>("ground_intake"),
+    BT::InputPort<bool>("store_ring", false, "whether to store the ring"),
   };
 }
 
@@ -52,6 +53,7 @@ BT::NodeStatus IntakeCmd::tick()
 {
   bool automatic = BT_Util::get_input<bool>(this, "auto");
   bool ground_intake = BT_Util::get_input<bool>(this, "ground_intake");
+  bool store_ring = BT_Util::get_input<bool>(this, "store_ring");
 
   bool target_red = false;
   BT_Util::get_from_blackboard(blackboard_, "target_red", target_red);
@@ -59,6 +61,7 @@ BT::NodeStatus IntakeCmd::tick()
   BT_Util::put_in_blackboard(blackboard_, "want_red", target_red);
   BT_Util::put_in_blackboard(blackboard_, "ring_detector_active", automatic);
   BT_Util::put_in_blackboard(blackboard_, "ground_intake_active", ground_intake);
+  BT_Util::put_in_blackboard(blackboard_, "store_ring", store_ring);
 
   return BT::NodeStatus::SUCCESS;
 }

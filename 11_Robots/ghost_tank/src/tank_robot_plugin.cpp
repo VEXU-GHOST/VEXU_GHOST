@@ -470,11 +470,13 @@ void TankRobotPlugin::autonomous(double current_time)
   bool ring_detector_active = false;
   bool want_red = m_color_target_red;
   // bool want_red = false;
+  bool store_ring = false;
   if (bt_->get_variable("ring_detector_active", ring_detector_active) 
     // && bt_->get_variable("want_red", want_red)
+    && bt_->get_variable("store_ring", store_ring)
   )
   {
-    ringDetector(ring_detector_active, current_time, want_red);
+    ringDetector(ring_detector_active, current_time, want_red, store_ring);
   }
 
   bool ground_intake_active = false;
@@ -487,6 +489,18 @@ void TankRobotPlugin::autonomous(double current_time)
   if (bt_->get_variable("neutral_stake_pos", neutral_stake_pos)) {
     updateNeutralStakeArmPosition(neutral_stake_pos);
   }
+
+  if (bt_->get_variable("bite_closed", m_bite_closed)) {
+  }
+  if (bt_->get_variable("clamp_closed", m_clamp_closed)) {
+  }
+  if (bt_->get_variable("arm_down", m_goal_rush_active)) {
+  }
+
+  auto joy_data = rhi_ptr_->getMainJoystickData();
+  updateBite(joy_data);
+  updateClamp(joy_data);
+  updateGoalRush(joy_data);
 
   double fwd_cmd = 0.0;
   double turn_cmd = 0.0;
@@ -511,8 +525,8 @@ void TankRobotPlugin::teleop(double current_time)
   }
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
-  bool shift1 = joy_data->btn_y; 
-  bool shift2 = joy_data->btn_r; 
+  bool shift1 = joy_data->btn_b; 
+  bool shift2 = joy_data->btn_d; 
 
   if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
     joy_data->btn_u && joy_data->btn_l && joy_data->btn_d && joy_data->btn_r)
@@ -548,7 +562,7 @@ void TankRobotPlugin::teleop(double current_time)
   updateDrivetrain(joy_data);
 }
 
-void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red)
+void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
 {
   static double last_input_time = 0.0;
   static double ring_found_time = 0.0;
@@ -622,7 +636,13 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
     hook = (retry_cycle < COOLDOWN_PERIOD);
   } else {
     // Normal hook logic
-    hook = ring_prewaited || (current_time - last_input_time < 0.5);
+    if (store_ring) {
+      // should not score the ring, will be stored in the center of the robot
+      hook = ring_prewaited;
+    } else {
+      // If not storing, keep hooks moving for an extra period of time to ensure scoring
+      hook = ring_prewaited || (current_time - last_input_time < 0.5);
+    }
   }
 
   bool ejecting = false;

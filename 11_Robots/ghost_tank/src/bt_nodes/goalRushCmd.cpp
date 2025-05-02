@@ -44,19 +44,20 @@ BT::PortsList GoalRushCmd::providedPorts()
   // This action has a single input port called "message"
   return {
     BT::InputPort<bool>("arm_down"),
-    BT::InputPort<bool>("clamp", true, "true means closed"),
+    // BT::InputPort<bool>("clamp", true, "true means closed"),
   };
 }
 
 BT::NodeStatus GoalRushCmd::tick()
 {
   bool arm_down = BT_Util::get_input<bool>(this, "arm_down");
-  bool clamp = BT_Util::get_input<bool>(this, "clamp");
+  // bool clamp = BT_Util::get_input<bool>(this, "clamp");
 
-  std::unordered_map<std::string, int> digital_io_port_map;
-  BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], arm_down);
-
+  // std::unordered_map<std::string, int> digital_io_port_map;
+  // BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], arm_down);
+  BT_Util::put_in_blackboard(blackboard_, "arm_down", arm_down);
+  
   return BT::NodeStatus::SUCCESS;
 }
 
