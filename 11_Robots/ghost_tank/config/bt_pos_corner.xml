@@ -7,8 +7,7 @@
   <BehaviorTree ID="pos_corner">
     <Sequence>
       <Logging message="positive corner left"/>
-      <GoalRushCmd arm_down="true"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="true"/>
       <MoveToPoseBezier posX_tiles="2.0"
                             posY_tiles="0.90"
                             theta_deg="90.0"
@@ -24,8 +23,7 @@
                             use_theta="true"
                             backwards="true"/>
       <ShutoffNode/>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="false"/>
 
       <SubTree ID="center_goal" _autoremap="true"/>
 

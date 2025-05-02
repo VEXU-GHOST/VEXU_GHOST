@@ -6,8 +6,7 @@
     <Sequence>
       <Logging message="basic auton 1"/>
       <Logging message="Go to corner stack"/>
-      <GoalRushCmd arm_down="true"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="true"/>
       <MoveToPoseBezier posX_tiles="1.9"
                             posY_tiles="1.75"
                             theta_deg="-70.0"
@@ -22,8 +21,7 @@
                             timeout_ms="-2000"
                             use_theta="true"
                             backwards="true"/>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="false"/>
       <Logging message="Back Up and Clamp Goal"/>
       <ParallelAll>
         <Fallback>
@@ -49,8 +47,7 @@
                             use_theta="true"
                             backwards="true"/>
       </ParallelAll>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="false"/>
       <ClampCmd clamp_closed="true"/>
 
       

@@ -16,11 +16,11 @@ ColorClassifier::ColorClassifier()
   load_color_parameters();
   // ROS Topics
   m_hsv_sub = this->create_subscription<std_msgs::msg::ColorRGBA>(
-    "/sensors/color_sensor_0/hsv", 10,
+    "hsv", 10,
     std::bind(&ColorClassifier::callback, this, std::placeholders::_1));
 
   m_category_pub = this->create_publisher<std_msgs::msg::String>(
-    "/sensors/color_sensor_0/color", 10);
+    "color", 10);
 }
 
 

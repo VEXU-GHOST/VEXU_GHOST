@@ -3,8 +3,7 @@
   <BehaviorTree ID="better_goal_rush">
     <Sequence>
       <Logging message="goal_rush"/>
-      <GoalRushCmd arm_down="true"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="true"/>
       <IntakeCmd auto="false"
                  ground_intake="true"/>
       <ParallelAll>
@@ -12,8 +11,7 @@
           <Timeout msec="600">
             <KeepRunningUntilFailure>
               <Sequence>
-                <GoalRushCmd arm_down="true"
-                          clamp="false"/>
+                <GoalRushCmd arm_down="true"/>
                 <BiteCmd bite_closed="false"/>
               </Sequence>
             </KeepRunningUntilFailure>
@@ -22,7 +20,7 @@
         </Fallback>
         <MoveToPoseBezier  posX_tiles="1.05"
                             posY_tiles="2.2"
-                            theta_deg="112.5"
+                            theta_deg="105"
                             search_radius_m="0.25"
                             threshold_m="0.1"
                             angle_threshold_deg="5.0"
@@ -36,8 +34,7 @@
                             backwards="false"/>
       </ParallelAll>
       <!-- </ReactiveFallback> -->
-      <GoalRushCmd arm_down="false"
-                  clamp = "true"/>
+      <GoalRushCmd arm_down="false"/>
       <ShutoffNode/>
       <!-- <WaitCmd seconds="0.100" -->
                 <!-- shutoff_motors="true"/> -->
@@ -61,13 +58,12 @@
 
       <!-- Release goal -->
       <Logging message="release goal"/>
-      <GoalRushCmd arm_down="true"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="true"/>
       <IntakeCmd auto="false"
-                 ground_intake="false"/>
-              <Logging message="pulling_back"/>
+                 ground_intake="true"/>
+      <Logging message="pulling_back"/>
     
-    <!-- Pull back a little to clear goal from arm -->
+      <!-- Pull back a little to clear goal from arm -->
       <MoveToPoseBezier posX_tiles="1.7"
                             posY_tiles="1.25"
                             theta_deg="135.0"
@@ -77,7 +73,7 @@
                             threshold_vel_mps="0.1"
                             angle_threshold_vel_dps="1.0"
                             lead="0.75"
-                            max_speed_linear_pct="1.0"
+                            max_speed_linear_pct="0.5"
                             max_speed_angular_pct="1.0"
                             timeout_ms="-2000"
                             use_theta="true"
@@ -85,8 +81,7 @@
       <ShutoffNode/>
       <!-- Release goal -->
       <Logging message="retract arm"/>
-      <GoalRushCmd arm_down="false"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="false"/>
       <IntakeCmd auto="false"
                  ground_intake="false"/>
     </Sequence>
@@ -109,7 +104,6 @@
     <Action ID="GoalRushCmd"
             editable="true">
       <input_port name="arm_down"/>
-      <input_port name="clamp"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">

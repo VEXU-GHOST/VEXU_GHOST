@@ -14,8 +14,8 @@
   <BehaviorTree ID="main_tree">
         <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
     <Sequence>
-      <SetMirrored mirrored="true"/>
-      <SetColorTarget target_red="false"/>
+      <!-- <SetMirrored mirrored="true"/> -->
+      <!-- <SetColorTarget target_red="false"/> -->
       <SubTree ID="better_goal_rush" _autoremap="true"/>
       <SubTree ID="basic_auton_1" _autoremap="true"/>
       <SubTree ID="basic_auton_1_end" _autoremap="true"/>
@@ -29,6 +29,18 @@
     </Sequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="test_color_sensor">
+    <Sequence>
+      <Logging message="Starting test_color_sensor tree"/>
+      <SetMirrored mirrored="false"/>
+      <GoalRushCmd arm_down="true"/>
+ 
+      <GoalRushDetected right="false" threshold="0.5"/>
+      <GoalRushCmd arm_down="false"/>
+      <WaitCmd seconds="200.0"
+                shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
   <BehaviorTree ID="test_integral">
     <Sequence>
       <SetMirrored mirrored="false"/>
@@ -127,15 +139,13 @@
     <Sequence>
       <SetMirrored mirrored="false"/>
       <!-- <Logging message="test"/> -->
-      <GoalRushCmd arm_down="true"
-                  clamp="false"/>
+      <GoalRushCmd arm_down="true"/>
       <ReactiveFallback>
         <GoalRushDetected/>
         <WaitCmd seconds="3.0"
                 shutoff_motors="true"/>
       </ReactiveFallback>
-      <GoalRushCmd arm_down="false"
-                  clamp = "true"/>
+      <GoalRushCmd arm_down="false"/>
       <WaitCmd seconds="1.0"
                 shutoff_motors="true"/>
     </Sequence>
