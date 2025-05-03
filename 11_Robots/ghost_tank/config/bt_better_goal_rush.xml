@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-  <BehaviorTree ID="goal_rush">
+  <BehaviorTree ID="better_goal_rush">
     <Sequence>
       <Logging message="goal_rush"/>
       <GoalRushCmd arm_down="true"/>
@@ -20,7 +20,7 @@
         </Fallback>
         <MoveToPoseBezier  posX_tiles="1.05"
                             posY_tiles="2.2"
-                            theta_deg="112.5"
+                            theta_deg="105"
                             search_radius_m="0.25"
                             threshold_m="0.1"
                             angle_threshold_deg="5.0"
@@ -56,8 +56,32 @@
                             backwards="true"/>
       <ShutoffNode/>
 
-      <Logging message="retract arm"/>
+      <!-- Release goal -->
+      <Logging message="release goal"/>
       <GoalRushCmd arm_down="true"/>
+      <IntakeCmd auto="false"
+                 ground_intake="true"/>
+      <Logging message="pulling_back"/>
+    
+      <!-- Pull back a little to clear goal from arm -->
+      <MoveToPoseBezier posX_tiles="1.7"
+                            posY_tiles="1.25"
+                            theta_deg="135.0"
+                            search_radius_m="0.1"
+                            threshold_m="0.20"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.75"
+                            max_speed_linear_pct="0.5"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-2000"
+                            use_theta="true"
+                            backwards="true"/>
+      <ShutoffNode/>
+      <!-- Release goal -->
+      <Logging message="retract arm"/>
+      <GoalRushCmd arm_down="false"/>
       <IntakeCmd auto="false"
                  ground_intake="false"/>
     </Sequence>
@@ -69,6 +93,10 @@
             editable="true">
       <input_port name="bite_closed"/>
     </Action>
+    <Action ID="ClampCmd"
+            editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
     <Action ID="ConveyorCmd"
             editable="true">
       <input_port name="fwd"/>
@@ -76,7 +104,6 @@
     <Action ID="GoalRushCmd"
             editable="true">
       <input_port name="arm_down"/>
-      <!-- <input_port name="clamp"/> -->
     </Action>
     <Action ID="SetMirrored"
             editable="true">
@@ -123,10 +150,7 @@
     <Action ID="ShutoffNode"
             editable="true"/>
     <Action ID="GoalRushDetected"
-            editable="true">
-      <input_port name="threshold"/>
-      <input_port name="right"/>
-    </Action>
+            editable="true"/>
   </TreeNodesModel>
 
 </root>

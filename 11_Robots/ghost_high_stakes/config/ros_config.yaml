@@ -75,7 +75,7 @@ competition_state_machine_node:
       neutral_stake_arm_loading_pos_deg: 35.0
       neutral_stake_arm_score_neutral_pos_deg: 110.0
       neutral_stake_arm_score_alliance_pos_deg: 170.0
-      neutral_stake_arm_down_pos_deg: 220.0
+      neutral_stake_arm_down_pos_deg: 240.0
 
       # motion planning
       move_to_pose_kp_xy: 2.2
@@ -86,7 +86,7 @@ competition_state_machine_node:
       move_to_pose_kp_xy_fine: 2.2
       move_to_pose_kd_xy_fine: 0.4
       move_to_pose_kp_theta_fine: 1.0  #1.0
-      move_to_pose_kd_theta_fine: 0.085  #0.2
+      move_to_pose_kd_theta_fine: 0.09 #0.085  #0.2
       move_to_pose_ki_theta_fine: 0.005 #0.01
       move_to_pose_integral_limit: 0.5 #0.5
 
@@ -133,7 +133,7 @@ competition_state_machine_node:
         ]
     particle_filter:
       world_frame: "map"
-      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldZeroLH.txt"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
 
       # Initial position
       # init_x: 0.508
@@ -195,7 +195,7 @@ competition_state_machine_node:
       red:
         hue_center: 0
         hue_range: 20
-        sat_min: 0.5
+        sat_min: 0.4
         sat_max: 1.0
         val_min: 0.003
         val_max: 1.0
@@ -509,10 +509,10 @@ map_ekf_node:
 
     initial_state:
       [
-        # 2.4, 0.508,  0.0,
-        # 0.0,  0.0,  1.39,
-        1.2, 0.508, 0.0,
-        0.0,  0.0,  1.75,
+        2.635,  0.559,  0.0,
+        0.0,  0.0,  1.178,
+        # 0.965, 0.559, 0.0,
+        # 0.0,  0.0,  1.964,
         0.0,  0.0,  0.0,
         0.0,  0.0,  0.0,
         0.0,  0.0,  0.0,
@@ -754,10 +754,19 @@ tts_music_node:
     volume: 150  # set to 0 to turn off, set to 100 at comp
 gpio_expander:
   ros__parameters:
-    gpio:
+    gpio: #topic type is int64
       "/io/leds/other": 
-        pins: [8, 9,10]
+        pins: [8, 9, 10]
         output: True
+      "/io/buttons/color_target": 
+        pins: [2]
+        output: False
+      "/io/buttons/mirrored": 
+        pins: [4]
+        output: False
+      "/io/buttons/other": 
+        pins: [6, 7]
+        output: False
       "/io/leds/bag": 
         pins: [11]
         output: True

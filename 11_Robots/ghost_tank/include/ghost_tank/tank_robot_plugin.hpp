@@ -39,6 +39,7 @@
 #include <std_msgs/msg/string.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <std_msgs/msg/int64.hpp>
 
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
@@ -99,18 +100,28 @@ protected:
    * @param current_time
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
+  void updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool R, double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateClampController(bool shift1, bool shift2 ,std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+ 
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, bool shift);
   void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+
   void updateNeutralStakeArmPosition(int arm_mode);
-  void ringDetector(bool active, double current_time, bool want_red);
+  void updateNeutralStakeArmPositionController(bool active, bool up_btn, bool down_btn);
+
+  void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
   void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
   // Output
   void playMusic(std::string m);
   void playTTS(std::string m);
+
+  void colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
+  void mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
  
 
   void resetWorldPose();
@@ -155,6 +166,9 @@ protected:
   }
   std::string m_color;
   double m_first_color_detect_inches = INFINITY;
+
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_color_target_sub;
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_mirrored_sub;
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
@@ -211,8 +225,8 @@ protected:
 
   bool m_use_backup_estimator = false;
   bool m_reset_world_pose = false;
-  bool m_clamp_closed{true};
-  bool m_bite_closed{true};
+  bool m_clamp_closed{false};
+  bool m_bite_closed{false};
   bool m_goal_rush_active{false};
   bool m_goal_rush_clamp_active{false};
 
@@ -276,6 +290,8 @@ protected:
   // Auton States
   bool m_auton_button_pressed = false;
   int m_auton_index = 0;
+  bool m_color_target_red = false;
+  bool m_mirrored = false;
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;

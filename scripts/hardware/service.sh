@@ -48,6 +48,30 @@ EOF
 	sudo systemctl disable --now gdm3
 	echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/nopasswd-$USER
 
+	cd /tmp
+
+	# Download the zip archive of the repo
+	wget -O jetson-orin-librealsense.zip https://codeload.github.com/jetsonhacks/jetson-orin-librealsense/zip/c8c2096b86fde54b9203107a474a07e0092a171d
+	
+	# Unzip into a specific directory
+	unzip jetson-orin-librealsense.zip -d jetson-orin-librealsense
+	
+	# Enter the extracted subdirectory (it will be named jetson-orin-librealsense-[hash])
+	cd jetson-orin-librealsense/*
+	# This will match: /tmp/jetson-orin-librealsense/jetson-orin-librealsense-c8c2096b86fde...
+	./install-udev.sh
+	
+	# Extract the kernel module tarball
+	tar -xzf install-modules.tar.gz
+	
+	# Enter the extracted kernel module directory
+	cd install-modules
+	
+	# Run the installation script with root privileges
+	sudo ./install-realsense-modules.sh
+	
+
+
 	;;
     *)
         echo "Usage: service.sh [restart/stop/kill/shutdown/install]"

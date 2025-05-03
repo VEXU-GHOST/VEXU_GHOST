@@ -51,9 +51,11 @@ BT::NodeStatus BiteCmd::tick()
 {
   bool bite_closed = BT_Util::get_input<bool>(this, "bite_closed");
 
-  std::unordered_map<std::string, int> digital_io_port_map;
-  BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bite_closed);
+  // std::unordered_map<std::string, int> digital_io_port_map;
+  // BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bite_closed);
+  BT_Util::put_in_blackboard(blackboard_, "bite_closed", bite_closed);
+
 
   return BT::NodeStatus::SUCCESS;
 }
