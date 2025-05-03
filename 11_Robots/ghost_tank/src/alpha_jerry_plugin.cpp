@@ -59,6 +59,8 @@ namespace ghost_tank
         "drive_r4",
         "drive_r5",
         "drive_r6",
+        "drive_r7",
+        "drive_r8",
     };
     m_left_drive_motor_names = {
         "drive_l1",
@@ -67,6 +69,8 @@ namespace ghost_tank
         "drive_l4",
         "drive_l5",
         "drive_l6",
+        "drive_l7",
+        "drive_l8",
     };
 
     m_all_drive_motor_names.insert(
@@ -97,7 +101,7 @@ namespace ghost_tank
     initROSComms();
     initEstimation();
     initIntake();
-    initNeutralStakeArm();
+    // initNeutralStakeArm();
     initTankModel();
     initAutonomy();
   }
@@ -392,7 +396,8 @@ namespace ghost_tank
     m_loop_current_limits.clear();
 
     updateConveyorPositionSensing();
-    publishIMUData();
+    // now done by realsense/imufilternode
+    //publishIMUData();
     updateAndPublishOdometry();
     publishTrajectoryVisualization();
   }
@@ -495,12 +500,6 @@ namespace ghost_tank
       updateIntake(ground_intake_active, false, false, false, current_time);
     }
 
-    int neutral_stake_pos = 0;
-    if (bt_->get_variable("neutral_stake_pos", neutral_stake_pos))
-    {
-      updateNeutralStakeArmPosition(neutral_stake_pos);
-    }
-
     if (bt_->get_variable("bite_closed", m_bite_closed))
     {
     }
@@ -563,7 +562,6 @@ namespace ghost_tank
     // CONDITIONAL control mode dispatching
     if (shift1)
     {
-      updateNeutralStakeArmJoystick(true, false, joy_data); // Y-held mode
       updateIntake(joy_data->btn_r2, joy_data->btn_r1,
                    false, false,
                    current_time);
@@ -578,7 +576,6 @@ namespace ghost_tank
       updateIntake(joy_data->btn_r2, joy_data->btn_r1,
                    joy_data->btn_l1, joy_data->btn_l2,
                    current_time); // Default mode
-      updateNeutralStakeArmJoystick(false, false, joy_data);
       updateGoalRush(joy_data, false);
     }
     updateBite(joy_data);
@@ -763,160 +760,6 @@ namespace ghost_tank
     {
       m_recording_btn_pressed = false;
     }
-  }
-
-  void AlphaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
-  {
-    std::vector<double> arm_mode_position_map{
-        m_neutral_stake_arm_rest_pos_deg,
-        m_neutral_stake_arm_loading_pos_deg,
-        m_neutral_stake_arm_score_neutral_pos_deg,
-        m_neutral_stake_arm_score_alliance_pos_deg,
-        m_neutral_stake_arm_down_pos_deg};
-
-    double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
-    double power = 0.0;
-
-    // Ensure arm_mode is within valid bounds
-    m_arm_mode = std::max(0, std::min(static_cast<int>(arm_mode_position_map.size() - 1), arm_mode));
-
-    m_neutral_stake_arm_des_pos = arm_mode_position_map[m_arm_mode];
-
-    int32_t current_ma;
-    double position_error = (m_neutral_stake_arm_des_pos - curr_pos);
-    if (m_arm_mode == 0 && std::fabs(position_error) < 1)
-    {
-      power = 0.0;
-      current_ma = 0;
-    }
-    else
-    {
-      current_ma = 2500;
-      power = m_neutral_stake_arm_kp * position_error;
-    }
-
-    // Don't exert positive power at upper limit
-    if (curr_pos > m_neutral_stake_arm_down_pos_deg)
-    {
-      power = ghost_util::clamp(power, -1.0, 0.0);
-    }
-
-    // Don't exert negative power at lower limit
-    if (curr_pos < m_neutral_stake_arm_rest_pos_deg)
-    {
-      power = ghost_util::clamp(power, 0.0, 1.0);
-    }
-
-    if (m_arm_mode == 3)
-    {
-      power = ghost_util::clamp(power, -0.4, 0.4);
-    }
-
-    if (m_arm_mode == 4)
-    {
-      power = ghost_util::clamp(power, -0.8, 0.8);
-    }
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-    m_loop_current_limits.push_back(current_ma);
-
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
-  }
-
-  void AlphaJerryPlugin::updateNeutralStakeArmPositionController(bool active, bool down_btn, bool up_btn)
-  {
-    double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
-    double power = 0.0;
-    int32_t current_ma = 0;
-
-    double position_error;
-    bool command_given = false;
-    if (active)
-    {
-      // ---- Manual Control ----
-      if (down_btn)
-      {
-        // Move forward (toward down)
-        position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
-        command_given = true;
-      }
-      else if (up_btn)
-      {
-        // Move backward (toward up)
-        position_error = (m_neutral_stake_arm_down_pos_deg - curr_pos);
-        command_given = true;
-      }
-      else
-      {
-        position_error = (m_neutral_stake_arm_loading_pos_deg - curr_pos);
-        if (abs(position_error) < 45.0)
-        {
-          command_given = true;
-        }
-      }
-      current_ma = 2500;
-      power = m_neutral_stake_arm_kp * position_error;
-    }
-    else
-    {
-      position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
-      current_ma = 2500;
-      power = m_neutral_stake_arm_kp * position_error;
-      command_given = true;
-    }
-    // ---- Send Command ----
-    if (command_given)
-    {
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", current_ma);
-      m_loop_current_limits.push_back(current_ma);
-      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
-    }
-    else
-    {
-      // Stop motor if no command needed
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake", 0);
-      m_loop_current_limits.push_back(0);
-      rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
-    }
-  }
-
-  void AlphaJerryPlugin::updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<JoystickDeviceData> joy_data)
-  {
-    bool down_btn = joy_data->btn_l2;
-    bool up_btn = joy_data->btn_l1;
-    bool active = shift1;
-    updateNeutralStakeArmPositionController(active, up_btn, down_btn);
-  }
-
-  void AlphaJerryPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
-  {
-    static bool btn_l1_pressed = false;
-    static bool btn_l2_pressed = false;
-
-    // Increment arm mode with button l1
-    if (joy_data->btn_l1 && m_arm_mode != 4 && !btn_l1_pressed)
-    {
-      m_arm_mode++;
-      btn_l1_pressed = true;
-    }
-    else if (!joy_data->btn_l1)
-    {
-      btn_l1_pressed = false;
-    }
-
-    // Decrement arm mode with button l2
-    if (joy_data->btn_l2 && m_arm_mode != 0 && !btn_l2_pressed)
-    {
-      m_arm_mode--;
-      btn_l2_pressed = true;
-    }
-    else if (!joy_data->btn_l2)
-    {
-      btn_l2_pressed = false;
-    }
-
-    // Call the position update function with the current arm mode
-    updateNeutralStakeArmPosition(m_arm_mode);
   }
 
   void AlphaJerryPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
@@ -1143,11 +986,22 @@ namespace ghost_tank
       if (joy_data->btn_l1)
       {
         m_goal_rush_active = true;
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
+        rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 1.0);
+      }
+      else if (joy_data->btn_l2){
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
+        rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", -1.0);
+      } else {
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
+        rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
       }
     }
     else
     {
       m_goal_rush_active = false;
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
+      rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
     }
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
   }

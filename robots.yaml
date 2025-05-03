@@ -1,5 +1,5 @@
 ### Points to selected robot configuration for PROS compile ###
-selected_robot: GHOST_TANK
+selected_robot: ALPHA_JERRY
 
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:

@@ -8,12 +8,12 @@ port_configuration:
         conveyor_motor_bottom:
             port: 5
             type: MOTOR
-            reversed: false
+            reversed: true
             config: intake_motor_config
         conveyor_motor_top:
             port: 6
             type: MOTOR
-            reversed: true
+            reversed: false
             config: intake_motor_config
         scissor_motor:
             port: 15
