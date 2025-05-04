@@ -1,9 +1,10 @@
 port_configuration:
     digital_io:
-        E: IN
-        F: OUT
-        G: OUT
-        H: OUT
+        A: OUT
+        B: OUT
+        C: OUT
+        D: OUT
+        E: OUT
     devices:
         conveyor_motor_bottom:
             port: 5
@@ -155,7 +156,7 @@ port_configuration:
             brake_mode: BRAKE
             encoder_units: DEGREES
             controller:
-                pos_gain: 0.0
+                pos_gain: 50.0
                 vel_gain: 0.0
                 ff_vel_gain: 0.0
                 ff_torque_gain: 0.0

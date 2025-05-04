@@ -86,10 +86,12 @@ namespace ghost_tank
 
   void AlphaJerryPlugin::populateDigitalIONames()
   {
-    digital_io_port_map["goal_rush_sensor"] = 4;
-    digital_io_port_map["goal_rush"] = 5;
-    digital_io_port_map["clamp"] = 7;
-    digital_io_port_map["bite"] = 6;
+    // digital_io_port_map["goal_rush_sensor"] = 4;
+    digital_io_port_map["goal_rush_l"] = 0;
+    digital_io_port_map["climb"] = 1;
+    digital_io_port_map["goal_rush_r"] = 2;
+    digital_io_port_map["bite"] = 3;
+    digital_io_port_map["clamp"] = 4;
   }
 
   //////////////////////
@@ -268,6 +270,11 @@ namespace ghost_tank
 
     m_ring_found = false;
     m_ring_color = m_color_map["unknown"];
+    
+    node_ptr_->declare_parameter("tank_robot_plugin.scissor_max_extension", 0.0);
+    node_ptr_->declare_parameter("tank_robot_plugin.scissor_reset_extension", 0.0);
+    m_scissor_max_extension = node_ptr_->get_parameter("tank_robot_plugin.scissor_max_extension").as_double();
+    m_scissor_reset_extension = node_ptr_->get_parameter("tank_robot_plugin.scissor_reset_extension").as_double();
   }
 
   void AlphaJerryPlugin::initNeutralStakeArm()
@@ -565,6 +572,7 @@ namespace ghost_tank
       updateIntake(joy_data->btn_r2, joy_data->btn_r1,
                    false, false,
                    current_time);
+      updateScissor(joy_data, shift1);
     }
     else if (shift2)
     {
@@ -580,6 +588,10 @@ namespace ghost_tank
     }
     updateBite(joy_data);
     updateDrivetrain(joy_data);
+
+    std::cout << "extension: " << m_scissor_max_extension << std::endl;
+    std::cout << "pos: " << rhi_ptr_->getMotorPosition("scissor_motor") << std::endl;
+
   }
 
   void AlphaJerryPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
@@ -609,6 +621,7 @@ namespace ghost_tank
 
     m_ring_found = m_color_map[m_color] != 0;
     m_ring_color = m_color_map[m_color];
+    std::cout << "color: " << m_ring_color << std::endl;
 
     // Initial ring detection
     if (m_ring_found && !running)
@@ -713,6 +726,10 @@ namespace ghost_tank
     {
       hook = false;
     }
+    // std::cout << "ejecting: " << ejecting << std::endl;
+    // std::cout << "hook: " << hook << std::endl;
+    // std::cout << "retry_mode: " << retry_mode << std::endl;
+
     // Call motor control with determined states
     updateIntake(true, hook, ejecting, !hook && retry_mode, current_time);
   }
@@ -762,9 +779,38 @@ namespace ghost_tank
     }
   }
 
+  void AlphaJerryPlugin::updateScissor(std::shared_ptr<JoystickDeviceData> joy_data, bool shift){
+    if (shift)
+    {
+      if (joy_data->btn_l1)
+      {
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
+        // rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 1.0);
+        rhi_ptr_->setMotorPositionCommand("scissor_motor", m_scissor_max_extension);
+      }
+      else if (joy_data->btn_l2){
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
+        rhi_ptr_->setMotorPositionCommand("scissor_motor", m_scissor_reset_extension);
+        // rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", -1.0);
+      } else if (joy_data->btn_x){
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
+        rhi_ptr_->setMotorPositionCommand("scissor_motor", -m_scissor_max_extension + m_scissor_reset_extension);
+        // rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", -1.0);
+      } else {
+        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
+        rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
+      }
+    }
+    else
+    {
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
+      rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
+    }
+  }
+  
   void AlphaJerryPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
   {
-    static bool first_r2 = true;
+    static bool first_r2 = false;
     static bool first_r2_started = false;
     // Manual Ground Pickup control
     double ground_pickup_power = 0;
@@ -830,7 +876,10 @@ namespace ghost_tank
         conveyor_current = 1000;
       }
     }
-
+    // std::cout << "m_conveyor_hook_is_aligned: " << m_conveyor_hook_is_aligned << std::endl;
+    // std::cout << "m_hook_fraction: " << m_hook_fraction << std::endl;
+    // std::cout << "conveyor_power: " << conveyor_power << std::endl;
+    
     // Transition to ejection mode
     static double ejecting_start_time = 0.0;
     if (R2 && L1 && m_conveyor_hook_is_aligned && !m_conveyor_hook_is_ejecting)
@@ -974,36 +1023,12 @@ namespace ghost_tank
 
   void AlphaJerryPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data, bool shift)
   {
-    // static bool goal_rush_btn_pressed = false;
-    // if (joy_data->btn_l1 && !goal_rush_btn_pressed) {
-    //   goal_rush_btn_pressed = true;
-    //   m_goal_rush_active = !m_goal_rush_active;
-    // } else if (!joy_data->btn_l1) {
-    //   goal_rush_btn_pressed = false;
-    // }
-    if (shift)
-    {
-      if (joy_data->btn_l1)
-      {
-        m_goal_rush_active = true;
-        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
-        rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 1.0);
-      }
-      else if (joy_data->btn_l2){
-        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
-        rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", -1.0);
-      } else {
-        rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
-        rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
-      }
-    }
-    else
-    {
+    if (joy_data->btn_l1 && shift) {
+      m_goal_rush_active = true;
+    } else {
       m_goal_rush_active = false;
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
-      rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
     }
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_goal_rush_active);
   }
 
   void AlphaJerryPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)

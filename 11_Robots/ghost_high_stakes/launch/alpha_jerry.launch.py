@@ -29,7 +29,7 @@ def generate_launch_description():
     robot_name = "ALPHA_JERRY"
 
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
-    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation.xml")
+    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation_alpha_jerry.xml")
     bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
     config_path = os.path.join(ghost_tank_share_dir, "config")
 
@@ -58,7 +58,7 @@ def generate_launch_description():
             {
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
-                "bt_path_interaction": bt_path_interaction,
+                "bt_path_interaction": bt_path,
                 "config_path": config_path,
             },
         ],
@@ -102,35 +102,58 @@ def generate_launch_description():
         executable="gpio_expander",
         name="gpio_expander",
         output="screen",
-        parameters=[ros_config_file, {
-            "system_i2c_bus_path" : "/dev/i2c-7"
-        }],
+        parameters=[ros_config_file],
     )
-
-    color_sensor_node = Node(
-        package="ghost_sensing",
-        executable="tcs_color_sensor",
-        name="tcs_color_sensor_0",
-        output="screen",
-        parameters=[ros_config_file, {
-            "system_i2c_bus_path" : "/dev/i2c-7"
-        }],
-    )
-    color_classifier_node = Node(
+    #color_sensor_intake = Node(
+    #     package="ghost_sensing",
+    #     executable="tcs_color_sensor",
+    #     name="tcs_color_sensor_intake",
+    #     output="screen",
+    #     namespace="/sensors/color_sensors/intake",
+    #     parameters=[
+    #         ros_config_file
+    #         # address 0x29, not configurable on tcs
+    #    ],
+    # )
+    color_classifier_intake = Node(
         package="ghost_sensing",
         executable="color_classifier",
         name="color_classifier_0",
         output="screen",
+        namespace="/sensors/color_sensors/intake",
         parameters=[ros_config_file],
     )
 
-    # tts_music_node = Node(
-    #     package="ghost_io_py",
-    #     executable="ghost_tts",
-    #     name="tts_music_node",
-    #     output="screen",
-    #     parameters=[ros_config_file],
-    # )
+    color_sensor_goal_rush_l = Node(
+        package="ghost_sensing",
+        executable="avago_color_sensor",
+        name="avago_color_sensor_goal_rush_l",
+        output="screen",
+        namespace="/sensors/color_sensors/goal_rush_l",
+        parameters=[ros_config_file, {
+            "address": 0x39^ (1<<6), # both address translator switches on so ^ 1<<6
+        }],
+    )
+    color_sensor_intake = Node(
+        package="ghost_sensing",
+        executable="avago_color_sensor",
+        name="avago_color_sensor_intake",
+        output="screen",
+        namespace="/sensors/color_sensors/intake",
+        parameters=[ros_config_file, {
+            "address": 0x39 , # both address translator switches on so ^ 1<<6
+        }],
+    )
+    # no need for color classifier, since we only use proximity for goal rush
+
+
+    tts_music_node = Node(
+        package="ghost_io_py",
+        executable="ghost_tts",
+        name="tts_music_node",
+        output="screen",
+        parameters=[ros_config_file],
+    )
 
     realsense_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -191,9 +214,12 @@ def generate_launch_description():
         odom_ekf_node,
         map_ekf_node,
         rplidar_node,
-        # color_classifier_node,
-        # color_sensor_node,
-        # tts_music_node,
+        color_sensor_intake,
+        color_classifier_intake,
+        # color_sensor_goal_rush_l,
+        #color_sensor_goal_rush_r,
+        tts_music_node,
         competition_state_machine_node,
-        # gpio_expander,
+        gpio_expander,
     ])
+

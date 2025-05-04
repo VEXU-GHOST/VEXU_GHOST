@@ -112,6 +112,7 @@ namespace ghost_tank
 
     void updateNeutralStakeArmPosition(int arm_mode);
     void updateNeutralStakeArmPositionController(bool active, bool up_btn, bool down_btn);
+    void updateScissor(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, bool shift);
 
     void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
     void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
@@ -258,6 +259,8 @@ namespace ghost_tank
     double m_neutral_stake_arm_score_alliance_pos_deg{0.0};
     double m_neutral_stake_arm_down_pos_deg{0.0};
     double m_neutral_stake_arm_des_pos{0.0};
+    double m_scissor_max_extension{0.0};
+    double m_scissor_reset_extension{0.0};
     int m_arm_mode{0};
 
     // Digital IO
