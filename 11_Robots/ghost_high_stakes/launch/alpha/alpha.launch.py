@@ -159,7 +159,7 @@ def generate_launch_description():
         imu_filter_node,
         odom_ekf_node,
         ekf_pf_node,
-        # map_ekf_node,
+        map_ekf_node,
         # color_sensor_intake,
         # color_classifier_intake,
                 # color_sensor_goal_rush_l,
