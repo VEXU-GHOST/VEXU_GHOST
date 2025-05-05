@@ -43,30 +43,7 @@ imu_filter_node:
 
 competition_state_machine_node:
   ros__parameters:
-    odom_topic: "/sensors/wheel_odom"
-    backup_pose_topic: "/odom_ekf/odometry"
-    pose_topic: "/map_ekf/odometry"
-    set_pf_pose_topic: "/set_pf_pose"
-
     tank_robot_plugin:
-      conveyor_num_links: 69.0
-      conveyor_sprocket_teeth: 12.0
-      conveyor_num_hooks: 3.0
-
-      conveyor_hook_align_threshold: 0.85
-      conveyor_hook_align_power: 0.5
-
-      conveyor_hook_throw_fraction: 0.5
-      conveyor_hook_throw_duration: 0.25
-
-      neutral_stake_arm_kp: 0.03
-      neutral_stake_arm_gear_ratio: 3.0
-      neutral_stake_arm_rest_pos_deg: 0.0
-      neutral_stake_arm_loading_pos_deg: 35.0
-      neutral_stake_arm_score_neutral_pos_deg: 110.0
-      neutral_stake_arm_score_alliance_pos_deg: 170.0
-      neutral_stake_arm_down_pos_deg: 240.0
-
       scissor_max_extension: 7700.0
       scissor_reset_extension: -200.0
 
@@ -83,31 +60,13 @@ competition_state_machine_node:
       move_to_pose_ki_theta_fine: 0.005 #0.01
       move_to_pose_integral_limit: 0.5 #0.5
 
-      drive_motor_ticks_per_rotation: 360.0
-      drive_gear_ratio: 1.15 # 23/20
-      drive_wheel_rad_in: 1.375
-      wheel_base_inches: 12.5
-      
-      cmd_twist_topic: "/cmd_vel" # from ekf
-      bag_recorder_start_topic: "bag_recorder/start"
-      bag_recorder_stop_topic: "bag_recorder/stop"
-
-      cmd_pose_topic: "/set_pose"
-      imu_topic: "/sensors/imu"
-      des_twist_topic: "/des_vel"
-      cur_twist_topic: "/cur_vel"
-      des_pos_topic: "/des_pos"
-      err_pos_topic: "/err_pos"
-      use_backup_estimator: false
-      sim_mode: false
-
 /**:
   ros__parameters:
     map_ekf:
       initial_state:
         [
-          1.2192, 1.2192, 0.0, #0.965, 0.559, 0.0, # 2.635,  0.559,  0.0,
-          0.0, 0.0, 0.0, #0.0,  0.0,  1.964, # 0.0,  0.0,  1.178,
+          1.2192, 0.6096, 0.0, #0.965, 0.559, 0.0, # 2.635,  0.559,  0.0,
+          0.0, 0.0, 1.570795, #0.0,  0.0,  1.964, # 0.0,  0.0,  1.178,
           0.0,  0.0,  0.0,
           0.0,  0.0,  0.0,
           0.0,  0.0,  0.0,

@@ -71,7 +71,6 @@ protected:
   void initROSComms();
   void initEstimation();
   void initIntake();
-  void initNeutralStakeArm();
   void initTankModel();
   void initAutonomy();
 
