@@ -91,7 +91,7 @@ void AlphaJerryPlugin::populateDigitalIONames()
   // digital_io_port_map["goal_rush_sensor"] = 4;
   digital_io_port_map["goal_rush_l"] = 0;
   digital_io_port_map["climb"] = 1;
-  digital_io_port_map["goal_rush"] = 2;
+  digital_io_port_map["goal_rush_r"] = 2;
   digital_io_port_map["bite"] = 3;
   digital_io_port_map["clamp"] = 4;
 }
@@ -105,7 +105,6 @@ void AlphaJerryPlugin::initialize()
   initROSComms();
   initEstimation();
   initIntake();
-  // initNeutralStakeArm();
   initTankModel();
   initAutonomy();
   resetWorldPose();
@@ -155,10 +154,6 @@ void AlphaJerryPlugin::initROSComms()
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
   std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
   m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(cmd_pose_topic, 10);
-
-  node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
-  std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
-  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(input_imu_topic, 10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
   std::string des_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
@@ -405,8 +400,6 @@ void AlphaJerryPlugin::onNewSensorData()
   m_loop_current_limits.clear();
 
   updateConveyorPositionSensing();
-  // now done by realsense/imufilternode
-  //publishIMUData();
   updateAndPublishOdometry();
   publishTrajectoryVisualization();
 }
@@ -417,30 +410,6 @@ void AlphaJerryPlugin::updateConveyorPositionSensing()
   m_conveyor_position_rel = std::fmod(m_conveyor_position_abs, m_conveyor_ticks_per_loop);
   m_conveyor_position_rel += (m_conveyor_position_rel < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
   m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
-}
-
-void AlphaJerryPlugin::publishIMUData()
-{
-  sensor_msgs::msg::Imu imu_msg{};
-  imu_msg.header.frame_id = "imu_link";
-  imu_msg.header.stamp = node_ptr_->get_clock()->now();
-  if (!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))) {
-    imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
-  }
-  if (!std::isnan(rhi_ptr_->getInertialSensorYRate("imu"))) {
-    imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
-  }
-  if (!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))) {
-    imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
-  }
-  double yaw;
-  if (!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))) {
-    yaw = -rhi_ptr_->getInertialSensorHeading("imu");
-    ghost_util::yawToQuaternionDeg(
-      yaw, imu_msg.orientation.w, imu_msg.orientation.x,
-      imu_msg.orientation.y, imu_msg.orientation.z);
-  }
-  imu_pub->publish(imu_msg);
 }
 
 void AlphaJerryPlugin::disabled()
@@ -506,8 +475,6 @@ void AlphaJerryPlugin::autonomous(double current_time)
   }
 
   auto joy_data = rhi_ptr_->getMainJoystickData();
-  updateBite(joy_data);
-  updateGoalRush(joy_data, false, true);
 
   double fwd_cmd = 0.0;
   double turn_cmd = 0.0;
@@ -549,19 +516,12 @@ void AlphaJerryPlugin::teleop(double current_time)
   updateScissor(joy_data->btn_l1, joy_data->btn_l2, shift_r);
   updateT1Climb(joy_data->btn_r1, joy_data->btn_r2, shift_r);
   updateClamp(joy_data->btn_l2, joy_data->btn_r2, shift_l);
-
-  // updateGoalRush(joy_data, shift_l, false);
-
+  updateGoalRush(joy_data->btn_l1, joy_data->btn_r1, shift_l);
 
   // Disable intake when shifts are active
-  // if(shift_r || shift_l){
-  //   updateIntake(false, false, false, false, current_time); // Default mode
-  // }
-  // else{
-  //   updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time); // Default mode
-  // }
 
-  // updateBite(joy_data);
+  updateIntakeFromJoystick(joy_data, shift_l, shift_r, current_time);
+
   updateDrivetrain(joy_data);
 
   // std::cout << "extension: " << m_scissor_max_extension << std::endl;
@@ -844,6 +804,11 @@ void AlphaJerryPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cu
     }
   }
 
+  if (!m_bite_closed) {
+    ground_pickup_power = 0.0;
+    ground_pickup_current = 0.0;
+  }
+
   rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
 
@@ -856,13 +821,27 @@ void AlphaJerryPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cu
   m_loop_current_limits.push_back(conveyor_current * 2.0);
 }
 
-void AlphaJerryPlugin::updateBite(JoyPtr joy_data)
+void AlphaJerryPlugin::updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time)
+{
+  if (shift_r || shift_l) {
+    updateIntake(false, false, false, false, current_time); // Default mode
+  } else {
+    if (joy_data->btn_l1 && joy_data->btn_r1) {
+      toggleBite(true);
+    } else {
+      toggleBite(false);
+    }
+    updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time); // Default mode
+  }
+}
+
+void AlphaJerryPlugin::toggleBite(bool signal)
 {
   static bool bite_btn_pressed = false;
-  if (joy_data->btn_x && !bite_btn_pressed) {
+  if (signal && !bite_btn_pressed) {
     bite_btn_pressed = true;
     m_bite_closed = !m_bite_closed;
-  } else if (!joy_data->btn_x) {
+  } else if (!signal) {
     bite_btn_pressed = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
@@ -920,23 +899,15 @@ void AlphaJerryPlugin::updateMusic(JoyPtr joy_data, double current_time)
   }
 }
 
-void AlphaJerryPlugin::updateGoalRush(JoyPtr joy_data, bool shift, bool auton)
+void AlphaJerryPlugin::updateGoalRush(bool left_rush, bool right_rush, bool enabled)
 {
-  bool goal_rush_l_active = false;
-  if (!auton) {
-    if (joy_data->btn_l1 && shift) {
-      goal_rush_l_active = true;
-    } else {
-      goal_rush_l_active = false;
-    }
-    if (joy_data->btn_r1 && shift) {
-      m_goal_rush_active = true;
-    } else {
-      m_goal_rush_active = false;
-    }
+  if (enabled) {
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], left_rush);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], right_rush);
+  } else {
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], false);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], false);
   }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], goal_rush_l_active);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
 }
 
 void AlphaJerryPlugin::updateDrivetrain(JoyPtr joy_data)

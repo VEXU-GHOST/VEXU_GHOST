@@ -77,7 +77,6 @@ protected:
 
   // onNewSensorData
   void updateConveyorPositionSensing();
-  void publishIMUData();
   void updateAndPublishOdometry();
   void publishBaseTwist();
   void publishTrajectoryVisualization();
@@ -103,17 +102,19 @@ protected:
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
 
-  void updateClamp(bool close, bool open, bool shift2);
+  void updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time);
+  void toggleBite(bool signal);
 
-  void updateDrivetrain(JoyPtr joy_data);
-  void updateBite(JoyPtr joy_data);
-  void updateGoalRush(JoyPtr joy_data, bool shift, bool auton);
+  void updateClamp(bool close, bool open, bool shift2);
+  void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
 
   void updateScissor(bool up, bool down, bool enabled);
   void updateT1Climb(bool up, bool down, bool enabled);
 
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
   void updateMusic(JoyPtr joy_data, double current_time);
+
+  void updateDrivetrain(JoyPtr joy_data);
 
   // Output
   void playMusic(std::string m);
@@ -149,13 +150,11 @@ protected:
   void publishErrorPose(Eigen::Vector3d pose);
 
   // Subscribers
-  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
-  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_robot_color;
   void colorCallback(const std_msgs::msg::String msg)
