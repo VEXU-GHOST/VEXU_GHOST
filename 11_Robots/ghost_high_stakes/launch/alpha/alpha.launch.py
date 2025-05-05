@@ -4,8 +4,9 @@ from launch import LaunchDescription
 
 from ament_index_python import get_package_share_directory
 from launch_ros.actions import Node, SetRemap
-from launch.actions import IncludeLaunchDescription, GroupAction
+from launch.actions import IncludeLaunchDescription, GroupAction, DeclareLaunchArgument, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import Command, LaunchConfiguration
 
 
 def generate_launch_description():
@@ -26,6 +27,8 @@ def generate_launch_description():
     bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
     config_path = os.path.join(ghost_tank_share_dir, "config")
 
+    base_params_file = LaunchConfiguration("base_params_file")
+
     ########################
     ### Node Definitions ###
     ########################
@@ -35,6 +38,7 @@ def generate_launch_description():
         name="ghost_serial_node",
         output="screen",
         parameters=[
+            base_params_file,
             ros_config_file,
             {"robot_config_yaml_path": robot_config_yaml_path},
         ],
@@ -46,6 +50,7 @@ def generate_launch_description():
         executable="competition_state_machine_node",
         output="screen",
         parameters=[
+            base_params_file,
             ros_config_file,
             {
                 "robot_config_yaml_path": robot_config_yaml_path,
@@ -63,7 +68,7 @@ def generate_launch_description():
         executable="imu_filter_node",
         name="imu_filter_node",
         output="screen",
-        parameters=[ros_config_file],
+        parameters=[ros_config_file, base_params_file],
     )
 
     gpio_expander = Node(
@@ -71,7 +76,7 @@ def generate_launch_description():
         executable="gpio_expander",
         name="gpio_expander",
         output="screen",
-        parameters=[ros_config_file],
+        parameters=[ros_config_file, base_params_file],
     )
 
     #color_sensor_intake = Node(
@@ -92,7 +97,7 @@ def generate_launch_description():
         name="color_classifier_0",
         output="screen",
         namespace="/sensors/color_sensors/intake",
-        parameters=[ros_config_file],
+        parameters=[ros_config_file, base_params_file],
     )
 
     color_sensor_goal_rush_l = Node(
@@ -101,7 +106,7 @@ def generate_launch_description():
         name="avago_color_sensor_goal_rush_l",
         output="screen",
         namespace="/sensors/color_sensors/goal_rush_l",
-        parameters=[ros_config_file, {
+        parameters=[ros_config_file, base_params_file, {
             "address": 0x39^ (1<<6), # both address translator switches on so ^ 1<<6
         }],
     )
@@ -111,9 +116,13 @@ def generate_launch_description():
         name="avago_color_sensor_intake",
         output="screen",
         namespace="/sensors/color_sensors/intake",
-        parameters=[ros_config_file, {
-            "address": 0x39 , # both address translator switches on so ^ 1<<6
-        }],
+        parameters=[
+            ros_config_file, 
+            base_params_file,
+            {
+                "address": 0x39 , # both address translator switches on so ^ 1<<6
+            }
+        ],
     )
     # no need for color classifier, since we only use proximity for goal rush
 
@@ -123,7 +132,7 @@ def generate_launch_description():
         executable="ekf_node",
         name="odom_ekf_node",
         output="screen",
-        parameters=[ros_config_file],
+        parameters=[ros_config_file, base_params_file],
         remappings=[("odometry/filtered", "/odom_ekf/odometry")],
     )
 
@@ -132,7 +141,7 @@ def generate_launch_description():
         executable="ekf_node",
         name="map_ekf_node",
         output="screen",
-        parameters=[ros_config_file],
+        parameters=[ros_config_file, base_params_file],
         remappings=[("odometry/filtered", "/map_ekf/odometry")],
     )
 
@@ -141,14 +150,15 @@ def generate_launch_description():
         executable="ekf_pf_node",
         name="ekf_pf_node",
         output="screen",
-        parameters=[ros_config_file],
+        parameters=[ros_config_file, base_params_file],
     )
 
     return LaunchDescription([
+        DeclareLaunchArgument('base_params_file'),
         serial_node,
         imu_filter_node,
-        # ekf_pf_node,
-        # odom_ekf_node,
+        odom_ekf_node,
+        ekf_pf_node,
         # map_ekf_node,
         # color_sensor_intake,
         # color_classifier_intake,

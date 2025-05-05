@@ -96,7 +96,8 @@ def generate_launch_description():
             robot_launch = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     os.path.join(ghost_high_stakes_base_dir, "launch", robot_name, robot_name + ".launch.py")
-                )
+                ),
+                launch_arguments={'base_params_file': base_ros_config_file}.items()
             )
             return [robot_launch]
 
