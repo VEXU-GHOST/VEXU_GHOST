@@ -292,7 +292,8 @@ void ParticleFilter::ObserveLaser(
   double delta_angle = math_util::AngleDiff(last_update_angle_, prev_odom_angle_);
   if (((delta_translation > config_params_.min_update_dist) ||
     (std::abs(delta_angle) > config_params_.min_update_angle)) &&
-    (std::abs(angular_velocity_curr_) < config_params_.max_update_angular_velocity))
+    (std::abs(yaw_angular_velocity_curr_) < config_params_.max_update_yaw_velocity) &&
+    (std::abs(tilt_angular_velocity_max_) < config_params_.max_update_tilt_velocity))
   {
     static int i = 0;
     double start_time = GetMonotonicTime();
