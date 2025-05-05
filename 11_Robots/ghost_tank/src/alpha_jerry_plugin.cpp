@@ -352,11 +352,7 @@ void AlphaJerryPlugin::initAutonomy()
   bt_->set_variable("pd_control_threshold_ptr", m_pd_control_threshold);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
-  try {
-    bt_->init_tree();
-  } catch (std::exception & e) {
-    std::cout << "Error init_tree: " << e.what() << std::endl;
-  }
+  resetBT();
 }
 
 /////////////////////
@@ -398,6 +394,9 @@ void AlphaJerryPlugin::autonomous(double current_time)
     playTTS("starting autonomous");
     m_odom_ptr->resetPose();
     resetWorldPose();
+
+    bt_->set_variable<bool>("clamp_closed", false);
+    bt_->set_variable<bool>("bite_closed", false);
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
@@ -448,6 +447,16 @@ void AlphaJerryPlugin::autonomous(double current_time)
   bt_->get_variable("fwd_cmd", msg.linear.x);
   bt_->get_variable("turn_cmd", msg.angular.z);
   m_base_twist_cmd_pub->publish(msg);
+}
+
+void AlphaJerryPlugin::resetBT()
+{
+  try {
+    std::cout << "Initializing Behavior Tree" << std::endl;
+    bt_->init_tree();
+  } catch (std::exception & e) {
+    std::cout << "Error init_tree: " << e.what() << std::endl;
+  }
 }
 
 void AlphaJerryPlugin::teleop(double current_time)
@@ -613,6 +622,7 @@ bool AlphaJerryPlugin::runAutonFromDriver(JoyPtr joy_data, double current_time)
       auton_button_pressed = true;
       m_is_first_auton_loop = true;
       m_auton_start_time = current_time;
+      resetBT();
     }
     autonomous(current_time - m_auton_start_time);
 

@@ -10,8 +10,9 @@ from launch.substitutions import Command, LaunchConfiguration
 
 
 def generate_launch_description():
-    home_dir = os.path.expanduser("~")
-    config_path = os.path.join(home_dir, "VEXU_GHOST", "11_Robots", "ghost_high_stakes", "config")
+    # Get base params from parent launch file and config path
+    base_params_file = LaunchConfiguration("base_params_file")
+    config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_high_stakes", "config")
 
     # This contains all the parameters for our ROS nodes
     ros_config_file = os.path.join(config_path, "alpha/alpha_ros_config.yaml")
@@ -19,15 +20,13 @@ def generate_launch_description():
     # This contains all the port and device info that gets compiled on to the V5 Brain
     robot_config_yaml_path = os.path.join(config_path, "alpha/alpha_hardware_config.yaml")
 
+    # This specifies robot control plugin yo load
     plugin_type = "ghost_tank::AlphaJerryPlugin"
     robot_name = "ALPHA_JERRY"
 
+    # Get BT Path for autons
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
     bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation_alpha_jerry.xml")
-    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
-    config_path = os.path.join(ghost_tank_share_dir, "config")
-
-    base_params_file = LaunchConfiguration("base_params_file")
 
     ########################
     ### Node Definitions ###
@@ -55,7 +54,6 @@ def generate_launch_description():
             {
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
-                "bt_path_interaction": bt_path,
                 "config_path": config_path,
             },
         ],

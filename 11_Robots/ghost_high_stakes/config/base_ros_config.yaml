@@ -117,7 +117,6 @@ competition_state_machine_node:
 
     system_i2c_bus_path: "/dev/i2c-7"
 
-
 ekf_pf_node:
   ros__parameters:
     particle_filter:

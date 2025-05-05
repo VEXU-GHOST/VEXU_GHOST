@@ -115,6 +115,9 @@ protected:
 
   void updateDrivetrain(JoyPtr joy_data);
 
+  void resetBT();
+
+
   // Output
   void playMusic(std::string m);
   void playTTS(std::string m);
