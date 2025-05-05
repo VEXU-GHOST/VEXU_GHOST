@@ -60,16 +60,13 @@ def generate_launch_description():
                     )
                 ),
                 launch_arguments={
-                    "unite_imu_method": "2",
                     "enable_depth": "false",
                     "enable_color": "false",
-                    "enable_sync": "true",
                     "enable_gyro": "true",
-                    "enable_accel": "true",
                     "initial_reset": "true",
+                    "gyro_qos": "SENSOR_DATA",
                     "gyro_fps": "200",  # 200 or 400
-                    "accel_fps": "63",  # 63 or 250
-                            "color_fps": "1",
+                    "color_fps": "1",
                 "color_width": "640",
                 "color_height": "480",
                 }.items(),
