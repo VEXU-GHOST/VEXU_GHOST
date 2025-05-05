@@ -89,7 +89,7 @@ namespace ghost_tank
     // digital_io_port_map["goal_rush_sensor"] = 4;
     digital_io_port_map["goal_rush_l"] = 0;
     digital_io_port_map["climb"] = 1;
-    digital_io_port_map["goal_rush_r"] = 2;
+    digital_io_port_map["goal_rush"] = 2;
     digital_io_port_map["bite"] = 3;
     digital_io_port_map["clamp"] = 4;
   }
@@ -106,6 +106,7 @@ namespace ghost_tank
     // initNeutralStakeArm();
     initTankModel();
     initAutonomy();
+    resetWorldPose();
   }
 
   void AlphaJerryPlugin::initROSComms()
@@ -232,9 +233,11 @@ namespace ghost_tank
 
     node_ptr_->declare_parameter("map_ekf.initial_estimate_covariance", std::vector<double>());
     node_ptr_->declare_parameter("map_ekf.initial_state", std::vector<double>());
+    node_ptr_->declare_parameter("map_ekf.initial_state_mirrored", std::vector<double>());
 
     m_initial_estimate_covariance = node_ptr_->get_parameter("map_ekf.initial_estimate_covariance").as_double_array();
     m_reset_pose = node_ptr_->get_parameter("map_ekf.initial_state").as_double_array();
+    m_reset_pose_mirrored = node_ptr_->get_parameter("map_ekf.initial_state_mirrored").as_double_array();
 
     std::cout << "[AlphaJerryPlugin::initEstimation] m_initial_estimate_covariance: " << m_initial_estimate_covariance.size() << std::endl;
     std::cout << "[AlphaJerryPlugin::initEstimation] m_reset_pose: " << m_reset_pose.size() << std::endl;
@@ -395,7 +398,7 @@ namespace ghost_tank
     static bool first_loop = true;
     if (first_loop)
     {
-      resetWorldPose();
+      // resetWorldPose();
       first_loop = false;
     }
 
@@ -466,7 +469,7 @@ namespace ghost_tank
     if (first_loop)
     {
       first_loop = false;
-      // m_odom_ptr->resetPose();
+      m_odom_ptr->resetPose();
     }
 
     try
@@ -520,7 +523,7 @@ namespace ghost_tank
     auto joy_data = rhi_ptr_->getMainJoystickData();
     updateBite(joy_data);
     updateClampController(false, false, joy_data);
-    updateGoalRush(joy_data, true);
+    updateGoalRush(joy_data, false, true);
 
     double fwd_cmd = 0.0;
     double turn_cmd = 0.0;
@@ -577,20 +580,20 @@ namespace ghost_tank
     else if (shift2)
     {
       updateClampController(shift1, shift2, joy_data); // R-held mode
-      updateGoalRush(joy_data, true);
+      updateGoalRush(joy_data, true, false);
     }
     else
     {
       updateIntake(joy_data->btn_r2, joy_data->btn_r1,
                    joy_data->btn_l1, joy_data->btn_l2,
                    current_time); // Default mode
-      updateGoalRush(joy_data, false);
+      updateGoalRush(joy_data, false, false);
     }
     updateBite(joy_data);
     updateDrivetrain(joy_data);
 
-    std::cout << "extension: " << m_scissor_max_extension << std::endl;
-    std::cout << "pos: " << rhi_ptr_->getMotorPosition("scissor_motor") << std::endl;
+    // std::cout << "extension: " << m_scissor_max_extension << std::endl;
+    // std::cout << "pos: " << rhi_ptr_->getMotorPosition("scissor_motor") << std::endl;
 
   }
 
@@ -1021,14 +1024,23 @@ namespace ghost_tank
     }
   }
 
-  void AlphaJerryPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data, bool shift)
+  void AlphaJerryPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_data, bool shift, bool auton)
   {
-    if (joy_data->btn_l1 && shift) {
-      m_goal_rush_active = true;
-    } else {
-      m_goal_rush_active = false;
+    bool goal_rush_l_active = false;
+    if (!auton){
+      if (joy_data->btn_l1 && shift) {
+        goal_rush_l_active = true;
+      } else {
+        goal_rush_l_active = false;
+      }
+      if (joy_data->btn_r1 && shift) {
+        m_goal_rush_active = true;
+      } else {
+        m_goal_rush_active = false;
+      }
     }
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_goal_rush_active);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], goal_rush_l_active);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
   }
 
   void AlphaJerryPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)
@@ -1207,19 +1219,30 @@ namespace ghost_tank
     }
 
     geometry_msgs::msg::Quaternion quat{};
-    ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
-
     geometry_msgs::msg::PoseWithCovarianceStamped new_pose{};
     new_pose.header.frame_id = "map";
     new_pose.header.stamp = node_ptr_->get_clock()->now();
-    new_pose.pose.pose.position.x = m_reset_pose[0];
-    new_pose.pose.pose.position.y = m_reset_pose[1];
+    
+    if (m_mirrored){
+      ghost_util::yawToQuaternionRad(m_reset_pose_mirrored[5], quat.w, quat.x, quat.y, quat.z);
+      new_pose.pose.pose.position.x = m_reset_pose_mirrored[0];
+      new_pose.pose.pose.position.y = m_reset_pose_mirrored[1];
+    } else {
+      ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
+      new_pose.pose.pose.position.x = m_reset_pose[0];
+      new_pose.pose.pose.position.y = m_reset_pose[1];
+    }
+    
     new_pose.pose.pose.orientation = quat;
     new_pose.pose.covariance = m_initial_estimate_covariance_arr;
 
     // Publish to Particle Filter
     m_reset_pf_pub->publish(new_pose);
-    std::cout << "Done reset" << std::endl;
+    if (m_mirrored){
+      std::cout << "Done reset: mirrored" << std::endl;
+    } else {
+      std::cout << "Done reset: regular" << std::endl;
+    }
   }
 
   void AlphaJerryPlugin::publishCurrentTwist(
@@ -1353,6 +1376,9 @@ namespace ghost_tank
 
   void AlphaJerryPlugin::colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
   {
+    if (m_color_target_red != msg->data){
+      RCLCPP_INFO(node_ptr_->get_logger(), "color_target_red state changed: %ld", msg->data);
+    }
     if (msg->data == 1)
     {
       m_color_target_red = true;
@@ -1369,17 +1395,21 @@ namespace ghost_tank
 
   void AlphaJerryPlugin::mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
   {
-    if (msg->data == 1)
-    {
-      m_mirrored = true;
-    }
-    else if (msg->data == 0)
-    {
-      m_mirrored = false;
-    }
-    else
-    {
-      RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
+    if (m_mirrored != msg->data){
+      RCLCPP_INFO(node_ptr_->get_logger(), "Mirrored state changed: %ld", msg->data);
+      if (msg->data == 1)
+      {
+        m_mirrored = true;
+      }
+      else if (msg->data == 0)
+      {
+        m_mirrored = false;
+      }
+      else
+      {
+        RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
+      }
+      resetWorldPose();
     }
   }
 

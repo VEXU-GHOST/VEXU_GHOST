@@ -106,7 +106,7 @@ namespace ghost_tank
 
     void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
     void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-    void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, bool shift);
+    void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, bool shift, bool auton);
     void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
     void updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
 
@@ -221,6 +221,7 @@ namespace ghost_tank
     static constexpr size_t m_cov_n = 6 * 6;
 
     std::vector<double> m_reset_pose;
+    std::vector<double> m_reset_pose_mirrored;
     std::vector<double> m_initial_estimate_covariance;
 
     bool m_use_backup_estimator = false;

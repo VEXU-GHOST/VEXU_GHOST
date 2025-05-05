@@ -1,72 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-  <BehaviorTree ID="better_goal_rush">
+  <include path="bt_center_goal.xml"/>
+  <BehaviorTree ID="aj_rings">
     <Sequence>
-      <Logging message="goal_rush"/>
-      <GoalRushCmd arm_down="true"/>
-      <IntakeCmd auto="false"
-                 ground_intake="true"/>
-      <ParallelAll>
-        <Fallback>
-          <Timeout msec="600">
-            <KeepRunningUntilFailure>
-              <Sequence>
-                <GoalRushCmd arm_down="true"/>
-                <!-- <BiteCmd bite_closed="false"/> -->
-              </Sequence>
-            </KeepRunningUntilFailure>
-          </Timeout>
-          <BiteCmd bite_closed="true"/>
-        </Fallback>
-        <MoveToPoseBezier  posX_tiles="1.05"
-                            posY_tiles="2.2"
-                            theta_deg="105"
-                            search_radius_m="0.25"
-                            threshold_m="0.05"
-                            angle_threshold_deg="5.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
-                            lead="0.4"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-1150"
-                            use_theta="true"
-                            backwards="false"/>
-      </ParallelAll>
-      <!-- </ReactiveFallback> -->
+      <Logging message="grab the goal"/>
       <GoalRushCmd arm_down="false"/>
-      <ShutoffNode/>
-      <!-- <WaitCmd seconds="0.100" -->
-                <!-- shutoff_motors="true"/> -->
-
-      <Logging message="pulling_back"/>
-      <MoveToPoseBezier posX_tiles="1.5"
-                            posY_tiles="1.5"
-                            theta_deg="135.0"
-                            search_radius_m="0.3"
-                            threshold_m="0.05"
-                            angle_threshold_deg="3.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
-                            lead="0.75"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-2000"
-                            use_theta="true"
-                            backwards="true"/>
-      <ShutoffNode/>
-
-      <!-- Release goal -->
-      <Logging message="release goal"/>
-      <GoalRushCmd arm_down="true"/>
-      <IntakeCmd auto="false"
-                 ground_intake="true"/>
-      <Logging message="pulling_back"/>
-    
-      <!-- Pull back a little to clear goal from arm -->
       <MoveToPoseBezier posX_tiles="1.7"
                             posY_tiles="1.25"
-                            theta_deg="135.0"
+                            theta_deg="-45.0"
                             search_radius_m="0.1"
                             threshold_m="0.05"
                             angle_threshold_deg="3.0"
@@ -78,12 +19,68 @@
                             timeout_ms="-2000"
                             use_theta="true"
                             backwards="true"/>
+      <!-- <MoveToPoseBezier posX_tiles="1.5"
+                            posY_tiles="2.0"
+                            theta_deg="-45.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.05"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="0.75"
+                            max_speed_linear_pct="1.0"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-2000"
+                            use_theta="true"
+                            backwards="true"/> -->
+      <Logging message="Back Up Further and Clamp Goal"/>
+      <ParallelAll>
+        <Fallback>
+          <Timeout msec="1000">
+            <KeepRunningUntilFailure>
+              <ClampCmd clamp_closed="false"/>
+            </KeepRunningUntilFailure>
+          </Timeout>
+          <ClampCmd clamp_closed="true"/>
+        </Fallback>
+        <MoveToPoseBezier posX_tiles="1.0"
+                            posY_tiles="2.5"
+                            theta_deg="-90.0"
+                            search_radius_m="0.3"
+                            threshold_m="0.05"
+                            angle_threshold_deg="3.0"
+                            threshold_vel_mps="0.1"
+                            angle_threshold_vel_dps="1.0"
+                            lead="1.0"
+                            max_speed_linear_pct="0.4"
+                            max_speed_angular_pct="1.0"
+                            timeout_ms="-2000"
+                            use_theta="true"
+                            backwards="true"/>
+      </ParallelAll>
+      <ClampCmd clamp_closed="true"/>
+
+      <!-- <WaitCmd seconds="100.00" -->
+                <!-- shutoff_motors="true"/> -->
+   
+      <Logging message="Processing stack2"/>
+      <!-- <IntakeCmd auto="true"
+                 ground_intake="false"/> -->
+      <MoveToPoseBezier posX_tiles="1.0"
+                              posY_tiles="1.0"
+                              theta_deg="-135.0"
+                              search_radius_m="0.3"
+                              threshold_m="0.02"
+                              angle_threshold_deg="1.0"
+                              threshold_vel_mps="0.1"
+                              angle_threshold_vel_dps="1.0"
+                              lead="0.5"
+                              max_speed_linear_pct="0.8"
+                              max_speed_angular_pct="1.0"
+                              timeout_ms="-2000"
+                              use_theta="true"
+                              backwards="false"/>
       <ShutoffNode/>
-      <!-- Release goal -->
-      <Logging message="retract arm"/>
-      <GoalRushCmd arm_down="false"/>
-      <IntakeCmd auto="false"
-                 ground_intake="false"/>
     </Sequence>
   </BehaviorTree>
 
@@ -111,8 +108,7 @@
     </Action>
     <Action ID="IntakeCmd"
             editable="true">
-      <input_port name="auto"/>
-      <input_port name="ground_intake"/>
+      <input_port name="active"/>
     </Action>
     <Action ID="Logging"
             editable="true">
@@ -148,8 +144,6 @@
                   default="false"/>
     </Action>
     <Action ID="ShutoffNode"
-            editable="true"/>
-    <Action ID="GoalRushDetected"
             editable="true"/>
   </TreeNodesModel>
 
