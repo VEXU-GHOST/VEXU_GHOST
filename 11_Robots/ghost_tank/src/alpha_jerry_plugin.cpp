@@ -324,7 +324,7 @@ void AlphaJerryPlugin::initTankModel()
 
   m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
   m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
-  // m_odom_ptr->resetPose();
+  m_odom_ptr->resetPose();
 
   node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.5);
@@ -418,21 +418,15 @@ void AlphaJerryPlugin::disabled()
 
 void AlphaJerryPlugin::autonomous(double current_time)
 {
-  static bool run_yet = 0;
-  if (!run_yet) {
+  if (m_is_first_auton_loop) {
+    m_is_first_auton_loop = false;
     playTTS("starting autonomous");
-    run_yet = 1;
+    m_odom_ptr->resetPose();
+    resetWorldPose();
   }
 
-  // std::cout << "Autonomous: " << current_time << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
   bt_->set_variable("mirrored", m_mirrored);
-
-  static bool first_loop = true;
-  if (first_loop) {
-    first_loop = false;
-    m_odom_ptr->resetPose();
-  }
 
   try {
     bt_->tick_tree();
@@ -467,25 +461,17 @@ void AlphaJerryPlugin::autonomous(double current_time)
     updateIntake(ground_intake_active, false, false, false, current_time);
   }
 
-  if (bt_->get_variable("bite_closed", m_bite_closed)) {
-  }
-  if (bt_->get_variable("clamp_closed", m_clamp_closed)) {
-  }
-  if (bt_->get_variable("arm_down", m_goal_rush_active)) {
-  }
+  // Update Pneumatics
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], true);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<bool>("clamp_closed"));
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], true);
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], true);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<bool>("bite_closed"));
 
-  auto joy_data = rhi_ptr_->getMainJoystickData();
-
-  double fwd_cmd = 0.0;
-  double turn_cmd = 0.0;
-  if (bt_->get_variable("fwd_cmd", fwd_cmd)) {
-  }
-  if (bt_->get_variable("turn_cmd", turn_cmd)) {
-  }
-
+  // Publish Twist Command
   geometry_msgs::msg::Twist msg{};
-  msg.linear.x = fwd_cmd;
-  msg.angular.z = turn_cmd;
+  bt_->get_variable("fwd_cmd", msg.linear.x);
+  bt_->get_variable("turn_cmd", msg.angular.z);
   m_base_twist_cmd_pub->publish(msg);
 }
 
@@ -646,18 +632,18 @@ void AlphaJerryPlugin::ringDetector(bool active, double current_time, bool want_
 
 bool AlphaJerryPlugin::runAutonFromDriver(JoyPtr joy_data, double current_time)
 {
+  static bool auton_button_pressed = false;
   if (joy_data->btn_u && joy_data->btn_l) {
-    if (!m_auton_button_pressed) {
-      m_auton_button_pressed = true;
+    if (!auton_button_pressed) {
+      auton_button_pressed = true;
       m_is_first_auton_loop = true;
       m_auton_start_time = current_time;
-      m_auton_index = 0;
     }
     autonomous(current_time - m_auton_start_time);
 
     return true;
   }
-  m_auton_button_pressed = false;
+  auton_button_pressed = false;
   return false;
 }
 

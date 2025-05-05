@@ -77,6 +77,17 @@ public:
 			return global_blackboard_->get<T>(name, value);
 		}
 	}
+
+	template<typename T>
+	T get_variable(std::string name){
+		T value;
+		if(!global_blackboard_){
+			std::cout << "ERROR: Tried to get BT variable before the BT constructor" << std::endl;
+		} else {
+			bool result = global_blackboard_->get<T>(name, value);
+		}
+		return value;
+	}
 private:
 	std::string bt_path_;
 	BT::Blackboard::Ptr global_blackboard_;

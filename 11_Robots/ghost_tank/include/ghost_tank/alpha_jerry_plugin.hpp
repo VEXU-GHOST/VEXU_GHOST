@@ -287,8 +287,6 @@ protected:
   double m_curr_theta_cmd = 0.0;
 
   // Auton States
-  bool m_auton_button_pressed = false;
-  int m_auton_index = 0;
   bool m_color_target_red = false;
   bool m_mirrored = false;
 
