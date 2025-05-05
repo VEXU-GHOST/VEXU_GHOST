@@ -1,0 +1,178 @@
+bag_recorder_service:
+  ros__parameters:
+    disk_space_required_kb: 256000
+    disk_check_period_s: 10
+
+tts_music_node:
+  ros__parameters:
+    volume: 150  # set to 0 to turn off, set to 100 at comp
+
+
+
+  ros__parameters:
+    input_topic_names:
+      - /odom_ekf/odometry
+
+competition_state_machine_node:
+  ros__parameters:
+    odom_topic: "/sensors/wheel_odom"
+    backup_pose_topic: "/odom_ekf/odometry"
+    pose_topic: "/map_ekf/odometry"
+    set_pf_pose_topic: "/set_pf_pose"
+
+    tank_robot_plugin:
+      conveyor_num_links: 69.0
+      conveyor_sprocket_teeth: 12.0
+      conveyor_num_hooks: 3.0
+
+      conveyor_hook_align_threshold: 0.85
+      conveyor_hook_align_power: 0.5
+
+      conveyor_hook_throw_fraction: 0.5
+      conveyor_hook_throw_duration: 0.25
+
+      neutral_stake_arm_kp: 0.03
+      neutral_stake_arm_gear_ratio: 3.0
+      neutral_stake_arm_rest_pos_deg: 0.0
+      neutral_stake_arm_loading_pos_deg: 35.0
+      neutral_stake_arm_score_neutral_pos_deg: 110.0
+      neutral_stake_arm_score_alliance_pos_deg: 170.0
+      neutral_stake_arm_down_pos_deg: 240.0
+
+      scissor_max_extension: 7700.0
+      scissor_reset_extension: -200.0
+
+      # motion planning
+      move_to_pose_kp_xy: 2.0
+      move_to_pose_kd_xy: 0.2
+      move_to_pose_kp_theta: 1.0
+      move_to_pose_kd_theta: 0.2
+      move_to_pose_ki_theta: 0.0
+      move_to_pose_kp_xy_fine: 1.0
+      move_to_pose_kd_xy_fine: 0.2
+      move_to_pose_kp_theta_fine: 1.0  #1.0
+      move_to_pose_kd_theta_fine: 0.09 #0.085  #0.2
+      move_to_pose_ki_theta_fine: 0.005 #0.01
+      move_to_pose_integral_limit: 0.5 #0.5
+
+      drive_motor_ticks_per_rotation: 360.0
+      drive_gear_ratio: 1.15 # 23/20
+      drive_wheel_rad_in: 1.375
+      wheel_base_inches: 12.5
+      
+      cmd_twist_topic: "/cmd_vel" # from ekf
+      bag_recorder_start_topic: "bag_recorder/start"
+      bag_recorder_stop_topic: "bag_recorder/stop"
+
+      cmd_pose_topic: "/set_pose"
+      imu_topic: "/sensors/imu"
+      des_twist_topic: "/des_vel"
+      cur_twist_topic: "/cur_vel"
+      des_pos_topic: "/des_pos"
+      err_pos_topic: "/err_pos"
+      use_backup_estimator: false
+      sim_mode: false
+
+/**:
+  ros__parameters:
+    map_ekf:
+      initial_state:
+        [
+          # 2.635,  0.559,  0.0,
+          # 0.0,  0.0,  1.178,
+          0.965, 0.559, 0.0,
+          0.0,  0.0,  1.964,
+          0.0,  0.0,  0.0,
+          0.0,  0.0,  0.0,
+          0.0,  0.0,  0.0,
+        ]
+
+      initial_estimate_covariance:
+        [
+          0.05,  0.0,  0.0,  0.0,  0.0, 0.0,
+          0.0, 0.05,  0.0,  0.0,  0.0, 0.0,
+          0.0,  0.0, 1e-9,  0.0,  0.0, 0.0,
+          0.0,  0.0,  0.0, 1e-9,  0.0, 0.0,
+          0.0,  0.0,  0.0,  0.0, 1e-9, 0.0,
+          0.0,  0.0,  0.0,  0.0,  0.0, 0.1,
+        ]
+
+      initial_state_mirrored:
+        [
+          2.635,  0.559,  0.0,
+          0.0,  0.0,  1.178,
+          0.0,  0.0,  0.0,
+          0.0,  0.0,  0.0,
+          0.0,  0.0,  0.0,
+        ]
+      
+    particle_filter:
+      world_frame: "map"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
+
+      # Initial position
+      # init_x: 0.508
+      # init_y: 0.28
+      # init_r: 0.0
+      
+      # Initial cloud distribution
+      init_x_sigma: 0.05 #
+      init_y_sigma: 0.05 #
+      init_r_sigma: 0.1 #
+
+      # Motion Model Params
+      # These calculate odometry standard deviations. X is forward, Y is left on robot.
+      # Primary components are k1, k5, k9, which relate x travel to x error, y travel to y error, theta -> theta error.
+
+      # Other values couple unrelated motions. These should be much smaller (and remember to account for units!)
+      # EX. Y error from X Motion should be very small, but maybe the robot drifts slightly sideways as it tries to drive straight.
+
+      # Remember that LIDAR will correct periodically, so these can be a bit generous.
+      # Too generous though, and you are either losing resolution or wasting computation.
+
+      # Maxx Gains (Doesnt seem to matter too much)
+      #k1: 0.30  # x error from x motion       # % error in primary direction. Wheel odom can slip a lot, so this should be large.
+      #k2: 0.001 # x error from y motion       # Non-holonomic robot doesn't move in Y, 0.1% for tolerance. 
+      #k3: 0.003 # x error from rotation       # 99% within 2.5" for 360°: (2.5"*IN2M/3)/(2π)
+      #k5: 0.001 # y error from y motion       # Non-holonomic robot doesn't move in Y, 0.1% for tolerance. 
+      #k6: 0.003 # y error from rotation       # 99% within 2.5" for 360°: (2.5"*IN2M/3)/(2π)
+      #k7: 0.095 # theta error from x motion   # After 2ft of travel, 99% of samples should be within 10°. std = (10°*DEG2RAD/3) / (24" * IN2M)
+      #k8: 0.001 # theta error from y motion   # Non-holonomic robot doesn't move in Y, 0.1% for tolerance. 
+
+      # Melissa Gains
+      k1: 0.15 # x error from x motion         # % error in primary direction
+      k2: 0.05 # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
+      k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+
+      k4: 0.05 # y error from x motion         # If heading is 2.5° off, Y can drift by around sin(2.5) = 4.36%
+      k5: 0.0703 # y error from y motion       # % error in primary direction
+      k6: 0.1 # y error from rotation          # Pure rotation should be causing very little motion, 99% within 5" for 360°
+
+      k7: 0.15 # theta error from x motion       # After 2ft of travel, 99% of samples should be within 15°. std = (10°*DEG2RAD/3) / (24" * IN2M)
+      k8: 0.05 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
+      k9: 0.015 # theta error from rotation    # % error in primary direction. IMU is very good and main source of heading, so this is small.
+
+
+    behavior_tree:
+      trajectory_topic: "/motion_planner/trajectory"
+    
+    use_sim_time: false
+    should_record: false
+
+    color_classification:
+      blue:
+        hue_center: 190
+        hue_range: 30
+        sat_min: 0.4
+        sat_max: 1.0
+        val_min: 0.002
+        val_max: 1.0
+      red:
+        hue_center: 0
+        hue_range: 20
+        sat_min: 0.33
+        sat_max: 1.0
+        val_min: 0.002
+        val_max: 1.0
+
+    system_i2c_bus_path: "/dev/i2c-7"

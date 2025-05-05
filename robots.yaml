@@ -18,4 +18,7 @@ GHOST_TANK:
   config_file: 11_Robots/ghost_high_stakes/config/robot_hardware_config_tank.yaml
 
 ALPHA_JERRY:
-  config_file: 11_Robots/ghost_high_stakes/config/robot_hardware_config_alpha_jerry.yaml
+  config_file: 11_Robots/ghost_high_stakes/config/alpha/alpha_hardware_config.yaml
+
+ALPHA_JERRY:
+  config_file: 11_Robots/ghost_high_stakes/config/omega/omega_hardware_config.yaml

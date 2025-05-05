@@ -10,20 +10,13 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
     home_dir = os.path.expanduser("~")
-    ghost_high_stakes_base_dir = os.path.join(
-        home_dir, "VEXU_GHOST", "11_Robots", "ghost_high_stakes"
-    )
-    ghost_ros_base_dir = os.path.join(
-        home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces"
-    )
+    config_path = os.path.join(home_dir, "VEXU_GHOST", "11_Robots", "ghost_high_stakes", "config")
 
     # This contains all the parameters for our ROS nodes
-    ros_config_file = os.path.join(ghost_high_stakes_base_dir, "config/ros_config.yaml")
+    ros_config_file = os.path.join(config_path, "alpha/alpha_ros_config.yaml")
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
-    robot_config_yaml_path = os.path.join(
-        ghost_high_stakes_base_dir, "config/robot_hardware_config_alpha_jerry.yaml"
-    )
+    robot_config_yaml_path = os.path.join(config_path, "alpha/alpha_hardware_config.yaml")
 
     plugin_type = "ghost_tank::AlphaJerryPlugin"
     robot_name = "ALPHA_JERRY"
@@ -33,7 +26,6 @@ def generate_launch_description():
     bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
     config_path = os.path.join(ghost_tank_share_dir, "config")
 
-    
     ########################
     ### Node Definitions ###
     ########################
@@ -66,30 +58,6 @@ def generate_launch_description():
         # arguments=["--ros-args", "--log-level", "debug"]
     )
 
-    bag_recorder_service = Node(
-        package="ghost_ros_interfaces",
-        executable="bag_recorder_service",
-        output="screen",
-        parameters=[ros_config_file],
-        # arguments=["--ros-args", "--log-level", "debug"]
-    )
-
-    rplidar_node = Node(
-        package="rplidar_ros",
-        executable="rplidar_node",
-        name="rplidar_node",
-        parameters=[
-            {
-                "channel_type": "serial",
-                "serial_port": "/dev/ttyUSB0",
-                "serial_baudrate": 256000,
-                "frame_id": "lidar_link",
-                "inverted": False,
-                "angle_compensate": True,
-            }
-        ],
-    )
-
     imu_filter_node = Node(
         package="ghost_sensing",
         executable="imu_filter_node",
@@ -97,6 +65,7 @@ def generate_launch_description():
         output="screen",
         parameters=[ros_config_file],
     )
+
     gpio_expander = Node(
         package="ghost_io",
         executable="gpio_expander",
@@ -104,6 +73,7 @@ def generate_launch_description():
         output="screen",
         parameters=[ros_config_file],
     )
+
     #color_sensor_intake = Node(
     #     package="ghost_sensing",
     #     executable="tcs_color_sensor",
@@ -115,6 +85,7 @@ def generate_launch_description():
     #         # address 0x29, not configurable on tcs
     #    ],
     # )
+
     color_classifier_intake = Node(
         package="ghost_sensing",
         executable="color_classifier",
@@ -147,45 +118,6 @@ def generate_launch_description():
     # no need for color classifier, since we only use proximity for goal rush
 
 
-    tts_music_node = Node(
-        package="ghost_io_py",
-        executable="ghost_tts",
-        name="tts_music_node",
-        output="screen",
-        parameters=[ros_config_file],
-    )
-
-    realsense_node = GroupAction(
-        actions=[
-            SetRemap(src='/camera/camera/imu', dst='/sensors/imu'),
-        
-    
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(
-                        get_package_share_directory("realsense2_camera"),
-                        "launch",
-                        "rs_launch.py",
-                    )
-                ),
-                launch_arguments={
-                    "unite_imu_method": "2",
-                    "enable_depth": "false",
-                    "enable_color": "false",
-                    "enable_sync": "true",
-                    "enable_gyro": "true",
-                    "enable_accel": "true",
-                    "initial_reset": "true",
-                    "gyro_fps": "200",  # 200 or 400
-                    "accel_fps": "63",  # 63 or 250
-                            "color_fps": "1",
-                "color_width": "640",
-                "color_height": "480",
-                }.items(),
-            )
-        ]
-    )
-
     odom_ekf_node = Node(
         package="robot_localization",
         executable="ekf_node",
@@ -214,19 +146,15 @@ def generate_launch_description():
 
     return LaunchDescription([
         serial_node,
-        bag_recorder_service,
-        ekf_pf_node,
-        realsense_node,
         imu_filter_node,
-        odom_ekf_node,
-        map_ekf_node,
-        rplidar_node,
-        color_sensor_intake,
-        color_classifier_intake,
-        # color_sensor_goal_rush_l,
-        #color_sensor_goal_rush_r,
-        tts_music_node,
+        # ekf_pf_node,
+        # odom_ekf_node,
+        # map_ekf_node,
+        # color_sensor_intake,
+        # color_classifier_intake,
+                # color_sensor_goal_rush_l,
+                #color_sensor_goal_rush_r,
         competition_state_machine_node,
-        gpio_expander,
+        # gpio_expander,
     ])
 
