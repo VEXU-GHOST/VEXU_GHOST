@@ -41,6 +41,8 @@ using ghost_v5_interfaces::devices::JoystickDeviceData;
 
 using ghost_util::INCHES_TO_METERS;
 
+using JoyPtr = std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData>;
+
 namespace ghost_tank
 {
 
@@ -59,6 +61,8 @@ void TankRobotPlugin::populateMotorNames()
     "drive_r4",
     "drive_r5",
     "drive_r6",
+    "drive_r7",
+    "drive_r8",
   };
   m_left_drive_motor_names = {
     "drive_l1",
@@ -67,6 +71,8 @@ void TankRobotPlugin::populateMotorNames()
     "drive_l4",
     "drive_l5",
     "drive_l6",
+    "drive_l7",
+    "drive_l8",
   };
 
   m_all_drive_motor_names.insert(
@@ -82,10 +88,12 @@ void TankRobotPlugin::populateMotorNames()
 
 void TankRobotPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["goal_rush_sensor"] = 4;
-  digital_io_port_map["goal_rush"] = 5;
-  digital_io_port_map["clamp"] = 7;
-  digital_io_port_map["bite"] = 6;
+  // digital_io_port_map["goal_rush_sensor"] = 4;
+  digital_io_port_map["goal_rush_l"] = 0;
+  digital_io_port_map["climb"] = 1;
+  digital_io_port_map["goal_rush_r"] = 2;
+  digital_io_port_map["bite"] = 3;
+  digital_io_port_map["clamp"] = 4;
 }
 
 //////////////////////
@@ -146,10 +154,6 @@ void TankRobotPlugin::initROSComms()
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
   std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
   m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(cmd_pose_topic, 10);
-
-  node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
-  std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
-  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(input_imu_topic, 10);
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
   std::string des_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
@@ -226,9 +230,11 @@ void TankRobotPlugin::initEstimation()
 
   node_ptr_->declare_parameter("map_ekf.initial_estimate_covariance", std::vector<double>());
   node_ptr_->declare_parameter("map_ekf.initial_state", std::vector<double>());
+  node_ptr_->declare_parameter("map_ekf.initial_state_mirrored", std::vector<double>());
 
   m_initial_estimate_covariance = node_ptr_->get_parameter("map_ekf.initial_estimate_covariance").as_double_array();
   m_reset_pose = node_ptr_->get_parameter("map_ekf.initial_state").as_double_array();
+  m_reset_pose_mirrored = node_ptr_->get_parameter("map_ekf.initial_state_mirrored").as_double_array();
 
   std::cout << "[TankRobotPlugin::initEstimation] m_initial_estimate_covariance: " << m_initial_estimate_covariance.size() << std::endl;
   std::cout << "[TankRobotPlugin::initEstimation] m_reset_pose: " << m_reset_pose.size() << std::endl;
@@ -315,7 +321,7 @@ void TankRobotPlugin::initTankModel()
 
   m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
   m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
-  // m_odom_ptr->resetPose();
+  m_odom_ptr->resetPose();
 
   node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.5);
@@ -368,11 +374,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("pd_control_threshold_ptr", m_pd_control_threshold);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
-  try {
-    bt_->init_tree();
-  } catch (std::exception & e) {
-    std::cout << "Error init_tree: " << e.what() << std::endl;
-  }
+  resetBT();
 }
 
 /////////////////////
@@ -382,6 +384,7 @@ void TankRobotPlugin::onNewSensorData()
 {
   static bool first_loop = true;
   if (first_loop) {
+    playMusic("hello_there");
     resetWorldPose();
     first_loop = false;
   }
@@ -390,7 +393,6 @@ void TankRobotPlugin::onNewSensorData()
   m_loop_current_limits.clear();
 
   updateConveyorPositionSensing();
-  publishIMUData();
   updateAndPublishOdometry();
   publishTrajectoryVisualization();
 }
@@ -403,44 +405,25 @@ void TankRobotPlugin::updateConveyorPositionSensing()
   m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
 }
 
-
-void TankRobotPlugin::publishIMUData()
-{
-  sensor_msgs::msg::Imu imu_msg{};
-  imu_msg.header.frame_id = "imu_link";
-  imu_msg.header.stamp = node_ptr_->get_clock()->now();
-  if (!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))) {
-    imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
-  }
-  if (!std::isnan(rhi_ptr_->getInertialSensorYRate("imu"))) {
-    imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
-  }
-  if (!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))) {
-    imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
-  }
-  double yaw;
-  if (!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))) {
-    yaw = -rhi_ptr_->getInertialSensorHeading("imu");
-    ghost_util::yawToQuaternionDeg(
-      yaw, imu_msg.orientation.w, imu_msg.orientation.x,
-      imu_msg.orientation.y, imu_msg.orientation.z);
-  }
-  imu_pub->publish(imu_msg);
-}
-
 void TankRobotPlugin::disabled()
 {
 }
 
 void TankRobotPlugin::autonomous(double current_time)
 {
-  static bool run_yet = 0;
-  if (!run_yet) {
+  if (m_is_first_auton_loop) {
+    m_is_first_auton_loop = false;
     playTTS("starting autonomous");
-    run_yet = 1;
+    m_odom_ptr->resetPose();
+    resetWorldPose();
+
+    bt_->set_variable<bool>("clamp_closed", false);
+    bt_->set_variable<bool>("bite_closed", false);
+    bt_->set_variable<bool>("goal_rush_l_down", false);
+    bt_->set_variable<bool>("goal_rush_r_down", false);
+    bt_->set_variable<bool>("climb_extended", false);
   }
 
-  // std::cout << "Autonomous: " << current_time << std::endl;
   bt_->set_variable("auton_time_elapsed", current_time);
   bt_->set_variable("mirrored", m_mirrored);
 
@@ -490,40 +473,37 @@ void TankRobotPlugin::autonomous(double current_time)
     updateNeutralStakeArmPosition(neutral_stake_pos);
   }
 
-  if (bt_->get_variable("bite_closed", m_bite_closed)) {
+  // Update Pneumatics
+  rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], bt_->get_variable<bool>("climb_extended"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<bool>("clamp_closed"));
+  if (m_mirrored){
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<bool>("goal_rush_r_down") || bt_->get_variable<bool>("goal_rush_down"));
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<bool>("goal_rush_l_down"));
+  } else {
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<bool>("goal_rush_l_down"));
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<bool>("goal_rush_r_down") || bt_->get_variable<bool>("goal_rush_down"));
   }
-  if (bt_->get_variable("clamp_closed", m_clamp_closed)) {
-  }
-  if (bt_->get_variable("arm_down", m_goal_rush_active)) {
-  }
+  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<bool>("bite_closed"));
 
-  auto joy_data = rhi_ptr_->getMainJoystickData();
-  updateBite(joy_data);
-  updateClampController(false, false, joy_data);
-  updateGoalRush(joy_data, true);
-
-  double fwd_cmd = 0.0;
-  double turn_cmd = 0.0;
-  if (bt_->get_variable("fwd_cmd", fwd_cmd)) {
-  }
-  if (bt_->get_variable("turn_cmd", turn_cmd)) {
-  }
-
+  // Publish Twist Command
   geometry_msgs::msg::Twist msg{};
-  msg.linear.x = fwd_cmd;
-  msg.angular.z = turn_cmd;
+  bt_->get_variable("fwd_cmd", msg.linear.x);
+  bt_->get_variable("turn_cmd", msg.angular.z);
   m_base_twist_cmd_pub->publish(msg);
 }
 
+void TankRobotPlugin::resetBT()
+{
+  try {
+    std::cout << "Initializing Behavior Tree" << std::endl;
+    bt_->init_tree();
+  } catch (std::exception & e) {
+    std::cout << "Error init_tree: " << e.what() << std::endl;
+  }
+}
 
 void TankRobotPlugin::teleop(double current_time)
 {
-  static bool run_yet = 0;
-  if (!run_yet) {
-    playMusic("hello_there");
-    run_yet = 1;
-  }
-
   auto joy_data = rhi_ptr_->getMainJoystickData();
   bool shift1 = joy_data->btn_b; 
   bool shift2 = joy_data->btn_d; 
@@ -535,14 +515,15 @@ void TankRobotPlugin::teleop(double current_time)
     std::system("echo 1 | sudo -S shutdown now");
     return;
   }
+
   bool running_auton = runAutonFromDriver(joy_data, current_time);
   if (running_auton) {
     return;
   }
 
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
-
   toggleBagRecorder(joy_data);
+
   // CONDITIONAL control mode dispatching
   if (shift1) {
     updateNeutralStakeArmJoystick(true, false, joy_data); // Y-held mode
@@ -680,7 +661,7 @@ bool TankRobotPlugin::runAutonFromDriver(std::shared_ptr<JoystickDeviceData> joy
       m_auton_button_pressed = true;
       m_is_first_auton_loop = true;
       m_auton_start_time = current_time;
-      m_auton_index = 0;
+      resetBT();
     }
     autonomous(current_time - m_auton_start_time);
 
@@ -1204,19 +1185,30 @@ void TankRobotPlugin::resetWorldPose()
   }
 
   geometry_msgs::msg::Quaternion quat{};
-  ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
-
   geometry_msgs::msg::PoseWithCovarianceStamped new_pose{};
   new_pose.header.frame_id = "map";
   new_pose.header.stamp = node_ptr_->get_clock()->now();
-  new_pose.pose.pose.position.x = m_reset_pose[0];
-  new_pose.pose.pose.position.y = m_reset_pose[1];
+
+  if (m_mirrored) {
+    ghost_util::yawToQuaternionRad(m_reset_pose_mirrored[5], quat.w, quat.x, quat.y, quat.z);
+    new_pose.pose.pose.position.x = m_reset_pose_mirrored[0];
+    new_pose.pose.pose.position.y = m_reset_pose_mirrored[1];
+  } else {
+    ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
+    new_pose.pose.pose.position.x = m_reset_pose[0];
+    new_pose.pose.pose.position.y = m_reset_pose[1];
+  }
+
   new_pose.pose.pose.orientation = quat;
   new_pose.pose.covariance = m_initial_estimate_covariance_arr;
 
   // Publish to Particle Filter
   m_reset_pf_pub->publish(new_pose);
-  std::cout << "Done reset" << std::endl;
+  if (m_mirrored) {
+    std::cout << "Done reset: mirrored" << std::endl;
+  } else {
+    std::cout << "Done reset: regular" << std::endl;
+  }
 }
 
 void TankRobotPlugin::publishCurrentTwist(
@@ -1348,6 +1340,9 @@ void TankRobotPlugin::playTTS(std::string textString)
 
 void TankRobotPlugin::colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
 {
+  if (m_color_target_red != msg->data) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "color_target_red state changed: %ld", msg->data);
+  }
   if (msg->data == 1) {
     m_color_target_red = true;
   } else if (msg->data == 0) {
@@ -1359,12 +1354,16 @@ void TankRobotPlugin::colorTargetButtonCallback(const std_msgs::msg::Int64::Shar
 
 void TankRobotPlugin::mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
 {
-  if (msg->data == 1) {
-    m_mirrored = true;
-  } else if (msg->data == 0) {
-    m_mirrored = false;
-  } else {
-    RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
+  if (m_mirrored != msg->data) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "Mirrored state changed: %ld", msg->data);
+    if (msg->data == 1) {
+      m_mirrored = true;
+    } else if (msg->data == 0) {
+      m_mirrored = false;
+    } else {
+      RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
+    }
+    resetWorldPose();
   }
 }
 
