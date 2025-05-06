@@ -14,20 +14,45 @@
         <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
     <Sequence>
       <Logging message="Close"/>
-      <BiteCmd bite_closed="true"/>
+      <SetBlackboard value="true" output_key="bite_closed"/>
       <WaitCmd seconds="2.0" shutoff_motors="true"/>
 
       <Logging message="Open"/>
-      <BiteCmd bite_closed="false"/>
+      <SetBlackboard value="false" output_key="bite_closed"/>
       <WaitCmd seconds="2.0" shutoff_motors="true"/>
       
-            <Logging message="Close"/>
-      <BiteCmd bite_closed="true"/>
+      <Logging message="Close"/>
+      <SetBlackboard value="true" output_key="clamp_closed"/>
       <WaitCmd seconds="2.0" shutoff_motors="true"/>
 
       <Logging message="Open"/>
-      <BiteCmd bite_closed="false"/>
+      <SetBlackboard value="false" output_key="clamp_closed"/>
       <WaitCmd seconds="2.0" shutoff_motors="true"/>
+
+      <Logging message="Close"/>
+      <SetBlackboard value="true" output_key="climb_extended"/>
+      <WaitCmd seconds="2.0" shutoff_motors="true"/>
+
+      <Logging message="Open"/>
+      <SetBlackboard value="false" output_key="climb_extended"/>
+      <WaitCmd seconds="2.0" shutoff_motors="true"/>
+
+           <Logging message="Close"/>
+      <SetBlackboard value="true" output_key="goal_rush_l_down"/>
+      <WaitCmd seconds="2.0" shutoff_motors="true"/>
+
+      <Logging message="Open"/>
+      <SetBlackboard value="false" output_key="goal_rush_l_down"/>
+      <WaitCmd seconds="2.0" shutoff_motors="true"/>
+
+           <Logging message="Close"/>
+      <SetBlackboard value="true" output_key="goal_rush_r_down"/>
+      <WaitCmd seconds="2.0" shutoff_motors="true"/>
+
+      <Logging message="Open"/>
+      <SetBlackboard value="false" output_key="goal_rush_r_down"/>
+      <WaitCmd seconds="2.0" shutoff_motors="true"/>
+
       <!-- <SubTree ID="better_goal_rush" _autoremap="true"/> -->
       <!-- <SubTree ID="aj_rings" _autoremap="true"/> -->
           
