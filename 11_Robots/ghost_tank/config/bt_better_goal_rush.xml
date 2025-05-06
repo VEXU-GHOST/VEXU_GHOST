@@ -3,38 +3,32 @@
   <BehaviorTree ID="better_goal_rush">
     <Sequence>
       <Logging message="goal_rush"/>
-      <GoalRushCmd arm_down="true"/>
-      <IntakeCmd auto="false"
-                 ground_intake="true"/>
+      <GoalRushCmd goal_rush_r_down="true"/>
+      <IntakeCmd auto="false" ground_intake="true"/>
+      <WaitCmd seconds="2.0" shutoff_motors="true"/>
+      <!-- <MoveVoltage forward_effort="1.0" angular_effort="0.0" timeout_ms="500"/> -->
+      <!-- <WaitCmd seconds="1.0" shutoff_motors="true"/> -->
+      <!-- <MoveVoltage forward_effort="-1.0" angular_effort="0.0" timeout_ms="500"/> -->
+      <!-- <WaitCmd seconds="1.0" shutoff_motors="true"/> -->
+      
       <ParallelAll>
-        <Fallback>
+        <!-- <Fallback>
           <Timeout msec="600">
             <KeepRunningUntilFailure>
               <Sequence>
-                <GoalRushCmd arm_down="true"/>
-                <!-- <BiteCmd bite_closed="false"/> -->
+                <GoalRushCmd goal_rush_r_down="true"/>
+                <BiteCmd bite_closed="true"/>
               </Sequence>
             </KeepRunningUntilFailure>
           </Timeout>
           <BiteCmd bite_closed="true"/>
-        </Fallback>
-        <MoveToPoseBezier  posX_tiles="1.05"
-                            posY_tiles="2.2"
-                            theta_deg="105"
-                            search_radius_m="0.25"
-                            threshold_m="0.05"
-                            angle_threshold_deg="5.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
-                            lead="0.4"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-1150"
-                            use_theta="true"
-                            backwards="false"/>
+        </Fallback> -->
       </ParallelAll>
+      <WaitCmd seconds="10.0" shutoff_motors="true"/>
+      
+
       <!-- </ReactiveFallback> -->
-      <GoalRushCmd arm_down="false"/>
+      <GoalRushCmd goal_rush_r_down="false"/>
       <ShutoffNode/>
       <!-- <WaitCmd seconds="0.100" -->
                 <!-- shutoff_motors="true"/> -->
@@ -43,22 +37,22 @@
       <MoveToPoseBezier posX_tiles="1.5"
                             posY_tiles="1.5"
                             theta_deg="135.0"
-                            search_radius_m="0.3"
-                            threshold_m="0.05"
-                            angle_threshold_deg="3.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
+                            search_radius_tiles="0.5"
+                            xy_exit_threshold_tiles="0.05"
+                            angle_exit_threshold_deg="3.0"
+                            lin_vel_exit_threshold_tps="0.1"
+                            ang_vel_exit_threshold_dps="1.0"
                             lead="0.75"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-2000"
+                            max_speed_linear_percent="1.0"
+                            max_speed_angular_percent="1.0"
+                            timeout_ms="2000"
                             use_theta="true"
                             backwards="true"/>
       <ShutoffNode/>
 
       <!-- Release goal -->
       <Logging message="release goal"/>
-      <GoalRushCmd arm_down="true"/>
+      <!-- <GoalRushCmd arm_down="true"/> -->
       <IntakeCmd auto="false"
                  ground_intake="true"/>
       <Logging message="pulling_back"/>
@@ -67,21 +61,21 @@
       <MoveToPoseBezier posX_tiles="1.7"
                             posY_tiles="1.25"
                             theta_deg="135.0"
-                            search_radius_m="0.1"
-                            threshold_m="0.05"
-                            angle_threshold_deg="3.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
+                            search_radius_tiles="0.1"
+                            xy_exit_threshold_tiles="0.05"
+                            angle_exit_threshold_deg="3.0"
+                            lin_vel_exit_threshold_tps="0.1"
+                            ang_vel_exit_threshold_dps="1.0"
                             lead="0.75"
-                            max_speed_linear_pct="0.5"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-2000"
+                            max_speed_linear_percent="1.0"
+                            max_speed_angular_percent="1.0"
+                            timeout_ms="2000"
                             use_theta="true"
                             backwards="true"/>
       <ShutoffNode/>
       <!-- Release goal -->
       <Logging message="retract arm"/>
-      <GoalRushCmd arm_down="false"/>
+      <!-- <GoalRushCmd arm_down="false"/> -->
       <IntakeCmd auto="false"
                  ground_intake="false"/>
     </Sequence>
@@ -103,7 +97,8 @@
     </Action>
     <Action ID="GoalRushCmd"
             editable="true">
-      <input_port name="arm_down"/>
+      <input_port name="goal_rush_l_down"/>
+      <input_port name="goal_rush_r_down"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">
@@ -123,34 +118,27 @@
       <input_port name="posX_tiles"/>
       <input_port name="posY_tiles"/>
       <input_port name="theta_deg"/>
-      <input_port name="search_radius_m"/>
-      <input_port name="threshold_m"/>
-      <input_port name="angle_threshold_deg"/>
-      <input_port name="threshold_vel_mps"/>
-      <input_port name="angle_threshold_vel_dps"/>
+      <input_port name="search_radius_tiles"/>
+      <input_port name="xy_exit_threshold_tiles"/>
+      <input_port name="angle_exit_threshold_deg"/>
+      <input_port name="lin_vel_exit_threshold_tps"/>
+      <input_port name="ang_vel_exit_threshold_dps"/>
       <input_port name="lead"/>
-      <input_port name="max_speed_linear_pct"/>
-      <input_port name="max_speed_angular_pct"/>
+      <input_port name="max_speed_linear_percent"/>
+      <input_port name="max_speed_angular_percent"/>
       <input_port name="timeout_ms"/>
       <input_port name="use_theta"/>
       <input_port name="backwards"/>
-    </Action>
-    <Action ID="MoveToPosePurepursuit"
-            editable="true">
-      <input_port name="fileName"/>
-      <input_port name="angle_threshold"
-                  default="5.0">m</input_port>
-      <input_port name="threshold"
-                  default="0.025">m</input_port>
-      <input_port name="timeout"
-                  default="5000">ms</input_port>
-      <input_port name="use_theta"
-                  default="false"/>
     </Action>
     <Action ID="ShutoffNode"
             editable="true"/>
     <Action ID="GoalRushDetected"
             editable="true"/>
+    <Action ID="MoveVoltage" editable="true">
+      <input_port name="forward_effort"/>
+      <input_port name="angular_effort"/>
+      <input_port name="timeout_ms"/>
+    </Action>
   </TreeNodesModel>
 
 </root>

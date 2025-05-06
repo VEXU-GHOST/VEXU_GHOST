@@ -229,6 +229,7 @@ set(NODES
   goalRushDetected
   goalDetected
   boundaryCheck
+  moveVoltage
 )
 
 foreach(NODE ${NODES})

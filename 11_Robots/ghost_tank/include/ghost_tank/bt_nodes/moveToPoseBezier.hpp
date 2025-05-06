@@ -84,6 +84,10 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr curr_angle_pub;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr des_angle_pub;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr fwd_cmd_pub;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr turn_cmd_pub;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr left_cmd_pub;
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr right_cmd_pub;
 
   Eigen::Vector3d final_pose_ = Eigen::Vector3d::Zero();
 
@@ -108,6 +112,9 @@ private:
   void PurePursuit();
   void GeneratePath();
   void publishTrajectoryVisualization();
+
+  void publishDrivetrainCommands(double fwd_cmd, double turn_cmd);
+
 };
 
 } // namespace ghost_tank {
