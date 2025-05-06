@@ -113,8 +113,8 @@ BT::NodeStatus MoveToPoseBezier::onRunning()
   backwards = BT_Util::get_input<bool>(this, "backwards", false);
   search_radius = BT_Util::get_input<double>(this, "search_radius_tiles", 0.3) * tile_to_meters;
   lead = BT_Util::get_input<double>(this, "lead", 1.0);
-  max_speed_linear = BT_Util::get_input<double>(this, "max_speed_linear_pct", 1.0);
-  max_speed_angular = BT_Util::get_input<double>(this, "max_speed_angular_pct", 1.0);
+  max_speed_linear = BT_Util::get_input<double>(this, "max_speed_linear_percent", 1.0);
+  max_speed_angular = BT_Util::get_input<double>(this, "max_speed_angular_percent", 1.0);
 
   // Invert commands when mirrored
   if (BT_Util::get_from_blackboard<bool>(blackboard_, "mirrored")) {
