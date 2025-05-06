@@ -50,7 +50,6 @@ def generate_launch_description():
 
     realsense_node = GroupAction(
         actions=[
-            SetRemap(src='/camera/camera/imu', dst='/sensors/imu'),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     os.path.join(
@@ -63,7 +62,7 @@ def generate_launch_description():
                     "enable_depth": "false",
                     "enable_color": "false",
                     "enable_gyro": "true",
-                    "initial_reset": "true",
+                    "initial_reset": "false",
                     "gyro_qos": "SENSOR_DATA",
                     "gyro_fps": "200",  # 200 or 400
                     "color_fps": "1",

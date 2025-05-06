@@ -6,7 +6,7 @@ ghost_serial_node:
 
 imu_filter_node:
   ros__parameters:
-    input_imu_topic: /sensors/imu
+    input_imu_topic: /camera/camera/gyro/sample
     output_imu_topic: /estimation/imu/filtered
     calculate_bias: false
     calculate_covariance: false
