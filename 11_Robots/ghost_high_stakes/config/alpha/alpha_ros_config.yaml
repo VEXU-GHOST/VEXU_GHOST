@@ -55,13 +55,13 @@ competition_state_machine_node:
       move_to_pose_ki_theta: 0.0
 
       # Settling Gains
-      move_to_pose_kp_xy_fine: 1.0
-      move_to_pose_kd_xy_fine: 0.2
-      move_to_pose_kp_theta_fine: 0.5
-      move_to_pose_kd_theta_fine: 0.00
-      move_to_pose_ki_theta_fine: 0.000
+      move_to_pose_kp_xy_fine: 0.0
+      move_to_pose_kd_xy_fine: 0.0
+      move_to_pose_kp_theta_fine: 0.75 #0.75
+      move_to_pose_kd_theta_fine: 0.1 #0.1
+      move_to_pose_ki_theta_fine: 2.0
       
-      move_to_pose_integral_limit: 0.5 #0.5
+      move_to_pose_integral_limit: 0.15 #0.5
 
 /**:
   ros__parameters:
