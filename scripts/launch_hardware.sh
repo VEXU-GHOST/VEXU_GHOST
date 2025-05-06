@@ -9,10 +9,10 @@ source "$VEXU_HOME/scripts/setup_env.sh"
 # log to stdout AND /var/log/syslog
 if [ -z ${ROBOT_NAME+x} ]; 
 then 
-    echo "var is unset"; 
-    ros2 launch ghost_high_stakes hardware.launch.py 2>&1 | tee /dev/tty |& logger;
-else echo "var is set to '$var'";
-    ros2 launch ghost_high_stakes alpha_jerry.launch.py 2>&1 | tee /dev/tty |& logger;
+    echo "ROBOT_NAME is unset... exiting"; 
+    # ros2 launch ghost_high_stakes hardware.launch.py 2>&1 | tee /dev/tty |& logger;
+else echo "ROBOT_NAME is set to '$ROBOT_NAME'";
+    ros2 launch ghost_high_stakes hardware.launch.py robot_name:=$ROBOT_NAME 2>&1 | tee /dev/tty |& logger;
 fi
 
 logger "RUNNING ros2 launch ghost_high_stakes DONE"

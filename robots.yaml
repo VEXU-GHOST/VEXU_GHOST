@@ -1,5 +1,5 @@
 ### Points to selected robot configuration for PROS compile ###
-selected_robot: ALPHA_JERRY
+selected_robot: OMEGA_JERRY
 
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:
@@ -20,5 +20,5 @@ GHOST_TANK:
 ALPHA_JERRY:
   config_file: 11_Robots/ghost_high_stakes/config/alpha/alpha_hardware_config.yaml
 
-ALPHA_JERRY:
+OMEGA_JERRY:
   config_file: 11_Robots/ghost_high_stakes/config/omega/omega_hardware_config.yaml

@@ -441,8 +441,8 @@ void AlphaJerryPlugin::autonomous(double current_time)
   // Update Pneumatics
   rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], bt_->get_variable<bool>("climb_extended"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<bool>("clamp_closed"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<bool>("goal_rush_l_down"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<bool>("goal_rush_r_down"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<bool>("goal_rush_l_down") && m_mirrored);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<bool>("goal_rush_r_down") && !m_mirrored);
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<bool>("bite_closed"));
 
   // Publish Twist Command
