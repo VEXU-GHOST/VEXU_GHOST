@@ -87,6 +87,7 @@ BT::PortsList MoveToPoseBezier::providedPorts()
 BT::NodeStatus MoveToPoseBezier::onStart()
 {
   first_loop_ = true;
+  settling_ = false;
   // plan_time_ = std::chrono::();
   return BT::NodeStatus::RUNNING;
 }
@@ -113,8 +114,8 @@ BT::NodeStatus MoveToPoseBezier::onRunning()
   backwards = BT_Util::get_input<bool>(this, "backwards", false);
   search_radius = BT_Util::get_input<double>(this, "search_radius_tiles", 0.3) * tile_to_meters;
   lead = BT_Util::get_input<double>(this, "lead", 1.0);
-  max_speed_linear = BT_Util::get_input<double>(this, "max_speed_linear_percent", 1.0);
-  max_speed_angular = BT_Util::get_input<double>(this, "max_speed_angular_percent", 1.0);
+  max_speed_linear_percent = BT_Util::get_input<double>(this, "max_speed_linear_percent", 1.0);
+  max_speed_angular_percent = BT_Util::get_input<double>(this, "max_speed_angular_percent", 1.0);
 
   // Invert commands when mirrored
   if (BT_Util::get_from_blackboard<bool>(blackboard_, "mirrored")) {
@@ -131,6 +132,7 @@ BT::NodeStatus MoveToPoseBezier::onRunning()
     RCLCPP_INFO(node_ptr_->get_logger(), "posX_m: %f", posX_m);
     RCLCPP_INFO(node_ptr_->get_logger(), "posY_m: %f", posY_m);
     RCLCPP_INFO(node_ptr_->get_logger(), "theta_rad: %f", theta_rad);
+    settling_ = false;
   }
 
   // Calculate end pose error for exit conditions
@@ -211,58 +213,59 @@ void MoveToPoseBezier::GeneratePath()
 
 void MoveToPoseBezier::PurePursuit()
 {
-  double current_x = tank_model_ptr_->getWorldPose().x();
-  double current_y = tank_model_ptr_->getWorldPose().y();
-  double current_angle = tank_model_ptr_->getWorldAngleRad();
+  // Get current state
+  Eigen::Vector2d current_pos = Eigen::Vector2d(tank_model_ptr_->getWorldPose().head<2>());
 
+  // Get desired trajectory
   auto x_trajectory = robot_trajectory_.x_trajectory.position_vector;
   auto y_trajectory = robot_trajectory_.y_trajectory.position_vector;
   auto theta_trajectory = robot_trajectory_.theta_trajectory.position_vector;
 
-  auto threshold_xy = robot_trajectory_.x_trajectory.threshold;
-  auto threshold_theta = robot_trajectory_.theta_trajectory.threshold;
+  // Load terminal pose from trajectory
+  final_pose_ = Eigen::Vector3d(x_trajectory.back(), y_trajectory.back(), theta_trajectory.back());
 
+  // Find intersection of path and pursuit radius
   Eigen::Vector3d desired_pose;
-  Eigen::Vector3d final_pose;
-
-  past_index_ = 0;
-
-  //find farthest point in radius
-  for (int i = past_index_; i < x_trajectory.size(); ++i) {
-    double distance = sqrt(
-      pow((current_x - x_trajectory[i]), 2) +
-      pow((current_y - y_trajectory[i]), 2));
+  past_index_ = x_trajectory.size()-1; // Initialize to end so if we are way off the path (no points inside pursuit radius), we go straight to final pose
+  for (int i = 0; i < x_trajectory.size(); ++i) {
+    double distance = (current_pos - Eigen::Vector2d(x_trajectory[i], y_trajectory[i])).norm();
     if (distance < search_radius) {
       past_index_ = i;
     }
   }
-
-  final_pose = Eigen::Vector3d(x_trajectory[x_trajectory.size() - 1], y_trajectory[y_trajectory.size() - 1], theta_trajectory[theta_trajectory.size() - 1]);
-  final_pose_ = final_pose;
-
   desired_pose = Eigen::Vector3d(x_trajectory[past_index_], y_trajectory[past_index_], 0.0);
   BT_Util::put_in_blackboard(blackboard_, "desired_pose", desired_pose);
 
+  // Select control strategy based on distance to target
+  double dist_err = (final_pose_.head<2>() - current_pos).norm();
+  bool within_pursuit_radius = dist_err < search_radius;
+  bool within_xy_exit_threshold = dist_err < xy_exit_threshold_m;
+
   Eigen::Vector2d command;
-
-  double dist_err = sqrt(((final_pose.x() - current_x) * (final_pose.x() - current_x) + (final_pose.y() - current_y) * (final_pose.y() - current_y)));
-
-  Eigen::Vector3d carrot;
-
-  des_angle_ = final_pose.z();
-  curr_angle_ = tank_model_ptr_->getWorldPose().z();
-
-  if (dist_err < threshold_xy) {
-    std::cout << "Settling" << std::endl;
-    carrot = final_pose;
-    command = pd_control_threshold_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose);
+  if (within_xy_exit_threshold || settling_) {
+    // We are within xy_exit_threshold, switch to pure angle control
+    command = pd_control_threshold_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose_);
+    
+    // Once we start settling, never exit to avoid instability.
+    settling_ = true;
   } else {
-    carrot = desired_pose;
-    command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), carrot, final_pose, backwards);
+    // Chase the carrot. If within pursuit radius, ignore lateral error in xy control.
+    command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), desired_pose, final_pose_, backwards, within_pursuit_radius);
   }
 
-  auto fwd_cmd = ghost_util::clamp(command[0], -max_speed_linear, max_speed_linear);
-  auto turn_cmd = ghost_util::clamp(command[1], -max_speed_angular, max_speed_angular);
+  // Clamp steering and lateral thrust to bounds
+  auto fwd_cmd = ghost_util::clamp(command[0], -max_speed_linear_percent, max_speed_linear_percent);
+  auto turn_cmd = ghost_util::clamp(command[1], -max_speed_angular_percent, max_speed_angular_percent);
+
+  // Normalize to avoid output saturation.
+  double left_cmd = fwd_cmd - turn_cmd;
+  double right_cmd = fwd_cmd + turn_cmd;
+
+  // Scale commands so that max command equals full thrust
+  double normalizer = 1.0 / std::max(1.0, std::max(std::fabs(left_cmd), std::fabs(right_cmd)));
+  // double normalizer = 1.0;
+  left_cmd *= normalizer;
+  right_cmd *= normalizer;
 
   BT_Util::put_in_blackboard(blackboard_, "fwd_cmd", fwd_cmd);
   BT_Util::put_in_blackboard(blackboard_, "turn_cmd", turn_cmd);
@@ -273,11 +276,11 @@ void MoveToPoseBezier::PurePursuit()
 void MoveToPoseBezier::publishTrajectoryVisualization()
 {
   std_msgs::msg::Float64 curr_angle_msg;
-  curr_angle_msg.data = curr_angle_;
+  curr_angle_msg.data = tank_model_ptr_->getWorldAngleRad();
   curr_angle_pub->publish(curr_angle_msg);
 
   std_msgs::msg::Float64 des_angle_msg;
-  des_angle_msg.data = des_angle_;
+  des_angle_msg.data = final_pose_.z();
   des_angle_pub->publish(des_angle_msg);
 
   visualization_msgs::msg::MarkerArray msg{};

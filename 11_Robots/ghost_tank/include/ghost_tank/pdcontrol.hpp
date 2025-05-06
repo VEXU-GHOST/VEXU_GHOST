@@ -19,7 +19,7 @@ public:
     float ki_theta,
     float integral_limit,
     float dt = 0.01);
-  Eigen::Vector2d tank_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & carrot_pos, const Eigen::Vector3d & final_pos, bool backwards);
+  Eigen::Vector2d tank_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & carrot_pos, const Eigen::Vector3d & final_pos, bool backwards, bool ignore_lateral_error = false);
   Eigen::Vector2d theta_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & end_pos);
   Eigen::Vector2d theta_pd(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & end_pos);
 
