@@ -4,21 +4,22 @@
     <Sequence>
       <Logging message="clear corner left"/>
       <Logging message="Go to corner stack"/>
-      <MoveToPoseBezier posX_tiles="0.8"
-                            posY_tiles="0.7"
+      <BiteCmd bite_closed="true"/>
+      <MoveToPoseBezier posX_tiles="0.75"
+                            posY_tiles="0.75"
                             theta_deg="225.0"
-                            search_radius_m="0.3"
-                            threshold_m="0.05"
-                            angle_threshold_deg="3.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
+                            search_radius_tiles="0.3"
+                            xy_exit_threshold_tiles="0.1"
+                            angle_exit_threshold_deg="3.0"
+                            lin_vel_exit_threshold_tps="0.1"
+                            ang_vel_exit_threshold_dps="1.0"
                             lead="0.5"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-1000"
-                            use_theta="false"
+                            max_speed_linear_percent="0.4"
+                            max_speed_angular_percent="1.0"
+                            timeout_ms="-5000"
+                            use_theta="true"
                             backwards="false"/>
-      <ShutoffNode/>
+
       <!-- <WaitCmd seconds="100.00" -->
                 <!-- shutoff_motors="true"/> -->
       <Logging message="Processing Corner Stack"/>
@@ -26,57 +27,29 @@
                  ground_intake="false"/>
       <Repeat num_cycles="2">
         <Sequence>
-          <MoveToPoseBezier posX_tiles="0.375"
-                                  posY_tiles="0.375"
-                                  theta_deg="225.0"
-                                  search_radius_m="0.05"
-                                  threshold_m="0.02"
-                                  angle_threshold_deg="1.0"
-                                  threshold_vel_mps="0.1"
-                                  angle_threshold_vel_dps="1.0"
-                                  lead="0.5"
-                                  max_speed_linear_pct="0.8"
-                                  max_speed_angular_pct="1.0"
-                                  timeout_ms="-750"
-                                  use_theta="true"
-                                  backwards="false"/>
+          <MoveVoltage forward_effort="0.5" angular_effort="0.0" timeout_ms="700"/>
           <ShutoffNode/>
-
-          <MoveToPoseBezier
-            posX_tiles="0.7"
-            posY_tiles="0.7"
-            theta_deg="-135.0"
-            search_radius_m="0.05"
-            threshold_m="0.02"
-            angle_threshold_deg="3.0"
-            threshold_vel_mps="0.1"
-            angle_threshold_vel_dps="1.0"
-            lead="0.5"
-            max_speed_linear_pct="0.5"
-            max_speed_angular_pct="1.0"
-            timeout_ms="-500"
-            use_theta="true"
-            backwards="true"/>
+          <MoveVoltage forward_effort="-0.5" angular_effort="0.0" timeout_ms="700"/>
           <ShutoffNode/>
         </Sequence>
       </Repeat>
 
-      <MoveToPoseBezier
+      <!-- <MoveToPoseBezier
         posX_tiles="1.0"
         posY_tiles="1.0"
         theta_deg="-135.0"
-        search_radius_m="0.3"
-        threshold_m="0.02"
-        angle_threshold_deg="3.0"
-        threshold_vel_mps="0.1"
-        angle_threshold_vel_dps="1.0"
+        search_radius_tiles="0.3"
+        xy_exit_threshold_tiles="0.02"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="0.1"
+        ang_vel_exit_threshold_dps="1.0"
         lead="0.5"
-        max_speed_linear_pct="1.0"
-        max_speed_angular_pct="1.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
         timeout_ms="-500"
         use_theta="true"
         backwards="true"/>
-      <ShutoffNode/>
+      <ShutoffNode/> -->
     </Sequence>
   </BehaviorTree>
 
@@ -115,14 +88,14 @@
       <input_port name="posX_tiles"/>
       <input_port name="posY_tiles"/>
       <input_port name="theta_deg"/>
-      <input_port name="search_radius_m"/>
-      <input_port name="threshold_m"/>
-      <input_port name="angle_threshold_deg"/>
-      <input_port name="threshold_vel_mps"/>
-      <input_port name="angle_threshold_vel_dps"/>
+      <input_port name="search_radius_tiles"/>
+      <input_port name="xy_exit_threshold_tiles"/>
+      <input_port name="angle_exit_threshold_deg"/>
+      <input_port name="lin_vel_exit_threshold_tps"/>
+      <input_port name="ang_vel_exit_threshold_dps"/>
       <input_port name="lead"/>
-      <input_port name="max_speed_linear_pct"/>
-      <input_port name="max_speed_angular_pct"/>
+      <input_port name="max_speed_linear_percent"/>
+      <input_port name="max_speed_angular_percent"/>
       <input_port name="timeout_ms"/>
       <input_port name="use_theta"/>
       <input_port name="backwards"/>

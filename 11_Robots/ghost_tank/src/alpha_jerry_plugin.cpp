@@ -266,7 +266,8 @@ void AlphaJerryPlugin::initIntake()
   {
     {"red", 1},
     {"blue", 2},
-    {"unknown", 0}};
+    {"unknown", 0}
+  };
 
   m_ring_found = false;
   m_ring_color = m_color_map["unknown"];
@@ -437,8 +438,13 @@ void AlphaJerryPlugin::autonomous(double current_time)
   m_bite_closed = (bt_->get_variable<int>("bite_closed"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], (bt_->get_variable<int>("climb_extended")));
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], (bt_->get_variable<int>("clamp_closed")));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], (bt_->get_variable<int>("goal_rush_l_down")));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], (bt_->get_variable<int>("goal_rush_r_down")));
+  if (m_mirrored){
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_l_down"));
+  } else {
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], (bt_->get_variable<int>("goal_rush_l_down")));
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], (bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down")));
+  }
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
 
   bool ground_intake_active = false;

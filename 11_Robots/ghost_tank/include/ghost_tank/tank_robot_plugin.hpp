@@ -52,6 +52,8 @@ namespace ghost_tank
 class TankRobotPlugin : public ghost_ros_interfaces::V5RobotBase
 {
 public:
+  using JoyPtr = std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData>;
+
   TankRobotPlugin();
 
   void initialize() override;
@@ -75,14 +77,13 @@ protected:
 
   // onNewSensorData
   void updateConveyorPositionSensing();
-  void publishIMUData();
   void updateAndPublishOdometry();
   void publishBaseTwist();
   void publishTrajectoryVisualization();
 
   // Teleop
-  bool runAutonFromDriver(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
-  void toggleBagRecorder(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  bool runAutonFromDriver(JoyPtr joy_data, double current_time);
+  void toggleBagRecorder(JoyPtr joy_data);
 
   /**
    * @brief Handles intaking logic
@@ -100,21 +101,23 @@ protected:
    * @param current_time
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
-  void updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool R, double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateClampController(bool shift1, bool shift2 ,std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool R, double current_time, JoyPtr joy_data);
+  void updateClamp(JoyPtr joy_data);
+  void updateClampController(bool shift1, bool shift2 , JoyPtr joy_data);
  
-  void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, bool shift);
-  void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateDrivetrain(JoyPtr joy_data);
+  void updateBite(JoyPtr joy_data);
+  void updateGoalRush(JoyPtr joy_data, bool shift);
+  void updateNeutralStakeArm(JoyPtr joy_data);
+  void updateNeutralStakeArmJoystick(bool shift1, bool shift2, JoyPtr joy_data);
 
   void updateNeutralStakeArmPosition(int arm_mode);
   void updateNeutralStakeArmPositionController(bool active, bool up_btn, bool down_btn);
 
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
-  void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateMusic(double current_time, JoyPtr joy_data);
+
+  void resetBT();
 
   // Output
   void playMusic(std::string m);
@@ -123,7 +126,6 @@ protected:
   void colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
  
-
   void resetWorldPose();
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
@@ -151,13 +153,11 @@ protected:
   void publishErrorPose(Eigen::Vector3d pose);
 
   // Subscribers
-  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
-  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_robot_color;
   void colorCallback(const std_msgs::msg::String msg)
@@ -221,6 +221,7 @@ protected:
   static constexpr size_t m_cov_n = 6 * 6;
 
   std::vector<double> m_reset_pose;
+  std::vector<double> m_reset_pose_mirrored;
   std::vector<double> m_initial_estimate_covariance;
 
   bool m_use_backup_estimator = false;
@@ -269,7 +270,6 @@ protected:
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
 
-
   // Field vs Robot Oriented Control
   bool m_toggle_tank_field_control_btn_pressed = false;
 
@@ -289,7 +289,6 @@ protected:
 
   // Auton States
   bool m_auton_button_pressed = false;
-  int m_auton_index = 0;
   bool m_color_target_red = false;
   bool m_mirrored = false;
 

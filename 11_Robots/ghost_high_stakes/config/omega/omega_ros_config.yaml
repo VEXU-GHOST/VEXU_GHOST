@@ -80,18 +80,21 @@ competition_state_machine_node:
       scissor_max_extension: 7700.0
       scissor_reset_extension: -200.0
 
-      # motion planning
+      # Nav Gains
       move_to_pose_kp_xy: 2.0
       move_to_pose_kd_xy: 0.2
       move_to_pose_kp_theta: 1.0
       move_to_pose_kd_theta: 0.2
       move_to_pose_ki_theta: 0.0
-      move_to_pose_kp_xy_fine: 1.0
-      move_to_pose_kd_xy_fine: 0.2
-      move_to_pose_kp_theta_fine: 1.0  #1.0
-      move_to_pose_kd_theta_fine: 0.09 #0.085  #0.2
-      move_to_pose_ki_theta_fine: 0.005 #0.01
-      move_to_pose_integral_limit: 0.5 #0.5
+
+      # Settling Gains
+      move_to_pose_kp_xy_fine: 0.0
+      move_to_pose_kd_xy_fine: 0.0
+      move_to_pose_kp_theta_fine: 0.4 #0.75
+      move_to_pose_kd_theta_fine: 0.1 #0.1
+      move_to_pose_ki_theta_fine: 2.0
+      
+      move_to_pose_integral_limit: 0.2 #0.5
 
       drive_motor_ticks_per_rotation: 360.0
       drive_gear_ratio: 1.15 # 23/20
