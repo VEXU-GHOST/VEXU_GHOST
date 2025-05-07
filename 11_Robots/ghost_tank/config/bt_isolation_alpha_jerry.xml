@@ -14,9 +14,7 @@
       <Logging message="Starting test_color_sensor tree yo what the nut" />
       <SetMirrored mirrored="false" />
       <GoalRushCmd goal_rush_l_down="true" />
-      <Logging message="um" />
       <BiteCmd bite_closed="true" />
-      <Logging message="yo" />
       <ParallelAll>
         <MoveVoltage forward_effort="0.20" angular_effort="0.0" timeout_ms="700" />
 
