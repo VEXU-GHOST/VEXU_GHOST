@@ -247,18 +247,12 @@ void MoveToPoseBezier::PurePursuit()
 
   Eigen::Vector2d command;
   if (within_xy_exit_threshold || settling_) {
-    std::cout << "Settling" << std::endl;
     // We are within xy_exit_threshold, switch to pure angle control
     command = pd_control_threshold_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose_);
 
     // Once we start settling, never exit to avoid instability.
     settling_ = true;
   } else {
-    if (within_pursuit_radius) {
-      std::cout << "within_pursuit_radius" << std::endl;
-    } else {
-      std::cout << "pure pursuit" << std::endl;
-    }
     // Chase the carrot. If within pursuit radius, ignore lateral error in xy control.
     command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), desired_pose, final_pose_, backwards, within_pursuit_radius);
   }

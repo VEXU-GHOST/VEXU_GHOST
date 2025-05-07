@@ -65,9 +65,6 @@ def generate_launch_description():
                     "initial_reset": "false",
                     "gyro_qos": "SENSOR_DATA",
                     "gyro_fps": "200",  # 200 or 400
-                    "color_fps": "1",
-                "color_width": "640",
-                "color_height": "480",
                 }.items(),
             )
         ]

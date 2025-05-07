@@ -443,7 +443,6 @@ void AlphaJerryPlugin::autonomous(double current_time)
 
   bool ground_intake_active = false;
   if (bt_->get_variable("ground_intake_active", ground_intake_active) && !ring_detector_active) {
-    std::cout << "Run Ground Pickup" << std::endl;
     updateIntake(ground_intake_active, false, false, false, current_time);
   }
 
@@ -784,7 +783,6 @@ void AlphaJerryPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cu
   if (!m_bite_closed) {
     ground_pickup_power = 0.0;
     ground_pickup_current = 0.0;
-    std::cout << "NOPE" << std::endl;
   }
 
   rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
