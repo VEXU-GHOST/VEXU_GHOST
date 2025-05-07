@@ -12,9 +12,12 @@
 
   <BehaviorTree ID="main_tree">
     <Sequence>
-      <Logging message="Starting main tree" />
-      <SetMirrored mirrored="false" />
-      <SubTree ID="worlds_goal_rush" _autoremap="true" />
+      <Sequence>
+        <Logging message="Starting main tree" />
+        <SetMirrored mirrored="false" />
+        <SubTree ID="worlds_goal_rush" _autoremap="true" />
+        <SubTree ID="center_rush_after_side_rush" _autoremap="true" />
+      </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true" />
     </Sequence>
   </BehaviorTree>
@@ -43,7 +46,7 @@
               <!-- Invert GoalRushDetected -->
               <Inverter>
                 <Sequence>
-                  <GoalRushDetected right="false" threshold="0.1" />
+                  <GoalRushDetected right="false" threshold="0.5" />
                   <Logging message="sensor no workie, there shouldn't be a goal yet" />
                 </Sequence>
               </Inverter>

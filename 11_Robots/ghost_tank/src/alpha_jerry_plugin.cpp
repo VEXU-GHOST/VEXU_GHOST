@@ -36,6 +36,7 @@
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
+using namespace std::chrono_literals;
 
 using ghost_v5_interfaces::devices::JoystickDeviceData;
 
@@ -543,7 +544,6 @@ void AlphaJerryPlugin::ringDetector(bool active, double current_time, bool want_
 
   m_ring_found = m_color_map[m_color] != 0;
   m_ring_color = m_color_map[m_color];
-  std::cout << "color: " << m_ring_color << std::endl;
 
   // Initial ring detection
   if (m_ring_found && !running) {
@@ -1089,6 +1089,7 @@ void AlphaJerryPlugin::resetWorldPose()
   // Publish to Particle Filter
   m_reset_ekf_pub->publish(new_pose);
   m_reset_pf_pub->publish(new_pose);
+  std::this_thread::sleep_for(250ms);
   if (m_mirrored) {
     std::cout << "Done reset: mirrored" << std::endl;
   } else {

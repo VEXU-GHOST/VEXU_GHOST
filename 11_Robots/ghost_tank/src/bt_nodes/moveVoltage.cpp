@@ -73,6 +73,7 @@ BT::NodeStatus MoveVoltage::onRunning()
 
 void MoveVoltage::onHalted()
 {
+  tank_model_ptr_->driveCommand(0.0, 0.0);
   resetStatus();
 }
 

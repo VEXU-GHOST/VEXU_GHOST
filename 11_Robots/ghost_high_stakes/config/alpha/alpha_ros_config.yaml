@@ -61,9 +61,9 @@ competition_state_machine_node:
       move_to_pose_kd_theta_fine: 0.1 #0.1
       move_to_pose_ki_theta_fine: 3.0
       
-      move_to_pose_integral_limit: 0.3 #0.5
+      move_to_pose_integral_limit: 0.35 #0.5
 
-      init_x_tiles: 1.427
+      init_x_tiles: 1.45
       init_y_tiles: 1.361
       init_theta_degrees: 113.0
 

@@ -72,9 +72,9 @@ competition_state_machine_node:
 
     particle_filter:
       # Initial cloud distribution
-      init_x_sigma: 0.05 #
-      init_y_sigma: 0.05 #
-      init_r_sigma: 0.1 #
+      init_x_sigma: 0.04 #
+      init_y_sigma: 0.04 #
+      init_r_sigma: 0.15 #
 
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
@@ -150,7 +150,7 @@ ekf_pf_node:
       # max_update_tilt_velocity: 0.0
 
       # Computation Factors
-      num_particles: 200 # Increase until computation runs out
+      num_particles: 250 # Increase until computation runs out
       resize_factor: 10.0 # num_points / resize_factor = num_rays
       resample_frequency: 4 # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
 
