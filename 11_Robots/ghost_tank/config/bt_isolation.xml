@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="test_intake">
+      main_tree_to_execute="main_tree">
   <!-- <include path="bt_goal_rush.xml"/> -->
-  <!-- <include path="bt_better_goal_rush.xml"/> -->
+  <include path="bt_better_goal_rush.xml"/>
+  <include path="bt_clear_corner.xml"/>
   <!-- <include path="bt_goal_rush_middle.xml"/> -->
   <!-- <include path="bt_pos_corner.xml"/> -->
   <!-- <include path="bt_neg_corner.xml"/> -->
@@ -12,9 +13,8 @@
   <!-- <include path="basic_auton_1_15size_before_neutral.xml"/> -->
   <!-- <include path="basic_auton_1_15size_end.xml"/> -->
   <BehaviorTree ID="main_tree">
-        <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
     <Sequence>
-      <SubTree ID="better_goal_rush" _autoremap="true"/>
+      <SubTree ID="clear_corner" _autoremap="true"/>
       <!-- <SubTree ID="basic_auton_1" _autoremap="true"/> -->
       <!-- <SubTree ID="basic_auton_1_end" _autoremap="true"/> -->
       
