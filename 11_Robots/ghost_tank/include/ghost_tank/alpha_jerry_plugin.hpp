@@ -219,8 +219,8 @@ protected:
   double m_init_world_theta = 0.0;
   static constexpr size_t m_cov_n = 6 * 6;
 
-  std::vector<double> m_reset_pose;
-  std::vector<double> m_reset_pose_mirrored;
+  Eigen::Vector2d m_reset_pose_xy_m;
+  double m_reset_pose_angle_rad;
   std::vector<double> m_initial_estimate_covariance;
 
   bool m_use_backup_estimator = false;

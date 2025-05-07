@@ -192,6 +192,7 @@ void AlphaJerryPlugin::initEstimation()
   rclcpp::QoS qos_profile(1);
   qos_profile.transient_local();
   m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, qos_profile);
+  m_reset_ekf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, qos_profile);
 
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
@@ -229,15 +230,20 @@ void AlphaJerryPlugin::initEstimation()
   m_init_sigma_theta = node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
 
   node_ptr_->declare_parameter("map_ekf.initial_estimate_covariance", std::vector<double>());
-  node_ptr_->declare_parameter("map_ekf.initial_state", std::vector<double>());
-  node_ptr_->declare_parameter("map_ekf.initial_state_mirrored", std::vector<double>());
-
   m_initial_estimate_covariance = node_ptr_->get_parameter("map_ekf.initial_estimate_covariance").as_double_array();
-  m_reset_pose = node_ptr_->get_parameter("map_ekf.initial_state").as_double_array();
-  m_reset_pose_mirrored = node_ptr_->get_parameter("map_ekf.initial_state_mirrored").as_double_array();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.init_x_tiles", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.init_y_tiles", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.init_theta_degrees", 0.0);
+
+  constexpr double tiles_to_meters = 0.6096;
+
+  m_reset_pose_xy_m = tiles_to_meters * Eigen::Vector2d(
+    node_ptr_->get_parameter("tank_robot_plugin.init_x_tiles").as_double(),
+    node_ptr_->get_parameter("tank_robot_plugin.init_y_tiles").as_double());
+  m_reset_pose_angle_rad = node_ptr_->get_parameter("tank_robot_plugin.init_theta_degrees").as_double() * ghost_util::DEG_TO_RAD;
 
   std::cout << "[AlphaJerryPlugin::initEstimation] m_initial_estimate_covariance: " << m_initial_estimate_covariance.size() << std::endl;
-  std::cout << "[AlphaJerryPlugin::initEstimation] m_reset_pose: " << m_reset_pose.size() << std::endl;
 }
 
 void AlphaJerryPlugin::initIntake()
@@ -400,6 +406,7 @@ void AlphaJerryPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("bite_closed", false);
     bt_->set_variable<bool>("goal_rush_l_down", false);
     bt_->set_variable<bool>("goal_rush_r_down", false);
+    bt_->set_variable<bool>("goal_rush_down", false);
     bt_->set_variable<bool>("climb_extended", false);
   }
 
@@ -438,7 +445,7 @@ void AlphaJerryPlugin::autonomous(double current_time)
   m_bite_closed = (bt_->get_variable<int>("bite_closed"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], (bt_->get_variable<int>("climb_extended")));
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], (bt_->get_variable<int>("clamp_closed")));
-  if (m_mirrored){
+  if (m_mirrored) {
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_l_down"));
   } else {
@@ -1065,21 +1072,23 @@ void AlphaJerryPlugin::resetWorldPose()
   new_pose.header.frame_id = "map";
   new_pose.header.stamp = node_ptr_->get_clock()->now();
 
+  Eigen::Vector2d reset_pose = m_reset_pose_xy_m;
+  double reset_angle = m_reset_pose_angle_rad;
+
   if (m_mirrored) {
-    ghost_util::yawToQuaternionRad(m_reset_pose_mirrored[5], quat.w, quat.x, quat.y, quat.z);
-    new_pose.pose.pose.position.x = m_reset_pose_mirrored[0];
-    new_pose.pose.pose.position.y = m_reset_pose_mirrored[1];
-  } else {
-    ghost_util::yawToQuaternionRad(m_reset_pose[5], quat.w, quat.x, quat.y, quat.z);
-    new_pose.pose.pose.position.x = m_reset_pose[0];
-    new_pose.pose.pose.position.y = m_reset_pose[1];
+    reset_pose.x() = 6*24.0*2.54/100.0 - m_reset_pose_xy_m.x();
+    reset_angle = M_PI - m_reset_pose_angle_rad;
   }
+  ghost_util::yawToQuaternionRad(reset_angle, quat.w, quat.x, quat.y, quat.z);
+  new_pose.pose.pose.position.x = reset_pose.x();
+  new_pose.pose.pose.position.y = reset_pose.y();
 
   new_pose.pose.pose.orientation = quat;
   new_pose.pose.covariance = m_initial_estimate_covariance_arr;
 
   // Publish to Particle Filter
   m_reset_pf_pub->publish(new_pose);
+  // m_reset_ekf_pub->publish(new_pose);
   if (m_mirrored) {
     std::cout << "Done reset: mirrored" << std::endl;
   } else {

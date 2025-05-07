@@ -63,26 +63,9 @@ competition_state_machine_node:
       
       move_to_pose_integral_limit: 0.3 #0.5
 
-/**:
-  ros__parameters:
-    map_ekf:
-      initial_state:
-        [
-          0.87, 0.83, 0.0, #0.965, 0.559, 0.0, # 2.635,  0.559,  0.0,
-          0.0, 0.0, 1.98, #0.0,  0.0,  1.964, # 0.0,  0.0,  1.178,
-          0.0,  0.0,  0.0,
-          0.0,  0.0,  0.0,
-          0.0,  0.0,  0.0,
-        ]
-
-      initial_state_mirrored:
-        [
-          2.635,  0.559,  0.0,
-          0.0,  0.0,  1.178,
-          0.0,  0.0,  0.0,
-          0.0,  0.0,  0.0,
-          0.0,  0.0,  0.0,
-        ]
+      init_x_tiles: 1.427
+      init_y_tiles: 1.361
+      init_theta_degrees: 113.0
 
 gpio_expander:
   ros__parameters:

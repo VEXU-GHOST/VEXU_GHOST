@@ -30,18 +30,22 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 BoundaryCheck::BoundaryCheck(
   const std::string & name, const BT::NodeConfig & config)
-  : BT::DecoratorNode(name, config){
-    blackboard_ = config.blackboard;
-    BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-    BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
-  }
+: BT::DecoratorNode(name, config)
+{
+  blackboard_ = config.blackboard;
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+}
 
 // It is mandatory to define this STATIC method.
 BT::PortsList BoundaryCheck::providedPorts()
 {
   // This action has a single input port called "message"
   return {
-    BT::InputPort<double>("y_threshold_tiles")
+    BT::InputPort<double>("x_lower_bound_tiles"),
+    BT::InputPort<double>("y_lower_bound_tiles"),
+    BT::InputPort<double>("x_upper_bound_tiles"),
+    BT::InputPort<double>("y_upper_bound_tiles")
   };
 }
 
@@ -54,18 +58,18 @@ void BoundaryCheck::halt()
 BT::NodeStatus BoundaryCheck::tick()
 {
   static constexpr double tile_to_meters = 0.6096;
-  double y_threshold_m = BT_Util::get_input<double>(this, "y_threshold_tiles") * tile_to_meters;
-  
-  // double timeout = seconds.value();
-  // double time = blackboard_->get<double>("auton_time_elapsed");
+  double x_lower_bound_m = BT_Util::get_input<double>(this, "x_lower_bound_tiles") * tile_to_meters;
+  double y_lower_bound_m = BT_Util::get_input<double>(this, "y_lower_bound_tiles") * tile_to_meters;
+  double x_upper_bound_m = BT_Util::get_input<double>(this, "x_upper_bound_tiles") * tile_to_meters;
+  double y_upper_bound_m = BT_Util::get_input<double>(this, "y_upper_bound_tiles") * tile_to_meters;
 
-  // if (time > timeout) {
-    // RCLCPP_INFO(node_ptr_->get_logger(), "AutonTimeout: %f s passed", time);
-    // return BT::NodeStatus::FAILURE;
-  // }
-
+  double current_x_m = tank_model_ptr_->getWorldPose().x();
   double current_y_m = tank_model_ptr_->getWorldPose().y();
-  if (abs(3.0 * tile_to_meters - current_y_m) < y_threshold_m) {
+
+  bool x_bounds_violated = (current_x_m < x_lower_bound_m) || (current_x_m > x_upper_bound_m);
+  bool y_bounds_violated = (current_y_m < y_lower_bound_m) || (current_y_m > y_upper_bound_m);
+
+  if (x_bounds_violated || y_bounds_violated) {
     haltChild();
     return BT::NodeStatus::FAILURE;
   }
