@@ -419,6 +419,7 @@ void TankRobotPlugin::autonomous(double current_time)
 
     bt_->set_variable<bool>("clamp_closed", false);
     bt_->set_variable<bool>("bite_closed", false);
+    bt_->set_variable<bool>("goal_rush_down", false);
     bt_->set_variable<bool>("goal_rush_l_down", false);
     bt_->set_variable<bool>("goal_rush_r_down", false);
     bt_->set_variable<bool>("climb_extended", false);
@@ -474,16 +475,16 @@ void TankRobotPlugin::autonomous(double current_time)
   }
 
   // Update Pneumatics
-  rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], bt_->get_variable<bool>("climb_extended"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<bool>("clamp_closed"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], bt_->get_variable<int>("climb_extended"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<int>("clamp_closed"));
   if (m_mirrored){
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<bool>("goal_rush_r_down") || bt_->get_variable<bool>("goal_rush_down"));
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<bool>("goal_rush_l_down"));
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_l_down"));
   } else {
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<bool>("goal_rush_l_down"));
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<bool>("goal_rush_r_down") || bt_->get_variable<bool>("goal_rush_down"));
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_l_down"));
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
   }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<bool>("bite_closed"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
 
   // Publish Twist Command
   geometry_msgs::msg::Twist msg{};
@@ -1019,6 +1020,7 @@ void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_dat
     }
   } else {
     m_goal_rush_active = false;
+    goal_rush_r_active = false;
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_goal_rush_active);
   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], goal_rush_r_active);

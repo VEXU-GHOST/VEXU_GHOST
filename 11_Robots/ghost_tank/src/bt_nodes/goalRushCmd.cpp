@@ -56,7 +56,7 @@ BT::NodeStatus GoalRushCmd::tick()
   // std::unordered_map<std::string, int> digital_io_port_map;
   // BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
   // rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], arm_down);
-  BT_Util::put_in_blackboard(blackboard_, "arm_down", arm_down);
+  BT_Util::put_in_blackboard(blackboard_, "goal_rush_down", arm_down);
   
   return BT::NodeStatus::SUCCESS;
 }
