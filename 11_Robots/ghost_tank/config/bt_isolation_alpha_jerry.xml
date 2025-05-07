@@ -13,57 +13,92 @@
   <BehaviorTree ID="main_tree">
         <!-- <SubTree ID="score_neutral" _autoremap="true"/> -->
     <Sequence>
-        <MoveToPoseBezier posX_tiles="2.0"
-                          posY_tiles="1.0"
-                          theta_deg="0.0"
-                          search_radius_tiles="0.5"
-                          lead="1.0"
-                          xy_exit_threshold_tiles="0.05"
-                          angle_exit_threshold_deg="3.0"
-                          lin_vel_exit_threshold_tps="0.1"
-                          ang_vel_exit_threshold_dps="1.0"
-                          max_speed_linear_percent="0.4"
-                          max_speed_angular_percent="1.0"
-                          timeout_ms="2000"
-                          use_theta="true"
-                          backwards="false"/>
-      <WaitCmd seconds="5.0" shutoff_motors="true"/>
-      <MoveToPoseBezier posX_tiles="3.0"
-                          posY_tiles="1.0"
-                          theta_deg="0.0"
-                          search_radius_tiles="0.3"
-                          lead="1.0"
-                          xy_exit_threshold_tiles="0.05"
-                          angle_exit_threshold_deg="3.0"
-                          lin_vel_exit_threshold_tps="0.1"
-                          ang_vel_exit_threshold_dps="1.0"
-                          max_speed_linear_percent="0.4"
-                          max_speed_angular_percent="1.0"
-                          timeout_ms="2000"
-                          use_theta="true"
-                          backwards="false"/>
-      <WaitCmd seconds="5.0" shutoff_motors="true"/>
-      <MoveToPoseBezier posX_tiles="2.0"
-                          posY_tiles="1.0"
-                          theta_deg="0.0"
-                          search_radius_tiles="0.3"
-                          lead="1.0"
-                          xy_exit_threshold_tiles="0.05"
-                          angle_exit_threshold_deg="3.0"
-                          lin_vel_exit_threshold_tps="0.1"
-                          ang_vel_exit_threshold_dps="1.0"
-                          max_speed_linear_percent="0.4"
-                          max_speed_angular_percent="1.0"
-                          timeout_ms="2000"
-                          use_theta="true"
-                          backwards="true"/>
-
-      <!-- <SubTree ID="better_goal_rush" _autoremap="true"/> -->
+ <!-- <SetBlackboard value="false" output_key="climb_extended"/> -->
+      <SetBlackboard value="true" output_key="bite_closed"/>
+      <MoveToPoseBezier posX_tiles="1.7"
+                  posY_tiles="2.5"
+                  theta_deg="45.0"
+                  search_radius_tiles="0.25"
+                  lead="0.5"
+                  xy_exit_threshold_tiles="0.1"
+                  angle_exit_threshold_deg="3.0"
+                  lin_vel_exit_threshold_tps="0.1"
+                  ang_vel_exit_threshold_dps="1.0"
+                  max_speed_linear_percent="0.4"
+                  max_speed_angular_percent="1.0"
+                  timeout_ms="10000"
+                  use_theta="true"
+                  backwards="false"/>
+      <SetBlackboard value="true" output_key="climb_extended"/>
+      <MoveToPoseBezier posX_tiles="1.9"
+                  posY_tiles="2.8"
+                  theta_deg="60.0"
+                  search_radius_tiles="0.3"
+                  lead="0.25"
+                  xy_exit_threshold_tiles="0.05"
+                  angle_exit_threshold_deg="3.0"
+                  lin_vel_exit_threshold_tps="0.1"
+                  ang_vel_exit_threshold_dps="1.0"
+                  max_speed_linear_percent="1.0"
+                  max_speed_angular_percent="1.0"
+                  timeout_ms="2000"
+                  use_theta="true"
+                  backwards="false"/>
+      <SetBlackboard value="false" output_key="climb_extended"/>
       <!-- <SubTree ID="aj_rings" _autoremap="true"/> -->
           
       <Logging message="Auton Complete"/>
       <WaitCmd seconds="500.0" shutoff_motors="true"/>
     </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="mtp_testing">
+  <Sequence>
+         <MoveToPoseBezier posX_tiles="2.0"
+                          posY_tiles="1.0"
+                          theta_deg="0.0"
+                          search_radius_tiles="0.5"
+                          lead="1.0"
+                          xy_exit_threshold_tiles="1.0"
+                          angle_exit_threshold_deg="3.0"
+                          lin_vel_exit_threshold_tps="0.1"
+                          ang_vel_exit_threshold_dps="1.0"
+                          max_speed_linear_percent="0.4"
+                          max_speed_angular_percent="1.0"
+                          timeout_ms="100000"
+                          use_theta="true"
+                          backwards="false"/>
+      <WaitCmd seconds="0.5" shutoff_motors="true"/>
+      <MoveToPoseBezier posX_tiles="3.0"
+                          posY_tiles="1.0"
+                          theta_deg="0.0"
+                          search_radius_tiles="0.2"
+                          lead="1.0"
+                          xy_exit_threshold_tiles="0.1"
+                          angle_exit_threshold_deg="3.0"
+                          lin_vel_exit_threshold_tps="0.1"
+                          ang_vel_exit_threshold_dps="1.0"
+                          max_speed_linear_percent="1.0"
+                          max_speed_angular_percent="1.0"
+                          timeout_ms="2000"
+                          use_theta="true"
+                          backwards="false"/>
+      <WaitCmd seconds="0.5" shutoff_motors="true"/>
+      <MoveToPoseBezier posX_tiles="2.0"
+                          posY_tiles="1.0"
+                          theta_deg="45.0"
+                          search_radius_tiles="0.3"
+                          lead="0.5"
+                          xy_exit_threshold_tiles="0.05"
+                          angle_exit_threshold_deg="3.0"
+                          lin_vel_exit_threshold_tps="0.1"
+                          ang_vel_exit_threshold_dps="1.0"
+                          max_speed_linear_percent="1.0"
+                          max_speed_angular_percent="1.0"
+                          timeout_ms="2000"
+                          use_theta="true"
+                          backwards="true"/>
+  </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="test_color_sensor">

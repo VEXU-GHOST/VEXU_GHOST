@@ -85,8 +85,6 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr curr_angle_pub;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr des_angle_pub;
 
-  double des_angle_;
-  double curr_angle_;
   Eigen::Vector3d final_pose_ = Eigen::Vector3d::Zero();
 
   double posX_m{0.0};
@@ -101,14 +99,14 @@ private:
   bool backwards{0};
   double search_radius{0.0};
   double lead{0.0};
-  double max_speed_linear{0.0};
-  double max_speed_angular{0.0};
+  double max_speed_linear_percent{0.0};
+  double max_speed_angular_percent{0.0};
+  bool settling_{false};
 
   static constexpr double tile_to_meters = 0.6096;
 
   void PurePursuit();
   void GeneratePath();
-  void OnlySpinPath(); // Only for testing!
   void publishTrajectoryVisualization();
 };
 
