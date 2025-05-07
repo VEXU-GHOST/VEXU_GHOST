@@ -50,26 +50,26 @@ competition_state_machine_node:
       # Nav Gains
       move_to_pose_kp_xy: 2.0
       move_to_pose_kd_xy: 0.2
-      move_to_pose_kp_theta: 1.0
+      move_to_pose_kp_theta: 2.0
       move_to_pose_kd_theta: 0.2
       move_to_pose_ki_theta: 0.0
 
       # Settling Gains
       move_to_pose_kp_xy_fine: 0.0
       move_to_pose_kd_xy_fine: 0.0
-      move_to_pose_kp_theta_fine: 0.4 #0.75
+      move_to_pose_kp_theta_fine: 1.0 #0.75
       move_to_pose_kd_theta_fine: 0.1 #0.1
-      move_to_pose_ki_theta_fine: 2.0
+      move_to_pose_ki_theta_fine: 3.0
       
-      move_to_pose_integral_limit: 0.2 #0.5
+      move_to_pose_integral_limit: 0.3 #0.5
 
 /**:
   ros__parameters:
     map_ekf:
       initial_state:
         [
-          1.2192, 0.6096, 0.0, #0.965, 0.559, 0.0, # 2.635,  0.559,  0.0,
-          0.0, 0.0, 1.570795, #0.0,  0.0,  1.964, # 0.0,  0.0,  1.178,
+          0.87, 0.83, 0.0, #0.965, 0.559, 0.0, # 2.635,  0.559,  0.0,
+          0.0, 0.0, 1.98, #0.0,  0.0,  1.964, # 0.0,  0.0,  1.178,
           0.0,  0.0,  0.0,
           0.0,  0.0,  0.0,
           0.0,  0.0,  0.0,

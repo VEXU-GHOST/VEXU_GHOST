@@ -105,7 +105,7 @@ def generate_launch_description():
         output="screen",
         namespace="/sensors/color_sensors/goal_rush_l",
         parameters=[ros_config_file, base_params_file, {
-            "address": 0x39^ (1<<6), # both address translator switches on so ^ 1<<6
+            "address": 0x49, # both address translator switches on so ^ 1<<6
         }],
     )
     color_sensor_intake = Node(
@@ -160,7 +160,7 @@ def generate_launch_description():
         map_ekf_node,
         # color_sensor_intake,
         # color_classifier_intake,
-                # color_sensor_goal_rush_l,
+                color_sensor_goal_rush_l,
                 #color_sensor_goal_rush_r,
         competition_state_machine_node,
         # gpio_expander,

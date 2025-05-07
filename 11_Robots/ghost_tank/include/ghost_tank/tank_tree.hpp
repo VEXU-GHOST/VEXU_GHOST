@@ -43,6 +43,7 @@
 #include "ghost_tank/bt_nodes/goalRushDetected.hpp"
 #include "ghost_tank/bt_nodes/goalDetected.hpp"
 #include "ghost_tank/bt_nodes/boundaryCheck.hpp"
+#include "ghost_tank/bt_nodes/moveVoltage.hpp"
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 

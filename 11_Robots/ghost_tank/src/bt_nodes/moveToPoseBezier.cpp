@@ -55,6 +55,10 @@ MoveToPoseBezier::MoveToPoseBezier(const std::string & name, const BT::NodeConfi
 
   curr_angle_pub = node_ptr_->create_publisher<std_msgs::msg::Float64>("/test/curr_angle", 10);
   des_angle_pub = node_ptr_->create_publisher<std_msgs::msg::Float64>("/test/des_angle", 10);
+  fwd_cmd_pub = node_ptr_->create_publisher<std_msgs::msg::Float64>("/test/fwd_cmd", 10);
+  turn_cmd_pub = node_ptr_->create_publisher<std_msgs::msg::Float64>("/test/turn_cmd", 10);
+  left_cmd_pub = node_ptr_->create_publisher<std_msgs::msg::Float64>("/test/left_cmd", 10);
+  right_cmd_pub = node_ptr_->create_publisher<std_msgs::msg::Float64>("/test/right_cmd", 10);
 
   first_loop_ = true;
 
@@ -226,7 +230,7 @@ void MoveToPoseBezier::PurePursuit()
 
   // Find intersection of path and pursuit radius
   Eigen::Vector3d desired_pose;
-  past_index_ = x_trajectory.size()-1; // Initialize to end so if we are way off the path (no points inside pursuit radius), we go straight to final pose
+  past_index_ = x_trajectory.size() - 1; // Initialize to end so if we are way off the path (no points inside pursuit radius), we go straight to final pose
   for (int i = 0; i < x_trajectory.size(); ++i) {
     double distance = (current_pos - Eigen::Vector2d(x_trajectory[i], y_trajectory[i])).norm();
     if (distance < search_radius) {
@@ -245,7 +249,7 @@ void MoveToPoseBezier::PurePursuit()
   if (within_xy_exit_threshold || settling_) {
     // We are within xy_exit_threshold, switch to pure angle control
     command = pd_control_threshold_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose_);
-    
+
     // Once we start settling, never exit to avoid instability.
     settling_ = true;
   } else {
@@ -264,13 +268,38 @@ void MoveToPoseBezier::PurePursuit()
   // Scale commands so that max command equals full thrust
   double normalizer = 1.0 / std::max(1.0, std::max(std::fabs(left_cmd), std::fabs(right_cmd)));
   // double normalizer = 1.0;
-  left_cmd *= normalizer;
-  right_cmd *= normalizer;
+  fwd_cmd *= normalizer;
+  turn_cmd *= normalizer;
+
+  publishDrivetrainCommands(fwd_cmd, turn_cmd);
+
 
   BT_Util::put_in_blackboard(blackboard_, "fwd_cmd", fwd_cmd);
   BT_Util::put_in_blackboard(blackboard_, "turn_cmd", turn_cmd);
 
   tank_model_ptr_->driveCommand(fwd_cmd, turn_cmd);
+}
+
+void MoveToPoseBezier::publishDrivetrainCommands(double fwd_cmd, double turn_cmd)
+{
+  double left_cmd = fwd_cmd - turn_cmd;
+  double right_cmd = fwd_cmd + turn_cmd;
+
+  std_msgs::msg::Float64 fwd_cmd_msg;
+  fwd_cmd_msg.data = fwd_cmd;
+  fwd_cmd_pub->publish(fwd_cmd_msg);
+
+  std_msgs::msg::Float64 turn_cmd_msg;
+  turn_cmd_msg.data = turn_cmd;
+  turn_cmd_pub->publish(turn_cmd_msg);
+
+  std_msgs::msg::Float64 left_cmd_msg;
+  left_cmd_msg.data = left_cmd;
+  left_cmd_pub->publish(left_cmd_msg);
+
+  std_msgs::msg::Float64 right_cmd_msg;
+  right_cmd_msg.data = right_cmd;
+  right_cmd_pub->publish(right_cmd_msg);
 }
 
 void MoveToPoseBezier::publishTrajectoryVisualization()

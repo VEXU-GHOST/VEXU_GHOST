@@ -434,12 +434,8 @@ void AlphaJerryPlugin::autonomous(double current_time)
     ringDetector(ring_detector_active, current_time, want_red, store_ring);
   }
 
-  bool ground_intake_active = false;
-  if (bt_->get_variable("ground_intake_active", ground_intake_active) && !ring_detector_active) {
-    updateIntake(ground_intake_active, false, false, false, current_time);
-  }
-
   // Update Pneumatics
+  m_bite_closed = (bt_->get_variable<int>("bite_closed"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], (bt_->get_variable<int>("climb_extended")));
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], (bt_->get_variable<int>("clamp_closed")));
   if (m_mirrored){
@@ -449,7 +445,12 @@ void AlphaJerryPlugin::autonomous(double current_time)
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], (bt_->get_variable<int>("goal_rush_l_down")));
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], (bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down")));
   }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], ( bt_->get_variable<int>("bite_closed")));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
+
+  bool ground_intake_active = false;
+  if (bt_->get_variable("ground_intake_active", ground_intake_active) && !ring_detector_active) {
+    updateIntake(ground_intake_active, false, false, false, current_time);
+  }
 
   // Publish Twist Command
   geometry_msgs::msg::Twist msg{};
@@ -466,6 +467,7 @@ void AlphaJerryPlugin::resetBT()
   } catch (std::exception & e) {
     std::cout << "Error init_tree: " << e.what() << std::endl;
   }
+  std::cout << "ResetBT Complete!" << std::endl;
 }
 
 void AlphaJerryPlugin::teleop(double current_time)
