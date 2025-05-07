@@ -59,6 +59,7 @@ void TankTree::init_tree(){
 	factory.registerNodeType<NeutralStakeCmd>("NeutralStakeCmd");
 	factory.registerNodeType<GoalRushDetected>("GoalRushDetected");
 	factory.registerNodeType<GoalDetected>("GoalDetected");
+	factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
 
     tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
 	std::cout << "Tree created: " << bt_path_ << std::endl;

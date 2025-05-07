@@ -228,6 +228,7 @@ set(NODES
   setColorTarget
   goalRushDetected
   goalDetected
+  boundaryCheck
 )
 
 foreach(NODE ${NODES})

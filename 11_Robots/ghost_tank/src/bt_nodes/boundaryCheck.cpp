@@ -21,44 +21,52 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/autonTimer.hpp"
+#include "ghost_tank/bt_nodes/boundaryCheck.hpp"
 
 namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
 // If your Node has ports, you must use this constructor signature
-AutonTimer::AutonTimer(
+BoundaryCheck::BoundaryCheck(
   const std::string & name, const BT::NodeConfig & config)
   : BT::DecoratorNode(name, config){
     blackboard_ = config.blackboard;
     BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-}
+    BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+  }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList AutonTimer::providedPorts()
+BT::PortsList BoundaryCheck::providedPorts()
 {
   // This action has a single input port called "message"
   return {
-    BT::InputPort<double>("seconds")
+    BT::InputPort<double>("y_threshold_tiles")
   };
 }
 
-void AutonTimer::halt()
+void BoundaryCheck::halt()
 {
   haltChild();
 }
 
 // Override the virtual function tick()
-BT::NodeStatus AutonTimer::tick()
+BT::NodeStatus BoundaryCheck::tick()
 {
-  double timeout = BT_Util::get_input<double>(this, "seconds");
+  static constexpr double tile_to_meters = 0.6096;
+  double y_threshold_m = BT_Util::get_input<double>(this, "y_threshold_tiles") * tile_to_meters;
   
   // double timeout = seconds.value();
-  double time = blackboard_->get<double>("auton_time_elapsed");
+  // double time = blackboard_->get<double>("auton_time_elapsed");
 
-  if (time > timeout) {
-    RCLCPP_INFO(node_ptr_->get_logger(), "AutonTimeout: %f s passed", time);
+  // if (time > timeout) {
+    // RCLCPP_INFO(node_ptr_->get_logger(), "AutonTimeout: %f s passed", time);
+    // return BT::NodeStatus::FAILURE;
+  // }
+
+  double current_y_m = tank_model_ptr_->getWorldPose().y();
+  if (abs(3.0 * tile_to_meters - current_y_m) < y_threshold_m) {
+    haltChild();
     return BT::NodeStatus::FAILURE;
   }
 
