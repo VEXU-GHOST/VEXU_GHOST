@@ -1005,14 +1005,23 @@ void TankRobotPlugin::updateGoalRush(std::shared_ptr<JoystickDeviceData> joy_dat
   // } else if (!joy_data->btn_l1) {
   //   goal_rush_btn_pressed = false;
   // }
+  bool goal_rush_r_active = false;
   if (shift){
     if (joy_data->btn_l1){
       m_goal_rush_active = true;
+    } else {
+      m_goal_rush_active = false;
+    }
+    if (joy_data->btn_r1){
+      goal_rush_r_active = true;
+    } else {
+      goal_rush_r_active = false;
     }
   } else {
     m_goal_rush_active = false;
   }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush"], m_goal_rush_active);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_goal_rush_active);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], goal_rush_r_active);
 }
 
 void TankRobotPlugin::updateDrivetrain(std::shared_ptr<JoystickDeviceData> joy_data)
