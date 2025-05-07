@@ -83,7 +83,7 @@ void TankRobotPlugin::populateMotorNames()
 void TankRobotPlugin::populateDigitalIONames()
 {
   digital_io_port_map["goal_rush_sensor"] = 4;
-  digital_io_port_map["goal_rush"] = 5;
+  digital_io_port_map["goal_rush"] = 1;
   digital_io_port_map["clamp"] = 7;
   digital_io_port_map["bite"] = 6;
 }

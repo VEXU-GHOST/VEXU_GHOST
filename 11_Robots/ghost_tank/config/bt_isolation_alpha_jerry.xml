@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4" main_tree_to_execute="test_boundary">
+<root BTCPP_format="4" main_tree_to_execute="test_color_sensor">
   
   <!-- Includes -->
   <include path="bt_goal_rush.xml"/>
@@ -9,6 +9,68 @@
   <include path="bt_neutral_stake.xml"/>
   <include path="bt_aj_rings.xml"/>
 
+  <BehaviorTree ID="test_color_sensor">
+    <Sequence>
+      <Logging message="Starting test_color_sensor tree yo what the nut" />
+      <SetMirrored mirrored="false" />
+      <GoalRushCmd goal_rush_l_down="true" />
+      <Logging message="um" />
+      <BiteCmd bite_closed="true" />
+      <Logging message="yo" />
+      <ParallelAll>
+        <MoveVoltage forward_effort="0.20" angular_effort="0.0" timeout_ms="700" />
+
+        <Sequence>
+          <Logging message="what" />
+
+          <WaitCmd seconds="0.35"
+            shutoff_motors="false" />
+
+          <Logging message="waited" />
+
+          <Fallback name="GoalRushOrTimeout">
+            <!-- Branch A: sensor working -->
+            <Sequence name="IfSensorFunctional">
+              <!-- Invert GoalRushDetected -->
+              <Inverter>
+                <Sequence>
+                  <GoalRushDetected right="false" threshold="0.1" />
+                  <Logging message="sensor no workie, there shouldn't be a goal yet" />
+                </Sequence>
+              </Inverter>
+              <Logging message="sensor works" />
+              <!-- Race: either detect or timeout -->
+              <ReactiveFallback>
+                <GoalRushDetected right="false" threshold="0.7" />
+                <WaitCmd seconds="0.35" shutoff_motors="false" />
+              </ReactiveFallback>
+              <!-- <ReactiveFallback name="GoalRushOrTimeout">
+                <! Branch A: goal‑rush detected >
+                <Sequence name="OnGoalRush">
+                  <GoalRushDetected right="false" threshold="0.7" />
+                  <Logging message="🏃‍♂️ Goal rush detected—exiting early" />
+                </Sequence>
+
+                <! Branch B: timeout expired >
+                <Sequence name="OnTimeout">
+                  <WaitCmd seconds="0.35" shutoff_motors="false" />
+                  <Logging message="⏱ Timeout reached—no goal rush" />
+                </Sequence>
+              </ReactiveFallback> -->
+            </Sequence>
+            <!-- Branch B: sensor failed, just wait -->
+            <Logging message="just wait, sensor failed????" />
+            <WaitCmd seconds="0.35" shutoff_motors="false" />
+          </Fallback>
+
+          <Logging message="ended" />
+          <!-- 4. Ramp down -->
+          <GoalRushCmd goal_rush_l_down="false" />
+          <WaitCmd seconds="100" shutoff_motors="true" />
+        </Sequence>
+      </ParallelAll>
+    </Sequence>
+  </BehaviorTree>
 
   <BehaviorTree ID="main_tree">
     <Sequence>
