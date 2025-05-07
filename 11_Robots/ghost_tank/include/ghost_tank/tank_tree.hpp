@@ -44,6 +44,7 @@
 #include "ghost_tank/bt_nodes/goalDetected.hpp"
 #include "ghost_tank/bt_nodes/boundaryCheck.hpp"
 #include "ghost_tank/bt_nodes/moveVoltage.hpp"
+#include "ghost_tank/bt_nodes/turnToPoint.hpp"
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 
@@ -58,42 +59,46 @@ namespace ghost_tank
 class TankTree
 {
 public:
-	TankTree(std::string bt_path);
-	void tick_tree();
-	void init_tree();
-	template<typename T>
-	void set_variable(std::string name, T value){
-		if(global_blackboard_){
-			global_blackboard_->set<T>(name, value);
-			// std::cout << "Set bt variable:" << name << std::endl;
-		} else {
-			std::cout << "ERROR: Tried to set BT variable before the BT constructor" << std::endl;
-		}
-	}
-	template<typename T>
-	bool get_variable(std::string name, T & value){
-		if(!global_blackboard_){
-			std::cout << "ERROR: Tried to get BT variable before the BT constructor" << std::endl;
-			return false;
-		} else {
-			return global_blackboard_->get<T>(name, value);
-		}
-	}
+  TankTree(std::string bt_path);
+  void tick_tree();
+  void init_tree();
+  template<typename T>
+  void set_variable(std::string name, T value)
+  {
+    if (global_blackboard_) {
+      global_blackboard_->set<T>(name, value);
+      // std::cout << "Set bt variable:" << name << std::endl;
+    } else {
+      std::cout << "ERROR: Tried to set BT variable before the BT constructor" << std::endl;
+    }
+  }
+  template<typename T>
+  bool get_variable(std::string name, T & value)
+  {
+    if (!global_blackboard_) {
+      std::cout << "ERROR: Tried to get BT variable before the BT constructor" << std::endl;
+      return false;
+    } else {
+      return global_blackboard_->get<T>(name, value);
+    }
+  }
 
-	template<typename T>
-	T get_variable(std::string name){
-		T value;
-		if(!global_blackboard_){
-			std::cout << "ERROR: Tried to get BT variable before the BT constructor" << std::endl;
-		} else {
-			bool result = global_blackboard_->get<T>(name, value);
-		}
-		return value;
-	}
+  template<typename T>
+  T get_variable(std::string name)
+  {
+    T value;
+    if (!global_blackboard_) {
+      std::cout << "ERROR: Tried to get BT variable before the BT constructor" << std::endl;
+    } else {
+      bool result = global_blackboard_->get<T>(name, value);
+    }
+    return value;
+  }
+
 private:
-	std::string bt_path_;
-	BT::Blackboard::Ptr global_blackboard_;
-	BT::Tree tree_;
+  std::string bt_path_;
+  BT::Blackboard::Ptr global_blackboard_;
+  BT::Tree tree_;
 };
 
 } // namespace ghost_tank
