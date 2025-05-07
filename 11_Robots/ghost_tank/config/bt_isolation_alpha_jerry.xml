@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4" main_tree_to_execute="main_tree">
+<root BTCPP_format="4" main_tree_to_execute="test_boundary">
   
   <!-- Includes -->
   <include path="bt_goal_rush.xml"/>
@@ -101,6 +101,45 @@
   </Sequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="test_boundary">
+    <Sequence>
+    <BoundaryCheck y_threshold_tiles="0.5">
+      <Sequence>
+         <MoveToPoseBezier posX_tiles="1.0"
+                          posY_tiles="3.0"
+                          theta_deg="90.0"
+                          search_radius_tiles="0.5"
+                          lead="1.0"
+                          xy_exit_threshold_tiles="0.1"
+                          angle_exit_threshold_deg="3.0"
+                          lin_vel_exit_threshold_tps="0.1"
+                          ang_vel_exit_threshold_dps="1.0"
+                          max_speed_linear_percent="0.2"
+                          max_speed_angular_percent="1.0"
+                          timeout_ms="100000"
+                          use_theta="true"
+                          backwards="false"/>
+      </Sequence>
+    </BoundaryCheck>
+    <WaitCmd seconds="1.0" shutoff_motors="true"/>
+    <MoveToPoseBezier posX_tiles="1.0"
+                        posY_tiles="1.0"
+                        theta_deg="90.0"
+                        search_radius_tiles="0.2"
+                        lead="1.0"
+                        xy_exit_threshold_tiles="0.1"
+                        angle_exit_threshold_deg="3.0"
+                        lin_vel_exit_threshold_tps="0.1"
+                        ang_vel_exit_threshold_dps="1.0"
+                        max_speed_linear_percent="0.2"
+                        max_speed_angular_percent="1.0"
+                        timeout_ms="10000"
+                        use_theta="true"
+                        backwards="true"/>
+    <WaitCmd seconds="0.5" shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+  
   <BehaviorTree ID="test_color_sensor">
     <Sequence>
       <Logging message="Starting test_color_sensor tree"/>

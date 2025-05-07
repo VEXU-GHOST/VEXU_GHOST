@@ -32,11 +32,11 @@
 
 namespace ghost_tank {
 
-class AutonTimer : public BT::DecoratorNode
+class BoundaryCheck : public BT::DecoratorNode
 {
 public:
   // If your Node has ports, you must use this constructor signature
-  AutonTimer(
+  BoundaryCheck(
     const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
