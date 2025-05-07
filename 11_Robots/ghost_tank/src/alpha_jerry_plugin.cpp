@@ -1087,8 +1087,8 @@ void AlphaJerryPlugin::resetWorldPose()
   new_pose.pose.covariance = m_initial_estimate_covariance_arr;
 
   // Publish to Particle Filter
+  m_reset_ekf_pub->publish(new_pose);
   m_reset_pf_pub->publish(new_pose);
-  // m_reset_ekf_pub->publish(new_pose);
   if (m_mirrored) {
     std::cout << "Done reset: mirrored" << std::endl;
   } else {
