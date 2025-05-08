@@ -130,7 +130,7 @@ port_configuration:
                 gear_ratio: 6.0
             serial:
                 send_position_command: false
-                send_velocity_command: true
+                send_velocity_command: false
                 send_voltage_command: true
                 send_torque_command: false
                 send_torque_data: false
