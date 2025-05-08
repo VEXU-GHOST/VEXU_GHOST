@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BehaviorTree ID="BT Move Straight">
+    <Sequence>
+      <Logging message="goingstraight"/>
+      <movetoPoint kp= 0.5, kd=0.5, max_effort_percent = 0.8, timeout_ms= 1000, xy_exit_threshold_tiles= 2/>
+      <Logging message="done :)"/>
+      <WaitCmd seconds="500.0"
+                shutoff_motors="true"/>
+      
+    </Sequence>
+  </BehaviorTree>

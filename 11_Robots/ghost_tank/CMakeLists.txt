@@ -230,6 +230,8 @@ set(NODES
   goalDetected
   boundaryCheck
   moveVoltage
+  turnToPoint
+  moveToPoint
 )
 
 foreach(NODE ${NODES})
