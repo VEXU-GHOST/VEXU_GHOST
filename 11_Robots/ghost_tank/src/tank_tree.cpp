@@ -64,6 +64,7 @@ void TankTree::init_tree()
   factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
   factory.registerNodeType<MoveVoltage>("MoveVoltage");
   factory.registerNodeType<TurnToPoint>("TurnToPoint");
+  factory.registerNodeType<MoveToPoint>("MoveToPoint");
 
   tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
   std::cout << "Tree created: " << bt_path_ << std::endl;

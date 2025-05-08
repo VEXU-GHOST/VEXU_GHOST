@@ -231,6 +231,7 @@ set(NODES
   boundaryCheck
   moveVoltage
   turnToPoint
+  moveToPoint
 )
 
 foreach(NODE ${NODES})

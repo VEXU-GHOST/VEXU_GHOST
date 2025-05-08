@@ -227,7 +227,6 @@ void MoveToPoseBezier::PurePursuit()
 
   // Load terminal pose from trajectory
   final_pose_ = Eigen::Vector3d(x_trajectory.back(), y_trajectory.back(), theta_trajectory.back());
-
   // Find intersection of path and pursuit radius
   Eigen::Vector3d desired_pose;
   past_index_ = x_trajectory.size() - 1; // Initialize to end so if we are way off the path (no points inside pursuit radius), we go straight to final pose
