@@ -2,17 +2,15 @@
 <root BTCPP_format="4"
       main_tree_to_execute="main_tree">
   <!-- <include path="bt_goal_rush.xml"/> -->
-  <include path="bt_better_goal_rush.xml"/>
+  <include path="worlds/bt_worlds_goal_rush.xml" />
+  <include path="worlds/bt_center_rush_after_side_rush.xml"/>
   <include path="bt_clear_corner.xml"/>
-  <!-- <include path="bt_goal_rush_middle.xml"/> -->
-  <!-- <include path="bt_pos_corner.xml"/> -->
-  <!-- <include path="bt_neg_corner.xml"/> -->
-  <!-- <include path="bt_score_neutral.xml"/> -->
   <!-- <include path="bt_skills.xml"/> -->
   <!-- <include path="bt_neutral_stake.xml"/> -->
   <!-- <include path="basic_auton_1_15size_before_neutral.xml"/> -->
   <!-- <include path="basic_auton_1_15size_end.xml"/> -->
-  <BehaviorTree ID="main_tree">
+
+  <BehaviorTree ID="main_tree2">
     <Sequence>
       <SubTree ID="clear_corner" _autoremap="true"/>
       <!-- <SubTree ID="basic_auton_1" _autoremap="true"/> -->
@@ -20,10 +18,20 @@
       
       <!-- <SubTree ID="neutral_stake" _autoremap="true"/> -->
       
-      <!-- <SubTree ID="pos_corner" _autoremap="true"/> -->
       <Logging message="Auton Complete"/>
       <WaitCmd seconds="500.0"
                 shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+  <BehaviorTree ID="main_tree">
+    <Sequence>
+      <Sequence>
+        <Logging message="Starting main tree" />
+        <!-- <SetMirrored mirrored="false" /> -->
+        <SubTree ID="worlds_goal_rush" _autoremap="true"/>
+        <SubTree ID="center_rush_after_side_rush" _autoremap="true"/>
+      </Sequence>
+      <WaitCmd seconds="500.0" shutoff_motors="true" />
     </Sequence>
   </BehaviorTree>
 

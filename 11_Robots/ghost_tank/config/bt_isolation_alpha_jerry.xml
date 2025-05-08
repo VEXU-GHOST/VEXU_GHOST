@@ -2,10 +2,8 @@
 <root BTCPP_format="4" main_tree_to_execute="main_tree">
 
   <!-- Includes -->
-  <include path="bt_goal_rush.xml" />
-  <include path="bt_better_goal_rush.xml" />
   <include path="worlds/bt_worlds_goal_rush.xml" />
-  <include path="bt_goal_rush_middle.xml" />
+  <include path="worlds/bt_center_rush_after_side_rush.xml"/>
   <include path="bt_skills.xml" />
   <include path="bt_neutral_stake.xml" />
   <include path="bt_aj_rings.xml" />
