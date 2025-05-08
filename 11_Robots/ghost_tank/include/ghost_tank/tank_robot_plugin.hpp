@@ -239,6 +239,8 @@ protected:
   double m_conveyor_position_rel{0.0};
   double m_hook_fraction{0.0};
 
+  double m_ground_pickup_stuck_since{0.0};
+
   double m_conveyor_hook_align_threshold{0.0};
   double m_conveyor_hook_align_power{0.0};
   double m_conveyor_last_aligned_position{0.0};
