@@ -28,7 +28,7 @@ BT::PortsList MoveToPoint::providedPorts()
 /// If it returns RUNNING, this becomes an asynchronous node.
 BT::NodeStatus MoveToPoint::onStart()
 {
-  // plan_time_ = std::chrono::();
+  first_loop_ = true;
   return BT::NodeStatus::RUNNING;
 }
 
@@ -68,8 +68,10 @@ void MoveToPoint::move()
   double max_effort_percent = BT_Util::get_input<double>(this, "max_effort_percent");
   Kp = BT_Util::get_input<double>(this, "kp");
   Kd = BT_Util::get_input<double>(this, "kd");
-
-  double dist_err = xy_exit_threshold_m - (tank_model_ptr_->getWorldTwist().head<2>()).norm();
+  
+  Eigen::Vector2d current_position_ = tank_model_ptr_->getWorldPose().head<2>();
+  double dist_moved = (current_position_ - start_position_).norm();
+  double dist_err = xy_exit_threshold_m - dist_moved;
   double fwd_cmd; 
   if(dist_err>0){
     fwd_cmd = dist_err*Kp - (tank_model_ptr_->getWorldTwist().head<2>().norm())*Kd;
