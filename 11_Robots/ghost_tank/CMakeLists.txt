@@ -218,6 +218,7 @@ set(NODES
   moveToPosePurepursuit
   biteCmd
   clampCmd
+  climbCmd
   shutoffNode
   intakeCmd
   goalRushCmd
@@ -232,6 +233,7 @@ set(NODES
   moveVoltage
   turnToPoint
   moveToPoint
+  moveScissor
 )
 
 foreach(NODE ${NODES})

@@ -95,6 +95,7 @@ void AlphaJerryPlugin::populateDigitalIONames()
   digital_io_port_map["goal_rush_r"] = 2;
   digital_io_port_map["bite"] = 3;
   digital_io_port_map["clamp"] = 4;
+  digital_io_port_map["shooter"] = 5;
 }
 
 //////////////////////
@@ -409,6 +410,7 @@ void AlphaJerryPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("goal_rush_r_down", false);
     bt_->set_variable<bool>("goal_rush_down", false);
     bt_->set_variable<bool>("climb_extended", false);
+    bt_->set_variable<bool>("shooter", false);
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
@@ -446,6 +448,7 @@ void AlphaJerryPlugin::autonomous(double current_time)
   m_bite_closed = (bt_->get_variable<int>("bite_closed"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], (bt_->get_variable<int>("climb_extended")));
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], (bt_->get_variable<int>("clamp_closed")));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["shooter"], (bt_->get_variable<int>("shoot")));
   if (m_mirrored) {
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_l_down"));
@@ -684,8 +687,11 @@ void AlphaJerryPlugin::updateT1Climb(bool up, bool down, bool enabled)
 
 void AlphaJerryPlugin::updateScissor(bool up, bool down, bool enabled)
 {
+  rhi_ptr_->setDigitalOut(digital_io_port_map["shooter"], false);
   if (enabled) {
-    if (up) {
+    if (up && down) {
+      rhi_ptr_->setDigitalOut(digital_io_port_map["shooter"], true);
+    } else if (up) {
       rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
       rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 1.0);
     } else if (down) {

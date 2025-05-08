@@ -5,6 +5,7 @@ port_configuration:
         C: OUT
         D: OUT
         E: OUT
+        F: OUT
     devices:
         conveyor_motor_bottom:
             port: 5

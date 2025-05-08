@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="deploy_scissor">
+    <Sequence>
+      <ClimbCmd climb_extended="true"/>
+      <WaitCmd seconds=".2" shutoff_motors="false" />
+      <MoveScissor scissor_position_in="5" offset="1" timeout_ms="2000"/>
+      <ClimbCmd climb_extended="false"/>
+      <MoveScissor scissor_position_in="11" offset="1" timeout_ms="2000"/>
+      <SetBlackboard value="true" output_key="shoot"/>
+      <WaitCmd seconds=".6" shutoff_motors="false" />
+      <MoveScissor scissor_position_in="5" offset="1" timeout_ms="2000"/>
+      <SetBlackboard value="false" output_key="shoot"/>
+      <ShutoffNode/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+            editable="true">
+      <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="ClampCmd"
+            editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
+    <Action ID="ClimbCmd"
+            editable="true">
+      <input_port name="climb_extended"/>
+    </Action>
+    <Action ID="ConveyorCmd"
+            editable="true">
+      <input_port name="fwd"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+            editable="true">
+      <input_port name="arm_down"/>
+    </Action>
+    <Action ID="SetMirrored"
+            editable="true">
+      <input_port name="mirrored"/>
+    </Action>
+    <Action ID="IntakeCmd"
+            editable="true">
+      <input_port name="active"/>
+    </Action>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPoseBezier"
+            editable="true">
+      <input_port name="posX_tiles"/>
+      <input_port name="posY_tiles"/>
+      <input_port name="theta_deg"/>
+      <input_port name="search_radius_tiles"/>
+      <input_port name="xy_exit_threshold_tiles"/>
+      <input_port name="angle_exit_threshold_deg"/>
+      <input_port name="lin_vel_exit_threshold_tps"/>
+      <input_port name="ang_vel_exit_threshold_dps"/>
+      <input_port name="lead"/>
+      <input_port name="max_speed_linear_percent"/>
+      <input_port name="max_speed_angular_percent"/>
+      <input_port name="timeout_ms"/>
+      <input_port name="use_theta"/>
+      <input_port name="backwards"/>
+    </Action>
+    <Action ID="MoveToPosePurepursuit"
+            editable="true">
+      <input_port name="fileName"/>
+      <input_port name="angle_threshold"
+                  default="5.0">m</input_port>
+      <input_port name="threshold"
+                  default="0.025">m</input_port>
+      <input_port name="timeout"
+                  default="5000">ms</input_port>
+      <input_port name="use_theta"
+                  default="false"/>
+    </Action>
+    <Action ID="ShutoffNode"
+            editable="true"/>
+    <Action ID="MoveScissor" editable="true">
+      <input_port name="scissor_position_in" />
+      <input_port name="offset" />
+      <input_port name="timeout_ms" />
+    </Action>
+  </TreeNodesModel>
+
+</root>

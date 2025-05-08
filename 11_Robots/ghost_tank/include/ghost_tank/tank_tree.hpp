@@ -32,6 +32,7 @@
 #include "ghost_tank/bt_nodes/moveToPosePurepursuit.hpp"
 #include "ghost_tank/bt_nodes/biteCmd.hpp"
 #include "ghost_tank/bt_nodes/clampCmd.hpp"
+#include "ghost_tank/bt_nodes/climbCmd.hpp"
 #include "ghost_tank/bt_nodes/shutoffNode.hpp"
 #include "ghost_tank/bt_nodes/intakeCmd.hpp"
 #include "ghost_tank/bt_nodes/goalRushCmd.hpp"
@@ -44,6 +45,7 @@
 #include "ghost_tank/bt_nodes/goalDetected.hpp"
 #include "ghost_tank/bt_nodes/boundaryCheck.hpp"
 #include "ghost_tank/bt_nodes/moveVoltage.hpp"
+#include "ghost_tank/bt_nodes/moveScissor.hpp"
 #include "ghost_tank/bt_nodes/turnToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
 
