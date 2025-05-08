@@ -46,6 +46,8 @@
 #include "ghost_tank/bt_nodes/moveVoltage.hpp"
 #include "ghost_tank/bt_nodes/turnToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
+#include "ghost_tank/bt_nodes/moveToTheta.hpp"
+
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 

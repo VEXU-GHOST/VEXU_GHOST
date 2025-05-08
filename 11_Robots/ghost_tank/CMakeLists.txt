@@ -232,6 +232,7 @@ set(NODES
   moveVoltage
   turnToPoint
   moveToPoint
+  moveToTheta
 )
 
 foreach(NODE ${NODES})
