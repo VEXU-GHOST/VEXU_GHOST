@@ -50,9 +50,11 @@ BT::NodeStatus MoveToPoint::onRunning()
   max_speed_angular_percent = BT_Util::get_input<double>(this, "max_speed_angular_percent", 1.0);
   backwards = BT_Util::get_input<bool>(this, "backwards", false);
 
+  Eigen::Vector2d start_position_;
   if (first_loop_) {
     start_time_ = std::chrono::system_clock::now();
     first_loop_ = false;
+    start_position_= tank_model_ptr_->getWorldPose().head<2>();
   }
   double cur_z = tank_model_ptr_->getWorldTwist().z();
   double cur_x = tank_model_ptr_->getWorldTwist().x();
@@ -60,8 +62,8 @@ BT::NodeStatus MoveToPoint::onRunning()
 
   Eigen::Vector2d des_pos = Eigen::Vector2d(posX_m, posY_m);
 
-  double dist_err = (des_pos - tank_model_ptr_->getWorldPose().head<2>()).norm();
-  bool xy_satisfied = dist_err < xy_exit_threshold_m;
+  double dist_err = (des_pos - start_position_).norm();
+  bool xy_satisfied = dist_err > xy_exit_threshold_m;
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
   if (xy_satisfied) {
