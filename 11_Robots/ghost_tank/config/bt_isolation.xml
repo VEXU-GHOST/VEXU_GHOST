@@ -4,6 +4,7 @@
   <!-- <include path="bt_goal_rush.xml"/> -->
   <include path="worlds/bt_worlds_goal_rush.xml" />
   <include path="worlds/bt_center_rush_after_side_rush.xml"/>
+  <include path="worlds/bt_grab_goal_after_rush.xml"/>
   <include path="bt_clear_corner.xml"/>
   <!-- <include path="bt_skills.xml"/> -->
   <!-- <include path="bt_neutral_stake.xml"/> -->
@@ -30,6 +31,7 @@
         <!-- <SetMirrored mirrored="false" /> -->
         <SubTree ID="worlds_goal_rush" _autoremap="true"/>
         <SubTree ID="center_rush_after_side_rush" _autoremap="true"/>
+        <SubTree ID="grab_goal_after_rush" _autoremap="true"/>
       </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true" />
     </Sequence>

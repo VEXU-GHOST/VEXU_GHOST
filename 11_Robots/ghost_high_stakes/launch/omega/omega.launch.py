@@ -77,17 +77,17 @@ def generate_launch_description():
         parameters=[ros_config_file, base_params_file],
     )
 
-    #color_sensor_intake = Node(
-    #     package="ghost_sensing",
-    #     executable="tcs_color_sensor",
-    #     name="tcs_color_sensor_intake",
-    #     output="screen",
-    #     namespace="/sensors/color_sensors/intake",
-    #     parameters=[
-    #         ros_config_file
-    #         # address 0x29, not configurable on tcs
-    #    ],
-    # )
+    color_sensor_intake = Node(
+        package="ghost_sensing",
+        executable="tcs_color_sensor",
+        name="tcs_color_sensor_intake",
+        output="screen",
+        namespace="/sensors/color_sensors/intake",
+        parameters=[
+            ros_config_file
+            # address 0x29, not configurable on tcs
+       ],
+    )
 
     color_classifier_intake = Node(
         package="ghost_sensing",
@@ -105,24 +105,19 @@ def generate_launch_description():
         output="screen",
         namespace="/sensors/color_sensors/goal_rush_l",
         parameters=[ros_config_file, base_params_file, {
-            "address": 0x39^ (1<<6), # both address translator switches on so ^ 1<<6
+            "address": 0x39 ^ 0x70, # both address translator switches off so ^ 0x70
         }],
     )
-    color_sensor_intake = Node(
+    color_sensor_goal_rush_r = Node(
         package="ghost_sensing",
         executable="avago_color_sensor",
-        name="avago_color_sensor_intake",
+        name="avago_color_sensor_goal_rush_r",
         output="screen",
-        namespace="/sensors/color_sensors/intake",
-        parameters=[
-            ros_config_file, 
-            base_params_file,
-            {
-                "address": 0x39 , # both address translator switches on so ^ 1<<6
-            }
-        ],
+        namespace="/sensors/color_sensors/goal_rush_r",
+        parameters=[ros_config_file, base_params_file, {
+            "address": 0x39 ^ 0x50, # one switch on idk which trial and error so ^ 0x40
+        }],
     )
-    # no need for color classifier, since we only use proximity for goal rush
 
 
     odom_ekf_node = Node(
@@ -158,10 +153,10 @@ def generate_launch_description():
         odom_ekf_node,
         ekf_pf_node,
         map_ekf_node,
-        # color_sensor_intake,
-        # color_classifier_intake,
-                # color_sensor_goal_rush_l,
-                #color_sensor_goal_rush_r,
+        color_sensor_intake,
+        color_classifier_intake,
+        color_sensor_goal_rush_l,
+        color_sensor_goal_rush_r,
         competition_state_machine_node,
         gpio_expander,
     ])
