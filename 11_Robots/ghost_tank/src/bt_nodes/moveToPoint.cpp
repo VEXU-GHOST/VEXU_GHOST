@@ -58,6 +58,8 @@ BT::NodeStatus MoveToPoint::onRunning()
   double cur_x = tank_model_ptr_->getWorldTwist().x();
   double cur_y = tank_model_ptr_->getWorldTwist().y();
 
+  Eigen::Vector2d des_pos = Eigen::Vector2d(posX_m, posY_m);
+
   double dist_err = (des_pos - tank_model_ptr_->getWorldPose().head<2>()).norm();
   bool xy_satisfied = dist_err < xy_exit_threshold_m;
 
@@ -78,10 +80,18 @@ void MoveToPoint::move()
   auto theta_trajectory = robot_trajectory_.theta_trajectory.position_vector;
 
   Eigen::Vector3d desired_pose;
+  past_index_ = x_trajectory.size() - 1; // Initialize to end so if we are way off the path (no points inside pursuit radius), we go straight to final pose
+
   desired_pose = Eigen::Vector3d(x_trajectory[past_index_], y_trajectory[past_index_], 0.0);
 
   Eigen::Vector3d final_pose_ = Eigen::Vector3d(posY_m, posX_m, cur_z); //ending point uses the current z to insure that it stays straight
   Eigen::Vector2d command;
+  Eigen::Vector2d des_pos = Eigen::Vector2d(posX_m, posY_m);
+
+  double dist_err = (des_pos - tank_model_ptr_->getWorldPose().head<2>()).norm();
+  search_radius = BT_Util::get_input<double>(this, "search_radius_tiles", 0.3) * tile_to_meters;
+
+  bool within_pursuit_radius = dist_err < search_radius;
   command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), desired_pose, final_pose_, backwards, within_pursuit_radius);
   // Clamp steering and lateral thrust to bounds
   auto fwd_cmd = ghost_util::clamp(command[0], -max_speed_linear_percent, max_speed_linear_percent);
@@ -93,13 +103,12 @@ void MoveToPoint::move()
   // Scale commands so that max command equals full thrust
   double normalizer = 1.0 / std::max(1.0, std::max(std::fabs(left_cmd), std::fabs(right_cmd)));
   // double normalizer = 1.0;
+
   fwd_cmd *= normalizer;
-  turn_cmd *= normalizer;
+
 
 
   BT_Util::put_in_blackboard(blackboard_, "fwd_cmd", fwd_cmd);
-  BT_Util::put_in_blackboard(blackboard_, "turn_cmd", turn_cmd);
-
   tank_model_ptr_->driveCommand(fwd_cmd, 0.0);
 }
 

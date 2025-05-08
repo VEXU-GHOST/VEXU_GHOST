@@ -44,15 +44,20 @@ private:
   BT::Blackboard::Ptr blackboard_;
   std::shared_ptr<PDControl> pd_control_ptr_;
   std::shared_ptr<PDControl> pd_control_threshold_ptr_;
+  ghost_planners::RobotTrajectory robot_trajectory_;
+
 
   bool first_loop_;
   bool backwards;
+  int past_index_;
+  double search_radius{0.0};
 
   double forward_effort{0.0};
   double angular_effort{0.0};
   int timeout_ms{0};
   double posX_m{0.0};
   double posY_m{0.0};
+  double cur_z{0.0};
   double des_ang{0.0};
   double max_speed_linear_percent{0.0};
   double max_speed_angular_percent{0.0};
