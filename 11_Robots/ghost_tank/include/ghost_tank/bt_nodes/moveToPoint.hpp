@@ -52,6 +52,9 @@ private:
   int past_index_;
   double search_radius{0.0};
 
+  double Kd{0.0};
+  double Kp{0.0};
+  double new_err{0.0};
   double forward_effort{0.0};
   double angular_effort{0.0};
   int timeout_ms{0};
@@ -63,6 +66,8 @@ private:
   double max_speed_angular_percent{0.0};
   double angle_exit_threshold_rad{0.0};
   double xy_exit_threshold_m{0.0};
+  Eigen::Vector2d start_position_;
+
 
   static constexpr double tile_to_meters = 0.6096;
 
