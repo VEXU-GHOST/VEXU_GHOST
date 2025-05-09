@@ -20,7 +20,7 @@ port_configuration:
         scissor_motor:
             port: 15
             type: MOTOR
-            reversed: true
+            reversed: false
             config: scissor_motor_config
         ground_pickup_motor:
             port: 16

@@ -4,12 +4,11 @@
     <Sequence>
       <ClimbCmd climb_extended="true"/>
       <WaitCmd seconds=".2" shutoff_motors="false" />
-      <MoveScissor scissor_position_in="5" offset="1" timeout_ms="2000"/>
+      <MoveScissor scissor_position_in="12" offset="1" timeout_ms="5000"/>
       <ClimbCmd climb_extended="false"/>
-      <MoveScissor scissor_position_in="11" offset="1" timeout_ms="2000"/>
       <SetBlackboard value="true" output_key="shoot"/>
       <WaitCmd seconds=".6" shutoff_motors="false" />
-      <MoveScissor scissor_position_in="5" offset="1" timeout_ms="2000"/>
+      <MoveScissor scissor_position_in="6" offset="1" timeout_ms="5000"/>
       <SetBlackboard value="false" output_key="shoot"/>
       <ShutoffNode/>
     </Sequence>

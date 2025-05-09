@@ -29,7 +29,7 @@ BT::NodeStatus MoveScissor::onStart()
 
 BT::NodeStatus MoveScissor::onRunning()
 {
-    const double INCH_TO_DEG = 1. / (1./8. * 4.) * 360.;
+    const double INCH_TO_DEG = 1. / (1./4. * 4.) * 360.;
     double target = BT_Util::get_input<double>(this, "scissor_position_in") * INCH_TO_DEG;
     double tolerance = BT_Util::get_input<double>(this, "offset") * INCH_TO_DEG;
     timeout_ms = BT_Util::get_input<int>(this, "timeout_ms");
