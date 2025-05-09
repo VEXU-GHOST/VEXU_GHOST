@@ -5,7 +5,7 @@
   <BehaviorTree ID="neg_corner">
     <Sequence>
       <Logging message="negative corner left"/>
-      <GoalRushCmd arm_down="true"/>
+      <GoalRushCmd goal_rush_down="true"/>
       <MoveToPoseBezier posX_tiles="1.9"
                             posY_tiles="1.75"
                             theta_deg="-70.0"
@@ -20,7 +20,7 @@
                             timeout_ms="-2000"
                             use_theta="true"
                             backwards="true"/>
-      <GoalRushCmd arm_down="false"/>
+      <GoalRushCmd goal_rush_down="false"/>
       <Logging message="Back Up and Clamp Goal"/>
       <ParallelAll>
         <Fallback>
@@ -46,7 +46,7 @@
                             use_theta="true"
                             backwards="true"/>
       </ParallelAll>
-      <GoalRushCmd arm_down="false"/>
+      <GoalRushCmd goal_rush_down="false"/>
       <ClampCmd clamp_closed="true"/>
 
       <ConveyorCmd fwd="true"/>
@@ -140,7 +140,7 @@
     </Action>
     <Action ID="GoalRushCmd"
             editable="true">
-      <input_port name="arm_down"/>
+      <input_port name="goal_rush_down"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">

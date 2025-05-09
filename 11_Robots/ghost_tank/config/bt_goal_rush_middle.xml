@@ -3,7 +3,7 @@
   <BehaviorTree ID="goal_rush_middle">
     <Sequence>
       <Logging message="goal_rush"/>
-      <GoalRushCmd arm_down="false"/>
+      <GoalRushCmd goal_rush_down="false"/>
       <MoveToPoseBezier  posX_tiles="2.5"
                             posY_tiles="2.5"
                             theta_deg="40.0"
@@ -18,7 +18,7 @@
                             timeout_ms="-5000"
                             use_theta="true"
                             backwards="false"/>
-      <GoalRushCmd arm_down="true"/>
+      <GoalRushCmd goal_rush_down="true"/>
       <WaitCmd seconds="0.100"
                 shutoff_motors="true"/>
 
@@ -40,7 +40,7 @@
       <ShutoffNode/>
 
       <Logging message="retract arm"/>
-      <GoalRushCmd arm_down="false"/>
+      <GoalRushCmd goal_rush_down="false"/>
     </Sequence>
   </BehaviorTree>
 
@@ -60,7 +60,7 @@
     </Action>
     <Action ID="GoalRushCmd"
             editable="true">
-      <input_port name="arm_down"/>
+      <input_port name="goal_rush_down"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">

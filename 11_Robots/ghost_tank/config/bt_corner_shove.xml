@@ -2,42 +2,42 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="corner_shove">
     <Sequence>
-      <Repeat num_cycles="2">
-        <Sequence>
-      <MoveToPoseBezier
-        posX_tiles="1.0"
-        posY_tiles="1.0"
-        theta_deg="45.0"
-        search_radius_tiles="0.3"
-        xy_exit_threshold_tiles="0.2"
-        angle_exit_threshold_deg="3.0"
-        lin_vel_exit_threshold_tps="0.1"
-        ang_vel_exit_threshold_dps="1.0"
-        lead="0.5"
-        max_speed_linear_percent="1.0"
-        max_speed_angular_percent="1.0"
-        timeout_ms="-1000"
-        use_theta="true"
-        backwards="false"/>
-      <ShutoffNode/>
-
-      <MoveToPoseBezier
-        posX_tiles="0.25"
-        posY_tiles="0.25"
-        theta_deg="45.0"
-        search_radius_tiles="0.3"
-        xy_exit_threshold_tiles="0.2"
-        angle_exit_threshold_deg="3.0"
-        lin_vel_exit_threshold_tps="0.1"
-        ang_vel_exit_threshold_dps="1.0"
-        lead="0.5"
-        max_speed_linear_percent="1.0"
-        max_speed_angular_percent="1.0"
-        timeout_ms="-1000"
-        use_theta="true"
-        backwards="true"/>
-      <ShutoffNode/>
       <ClampCmd clamp_closed="false"/>
+      <Repeat num_cycles="1">
+        <Sequence>
+        <MoveToPoseBezier
+          posX_tiles="1.0"
+          posY_tiles="1.0"
+          theta_deg="45.0"
+          search_radius_tiles="0.3"
+          xy_exit_threshold_tiles="0.2"
+          angle_exit_threshold_deg="3.0"
+          lin_vel_exit_threshold_tps="0.1"
+          ang_vel_exit_threshold_dps="1.0"
+          lead="0.5"
+          max_speed_linear_percent="1.0"
+          max_speed_angular_percent="1.0"
+          timeout_ms="-1000"
+          use_theta="true"
+          backwards="false"/>
+        <ShutoffNode/>
+
+        <MoveToPoseBezier
+          posX_tiles="0.25"
+          posY_tiles="0.25"
+          theta_deg="45.0"
+          search_radius_tiles="0.3"
+          xy_exit_threshold_tiles="0.2"
+          angle_exit_threshold_deg="3.0"
+          lin_vel_exit_threshold_tps="0.1"
+          ang_vel_exit_threshold_dps="1.0"
+          lead="0.5"
+          max_speed_linear_percent="1.0"
+          max_speed_angular_percent="1.0"
+          timeout_ms="-1000"
+          use_theta="true"
+          backwards="true"/>
+        <ShutoffNode/>
         </Sequence>
       </Repeat>
     </Sequence>
@@ -59,7 +59,7 @@
     </Action>
     <Action ID="GoalRushCmd"
             editable="true">
-      <input_port name="arm_down"/>
+      <input_port name="goal_rush_down"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">

@@ -4,7 +4,7 @@
   <BehaviorTree ID="aj_rings">
     <Sequence>
       <Logging message="grab the goal"/>
-      <GoalRushCmd arm_down="false"/>
+      <GoalRushCmd goal_rush_down="false"/>
       <MoveToPoseBezier posX_tiles="1.7"
                             posY_tiles="1.25"
                             theta_deg="-45.0"
@@ -100,7 +100,7 @@
     </Action>
     <Action ID="GoalRushCmd"
             editable="true">
-      <input_port name="arm_down"/>
+      <input_port name="goal_rush_down"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">

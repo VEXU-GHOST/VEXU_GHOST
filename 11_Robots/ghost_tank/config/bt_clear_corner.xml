@@ -5,8 +5,8 @@
       <Logging message="clear corner left"/>
       <Logging message="Go to corner stack"/>
       <BiteCmd bite_closed="true"/>
-      <MoveToPoseBezier posX_tiles="0.75"
-                            posY_tiles="0.75"
+      <MoveToPoseBezier posX_tiles="1.0"
+                            posY_tiles="1.0"
                             theta_deg="225.0"
                             search_radius_tiles="0.5"
                             xy_exit_threshold_tiles="0.05"
@@ -16,7 +16,7 @@
                             lead="0.5"
                             max_speed_linear_percent="0.4"
                             max_speed_angular_percent="1.0"
-                            timeout_ms="-5000"
+                            timeout_ms="-2000"
                             use_theta="true"
                             backwards="false"/>
 
@@ -27,9 +27,9 @@
                  ground_intake="false"/>
       <Repeat num_cycles="2">
         <Sequence>
-          <MoveVoltage forward_effort="0.3" angular_effort="0.0" timeout_ms="1000"/>
+          <MoveVoltage forward_effort="0.4" angular_effort="0.0" timeout_ms="1400"/>
           <ShutoffNode/>
-          <MoveVoltage forward_effort="-0.3" angular_effort="0.0" timeout_ms="1000"/>
+          <MoveVoltage forward_effort="-0.4" angular_effort="0.0" timeout_ms="700"/>
           <ShutoffNode/>
         </Sequence>
       </Repeat>
@@ -69,7 +69,7 @@
     </Action>
     <Action ID="GoalRushCmd"
             editable="true">
-      <input_port name="arm_down"/>
+      <input_port name="goal_rush_down"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">

@@ -3,7 +3,7 @@
   <BehaviorTree ID="goal_rush">
     <Sequence>
       <Logging message="goal_rush"/>
-      <GoalRushCmd arm_down="true"/>
+      <GoalRushCmd goal_rush_down="true"/>
       <IntakeCmd auto="false"
                  ground_intake="true"/>
       <ParallelAll>
@@ -11,7 +11,7 @@
           <Timeout msec="600">
             <KeepRunningUntilFailure>
               <Sequence>
-                <GoalRushCmd arm_down="true"/>
+                <GoalRushCmd goal_rush_down="true"/>
                 <BiteCmd bite_closed="false"/>
               </Sequence>
             </KeepRunningUntilFailure>
@@ -34,7 +34,7 @@
                             backwards="false"/>
       </ParallelAll>
       <!-- </ReactiveFallback> -->
-      <GoalRushCmd arm_down="false"/>
+      <GoalRushCmd goal_rush_down="false"/>
       <ShutoffNode/>
       <!-- <WaitCmd seconds="0.100" -->
                 <!-- shutoff_motors="true"/> -->
@@ -57,7 +57,7 @@
       <ShutoffNode/>
 
       <Logging message="retract arm"/>
-      <GoalRushCmd arm_down="true"/>
+      <GoalRushCmd goal_rush_down="true"/>
       <IntakeCmd auto="false"
                  ground_intake="false"/>
     </Sequence>
@@ -75,7 +75,7 @@
     </Action>
     <Action ID="GoalRushCmd"
             editable="true">
-      <input_port name="arm_down"/>
+      <input_port name="goal_rush_down"/>
       <!-- <input_port name="clamp"/> -->
     </Action>
     <Action ID="SetMirrored"

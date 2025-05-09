@@ -191,7 +191,7 @@
 
       <!-- Release goal -->
       <Logging message="release goal"/>
-      <!-- <GoalRushCmd arm_down="true"/> -->
+      <!-- <GoalRushCmd goal_rush_down="true"/> -->
       <IntakeCmd auto="false"
                  ground_intake="true"/>
       <Logging message="pulling_back"/>
@@ -214,7 +214,7 @@
       <ShutoffNode/>
       <!-- Release goal -->
       <Logging message="retract arm"/>
-      <!-- <GoalRushCmd arm_down="false"/> -->
+      <!-- <GoalRushCmd goal_rush_down="false"/> -->
       <IntakeCmd auto="false"
                  ground_intake="false"/>
     </Sequence>
