@@ -9,6 +9,7 @@ TurnToPoint::TurnToPoint(const std::string & name, const BT::NodeConfig & config
 {
     blackboard_ = config.blackboard;
     BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+    BT_Util::get_from_blackboard(blackboard_, "pd_control_threshold_ptr", pd_control_ptr_);
 
     posX_m = BT_Util::get_input<double>(this, "posX_tiles") * tile_to_meters;
     posY_m = BT_Util::get_input<double>(this, "posY_tiles") * tile_to_meters;
@@ -26,21 +27,21 @@ BT::PortsList TurnToPoint::providedPorts() {
 }
 
 BT::NodeStatus TurnToPoint::onStart() {
-    double cur_x = tank_model_ptr_->getWorldTwist().x();
-    double cur_y = tank_model_ptr_->getWorldTwist().y();
+    double cur_x = tank_model_ptr_->getWorldPose().x();
+    double cur_y = tank_model_ptr_->getWorldPose().y();
 
     start_time_ = std::chrono::system_clock::now();
-    des_ang_rad = std::atan2(posY_m - cur_y, posX_m - cur_x) + M_PI;
+    des_ang_rad = std::atan2(posY_m - cur_y, posX_m - cur_x);
 
     return BT::NodeStatus::RUNNING;
 }
 
 BT::NodeStatus TurnToPoint::onRunning() {
-    double theta_err_rad = std::fabs((tank_model_ptr_->getWorldTwist().z() - des_ang_rad));
+    double theta_err_rad = std::fabs(ghost_util::SmallestAngleDistRad(tank_model_ptr_->getWorldTwist().z(), des_ang_rad));
     bool angle_satisfied = theta_err_rad < angle_exit_threshold_rad;
 
     int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
-    if (angle_satisfied) {
+    if (angle_satisfied || time_elapsed > timeout_ms) {
         tank_model_ptr_->driveCommand(0.0, 0.0);
         return BT::NodeStatus::SUCCESS;
     }
