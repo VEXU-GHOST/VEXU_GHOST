@@ -680,8 +680,11 @@ gpio_expander:
       "/io/buttons/mirrored": 
         pins: [4]
         output: False
+      "/io/buttons/reset": 
+        pins: [7]
+        output: False
       "/io/buttons/other": 
-        pins: [6, 7]
+        pins: [6]
         output: False
       "/io/leds/bag": 
         pins: [11]

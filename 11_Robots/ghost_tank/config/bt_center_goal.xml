@@ -3,7 +3,7 @@
   <BehaviorTree ID="center_goal">
     <Sequence>
       <Logging message="Going to goal"/>
-      <BiteCmd bite_closed="false"/>
+      <!-- <BiteCmd bite_closed="false"/> -->
       <ClampCmd clamp_closed="false"/>
 
       <MoveToPoseBezier posX_tiles="2.5"

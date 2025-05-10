@@ -23,7 +23,7 @@
       <ShutoffNode/>
 
       <SubTree ID="clear_corner" _autoremap="true"/>
-      <SubTree ID="corner_shove" _autoremap="true"/>
+      <!-- <SubTree ID="corner_shove" _autoremap="true"/> -->
    
       <ShutoffNode/>
     </Sequence>

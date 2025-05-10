@@ -187,7 +187,7 @@ void TankRobotPlugin::initROSComms()
     "/io/buttons/mirrored", 10,
     std::bind(&TankRobotPlugin::mirroredButtonCallback, this, _1));
   m_button_reset_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
-    "/io/buttons/other", 10,
+    "/io/buttons/reset", 10,
     std::bind(&TankRobotPlugin::resetButtonCallback, this, _1));
 }
 

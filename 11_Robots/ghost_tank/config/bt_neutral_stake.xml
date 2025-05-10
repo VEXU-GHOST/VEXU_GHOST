@@ -6,7 +6,22 @@
       <IntakeCmd auto="true"
                  ground_intake="false"
                  store_ring="true"/>
-      <MoveToPoseBezier  posX_tiles="3.0"
+      <MoveToPoseBezier  posX_tiles="2.0"
+                 posY_tiles="0.7"
+                 theta_deg="0.0"
+                 search_radius_tiles="0.5"
+                 xy_exit_threshold_tiles="0.02"
+                 angle_exit_threshold_deg="5.0"
+                 lin_vel_exit_threshold_tps="0.1"
+                 ang_vel_exit_threshold_dps="1.0"
+                 lead="0.3"
+                 max_speed_linear_percent="0.4"
+                 max_speed_angular_percent="1.0"
+                 timeout_ms="-2000"
+                 use_theta="true"
+                 backwards="false"/>
+      
+      <MoveToPoseBezier  posX_tiles="4.0"
                           posY_tiles="0.7"
                           theta_deg="0.0"
                           search_radius_tiles="0.5"
@@ -15,9 +30,38 @@
                           lin_vel_exit_threshold_tps="0.1"
                           ang_vel_exit_threshold_dps="1.0"
                           lead="0.3"
-                          max_speed_linear_percent="0.4"
+                          max_speed_linear_percent="0.7"
                           max_speed_angular_percent="1.0"
-                          timeout_ms="-3000"
+                          timeout_ms="-2000"
+                          use_theta="true"
+                          backwards="false"/>
+      <MoveToPoseBezier  posX_tiles="3.5"
+                          posY_tiles="1.5"
+                          theta_deg="-90.0"
+                          search_radius_tiles="0.5"
+                          xy_exit_threshold_tiles="0.02"
+                          angle_exit_threshold_deg="5.0"
+                          lin_vel_exit_threshold_tps="0.1"
+                          ang_vel_exit_threshold_dps="1.0"
+                          lead="0.0"
+                          max_speed_linear_percent="0.6"
+                          max_speed_angular_percent="1.0"
+                          timeout_ms="-1000"
+                          use_theta="true"
+                          backwards="true"/>
+      <ClampCmd clamp_closed="false"/>
+      <MoveToPoseBezier  posX_tiles="3.0"
+                          posY_tiles="1.0"
+                          theta_deg="180.0"
+                          search_radius_tiles="0.5"
+                          xy_exit_threshold_tiles="0.02"
+                          angle_exit_threshold_deg="5.0"
+                          lin_vel_exit_threshold_tps="0.1"
+                          ang_vel_exit_threshold_dps="1.0"
+                          lead="0.0"
+                          max_speed_linear_percent="0.6"
+                          max_speed_angular_percent="1.0"
+                          timeout_ms="-2000"
                           use_theta="true"
                           backwards="false"/>
       <IntakeCmd auto="false"
@@ -25,11 +69,11 @@
                  store_ring="false"/>
       <Logging message="neutral stake"/>
       <MoveToPoseBezier  posX_tiles="3.0"
-                          posY_tiles="0.6"
+                          posY_tiles="1.0"
                           theta_deg="90.0"
                           search_radius_tiles="0.5"
                           xy_exit_threshold_tiles="0.02"
-                          angle_exit_threshold_deg="5.0"
+                          angle_exit_threshold_deg="3.0"
                           lin_vel_exit_threshold_tps="0.1"
                           ang_vel_exit_threshold_dps="1.0"
                           lead="0.3"
@@ -60,13 +104,11 @@
                  ground_intake="false"/>
       <Logging message="scoring"/>
       <!-- <ConveyorCmd fwd="false"/> -->
-      <ForceSuccess>
-        <Timeout msec="1000"> 
-          <KeepRunningUntilFailure>
-            <ConveyorCmd fwd="true"/>
-          </KeepRunningUntilFailure>
-        </Timeout>
-      </ForceSuccess>
+      <ConveyorCmd fwd="true"/>
+      <WaitCmd seconds="1.00"
+                shutoff_motors="true"/>
+      <ConveyorCmd fwd="false"/>
+
       <MoveToPoseBezier posX_tiles="3.0"
                             posY_tiles="1.0"
                             theta_deg="90.0"

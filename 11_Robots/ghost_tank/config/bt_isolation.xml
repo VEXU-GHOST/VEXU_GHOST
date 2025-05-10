@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="test_conveyor">
+      main_tree_to_execute="main_tree">
   <!-- <include path="bt_goal_rush.xml"/> -->
   <include path="worlds/bt_worlds_goal_rush_omega.xml" />
   <include path="worlds/bt_center_rush_after_side_rush.xml"/>
@@ -23,6 +23,22 @@
         <SubTree ID="basic_auton_1_end" _autoremap="true"/>
         <SubTree ID="neutral_stake" _autoremap="true"/>
       </Sequence>
+      <WaitCmd seconds="500.0" shutoff_motors="true" />
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test_turn">
+    <Sequence>
+      <Logging message="Starting turn"/>
+      <TurnToPoint posX_tiles="0.0"
+        posY_tiles="0.0"
+        timeout_ms="2000"
+        angle_exit_threshold_deg="1.0"/>
+      <Logging message="done"/>
+      <TurnToPoint posX_tiles="1.0"
+        posY_tiles="3.0"
+        timeout_ms="2000"
+        angle_exit_threshold_deg="1.0"/>
       <WaitCmd seconds="500.0" shutoff_motors="true" />
     </Sequence>
   </BehaviorTree>

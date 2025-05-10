@@ -140,9 +140,9 @@ void GPIOExpander::callback(const std_msgs::msg::Int64::SharedPtr in, std::strin
 {
   int64_t data = in->data;
   auto pins = m_gpio_map[name].pins;
-  std::cout << name << " " << std::endl;
+  // std::cout << name << " " << std::endl;
   for (int i = pins.size() - 1; i >= 0; i--) {
-  std::cout << pins[i] << " " << std::to_string(data & 1) << std::endl;
+  // std::cout << pins[i] << " " << std::to_string(data & 1) << std::endl;
     chip->setPin(pins[i], !(data & 1));
     data >>= 1;
   }
