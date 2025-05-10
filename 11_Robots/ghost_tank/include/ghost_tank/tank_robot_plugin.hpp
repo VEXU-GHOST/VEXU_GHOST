@@ -172,6 +172,10 @@ protected:
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_color_target_sub;
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_mirrored_sub;
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_reset_sub;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr m_led_color_red_pub;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr m_led_side_right_pub;
+
+
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;

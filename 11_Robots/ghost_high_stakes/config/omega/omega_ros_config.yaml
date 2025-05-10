@@ -773,30 +773,3 @@ map_ekf_node:
       ]
 
     dynamic_process_noise_covariance: true
-tts_music_node:
-  ros__parameters:
-    volume: 150  # set to 0 to turn off, set to 100 at comp
-gpio_expander:
-  ros__parameters:
-    gpio: #topic type is int64
-      "/io/leds/other": 
-        pins: [8, 9, 10]
-        output: True
-      "/io/buttons/color_target": 
-        pins: [2]
-        output: False
-      "/io/buttons/mirrored": 
-        pins: [4]
-        output: False
-      "/io/buttons/other": 
-        pins: [6]
-        output: False
-      "/io/buttons/other7": 
-        pins: [7]
-        output: False
-      "/io/leds/bag": 
-        pins: [11]
-        output: True
-      "/io/buttons/bag":
-        pins: [0]
-        output: False
