@@ -54,6 +54,7 @@ void TankTree::init_tree()
   factory.registerNodeType<ClimbCmd>("ClimbCmd"); // <-- registered new node
   factory.registerNodeType<ShutoffNode>("ShutoffNode");
   factory.registerNodeType<IntakeCmd>("IntakeCmd");
+  factory.registerNodeType<IntakeCmd>("IsHanging");
   factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
   factory.registerNodeType<SetColorTarget>("SetColorTarget");
   factory.registerNodeType<SetMirrored>("SetMirrored");

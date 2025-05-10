@@ -35,6 +35,7 @@
 #include "ghost_tank/bt_nodes/climbCmd.hpp"
 #include "ghost_tank/bt_nodes/shutoffNode.hpp"
 #include "ghost_tank/bt_nodes/intakeCmd.hpp"
+#include "ghost_tank/bt_nodes/isHanging.hpp"
 #include "ghost_tank/bt_nodes/goalRushCmd.hpp"
 #include "ghost_tank/bt_nodes/setMirrored.hpp"
 #include "ghost_tank/bt_nodes/setColorTarget.hpp"
