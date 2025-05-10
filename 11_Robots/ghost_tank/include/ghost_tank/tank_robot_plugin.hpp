@@ -110,6 +110,7 @@ protected:
   void updateGoalRush(JoyPtr joy_data, bool shift);
   void updateNeutralStakeArm(JoyPtr joy_data);
   void updateNeutralStakeArmJoystick(bool shift1, bool shift2, JoyPtr joy_data);
+  void updateConveyorOnly(bool active);
 
   void updateNeutralStakeArmPosition(int arm_mode);
   void updateNeutralStakeArmPositionController(bool active, bool up_btn, bool down_btn);
@@ -125,6 +126,7 @@ protected:
 
   void colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
+  void resetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
  
   void resetWorldPose();
 
@@ -169,6 +171,7 @@ protected:
 
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_color_target_sub;
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_mirrored_sub;
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_reset_sub;
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
@@ -291,6 +294,7 @@ protected:
   bool m_auton_button_pressed = false;
   bool m_color_target_red = false;
   bool m_mirrored = false;
+  bool m_reset = false;
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;

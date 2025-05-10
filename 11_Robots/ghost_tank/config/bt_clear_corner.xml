@@ -16,7 +16,7 @@
                             lead="0.5"
                             max_speed_linear_percent="0.4"
                             max_speed_angular_percent="1.0"
-                            timeout_ms="-2000"
+                            timeout_ms="-3000"
                             use_theta="true"
                             backwards="false"/>
 

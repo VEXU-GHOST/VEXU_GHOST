@@ -14,9 +14,9 @@
       <Sequence>
         <Logging message="Starting main tree" />
         <SetMirrored mirrored="false" />
-        <!-- <SubTree ID="worlds_goal_rush" _autoremap="true" /> -->
-        <SubTree ID="deploy_scissor" _autoremap="true" />
-        <!-- <SubTree ID="center_rush_after_side_rush" _autoremap="true" /> -->
+        <SubTree ID="worlds_goal_rush" _autoremap="true" />
+        <SubTree ID="center_rush_after_side_rush" _autoremap="true" />
+        <!-- <SubTree ID="deploy_scissor" _autoremap="true" /> -->
       </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true" />
     </Sequence>

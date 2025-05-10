@@ -6,7 +6,7 @@
     <Sequence>
       <Logging message="move to clear corner start pos"/>
       <MoveToPoseBezier posX_tiles="1.0"
-                            posY_tiles="0.6"
+                            posY_tiles="1.0"
                             theta_deg="-135.0" 
                             search_radius_tiles="0.3"
                             xy_exit_threshold_tiles="0.05"

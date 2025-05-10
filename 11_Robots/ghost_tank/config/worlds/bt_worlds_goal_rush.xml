@@ -16,7 +16,12 @@
                 y_lower_bound_tiles="0.0"
                 x_upper_bound_tiles="6.0"
                 y_upper_bound_tiles="2.25">
-                <MoveVoltage forward_effort="1.0" angular_effort="0.0" timeout_ms="700" />
+                <MoveToPoint 
+                  kp="2.5"
+                  kd="0.0" 
+                  max_effort_percent="1.0"
+                  timeout_ms="700"
+                  xy_exit_threshold_tiles="0.9"/>
               </BoundaryCheck>
               <Logging message="Timed Out" />
             </Sequence>
@@ -40,7 +45,12 @@
       <IntakeCmd auto="false" ground_intake="false" />
       <MoveVoltage forward_effort="-0.1" angular_effort="0.0" timeout_ms="50" />
 
-      <MoveVoltage forward_effort="-1.0" angular_effort="0.0" timeout_ms="700" />
+      <MoveToPoint 
+        kp="3.5"
+        kd="0.0"
+        max_effort_percent="-1.0"
+        timeout_ms="700"
+        xy_exit_threshold_tiles="0.5"/>
       <GoalRushCmd goal_rush_down="true" />
     </Sequence>
   </BehaviorTree>

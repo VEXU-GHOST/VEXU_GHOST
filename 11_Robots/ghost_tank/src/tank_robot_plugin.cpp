@@ -180,6 +180,9 @@ void TankRobotPlugin::initROSComms()
   m_button_mirrored_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
     "/io/buttons/mirrored", 10,
     std::bind(&TankRobotPlugin::mirroredButtonCallback, this, _1));
+  m_button_reset_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
+    "/io/buttons/other", 10,
+    std::bind(&TankRobotPlugin::resetButtonCallback, this, _1));
 }
 
 void TankRobotPlugin::initEstimation()
@@ -415,7 +418,7 @@ void TankRobotPlugin::autonomous(double current_time)
     m_is_first_auton_loop = false;
     playTTS("starting autonomous");
     m_odom_ptr->resetPose();
-    resetWorldPose();
+    // resetWorldPose();
 
     bt_->set_variable<bool>("clamp_closed", false);
     bt_->set_variable<bool>("bite_closed", false);
@@ -423,10 +426,11 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("goal_rush_l_down", false);
     bt_->set_variable<bool>("goal_rush_r_down", false);
     bt_->set_variable<bool>("climb_extended", false);
+    bt_->set_variable<bool>("conveyor_active", false);
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
-  bt_->set_variable("mirrored", m_mirrored);
+  bt_->set_variable<bool>("mirrored", m_mirrored);
 
   static bool first_loop = true;
   if (first_loop) {
@@ -455,22 +459,31 @@ void TankRobotPlugin::autonomous(double current_time)
   bool want_red = m_color_target_red;
   // bool want_red = false;
   bool store_ring = false;
-  if (bt_->get_variable("ring_detector_active", ring_detector_active) 
+  bool conveyor_active = false;
+  if (bt_->get_variable<bool>("ring_detector_active", ring_detector_active) 
     // && bt_->get_variable("want_red", want_red)
-    && bt_->get_variable("store_ring", store_ring)
+    && bt_->get_variable<bool>("store_ring", store_ring)
+    && bt_->get_variable<bool>("conveyor_active", conveyor_active)
   )
   {
-    ringDetector(ring_detector_active, current_time, want_red, store_ring);
+    if (conveyor_active){
+      std::cout << "i wanna convey" << std::endl;
+      // updateIntake(false, true, false, false, current_time);
+      updateConveyorOnly(true);
+    } else {
+      std::cout << "im hungry" << std::endl;
+      ringDetector(ring_detector_active, current_time, want_red, store_ring);
+    }
   }
 
   bool ground_intake_active = false;
-  if (bt_->get_variable("ground_intake_active", ground_intake_active) && !ring_detector_active)
+  if (bt_->get_variable<bool>("ground_intake_active", ground_intake_active) && !ring_detector_active && !conveyor_active)
   {
     updateIntake(ground_intake_active, false, false, false, current_time);
   }
 
   int neutral_stake_pos = 0;
-  if (bt_->get_variable("neutral_stake_pos", neutral_stake_pos)) {
+  if (bt_->get_variable<int>("neutral_stake_pos", neutral_stake_pos)) {
     updateNeutralStakeArmPosition(neutral_stake_pos);
   }
 
@@ -915,6 +928,7 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
       conveyor_current = 0;
     }
   }
+  
 
   rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
@@ -925,6 +939,18 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
   rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
 
   m_loop_current_limits.push_back(ground_pickup_current);
+  m_loop_current_limits.push_back(conveyor_current*2.0);
+}
+
+void TankRobotPlugin::updateConveyorOnly(bool active){
+  double conveyor_power = 1.0;
+  double conveyor_current = 2500;
+
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
+
   m_loop_current_limits.push_back(conveyor_current*2.0);
 }
 
@@ -1377,6 +1403,22 @@ void TankRobotPlugin::mirroredButtonCallback(const std_msgs::msg::Int64::SharedP
     resetWorldPose();
   }
 }
+
+void TankRobotPlugin::resetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
+{
+  if (m_reset != msg->data) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "m_reset state changed: %ld", msg->data);
+    if (msg->data == 1) {
+      m_reset = true;
+    } else if (msg->data == 0) {
+      m_reset = false;
+    } else {
+      RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
+    }
+    resetWorldPose();
+  }
+}
+
 
 } // namespace ghost_tank
 

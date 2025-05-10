@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main_tree">
+      main_tree_to_execute="test_conveyor">
   <!-- <include path="bt_goal_rush.xml"/> -->
   <include path="worlds/bt_worlds_goal_rush_omega.xml" />
   <include path="worlds/bt_center_rush_after_side_rush.xml"/>
@@ -24,6 +24,36 @@
         <SubTree ID="neutral_stake" _autoremap="true"/>
       </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true" />
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="test_conveyor">
+    <Sequence>
+      <Logging message="Starting conveyor"/>
+      <ConveyorCmd fwd="true"/>
+      <WaitCmd seconds="0.5"
+          shutoff_motors="true"/>
+      <Logging message="stopping conveyor"/>
+      <ConveyorCmd fwd="false"/>
+      <WaitCmd seconds="0.5"
+            shutoff_motors="true"/>
+      <IntakeCmd auto="true"
+          ground_intake="false"/>
+      <WaitCmd seconds="0.5"
+                shutoff_motors="true"/>
+      <IntakeCmd auto="false"
+          ground_intake="false"/>
+      <WaitCmd seconds="0.5"
+            shutoff_motors="true"/>
+      <!-- <ForceSuccess>
+        <Timeout msec="1000"> 
+          <KeepRunningUntilFailure>
+            <ConveyorCmd fwd="true"/>
+          </KeepRunningUntilFailure>
+        </Timeout>
+      </ForceSuccess> -->
+      <!-- <WaitCmd seconds="1.0"
+                shutoff_motors="true"/> -->
     </Sequence>
   </BehaviorTree>
 
