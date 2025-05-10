@@ -401,8 +401,8 @@ void AlphaJerryPlugin::autonomous(double current_time)
   if (m_is_first_auton_loop) {
     m_is_first_auton_loop = false;
     playTTS("starting autonomous");
-    m_odom_ptr->resetPose();
-    resetWorldPose();
+    // m_odom_ptr->resetPose();
+    // resetWorldPose();
 
     bt_->set_variable<bool>("clamp_closed", false);
     bt_->set_variable<bool>("bite_closed", false);
@@ -644,6 +644,11 @@ bool AlphaJerryPlugin::runAutonFromDriver(JoyPtr joy_data, double current_time)
       m_is_first_auton_loop = true;
       m_auton_start_time = current_time;
       resetBT();
+
+      m_odom_ptr->resetPose();
+      resetWorldPose();
+
+      std::this_thread::sleep_for(500ms);
     }
     autonomous(current_time - m_auton_start_time);
 
@@ -1084,7 +1089,7 @@ void AlphaJerryPlugin::resetWorldPose()
   double reset_angle = m_reset_pose_angle_rad;
 
   if (m_mirrored) {
-    reset_pose.x() = 6*24.0*2.54/100.0 - m_reset_pose_xy_m.x();
+    reset_pose.x() = 6 * 24.0 * 2.54 / 100.0 - m_reset_pose_xy_m.x();
     reset_angle = M_PI - m_reset_pose_angle_rad;
   }
   ghost_util::yawToQuaternionRad(reset_angle, quat.w, quat.x, quat.y, quat.z);

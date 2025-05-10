@@ -17,11 +17,8 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
-
-
       <MoveToPoseBezier posX_tiles="1.5"
-        posY_tiles="2.0"
+        posY_tiles="1.85"
         theta_deg="-60.0"
         search_radius_tiles="0.5"
         xy_exit_threshold_tiles="0.1"
@@ -35,8 +32,6 @@
         use_theta="true"
         backwards="true" />
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
-
       <ForceSuccess>
         <Fallback>
           <Sequence>
@@ -46,9 +41,9 @@
               x_upper_bound_tiles="6.0"
               y_upper_bound_tiles="2.75">
               <Sequence>
-                <MoveVoltage forward_effort="-0.4" angular_effort="0.0" timeout_ms="500" />
+                <MoveVoltage forward_effort="-0.4" angular_effort="0.0" timeout_ms="750" />
                 <ClampCmd clamp_closed="true" />
-                <MoveVoltage forward_effort="-0.4" angular_effort="0.0" timeout_ms="250" />
+                <MoveVoltage forward_effort="-0.4" angular_effort="0.0" timeout_ms="400" />
               </Sequence>
             </BoundaryCheck>
             <Logging message="Timed Out" />
@@ -57,10 +52,9 @@
         </Fallback>
       </ForceSuccess>
 
-      <WaitCmd seconds="0.1" shutoff_motors="true" />
-
-
       <IntakeCmd auto="true" ground_intake="false" />
+
+      <WaitCmd seconds="0.5" shutoff_motors="true" />
 
       <MoveToPoseBezier posX_tiles="1.5"
         posY_tiles="2.0"
@@ -77,8 +71,7 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="0.1" shutoff_motors="true" />
-
+      <WaitCmd seconds="0.5" shutoff_motors="true" />
 
       <MoveToPoseBezier posX_tiles="1.5"
         posY_tiles="2.0"
@@ -95,9 +88,6 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="0.1" shutoff_motors="true" />
-
-
       <IntakeCmd auto="true" ground_intake="true" />
 
       <MoveToPoseBezier posX_tiles="0.75"
@@ -111,12 +101,11 @@
         lead="0.75"
         max_speed_linear_percent="1.0"
         max_speed_angular_percent="1.0"
-        timeout_ms="1000"
+        timeout_ms="1500"
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="0.1" shutoff_motors="true" />
-
+      <WaitCmd seconds="0.5" shutoff_motors="true" />
 
       <MoveToPoseBezier posX_tiles="1.0"
         posY_tiles="2.0"
@@ -133,9 +122,6 @@
         use_theta="true"
         backwards="true" />
 
-      <WaitCmd seconds="0.1" shutoff_motors="true" />
-
-
       <MoveToPoseBezier posX_tiles="1.0"
         posY_tiles="2.0"
         theta_deg="-90.0"
@@ -151,9 +137,6 @@
         use_theta="true"
         backwards="true" />
 
-      <WaitCmd seconds="0.1" shutoff_motors="true" />
-
-
       <MoveToPoseBezier posX_tiles="1.0"
         posY_tiles="0.75"
         theta_deg="-90.0"
@@ -169,10 +152,22 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="0.1" shutoff_motors="true" />
+      <MoveToPoseBezier posX_tiles="1.0"
+        posY_tiles="1.75"
+        theta_deg="-90.0"
+        search_radius_tiles="0.5"
+        xy_exit_threshold_tiles="0.05"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="0.1"
+        ang_vel_exit_threshold_dps="1.0"
+        lead="0.75"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1000"
+        use_theta="true"
+        backwards="true" />
 
-
-      <MoveToPoseBezier posX_tiles="0.5"
+      <MoveToPoseBezier posX_tiles="0.75"
         posY_tiles="0.75"
         theta_deg="-90.0"
         search_radius_tiles="0.5"
@@ -187,8 +182,81 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="10.0" shutoff_motors="true" />
+        <MoveToPoseBezier posX_tiles="0.75"
+        posY_tiles="0.75"
+        theta_deg="-135.0"
+        search_radius_tiles="0.5"
+        xy_exit_threshold_tiles="0.05"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="0.1"
+        ang_vel_exit_threshold_dps="1.0"
+        lead="0.75"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1000"
+        use_theta="true"
+        backwards="false" />
 
+      <TurnToPoint posX_tiles="0.0"
+        posY_tiles="0.0"
+        timeout_ms="1000"
+        angle_exit_threshold_deg="1.0" />
+
+      <MoveVoltage forward_effort="0.5" angular_effort="0.0" timeout_ms="1000" />
+
+      <WaitCmd seconds="1.0" shutoff_motors="true" />
+
+      <MoveVoltage forward_effort="-0.5" angular_effort="0.0" timeout_ms="1000" />
+
+      <WaitCmd seconds="0.5" shutoff_motors="true" />
+
+      <MoveVoltage forward_effort="0.5" angular_effort="0.0" timeout_ms="1000" />
+
+      <MoveToPoseBezier posX_tiles="1.0"
+        posY_tiles="1.0"
+        theta_deg="-45.0"
+        search_radius_tiles="0.5"
+        xy_exit_threshold_tiles="0.05"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="0.1"
+        ang_vel_exit_threshold_dps="1.0"
+        lead="0.75"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1000"
+        use_theta="true"
+        backwards="true" />
+
+      <MoveToPoseBezier posX_tiles="1.0"
+        posY_tiles="1.0"
+        theta_deg="135.0"
+        search_radius_tiles="0.5"
+        xy_exit_threshold_tiles="0.05"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="0.1"
+        ang_vel_exit_threshold_dps="1.0"
+        lead="0.75"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1000"
+        use_theta="true"
+        backwards="true" />
+
+      <MoveToPoint
+        kp="2.5"
+        kd="0.0"
+        max_effort_percent="-1.0"
+        timeout_ms="750"
+        xy_exit_threshold_tiles="-0.75" />
+
+      <ClampCmd clamp_closed="false" />
+
+      <MoveToPoint
+        kp="2.5"
+        kd="0.0"
+        max_effort_percent="1.0"
+        timeout_ms="750"
+        xy_exit_threshold_tiles="0.75" />
 
       <!-- <ParallelAll> -->
       <!-- <Fallback>

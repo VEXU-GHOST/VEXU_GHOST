@@ -3,8 +3,9 @@
   <BehaviorTree ID="center_rush_after_side_rush">
     <Sequence>
       <MoveVoltage forward_effort="-0.5" angular_effort="0.0" timeout_ms="400" />
-      <MoveToPoseBezier posX_tiles="2.5"
-        posY_tiles="2.5"
+
+      <MoveToPoseBezier posX_tiles="2.3"
+        posY_tiles="2.3"
         theta_deg="70.0"
         search_radius_tiles="0.2"
         xy_exit_threshold_tiles="0.05"
@@ -14,9 +15,41 @@
         lead="0.25"
         max_speed_linear_percent="0.6"
         max_speed_angular_percent="1.0"
-        timeout_ms="2750"
+        timeout_ms="2500"
         use_theta="true"
         backwards="false" />
+
+      <Parallel failure_count="2" success_count="1">
+        <ForceSuccess>
+          <Fallback>
+            <Sequence>
+              <BoundaryCheck
+                x_lower_bound_tiles="0.0"
+                y_lower_bound_tiles="0.0"
+                x_upper_bound_tiles="6.0"
+                y_upper_bound_tiles="2.3">
+                <MoveToPoint
+                  kp="2.5"
+                  kd="0.0"
+                  max_effort_percent="1.0"
+                  timeout_ms="1000"
+                  xy_exit_threshold_tiles="1.0" />
+              </BoundaryCheck>
+              <Logging message="Timed Out" />
+            </Sequence>
+            <Logging message="Hit Boundary" />
+          </Fallback>
+        </ForceSuccess>
+        <Fallback>
+          <Sequence>
+            <RetryUntilSuccessful num_attempts="-1">
+              <GoalRushDetected threshold="0.1" />
+            </RetryUntilSuccessful>
+            <Logging message="Goal Rush detected!" />
+          </Sequence>
+          <Logging message="Goal Rush detection failed" />
+        </Fallback>
+      </Parallel>
 
       <GoalRushCmd goal_rush_down="false" />
       <WaitCmd seconds="0.05" shutoff_motors="true" />

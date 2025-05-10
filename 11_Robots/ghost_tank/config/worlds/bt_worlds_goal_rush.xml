@@ -15,13 +15,13 @@
                 x_lower_bound_tiles="0.0"
                 y_lower_bound_tiles="0.0"
                 x_upper_bound_tiles="6.0"
-                y_upper_bound_tiles="2.25">
+                y_upper_bound_tiles="2.3">
                 <MoveToPoint 
                   kp="2.5"
                   kd="0.0" 
                   max_effort_percent="1.0"
-                  timeout_ms="700"
-                  xy_exit_threshold_tiles="0.9"/>
+                  timeout_ms="1000"
+                  xy_exit_threshold_tiles="1.4"/>
               </BoundaryCheck>
               <Logging message="Timed Out" />
             </Sequence>
