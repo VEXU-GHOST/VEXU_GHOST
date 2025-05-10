@@ -221,6 +221,7 @@ set(NODES
   climbCmd
   shutoffNode
   intakeCmd
+  isHanging
   goalRushCmd
   setMirrored
   conveyorCmd
