@@ -2,14 +2,20 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="deploy_scissor">
     <Sequence>
+          <!-- <SetBlackboard value="false" output_key="shoot"/> -->
+
       <ClimbCmd climb_extended="true"/>
-      <WaitCmd seconds=".2" shutoff_motors="false" />
-      <MoveScissor scissor_position_in="12" offset="1" timeout_ms="5000"/>
+      <WaitCmd seconds="0.8" shutoff_motors="false" />
+      <MoveScissor scissor_position_in="12" offset="1" timeout_ms="1000"/>
       <ClimbCmd climb_extended="false"/>
-      <SetBlackboard value="true" output_key="shoot"/>
-      <WaitCmd seconds=".6" shutoff_motors="false" />
-      <MoveScissor scissor_position_in="6" offset="1" timeout_ms="5000"/>
-      <SetBlackboard value="false" output_key="shoot"/>
+      <WaitCmd seconds="0.5" shutoff_motors="false" />
+      <MoveScissor scissor_position_in="8" offset="1" timeout_ms="1000"/>
+      <!-- <ClimbCmd climb_extended="true"/>
+      <WaitCmd seconds="0.2" shutoff_motors="false" />
+      <ClimbCmd climb_extended="false"/>
+      <MoveScissor scissor_position_in="16" offset="1" timeout_ms="5000"/>
+      <WaitCmd seconds="0.2" shutoff_motors="false" />
+      <SetBlackboard value="false" output_key="shoot"/> -->
       <ShutoffNode/>
     </Sequence>
   </BehaviorTree>

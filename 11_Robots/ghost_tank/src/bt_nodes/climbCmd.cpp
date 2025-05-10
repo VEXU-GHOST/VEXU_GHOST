@@ -13,14 +13,18 @@ ClimbCmd::ClimbCmd(const std::string & name, const BT::NodeConfig & config)
 BT::PortsList ClimbCmd::providedPorts()
 {
   return {
-    BT::InputPort<bool>("climb_extended")
+    BT::InputPort<bool>("climb_extended"),
+    BT::InputPort<bool>("shoot", false, "")
+
   };
 }
 
 BT::NodeStatus ClimbCmd::tick()
 {
   bool climb_up = BT_Util::get_input<bool>(this, "climb_extended");
+  bool shoot = BT_Util::get_input<bool>(this, "shoot");
   BT_Util::put_in_blackboard(blackboard_, "climb_extended", climb_up);
+  BT_Util::put_in_blackboard(blackboard_, "shoot", shoot);
   return BT::NodeStatus::SUCCESS;
 }
 

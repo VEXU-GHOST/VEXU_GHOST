@@ -57,7 +57,7 @@
         </Fallback>
       </ForceSuccess>
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
+      <WaitCmd seconds="0.1" shutoff_motors="true" />
 
 
       <IntakeCmd auto="true" ground_intake="false" />
@@ -77,7 +77,7 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
+      <WaitCmd seconds="0.1" shutoff_motors="true" />
 
 
       <MoveToPoseBezier posX_tiles="1.5"
@@ -95,7 +95,7 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
+      <WaitCmd seconds="0.1" shutoff_motors="true" />
 
 
       <IntakeCmd auto="true" ground_intake="true" />
@@ -115,7 +115,7 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
+      <WaitCmd seconds="0.1" shutoff_motors="true" />
 
 
       <MoveToPoseBezier posX_tiles="1.0"
@@ -133,7 +133,7 @@
         use_theta="true"
         backwards="true" />
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
+      <WaitCmd seconds="0.1" shutoff_motors="true" />
 
 
       <MoveToPoseBezier posX_tiles="1.0"
@@ -151,7 +151,7 @@
         use_theta="true"
         backwards="true" />
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
+      <WaitCmd seconds="0.1" shutoff_motors="true" />
 
 
       <MoveToPoseBezier posX_tiles="1.0"
@@ -169,7 +169,7 @@
         use_theta="true"
         backwards="false" />
 
-      <WaitCmd seconds="1.0" shutoff_motors="true" />
+      <WaitCmd seconds="0.1" shutoff_motors="true" />
 
 
       <MoveToPoseBezier posX_tiles="0.5"
