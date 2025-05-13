@@ -52,7 +52,7 @@ BT::NodeStatus MoveToPoint::onRunning()
   Eigen::Vector2d current_position_ = tank_model_ptr_->getWorldPose().head<2>();
 
   double dist_err = (current_position_ - start_position_).norm();
-  bool xy_satisfied = dist_err > xy_exit_threshold_m;
+  bool xy_satisfied = dist_err > abs(xy_exit_threshold_m);
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
   if (xy_satisfied || time_elapsed > timeout_ms) {
@@ -71,7 +71,7 @@ void MoveToPoint::move()
   
   Eigen::Vector2d current_position_ = tank_model_ptr_->getWorldPose().head<2>();
   double dist_moved = (current_position_ - start_position_).norm();
-  double dist_err = xy_exit_threshold_m - dist_moved;
+  double dist_err = abs(xy_exit_threshold_m) - dist_moved;
   double fwd_cmd; 
   if(dist_err>0){
     fwd_cmd = dist_err*Kp - (tank_model_ptr_->getWorldTwist().head<2>().norm())*Kd;
@@ -79,9 +79,9 @@ void MoveToPoint::move()
     fwd_cmd = 0;
   }
 
-  fwd_cmd = ghost_util::clamp(fwd_cmd, -abs(max_effort_percent), abs(max_effort_percent));
+  fwd_cmd = ghost_util::clamp(fwd_cmd, -max_effort_percent, max_effort_percent);
 
-  if (max_effort_percent < 0){
+  if (xy_exit_threshold_m < 0){
     fwd_cmd *= -1;
   }
 

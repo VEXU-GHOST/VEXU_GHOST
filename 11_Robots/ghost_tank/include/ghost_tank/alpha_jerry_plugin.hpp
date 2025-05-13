@@ -44,7 +44,6 @@
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
 #include <ghost_tank/pdcontrol.hpp>
-#include <ghost_tank/boomerang.hpp>
 
 namespace ghost_tank
 {
@@ -295,7 +294,6 @@ protected:
   bool m_interaction_started = false;
   bool m_sim_mode = false;
 
-  // boomerang
   double m_max_speed_linear;
   double m_max_speed_angular;
 
@@ -303,7 +301,6 @@ protected:
   int m_past_index = 0;
   int m_next_index = 0;
 
-  std::shared_ptr<Boomerang> m_boomerang;
   std::shared_ptr<PDControl> m_pd_control;
   std::shared_ptr<PDControl> m_pd_control_threshold;
 

@@ -1,10 +1,8 @@
 #include <iostream>
-#include <ghost_tank/tank_model.hpp>
-#include <ghost_tank/tank_robot_plugin.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <pluginlib/class_list_macros.hpp>
-#include <ghost_tank/boomerang.hpp>
+#include <ghost_planners/boomerang.hpp>
 //#include <pluginlib/class_list_macros.hpp>
 
 #include <cmath>
@@ -12,7 +10,7 @@
 
 //class for Boomerang control, to travel from point a to b, maintaining knowledge of location.
 
-namespace ghost_tank
+namespace ghost_planners
 {
 
 Boomerang::Boomerang()
@@ -64,4 +62,4 @@ std::vector<Eigen::Vector2d> Boomerang::get_points()
   return points_;
 }
 
-}  // namespace ghost_tank
+}  // namespace ghost_planners

@@ -1,6 +1,5 @@
 #pragma once
 #include <iostream>
-#include <ghost_tank/tank_model.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <eigen3/Eigen/Core>
@@ -8,9 +7,9 @@
 #include <cmath>
 #include <vector>
 
-//class for BezierCurve control, to travel from point a to b, maintaining knowledge of location.
+// generates a path between two points using a bezier curve
 
-namespace ghost_tank
+namespace ghost_planners
 {
 
 class BezierCurve {
@@ -40,4 +39,4 @@ private:
   std::vector<Eigen::Vector2d> points_;
 };
 
-} // namespace ghost_tank
+} // namespace ghost_planners

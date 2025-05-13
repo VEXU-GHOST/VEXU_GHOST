@@ -1,7 +1,6 @@
 #include <math.h>
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_msgs/msg/robot_trajectory.hpp"
-#include "ghost_tank/bezier_curve.hpp"
 #include "ghost_tank/pdcontrol.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_util/angle_util.hpp"

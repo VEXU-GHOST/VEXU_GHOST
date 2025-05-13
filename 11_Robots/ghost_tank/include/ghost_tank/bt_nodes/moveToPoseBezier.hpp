@@ -25,7 +25,7 @@
 #include <math.h>
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_msgs/msg/robot_trajectory.hpp"
-#include "ghost_tank/bezier_curve.hpp"
+#include "ghost_planners/bezier_curve.hpp"
 #include "ghost_tank/pdcontrol.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_util/angle_util.hpp"
@@ -39,6 +39,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 
 using std::placeholders::_1;
+using ghost_planners::BezierCurve;
 
 namespace ghost_tank
 {

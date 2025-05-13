@@ -1,18 +1,14 @@
 #include <iostream>
-#include <ghost_tank/tank_model.hpp>
-#include <ghost_tank/tank_robot_plugin.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
-#include <pluginlib/class_list_macros.hpp>
-#include <ghost_tank/bezier_curve.hpp>
-//#include <pluginlib/class_list_macros.hpp>
+#include <ghost_planners/bezier_curve.hpp>
 
 #include <cmath>
 #include <vector>
 
 //class for BezierCurve control, to travel from point a to b, maintaining knowledge of location.
 
-namespace ghost_tank
+namespace ghost_planners
 {
 
 BezierCurve::BezierCurve()
@@ -68,4 +64,4 @@ std::vector<Eigen::Vector2d> BezierCurve::get_points()
   return points_;
 }
 
-}  // namespace ghost_tank
+}  // namespace ghost_planners

@@ -1,4 +1,3 @@
-#include "ghost_tank/pdcontrol.hpp"
 #include "ghost_tank/bt_nodes/turnToPoint.hpp"
 #include <cmath>
 

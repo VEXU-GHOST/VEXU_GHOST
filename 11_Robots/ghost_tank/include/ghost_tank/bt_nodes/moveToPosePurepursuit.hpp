@@ -25,7 +25,6 @@
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_msgs/msg/robot_trajectory.hpp"
-#include "ghost_tank/boomerang.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_util/angle_util.hpp"
 #include "ghost_util/unit_conversion_utils.hpp"
@@ -68,7 +67,6 @@ private:
   std::chrono::time_point<std::chrono::system_clock> start_time_;
   std::chrono::time_point<std::chrono::system_clock> plan_time_;
   std::shared_ptr<rclcpp::Node> node_ptr_;
-  std::shared_ptr<Boomerang> boomerang_;
 	BT::Blackboard::Ptr blackboard_;
 
   bool started_;

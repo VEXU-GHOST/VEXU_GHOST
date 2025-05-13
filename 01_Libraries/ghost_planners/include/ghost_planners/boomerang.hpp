@@ -1,6 +1,5 @@
 #pragma once
 #include <iostream>
-#include <ghost_tank/tank_model.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <eigen3/Eigen/Core>
@@ -10,7 +9,7 @@
 
 //class for Boomerang control, to travel from point a to b, maintaining knowledge of location.
 
-namespace ghost_tank
+namespace ghost_planners
 {
 
 class Boomerang {
@@ -38,4 +37,4 @@ private:
   std::vector<Eigen::Vector2d> points_;
 };
 
-} // namespace ghost_tank
+} // namespace ghost_planners
