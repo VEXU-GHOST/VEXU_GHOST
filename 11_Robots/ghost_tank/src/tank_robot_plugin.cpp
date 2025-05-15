@@ -55,7 +55,7 @@ TankRobotPlugin::TankRobotPlugin()
 void TankRobotPlugin::populateMotorNames()
 {
   m_right_drive_motor_names = {
-    "drive_r1",
+    // "drive_r1",
     "drive_r2",
     "drive_r3",
     "drive_r4",
@@ -69,7 +69,7 @@ void TankRobotPlugin::populateMotorNames()
     "drive_l2",
     "drive_l3",
     "drive_l4",
-    "drive_l5",
+    // "drive_l5",
     "drive_l6",
     "drive_l7",
     "drive_l8",
@@ -94,6 +94,7 @@ void TankRobotPlugin::populateDigitalIONames()
   digital_io_port_map["goal_rush_r"] = 2;
   digital_io_port_map["bite"] = 3;
   digital_io_port_map["clamp"] = 4;
+  digital_io_port_map["buddy"] = 5;
 }
 
 //////////////////////
@@ -170,6 +171,10 @@ void TankRobotPlugin::initROSComms()
   node_ptr_->declare_parameter("tank_robot_plugin.err_pos_topic", "/err_pos");
   std::string err_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.err_pos_topic").as_string();
   m_err_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(err_pos_topic, 10);
+
+  node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
+  std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
+  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(input_imu_topic, 10);
 
   m_tts_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
   m_music_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/music", 1);
@@ -402,6 +407,7 @@ void TankRobotPlugin::onNewSensorData()
   m_loop_current_limits.clear();
 
   updateConveyorPositionSensing();
+  publishIMUData();
   updateAndPublishOdometry();
   publishTrajectoryVisualization();
 }
@@ -412,6 +418,30 @@ void TankRobotPlugin::updateConveyorPositionSensing()
   m_conveyor_position_rel = std::fmod(m_conveyor_position_abs, m_conveyor_ticks_per_loop);
   m_conveyor_position_rel += (m_conveyor_position_rel < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
   m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
+}
+
+void TankRobotPlugin::publishIMUData()
+{
+  sensor_msgs::msg::Imu imu_msg{};
+  imu_msg.header.frame_id = "imu_link";
+  imu_msg.header.stamp = node_ptr_->get_clock()->now();
+  if (!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))) {
+    imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  if (!std::isnan(rhi_ptr_->getInertialSensorYRate("imu"))) {
+    imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  if (!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))) {
+    imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  double yaw;
+  if (!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))) {
+    yaw = -rhi_ptr_->getInertialSensorHeading("imu");
+    ghost_util::yawToQuaternionDeg(
+      yaw, imu_msg.orientation.w, imu_msg.orientation.x,
+      imu_msg.orientation.y, imu_msg.orientation.z);
+  }
+  imu_pub->publish(imu_msg);
 }
 
 void TankRobotPlugin::disabled()
@@ -433,6 +463,8 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("goal_rush_r_down", false);
     bt_->set_variable<bool>("climb_extended", false);
     bt_->set_variable<bool>("conveyor_active", false);
+    bt_->set_variable<bool>("store_ring", false);
+    bt_->set_variable<bool>("ring_detector_active", false);
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
@@ -466,6 +498,7 @@ void TankRobotPlugin::autonomous(double current_time)
   // bool want_red = false;
   bool store_ring = false;
   bool conveyor_active = false;
+  bool ground_intake_active = false;
   if (bt_->get_variable<bool>("ring_detector_active", ring_detector_active) 
     // && bt_->get_variable("want_red", want_red)
     && bt_->get_variable<bool>("store_ring", store_ring)
@@ -481,8 +514,7 @@ void TankRobotPlugin::autonomous(double current_time)
       ringDetector(ring_detector_active, current_time, want_red, store_ring);
     }
   }
-
-  bool ground_intake_active = false;
+  
   if (bt_->get_variable<bool>("ground_intake_active", ground_intake_active) && !ring_detector_active && !conveyor_active)
   {
     updateIntake(ground_intake_active, false, false, false, current_time);
@@ -564,6 +596,12 @@ void TankRobotPlugin::teleop(double current_time)
   }
   updateBite(joy_data);
   updateDrivetrain(joy_data);
+
+  if (joy_data->btn_r && joy_data->btn_y && !m_buddy_pressed) {
+    m_buddy_pressed = true;
+    m_buddy_extended = !m_buddy_extended;
+  } else if(!joy_data->btn_r && !joy_data->btn_y) m_buddy_pressed = false;
+  rhi_ptr_->setDigitalOut(digital_io_port_map["buddy"], m_buddy_extended);
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
@@ -818,6 +856,7 @@ void TankRobotPlugin::updateNeutralStakeArmJoystick(bool shift1, bool shift2, st
   bool down_btn = joy_data->btn_l2;
   bool up_btn = joy_data->btn_l1;
   bool active = shift1;
+
   updateNeutralStakeArmPositionController(active, up_btn, down_btn);
 }
 
@@ -1410,12 +1449,13 @@ void TankRobotPlugin::mirroredButtonCallback(const std_msgs::msg::Int64::SharedP
     } else {
       RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
     }
+
+    resetWorldPose();
+  }
     auto message = std_msgs::msg::Int64();
     message.data = m_mirrored;
     m_led_side_right_pub->publish(message);
 
-    resetWorldPose();
-  }
 }
 
 void TankRobotPlugin::resetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)

@@ -77,6 +77,7 @@ protected:
 
   // onNewSensorData
   void updateConveyorPositionSensing();
+  void publishIMUData();
   void updateAndPublishOdometry();
   void publishBaseTwist();
   void publishTrajectoryVisualization();
@@ -155,12 +156,14 @@ protected:
   void publishErrorPose(Eigen::Vector3d pose);
 
   // Subscribers
+  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
-
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
+  
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_robot_color;
   void colorCallback(const std_msgs::msg::String msg)
   {
@@ -268,6 +271,9 @@ protected:
   double m_neutral_stake_arm_down_pos_deg{0.0};
   double m_neutral_stake_arm_des_pos{0.0};
   int m_arm_mode{0};
+
+  bool m_buddy_extended{false};
+  bool m_buddy_pressed{false};
 
   // Digital IO
   std::vector<bool> m_digital_io;
