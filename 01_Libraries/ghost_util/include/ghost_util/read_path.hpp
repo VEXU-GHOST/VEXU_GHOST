@@ -45,17 +45,19 @@ std::vector<std::vector<double>> readPathFromFile(const std::string &filename) {
         std::getline(ss, value_string, ',');
         x_trajectory.push_back(
             std::clamp(
-                (std::stod(value_string) + FIELD_WIDTH_CM / 2) * CM_TO_TILES,
+                (std::stod(value_string) + FIELD_WIDTH_CM / 2),
                 FIELD_MIN, FIELD_MAX
-        ));
+            ) * CM_TO_TILES
+        );
 
         // Get Y setpoint
         std::getline(ss, value_string, ',');
         y_trajectory.push_back(
             std::clamp(
-                (std::stod(value_string) + FIELD_WIDTH_CM / 2) * CM_TO_TILES,
+                (std::stod(value_string) + FIELD_WIDTH_CM / 2),
                 FIELD_MIN, FIELD_MAX
-        ));
+            ) * CM_TO_TILES
+        );
 
         // Ignore speed
         std::getline(ss, value_string, ',');
