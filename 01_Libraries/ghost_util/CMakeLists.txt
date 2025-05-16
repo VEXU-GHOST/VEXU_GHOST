@@ -126,6 +126,11 @@ target_link_libraries(test_parsing_util
   gtest
 )
 
+ament_add_gtest(test_read_path test/test_read_path.cpp)
+target_link_libraries(test_read_path
+  gtest
+)
+
 ament_add_gtest(test_math_util test/test_math_util.cpp)
 target_link_libraries(test_math_util
   gtest
