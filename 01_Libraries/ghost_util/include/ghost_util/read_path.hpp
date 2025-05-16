@@ -10,8 +10,8 @@
 
 constexpr double WALL_WIDTH_CM = 2 * 2.54;
 constexpr double FIELD_WIDTH_CM = 12 * 12 * 2.54;
-constexpr double FIELD_MAX =  (FIELD_WIDTH_CM/2) - WALL_WIDTH_CM;
-constexpr double FIELD_MIN = -(FIELD_WIDTH_CM/2) + WALL_WIDTH_CM;
+constexpr double FIELD_MAX =  (FIELD_WIDTH_CM / 2) - WALL_WIDTH_CM;
+constexpr double FIELD_MIN = -(FIELD_WIDTH_CM / 2) + WALL_WIDTH_CM;
 constexpr double CM_TO_TILES = 1 / (24 * 2.54);
 
 
