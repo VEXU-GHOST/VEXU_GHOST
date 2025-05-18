@@ -21,7 +21,7 @@ def generate_launch_description():
     robot_config_yaml_path = os.path.join(config_path, "omega/omega_hardware_config.yaml")
 
     # This specifies robot control plugin yo load
-    plugin_type = "ghost_tank::TankRobotPlugin"
+    plugin_type = "ghost_tank::OmegaRobotPlugin"
     robot_name = "OMEGA_JERRY"
 
     # Get BT Path for autons

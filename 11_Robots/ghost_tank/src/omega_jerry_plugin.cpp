@@ -25,7 +25,7 @@
 #include <cmath>
 #include <bits/stdc++.h>
 #include <ghost_tank/tank_model.hpp>
-#include <ghost_tank/tank_robot_plugin.hpp>
+#include <ghost_tank/omega_jerry_plugin.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/math_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
@@ -176,12 +176,6 @@ void OmegaJerryPlugin::autonomous(double current_time)
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
-
-  if (joy_data->btn_r && joy_data->btn_y && !m_buddy_pressed) {
-    m_buddy_pressed = true;
-    m_buddy_extended = !m_buddy_extended;
-  } else if(!joy_data->btn_r && !joy_data->btn_y) m_buddy_pressed = false;
-  rhi_ptr_->setDigitalOut(digital_io_port_map["buddy"], m_buddy_extended);
 }
 
 void OmegaJerryPlugin::teleop(double current_time)
@@ -193,6 +187,12 @@ void OmegaJerryPlugin::teleop(double current_time)
   TankRobotPlugin::teleop(current_time);
 
   updateNeutralStakeArmController(joy_data->btn_l1, joy_data->btn_l2, shift1); // Y-held mode
+
+  if (joy_data->btn_r && joy_data->btn_y && !m_buddy_pressed) {
+    m_buddy_pressed = true;
+    m_buddy_extended = !m_buddy_extended;
+  } else if(!joy_data->btn_r && !joy_data->btn_y) m_buddy_pressed = false;
+  rhi_ptr_->setDigitalOut(digital_io_port_map["buddy"], m_buddy_extended);
 }
 
 void OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)

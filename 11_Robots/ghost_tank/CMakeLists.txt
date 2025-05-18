@@ -163,6 +163,34 @@ RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
+add_library(omega_jerry_plugin SHARED src/omega_jerry_plugin.cpp)
+target_include_directories(omega_jerry_plugin
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+  target_link_libraries(omega_jerry_plugin
+    tank_model
+    tank_odom
+    tank_tree
+    pdcontrol
+    tank_robot_plugin
+  )
+ament_target_dependencies(omega_jerry_plugin
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  omega_jerry_plugin
+)
+ament_export_targets(omega_jerry_plugin HAS_LIBRARY_TARGET)
+install(
+TARGETS omega_jerry_plugin
+EXPORT omega_jerry_plugin
+LIBRARY DESTINATION lib
+ARCHIVE DESTINATION lib
+RUNTIME DESTINATION bin
+INCLUDES DESTINATION include
+)
+
 # bt node libraries
 set(NODES
   loggingNode
