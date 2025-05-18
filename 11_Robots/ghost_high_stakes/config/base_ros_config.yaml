@@ -304,7 +304,8 @@ odom_ekf_node:
     # For messages that have both pose and twist data, the parameter specifies to which part of the message we are applying
     # the thresholds.
 
-    imu0: /estimation/imu/filtered
+    # imu0: /estimation/imu/filtered
+    imu0: /sensors/imu
 
     # The order of the
     # values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az
@@ -666,14 +667,14 @@ gpio_expander:
   ros__parameters:
     gpio: #topic type is int64
       "/io/leds/other": 
-        pins: [10]
+        pins: [10,8,9]
         output: True
-      "/io/leds/color_red":
-        pins: [8]
-        output: True
-      "/io/leds/side_right":
-        pins: [9]
-        output: True
+      # "/io/leds/color_red":
+      #   pins: [8]
+      #   output: True
+      # "/io/leds/side_right":
+      #   pins: [9]
+      #   output: True
       "/io/buttons/color_target": 
         pins: [2]
         output: False

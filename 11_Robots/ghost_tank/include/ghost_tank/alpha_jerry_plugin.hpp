@@ -75,6 +75,7 @@ protected:
 
   // onNewSensorData
   void updateConveyorPositionSensing();
+  void publishIMUData();
   void updateAndPublishOdometry();
   void publishBaseTwist();
   void publishTrajectoryVisualization();
@@ -101,6 +102,7 @@ protected:
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
 
   void updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time);
+  void updateConveyorOnly(bool active);
   void toggleBite(bool signal);
 
   void updateClamp(bool close, bool open, bool shift2);
@@ -116,13 +118,13 @@ protected:
 
   void resetBT();
 
-
   // Output
   void playMusic(std::string m);
   void playTTS(std::string m);
 
   void colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
+  void resetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
 
   void resetWorldPose();
 
@@ -151,11 +153,13 @@ protected:
   void publishErrorPose(Eigen::Vector3d pose);
 
   // Subscribers
+  void imuUpdateCallback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void worldOdometryUpdateCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
   void worldOdometryUpdateCallbackBackup(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_robot_color;
   void colorCallback(const std_msgs::msg::String msg)
@@ -167,6 +171,9 @@ protected:
 
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_color_target_sub;
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_mirrored_sub;
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_reset_sub;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr m_led_color_red_pub;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr m_led_side_right_pub;
 
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
@@ -258,9 +265,10 @@ protected:
   double m_neutral_stake_arm_score_alliance_pos_deg{0.0};
   double m_neutral_stake_arm_down_pos_deg{0.0};
   double m_neutral_stake_arm_des_pos{0.0};
-  double m_scissor_max_extension{0.0};
-  double m_scissor_reset_extension{0.0};
   int m_arm_mode{0};
+
+  double m_rush_held{false};
+  double m_rush_button_pressed{false};
 
   // Digital IO
   std::vector<bool> m_digital_io;
@@ -270,36 +278,13 @@ protected:
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
 
-  // Field vs Robot Oriented Control
-  bool m_toggle_tank_field_control_btn_pressed = false;
-
-  // Angle vs Velocity Control
-  bool m_toggle_tank_angle_control_btn_pressed = false;
-  double m_angle_target = 0.0;
-  double m_joy_angle_control_threshold = 0.0;
-
-  // Slew Rate Control
-  double m_joystick_slew_rate = 2.0;
-  double m_last_x_cmd = 0.0;
-  double m_last_y_cmd = 0.0;
-  double m_last_theta_cmd = 0.0;
-  double m_curr_x_cmd = 0.0;
-  double m_curr_y_cmd = 0.0;
-  double m_curr_theta_cmd = 0.0;
-
   // Auton States
   bool m_color_target_red = false;
   bool m_mirrored = false;
+  bool m_reset = false;
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;
-
-  double m_max_speed_linear;
-  double m_max_speed_angular;
-
-  // pure pursuit
-  int m_past_index = 0;
-  int m_next_index = 0;
 
   std::shared_ptr<PDControl> m_pd_control;
   std::shared_ptr<PDControl> m_pd_control_threshold;

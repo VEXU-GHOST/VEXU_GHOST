@@ -63,8 +63,7 @@
         shutoff_motors="true"/>
       <MoveVoltage forward_effort="-0.2" angular_effort="0.0" timeout_ms="500" />      
       <GoalRushCmd goal_rush_down="false" />
-      <WaitCmd seconds="0.300"
-        shutoff_motors="true"/>
+      <WaitCmd seconds="0.300" shutoff_motors="true"/>
       <IntakeCmd auto="false" ground_intake="false" />
     </Sequence>
   </BehaviorTree>

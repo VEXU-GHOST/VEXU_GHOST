@@ -89,7 +89,6 @@ void AlphaJerryPlugin::populateMotorNames()
 
 void AlphaJerryPlugin::populateDigitalIONames()
 {
-  // digital_io_port_map["goal_rush_sensor"] = 4;
   digital_io_port_map["goal_rush_l"] = 0;
   digital_io_port_map["climb"] = 1;
   digital_io_port_map["goal_rush_r"] = 2;
@@ -173,8 +172,17 @@ void AlphaJerryPlugin::initROSComms()
   std::string err_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.err_pos_topic").as_string();
   m_err_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(err_pos_topic, 10);
 
+  node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
+  std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
+  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(input_imu_topic, 10);
+
   m_tts_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
   m_music_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/music", 1);
+
+  m_led_color_red_pub = node_ptr_
+    ->create_publisher<std_msgs::msg::Int64>("/io/leds/color_red", 1);
+  m_led_side_right_pub = node_ptr_
+    ->create_publisher<std_msgs::msg::Int64>("/io/leds/side_right", 1);
 
   m_button_color_target_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
     "/io/buttons/color_target", 10,
@@ -182,6 +190,9 @@ void AlphaJerryPlugin::initROSComms()
   m_button_mirrored_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
     "/io/buttons/mirrored", 10,
     std::bind(&AlphaJerryPlugin::mirroredButtonCallback, this, _1));
+  m_button_reset_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
+    "/io/buttons/reset", 10,
+    std::bind(&AlphaJerryPlugin::resetButtonCallback, this, _1));
 }
 
 void AlphaJerryPlugin::initEstimation()
@@ -279,11 +290,6 @@ void AlphaJerryPlugin::initIntake()
 
   m_ring_found = false;
   m_ring_color = m_color_map["unknown"];
-
-  node_ptr_->declare_parameter("tank_robot_plugin.scissor_max_extension", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.scissor_reset_extension", 0.0);
-  m_scissor_max_extension = node_ptr_->get_parameter("tank_robot_plugin.scissor_max_extension").as_double();
-  m_scissor_reset_extension = node_ptr_->get_parameter("tank_robot_plugin.scissor_reset_extension").as_double();
 }
 
 void AlphaJerryPlugin::initTankModel()
@@ -316,8 +322,6 @@ void AlphaJerryPlugin::initTankModel()
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_ki_theta", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.max_speed_linear", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.max_speed_angular", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy_fine", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy_fine", 0.5);
   node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta_fine", 0.5);
@@ -330,8 +334,6 @@ void AlphaJerryPlugin::initTankModel()
   float kp_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
   float kd_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
   float ki_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
-  m_max_speed_linear = node_ptr_->get_parameter("tank_robot_plugin.max_speed_linear").as_double();
-  m_max_speed_angular = node_ptr_->get_parameter("tank_robot_plugin.max_speed_angular").as_double();
   float kp_xy_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy_fine").as_double();
   float kd_xy_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy_fine").as_double();
   float kp_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta_fine").as_double();
@@ -379,6 +381,7 @@ void AlphaJerryPlugin::onNewSensorData()
   m_loop_current_limits.clear();
 
   updateConveyorPositionSensing();
+  publishIMUData();
   updateAndPublishOdometry();
   publishTrajectoryVisualization();
 }
@@ -389,6 +392,30 @@ void AlphaJerryPlugin::updateConveyorPositionSensing()
   m_conveyor_position_rel = std::fmod(m_conveyor_position_abs, m_conveyor_ticks_per_loop);
   m_conveyor_position_rel += (m_conveyor_position_rel < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
   m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
+}
+
+void AlphaJerryPlugin::publishIMUData()
+{
+  sensor_msgs::msg::Imu imu_msg{};
+  imu_msg.header.frame_id = "imu_link";
+  imu_msg.header.stamp = node_ptr_->get_clock()->now();
+  if (!std::isnan(rhi_ptr_->getInertialSensorXRate("imu"))) {
+    imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  if (!std::isnan(rhi_ptr_->getInertialSensorYRate("imu"))) {
+    imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  if (!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))) {
+    imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+  }
+  double yaw;
+  if (!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))) {
+    yaw = -rhi_ptr_->getInertialSensorHeading("imu");
+    ghost_util::yawToQuaternionDeg(
+      yaw, imu_msg.orientation.w, imu_msg.orientation.x,
+      imu_msg.orientation.y, imu_msg.orientation.z);
+  }
+  imu_pub->publish(imu_msg);
 }
 
 void AlphaJerryPlugin::disabled()
@@ -409,11 +436,14 @@ void AlphaJerryPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("goal_rush_r_down", false);
     bt_->set_variable<bool>("goal_rush_down", false);
     bt_->set_variable<bool>("climb_extended", false);
+    bt_->set_variable<bool>("conveyor_active", false);
+    bt_->set_variable<bool>("store_ring", false);
+    bt_->set_variable<bool>("ring_detector_active", false);
     bt_->set_variable<bool>("shoot", false);
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
-  bt_->set_variable("mirrored", m_mirrored);
+  bt_->set_variable<bool>("mirrored", m_mirrored);
 
   try {
     bt_->tick_tree();
@@ -434,17 +464,23 @@ void AlphaJerryPlugin::autonomous(double current_time)
 
   bool ring_detector_active = false;
   bool want_red = m_color_target_red;
-  // bool want_red = false;
   bool store_ring = false;
-  if (bt_->get_variable("ring_detector_active", ring_detector_active)
-    // && bt_->get_variable("want_red", want_red)
-    && bt_->get_variable("store_ring", store_ring))
-  {
+  bool conveyor_active = false;
+  bool ground_intake_active = false;
+  bt_->get_variable<bool>("ring_detector_active", ring_detector_active);
+  bt_->get_variable<bool>("store_ring", store_ring);
+  bt_->get_variable<bool>("conveyor_active", conveyor_active);
+  bt_->get_variable<bool>("ground_intake_active", ground_intake_active);
+
+  if (conveyor_active){
+    updateConveyorOnly(true);
+  } else if (ring_detector_active) {
     ringDetector(ring_detector_active, current_time, want_red, store_ring);
+  } else {
+    updateIntake(ground_intake_active, false, false, false, current_time);
   }
 
   // Update Pneumatics
-  m_bite_closed = (bt_->get_variable<int>("bite_closed"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], (bt_->get_variable<bool>("climb_extended")));
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], (bt_->get_variable<bool>("clamp_closed")));
   rhi_ptr_->setDigitalOut(digital_io_port_map["shooter"], (bt_->get_variable<bool>("shoot")));
@@ -455,12 +491,7 @@ void AlphaJerryPlugin::autonomous(double current_time)
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], (bt_->get_variable<int>("goal_rush_l_down")));
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], (bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down")));
   }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
-
-  bool ground_intake_active = false;
-  if (bt_->get_variable("ground_intake_active", ground_intake_active) && !ring_detector_active) {
-    updateIntake(ground_intake_active, false, false, false, current_time);
-  }
+  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
 
   // Publish Twist Command
   geometry_msgs::msg::Twist msg{};
@@ -514,10 +545,6 @@ void AlphaJerryPlugin::teleop(double current_time)
   updateIntakeFromJoystick(joy_data, shift_l, shift_r, current_time);
 
   updateDrivetrain(joy_data);
-
-  // std::cout << "extension: " << m_scissor_max_extension << std::endl;
-  // std::cout << "pos: " << rhi_ptr_->getMotorPosition("scissor_motor") << std::endl;
-
 }
 
 void AlphaJerryPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
@@ -836,6 +863,18 @@ void AlphaJerryPlugin::updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, b
   }
 }
 
+void AlphaJerryPlugin::updateConveyorOnly(bool active){
+  double conveyor_power = 1.0;
+  double conveyor_current = 2500;
+
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
+  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
+
+  m_loop_current_limits.push_back(conveyor_current*2.0);
+}
+
 void AlphaJerryPlugin::toggleBite(bool signal)
 {
   static bool bite_btn_pressed = false;
@@ -850,8 +889,6 @@ void AlphaJerryPlugin::toggleBite(bool signal)
 
 void AlphaJerryPlugin::updateClamp(bool close, bool open, bool shift_l)
 {
-  static bool clamp_btn_pressed = false;
-
   if (shift_l) {
     // Close on L2 rising edge
     if (close) {
@@ -903,11 +940,19 @@ void AlphaJerryPlugin::updateMusic(JoyPtr joy_data, double current_time)
 void AlphaJerryPlugin::updateGoalRush(bool left_rush, bool right_rush, bool enabled)
 {
   if (enabled) {
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], left_rush);
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], right_rush);
+    if (left_rush && right_rush && !m_rush_button_pressed) {
+      m_rush_button_pressed = true;
+      m_rush_held = !m_rush_held;
+    } else m_rush_button_pressed = false;
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_rush_held ||  left_rush);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], m_rush_held || right_rush);
   } else {
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], false);
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], false);
+  }
+  if (m_rush_held){
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], true);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], true);
   }
 }
 
@@ -1222,6 +1267,7 @@ void AlphaJerryPlugin::publishTrajectoryVisualization()
   msg.markers.push_back(marker);
   m_trajectory_viz_pub->publish(msg);
 }
+
 void AlphaJerryPlugin::playMusic(std::string musicFileName)
 {
   auto message = std_msgs::msg::String();
@@ -1248,6 +1294,9 @@ void AlphaJerryPlugin::colorTargetButtonCallback(const std_msgs::msg::Int64::Sha
   } else {
     RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
   }
+  auto message = std_msgs::msg::Int64();
+  message.data = m_color_target_red;
+  m_led_color_red_pub->publish(message);
 }
 
 void AlphaJerryPlugin::mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
@@ -1258,6 +1307,24 @@ void AlphaJerryPlugin::mirroredButtonCallback(const std_msgs::msg::Int64::Shared
       m_mirrored = true;
     } else if (msg->data == 0) {
       m_mirrored = false;
+    } else {
+      RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
+    }
+    resetWorldPose();
+  }
+  auto message = std_msgs::msg::Int64();
+  message.data = m_mirrored;
+  m_led_side_right_pub->publish(message);
+}
+
+void AlphaJerryPlugin::resetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
+{
+  if (m_reset != msg->data) {
+    RCLCPP_INFO(node_ptr_->get_logger(), "m_reset state changed: %ld", msg->data);
+    if (msg->data == 1) {
+      m_reset = true;
+    } else if (msg->data == 0) {
+      m_reset = false;
     } else {
       RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
     }

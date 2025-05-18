@@ -5,7 +5,12 @@ port_configuration:
         C: OUT
         D: OUT
         E: OUT
+        F: OUT
     devices:
+        imu:
+            port: 4
+            type: INERTIAL_SENSOR
+            config: inertial_sensor_config
         conveyor_motor_bottom:
             port: 5
             type: MOTOR
@@ -46,11 +51,11 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_l5:
-            port: 14
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
+        # drive_l5:
+        #     port: 14
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
         drive_l6:
             port: 13
             type: MOTOR
@@ -66,11 +71,11 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_r1:
-            port: 4
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
+        # drive_r1:
+        #     port: 4
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
         drive_r2:
             port: 3
             type: MOTOR

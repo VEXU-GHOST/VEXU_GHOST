@@ -16,10 +16,13 @@
                             lead="0.5"
                             max_speed_linear_percent="0.4"
                             max_speed_angular_percent="1.0"
-                            timeout_ms="-3000"
+                            timeout_ms="-1000"
                             use_theta="true"
                             backwards="false"/>
-
+      <TurnToPoint posX_tiles="0.0"
+                  posY_tiles="0.0"
+                  timeout_ms="1000"
+                  angle_exit_threshold_deg="1.0"/>
       <!-- <WaitCmd seconds="100.00" -->
                 <!-- shutoff_motors="true"/> -->
       <Logging message="Processing Corner Stack"/>
@@ -34,7 +37,7 @@
         </Sequence>
       </Repeat>
 
-      <MoveToPoseBezier
+      <!-- <MoveToPoseBezier
         posX_tiles="1.0"
         posY_tiles="1.0"
         theta_deg="45.0"
@@ -48,7 +51,7 @@
         max_speed_angular_percent="1.0"
         timeout_ms="-2000"
         use_theta="true"
-        backwards="true"/>
+        backwards="true"/> -->
       <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
