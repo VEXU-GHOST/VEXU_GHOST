@@ -44,9 +44,6 @@ imu_filter_node:
 competition_state_machine_node:
   ros__parameters:
     tank_robot_plugin:
-      scissor_max_extension: 7700.0
-      scissor_reset_extension: -200.0
-
       # Nav Gains
       move_to_pose_kp_xy: 2.0
       move_to_pose_kd_xy: 0.2
