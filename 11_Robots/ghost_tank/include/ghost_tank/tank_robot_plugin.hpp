@@ -102,22 +102,21 @@ protected:
    * @param current_time
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
-  void updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool R, double current_time, JoyPtr joy_data);
-  void updateClamp(JoyPtr joy_data);
-  void updateClampController(bool shift1, bool shift2 , JoyPtr joy_data);
- 
-  void updateDrivetrain(JoyPtr joy_data);
-  void updateBite(JoyPtr joy_data);
-  void updateGoalRush(JoyPtr joy_data, bool shift);
-  void updateNeutralStakeArm(JoyPtr joy_data);
-  void updateNeutralStakeArmJoystick(bool shift1, bool shift2, JoyPtr joy_data);
+  
+  void updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time);
   void updateConveyorOnly(bool active);
-
+  void toggleBite(bool signal);
+  
+  void updateClamp(bool close, bool open, bool shift2);
+  void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
+ 
   void updateNeutralStakeArmPosition(int arm_mode);
-  void updateNeutralStakeArmPositionController(bool active, bool up_btn, bool down_btn);
-
+  void updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active);
+  
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
   void updateMusic(double current_time, JoyPtr joy_data);
+  
+  void updateDrivetrain(JoyPtr joy_data);
 
   void resetBT();
 
@@ -178,8 +177,6 @@ protected:
   rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr m_led_color_red_pub;
   rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr m_led_side_right_pub;
 
-
-
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
   rclcpp::Client<ghost_msgs::srv::StopRecorder>::SharedPtr m_stop_recorder_client;
@@ -230,8 +227,8 @@ protected:
   double m_init_world_theta = 0.0;
   static constexpr size_t m_cov_n = 6 * 6;
 
-  std::vector<double> m_reset_pose;
-  std::vector<double> m_reset_pose_mirrored;
+  Eigen::Vector2d m_reset_pose_xy_m;
+  double m_reset_pose_angle_rad;
   std::vector<double> m_initial_estimate_covariance;
 
   bool m_use_backup_estimator = false;
@@ -272,6 +269,8 @@ protected:
   double m_neutral_stake_arm_des_pos{0.0};
   int m_arm_mode{0};
 
+  double m_rush_held{false};
+  double m_rush_button_pressed{false};
   bool m_buddy_extended{false};
   bool m_buddy_pressed{false};
 
@@ -283,39 +282,13 @@ protected:
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
 
-  // Field vs Robot Oriented Control
-  bool m_toggle_tank_field_control_btn_pressed = false;
-
-  // Angle vs Velocity Control
-  bool m_toggle_tank_angle_control_btn_pressed = false;
-  double m_angle_target = 0.0;
-  double m_joy_angle_control_threshold = 0.0;
-
-  // Slew Rate Control
-  double m_joystick_slew_rate = 2.0;
-  double m_last_x_cmd = 0.0;
-  double m_last_y_cmd = 0.0;
-  double m_last_theta_cmd = 0.0;
-  double m_curr_x_cmd = 0.0;
-  double m_curr_y_cmd = 0.0;
-  double m_curr_theta_cmd = 0.0;
-
   // Auton States
-  bool m_auton_button_pressed = false;
   bool m_color_target_red = false;
   bool m_mirrored = false;
   bool m_reset = false;
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;
-
-  // boomerang
-  double m_max_speed_linear;
-  double m_max_speed_angular;
-
-  // pure pursuit
-  int m_past_index = 0;
-  int m_next_index = 0;
 
   std::shared_ptr<Boomerang> m_boomerang;
   std::shared_ptr<PDControl> m_pd_control;
@@ -331,7 +304,7 @@ protected:
   std::vector<double> m_loop_current_limits;
   int m_num_motors{16};
 
-  // ring detection
+  // ring detectionGoal
   bool m_ring_found = false;
   int m_ring_color = 0;
   std::map<std::string, int> m_color_map;
