@@ -94,6 +94,7 @@ void OmegaJerryPlugin::populateDigitalIONames()
   digital_io_port_map["goal_rush_r"] = 2;
   digital_io_port_map["bite"] = 3;
   digital_io_port_map["clamp"] = 4;
+  digital_io_port_map["buddy"] = 5;
 }
 
 //////////////////////
@@ -153,8 +154,9 @@ void OmegaJerryPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("goal_rush_down", false);
     bt_->set_variable<bool>("goal_rush_l_down", false);
     bt_->set_variable<bool>("goal_rush_r_down", false);
-    bt_->set_variable<bool>("climb_extended", false);
     bt_->set_variable<bool>("conveyor_active", false);
+    bt_->set_variable<bool>("store_ring", false);
+    bt_->set_variable<bool>("ring_detector_active", false);
   }
 
   TankRobotPlugin::autonomous(current_time);
@@ -165,7 +167,6 @@ void OmegaJerryPlugin::autonomous(double current_time)
   }
   
   // Update Pneumatics
-  rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], bt_->get_variable<int>("climb_extended"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<int>("clamp_closed"));
   if (m_mirrored) {
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
@@ -176,6 +177,11 @@ void OmegaJerryPlugin::autonomous(double current_time)
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
 
+  if (joy_data->btn_r && joy_data->btn_y && !m_buddy_pressed) {
+    m_buddy_pressed = true;
+    m_buddy_extended = !m_buddy_extended;
+  } else if(!joy_data->btn_r && !joy_data->btn_y) m_buddy_pressed = false;
+  rhi_ptr_->setDigitalOut(digital_io_port_map["buddy"], m_buddy_extended);
 }
 
 void OmegaJerryPlugin::teleop(double current_time)
@@ -186,13 +192,7 @@ void OmegaJerryPlugin::teleop(double current_time)
 
   TankRobotPlugin::teleop(current_time);
 
-  // CONDITIONAL control mode dispatching
-  if (shift1) {
-    updateNeutralStakeArmJoystick(true, false, joy_data); // Y-held mode
-  } else if (shift2) {
-  } else {
-    updateNeutralStakeArmJoystick(false, false, joy_data);
-  }
+  updateNeutralStakeArmController(joy_data->btn_l1, joy_data->btn_l2, shift1); // Y-held mode
 }
 
 void OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
@@ -247,7 +247,7 @@ void OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", power);
 }
 
-void OmegaJerryPlugin::updateNeutralStakeArmPositionController(bool active, bool down_btn, bool up_btn)
+void OmegaJerryPlugin::updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active)
 {
   double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
@@ -290,39 +290,6 @@ void OmegaJerryPlugin::updateNeutralStakeArmPositionController(bool active, bool
     m_loop_current_limits.push_back(0);
     rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake", 0.0);
   }
-}
-
-void OmegaJerryPlugin::updateNeutralStakeArmJoystick(bool shift1, bool shift2, std::shared_ptr<JoystickDeviceData> joy_data)
-{
-  bool down_btn = joy_data->btn_l2;
-  bool up_btn = joy_data->btn_l1;
-  bool active = shift1;
-  updateNeutralStakeArmPositionController(active, up_btn, down_btn);
-}
-
-void OmegaJerryPlugin::updateNeutralStakeArm(std::shared_ptr<JoystickDeviceData> joy_data)
-{
-  static bool btn_l1_pressed = false;
-  static bool btn_l2_pressed = false;
-
-  // Increment arm mode with button l1
-  if (joy_data->btn_l1 && m_arm_mode != 4 && !btn_l1_pressed) {
-    m_arm_mode++;
-    btn_l1_pressed = true;
-  } else if (!joy_data->btn_l1) {
-    btn_l1_pressed = false;
-  }
-
-  // Decrement arm mode with button l2
-  if (joy_data->btn_l2 && m_arm_mode != 0 && !btn_l2_pressed) {
-    m_arm_mode--;
-    btn_l2_pressed = true;
-  } else if (!joy_data->btn_l2) {
-    btn_l2_pressed = false;
-  }
-
-  // Call the position update function with the current arm mode
-  updateNeutralStakeArmPosition(m_arm_mode);
 }
 
 } // namespace ghost_tank

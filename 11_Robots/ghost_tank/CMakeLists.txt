@@ -145,6 +145,7 @@ target_include_directories(alpha_jerry_plugin
     tank_odom
     tank_tree
     pdcontrol
+    tank_robot_plugin
   )
 ament_target_dependencies(alpha_jerry_plugin
   ${DEPENDENCIES}

@@ -109,9 +109,6 @@ protected:
   void updateClamp(bool close, bool open, bool shift2);
   void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
  
-  void updateNeutralStakeArmPosition(int arm_mode);
-  void updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active);
-  
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
   void updateMusic(double current_time, JoyPtr joy_data);
   
@@ -256,18 +253,6 @@ protected:
   bool m_conveyor_hook_is_ejecting{false};
   bool m_conveyor_is_throwing{false};
 
-  // Neutral Stake Arm
-  double m_neutral_stake_arm_kp{0.0};
-  double m_neutral_stake_arm_gear_ratio{0.0};
-  double m_neutral_stake_arm_rest_pos_deg{0.0};
-  double m_neutral_stake_arm_loading_pos_deg{0.0};
-  double m_neutral_stake_arm_loaded_pos_deg{0.0};
-  double m_neutral_stake_arm_score_neutral_pos_deg{0.0};
-  double m_neutral_stake_arm_score_alliance_pos_deg{0.0};
-  double m_neutral_stake_arm_down_pos_deg{0.0};
-  double m_neutral_stake_arm_des_pos{0.0};
-  int m_arm_mode{0};
-
   double m_rush_held{false};
   double m_rush_button_pressed{false};
   bool m_buddy_extended{false};
@@ -302,7 +287,7 @@ protected:
   std::vector<double> m_loop_current_limits;
   int m_num_motors{16};
 
-  // ring detectionGoal
+  // ring detection
   bool m_ring_found = false;
   int m_ring_color = 0;
   std::map<std::string, int> m_color_map;

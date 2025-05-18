@@ -67,19 +67,15 @@ protected:
   void populateDigitalIONames();
 
   // Initialization
-  void initROSComms();
-  void initEstimation();
-  void initIntake();
+  // void initROSComms();
+  // void initEstimation();
+  // void initIntake();
   void initNeutralStakeArm();
-  void initTankModel();
-  void initAutonomy();
-
-  void updateNeutralStakeArm(JoyPtr joy_data);
-  void updateNeutralStakeArmJoystick(bool shift1, bool shift2, JoyPtr joy_data);
-  void updateConveyorOnly(bool active);
-
+  // void initTankModel();
+  // void initAutonomy();
+  
   void updateNeutralStakeArmPosition(int arm_mode);
-  void updateNeutralStakeArmPositionController(bool active, bool up_btn, bool down_btn);
+  void updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active);
 
   // Neutral Stake Arm
   double m_neutral_stake_arm_kp{0.0};
