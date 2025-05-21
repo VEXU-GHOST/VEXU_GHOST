@@ -7,6 +7,7 @@
 #include <string>
 
 #include "eigen3/Eigen/Dense"
+#include "ghost_util/unit_conversion_utils.hpp"
 
 constexpr double WALL_WIDTH_CM = 2 * 2.54;
 constexpr double FIELD_WIDTH_CM = 12 * 12 * 2.54;
@@ -60,7 +61,7 @@ std::vector<std::vector<double>> readPathFromFile(const std::string &filename) {
         // Get Theta setpoint
         std::getline(ss, value_string, ',');
         if (value_string != "") {
-            current_theta = std::stod(value_string);
+            current_theta = std::stod(value_string) * DEG_TO_RAD;
         }
         theta_trajectory.push_back(current_theta);
     }

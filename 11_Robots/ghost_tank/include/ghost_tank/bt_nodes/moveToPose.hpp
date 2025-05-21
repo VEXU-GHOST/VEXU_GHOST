@@ -43,7 +43,6 @@ namespace ghost_tank
 {
 
 // abstract class for movetopose bt nodes
-// DO NOT USE DIRECTLY
 class MoveToPose : public BT::StatefulActionNode
 {
 public:

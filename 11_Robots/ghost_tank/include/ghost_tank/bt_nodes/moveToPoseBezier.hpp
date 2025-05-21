@@ -60,7 +60,6 @@ private:
   double max_speed_linear_percent{0.0};
   double max_speed_angular_percent{0.0};
 
-  
   // gets all member variables from ports, must deal with mirrored also 
   void GetBlackboardData();
   void FirstLoop();
