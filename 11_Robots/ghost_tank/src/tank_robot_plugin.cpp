@@ -509,8 +509,6 @@ void TankRobotPlugin::resetBT()
 
 void TankRobotPlugin::teleop(double current_time)
 {
-  std::cout << "TankRobotPlugin::teleop" << std::endl;
-
   auto joy_data = rhi_ptr_->getMainJoystickData();
   bool shift1 = joy_data->btn_b;
   bool shift2 = joy_data->btn_d;

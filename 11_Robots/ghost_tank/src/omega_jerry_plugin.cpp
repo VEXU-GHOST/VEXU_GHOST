@@ -55,7 +55,7 @@ OmegaJerryPlugin::OmegaJerryPlugin()
 void OmegaJerryPlugin::populateMotorNames()
 {
   m_right_drive_motor_names = {
-    "drive_r1",
+    // "drive_r1",
     "drive_r2",
     "drive_r3",
     "drive_r4",
@@ -69,7 +69,7 @@ void OmegaJerryPlugin::populateMotorNames()
     "drive_l2",
     "drive_l3",
     "drive_l4",
-    "drive_l5",
+    // "drive_l5",
     "drive_l6",
     "drive_l7",
     "drive_l8",

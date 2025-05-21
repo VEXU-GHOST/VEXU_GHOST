@@ -1,6 +1,6 @@
-<library path="tank_robot_plugin">
-  <class type="ghost_tank::TankRobotPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
-    <description>Tank Robot</description>
+<library path="omega_jerry_plugin">
+  <class type="ghost_tank::OmegaJerryPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
+    <description>Omega Jerry</description>
   </class>
 </library>
 <library path="alpha_jerry_plugin">
