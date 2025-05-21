@@ -539,7 +539,6 @@ void TankRobotPlugin::teleop(double current_time)
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
-void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
 {
   static double last_input_time = 0.0;
   static double ring_found_time = 0.0;

@@ -39,10 +39,10 @@ namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
-class MoveToPosePurepursuit : public BT::StatefulActionNode {
+class MoveToPoseJERRYIO : public BT::StatefulActionNode {
 public:
 	// If your Node has ports, you must use this constructor signature
-	MoveToPosePurepursuit(const std::string& name, const BT::NodeConfig& config);
+	MoveToPoseJERRYIO(const std::string& name, const BT::NodeConfig& config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -57,9 +57,6 @@ public:
   /// when the method halt() is called and the action is RUNNING, this method is invoked.
   /// This is a convenient place todo a cleanup, if needed.
   void onHalted();
-
-  // Override the virtual function tick()
-  // BT::NodeStatus tick() override;
 
 private:
   std::shared_ptr<TankModel> tank_model_ptr_;

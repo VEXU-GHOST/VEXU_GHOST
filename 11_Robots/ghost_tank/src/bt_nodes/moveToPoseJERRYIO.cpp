@@ -21,8 +21,7 @@
  *   SOFTWARE.
  */
 
-#include "ghost_tank/bt_nodes/moveToPosePurepursuit.hpp"
-
+#include "ghost_tank/bt_nodes/moveToPoseJERRYIO.hpp"
 
 using std::placeholders::_1;
 
@@ -30,9 +29,9 @@ namespace ghost_tank
 {
 
 // If your Node has ports, you must use this constructor signature
-MoveToPosePurepursuit::MoveToPosePurepursuit(const std::string& name, const BT::NodeConfig& config):
+MoveToPoseJERRYIO::MoveToPoseJERRYIO(const std::string& name, const BT::NodeConfig& config):
 	BT::StatefulActionNode(name, config){
-  	std::cout << "[MoveToPosePurepursuit::MoveToPosePurepursuit]" << std::endl;
+  	std::cout << "[MoveToPoseJERRYIO::MoveToPoseJERRYIO]" << std::endl;
 		
 	blackboard_ = config.blackboard;
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
@@ -56,7 +55,7 @@ MoveToPosePurepursuit::MoveToPosePurepursuit(const std::string& name, const BT::
 }
 
 // It is mandatory to define this STATIC method.
-BT::PortsList MoveToPosePurepursuit::providedPorts(){
+BT::PortsList MoveToPoseJERRYIO::providedPorts(){
 	return {
 	    BT::InputPort<std::string>("fileName"),
 		BT::InputPort<double>("threshold"),
@@ -68,7 +67,7 @@ BT::PortsList MoveToPosePurepursuit::providedPorts(){
 
 /// Method called once, when transitioning from the state IDLE.
 /// If it returns RUNNING, this becomes an asynchronous node.
-BT::NodeStatus MoveToPosePurepursuit::onStart(){
+BT::NodeStatus MoveToPoseJERRYIO::onStart(){
 	started_ = false;
 	// plan_time_ = std::chrono::();
 	return BT::NodeStatus::RUNNING;
@@ -76,22 +75,22 @@ BT::NodeStatus MoveToPosePurepursuit::onStart(){
 
 /// when the method halt() is called and the action is RUNNING, this method is invoked.
 /// This is a convenient place todo a cleanup, if needed.
-void MoveToPosePurepursuit::onHalted(){
+void MoveToPoseJERRYIO::onHalted(){
 	resetStatus();
 }
 
-BT::NodeStatus MoveToPosePurepursuit::onRunning() {
+BT::NodeStatus MoveToPoseJERRYIO::onRunning() {
 	std::string file_name = BT_Util::get_input<std::string>(this, "fileName");
 	double threshold = BT_Util::get_input<double>(this, "threshold");
 	double angle_threshold = BT_Util::get_input<double>(this, "angle_threshold");
 	int timeout = BT_Util::get_input<int>(this, "timeout");
 	bool use_theta = BT_Util::get_input<bool>(this, "use_theta");
+	
+	auto path = ghost_util::readPathFromFile(file_name);
+	std::vector<double> x_values = path[0]; 
+	std::vector<double> y_values = path[1]; 
+	std::vector<double> angle_values = path[2]; 
 
-	std::vector<double> x_values; 
-	std::vector<double> y_values; 
-	std::vector<double> angle_values; 
-
-	ghost_util::readPathFromFile(file_name, x_values, y_values, angle_values);
 	int length = x_values.size();
 
 	ghost_msgs::msg::RobotTrajectory msg{};
@@ -115,7 +114,7 @@ BT::NodeStatus MoveToPosePurepursuit::onRunning() {
 			 && (abs(ghost_util::SmallestAngleDistRad(angle_values[length-1], tank_model_ptr_->getWorldAngleRad())) < angle_threshold)
 			)
 		{
-			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPosePurepursuit: Success");
+			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseJERRYIO: Success");
 			return BT::NodeStatus::SUCCESS;
 		}
 	} else {
@@ -123,7 +122,7 @@ BT::NodeStatus MoveToPosePurepursuit::onRunning() {
 			(abs(y_values[length-1] - tank_model_ptr_->getWorldPose().y()) < threshold) 
 			)
 		{
-			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPosePurepursuit: Success");
+			RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseJERRYIO: Success");
 			return BT::NodeStatus::SUCCESS;
 		}
 	}
@@ -132,16 +131,16 @@ BT::NodeStatus MoveToPosePurepursuit::onRunning() {
 		auto now = std::chrono::system_clock::now();
 		int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
 		// int time_elapsed_since_plan = std::chrono::duration_cast<std::chrono::milliseconds>(now - plan_time_).count();
-		// RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPosePurepursuit: %i ms elapsed", time_elapsed);
+		// RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseJERRYIO: %i ms elapsed", time_elapsed);
 		if(timeout > 0){ // positive timeout means how often to plan/send trajectory
 			if(time_elapsed > timeout){
-				RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPosePurepursuit Timeout: %i ms elapsed", time_elapsed);
+				RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPoseJERRYIO Timeout: %i ms elapsed", time_elapsed);
 				// started_ = false;
 				// return BT::NodeStatus::FAILURE;
 			// } else if (time_elapsed_since_plan > 10000){
 				start_time_ = std::chrono::system_clock::now();
 				trajectory_pub_->publish(msg);
-				RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPosePurepursuit: sent trajectory");
+				RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseJERRYIO: sent trajectory");
 				// plan_time_ = std::chrono::system_clock::now();
 			}
 		}
@@ -152,7 +151,7 @@ BT::NodeStatus MoveToPosePurepursuit::onRunning() {
 		}
 	}
 	else{
-		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPosePurepursuit: Started");
+		RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPoseJERRYIO: Started");
 		start_time_ = std::chrono::system_clock::now();
 		started_ = true;
 		trajectory_pub_->publish(msg);

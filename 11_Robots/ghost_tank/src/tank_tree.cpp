@@ -48,7 +48,7 @@ void TankTree::init_tree()
   factory.registerNodeType<AutonTimer>("AutonTimer");
   factory.registerNodeType<MoveToPoseBezier>("MoveToPoseBezier");
   factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-  factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit");
+  factory.registerNodeType<MoveToPoseJERRYIO>("MoveToPoseJERRYIO");
   factory.registerNodeType<BiteCmd>("BiteCmd");
   factory.registerNodeType<ClampCmd>("ClampCmd");
   factory.registerNodeType<ClimbCmd>("ClimbCmd"); // <-- registered new node

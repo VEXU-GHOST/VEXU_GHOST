@@ -198,7 +198,7 @@ set(NODES
   autonTimer
   moveToPoseBezier
   moveToPoseBoomerang
-  moveToPosePurepursuit
+  moveToPoseJERRYIO
   biteCmd
   clampCmd
   climbCmd
