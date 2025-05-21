@@ -1,77 +1,74 @@
 #pragma once
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <string>
-namespace ghost_util
-{
-int readPathFromFile(std::string filename, std::vector<double> &x_values, std::vector<double> &y_values, std::vector<double> &angle_values) {
+
+#include "eigen3/Eigen/Dense"
+
+constexpr double WALL_WIDTH_CM = 2 * 2.54;
+constexpr double FIELD_WIDTH_CM = 12 * 12 * 2.54;
+constexpr double FIELD_MAX =  (FIELD_WIDTH_CM / 2) - WALL_WIDTH_CM;
+constexpr double FIELD_MIN = -(FIELD_WIDTH_CM / 2) + WALL_WIDTH_CM;
+constexpr double CM_TO_TILES = 1 / (24 * 2.54);
+
+
+namespace ghost_util {
+
+std::vector<std::vector<double>> readPathFromFile(const std::string &filename) {
+
     std::ifstream file(filename);
-
     if (!file.is_open()) {
-        std::cerr << "Error opening file!" << std::endl;
-        return 1;
+        throw std::runtime_error("Failed to open " + filename + ".");
     }
-    // Open the CSV file
-    
-   
 
-    // Vectors to store the data
-    //td::vector<double> x_values;
-    //std::vector<double> y_values;
-   // std::vector<double> angle_values;
-
-   //this method transformed to fit JerryPathIO (treats center as 0) 
-   //to Ghost convention (bottow right corner as 0). At bottom 0 corner, 
-   //we want both axis to be positive (left = positive, top= positive)
+    std::vector<double> x_trajectory;
+    std::vector<double> y_trajectory;
+    std::vector<double> theta_trajectory;
 
     std::string line;
-    // Read the file line by line
+    double current_theta = 0;
     while (std::getline(file, line)) {
+
         std::stringstream ss(line);
-        std::string value;
-        
-        // Read X value
-        if (std::getline(ss, value, ',')) {
-            //std::cout << value << " ";
-            y_values.push_back((std::stod(value) / -100.0)+ 1.83);
+        std::string value_string;
+        double value;
+
+        // Ignore metadata
+        if (ss.peek() == '#') {
+            continue;
         }
-        
-        // Read Y value
-        if (std::getline(ss, value, ',')) {
-           x_values.push_back((std::stod(value) / 100.0)+ 1.83);
+
+        // Get X setpoint
+        std::getline(ss, value_string, ',');
+        x_trajectory.push_back(
+            (std::clamp((std::stod(value_string)), FIELD_MIN, FIELD_MAX) + FIELD_WIDTH_CM / 2) * CM_TO_TILES
+        );
+
+        // Get Y setpoint
+        std::getline(ss, value_string, ',');
+        y_trajectory.push_back(
+            (std::clamp((std::stod(value_string)), FIELD_MIN, FIELD_MAX) + FIELD_WIDTH_CM / 2) * CM_TO_TILES
+        );
+
+        // Ignore speed
+        std::getline(ss, value_string, ',');
+        value_string = "";
+
+        // Get Theta setpoint
+        std::getline(ss, value_string, ',');
+        if (value_string != "") {
+            current_theta = std::stod(value_string);
         }
-        
-        // Read Angle value
-        if (std::getline(ss, value, ',')) {
-            angle_values.push_back(std::stod(value));
-        }
+        theta_trajectory.push_back(current_theta);
     }
 
     // Close the file
     file.close();
-/*
-    // Print the data to verify
-    std::cout << "X values: ";
-    for (const auto& x : x_values) {
-        std::cout << x << " ";
-    }
-    std::cout << std::endl;
 
-    std::cout << "Y values: ";
-    for (const auto& y : y_values) {
-        std::cout << y << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "Angle values: ";
-    for (const auto& angle : angle_values) {
-        std::cout << angle << " ";
-    }
-    std::cout << std::endl;
-*/
-
-    return 0;
+    return {x_trajectory, y_trajectory, theta_trajectory};
 }
+
 }  // namespace ghost_util

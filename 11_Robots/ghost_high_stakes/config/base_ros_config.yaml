@@ -666,6 +666,7 @@ tts_music_node:
 gpio_expander:
   ros__parameters:
     gpio: #topic type is int64
+    gpio: #topic type is int64
       "/io/leds/other": 
         pins: [10,8,9]
         output: True

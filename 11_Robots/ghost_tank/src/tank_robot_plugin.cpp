@@ -394,6 +394,7 @@ void TankRobotPlugin::updateConveyorPositionSensing()
   m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
 }
 
+
 void TankRobotPlugin::publishIMUData()
 {
   sensor_msgs::msg::Imu imu_msg{};
@@ -538,6 +539,7 @@ void TankRobotPlugin::teleop(double current_time)
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
+void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
 {
   static double last_input_time = 0.0;
   static double ring_found_time = 0.0;
@@ -611,6 +613,13 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
     hook = (retry_cycle < COOLDOWN_PERIOD);
   } else {
     // Normal hook logic
+    if (store_ring) {
+      // should not score the ring, will be stored in the center of the robot
+      hook = ring_prewaited;
+    } else {
+      // If not storing, keep hooks moving for an extra period of time to ensure scoring
+      hook = ring_prewaited || (current_time - last_input_time < 0.5);
+    }
     if (store_ring) {
       // should not score the ring, will be stored in the center of the robot
       hook = ring_prewaited;
