@@ -87,13 +87,24 @@ protected:
 
   static constexpr double tile_to_meters = 0.6096;
 
+  double xy_exit_threshold_m{0.0};
+  double angle_exit_threshold_rad{0.0};
+  double lin_vel_exit_threshold_mps{0.0};
+  double ang_vel_exit_threshold_radps{0.0};
+  double search_radius{0.0};
+  double max_speed_linear_percent{0.0};
+  double max_speed_angular_percent{0.0};
+  bool use_theta{0};
+  bool backwards{0};
+  int timeout_ms{0};
+
   // gets all member variables from ports, must deal with mirrored also 
   virtual void GetBlackboardData() = 0;
   virtual void FirstLoop() = 0;
   virtual void GeneratePath() = 0;
   // virtual void GetFinalPose() = 0;
   void PurePursuit();
-  void CheckEndConditions();
+  bool CheckEndConditions(Eigen::Vector3d des_pos);
   void publishTrajectoryVisualization();
 
   void publishDrivetrainCommands(double fwd_cmd, double turn_cmd);

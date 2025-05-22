@@ -51,7 +51,7 @@ void TankTree::init_tree()
   factory.registerNodeType<MoveToPoseJERRYIO>("MoveToPoseJERRYIO");
   factory.registerNodeType<BiteCmd>("BiteCmd");
   factory.registerNodeType<ClampCmd>("ClampCmd");
-  factory.registerNodeType<ClimbCmd>("ClimbCmd"); // <-- registered new node
+  factory.registerNodeType<ClimbCmd>("ClimbCmd");
   factory.registerNodeType<ShutoffNode>("ShutoffNode");
   factory.registerNodeType<IntakeCmd>("IntakeCmd");
   factory.registerNodeType<IntakeCmd>("IsHanging");

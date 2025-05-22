@@ -127,12 +127,12 @@ ament_export_libraries(
 )
 ament_export_targets(tank_robot_plugin HAS_LIBRARY_TARGET)
 install(
-TARGETS tank_robot_plugin
-EXPORT tank_robot_plugin
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
-RUNTIME DESTINATION bin
-INCLUDES DESTINATION include
+  TARGETS tank_robot_plugin
+  EXPORT tank_robot_plugin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
 add_library(alpha_jerry_plugin SHARED src/alpha_jerry_plugin.cpp)
@@ -196,9 +196,6 @@ set(NODES
   loggingNode
   autoDone
   autonTimer
-  moveToPoseBezier
-  moveToPoseBoomerang
-  moveToPoseJERRYIO
   biteCmd
   clampCmd
   climbCmd
@@ -220,6 +217,35 @@ set(NODES
   moveScissor
 )
 
+# bt node libraries
+set(MOVETOPOSENODES
+  moveToPoseBezier
+  moveToPoseBoomerang
+  moveToPoseJERRYIO
+)
+
+add_library(moveToPose SHARED
+  src/bt_nodes/moveToPose.cpp
+)
+target_include_directories(moveToPose
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(moveToPose
+  ${DEPENDENCIES}
+)
+target_link_libraries(moveToPose
+)
+ament_export_targets(moveToPose HAS_LIBRARY_TARGET)
+install(
+  TARGETS moveToPose
+  EXPORT moveToPose
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 foreach(NODE ${NODES})
   add_library(${NODE} SHARED
     src/bt_nodes/${NODE}.cpp
@@ -232,7 +258,32 @@ foreach(NODE ${NODES})
     ${DEPENDENCIES}
   )
   target_link_libraries(${NODE}
+  )
+  ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
+  install(
+    TARGETS ${NODE}
+    EXPORT ${NODE}
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+  )
+endforeach()
+
+foreach(NODE ${MOVETOPOSENODES})
+  add_library(${NODE} SHARED
+    src/bt_nodes/${NODE}.cpp
+  )
+  target_include_directories(${NODE}
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  ament_target_dependencies(${NODE}
+    ${DEPENDENCIES}
+  )
+  target_link_libraries(${NODE}
     pdcontrol
+    moveToPose
   )
   ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
   install(
@@ -258,6 +309,7 @@ ament_target_dependencies(tank_tree
 )
 target_link_libraries(tank_tree
   ${NODES}
+  ${MOVETOPOSENODES}
 )
 ament_export_targets(tank_tree HAS_LIBRARY_TARGET)
 install(
