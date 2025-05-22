@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-      main_tree_to_execute="main_tree">
+      main_tree_to_execute="test_jerryio">
   <!-- <include path="bt_goal_rush.xml"/> -->
   <include path="worlds/bt_worlds_goal_rush_omega.xml" />
   <include path="worlds/bt_center_rush_after_side_rush.xml"/>
@@ -15,13 +15,13 @@
     <Sequence>
       <Sequence>
         <Logging message="Starting main tree" />
-        <SubTree ID="worlds_goal_rush" _autoremap="true"/>
-        <!-- <SubTree ID="win_point" _autoremap="true"/> -->
+        <!-- <SubTree ID="worlds_goal_rush" _autoremap="true"/> -->
+        <SubTree ID="win_point" _autoremap="true"/>
         <SubTree ID="basic_auton_1" _autoremap="true"/>
         <SubTree ID="basic_auton_1_end" _autoremap="true"/>
         <SubTree ID="neutral_stake" _autoremap="true"/>
       </Sequence>
-      <WaitCmd seconds="500.0" shutoff_motors="true" />
+      <WaitCmd seconds="500.0" shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
 
@@ -53,6 +53,24 @@
     </Sequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="test_jerryio">
+    <Sequence>
+      <Logging message="Starting jerryio"/>
+      <MoveToPoseJERRYIO file_path="test_path.txt"
+        search_radius_tiles="0.5"
+        xy_exit_threshold_tiles="0.05"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="0.1"
+        ang_vel_exit_threshold_dps="5.0"
+        max_speed_linear_percent="0.7"
+        max_speed_angular_percent="1.0"
+        timeout_ms="5000"
+        use_theta="true"
+        backwards="true"/>
+      <Logging message="done"/>
+      <WaitCmd seconds="500.0" shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
 
   <BehaviorTree ID="test_turn">
     <Sequence>
@@ -230,20 +248,6 @@
                  store_ring="false"/>
       <WaitCmd seconds="500.0"
                shutoff_motors="true"/>
-    </Sequence>
-  </BehaviorTree>
-
-
-  <BehaviorTree ID="jerryiotest">
-    <Sequence>
-      <Logging message="test"/>
-      <MoveToPosePurepursuit fileName="~/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
-                             angle_threshold="165.0"
-                             threshold="0.2"
-                             timeout="1000"
-                             use_theta="false"/>
-      <Logging message="testover"/>
-      <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
 

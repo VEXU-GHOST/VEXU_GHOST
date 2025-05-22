@@ -14,7 +14,7 @@ constexpr double FIELD_WIDTH_CM = 12 * 12 * 2.54;
 constexpr double FIELD_MAX =  (FIELD_WIDTH_CM / 2) - WALL_WIDTH_CM;
 constexpr double FIELD_MIN = -(FIELD_WIDTH_CM / 2) + WALL_WIDTH_CM;
 constexpr double CM_TO_TILES = 1 / (24 * 2.54);
-
+constexpr double TILES_TO_METERS = 0.6096;
 
 namespace ghost_util {
 
@@ -42,16 +42,17 @@ std::vector<std::vector<double>> readPathFromFile(const std::string &filename) {
             continue;
         }
 
-        // Get X setpoint
-        std::getline(ss, value_string, ',');
-        x_trajectory.push_back(
-            (std::clamp((std::stod(value_string)), FIELD_MIN, FIELD_MAX) + FIELD_WIDTH_CM / 2) * CM_TO_TILES
-        );
-
         // Get Y setpoint
         std::getline(ss, value_string, ',');
         y_trajectory.push_back(
-            (std::clamp((std::stod(value_string)), FIELD_MIN, FIELD_MAX) + FIELD_WIDTH_CM / 2) * CM_TO_TILES
+            // 6.0 * TILES_TO_METERS - (std::clamp((std::stod(value_string)), FIELD_MIN, FIELD_MAX) + FIELD_WIDTH_CM / 2) / 100.0
+            (std::clamp((std::stod(value_string)), FIELD_MIN, FIELD_MAX) + FIELD_WIDTH_CM / 2) / 100.0
+        );
+        
+        // Get X setpoint
+        std::getline(ss, value_string, ',');
+        x_trajectory.push_back(
+            6.0 * TILES_TO_METERS - (std::clamp((std::stod(value_string)), FIELD_MIN, FIELD_MAX) + FIELD_WIDTH_CM / 2) / 100.0
         );
 
         // Ignore speed
@@ -61,7 +62,12 @@ std::vector<std::vector<double>> readPathFromFile(const std::string &filename) {
         // Get Theta setpoint
         std::getline(ss, value_string, ',');
         if (value_string != "") {
-            current_theta = std::stod(value_string) * DEG_TO_RAD;
+            current_theta = (std::stod(value_string) * DEG_TO_RAD + M_PI);
+            if (current_theta > 360.0){
+                current_theta -= 360.0;
+            } else if (current_theta < 0.0){
+                current_theta += 360;
+            }
         }
         theta_trajectory.push_back(current_theta);
     }

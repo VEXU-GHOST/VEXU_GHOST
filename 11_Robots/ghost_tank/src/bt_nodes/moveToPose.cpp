@@ -79,6 +79,7 @@ BT::NodeStatus MoveToPose::onRunning()
     start_time_ = std::chrono::system_clock::now();
     first_loop_ = false;
     GeneratePath();
+    publishTrajectoryVisualization();
     // RCLCPP_INFO(node_ptr_->get_logger(), "posX_m: %f", posX_m);
     // RCLCPP_INFO(node_ptr_->get_logger(), "posY_m: %f", posY_m);
     // RCLCPP_INFO(node_ptr_->get_logger(), "theta_rad: %f", theta_rad);
@@ -94,7 +95,6 @@ BT::NodeStatus MoveToPose::onRunning()
 
   // Run control
   PurePursuit();
-  publishTrajectoryVisualization();
 
   return BT::NodeStatus::RUNNING;
 }
@@ -272,13 +272,13 @@ void MoveToPose::publishTrajectoryVisualization()
   marker.id = 0;
   marker.type = 8;          // points type
   marker.action = 0;
-  marker.scale.x = 0.01;
-  marker.scale.y = 0.01;
+  marker.scale.x = 0.03;
+  marker.scale.y = 0.03;
   marker.scale.z = 0.1;
-  marker.color.r = 1.0;
+  marker.color.g = 1.0;
   marker.color.a = 0.5;
 
-  for (int i = 0; i < robot_trajectory_.x_trajectory.position_vector.size(); i += 25) {
+  for (int i = 0; i < robot_trajectory_.x_trajectory.position_vector.size(); i += 5) {
     geometry_msgs::msg::Point p;
     p.x = robot_trajectory_.x_trajectory.position_vector[i];
     p.y = robot_trajectory_.y_trajectory.position_vector[i];

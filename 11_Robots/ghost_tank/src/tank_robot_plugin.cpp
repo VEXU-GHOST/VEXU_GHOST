@@ -362,6 +362,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("pd_control_threshold_ptr", m_pd_control_threshold);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
+  bt_->set_variable("config_path", config_path);
   resetBT();
 }
 

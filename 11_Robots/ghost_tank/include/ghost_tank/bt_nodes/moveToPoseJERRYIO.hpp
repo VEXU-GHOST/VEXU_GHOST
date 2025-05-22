@@ -43,6 +43,7 @@ public:
 
 private:
   std::string file_path;
+  std::string config_path;
 
   // gets all member variables from ports, must deal with mirrored also 
   void GetBlackboardData();

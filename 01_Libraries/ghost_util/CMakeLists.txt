@@ -63,8 +63,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-
-
 add_library(angle_util SHARED
   src/angle_util.cpp
 )

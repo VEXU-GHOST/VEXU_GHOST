@@ -45,7 +45,7 @@ competition_state_machine_node:
   ros__parameters:
     tank_robot_plugin:
       neutral_stake_arm_kp: 0.03
-      neutral_stake_arm_gear_ratio: 3.0
+      neutral_stake_arm_gear_ratio: 9.0 #3.0
       neutral_stake_arm_rest_pos_deg: 0.0
       neutral_stake_arm_loading_pos_deg: 30.0
       neutral_stake_arm_score_neutral_pos_deg: 110.0
@@ -68,6 +68,6 @@ competition_state_machine_node:
       
       move_to_pose_integral_limit: 0.35 #0.5
 
-      init_x_tiles: 1.58
-      init_y_tiles: 0.916
-      init_theta_degrees: 113.0
+      init_x_tiles: 2.5
+      init_y_tiles: 0.5
+      init_theta_degrees: -20.0

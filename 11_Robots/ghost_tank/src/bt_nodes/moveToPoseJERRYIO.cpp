@@ -32,6 +32,8 @@ namespace ghost_tank
 MoveToPoseJERRYIO::MoveToPoseJERRYIO(const std::string& name, const BT::NodeConfig& config)
 : MoveToPose::MoveToPose(name, config){
   	std::cout << "[MoveToPoseJERRYIO::MoveToPoseJERRYIO]" << std::endl;
+
+	BT_Util::get_from_blackboard(blackboard_, "config_path", config_path);
 }
 
 // It is mandatory to define this STATIC method.
@@ -73,7 +75,7 @@ void MoveToPoseJERRYIO::FirstLoop(){
 }
 
 void MoveToPoseJERRYIO::GeneratePath(){
-	auto path = ghost_util::readPathFromFile(file_path);
+	auto path = ghost_util::readPathFromFile(config_path + '/' + file_path);
 	
 	std::vector<double> x_trajectory = path[0];
 	std::vector<double> y_trajectory = path[1];

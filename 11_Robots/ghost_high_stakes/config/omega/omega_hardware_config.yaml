@@ -26,8 +26,13 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: intake_motor_config
-        neutral_stake:
+        neutral_stake_1:
             port: 15
+            type: MOTOR
+            reversed: false
+            config: neutral_stake_motor_config
+        neutral_stake_2:
+            port: 14
             type: MOTOR
             reversed: true
             config: neutral_stake_motor_config
@@ -157,7 +162,7 @@ port_configuration:
                 send_velocity_command: false
                 send_voltage_command: true
         neutral_stake_motor_config:
-            gearset: 100
+            gearset: 200
             brake_mode: BRAKE
             encoder_units: DEGREES
             controller:

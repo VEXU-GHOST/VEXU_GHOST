@@ -13,6 +13,7 @@ def generate_launch_description():
     # Get base params from parent launch file and config path
     base_params_file = LaunchConfiguration("base_params_file")
     config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_high_stakes", "config")
+    tank_config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_tank", "config")
 
     # This contains all the parameters for our ROS nodes
     ros_config_file = os.path.join(config_path, "omega/omega_ros_config.yaml")
@@ -54,7 +55,7 @@ def generate_launch_description():
             {
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
-                "config_path": config_path,
+                "config_path": tank_config_path,
             },
         ],
         arguments=[plugin_type, robot_name],
