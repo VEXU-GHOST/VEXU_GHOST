@@ -76,13 +76,13 @@ competition_state_machine_node:
       # Too generous though, and you are either losing resolution or wasting computation.
 
       # Melissa Gains
-      k1: 0.4 # x error from x motion         # % error in primary direction
+      k1: 1.0 # x error from x motion         # % error in primary direction
       k2: 0.05 # x error from y motion         # Assume 10% drift via steering errors (hard to drive straight w swerve)
-      k3: 0.1 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k3: 0.05 # x error from rotation         # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k4: 0.1 # y error from x motion         # If heading is 5° off, Y can drift by around sin(5) = 8.7%. Round up to 10%
       k5: 0.0703 # y error from y motion       # % error in primary direction
-      k6: 0.1 # y error from rotation          # Pure rotation should be causing very little motion, 99% within 5" for 360°
+      k6: 0.05 # y error from rotation          # Pure rotation should be causing very little motion, 99% within 5" for 360°
 
       k7: 0.15 # theta error from x motion       # After 2ft of travel, 99% of samples should be within 15°. std = (10°*DEG2RAD/3) / (24" * IN2M)
       k8: 0.05 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
@@ -127,8 +127,8 @@ ekf_pf_node:
       sigma_observation: 0.2 # Prof recommends 0.15-0.2 based on sensor specs
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
-      min_update_dist: 0.05 #0.05
-      min_update_angle: 10.0 #0.005
+      min_update_dist: 0.05
+      min_update_angle: 10.0 
       max_update_yaw_velocity: 1.0
       max_update_tilt_velocity: 0.2
 
@@ -141,7 +141,7 @@ ekf_pf_node:
       # Computation Factors
       num_particles: 250 # Increase until computation runs out
       resize_factor: 10.0 # num_points / resize_factor = num_rays
-      resample_frequency: 4 # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
+      resample_frequency: 2 # Resamples per update cycle (Requires experimental tuning). Lower value will resample more often and tighten cloud distribution.
 
       # Statistical gain for lidar scan confidence (Requires experimental tuning)
       # Technically speaking, this is the statisical correlation between all the scans of the lidar. They aren't independent, because many scans
@@ -151,14 +151,15 @@ ekf_pf_node:
       # In practice, this is a tunable param which will increase or decrease overall LIDAR confidence.
       # One good way to tune is to look at how different the particle weights are from each other.
       # Decreasing gamma should decrease confidence in lidar observation and weight particles less harshly, IIRC?
-      gamma: 0.05
+      gamma: 0.1
 
       # Limits maximum penalty for a bad laser scan
       # Increasing these makes it harsher on short/long errors for scan
       # Short scans are very common for other robots and dynamic obstacles
       # Long scans are extremely unlikely for comp (you see through walls?). Doorways make this viable in buildings and when glass is present.
+      # Above is not true if robot tilts and LIDAR sees out of the field.
       dist_short: 0.2 # 1 std from sensor 68.2%
-      dist_long: 0.25 # 2 std from sensor 95%
+      dist_long: 0.2 # 2 std from sensor 95%
 
       # Some robots can't place a LIDAR with 360° view. These parameters allow you to permanently ignore the obscured range of the scan.
       use_skip_range: false
