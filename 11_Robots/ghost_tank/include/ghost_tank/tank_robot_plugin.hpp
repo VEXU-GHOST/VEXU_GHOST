@@ -142,7 +142,6 @@ protected:
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_tts_pub;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_music_pub;
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_ekf_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_pf_pub;
 
   void publishDesiredTwist(Eigen::Vector3d twist);
@@ -197,7 +196,8 @@ protected:
 
   // Odometry
   std::shared_ptr<TankOdometry> m_odom_ptr;
-  double m_imu_yaw;
+  double m_imu_yaw_rad;
+  double m_imu_offset_rad{0.0};
   Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
 
   Eigen::Vector3d m_curr_odom_pose = Eigen::Vector3d::Zero();
@@ -218,14 +218,10 @@ protected:
   double m_init_sigma_x = 0.2;              // 99% within +-24" (two tiles)
   double m_init_sigma_y = 0.2;              // 99% within +-24" (two tiles)
   double m_init_sigma_theta = 0.35;         // 99% within 60 degrees
-  double m_init_world_x = 0.0;
-  double m_init_world_y = 0.0;
-  double m_init_world_theta = 0.0;
   static constexpr size_t m_cov_n = 6 * 6;
 
   Eigen::Vector2d m_reset_pose_xy_m;
   double m_reset_pose_angle_rad;
-  std::vector<double> m_initial_estimate_covariance;
 
   bool m_use_backup_estimator = false;
   bool m_reset_world_pose = false;

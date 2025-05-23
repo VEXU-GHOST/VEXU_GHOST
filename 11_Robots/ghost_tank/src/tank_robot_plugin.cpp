@@ -205,7 +205,6 @@ void TankRobotPlugin::initEstimation()
   rclcpp::QoS qos_profile(1);
   qos_profile.transient_local();
   m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, qos_profile);
-  m_reset_ekf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, qos_profile);
 
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
@@ -229,21 +228,12 @@ void TankRobotPlugin::initEstimation()
   m_k8 = node_ptr_->get_parameter("particle_filter.k8").as_double();
   m_k9 = node_ptr_->get_parameter("particle_filter.k9").as_double();
 
-  node_ptr_->declare_parameter("particle_filter.init_world_x", m_init_world_x);
-  node_ptr_->declare_parameter("particle_filter.init_world_y", m_init_world_y);
-  node_ptr_->declare_parameter("particle_filter.init_world_theta", m_init_world_theta);
   node_ptr_->declare_parameter("particle_filter.init_sigma_x", m_init_sigma_x);
   node_ptr_->declare_parameter("particle_filter.init_sigma_y", m_init_sigma_y);
   node_ptr_->declare_parameter("particle_filter.init_sigma_theta", m_init_sigma_theta);
-  m_init_world_x = node_ptr_->get_parameter("particle_filter.init_world_x").as_double();
-  m_init_world_y = node_ptr_->get_parameter("particle_filter.init_world_y").as_double();
-  m_init_world_theta = node_ptr_->get_parameter("particle_filter.init_world_theta").as_double();
   m_init_sigma_x = node_ptr_->get_parameter("particle_filter.init_sigma_x").as_double();
   m_init_sigma_y = node_ptr_->get_parameter("particle_filter.init_sigma_y").as_double();
   m_init_sigma_theta = node_ptr_->get_parameter("particle_filter.init_sigma_theta").as_double();
-
-  node_ptr_->declare_parameter("map_ekf.initial_estimate_covariance", std::vector<double>());
-  m_initial_estimate_covariance = node_ptr_->get_parameter("map_ekf.initial_estimate_covariance").as_double_array();
 
   node_ptr_->declare_parameter("tank_robot_plugin.init_x_tiles", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.init_y_tiles", 0.0);
@@ -255,8 +245,6 @@ void TankRobotPlugin::initEstimation()
     node_ptr_->get_parameter("tank_robot_plugin.init_x_tiles").as_double(),
     node_ptr_->get_parameter("tank_robot_plugin.init_y_tiles").as_double());
   m_reset_pose_angle_rad = node_ptr_->get_parameter("tank_robot_plugin.init_theta_degrees").as_double() * ghost_util::DEG_TO_RAD;
-
-  std::cout << "[TankRobotPlugin::initEstimation] m_initial_estimate_covariance: " << m_initial_estimate_covariance.size() << std::endl;
 }
 
 void TankRobotPlugin::initIntake()
@@ -410,11 +398,13 @@ void TankRobotPlugin::publishIMUData()
   if (!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))) {
     imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
   }
-  double yaw;
+  double world_yaw;
   if (!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))) {
-    yaw = -rhi_ptr_->getInertialSensorHeading("imu");
-    ghost_util::yawToQuaternionDeg(
-      yaw, imu_msg.orientation.w, imu_msg.orientation.x,
+    m_imu_yaw_rad = -rhi_ptr_->getInertialSensorHeading("imu")* ghost_util::DEG_TO_RAD;
+
+    world_yaw = ghost_util::WrapAngle2PI(m_imu_yaw_rad + m_imu_offset_rad);
+    ghost_util::yawToQuaternionRad(
+      m_imu_yaw_rad, imu_msg.orientation.w, imu_msg.orientation.x,
       imu_msg.orientation.y, imu_msg.orientation.z);
   }
   imu_pub->publish(imu_msg);
@@ -1074,9 +1064,9 @@ void TankRobotPlugin::resetWorldPose()
 {
   // Copy yaml vectors to array
   std::array<double, m_cov_n> m_initial_estimate_covariance_arr;
-  for (int i = 0; i < m_initial_estimate_covariance.size(); i++) {
-    m_initial_estimate_covariance_arr[i] = m_initial_estimate_covariance[i];
-  }
+  m_initial_estimate_covariance_arr[0] = m_init_sigma_x*m_init_sigma_x;
+  m_initial_estimate_covariance_arr[7] = m_init_sigma_y*m_init_sigma_y;
+  m_initial_estimate_covariance_arr[35] = m_init_sigma_theta*m_init_sigma_theta;
 
   geometry_msgs::msg::Quaternion quat{};
   geometry_msgs::msg::PoseWithCovarianceStamped new_pose{};

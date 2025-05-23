@@ -38,8 +38,8 @@ imu_filter_node:
 
     # This is a Intrinsic ZYX rotation from base link to imu!
     sensor_roll: 0.0
-    sensor_pitch: -90.0
-    sensor_yaw: 90.0
+    sensor_pitch: 0.0
+    sensor_yaw: 0.0
 
 competition_state_machine_node:
   ros__parameters:
@@ -70,4 +70,4 @@ competition_state_machine_node:
 
       init_x_tiles: 2.5
       init_y_tiles: 0.5
-      init_theta_degrees: -20.0
+      init_theta_degrees: -90.0

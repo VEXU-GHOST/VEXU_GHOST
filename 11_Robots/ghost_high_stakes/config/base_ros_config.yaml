@@ -59,17 +59,6 @@ competition_state_machine_node:
     use_sim_time: false
     should_record: false
 
-    map_ekf:
-      initial_estimate_covariance:
-        [
-          0.05,  0.0,  0.0,  0.0,  0.0, 0.0,
-          0.0, 0.05,  0.0,  0.0,  0.0, 0.0,
-          0.0,  0.0, 1e-9,  0.0,  0.0, 0.0,
-          0.0,  0.0,  0.0, 1e-9,  0.0, 0.0,
-          0.0,  0.0,  0.0,  0.0, 1e-9, 0.0,
-          0.0,  0.0,  0.0,  0.0,  0.0, 0.1,
-        ]
-
     particle_filter:
       # Initial cloud distribution
       init_x_sigma: 0.04 #
@@ -266,7 +255,7 @@ odom_ekf_node:
     odom0_config:
       [
         true,  true,  false,
-        false, false, true,
+        false, false, false,
         false, false, false,
         false, false, false,
         false, false, false,
@@ -304,15 +293,14 @@ odom_ekf_node:
     # For messages that have both pose and twist data, the parameter specifies to which part of the message we are applying
     # the thresholds.
 
-    # imu0: /estimation/imu/filtered
-    imu0: /sensors/imu
+    imu0: /estimation/imu/filtered
 
     # The order of the
     # values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az
     imu0_config:
       [
         false, false, false,
-        false, false, false,
+        false, false, true,
         false, false, false,
         false, false, true,
         false, false, false,
