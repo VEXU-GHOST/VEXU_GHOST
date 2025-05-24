@@ -174,6 +174,7 @@ install(TARGETS
 # Robot Trajectory Tests
 set(DEVICE_TESTS
   test_robot_trajectory
+  test_tank_robot_trajectory
 )
 foreach(TEST ${DEVICE_TESTS})
   ament_add_gtest(${TEST} test/${TEST}.cpp)
