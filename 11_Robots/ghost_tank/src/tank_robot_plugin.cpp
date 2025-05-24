@@ -301,6 +301,7 @@ void TankRobotPlugin::initTankModel()
   tank_model_config.wheel_dist = wheel_base_inches / 2.0; //in
 
   m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
+  tank_trajectory_ptr_ = std::make_shared<motion_planning::Trajectory>();
   m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
   m_odom_ptr->resetPose();
 
@@ -359,6 +360,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
   bt_->set_variable("node_ptr", node_ptr_);
+  bt_->set_variable("tank_trajectory_ptr", tank_trajectory_ptr_);
   bt_->set_variable("pd_control_ptr", m_pd_control);
   bt_->set_variable("pd_control_threshold_ptr", m_pd_control_threshold);
   bt_->set_variable("pd_control_arc_ptr", m_pd_control_arc);

@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Jake Wendling
+ *   Copyright (c) 2025 Jake Wendling, Maxx Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,32 +24,18 @@
 #pragma once
 
 #include "behaviortree_cpp/behavior_tree.h"
-#include "ghost_msgs/msg/robot_trajectory.hpp"
-#include "ghost_planners/boomerang.hpp"
-#include "ghost_tank/pdcontrol.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
-#include "ghost_util/angle_util.hpp"
-#include "ghost_util/unit_conversion_utils.hpp"
-#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
-#include "visualization_msgs/msg/marker.hpp"
-#include <visualization_msgs/msg/marker_array.hpp>
-#include <std_msgs/msg/float64.hpp>
-
-#include "rclcpp/rclcpp.hpp"
-#include "tf2/LinearMath/Quaternion.h"
-
-using std::placeholders::_1;
-using ghost_planners::Boomerang;
+#include <ghost_tank/motion_planning/trajectory.hpp>
 
 namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
-class MoveToPoseBoomerang : public BT::StatefulActionNode
+class FollowPath : public BT::StatefulActionNode
 {
 public:
   // If your Node has ports, you must use this constructor signature
-  MoveToPoseBoomerang(const std::string & name, const BT::NodeConfig & config);
+  FollowPath(const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -65,34 +51,21 @@ public:
   /// This is a convenient place todo a cleanup, if needed.
   void onHalted();
 
-  // Override the virtual function tick()
-  // BT::NodeStatus tick() override;
-
 private:
   std::shared_ptr<TankModel> tank_model_ptr_;
-  rclcpp::Publisher<ghost_msgs::msg::RobotTrajectory>::SharedPtr trajectory_pub_;
-  std::chrono::time_point<std::chrono::system_clock> start_time_;
-  std::chrono::time_point<std::chrono::system_clock> plan_time_;
-  std::shared_ptr<rclcpp::Node> node_ptr_;
-  std::shared_ptr<Boomerang> boomerang_;
+  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
   BT::Blackboard::Ptr blackboard_;
 
-  bool started_;
-  int past_index_;
-  std::shared_ptr<PDControl> pd_control_ptr_;
-  std::shared_ptr<PDControl> pd_control_threshold_ptr_;
-	ghost_planners::RobotTrajectory robot_trajectory_;
-  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub_;
-  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr curr_angle_pub;
-  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr des_angle_pub;
+  double xy_exit_threshold_m_{0.0};
+  double angle_exit_threshold_rad_{0.0};
+  double lin_vel_exit_threshold_mps_{0.0};
+  double ang_vel_exit_threshold_radps_{0.0};
+  double max_speed_linear_percent_{0.0};
+  double max_speed_angular_percent_{0.0};
+  int timeout_ms_{0};
+  bool use_theta_{false};
 
-  double des_angle_;
-  double curr_angle_;
-  Eigen::Vector3d final_pose_ = Eigen::Vector3d::Zero();
-
-  void PurePursuit();
-  void GeneratePath();
-  void publishTrajectoryVisualization();
+  motion_planning::Trajectory trajectory_;
 };
 
 } // namespace ghost_tank {

@@ -101,17 +101,17 @@ protected:
    * @param current_time
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
-  
+
   void updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time);
   void updateConveyorOnly(bool active);
   void toggleBite(bool signal);
-  
+
   void updateClamp(bool close, bool open, bool shift2);
   void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
- 
+
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
   void updateMusic(double current_time, JoyPtr joy_data);
-  
+
   void updateDrivetrain(JoyPtr joy_data);
 
   void resetBT();
@@ -123,7 +123,7 @@ protected:
   void colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void resetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
- 
+
   void resetWorldPose();
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
@@ -157,7 +157,7 @@ protected:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
-  
+
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_robot_color;
   void colorCallback(const std_msgs::msg::String msg)
   {
@@ -178,6 +178,7 @@ protected:
 
   // Tank Model
   std::shared_ptr<TankModel> m_tank_model_ptr;
+  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
 
   // Autonomy
   std::string bt_path_;

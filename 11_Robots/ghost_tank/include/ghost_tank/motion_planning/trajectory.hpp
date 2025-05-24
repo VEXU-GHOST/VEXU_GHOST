@@ -35,12 +35,13 @@ namespace ghost_tank
 
 namespace motion_planning
 {
-  
+
 struct Trajectory
 {
-  Trajectory(int size = 0){
+  Trajectory(int size = 0)
+  {
     resize(size);
-  };
+  }
 
   void resize(int size)
   {
@@ -55,6 +56,16 @@ struct Trajectory
   int size()
   {
     return t.size();
+  }
+
+  void update(const Trajectory & other)
+  {
+    t = other.t;
+    x = other.x;
+    y = other.y;
+    theta = other.theta;
+    omega = other.omega;
+    remaining_path_length = other.remaining_path_length;
   }
 
   void clear()
