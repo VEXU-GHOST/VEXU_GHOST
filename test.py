@@ -112,7 +112,7 @@ class RealSenseYOLO(Node):
                     f"Detected {class_name} | Confidence: {box.conf.item():.2f} | X: {X:.2f}m, Y: {Y:.2f}m, Z: {Z:.2f}m"
                 )
 
-                self.publish_marker(X, Y, Z)
+                self.publish_marker(X, Z, 0.0)
 
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         #cv2.imwrite(f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg", frame)
