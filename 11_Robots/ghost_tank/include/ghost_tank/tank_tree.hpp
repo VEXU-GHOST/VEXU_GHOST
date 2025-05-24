@@ -27,8 +27,6 @@
 #include "ghost_tank/bt_nodes/loggingNode.hpp"
 #include "ghost_tank/bt_nodes/autoDone.hpp"
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
-#include "ghost_tank/bt_nodes/moveToPoseBezier.hpp"
-#include "ghost_tank/bt_nodes/moveToPoseBoomerang.hpp"
 #include "ghost_tank/bt_nodes/moveToPoseJERRYIO.hpp"
 #include "ghost_tank/bt_nodes/biteCmd.hpp"
 #include "ghost_tank/bt_nodes/clampCmd.hpp"
@@ -48,6 +46,8 @@
 #include "ghost_tank/bt_nodes/moveVoltage.hpp"
 #include "ghost_tank/bt_nodes/moveScissor.hpp"
 #include "ghost_tank/bt_nodes/turnToPoint.hpp"
+#include "ghost_tank/bt_nodes/generate_bezier_path.hpp"
+#include "ghost_tank/bt_nodes/follow_path.hpp"
 // #include "ghost_tank/bt_nodes/arcturnToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
 

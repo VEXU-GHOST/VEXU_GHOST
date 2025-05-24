@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2025 Jake Wendling, Maxx Wilson
+ *   Copyright (c) 2024 Maxx Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,38 +23,19 @@
 
 #pragma once
 
-#include "behaviortree_cpp/behavior_tree.h"
-#include "ghost_tank/bt_nodes/bt_util.hpp"
-#include "ghost_tank/control/path_generators.hpp"
+#include <eigen3/Eigen/Core>
 
 namespace ghost_tank
 {
 
-// SyncActionNode (synchronous action) with an input port.
-class GenerateBezierPath : public BT::StatefulActionNode
+namespace motion_planning
 {
-public:
-  // If your Node has ports, you must use this constructor signature
-  GenerateBezierPath(const std::string & name, const BT::NodeConfig & config);
-
-  // It is mandatory to define this STATIC method.
-  static BT::PortsList providedPorts();
-
-  /// Method called once, when transitioning from the state IDLE.
-  /// If it returns RUNNING, this becomes an asynchronous node.
-  BT::NodeStatus onStart();
-
-  /// method invoked when the action is already in the RUNNING state.
-  BT::NodeStatus onRunning();
-
-  /// when the method halt() is called and the action is RUNNING, this method is invoked.
-  /// This is a convenient place todo a cleanup, if needed.
-  void onHalted();
-
-private:
-  std::shared_ptr<TankModel> tank_model_ptr_;
-  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
-  BT::Blackboard::Ptr blackboard_;
+struct TankRobotState
+{
+  Eigen::Vector2d position;
+  double angle;
+  Eigen::Vector2d linear_velocity;
+  double angular_velocity;
 };
-
-} // namespace ghost_tank {
+} //namespace motion_planning
+} //namespace ghost_tank

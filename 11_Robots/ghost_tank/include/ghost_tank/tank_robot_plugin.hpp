@@ -43,7 +43,8 @@
 
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
-#include <ghost_tank/pdcontrol.hpp>
+#include <ghost_tank/control/tank_pid_controller.hpp>
+#include <ghost_tank/control/trajectory.hpp>
 
 namespace ghost_tank
 {

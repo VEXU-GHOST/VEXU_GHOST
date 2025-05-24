@@ -22,7 +22,6 @@
  */
 
 #include "ghost_tank/bt_nodes/waitCmd.hpp"
-#include "ghost_tank/pdcontrol.hpp"
 
 using std::placeholders::_1;
 

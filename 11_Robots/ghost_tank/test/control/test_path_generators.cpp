@@ -21,7 +21,7 @@
  *   SOFTWARE.
  */
 
-#include <ghost_tank/motion_planning/path_generators.hpp>
+#include <ghost_tank/control/path_generators.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 
 #include "matplotlibcpp.h"

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ghost_tank/motion_planning/trajectory.hpp>
+#include <ghost_tank/control/trajectory.hpp>
 #include <eigen3/Eigen/Core>
 
 namespace ghost_tank

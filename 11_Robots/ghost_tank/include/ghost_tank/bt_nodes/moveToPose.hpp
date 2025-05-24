@@ -25,7 +25,7 @@
 #include <math.h>
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_msgs/msg/robot_trajectory.hpp"
-#include "ghost_tank/pdcontrol.hpp"
+#include "ghost_tank/control/tank_pid_controller.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_util/angle_util.hpp"
 #include "ghost_util/unit_conversion_utils.hpp"

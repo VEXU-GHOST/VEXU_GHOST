@@ -87,27 +87,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-add_library(pdcontrol SHARED src/pdcontrol.cpp)
-target_include_directories(pdcontrol
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(pdcontrol
-  ${DEPENDENCIES}
-)
-ament_export_libraries(
-  pdcontrol
-)
-ament_export_targets(pdcontrol HAS_LIBRARY_TARGET)
-install(
-  TARGETS pdcontrol
-  EXPORT pdcontrol
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
 add_library(tank_robot_plugin SHARED src/tank_robot_plugin.cpp)
 target_include_directories(tank_robot_plugin
   PUBLIC
@@ -117,7 +96,6 @@ target_include_directories(tank_robot_plugin
     tank_model
     tank_odom
     tank_tree
-    pdcontrol
   )
 ament_target_dependencies(tank_robot_plugin
   ${DEPENDENCIES}
@@ -144,7 +122,6 @@ target_include_directories(alpha_jerry_plugin
     tank_model
     tank_odom
     tank_tree
-    pdcontrol
     tank_robot_plugin
   )
 ament_target_dependencies(alpha_jerry_plugin
@@ -172,7 +149,6 @@ target_include_directories(omega_jerry_plugin
     tank_model
     tank_odom
     tank_tree
-    pdcontrol
     tank_robot_plugin
   )
 ament_target_dependencies(omega_jerry_plugin
@@ -215,12 +191,12 @@ set(NODES
   turnToPoint
   moveToPoint
   moveScissor
+  generate_bezier_path
+  follow_path
 )
 
 # bt node libraries
 set(MOVETOPOSENODES
-  moveToPoseBezier
-  moveToPoseBoomerang
   moveToPoseJERRYIO
 )
 
@@ -282,7 +258,6 @@ foreach(NODE ${MOVETOPOSENODES})
     ${DEPENDENCIES}
   )
   target_link_libraries(${NODE}
-    pdcontrol
     moveToPose
   )
   ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
@@ -342,7 +317,7 @@ foreach(TEST ${TEST_FILES})
   $<INSTALL_INTERFACE:include>)
 endforeach()
 
-add_executable(test_path_generators test/motion_planning/test_path_generators.cpp)
+add_executable(test_path_generators test/control/test_path_generators.cpp)
 ament_target_dependencies(test_path_generators
   ${DEPENDENCIES}
   )

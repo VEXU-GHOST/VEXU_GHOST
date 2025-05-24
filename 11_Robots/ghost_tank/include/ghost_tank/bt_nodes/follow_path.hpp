@@ -25,7 +25,7 @@
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
-#include <ghost_tank/motion_planning/trajectory.hpp>
+#include <ghost_tank/control/trajectory.hpp>
 
 namespace ghost_tank
 {
