@@ -1,68 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-  <include path="bt_clear_corner.xml"/>
-  <include path="bt_collect_rings.xml"/>
-  <include path="bt_corner_shove.xml"/>
-  <include path="bt_center_goal.xml"/>
-  <BehaviorTree ID="pos_corner">
+  <BehaviorTree ID="intake_middle_ring">
     <Sequence>
-      <Logging message="positive corner left"/>
-      <GoalRushCmd goal_rush_down="true"/>
-      <MoveToPoseBezier posX_tiles="2.0"
-                            posY_tiles="0.90"
-                            theta_deg="90.0"
-                            search_radius_tiles="0.3"
-                            xy_exit_threshold_tiles="0.05"
-                            angle_exit_threshold_deg="5.0"
-                            lin_vel_exit_threshold_tps="0.1"
-                            ang_vel_exit_threshold_dps="1.0"
-                            lead="0.75"
-                            max_speed_linear_percent="1.0"
-                            max_speed_angular_percent="1.0"
-                            timeout_ms="-2000"
-                            use_theta="true"
-                            backwards="true"/>
-      <ShutoffNode/>
-      <GoalRushCmd goal_rush_down="false"/>
-
-      <SubTree ID="center_goal" _autoremap="true"/>
-
-      <SubTree ID="collect_rings" _autoremap="true"/>
-      <SubTree ID="clear_corner" _autoremap="true"/>
-      <SubTree ID="corner_shove" _autoremap="true"/>
-      <MoveToPoseBezier
-        posX_tiles="2.0"
-        posY_tiles="2.5"
-        theta_deg="90.0"
-        search_radius_tiles="0.3"
+      <Logging message="Starting intake_middle_ring" />
+      <TurnToPoint posX_tiles="1.5"
+                  posY_tiles="0.5"
+                  timeout_ms="2000"
+                  angle_exit_threshold_deg="1.0"/>
+      <MoveToPoseBezier posX_tiles="3.5"
+        posY_tiles="0.8"
+        theta_deg="180.0"
+        search_radius_tiles="0.5"
         xy_exit_threshold_tiles="0.2"
-        angle_exit_threshold_deg="3.0"
-        lin_vel_exit_threshold_tps="0.1"
-        ang_vel_exit_threshold_dps="1.0"
+        angle_exit_threshold_deg="10.0"
         lead="0.5"
-        max_speed_linear_percent="1.0"
+        max_speed_linear_percent="0.7"
         max_speed_angular_percent="1.0"
-        timeout_ms="-2000"
-        use_theta="true"
+        timeout_ms="3000"
+        use_theta="false"
         backwards="false"/>
-      <ShutoffNode/>
-
-      <MoveToPoseBezier
-        posX_tiles="2.0"
-        posY_tiles="2.7"
-        theta_deg="90.0"
-        search_radius_tiles="0.3"
-        xy_exit_threshold_tiles="0.2"
-        angle_exit_threshold_deg="3.0"
-        lin_vel_exit_threshold_tps="0.1"
-        ang_vel_exit_threshold_dps="1.0"
-        lead="0.5"
-        max_speed_linear_percent="0.2"
-        max_speed_angular_percent="0.2"
-        timeout_ms="-1000"
-        use_theta="true"
-        backwards="false"/>
-      <!-- <ShutoffNode/> -->
     </Sequence>
   </BehaviorTree>
 
@@ -88,6 +44,10 @@
             editable="true">
       <input_port name="mirrored"/>
     </Action>
+    <Action ID="SetColorTarget"
+            editable="true">
+      <input_port name="target_red"/>
+    </Action>
     <Action ID="IntakeCmd"
             editable="true">
       <input_port name="auto"/>
@@ -96,6 +56,23 @@
     <Action ID="Logging"
             editable="true">
       <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPoseBoomerang"
+            editable="true">
+      <input_port name="posX_tiles"/>
+      <input_port name="posY_tiles"/>
+      <input_port name="theta_deg"/>
+      <input_port name="search_radius_tiles"/>
+      <input_port name="xy_exit_threshold_tiles"/>
+      <input_port name="angle_exit_threshold_deg"/>
+      <input_port name="lin_vel_exit_threshold_tps"/>
+      <input_port name="ang_vel_exit_threshold_dps"/>
+      <input_port name="lead"/>
+      <input_port name="max_speed_linear_percent"/>
+      <input_port name="max_speed_angular_percent"/>
+      <input_port name="timeout_ms"/>
+      <input_port name="use_theta"/>
+      <input_port name="backwards"/>
     </Action>
     <Action ID="MoveToPoseBezier"
             editable="true">

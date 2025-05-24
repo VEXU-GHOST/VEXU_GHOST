@@ -85,7 +85,7 @@ def generate_launch_description():
         output="screen",
         namespace="/sensors/color_sensors/intake",
         parameters=[
-            ros_config_file
+            ros_config_file, base_params_file
             # address 0x29, not configurable on tcs
        ],
     )

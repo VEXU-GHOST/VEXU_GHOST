@@ -213,6 +213,7 @@ set(NODES
   boundaryCheck
   moveVoltage
   turnToPoint
+  arcturnToPoint
   moveToPoint
   moveScissor
 )

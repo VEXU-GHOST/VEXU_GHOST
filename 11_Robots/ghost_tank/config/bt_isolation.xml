@@ -6,10 +6,8 @@
   <include path="worlds/bt_center_rush_after_side_rush.xml"/>
   <include path="worlds/bt_grab_goal_after_rush.xml"/>
   <include path="bt_clear_corner.xml"/>
+  <include path="bt_intake_middle_ring.xml"/>
   <!-- <include path="bt_skills.xml"/> -->
-  <include path="bt_neutral_stake.xml"/>
-  <include path="basic_auton_1_15size_before_neutral.xml"/>
-  <include path="basic_auton_1_15size_end.xml"/>
 
   <BehaviorTree ID="main_tree">
     <Sequence>
@@ -18,11 +16,9 @@
         <!-- <SubTree ID="worlds_goal_rush" _autoremap="true"/> -->
         <SubTree ID="win_point" _autoremap="true"/>
         <SubTree ID="grab_middle_goal" _autoremap="true"/>
-        <SubTree ID="clear_corner" _autoremap="true"/>
+        <SubTree ID="clear_negative_corner" _autoremap="true"/>
+        <SubTree ID="intake_middle_ring" _autoremap="true"/>
         
-        <!-- <SubTree ID="basic_auton_1" _autoremap="true"/> -->
-        <!-- <SubTree ID="basic_auton_1_end" _autoremap="true"/> -->
-        <!-- <SubTree ID="neutral_stake" _autoremap="true"/> -->
       </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true"/>
     </Sequence>
@@ -33,8 +29,6 @@
       <Logging message="Starting winpoint"/>
       <NeutralStakeCmd state="3"
           timeout="2.000"/>
-      <!-- <NeutralStakeCmd state="0"
-          timeout="1.000"/> -->
     </Sequence>
   </BehaviorTree>
 
@@ -55,9 +49,10 @@
         backwards="true"/> -->
       <ArcturnToPoint posX_tiles="3.0"
         posY_tiles="1.0"
-        timeout_ms="2000"
-        angle_exit_threshold_deg="1.0"
-        backwards="true"/>
+        timeout_ms="3000"
+        angle_exit_threshold_deg="3.0"
+        drive_backwards="true"
+        face_backwards="true"/>
       <MoveToPoint 
         kp="3.0"
         kd="0.0"
@@ -83,39 +78,7 @@
       <IntakeCmd auto="true"
           ground_intake="false"/>
       <WaitCmd seconds="0.3" shutoff_motors="true"/>
-      <ParallelAll>
-        <Sequence>
-          <MoveToPoseBezier posX_tiles="1.5"
-                              posY_tiles="0.75"
-                              theta_deg="180.0"
-                              search_radius_tiles="0.5"
-                              xy_exit_threshold_tiles="0.1"
-                              angle_exit_threshold_deg="3.0"
-                              lin_vel_exit_threshold_tps="0.1"
-                              ang_vel_exit_threshold_dps="1.0"
-                              lead="0.5"
-                              max_speed_linear_percent="0.6"
-                              max_speed_angular_percent="1.0"
-                              timeout_ms="2000"
-                              use_theta="true"
-                              backwards="false"/>
-        <MoveToPoseBezier posX_tiles="1.0"
-                              posY_tiles="1.0"
-                              theta_deg="135.0"
-                              search_radius_tiles="0.5"
-                              xy_exit_threshold_tiles="0.1"
-                              angle_exit_threshold_deg="3.0"
-                              lin_vel_exit_threshold_tps="0.1"
-                              ang_vel_exit_threshold_dps="1.0"
-                              lead="0.5"
-                              max_speed_linear_percent="0.6"
-                              max_speed_angular_percent="1.0"
-                              timeout_ms="2000"
-                              use_theta="true"
-                              backwards="false"/>
-        </Sequence>
-      <ParallelAll>
-      </Sequence>
+    </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="test_turn">
@@ -289,6 +252,7 @@
     <Sequence>
       <Logging message="test"/>
       <BiteCmd bite_closed="true"/>
+      <ClampCmd clamp_closed="true"/>
       <IntakeCmd auto="true"
                  ground_intake="false"
                  store_ring="false"/>
