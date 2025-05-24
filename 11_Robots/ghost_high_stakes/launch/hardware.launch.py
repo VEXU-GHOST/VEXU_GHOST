@@ -148,10 +148,11 @@ def generate_launch_description():
             # "enable_sync": "true",
             # "enable_gyro": "true",
             # "enable_accel": "true",
-            "initial_reset": "true",
+            "initial_reset": "false",
             # "gyro_fps": "200",  # 200 or 400
             # "accel_fps": "63",  # 63 or 250
             "color_fps": "1",
+            "depth_fps": "1",
             "color_width": "640",
             "color_height": "480",
             
@@ -185,17 +186,17 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        # serial_node,
-        # bag_recorder_service,
-        # ekf_pf_node,
-        realsense_node,
-        # imu_filter_node,
-        # odom_ekf_node,
-        # map_ekf_node,
-        # rplidar_node,
+        #serial_node,
+         #bag_recorder_service,
+         ekf_pf_node,
+         realsense_node,
+         imu_filter_node,
+         odom_ekf_node,
+         map_ekf_node,
+         rplidar_node,
         # color_classifier_node,
         # color_sensor_node,
         # tts_music_node,
-        # competition_state_machine_node,
+        competition_state_machine_node,
         # gpio_expander,
     ])
