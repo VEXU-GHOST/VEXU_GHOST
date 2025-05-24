@@ -325,6 +325,8 @@ install(
 ###### Tests ######
 ###################
 set(TEST_FILES
+  test_tank_robot_trajectory
+  test_tank_odom
 )
 
 foreach(TEST ${TEST_FILES})
@@ -340,12 +342,21 @@ foreach(TEST ${TEST_FILES})
   $<INSTALL_INTERFACE:include>)
 endforeach()
 
-ament_add_gtest(test_tank_odom test/test_tank_odom.cpp)
-target_link_libraries(test_tank_odom
-  gtest
-  tank_odom
-)
-
+add_executable(test_path_generators test/motion_planning/test_path_generators.cpp)
+ament_target_dependencies(test_path_generators
+  ${DEPENDENCIES}
+  )
+  target_link_libraries(test_path_generators
+  matplotlib_cpp::matplotlib_cpp
+  ${PYTHON_LIBRARIES}
+  )
+target_include_directories(test_path_generators
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  test_path_generators
+  DESTINATION lib/${PROJECT_NAME})
 
 ###################
 ##### Install #####

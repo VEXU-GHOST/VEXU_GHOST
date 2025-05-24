@@ -30,12 +30,17 @@
 #include "ghost_util/math_util.hpp"
 #include <iostream>
 
-namespace ghost_planners
+namespace ghost_tank
 {
 
-struct TankRobotTrajectory
+namespace motion_planning
 {
-  TankRobotTrajectory() = default;
+  
+struct Trajectory
+{
+  Trajectory(int size = 0){
+    resize(size);
+  };
 
   void resize(int size)
   {
@@ -65,7 +70,8 @@ struct TankRobotTrajectory
   bool calculateRemainingPathLengths()
   {
     if (t.size() != x.size() || t.size() != y.size()) {
-      std::cout << "[TankRobotTrajectory::calculateRemainingPathLengths] Error: t, x, and y trajactories have mismatched dimension!" << std::endl;
+      std::cout << "[ghost_tank::motion_planning::Trajectory::calculateRemainingPathLengths]" <<
+        "Error: t, x, and y trajactories have mismatched dimension!" << std::endl;
       return false;
     }
 
@@ -96,4 +102,5 @@ struct TankRobotTrajectory
   std::vector<double> remaining_path_length;
 };
 
-} //namespace ghost_planners
+} //namespace motion_planning
+} //namespace ghost_tank

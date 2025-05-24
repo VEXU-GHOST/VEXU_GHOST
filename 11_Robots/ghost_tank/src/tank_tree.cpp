@@ -66,7 +66,7 @@ void TankTree::init_tree()
   factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
   factory.registerNodeType<MoveVoltage>("MoveVoltage");
   factory.registerNodeType<TurnToPoint>("TurnToPoint");
-  factory.registerNodeType<ArcturnToPoint>("ArcturnToPoint");
+  // factory.registerNodeType<ArcturnToPoint>("ArcturnToPoint");
   factory.registerNodeType<MoveToPoint>("MoveToPoint");
   factory.registerNodeType<MoveScissor>("MoveScissor");
 

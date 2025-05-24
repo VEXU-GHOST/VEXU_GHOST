@@ -21,17 +21,17 @@
  *   SOFTWARE.
  */
 
-#include <ghost_planners/tank_robot_trajectory.hpp>
+#include <ghost_tank/motion_planning/trajectory.hpp>
 #include <gtest/gtest.h>
 
-using ghost_planners::TankRobotTrajectory;
+using ghost_tank::motion_planning::Trajectory;
 
-TEST(TestTankRobotTrajectory, testConstructors) {
-  EXPECT_NO_THROW(auto traj = TankRobotTrajectory());
+TEST(TestTrajectory, testConstructors) {
+  EXPECT_NO_THROW(auto traj = Trajectory());
 }
 
-TEST(TestTankRobotTrajectory, testResize) {
-  auto traj = TankRobotTrajectory();
+TEST(TestTrajectory, testResize) {
+  auto traj = Trajectory();
 
   EXPECT_EQ(traj.size(), 0);
 
@@ -48,8 +48,8 @@ TEST(TestTankRobotTrajectory, testResize) {
   EXPECT_EQ(traj.remaining_path_length.size(), 10);
 }
 
-TEST(TestTankRobotTrajectory, testClear) {
-  auto traj = TankRobotTrajectory();
+TEST(TestTrajectory, testClear) {
+  auto traj = Trajectory();
 
   traj.resize(10);
   traj.clear();
@@ -62,8 +62,8 @@ TEST(TestTankRobotTrajectory, testClear) {
   EXPECT_EQ(traj.remaining_path_length.size(), 0);
 }
 
-TEST(TestTankRobotTrajectory, testCalculateRemainingPathLengths) {
-  auto traj = TankRobotTrajectory();
+TEST(TestTrajectory, testCalculateRemainingPathLengths) {
+  auto traj = Trajectory();
 
   int num_segments = 10;
   traj.resize(num_segments);
