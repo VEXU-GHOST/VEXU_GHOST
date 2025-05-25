@@ -24,6 +24,7 @@ class RealSenseYOLO(Node):
         self.info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
 
         self.marker_pub = self.create_publisher(Marker, '/detected_objects_marker', 10)
+        self.processed_image_pub = self.create_publisher(Image, '/yolo_processed_image', 10)
 
         self.get_logger().info("RealSense YOLO node initialized.")
 
@@ -35,12 +36,12 @@ class RealSenseYOLO(Node):
         self.get_logger().info(f"Camera intrinsics received: fx={self.fx}, fy={self.fy}, cx={self.cx}, cy={self.cy}")
 
     def color_callback(self, msg):
-        print("recieved color image!")
+        print("Received color image!")
         self.color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.try_process()
 
     def depth_callback(self, msg):
-        print("recieved depth image!")
+        print("Received depth image!")
         self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='16UC1')
         self.try_process()
 
@@ -101,21 +102,29 @@ class RealSenseYOLO(Node):
                 lowest_20 = sorted_depths[:num_low]
                 depth_m = np.mean(lowest_20) / 1000.0
 
-                X = (cx_px - self.cx) * depth_m / self.fx
-                Y = (cy_px - self.cy) * depth_m / self.fy
-                Z = depth_m
+                X = (cx_px - self.cx) * depth_m / self.fx  # horizontal (RealSense X)
+                Y = (cy_px - self.cy) * depth_m / self.fy  # vertical (RealSense Y)
+                Z = depth_m  # forward (RealSense Z)
 
                 label = f"{class_name}: {box.conf.item():.2f}, Z: {Z:.2f}m"
                 cv2.putText(frame, label, (x1, lower_y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
                 self.get_logger().info(
-                    f"Detected {class_name} | Confidence: {box.conf.item():.2f} | X: {X:.2f}m, Y: {Y:.2f}m, Z: {Z:.2f}m"
+                    f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {Z:.2f}m, Y: {-X:.2f}m"
                 )
 
-                self.publish_marker(X, Z, 0.0)
+                # Fixed axis mapping for RViz (2D top-down): RealSense Z → RViz X, -RealSense X → RViz Y
+                self.publish_marker(Z, -X, 0.0)
 
+        # Save processed image locally (optional)
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        #cv2.imwrite(f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg", frame)
+        cv2.imwrite(f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg", frame)
+
+        # Publish processed image to RViz
+        processed_msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
+        processed_msg.header.stamp = self.get_clock().now().to_msg()
+        processed_msg.header.frame_id = "camera_color_optical_frame"
+        self.processed_image_pub.publish(processed_msg)
 
     def publish_marker(self, x, y, z):
         marker = Marker()
