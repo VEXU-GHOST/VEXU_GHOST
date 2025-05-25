@@ -280,6 +280,23 @@ void TankRobotPlugin::initIntake()
   m_ring_color = m_color_map["unknown"];
 }
 
+PIDGains TankRobotPlugin::loadPIDGains(const std::string & param_prefix)
+{
+  PIDGains gains;
+
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".kp", -1.0);
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".ki", -1.0);
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".kd", -1.0);
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".integral_limit", -1.0);
+
+  gains.kp = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".kp").as_double();
+  gains.ki = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".ki").as_double();
+  gains.kd = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".kd").as_double();
+  gains.integral_limit = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".integral_limit").as_double();
+
+  return PIDGains;
+}
+
 void TankRobotPlugin::initTankModel()
 {
   std::cout << "[TankRobotPlugin::initTankModel]" << std::endl;
@@ -305,46 +322,19 @@ void TankRobotPlugin::initTankModel()
   m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
   m_odom_ptr->resetPose();
 
-  node_ptr_->declare_parameter("tank_robot_plugin.search_radius", -1.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_ki_theta", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy_fine", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy_fine", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta_fine", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta_fine", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_ki_theta_fine", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_integral_limit", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_xy_arc", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_xy_arc", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kp_theta_arc", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_kd_theta_arc", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_ki_theta_arc", 0.5);
-  node_ptr_->declare_parameter("tank_robot_plugin.move_to_pose_integral_limit_arc", 0.5);
   m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
-  float kp_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy").as_double();
-  float kd_xy = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy").as_double();
-  float kp_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta").as_double();
-  float kd_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
-  float ki_theta = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta").as_double();
-  float kp_xy_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy_fine").as_double();
-  float kd_xy_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy_fine").as_double();
-  float kp_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta_fine").as_double();
-  float kd_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta_fine").as_double();
-  float ki_theta_fine = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_ki_theta_fine").as_double();
-  float integral_limit = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_integral_limit").as_double();
-  float kp_xy_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_xy_arc").as_double();
-  float kd_xy_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_xy_arc").as_double();
-  float kp_theta_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kp_theta_arc").as_double();
-  float kd_theta_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_kd_theta_arc").as_double();
-  float ki_theta_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_ki_theta_arc").as_double();
-  float integral_limit_arc = node_ptr_->get_parameter("tank_robot_plugin.move_to_pose_integral_limit_arc").as_double();
 
-  m_pd_control = std::make_shared<PDControl>(kp_xy, kd_xy, kp_theta, kd_theta, ki_theta, integral_limit);
-  m_pd_control_threshold = std::make_shared<PDControl>(kp_xy_fine, kd_xy_fine, kp_theta_fine, kd_theta_fine, ki_theta_fine, integral_limit);
-  m_pd_control_arc = std::make_shared<PDControl>(kp_xy_arc, kd_xy_arc, kp_theta_arc, kd_theta_arc, ki_theta_arc, integral_limit_arc);
+  // Load PID Controller Gains
+  auto linear_approach_gains = loadPIDGains("linear_approach");
+  auto angular_approach_gains = loadPIDGains("angular_approach");
+  m_approach_controller_ptr = std::make_shared<PDControl>(linear_approach_gains, angular_approach_gains);
+  
+  auto linear_settling_gains = loadPIDGains("linear_settling");
+  auto angular_settling_gains = loadPIDGains("angular_settling");
+  m_settling_controller_ptr = std::make_shared<PDControl>(linear_settling_gains, angular_settling_gains);
+
+  auto arc_turn_gains = loadPIDGains("arc_turn");
+  m_arc_turn_controller_ptr = std::make_shared<PDControl>(PIDGains(), arc_turn_gains);
 }
 
 void TankRobotPlugin::initAutonomy()
@@ -361,9 +351,9 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
   bt_->set_variable("node_ptr", node_ptr_);
   bt_->set_variable("tank_trajectory_ptr", tank_trajectory_ptr_);
-  bt_->set_variable("pd_control_ptr", m_pd_control);
-  bt_->set_variable("pd_control_threshold_ptr", m_pd_control_threshold);
-  bt_->set_variable("pd_control_arc_ptr", m_pd_control_arc);
+  bt_->set_variable("approach_controller_ptr", m_approach_controller_ptr);
+  bt_->set_variable("settling_contoller_ptr", m_settling_contoller_ptr);
+  bt_->set_variable("arc_turn_controller_ptr", m_arc_turn_controller_ptr);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
   bt_->set_variable("config_path", config_path);
@@ -416,7 +406,7 @@ void TankRobotPlugin::publishIMUData()
   }
   double world_yaw;
   if (!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))) {
-    m_imu_yaw_rad = -rhi_ptr_->getInertialSensorHeading("imu")* ghost_util::DEG_TO_RAD;
+    m_imu_yaw_rad = -rhi_ptr_->getInertialSensorHeading("imu") * ghost_util::DEG_TO_RAD;
 
     world_yaw = ghost_util::WrapAngle2PI(m_imu_yaw_rad + m_imu_offset_rad);
     ghost_util::yawToQuaternionRad(
@@ -478,7 +468,7 @@ void TankRobotPlugin::autonomous(double current_time)
   bt_->get_variable<bool>("conveyor_active", conveyor_active);
   bt_->get_variable<bool>("ground_intake_active", ground_intake_active);
 
-  if (conveyor_active){
+  if (conveyor_active) {
     updateConveyorOnly(true);
   } else if (ring_detector_active) {
     ringDetector(ring_detector_active, current_time, want_red, store_ring);
@@ -794,7 +784,7 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
       conveyor_current = 0;
     }
   }
-  
+
   rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
 
@@ -821,7 +811,8 @@ void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bo
   }
 }
 
-void TankRobotPlugin::updateConveyorOnly(bool active){
+void TankRobotPlugin::updateConveyorOnly(bool active)
+{
   double conveyor_power = 1.0;
   double conveyor_current = 2500;
 
@@ -830,7 +821,7 @@ void TankRobotPlugin::updateConveyorOnly(bool active){
   rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
 
-  m_loop_current_limits.push_back(conveyor_current*2.0);
+  m_loop_current_limits.push_back(conveyor_current * 2.0);
 }
 
 void TankRobotPlugin::toggleBite(bool signal)
@@ -902,14 +893,14 @@ void TankRobotPlugin::updateGoalRush(bool left_rush, bool right_rush, bool enabl
     if (left_rush && right_rush && !m_rush_button_pressed) {
       m_rush_button_pressed = true;
       m_rush_held = !m_rush_held;
-    } else m_rush_button_pressed = false;
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_rush_held ||  left_rush);
+    } else {m_rush_button_pressed = false;}
+    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_rush_held || left_rush);
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], m_rush_held || right_rush);
   } else {
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], false);
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], false);
   }
-  if (m_rush_held){
+  if (m_rush_held) {
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], true);
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], true);
   }
@@ -1080,9 +1071,9 @@ void TankRobotPlugin::resetWorldPose()
 {
   // Copy yaml vectors to array
   std::array<double, m_cov_n> m_initial_estimate_covariance_arr;
-  m_initial_estimate_covariance_arr[0] = m_init_sigma_x*m_init_sigma_x;
-  m_initial_estimate_covariance_arr[7] = m_init_sigma_y*m_init_sigma_y;
-  m_initial_estimate_covariance_arr[35] = m_init_sigma_theta*m_init_sigma_theta;
+  m_initial_estimate_covariance_arr[0] = m_init_sigma_x * m_init_sigma_x;
+  m_initial_estimate_covariance_arr[7] = m_init_sigma_y * m_init_sigma_y;
+  m_initial_estimate_covariance_arr[35] = m_init_sigma_theta * m_init_sigma_theta;
 
   geometry_msgs::msg::Quaternion quat{};
   geometry_msgs::msg::PoseWithCovarianceStamped new_pose{};

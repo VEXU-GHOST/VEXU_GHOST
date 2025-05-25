@@ -3,32 +3,38 @@
 #include <iostream>
 #include <eigen3/Eigen/Core>
 
-#include <ghost_tank/tank_model.hpp>
+#include <ghost_tank/control/tank_robot_state.hpp>
 #include <ghost_util/angle_util.hpp>
+#include <ghost_util/math_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <cmath>
 
 namespace ghost_tank
 {
 
+struct PIDGains
+{
+  double kp = 0.0;
+  double ki = 0.0;
+  double kd = 0.0;
+  double integral_limit = 0.0;
+};
+
 class PDControl
 {
-
 public:
-  //constructor
-  PDControl(
-    float kp_xy,
-    float kd_xy,
-    float kp_theta,
-    float kd_theta,
-    float ki_theta,
-    float integral_limit,
-    float dt = 0.01)
-  : kp_xy_(kp_xy), kd_xy_(kd_xy), kp_theta_(kp_theta), kd_theta_(kd_theta), ki_theta_(ki_theta), integral_limit_(integral_limit), dt_(dt)
+  PDControl(PIDGains linear_gains, PIDGains angular_gains, float dt = 0.01)
+  : angular_gains_(linear_gains), linear_gains_(angular_gains), dt_(dt)
   {
-    integral_theta_ = 0.0;
-    prev_error_theta_ = 0.0;
-    last_twist_z_ = 0.0;
+    reset();
+  }
+
+  void reset()
+  {
+    angular_integral_sum_ = 0.0;
+    linear_integral_sum_ = 0.0;
+    last_linear_error_ = 0.0;
+    last_angular_error_ = 0.0;
   }
 
   Eigen::Vector2d tank_pid(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & carrot_pos, const Eigen::Vector3d & final_pos, bool backwards, bool ignore_lateral_error = false)
@@ -49,12 +55,12 @@ public:
       dist_err *= cos(error_theta);
       derivative_err_linear *= cos(error_theta);
     }
-    output_linear = kp_xy_ * dist_err + kd_xy_ * derivative_err_linear;
+    output_linear = linear_gains_.kp * dist_err + linear_gains_.kd * derivative_err_linear;
     output_linear = ghost_util::clamp(output_linear, -1.0f, 1.0f);
     output_linear *= (backwards) ? -1.0 : 1.0;
 
     float derivative_theta = -cur_twist.z();
-    output_angular = kp_theta_ * error_theta + kd_theta_ * derivative_theta;
+    output_angular = angular_gains_.kp * error_theta + angular_gains_.kd * derivative_theta;
     output_angular = ghost_util::clamp(output_angular, -1.0f, 1.0f);
 
     return Eigen::Vector2d(output_linear, output_angular);
@@ -64,7 +70,7 @@ public:
   {
     float error_theta = ghost_util::SmallestAngleDistRad(end_pos.z(), cur_pos.z());
     float derivative_theta = -cur_twist.z();
-    float output_angular = kp_theta_ * error_theta + kd_theta_ * derivative_theta;
+    float output_angular = angular_gains_.kp * error_theta + angular_gains_.kd * derivative_theta;
     output_angular = ghost_util::clamp(output_angular, -1.0f, 1.0f);
 
     return Eigen::Vector2d(0.0, output_angular);
@@ -72,43 +78,37 @@ public:
 
   Eigen::Vector2d theta_pd(const Eigen::Vector3d & cur_pos, const Eigen::Vector3d & cur_twist, const Eigen::Vector3d & end_pos)
   {
-    if (prev_final_pos_ != end_pos) {
-      integral_theta_ = 0.0;
-      prev_final_pos_ = end_pos;
-    }
-
     float error_theta = ghost_util::SmallestAngleDistRad(end_pos.z(), cur_pos.z());
     float derivative_theta = -cur_twist.z();
 
-    integral_theta_ += error_theta * dt_;
+    angular_integral_sum_ += error_theta * dt_;
 
     // Check for sign change reset
-    if (prev_error_theta_ * error_theta < 0) {
-      integral_theta_ = 0.0;
+    if (last_angular_error_ * error_theta < 0) {
+      angular_integral_sum_ = 0.0;
     }
 
-    prev_error_theta_ = error_theta;
+    last_angular_error_ = error_theta;
 
-    float integral_contribution = ghost_util::clamp(ki_theta_ * integral_theta_, -integral_limit_, integral_limit_);
+    float integral_contribution = ghost_util::clamp(angular_gains_.ki * angular_integral_sum_, -angular_gains_.integral_limit, angular_gains_.integral_limit);
 
-    float output_angular = kp_theta_ * error_theta + kd_theta_ * derivative_theta + integral_contribution;
+    float output_angular = angular_gains_.kp * error_theta + angular_gains_.kd * derivative_theta + integral_contribution;
     output_angular = ghost_util::clamp(output_angular, -1.0f, 1.0f);
 
     return Eigen::Vector2d(0.0, output_angular);
   }
 
 private:
-  float kp_xy_;
-  float kd_xy_;
-  float kp_theta_;
-  float kd_theta_;
-  float ki_theta_;
-  float integral_limit_;
-  float integral_theta_ = 0.0;
-  float prev_error_theta_ = 0.0;
+  PIDGains angular_gains_;
+  PIDGains linear_gains_;
+
+  double angular_integral_sum_{0.0};
+  double linear_integral_sum_{0.0};
+
+  double last_linear_error_{0.0};
+  double last_angular_error_{0.0};
+
   float dt_ = 0.01;
-  float last_twist_z_;
-  Eigen::Vector3d prev_final_pos_;
 };
 
 } // namespace ghost_tank

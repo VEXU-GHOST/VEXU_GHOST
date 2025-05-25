@@ -71,9 +71,9 @@ protected:
   void initROSComms();
   void initEstimation();
   void initIntake();
-  void initNeutralStakeArm();
   void initTankModel();
   void initAutonomy();
+  PIDGains loadPIDGains(const std::string & param_prefix);
 
   // onNewSensorData
   void updateConveyorPositionSensing();
@@ -180,6 +180,9 @@ protected:
   // Tank Model
   std::shared_ptr<TankModel> m_tank_model_ptr;
   std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
+  std::shared_ptr<PDControl> m_approach_controller_ptr;
+  std::shared_ptr<PDControl> m_settling_contoller_ptr;
+  std::shared_ptr<PDControl> m_arc_turn_controller_ptr;
 
   // Autonomy
   std::string bt_path_;
@@ -191,19 +194,13 @@ protected:
   Eigen::Vector3d m_desired_pose = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_desired_twist = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_final_pose = Eigen::Vector3d::Zero();
-  double m_move_to_pose_kp_xy = 0.0;
-  double m_move_to_pose_kd_xy = 0.0;
-  double m_move_to_pose_kp_theta = 0.0;
-  double m_move_to_pose_kd_theta = 0.0;
 
   // Odometry
   std::shared_ptr<TankOdometry> m_odom_ptr;
   double m_imu_yaw_rad;
   double m_imu_offset_rad{0.0};
   Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
-
   Eigen::Vector3d m_curr_odom_pose = Eigen::Vector3d::Zero();
-
   Eigen::Vector3d m_curr_odom_std = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_curr_odom_cov = Eigen::Vector3d::Zero();
   double m_k1 = 0.0;
@@ -272,10 +269,6 @@ protected:
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;
-
-  std::shared_ptr<PDControl> m_pd_control;
-  std::shared_ptr<PDControl> m_pd_control_threshold;
-  std::shared_ptr<PDControl> m_pd_control_arc;
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;
