@@ -65,7 +65,6 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 
   Eigen::Vector2d desired_pose;
 
-
   if (dist_to_end <= lookahead_distance_m_) {
     desired_pose = goal_pose_.head<2>();
   } else {
@@ -89,7 +88,6 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   if (within_xy_exit_threshold || settling_) {
     // We are within xy_exit_threshold, switch to pure angle control
     command = m_approach_controller_ptr->calculateDriveCommand(current_state, desired_state, backwards_);
-
     // Once we start settling, never exit to avoid instability.
     settling_ = true;
   } else {
