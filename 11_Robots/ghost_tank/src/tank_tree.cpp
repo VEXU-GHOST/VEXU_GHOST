@@ -46,7 +46,7 @@ void TankTree::init_tree()
   factory.registerNodeType<LoggingNode>("Logging");
   factory.registerNodeType<AutoDone>("AutoDone");
   factory.registerNodeType<AutonTimer>("AutonTimer");
-  factory.registerNodeType<MoveToPoseJERRYIO>("MoveToPoseJERRYIO");
+  factory.registerNodeType<LoadPathFromCSV>("LoadPathFromCSV");
   factory.registerNodeType<BiteCmd>("BiteCmd");
   factory.registerNodeType<ClampCmd>("ClampCmd");
   factory.registerNodeType<ClimbCmd>("ClimbCmd");

@@ -27,7 +27,7 @@
 #include "ghost_tank/bt_nodes/loggingNode.hpp"
 #include "ghost_tank/bt_nodes/autoDone.hpp"
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
-#include "ghost_tank/bt_nodes/moveToPoseJERRYIO.hpp"
+#include "ghost_tank/bt_nodes/load_path_from_csv.hpp"
 #include "ghost_tank/bt_nodes/biteCmd.hpp"
 #include "ghost_tank/bt_nodes/clampCmd.hpp"
 #include "ghost_tank/bt_nodes/climbCmd.hpp"

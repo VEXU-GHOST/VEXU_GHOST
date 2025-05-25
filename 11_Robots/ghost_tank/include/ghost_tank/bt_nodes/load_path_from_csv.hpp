@@ -23,9 +23,10 @@
 
 #pragma once
 
-#include "ghost_tank/control/tank_pid_controller.hpp"
-#include "ghost_tank/bt_nodes/moveToPose.hpp"
+#include "behaviortree_cpp/behavior_tree.h"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
 #include "ghost_util/read_path.hpp"
+#include <ghost_tank/control/trajectory.hpp>
 
 using std::placeholders::_1;
 
@@ -33,22 +34,28 @@ namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
-class MoveToPoseJERRYIO : public MoveToPose {
+class LoadPathFromCSV : public BT::StatefulActionNode
+{
 public:
-	// If your Node has ports, you must use this constructor signature
-	MoveToPoseJERRYIO(const std::string& name, const BT::NodeConfig& config);
+  // If your Node has ports, you must use this constructor signature
+  LoadPathFromCSV(const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
-private:
-  std::string file_path;
-  std::string config_path;
+  /// Method called once, when transitioning from the state IDLE.
+  /// If it returns RUNNING, this becomes an asynchronous node.
+  BT::NodeStatus onStart();
 
-  // gets all member variables from ports, must deal with mirrored also 
-  void GetBlackboardData();
-  void FirstLoop();
-  void GeneratePath();
+  /// method invoked when the action is already in the RUNNING state.
+  BT::NodeStatus onRunning();
+
+  void onHalted();
+
+private:
+  std::string config_path;
+  BT::Blackboard::Ptr blackboard_;
+  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
 };
 
 } // namespace ghost_tank {

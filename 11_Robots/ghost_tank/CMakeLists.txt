@@ -192,12 +192,12 @@ set(NODES
   moveToPoint
   moveScissor
   generate_bezier_path
+  load_path_from_csv
   follow_path
 )
 
 # bt node libraries
 set(MOVETOPOSENODES
-  moveToPoseJERRYIO
 )
 
 add_library(moveToPose SHARED
