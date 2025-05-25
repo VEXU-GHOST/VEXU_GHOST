@@ -199,30 +199,30 @@ set(NODES
 )
 
 # bt node libraries
-set(MOVETOPOSENODES
-)
-
-add_library(moveToPose SHARED
-  src/bt_nodes/moveToPose.cpp
-)
-target_include_directories(moveToPose
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(moveToPose
-  ${DEPENDENCIES}
-)
-target_link_libraries(moveToPose
-)
-ament_export_targets(moveToPose HAS_LIBRARY_TARGET)
-install(
-  TARGETS moveToPose
-  EXPORT moveToPose
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
+# set(MOVETOPOSENODES
+# )
+# 
+# add_library(moveToPose SHARED
+#   src/bt_nodes/moveToPose.cpp
+# )
+# target_include_directories(moveToPose
+#   PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
+# ament_target_dependencies(moveToPose
+#   ${DEPENDENCIES}
+# )
+# target_link_libraries(moveToPose
+# )
+# ament_export_targets(moveToPose HAS_LIBRARY_TARGET)
+# install(
+#   TARGETS moveToPose
+#   EXPORT moveToPose
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#   RUNTIME DESTINATION bin
+#   INCLUDES DESTINATION include
+# )
 
 foreach(NODE ${NODES})
   add_library(${NODE} SHARED
@@ -318,6 +318,16 @@ foreach(TEST ${TEST_FILES})
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
   $<INSTALL_INTERFACE:include>)
 endforeach()
+
+ament_add_gtest(test_trajectory test/control/test_trajectory.cpp)
+  ament_target_dependencies(test_trajectory ${DEPENDENCIES})
+  target_link_libraries(test_trajectory
+    gtest_main
+  )
+  target_include_directories(test_trajectory PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
+  $<INSTALL_INTERFACE:include>)
 
 add_executable(test_path_generators test/control/test_path_generators.cpp)
 ament_target_dependencies(test_path_generators

@@ -26,6 +26,7 @@
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include <ghost_tank/control/trajectory.hpp>
+#include <ghost_tank/control/tank_pid_controller.hpp>
 
 namespace ghost_tank
 {
@@ -39,10 +40,10 @@ public:
 
   /// Method called once, when transitioning from the state IDLE.
   /// If it returns RUNNING, this becomes an asynchronous node.
-  BT::NodeStatus onStart();
+  virtual BT::NodeStatus onStart();
 
   /// method invoked when the action is already in the RUNNING state.
-  BT::NodeStatus onRunning();
+  virtual BT::NodeStatus onRunning();
 
   /// when the method halt() is called and the action is RUNNING, this method is invoked.
   /// This is a convenient place todo a cleanup, if needed.
@@ -66,6 +67,9 @@ protected:
   std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
   motion_planning::Trajectory trajectory_;
 
+  std::shared_ptr<TankPIDController> m_approach_controller_ptr;
+  std::shared_ptr<TankPIDController> m_settling_controller_ptr;
+
   // Path Config
   double xy_exit_threshold_m_{0.0};
   double angle_exit_threshold_rad_{0.0};
@@ -81,6 +85,7 @@ protected:
   std::chrono::time_point<std::chrono::system_clock> start_time_;
   bool first_loop_{true};
   bool settling_{false};
+  bool backwards_{false};
 };
 
 } // namespace ghost_tank {

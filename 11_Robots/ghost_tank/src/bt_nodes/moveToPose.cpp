@@ -160,13 +160,13 @@ void MoveToPose::PurePursuit()
   Eigen::Vector2d command;
   if (within_xy_exit_threshold || settling_) {
     // We are within xy_exit_threshold, switch to pure angle control
-    // command = pd_control_threshold_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose_);
+    command = pd_control_threshold_ptr_->theta_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), final_pose_);
 
     // Once we start settling, never exit to avoid instability.
     settling_ = true;
   } else {
     // Chase the carrot. If within pursuit radius, ignore lateral error in xy control.
-    // command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), desired_pose, final_pose_, backwards, within_pursuit_radius);
+    command = pd_control_ptr_->tank_pid(tank_model_ptr_->getWorldPose(), tank_model_ptr_->getWorldTwist(), desired_pose, final_pose_, backwards, within_pursuit_radius);
   }
 
   // Clamp steering and lateral thrust to bounds

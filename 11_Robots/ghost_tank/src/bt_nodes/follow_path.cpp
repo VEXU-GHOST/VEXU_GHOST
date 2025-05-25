@@ -34,6 +34,8 @@ FollowPath::FollowPath(const std::string & name, const BT::NodeConfig & config)
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_trajectory_ptr", tank_trajectory_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "approach_controller_ptr", m_approach_controller_ptr);
+  BT_Util::get_from_blackboard(blackboard_, "settling_controller_ptr", m_settling_controller_ptr);
 }
 
 BT::PortsList FollowPath::getBaseInputPorts()
@@ -45,7 +47,8 @@ BT::PortsList FollowPath::getBaseInputPorts()
     BT::InputPort<double>("max_speed_linear_percent"),
     BT::InputPort<double>("max_speed_angular_percent"),
     BT::InputPort<int>("timeout_ms"),
-    BT::InputPort<bool>("use_theta")
+    BT::InputPort<bool>("use_theta"),
+    BT::InputPort<bool>("backwards"),
   };
 }
 
@@ -64,6 +67,7 @@ BT::NodeStatus FollowPath::onStart()
   max_speed_angular_percent_ = BT_Util::get_input<double>(this, "max_speed_angular_percent");
   timeout_ms_ = BT_Util::get_input<int>(this, "timeout_ms");
   use_theta_ = BT_Util::get_input<bool>(this, "use_theta");
+  backwards_ = BT_Util::get_input<bool>(this, "backwards");
 
   // Update local trajectory copy
   trajectory_ = *tank_trajectory_ptr_;

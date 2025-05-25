@@ -38,9 +38,14 @@ public:
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
+
+  BT::NodeStatus onStart() override;
+
   Eigen::Vector2d calculateControllerCommand() override;
 
 protected:
+  double lookahead_distance_m_{0.0};
+  int last_carrot_index_{0};
 };
 
 } // namespace ghost_tank
