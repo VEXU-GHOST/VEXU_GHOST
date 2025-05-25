@@ -333,6 +333,18 @@ install(TARGETS
   test_path_generators
   DESTINATION lib/${PROJECT_NAME})
 
+add_executable(test_trajectory_viz test/visualization/test_trajectory_viz.cpp)
+ament_target_dependencies(test_trajectory_viz
+  ${DEPENDENCIES}
+  )
+target_include_directories(test_trajectory_viz
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+test_trajectory_viz
+  DESTINATION lib/${PROJECT_NAME})
+
 ###################
 ##### Install #####
 ###################
