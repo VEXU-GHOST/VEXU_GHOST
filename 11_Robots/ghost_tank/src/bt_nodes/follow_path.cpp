@@ -33,24 +33,28 @@ FollowPath::FollowPath(const std::string & name, const BT::NodeConfig & config)
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_trajectory_ptr", tank_trajectory_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
 }
 
-BT::PortsList FollowPath::providedPorts()
+BT::PortsList FollowPath::getBaseInputPorts()
 {
-  return {
-    BT::InputPort<double>("xy_exit_threshold_tiles"),
+  return  {BT::InputPort<double>("xy_exit_threshold_tiles"),
     BT::InputPort<double>("angle_exit_threshold_deg"),
     BT::InputPort<double>("lin_vel_exit_threshold_tps", 1000.0, ""),
     BT::InputPort<double>("ang_vel_exit_threshold_dps", 1000.0, ""),
     BT::InputPort<double>("max_speed_linear_percent"),
     BT::InputPort<double>("max_speed_angular_percent"),
     BT::InputPort<int>("timeout_ms"),
-    BT::InputPort<bool>("use_theta"),
+    BT::InputPort<bool>("use_theta")
   };
 }
 
 BT::NodeStatus FollowPath::onStart()
 {
+  first_loop_ = true;
+  start_time_ = std::chrono::system_clock::now();
+  settling_ = false;
+
   // Get Blackboard Inputs
   xy_exit_threshold_m_ = BT_Util::get_input<double>(this, "xy_exit_threshold_tiles") * ghost_util::TILES_TO_METERS;
   angle_exit_threshold_rad_ = BT_Util::get_input<double>(this, "angle_exit_threshold_deg") * ghost_util::DEG_TO_RAD;
@@ -63,17 +67,78 @@ BT::NodeStatus FollowPath::onStart()
 
   // Update local trajectory copy
   trajectory_ = *tank_trajectory_ptr_;
+
+  goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());
   return BT::NodeStatus::RUNNING;
 }
 
 BT::NodeStatus FollowPath::onRunning()
 {
-//   return BT::NodeStatus::SUCCESS;
+  if (checkEndConditions()) {
+    tank_model_ptr_->driveCommand(0.0, 0.0);
+    return BT::NodeStatus::SUCCESS;
+  }
+
+  auto cmd = calculateControllerCommand();
+  fwd_command_ = cmd.x();
+  turn_command_ = cmd.y();
+
+  normalizeControllerCommand();
+
+  tank_model_ptr_->driveCommand(fwd_command_, turn_command_);
   return BT::NodeStatus::RUNNING;
+}
+
+void FollowPath::normalizeControllerCommand()
+{
+  // Clamp steering and lateral thrust to bounds
+  fwd_command_ = ghost_util::clamp(fwd_command_, -max_speed_linear_percent_, max_speed_linear_percent_);
+  turn_command_ = ghost_util::clamp(turn_command_, -max_speed_angular_percent_, max_speed_angular_percent_);
+
+  // Normalize to avoid output saturation.
+  double left_cmd = fwd_command_ - turn_command_;
+  double right_cmd = fwd_command_ + turn_command_;
+
+  // Scale commands so that max command equals full thrust
+  double normalizer = 1.0 / std::max(1.0, std::max(std::fabs(left_cmd), std::fabs(right_cmd)));
+  // double normalizer = 1.0;
+  fwd_command_ *= normalizer;
+  turn_command_ *= normalizer;
+}
+
+bool FollowPath::checkEndConditions()
+{
+  double dist_err = (goal_pose_.head<2>() - tank_model_ptr_->getWorldPose().head<2>()).norm();
+  double theta_err = std::fabs(ghost_util::SmallestAngleDistRad(goal_pose_.z(), tank_model_ptr_->getWorldAngleRad()));
+
+  bool xy_satisfied = dist_err < xy_exit_threshold_m_;
+  bool angle_satisfied = theta_err < angle_exit_threshold_rad_;
+  bool xy_vel_satisfied = tank_model_ptr_->getWorldTwist().head<2>().norm() < lin_vel_exit_threshold_mps_;
+  bool ang_vel_satisfied = std::fabs(tank_model_ptr_->getWorldTwist().z()) < ang_vel_exit_threshold_radps_;
+
+  // Check exit conditions
+  if (xy_satisfied && ang_vel_satisfied && xy_vel_satisfied) {
+    bool translation_only = !use_theta_;
+    if (translation_only || use_theta_ && ang_vel_satisfied) {
+      RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPose: Success");
+      return true;
+    }
+  }
+
+  // Check timeout condition
+  int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
+  if (time_elapsed > abs(timeout_ms_)) {
+    RCLCPP_WARN(node_ptr_->get_logger(), "MoveToPose: Skipped");
+    return true;
+  }
+
+  // Continue along the path
+  return false;
 }
 
 void FollowPath::onHalted()
 {
+  tank_model_ptr_->driveCommand(0.0, 0.0);
   resetStatus();
 }
 

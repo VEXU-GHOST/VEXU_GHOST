@@ -37,9 +37,6 @@ public:
   // If your Node has ports, you must use this constructor signature
   FollowPath(const std::string & name, const BT::NodeConfig & config);
 
-  // It is mandatory to define this STATIC method.
-  static BT::PortsList providedPorts();
-
   /// Method called once, when transitioning from the state IDLE.
   /// If it returns RUNNING, this becomes an asynchronous node.
   BT::NodeStatus onStart();
@@ -51,11 +48,25 @@ public:
   /// This is a convenient place todo a cleanup, if needed.
   void onHalted();
 
-private:
-  std::shared_ptr<TankModel> tank_model_ptr_;
-  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
+  virtual Eigen::Vector2d calculateControllerCommand() = 0;
+
+  static BT::PortsList getBaseInputPorts();
+
+protected:
+  bool checkEndConditions();
+  void normalizeControllerCommand();
+
+  std::shared_ptr<rclcpp::Node> node_ptr_;
   BT::Blackboard::Ptr blackboard_;
 
+  double fwd_command_{0.0};
+  double turn_command_{0.0};
+
+  std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
+  motion_planning::Trajectory trajectory_;
+
+  // Path Config
   double xy_exit_threshold_m_{0.0};
   double angle_exit_threshold_rad_{0.0};
   double lin_vel_exit_threshold_mps_{0.0};
@@ -64,8 +75,12 @@ private:
   double max_speed_angular_percent_{0.0};
   int timeout_ms_{0};
   bool use_theta_{false};
+  Eigen::Vector3d goal_pose_;
 
-  motion_planning::Trajectory trajectory_;
+  // State Transition Handling
+  std::chrono::time_point<std::chrono::system_clock> start_time_;
+  bool first_loop_{true};
+  bool settling_{false};
 };
 
 } // namespace ghost_tank {

@@ -23,44 +23,24 @@
 
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
-#include "behaviortree_cpp/behavior_tree.h"
-#include <visualization_msgs/msg/marker_array.hpp>
-
-#include "ghost_tank/bt_nodes/bt_util.hpp"
-#include "ghost_tank/control/path_generators.hpp"
+#include <ghost_tank/bt_nodes/follow_path.hpp>
 
 namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
-class GenerateBezierPath : public BT::StatefulActionNode
+class FollowPathPurePursuit : public FollowPath
 {
 public:
   // If your Node has ports, you must use this constructor signature
-  GenerateBezierPath(const std::string & name, const BT::NodeConfig & config);
+  FollowPathPurePursuit(const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
-  /// Method called once, when transitioning from the state IDLE.
-  /// If it returns RUNNING, this becomes an asynchronous node.
-  BT::NodeStatus onStart();
+  Eigen::Vector2d calculateControllerCommand() override;
 
-  /// method invoked when the action is already in the RUNNING state.
-  BT::NodeStatus onRunning();
-
-  /// when the method halt() is called and the action is RUNNING, this method is invoked.
-  /// This is a convenient place todo a cleanup, if needed.
-  void onHalted();
-
-private:
-  std::shared_ptr<TankModel> tank_model_ptr_;
-  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
-  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub_ptr_;
-  visualization_msgs::msg::MarkerArray viz_msg_;
-  BT::Blackboard::Ptr blackboard_;
-  std::shared_ptr<rclcpp::Node> node_ptr_;
+protected:
 };
 
-} // namespace ghost_tank {
+} // namespace ghost_tank

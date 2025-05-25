@@ -194,6 +194,8 @@ set(NODES
   generate_bezier_path
   load_path_from_csv
   follow_path
+  follow_path_pure_pursuit
+  follow_path_stanley_controller
 )
 
 # bt node libraries

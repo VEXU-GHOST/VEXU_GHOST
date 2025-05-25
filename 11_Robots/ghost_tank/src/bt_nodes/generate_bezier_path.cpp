@@ -23,6 +23,7 @@
 
 
 #include "ghost_tank/bt_nodes/generate_bezier_path.hpp"
+#include <ghost_tank/visualization/ros_helpers.hpp>
 
 namespace ghost_tank
 {
@@ -35,6 +36,11 @@ GenerateBezierPath::GenerateBezierPath(const std::string & name, const BT::NodeC
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_trajectory_ptr", tank_trajectory_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+
+  if (node_ptr_) {
+    trajectory_viz_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/autonomy/current_tank_trajectory", 10);
+  }
 }
 
 BT::PortsList GenerateBezierPath::providedPorts()
@@ -97,6 +103,12 @@ BT::NodeStatus GenerateBezierPath::onRunning()
   }
 
   traj.calculateRemainingPathLengths();
+
+  if (node_ptr_) {
+    viz_msg_.markers.clear();
+    visualization::getTrajectoryMsg(traj, viz_msg_, 10);
+    trajectory_viz_pub_ptr_->publish(viz_msg_);
+  }
 
   *tank_trajectory_ptr_ = traj;
   return BT::NodeStatus::SUCCESS;
