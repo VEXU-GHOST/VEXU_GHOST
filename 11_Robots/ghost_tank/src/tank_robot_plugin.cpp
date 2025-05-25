@@ -39,7 +39,7 @@ using std::placeholders::_1;
 using namespace std::chrono_literals;
 
 using ghost_control::PIDController;
-using ghost_control::PIDGains;
+using ghost_control::PIDConfig;
 
 using ghost_v5_interfaces::devices::JoystickDeviceData;
 
@@ -283,21 +283,23 @@ void TankRobotPlugin::initIntake()
   m_ring_color = m_color_map["unknown"];
 }
 
-PIDGains TankRobotPlugin::loadPIDGains(const std::string & param_prefix)
+PIDConfig TankRobotPlugin::loadPIDConfig(const std::string & param_prefix)
 {
-  PIDGains gains;
+  PIDConfig config;
 
   node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".kp", -1.0);
   node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".ki", -1.0);
   node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".kd", -1.0);
   node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".integral_limit", -1.0);
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".integral_activation_bound", -1.0);
 
-  gains.kp = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".kp").as_double();
-  gains.ki = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".ki").as_double();
-  gains.kd = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".kd").as_double();
-  gains.integral_limit = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".integral_limit").as_double();
+  config.kp = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".kp").as_double();
+  config.ki = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".ki").as_double();
+  config.kd = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".kd").as_double();
+  config.integral_limit = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".integral_limit").as_double();
+  config.integral_activation_bound = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".integral_activation_bound").as_double();
 
-  return gains;
+  return config;
 }
 
 void TankRobotPlugin::initTankModel()
@@ -328,16 +330,16 @@ void TankRobotPlugin::initTankModel()
   m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
 
   // Load PID Controller Gains
-  auto linear_approach_gains = loadPIDGains("linear_approach");
-  auto angular_approach_gains = loadPIDGains("angular_approach");
-  m_approach_controller_ptr = std::make_shared<TankPIDController>(linear_approach_gains, angular_approach_gains);
+  auto linear_approach_config = loadPIDConfig("linear_approach");
+  auto angular_approach_config = loadPIDConfig("angular_approach");
+  m_approach_controller_ptr = std::make_shared<TankPIDController>(linear_approach_config, angular_approach_config);
   
-  auto linear_settling_gains = loadPIDGains("linear_settling");
-  auto angular_settling_gains = loadPIDGains("angular_settling");
-  m_settling_controller_ptr = std::make_shared<TankPIDController>(linear_settling_gains, angular_settling_gains);
+  auto linear_settling_config = loadPIDConfig("linear_settling");
+  auto angular_settling_config = loadPIDConfig("angular_settling");
+  m_settling_controller_ptr = std::make_shared<TankPIDController>(linear_settling_config, angular_settling_config);
 
-  auto arc_turn_gains = loadPIDGains("arc_turn");
-  m_arc_turn_controller_ptr = std::make_shared<PIDController>(arc_turn_gains);
+  auto arc_turn_config = loadPIDConfig("arc_turn");
+  m_arc_turn_controller_ptr = std::make_shared<PIDController>(arc_turn_config);
 }
 
 void TankRobotPlugin::initAutonomy()

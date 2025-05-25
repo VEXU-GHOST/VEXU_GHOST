@@ -41,7 +41,7 @@ struct TankState
 class TankPIDController
 {
 public:
-  TankPIDController(const ghost_control::PIDGains & linear_gains, const ghost_control::PIDGains & angular_gains, float dt = 0.01)
+  TankPIDController(const ghost_control::PIDConfig & linear_gains, const ghost_control::PIDConfig & angular_gains, float dt = 0.01)
   {
     linear_controller_ptr_ = std::make_shared<ghost_control::PIDController>(linear_gains, dt);
     angular_controller_ptr_ = std::make_shared<ghost_control::PIDController>(angular_gains, dt);

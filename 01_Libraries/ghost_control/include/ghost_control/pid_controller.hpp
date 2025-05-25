@@ -27,12 +27,13 @@
 namespace ghost_control
 {
 
-struct PIDGains
+struct PIDConfig
 {
   double kp = 0.0;
   double ki = 0.0;
   double kd = 0.0;
-  double integral_limit = 0.0;
+  double integral_limit = std::numeric_limits<double>::infinity();
+  double integral_activation_bound = std::numeric_limits<double>::infinity();
 };
 
 /**
@@ -44,11 +45,11 @@ class PIDController
 {
 public:
   /**
-   * @brief Constructs a PID controller with given gains and timestep.
-   * @param gains Struct containing the PID gains.
+   * @brief Constructs a PID controller with given config and timestep.
+   * @param config Struct containing the PID config.
    * @param dt Time step between control loop updates (in seconds).
    */
-  PIDController(const PIDGains & gains, double dt = 0.01);
+  PIDController(const PIDConfig & config, double dt = 0.01);
 
   /**
    * @brief Resets the integral accumulator and previous error state.
@@ -67,7 +68,7 @@ public:
   double calculateCommand(double error, double error_deriv, double additional_terms = 0.0);
 
 private:
-  PIDGains gains_;
+  PIDConfig config_;
   double integral_sum_;
   double last_error_;
   double dt_;

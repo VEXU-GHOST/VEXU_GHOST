@@ -75,7 +75,7 @@ protected:
   void initIntake();
   void initTankModel();
   void initAutonomy();
-  ghost_control::PIDGains loadPIDGains(const std::string & param_prefix);
+  ghost_control::PIDConfig loadPIDConfig(const std::string & param_prefix);
 
   // onNewSensorData
   void updateConveyorPositionSensing();

@@ -25,8 +25,8 @@
 namespace ghost_control
 {
 
-PIDController::PIDController(const PIDGains & gains, double dt)
-: gains_(gains), dt_(dt)
+PIDController::PIDController(const PIDConfig & config, double dt)
+: config_(config), dt_(dt)
 {
   reset();
 }
@@ -46,10 +46,15 @@ double PIDController::calculateCommand(double error, double error_deriv, double 
   last_error_ = error;
 
   // Calculate Integral Component
-  integral_sum_ += error * dt_;
-  double integral_component = ghost_util::clamp(gains_.ki * integral_sum_, -gains_.integral_limit, gains_.integral_limit);
+  double integral_component = 0.0;
+  if (std::fabs(error) <= config_.integral_activation_bound) {
+    integral_sum_ += error * dt_;
+    integral_component = ghost_util::clamp(config_.ki * integral_sum_, -config_.integral_limit, config_.integral_limit);
+  } else {
+    integral_sum_ = 0.0;  // Optional: clear it when outside zone
+  }
 
-  return gains_.kp * error + integral_component + gains_.kd * error_deriv + additional_terms;
+  return config_.kp * error + integral_component + config_.kd * error_deriv + additional_terms;
 }
 
 } // namespace ghost_control
