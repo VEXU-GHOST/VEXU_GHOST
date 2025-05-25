@@ -327,7 +327,7 @@ void TankRobotPlugin::initTankModel()
   m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
   m_odom_ptr->resetPose();
 
-  m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
+  // m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
 
   // Load PID Controller Gains
   auto linear_approach_config = loadPIDConfig("linear_approach");
@@ -383,7 +383,7 @@ void TankRobotPlugin::onNewSensorData()
   updateConveyorPositionSensing();
   publishIMUData();
   updateAndPublishOdometry();
-  publishTrajectoryVisualization();
+  // publishTrajectoryVisualization();
 }
 
 void TankRobotPlugin::updateConveyorPositionSensing()
@@ -1156,71 +1156,71 @@ void TankRobotPlugin::publishErrorPose(Eigen::Vector3d pose)
   m_err_pos_pub->publish(msg);
 }
 
-void TankRobotPlugin::publishTrajectoryVisualization()
-{
-  if (!robot_trajectory_ptr_->isNotEmpty()) {
-    return;
-  }
-  visualization_msgs::msg::MarkerArray msg{};
+// void TankRobotPlugin::publishTrajectoryVisualization()
+// {
+//   if (!robot_trajectory_ptr_->isNotEmpty()) {
+//     return;
+//   }
+//   visualization_msgs::msg::MarkerArray msg{};
 
-  visualization_msgs::msg::Marker search_radius_marker{};
-  search_radius_marker.header.frame_id = "base_link";
-  search_radius_marker.header.stamp = node_ptr_->get_clock()->now();
-  search_radius_marker.id = 1;
-  search_radius_marker.type = 3;   // cylinder type
-  search_radius_marker.action = 0;
-  search_radius_marker.scale.x = 2 * m_search_radius;
-  search_radius_marker.scale.y = 2 * m_search_radius;
-  search_radius_marker.scale.z = 0.01;
-  search_radius_marker.color.b = 1.0;
-  search_radius_marker.color.a = 0.3;
+//   visualization_msgs::msg::Marker search_radius_marker{};
+//   search_radius_marker.header.frame_id = "base_link";
+//   search_radius_marker.header.stamp = node_ptr_->get_clock()->now();
+//   search_radius_marker.id = 1;
+//   search_radius_marker.type = 3;   // cylinder type
+//   search_radius_marker.action = 0;
+//   search_radius_marker.scale.x = 2 * m_search_radius;
+//   search_radius_marker.scale.y = 2 * m_search_radius;
+//   search_radius_marker.scale.z = 0.01;
+//   search_radius_marker.color.b = 1.0;
+//   search_radius_marker.color.a = 0.3;
 
-  visualization_msgs::msg::Marker carrot{};
-  carrot.header.frame_id = "map";
-  carrot.header.stamp = node_ptr_->get_clock()->now();
-  carrot.id = 2;
-  carrot.type = 4;   // line type
-  carrot.action = 0;
-  carrot.scale.x = 0.01;
-  carrot.scale.y = 1.0;
-  carrot.scale.z = 1.0;
-  carrot.color.g = 1.0;
-  carrot.color.a = 0.5;
-  geometry_msgs::msg::Point p_robot;
-  p_robot.x = m_tank_model_ptr->getWorldPose().x();
-  p_robot.y = m_tank_model_ptr->getWorldPose().y();
-  p_robot.z = 0.0;
-  geometry_msgs::msg::Point p_carrot;
-  p_carrot.set__x(m_desired_pose.x());
-  p_carrot.set__y(m_desired_pose.y());
-  p_carrot.z = 0.0;
-  carrot.points.push_back(p_robot);
-  carrot.points.push_back(p_carrot);
+//   visualization_msgs::msg::Marker carrot{};
+//   carrot.header.frame_id = "map";
+//   carrot.header.stamp = node_ptr_->get_clock()->now();
+//   carrot.id = 2;
+//   carrot.type = 4;   // line type
+//   carrot.action = 0;
+//   carrot.scale.x = 0.01;
+//   carrot.scale.y = 1.0;
+//   carrot.scale.z = 1.0;
+//   carrot.color.g = 1.0;
+//   carrot.color.a = 0.5;
+//   geometry_msgs::msg::Point p_robot;
+//   p_robot.x = m_tank_model_ptr->getWorldPose().x();
+//   p_robot.y = m_tank_model_ptr->getWorldPose().y();
+//   p_robot.z = 0.0;
+//   geometry_msgs::msg::Point p_carrot;
+//   p_carrot.set__x(m_desired_pose.x());
+//   p_carrot.set__y(m_desired_pose.y());
+//   p_carrot.z = 0.0;
+//   carrot.points.push_back(p_robot);
+//   carrot.points.push_back(p_carrot);
 
-  visualization_msgs::msg::Marker marker{};
-  marker.header.frame_id = "map";
-  marker.header.stamp = node_ptr_->get_clock()->now();
-  marker.id = 0;
-  marker.type = 8;   // points type
-  marker.action = 0;
-  marker.scale.x = 0.025;
-  marker.scale.y = 0.025;
-  marker.scale.z = 0.1;
-  marker.color.r = 1.0;
-  marker.color.a = 1.0;
+//   visualization_msgs::msg::Marker marker{};
+//   marker.header.frame_id = "map";
+//   marker.header.stamp = node_ptr_->get_clock()->now();
+//   marker.id = 0;
+//   marker.type = 8;   // points type
+//   marker.action = 0;
+//   marker.scale.x = 0.025;
+//   marker.scale.y = 0.025;
+//   marker.scale.z = 0.1;
+//   marker.color.r = 1.0;
+//   marker.color.a = 1.0;
 
-  for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); i += 5) {
-    geometry_msgs::msg::Point p;
-    p.x = robot_trajectory_ptr_->x_trajectory.position_vector[i];
-    p.y = robot_trajectory_ptr_->y_trajectory.position_vector[i];
-    p.z = 0.0;
-    marker.points.push_back(p);
-  }
-  msg.markers.push_back(search_radius_marker);
-  msg.markers.push_back(carrot);
-  msg.markers.push_back(marker);
-  m_trajectory_viz_pub->publish(msg);
-}
+//   for (int i = 0; i < robot_trajectory_ptr_->x_trajectory.position_vector.size(); i += 5) {
+//     geometry_msgs::msg::Point p;
+//     p.x = robot_trajectory_ptr_->x_trajectory.position_vector[i];
+//     p.y = robot_trajectory_ptr_->y_trajectory.position_vector[i];
+//     p.z = 0.0;
+//     marker.points.push_back(p);
+//   }
+//   msg.markers.push_back(search_radius_marker);
+//   msg.markers.push_back(carrot);
+//   msg.markers.push_back(marker);
+//   m_trajectory_viz_pub->publish(msg);
+// }
 
 void TankRobotPlugin::playMusic(std::string musicFileName)
 {

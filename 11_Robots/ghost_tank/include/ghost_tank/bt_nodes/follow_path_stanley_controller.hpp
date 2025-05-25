@@ -38,6 +38,8 @@ public:
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
+  BT::NodeStatus onStart() override;
+
   Eigen::Vector2d calculateControllerCommand() override;
 
 protected:

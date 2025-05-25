@@ -39,13 +39,13 @@ namespace ghost_tank
 namespace visualization
 {
 
-constexpr double TRAJECTORY_SPHERE_DIAMETER = 0.1;
-constexpr double TRAJECTORY_ARROW_LENGTH = 0.25;
-constexpr double TRAJECTORY_ARROW_SHAFT_DIAMETER = 0.035;
-constexpr double TRAJECTORY_ARROW_HEAD_DIAMETER = 0.05;
+constexpr double TRAJECTORY_SPHERE_DIAMETER = 0.02;
+constexpr double TRAJECTORY_ARROW_LENGTH = 0.075;
+constexpr double TRAJECTORY_ARROW_SHAFT_DIAMETER = 0.015;
+constexpr double TRAJECTORY_ARROW_HEAD_DIAMETER = 0.025;
 constexpr float TRAJECTORY_SPHERE_ALPHA = 0.5f;
 constexpr float TRAJECTORY_ARROW_ALPHA = 1.0f;
-constexpr double TRAJECTORY_ARROW_Z_OFFSET = 0.15;
+constexpr double TRAJECTORY_ARROW_Z_OFFSET = 0.1;
 
 /**
  * @brief Populates a visualization_msgs::msg::MarkerArray with trajectory points as spheres and arrows.

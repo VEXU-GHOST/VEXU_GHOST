@@ -49,7 +49,7 @@ BT::PortsList GenerateBezierPath::providedPorts()
     BT::InputPort<double>("end_x_tiles"),
     BT::InputPort<double>("end_y_tiles"),
     BT::InputPort<double>("end_theta_deg"),
-    BT::InputPort<double>("lead"),
+    BT::InputPort<double>("lead_tiles"),
     BT::InputPort<bool>("backwards", false, ""),
     BT::InputPort<std::string>("type", "CUBIC_BEZIER", ""),
     BT::InputPort<int>("num_points", 250, "")
@@ -89,7 +89,7 @@ BT::NodeStatus GenerateBezierPath::onRunning()
   // Mirror path about center line of VEX field
   if (BT_Util::get_from_blackboard<bool>(blackboard_, "mirrored")) {
     end_x_m = 6.0 * ghost_util::TILES_TO_METERS - end_x_m;
-    start_angle = ghost_util::WrapAngle2PI(M_PI - start_angle);
+    end_theta_rad = ghost_util::WrapAngle2PI(M_PI - end_theta_rad);
   }
 
   // Generate Trajectory

@@ -34,9 +34,21 @@ FollowPathPurePursuit::FollowPathPurePursuit(const std::string & name, const BT:
 
 BT::PortsList FollowPathPurePursuit::providedPorts()
 {
-  auto input_ports = getBaseInputPorts();
-  input_ports.insert(BT::InputPort<double>("lookahead_distance_tiles"));
-  return input_ports;
+  // auto input_ports = FollowPath::getBaseInputPorts();
+  // input_ports.insert(BT::InputPort<double>("lookahead_distance_tiles"));
+  // return input_ports;
+
+    return  {BT::InputPort<double>("xy_exit_threshold_tiles"),
+    BT::InputPort<double>("angle_exit_threshold_deg"),
+    BT::InputPort<double>("lin_vel_exit_threshold_tps", 1000.0, ""),
+    BT::InputPort<double>("ang_vel_exit_threshold_dps", 1000.0, ""),
+    BT::InputPort<double>("max_speed_linear_percent"),
+    BT::InputPort<double>("max_speed_angular_percent"),
+    BT::InputPort<int>("timeout_ms"),
+    BT::InputPort<bool>("use_theta"),
+    BT::InputPort<bool>("backwards"),
+    BT::InputPort<double>("lookahead_distance_tiles")
+  };
 }
 
 BT::NodeStatus FollowPathPurePursuit::onStart()

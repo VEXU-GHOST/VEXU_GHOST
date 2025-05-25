@@ -40,14 +40,14 @@ public:
 
   /// Method called once, when transitioning from the state IDLE.
   /// If it returns RUNNING, this becomes an asynchronous node.
-  virtual BT::NodeStatus onStart();
+  BT::NodeStatus onStart() override;
 
   /// method invoked when the action is already in the RUNNING state.
-  virtual BT::NodeStatus onRunning();
+  BT::NodeStatus onRunning() override;
 
   /// when the method halt() is called and the action is RUNNING, this method is invoked.
   /// This is a convenient place todo a cleanup, if needed.
-  void onHalted();
+  void onHalted() override;
 
   virtual Eigen::Vector2d calculateControllerCommand() = 0;
 

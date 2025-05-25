@@ -193,36 +193,7 @@ set(NODES
   moveScissor
   generate_bezier_path
   load_path_from_csv
-  follow_path
-  follow_path_pure_pursuit
-  follow_path_stanley_controller
 )
-
-# bt node libraries
-# set(MOVETOPOSENODES
-# )
-# 
-# add_library(moveToPose SHARED
-#   src/bt_nodes/moveToPose.cpp
-# )
-# target_include_directories(moveToPose
-#   PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# ament_target_dependencies(moveToPose
-#   ${DEPENDENCIES}
-# )
-# target_link_libraries(moveToPose
-# )
-# ament_export_targets(moveToPose HAS_LIBRARY_TARGET)
-# install(
-#   TARGETS moveToPose
-#   EXPORT moveToPose
-#   LIBRARY DESTINATION lib
-#   ARCHIVE DESTINATION lib
-#   RUNTIME DESTINATION bin
-#   INCLUDES DESTINATION include
-# )
 
 foreach(NODE ${NODES})
   add_library(${NODE} SHARED
@@ -248,7 +219,36 @@ foreach(NODE ${NODES})
   )
 endforeach()
 
-foreach(NODE ${MOVETOPOSENODES})
+###################
+### Follow Path ###
+###################
+
+add_library(follow_path SHARED
+  src/bt_nodes/follow_path.cpp
+)
+target_include_directories(follow_path
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(follow_path
+  ${DEPENDENCIES}
+)
+target_link_libraries(follow_path
+)
+ament_export_targets(follow_path HAS_LIBRARY_TARGET)
+install(
+  TARGETS follow_path
+  EXPORT follow_path
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+set(FOLLOW_PATH_NODES
+  follow_path_pure_pursuit
+)
+foreach(NODE ${FOLLOW_PATH_NODES})
   add_library(${NODE} SHARED
     src/bt_nodes/${NODE}.cpp
   )
@@ -260,7 +260,7 @@ foreach(NODE ${MOVETOPOSENODES})
     ${DEPENDENCIES}
   )
   target_link_libraries(${NODE}
-    moveToPose
+    follow_path
   )
   ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
   install(
@@ -286,7 +286,7 @@ ament_target_dependencies(tank_tree
 )
 target_link_libraries(tank_tree
   ${NODES}
-  ${MOVETOPOSENODES}
+  ${FOLLOW_PATH_NODES}
 )
 ament_export_targets(tank_tree HAS_LIBRARY_TARGET)
 install(

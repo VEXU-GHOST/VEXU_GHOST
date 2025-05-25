@@ -45,6 +45,21 @@ BT::PortsList FollowPathStanleyController::providedPorts()
   return input_ports;
 }
 
+
+BT::NodeStatus FollowPathStanleyController::onStart()
+{
+  // Call base class onStart to initialize common parameters
+  BT::NodeStatus status = FollowPath::onStart();
+  if (status != BT::NodeStatus::RUNNING) {
+    return status; // Return if base initialization failed or is not running
+  }
+
+  // Get Pure Pursuit specific parameters
+  // lookahead_distance_m_ = BT_Util::get_input<double>(this, "lookahead_distance_tiles") * ghost_util::TILES_TO_METERS;
+
+  return BT::NodeStatus::RUNNING;
+}
+
 Eigen::Vector2d FollowPathStanleyController::calculateControllerCommand()
 {
   // Get current vehicle pose and twist from the TankModel
