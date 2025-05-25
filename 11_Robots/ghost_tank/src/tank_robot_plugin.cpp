@@ -38,6 +38,9 @@ using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
 using namespace std::chrono_literals;
 
+using ghost_control::PIDController;
+using ghost_control::PIDGains;
+
 using ghost_v5_interfaces::devices::JoystickDeviceData;
 
 using ghost_util::INCHES_TO_METERS;
@@ -294,7 +297,7 @@ PIDGains TankRobotPlugin::loadPIDGains(const std::string & param_prefix)
   gains.kd = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".kd").as_double();
   gains.integral_limit = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".integral_limit").as_double();
 
-  return PIDGains;
+  return gains;
 }
 
 void TankRobotPlugin::initTankModel()
@@ -327,14 +330,14 @@ void TankRobotPlugin::initTankModel()
   // Load PID Controller Gains
   auto linear_approach_gains = loadPIDGains("linear_approach");
   auto angular_approach_gains = loadPIDGains("angular_approach");
-  m_approach_controller_ptr = std::make_shared<PDControl>(linear_approach_gains, angular_approach_gains);
+  m_approach_controller_ptr = std::make_shared<TankPIDController>(linear_approach_gains, angular_approach_gains);
   
   auto linear_settling_gains = loadPIDGains("linear_settling");
   auto angular_settling_gains = loadPIDGains("angular_settling");
-  m_settling_controller_ptr = std::make_shared<PDControl>(linear_settling_gains, angular_settling_gains);
+  m_settling_controller_ptr = std::make_shared<TankPIDController>(linear_settling_gains, angular_settling_gains);
 
   auto arc_turn_gains = loadPIDGains("arc_turn");
-  m_arc_turn_controller_ptr = std::make_shared<PDControl>(PIDGains(), arc_turn_gains);
+  m_arc_turn_controller_ptr = std::make_shared<PIDController>(arc_turn_gains);
 }
 
 void TankRobotPlugin::initAutonomy()
@@ -352,7 +355,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("node_ptr", node_ptr_);
   bt_->set_variable("tank_trajectory_ptr", tank_trajectory_ptr_);
   bt_->set_variable("approach_controller_ptr", m_approach_controller_ptr);
-  bt_->set_variable("settling_contoller_ptr", m_settling_contoller_ptr);
+  bt_->set_variable("settling_controller_ptr", m_settling_controller_ptr);
   bt_->set_variable("arc_turn_controller_ptr", m_arc_turn_controller_ptr);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);

@@ -52,28 +52,35 @@ competition_state_machine_node:
       neutral_stake_arm_score_alliance_pos_deg: 165.0
       neutral_stake_arm_down_pos_deg: 240.0
 
-      # Nav Gains
-      move_to_pose_kp_xy: 2.0
-      move_to_pose_kd_xy: 0.2
-      move_to_pose_kp_theta: 2.0
-      move_to_pose_kd_theta: 0.2
-      move_to_pose_ki_theta: 0.0
+      linear_approach:
+        kp: 2.0
+        ki: 0.0
+        kd: 0.2
+        integral_limit: 0.0
 
-      # Settling Gains
-      move_to_pose_kp_xy_fine: 0.0
-      move_to_pose_kd_xy_fine: 0.0
-      move_to_pose_kp_theta_fine: 0.4
-      move_to_pose_kd_theta_fine: 0.1
-      move_to_pose_ki_theta_fine: 3.0
+      angular_approach:
+        kp: 2.0
+        ki: 0.0
+        kd: 0.2
+        integral_limit: 0.0
 
-      # Arcturn Gains
-      move_to_pose_kp_xy_arc: 0.0
-      move_to_pose_kd_xy_arc: 0.0
-      move_to_pose_kp_theta_arc: 0.8 #0.75
-      move_to_pose_kd_theta_arc: 0.1 #0.1
-      move_to_pose_ki_theta_arc: 6.0
-      
-      move_to_pose_integral_limit: 0.7
+      linear_settling:
+        kp: 0.0
+        ki: 0.0
+        kd: 0.0
+        integral_limit: 0.0
+
+      angular_settling:
+        kp: 1.0
+        ki: 3.0
+        kd: 0.1
+        integral_limit: 0.35
+
+      arc_turn:
+        kp: 2.0
+        ki: 0.0
+        kd: 0.2
+        integral_limit: 0.0
 
       init_x_tiles: 2.4
       init_y_tiles: 0.4

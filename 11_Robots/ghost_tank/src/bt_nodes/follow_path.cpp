@@ -62,7 +62,7 @@ BT::NodeStatus FollowPath::onStart()
   use_theta_ = BT_Util::get_input<bool>(this, "use_theta");
 
   // Update local trajectory copy
-  trajectory_.update(*tank_trajectory_ptr_);
+  trajectory_ = *tank_trajectory_ptr_;
   return BT::NodeStatus::RUNNING;
 }
 

@@ -55,7 +55,6 @@ public:
    */
   void reset();
 
-
   /**
    * @brief Computes a control command based on error and error derivative.
    *
@@ -65,11 +64,10 @@ public:
    * @param error_deriv Derivative of the error.
    * @return Control output.
    */
-  double calculateCommand(double error, double error_deriv);
+  double calculateCommand(double error, double error_deriv, double additional_terms = 0.0);
 
 private:
   PIDGains gains_;
-
   double integral_sum_;
   double last_error_;
   double dt_;

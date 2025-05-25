@@ -46,6 +46,8 @@
 #include <ghost_tank/control/tank_pid_controller.hpp>
 #include <ghost_tank/control/trajectory.hpp>
 
+#include <ghost_control/pid_controller.hpp>
+
 namespace ghost_tank
 {
 
@@ -73,7 +75,7 @@ protected:
   void initIntake();
   void initTankModel();
   void initAutonomy();
-  PIDGains loadPIDGains(const std::string & param_prefix);
+  ghost_control::PIDGains loadPIDGains(const std::string & param_prefix);
 
   // onNewSensorData
   void updateConveyorPositionSensing();
@@ -180,9 +182,9 @@ protected:
   // Tank Model
   std::shared_ptr<TankModel> m_tank_model_ptr;
   std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
-  std::shared_ptr<PDControl> m_approach_controller_ptr;
-  std::shared_ptr<PDControl> m_settling_contoller_ptr;
-  std::shared_ptr<PDControl> m_arc_turn_controller_ptr;
+  std::shared_ptr<TankPIDController> m_approach_controller_ptr;
+  std::shared_ptr<TankPIDController> m_settling_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
 
   // Autonomy
   std::string bt_path_;

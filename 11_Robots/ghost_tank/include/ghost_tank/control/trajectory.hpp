@@ -53,19 +53,9 @@ struct Trajectory
     remaining_path_length.resize(size, 0.0);
   }
 
-  int size()
+  int size() const
   {
     return t.size();
-  }
-
-  void update(const Trajectory & other)
-  {
-    t = other.t;
-    x = other.x;
-    y = other.y;
-    theta = other.theta;
-    omega = other.omega;
-    remaining_path_length = other.remaining_path_length;
   }
 
   void clear()

@@ -37,7 +37,7 @@ void PIDController::reset()
   last_error_ = 0.0;
 }
 
-double PIDController::calculateCommand(double error, double error_deriv)
+double PIDController::calculateCommand(double error, double error_deriv, double additional_terms)
 {
   // Check for integral reset
   if (last_error_ * error < 0) {
@@ -49,7 +49,7 @@ double PIDController::calculateCommand(double error, double error_deriv)
   integral_sum_ += error * dt_;
   double integral_component = ghost_util::clamp(gains_.ki * integral_sum_, -gains_.integral_limit, gains_.integral_limit);
 
-  return gains_.kp * error + integral_component + gains_.kd * error_deriv;
+  return gains_.kp * error + integral_component + gains_.kd * error_deriv + additional_terms;
 }
 
 } // namespace ghost_control

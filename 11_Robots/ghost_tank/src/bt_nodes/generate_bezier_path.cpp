@@ -98,7 +98,7 @@ BT::NodeStatus GenerateBezierPath::onRunning()
 
   traj.calculateRemainingPathLengths();
 
-  tank_trajectory_ptr_->update(traj);
+  *tank_trajectory_ptr_ = traj;
   return BT::NodeStatus::SUCCESS;
 }
 
