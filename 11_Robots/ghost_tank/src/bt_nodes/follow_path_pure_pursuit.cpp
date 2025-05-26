@@ -22,8 +22,11 @@
  */
 
 
-#include "ghost_tank/bt_nodes/follow_path_pure_pursuit.hpp"
 #include <Eigen/Geometry>
+#include <cmath>
+
+#include "ghost_tank/bt_nodes/follow_path_pure_pursuit.hpp"
+#include <ghost_tank/visualization/ros_helpers.hpp>
 
 namespace ghost_tank
 {
@@ -35,7 +38,7 @@ FollowPathPurePursuit::FollowPathPurePursuit(const std::string & name, const BT:
 
 BT::PortsList FollowPathPurePursuit::providedPorts()
 {
-    // auto input_ports = FollowPath::getBaseInputPorts();
+  // auto input_ports = FollowPath::getBaseInputPorts();
   // input_ports.insert(BT::InputPort<double>("lookahead_distance_tiles"));
   // return input_ports;
   return  {BT::InputPort<double>("xy_exit_threshold_tiles"),
@@ -70,7 +73,7 @@ BT::NodeStatus FollowPathPurePursuit::onStart()
 
   // If min_lookahead_distance_m_ was not provided, use the old lookahead_distance_m_ as the minimum
   if (min_lookahead_distance_m_ == 0.0) { // Assuming 0.0 is the default value if not provided
-      min_lookahead_distance_m_ = lookahead_distance_m_;
+    min_lookahead_distance_m_ = lookahead_distance_m_;
   }
 
   return BT::NodeStatus::RUNNING;
@@ -79,16 +82,15 @@ BT::NodeStatus FollowPathPurePursuit::onStart()
 Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 {
   // Get current robot pose and linear speed
-  Eigen::Vector3d current_robot_pose = tank_model_ptr_->getWorldPose();
-  Eigen::Vector2d current_pos = current_robot_pose.head<2>();
-  double current_robot_theta = current_robot_pose.z();
+  current_position_ = tank_model_ptr_->getWorldPose().head<2>();
+  current_robot_theta_ = tank_model_ptr_->getWorldPose().z();
   double current_linear_speed = tank_model_ptr_->getWorldTwist().head<2>().norm();
 
   // The goal_pose_ is the end of the trajectory, which is static for the path
   goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());
 
   // Find closest point in path to the current robot position
-  int index = trajectory_.getIndexOfClosestPoint(current_pos);
+  int index = trajectory_.getIndexOfClosestPoint(current_position_);
   double dist_to_end = trajectory_.remaining_path_length[index];
 
   // Store the projected point of the robot's current position onto the path for visualization
@@ -110,12 +112,12 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
       trajectory_.remaining_path_length.end(),
       carrot_dist_from_end,
       std::greater<double>() // Use std::greater for reverse sorted remaining_path_length
-    ) - trajectory_.remaining_path_length.begin();
+      ) - trajectory_.remaining_path_length.begin();
     carrot_point_ = Eigen::Vector2d(trajectory_.x[carrot_index], trajectory_.y[carrot_index]);
   }
 
   // Select control strategy based on distance to target
-  double dist_err = (goal_pose_.head<2>() - current_pos).norm();
+  double dist_err = (goal_pose_.head<2>() - current_position_).norm();
   bool within_xy_exit_threshold = dist_err < xy_exit_threshold_m_;
 
   Eigen::Vector2d command;
@@ -129,13 +131,14 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 
     // Once we start settling, never exit to avoid instability.
     settling_ = true;
+    curvature_ = 0.0;
   } else {
     // Pure Pursuit Approach Phase
 
     // 1. Transform carrot_point_ to robot's local frame using Eigen::Rotation2D
     Eigen::Vector2d carrot_point_world = carrot_point_;
-    Eigen::Vector2d robot_position_world = current_robot_pose.head<2>();
-    double robot_yaw_world = current_robot_pose.z();
+    Eigen::Vector2d robot_position_world = current_position_;
+    double robot_yaw_world = current_robot_theta_;
 
     // Vector from robot to carrot point in world frame
     Eigen::Vector2d vector_to_carrot_world = carrot_point_world - robot_position_world;
@@ -150,17 +153,18 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     double y_robot_frame = carrot_point_robot_frame.y();
 
     // 2. Calculate actual lookahead distance (distance from robot to carrot point)
-    double actual_lookahead_distance = (carrot_point_ - current_pos).norm();
+    double actual_lookahead_distance = (carrot_point_ - current_position_).norm();
 
     // Avoid division by zero if robot is on top of the carrot point
     if (actual_lookahead_distance < 1e-6) {
-        command = Eigen::Vector2d(0.0, 0.0); // Stop if at the carrot point
-        return command;
+      command = Eigen::Vector2d(0.0, 0.0);   // Stop if at the carrot point
+      curvature_ = 0.0;
+      return command;
     }
 
     // 3. Calculate curvature (kappa)
     // kappa = (2 * y_robot_frame) / (Ld^2)
-    double curvature = (2.0 * y_robot_frame) / (actual_lookahead_distance * actual_lookahead_distance);
+    curvature_ = (2.0 * y_robot_frame) / (actual_lookahead_distance * actual_lookahead_distance);
 
     // 4. Determine desired linear velocity (can be constant or from trajectory speed profile)
     // For now, use the max_speed_linear_percent_ scaled by the tank model's max speed.
@@ -168,12 +172,12 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 
     // Account for backwards movement in desired linear speed
     if (backwards_) {
-        desired_linear_speed *= -1.0;
+      desired_linear_speed *= -1.0;
     }
 
     // 5. Calculate desired angular velocity
     // omega = v * kappa
-    double desired_angular_velocity = desired_linear_speed * curvature;
+    double desired_angular_velocity = desired_linear_speed * curvature_;
 
     // Set the commands directly for Pure Pursuit
     fwd_command_ = desired_linear_speed;
@@ -225,6 +229,8 @@ void FollowPathPurePursuit::populateVisualizationMarkers()
   carrot_point_marker.color.g = 1.0;
   carrot_point_marker.color.b = 0.0;
   viz_msg_.markers.push_back(carrot_point_marker);
+
+  ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_robot_theta_, carrot_point_, curvature_);
 }
 
 

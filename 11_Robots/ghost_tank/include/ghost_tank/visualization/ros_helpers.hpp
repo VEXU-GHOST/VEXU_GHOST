@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maxx Wilson
+ * Copyright (c) 2025 Maxx Wilson
  * All rights reserved.
 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -13,10 +13,10 @@
  * copies or substantial portions of the Software.
 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE MERCHANTABILITY,
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
@@ -29,7 +29,9 @@
 #include <std_msgs/msg/color_rgba.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <algorithm>
+#include <cmath>
 
+#include <Eigen/Geometry>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_tank/control/trajectory.hpp>
 
@@ -46,6 +48,18 @@ constexpr double TRAJECTORY_ARROW_HEAD_DIAMETER = 0.025;
 constexpr float TRAJECTORY_SPHERE_ALPHA = 0.5f;
 constexpr float TRAJECTORY_ARROW_ALPHA = 1.0f;
 constexpr double TRAJECTORY_ARROW_Z_OFFSET = 0.1;
+
+// Constants for the new arc/line marker
+constexpr double ARC_LINE_WIDTH = 0.05;
+const std_msgs::msg::ColorRGBA ARC_LINE_COLOR = []() {
+    std_msgs::msg::ColorRGBA color;
+    color.r = 0.0f;
+    color.g = 0.0f;
+    color.b = 1.0f;
+    color.a = 1.0f;
+    return color;
+  }();
+
 
 /**
  * @brief Populates a visualization_msgs::msg::MarkerArray with trajectory points as spheres and arrows.
@@ -92,7 +106,7 @@ void getTrajectoryMsg(
   visualization_msgs::msg::Marker sphere_list_marker;
   sphere_list_marker.header.frame_id = "map";
   sphere_list_marker.header.stamp = current_ros_time;
-  sphere_list_marker.ns = "trajectory_points";
+  sphere_list_marker.ns = "ghost_tank";
   sphere_list_marker.id = viz_msg.markers.size();
   sphere_list_marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
   sphere_list_marker.action = visualization_msgs::msg::Marker::ADD;
@@ -205,5 +219,92 @@ void getTrajectoryMsg(
   }
 }
 
-} //namespace visualization
-} //namespace ghost_tank
+/**
+ * @brief Adds a visualization_msgs::msg::Marker for a circular arc or straight line to a MarkerArray.
+ *
+ * This function calculates and adds a LINE_STRIP marker representing a circular arc
+ * from a start point with a given orientation to an end point, based on a provided curvature.
+ * If the curvature is negligible, it draws a straight line between the start and end points.
+ *
+ * NOTE: This function *appends* markers to the provided viz_msg.
+ * The caller is responsible for clearing viz_msg.markers if a fresh set of markers is desired.
+ * Marker IDs are generated based on the current size of viz_msg.markers to ensure uniqueness.
+ *
+ * @param viz_msg The output MarkerArray message that will be populated.
+ * @param start_point The 2D starting point of the arc/line.
+ * @param start_orientation_rad The orientation (yaw) at the start point in radians.
+ * @param end_point The 2D ending point of the arc/line.
+ * @param curvature The calculated curvature (kappa) for the arc.
+ */
+void getArcOrLineMarker(
+  visualization_msgs::msg::MarkerArray & viz_msg,
+  const Eigen::Vector2d & start_point,
+  double start_orientation_rad,
+  const Eigen::Vector2d & end_point,
+  double curvature)
+{
+  visualization_msgs::msg::Marker marker;
+  marker.header.frame_id = "map";
+  marker.header.stamp = rclcpp::Clock().now(); // Get current ROS time internally
+  marker.ns = "ghost_tank";
+  marker.id = viz_msg.markers.size(); // Use current size for unique ID
+  marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
+  marker.action = visualization_msgs::msg::Marker::ADD;
+  marker.scale.x = ARC_LINE_WIDTH;
+  marker.color = ARC_LINE_COLOR;
+
+  // Only plot the arc if curvature is not negligible
+  if (std::abs(curvature) > 1e-6) {
+    double radius = 1.0 / curvature;
+
+    // Calculate center of the turning circle
+    double cx = start_point.x() - radius * std::sin(start_orientation_rad);
+    double cy = start_point.y() + radius * std::cos(start_orientation_rad);
+
+    // Calculate start and end angles of the arc relative to the circle center
+    double start_angle_rad = std::atan2(start_point.y() - cy, start_point.x() - cx);
+    double end_angle_rad = std::atan2(end_point.y() - cy, end_point.x() - cx);
+
+    // Adjust end_angle_rad to ensure the arc is drawn in the correct direction (shortest path along the circle)
+    if (curvature > 0) { // Left turn (CCW)
+      if (end_angle_rad < start_angle_rad) {
+        end_angle_rad += 2 * M_PI;
+      }
+    } else { // Right turn (CW)
+      if (end_angle_rad > start_angle_rad) {
+        end_angle_rad -= 2 * M_PI;
+      }
+    }
+
+    // Generate points along the arc
+    int num_points = 50; // Number of segments for the arc
+    double angle_step = (end_angle_rad - start_angle_rad) / num_points;
+
+    for (int i = 0; i <= num_points; ++i) {
+      double current_angle = start_angle_rad + i * angle_step;
+      geometry_msgs::msg::Point p;
+      p.x = cx + std::abs(radius) * std::cos(current_angle);
+      p.y = cy + std::abs(radius) * std::sin(current_angle);
+      p.z = 0.0; // Assuming 2D plane
+      marker.points.push_back(p);
+    }
+  } else {
+    // If curvature is negligible (straight line), draw a line from start_point to end_point
+    geometry_msgs::msg::Point p_start;
+    p_start.x = start_point.x();
+    p_start.y = start_point.y();
+    p_start.z = 0.0;
+    marker.points.push_back(p_start);
+
+    geometry_msgs::msg::Point p_end;
+    p_end.x = end_point.x();
+    p_end.y = end_point.y();
+    p_end.z = 0.0;
+    marker.points.push_back(p_end);
+  }
+
+  viz_msg.markers.push_back(marker);
+}
+
+} // namespace visualization
+} // namespace ghost_tank

@@ -24,6 +24,7 @@
 
 #include <ghost_tank/bt_nodes/follow_path.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 namespace ghost_tank
 {
@@ -46,8 +47,12 @@ protected:
   double k_lookahead_{0.0};
   double min_lookahead_distance_m_{0.0};
 
+  Eigen::Vector2d current_position_;
+  double current_robot_theta_;
   Eigen::Vector2d projected_position_on_path_;
   Eigen::Vector2d carrot_point_;
+  double curvature_{0.0};
+
 };
 
 } // namespace ghost_tank
