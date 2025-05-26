@@ -77,10 +77,10 @@ BT::NodeStatus GenerateBezierPath::onRunning()
   // Get trajectory input data
   Eigen::Vector2d start_pos = tank_model_ptr_->getWorldPose().head<2>();
   double start_angle = tank_model_ptr_->getWorldPose()[2];
-  double end_x_m = BT_Util::get_input<int>(this, "end_x_tiles") * ghost_util::TILES_TO_METERS;
-  double end_y_m = BT_Util::get_input<int>(this, "end_y_tiles") * ghost_util::TILES_TO_METERS;
-  double end_theta_rad = BT_Util::get_input<int>(this, "end_theta_deg") * ghost_util::DEG_TO_RAD;
-  double lead_m = BT_Util::get_input<int>(this, "lead_tiles") * ghost_util::TILES_TO_METERS;
+  double end_x_m = BT_Util::get_input<double>(this, "end_x_tiles") * ghost_util::TILES_TO_METERS;
+  double end_y_m = BT_Util::get_input<double>(this, "end_y_tiles") * ghost_util::TILES_TO_METERS;
+  double end_theta_rad = BT_Util::get_input<double>(this, "end_theta_deg") * ghost_util::DEG_TO_RAD;
+  double lead_m = BT_Util::get_input<double>(this, "lead_tiles") * ghost_util::TILES_TO_METERS;
 
   if (BT_Util::get_input<bool>(this, "backwards")) {
     start_angle = ghost_util::FlipAnglePI(start_angle);
