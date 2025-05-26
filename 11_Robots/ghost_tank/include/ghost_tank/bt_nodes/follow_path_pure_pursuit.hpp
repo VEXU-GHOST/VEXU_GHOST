@@ -43,6 +43,9 @@ public:
 
 protected:
   double lookahead_distance_m_{0.0};
+  double k_lookahead_{0.0};
+  double min_lookahead_distance_m_{0.0};
+
   Eigen::Vector2d projected_position_on_path_;
   Eigen::Vector2d carrot_point_;
 };
