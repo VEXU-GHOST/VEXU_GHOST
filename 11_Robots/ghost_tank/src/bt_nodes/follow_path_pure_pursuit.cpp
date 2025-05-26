@@ -82,59 +82,71 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   // --- Determine the carrot point using the pursuit radius method ---
   carrot_point_ = goal_pose_.head<2>(); // Default to goal in case no valid point is found
   double min_remaining_path_length_for_carrot = std::numeric_limits<double>::max();
+  bool carrot_point_found_on_path = false; // Flag to track if a valid carrot point on path was found
 
   // Iterate through path segments starting from the closest point
   // We need at least two points for a segment, so loop up to size() - 1
   for (int i = closest_point_index; i < trajectory_.x.size() - 1; ++i) {
     Eigen::Vector2d p1(trajectory_.x[i], trajectory_.y[i]);
-    Eigen::Vector2d p2(trajectory_.x[i+1], trajectory_.y[i+1]);
+    Eigen::Vector2d p2(trajectory_.x[i + 1], trajectory_.y[i + 1]);
 
-    // Vector representing the line segment
-    Eigen::Vector2d segment_vec = p2 - p1;
+    Eigen::Vector2d intersection1, intersection2;
+    int num_intersections = geometry::CircleLineIntersection(
+      current_position_,          // Circle center (robot's current position)
+      dynamic_pursuit_radius_,    // Circle radius (lookahead distance)
+      p1, p2,                     // Line segment points
+      &intersection1, &intersection2);   // Output intersection points
 
-    // Vector from robot to p1 (relative to robot's current position)
-    Eigen::Vector2d robot_to_p1 = p1 - current_position_;
+    for (int j = 0; j < num_intersections; ++j) {
+      Eigen::Vector2d current_intersection = (j == 0) ? intersection1 : intersection2;
 
-    // Coefficients for the quadratic equation At^2 + Bt + C = 0
-    // This finds intersections of a circle (robot center, lookahead_distance radius) with a line segment
-    double A = segment_vec.dot(segment_vec);
-    double B = 2 * robot_to_p1.dot(segment_vec);
-    double C = robot_to_p1.dot(robot_to_p1) - dynamic_pursuit_radius_ * dynamic_pursuit_radius_;
+      // Calculate 't' value for interpolation.
+      // This 't' is relative to the segment [p1, p2].
+      // (current_intersection - p1).norm() / (p2 - p1).norm()
+      // Note: geometry::CircleLineIntersection already provides this 'gamma' in its implementation.
+      // We need to re-derive 't' here or modify geometry::CircleLineIntersection to return it.
+      // For simplicity, let's re-calculate it since we only need it for the path length interpolation.
+      double segment_length = (p2 - p1).norm();
+      double t = 0.0;
+      if (segment_length > geometry::kEpsilon) { // Avoid division by zero
+        t = (current_intersection - p1).norm() / segment_length;
+        // Ensure t is within [0,1] range for interpolation in case of numerical inaccuracies
+        t = math_util::Clamp(t, 0.0, 1.0);
+      }
 
-    double discriminant = B * B - 4 * A * C;
 
-    if (discriminant < 0) {
-      // No real intersection points for this segment (circle does not intersect line)
-      continue;
-    }
+      // Linearly interpolate the remaining path length for the intersection point.
+      // We're looking for the point that is *furthest along the path*,
+      // which corresponds to the *smallest* remaining_path_length value.
+      double interpolated_remaining_length =
+        trajectory_.remaining_path_length[i] * (1.0 - t) +
+        trajectory_.remaining_path_length[i + 1] * t;
 
-    double sqrt_discriminant = std::sqrt(discriminant);
-    double t_values[] = {
-      (-B + sqrt_discriminant) / (2 * A),
-      (-B - sqrt_discriminant) / (2 * A)
-    };
+      // To find the furthest point *along the path* that is within the lookahead circle AND in front of the robot,
+      // we need to compare `interpolated_remaining_length` and ensure it's "in front" of the robot.
+      // The `CircleLineIntersection` already ensures it's on the segment.
+      // We need to ensure the point is *forward* of the robot.
+      // Transforming to robot frame for this check:
+      Eigen::Vector2d vector_to_intersection_world = current_intersection - current_position_;
+      Eigen::Rotation2D<double> rotation_to_robot_frame(-current_robot_theta_);
+      Eigen::Vector2d intersection_point_robot_frame = rotation_to_robot_frame * vector_to_intersection_world;
 
-    // Check both potential intersection points
-    for (double t : t_values) {
-      // Ensure the intersection point lies within the segment [0, 1]
-      if (t >= 0.0 && t <= 1.0) {
-        Eigen::Vector2d intersection_point = p1 + t * segment_vec;
-
-        // Linearly interpolate the remaining path length for the intersection point.
-        // We're looking for the point that is *furthest along the path*,
-        // which corresponds to the *smallest* remaining_path_length value.
-        double interpolated_remaining_length =
-            trajectory_.remaining_path_length[i] * (1.0 - t) +
-            trajectory_.remaining_path_length[i+1] * t;
-
-        // If this intersection point is further along the path than the current best candidate,
-        // update the carrot point.
+      // Only consider points that are ahead of the robot (positive x in robot frame)
+      if (intersection_point_robot_frame.x() >= 0.0) { // Using >= 0.0 for points exactly on the robot's y-axis
         if (interpolated_remaining_length < min_remaining_path_length_for_carrot) {
           min_remaining_path_length_for_carrot = interpolated_remaining_length;
-          carrot_point_ = intersection_point;
+          carrot_point_ = current_intersection;
+          carrot_point_found_on_path = true;
         }
       }
     }
+  }
+
+  // If no valid intersection point was found on the path segments within the lookahead distance
+  // (i.e., the path segments are all too far or behind the robot),
+  // then the carrot point defaults to the global goal.
+  if (!carrot_point_found_on_path) {
+    carrot_point_ = goal_pose_.head<2>();
   }
 
   // --- End carrot point determination ---
@@ -179,7 +191,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     double actual_lookahead_distance = (carrot_point_ - current_position_).norm();
 
     // Avoid division by zero if robot is on top of the carrot point
-    if (actual_lookahead_distance < 1e-6) {
+    if (actual_lookahead_distance < 1e-6) { // Use kEpsilon from geometry.h if preferred
       command = Eigen::Vector2d(0.0, 0.0);   // Stop if at the carrot point
       curvature_ = 0.0;
       // Since we want zero output for testing, ensure this path returns zeros
