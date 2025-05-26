@@ -23,7 +23,7 @@
 
 
 #include "ghost_tank/bt_nodes/generate_bezier_path.hpp"
-#include <ghost_tank/visualization/ros_helpers.hpp>
+#include <ghost_tank/visualization/visualization_helpers.hpp>
 
 namespace ghost_tank
 {

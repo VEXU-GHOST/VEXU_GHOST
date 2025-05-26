@@ -32,11 +32,15 @@ FollowPath::FollowPath(const std::string & name, const BT::NodeConfig & config)
 : BT::StatefulActionNode(name, config)
 {
   blackboard_ = config.blackboard;
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+  
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_trajectory_ptr", tank_trajectory_ptr_);
-  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-  BT_Util::get_from_blackboard(blackboard_, "approach_controller_ptr", m_approach_controller_ptr);
-  BT_Util::get_from_blackboard(blackboard_, "settling_controller_ptr", m_settling_controller_ptr);
+
+  BT_Util::get_from_blackboard(blackboard_, "distance_approach_controller_ptr", m_distance_approach_controller_ptr);
+  BT_Util::get_from_blackboard(blackboard_, "steering_approach_controller_ptr", m_distance_settling_controller_ptr);
+  BT_Util::get_from_blackboard(blackboard_, "distance_settling_controller_ptr", m_steering_approach_controller_ptr);
+  BT_Util::get_from_blackboard(blackboard_, "steering_settling_controller_ptr", m_steering_settling_controller_ptr);
 
   path_viz_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/autonomy/follow_path/viz_markers", 10);
   exit_threshold_viz_pub_ptr_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/autonomy/follow_path/exit_threshold_viz", 10);

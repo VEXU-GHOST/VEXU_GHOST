@@ -65,6 +65,7 @@ protected:
   Eigen::Vector2d carrot_point_;
   double curvature_{0.0};
 
+  double dist_to_goal_{0.0};
 };
 
 } // namespace ghost_tank

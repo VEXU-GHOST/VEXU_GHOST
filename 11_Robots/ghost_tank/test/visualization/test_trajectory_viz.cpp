@@ -25,7 +25,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <ghost_tank/control/trajectory.hpp>
 #include <ghost_tank/control/path_generators.hpp>
-#include <ghost_tank/visualization/ros_helpers.hpp>
+#include <ghost_tank/visualization/visualization_helpers.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <vector>

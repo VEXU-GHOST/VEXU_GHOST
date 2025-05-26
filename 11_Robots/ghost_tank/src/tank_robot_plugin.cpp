@@ -327,19 +327,18 @@ void TankRobotPlugin::initTankModel()
   m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
   m_odom_ptr->resetPose();
 
-  // m_search_radius = node_ptr_->get_parameter("tank_robot_plugin.search_radius").as_double();
-
   // Load PID Controller Gains
-  auto linear_approach_config = loadPIDConfig("linear_approach");
-  auto angular_approach_config = loadPIDConfig("angular_approach");
-  m_approach_controller_ptr = std::make_shared<TankPIDController>(linear_approach_config, angular_approach_config);
-  
-  auto linear_settling_config = loadPIDConfig("linear_settling");
-  auto angular_settling_config = loadPIDConfig("angular_settling");
-  m_settling_controller_ptr = std::make_shared<TankPIDController>(linear_settling_config, angular_settling_config);
+  auto distance_approach_config = loadPIDConfig("distance_approach");
+  m_distance_approach_controller_ptr = std::make_shared<PIDController>(distance_approach_config);
 
-  auto arc_turn_config = loadPIDConfig("arc_turn");
-  m_arc_turn_controller_ptr = std::make_shared<PIDController>(arc_turn_config);
+  auto steering_approach_config = loadPIDConfig("steering_approach");
+  m_steering_approach_controller_ptr = std::make_shared<PIDController>(steering_approach_config);
+
+  auto distance_settling_config = loadPIDConfig("distance_settling");
+  m_distance_settling_controller_ptr = std::make_shared<PIDController>(distance_settling_config);
+
+  auto steering_settling_config = loadPIDConfig("steering_settling");
+  m_steering_settling_controller_ptr = std::make_shared<PIDController>(steering_settling_config);
 }
 
 void TankRobotPlugin::initAutonomy()
@@ -356,9 +355,10 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
   bt_->set_variable("node_ptr", node_ptr_);
   bt_->set_variable("tank_trajectory_ptr", tank_trajectory_ptr_);
-  bt_->set_variable("approach_controller_ptr", m_approach_controller_ptr);
-  bt_->set_variable("settling_controller_ptr", m_settling_controller_ptr);
-  bt_->set_variable("arc_turn_controller_ptr", m_arc_turn_controller_ptr);
+  bt_->set_variable("distance_approach_controller_ptr", m_distance_approach_controller_ptr);
+  bt_->set_variable("distance_settling_controller_ptr", m_steering_approach_controller_ptr);
+  bt_->set_variable("steering_approach_controller_ptr", m_distance_settling_controller_ptr);
+  bt_->set_variable("steering_settling_controller_ptr", m_steering_settling_controller_ptr);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
   bt_->set_variable("config_path", config_path);

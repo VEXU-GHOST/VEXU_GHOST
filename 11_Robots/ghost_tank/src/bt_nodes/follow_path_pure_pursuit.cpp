@@ -27,7 +27,7 @@
 #include <limits>
 
 #include "ghost_tank/bt_nodes/follow_path_pure_pursuit.hpp"
-#include <ghost_tank/visualization/ros_helpers.hpp>
+#include <ghost_tank/visualization/visualization_helpers.hpp>
 
 namespace ghost_tank
 {
@@ -64,12 +64,6 @@ BT::NodeStatus FollowPathPurePursuit::onStart()
 
 Eigen::Vector2d FollowPathPurePursuit::calculateCarrotPoint() const
 {
-  // If the goal is within the pursuit radius, aim directly for the goal.
-  bool goal_within_pursuit_radius = (goal_pose_.head<2>() - current_position_).norm() <= dynamic_pursuit_radius_;
-  if (goal_within_pursuit_radius) {
-    return goal_pose_.head<2>();
-  }
-
   // Default carrot point to the goal in case no valid intersection is found on the path.
   Eigen::Vector2d carrot_point = goal_pose_.head<2>();
   double min_remaining_path_length_for_carrot = std::numeric_limits<double>::max();
@@ -138,40 +132,33 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
 {
   // Transform carrot_point_ to robot's local frame
   Eigen::Vector2d vector_to_carrot_world = carrot_point_ - current_position_;
-  Eigen::Rotation2D<double> rotation_to_robot_frame(-current_robot_theta_);
-  Eigen::Vector2d carrot_point_robot_frame = rotation_to_robot_frame * vector_to_carrot_world;
-
-  double x_robot_frame = carrot_point_robot_frame.x();
-  double y_robot_frame = carrot_point_robot_frame.y();
+  Eigen::Vector2d carrot_point_robot_frame = Eigen::Rotation2D<double>(-current_robot_theta_) * vector_to_carrot_world;
 
   // Calculate actual lookahead distance (distance from robot to carrot point)
-  double actual_lookahead_distance = vector_to_carrot_world.norm();
+  double dist_to_carrot = vector_to_carrot_world.norm();
 
   // Avoid division by zero if robot is on top of the carrot point
-  if (actual_lookahead_distance < geometry::kEpsilon) { // Using kEpsilon from geometry.h
+  if (dist_to_carrot < 1.0e-6) {
     curvature_ = 0.0;
-    return Eigen::Vector2d(0.0, 0.0); // Stop if at the carrot point
+    return Eigen::Vector2d(0.0, 0.0);
   }
 
-  // Calculate curvature (kappa)
-  // kappa = (2 * y_robot_frame) / (Ld^2)
-  curvature_ = (2.0 * y_robot_frame) / (actual_lookahead_distance * actual_lookahead_distance);
+  // Calculate curvature
+  curvature_ = (2.0 * carrot_point_robot_frame.y()) / (dist_to_carrot * dist_to_carrot);
 
   // Determine desired linear velocity (can be constant or from trajectory speed profile)
-  double desired_linear_speed = max_speed_linear_percent_ * tank_model_ptr_->getMaxBaseLinearVelocity();
+  double desired_speed = max_speed_linear_percent_ * tank_model_ptr_->getMaxBaseLinearVelocity();
+  double current_speed = tank_model_ptr_->getWorldTwist().head<2>().norm();
+  fwd_command_ = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, desired_speed - current_speed);
+
+  double angle_error = ghost_util::SmallestAngleDistRad(atan2(carrot_point_robot_frame.y(), carrot_point_robot_frame.x()), current_robot_theta_);
+  double ang_vel_error = desired_speed * curvature_ - tank_model_ptr_->getWorldTwist().z();
+  turn_command_ = m_steering_approach_controller_ptr->calculateCommand(angle_error, ang_vel_error);
 
   // Account for backwards movement in desired linear speed
   if (backwards_) {
-    desired_linear_speed *= -1.0;
+    fwd_command_ *= -1.0;
   }
-
-  // Calculate desired angular velocity
-  // omega = v * kappa
-  double desired_angular_velocity = desired_linear_speed * curvature_;
-
-  // Set the commands directly for Pure Pursuit
-  fwd_command_ = desired_linear_speed;
-  turn_command_ = desired_angular_velocity;
 
   return Eigen::Vector2d(fwd_command_, turn_command_);
 }
@@ -179,120 +166,45 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
 
 Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 {
-  // Update current robot pose and linear speed
-  current_position_ = tank_model_ptr_->getWorldPose().head<2>();
-  current_robot_theta_ = tank_model_ptr_->getWorldPose().z();
-  double current_linear_speed = tank_model_ptr_->getWorldTwist().head<2>().norm();
-  
-  // The goal_pose_ is the end of the trajectory, which is static for the path
-  goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());
-
   // Update pure pursuit specific data
-  dynamic_pursuit_radius_ = std::max(min_pursuit_radius_, k_lookahead_ * current_linear_speed);
+  dynamic_pursuit_radius_ = std::max(min_pursuit_radius_, k_lookahead_ * tank_model_ptr_->getWorldTwist().head<2>().norm());
   closest_point_index_ = trajectory_.getIndexOfClosestPoint(current_position_);
   projected_position_on_path_ = Eigen::Vector2d(trajectory_.x[closest_point_index_], trajectory_.y[closest_point_index_]);
 
-  carrot_point_ = calculateCarrotPoint();
+  dist_to_goal_ = (goal_pose_.head<2>() - current_position_).norm();
 
-
-  // Select control strategy based on distance to target
-  double dist_err = (goal_pose_.head<2>() - current_position_).norm();
-  bool within_xy_exit_threshold = dist_err < xy_exit_threshold_m_;
+  if (dist_to_goal_ <= dynamic_pursuit_radius_) {
+    carrot_point_ = goal_pose_.head<2>();
+  } else {
+    carrot_point_ = calculateCarrotPoint();
+  }
 
   Eigen::Vector2d command;
-
-  // Check if we are in the settling phase or should transition to it
-  if (within_xy_exit_threshold || settling_) {
+  if (dist_to_goal_ < xy_exit_threshold_m_ || settling_) {
     // Use the settling controller
-    TankState current_state(dist_err, tank_model_ptr_->getWorldTwist().head<2>().norm(), tank_model_ptr_->getWorldPose().z(), tank_model_ptr_->getWorldTwist().z());
-    TankState desired_state(0.0, 0.0, 0.0, 0.0); // Desired state to stop and align
-    command = m_settling_controller_ptr->calculateDriveCommand(current_state, desired_state, backwards_);
+    double angle_error = ghost_util::SmallestAngleDistRad(goal_pose_.z(), current_robot_theta_);
+    command.x() = m_distance_settling_controller_ptr->calculateCommand(dist_to_goal_ * cos(angle_error), -tank_model_ptr_->getWorldTwist().head<2>().norm());
+    command.y() = m_steering_settling_controller_ptr->calculateCommand(angle_error, -tank_model_ptr_->getWorldTwist().z());
 
     // Once we start settling, never exit to avoid instability.
     settling_ = true;
     curvature_ = 0.0;
   } else {
-    // Pure Pursuit Approach Phase: Calculate and return commands from the dedicated method
+    // Use approach controller with Pure Pursuit
     command = calculatePurePursuitDriveCommand();
   }
 
-  // Always return zero command for safe testing, as requested.
-  // This line might override actual command. Ensure its purpose for "safe testing" is understood.
-  // If it's meant to be a permanent safety feature, it might need more sophisticated logic.
-  return Eigen::Vector2d(0.0, 0.0);
+  return command;
 }
 
 void FollowPathPurePursuit::populateVisualizationMarkers()
 {
-  auto stamp = node_ptr_->now();
-
-  // Marker for Projected Position On Path (Closest point to robot's current pose)
-  visualization_msgs::msg::Marker projected_pos_marker;
-  projected_pos_marker.header.frame_id = "map";
-  projected_pos_marker.header.stamp = stamp;
-  projected_pos_marker.ns = "pure_pursuit_viz";
-  projected_pos_marker.id = viz_msg_.markers.size();
-  projected_pos_marker.type = visualization_msgs::msg::Marker::SPHERE;
-  projected_pos_marker.action = visualization_msgs::msg::Marker::ADD;
-  projected_pos_marker.pose.position.x = projected_position_on_path_.x();
-  projected_pos_marker.pose.position.y = projected_position_on_path_.y();
-  projected_pos_marker.pose.position.z = MARKER_Z_OFFSET;
-  projected_pos_marker.scale.x = PROJ_POINT_MARKER_DIAM;
-  projected_pos_marker.scale.y = PROJ_POINT_MARKER_DIAM;
-  projected_pos_marker.scale.z = PROJ_POINT_MARKER_DIAM;
-  projected_pos_marker.color.a = 1.0;
-  projected_pos_marker.color.r = 1.0;
-  projected_pos_marker.color.g = 1.0;
-  projected_pos_marker.color.b = 1.0;
-  viz_msg_.markers.push_back(projected_pos_marker);
-
-  // Marker for Lookahead Carrot Point
-  visualization_msgs::msg::Marker carrot_point_marker;
-  carrot_point_marker.header.frame_id = "map";
-  carrot_point_marker.header.stamp = stamp;
-  carrot_point_marker.ns = "pure_pursuit_viz";
-  carrot_point_marker.id = viz_msg_.markers.size();
-  carrot_point_marker.type = visualization_msgs::msg::Marker::SPHERE;
-  carrot_point_marker.action = visualization_msgs::msg::Marker::ADD;
-  carrot_point_marker.pose.position.x = carrot_point_.x();
-  carrot_point_marker.pose.position.y = carrot_point_.y();
-  carrot_point_marker.pose.position.z = MARKER_Z_OFFSET;
-  carrot_point_marker.scale.x = CARROT_POINT_MARKER_DIAM;
-  carrot_point_marker.scale.y = CARROT_POINT_MARKER_DIAM;
-  carrot_point_marker.scale.z = CARROT_POINT_MARKER_DIAM;
-  carrot_point_marker.color.a = 1.0;
-  carrot_point_marker.color.r = 1.0;
-  carrot_point_marker.color.g = 0.5;
-  carrot_point_marker.color.b = 0.0;
-  viz_msg_.markers.push_back(carrot_point_marker);
-
-  // Marker for Pursuit Radius Circle
-  visualization_msgs::msg::Marker pursuit_radius_circle_marker;
-  pursuit_radius_circle_marker.header.frame_id = "map";
-  pursuit_radius_circle_marker.header.stamp = stamp;
-  pursuit_radius_circle_marker.ns = "pure_pursuit_viz";
-  pursuit_radius_circle_marker.id = viz_msg_.markers.size();
-  pursuit_radius_circle_marker.type = visualization_msgs::msg::Marker::SPHERE; // SPHERE type can render as a circle if Z scale is small
-  pursuit_radius_circle_marker.action = visualization_msgs::msg::Marker::ADD;
-
-  // Center the circle at the robot's current position
-  pursuit_radius_circle_marker.pose.position.x = current_position_.x();
-  pursuit_radius_circle_marker.pose.position.y = current_position_.y();
-  pursuit_radius_circle_marker.pose.position.z = MARKER_Z_OFFSET; // Keep it above the map for visibility
-
-  // Scale the sphere to represent the circle's diameter
-  pursuit_radius_circle_marker.scale.x = dynamic_pursuit_radius_ * 2.0;
-  pursuit_radius_circle_marker.scale.y = dynamic_pursuit_radius_ * 2.0;
-  pursuit_radius_circle_marker.scale.z = 0.01; // Make Z very small to appear as a flat circle
-
-  pursuit_radius_circle_marker.color.a = 0.3; // Semi-transparent
-  pursuit_radius_circle_marker.color.r = 0.0;
-  pursuit_radius_circle_marker.color.g = 0.0;
-  pursuit_radius_circle_marker.color.b = 1.0; // Blue color
-  viz_msg_.markers.push_back(pursuit_radius_circle_marker);
-
-  ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_robot_theta_, carrot_point_, curvature_);
+  visualization::getPointMarker(viz_msg_, projected_position_on_path_, visualization::getColorRGBA(1.0, 1.0, 1.0, 1.0));
+  visualization::getPointMarker(viz_msg_, carrot_point_, visualization::getColorRGBA(1.0, 0.5, 0.0, 1.0));
+  visualization::getCircleMarker(viz_msg_, current_position_, dynamic_pursuit_radius_, visualization::getColorRGBA(0.0, 0.0, 1.0, 0.3));
+  if (!settling_) {
+    ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_robot_theta_, carrot_point_, curvature_);
+  }
 }
-
 
 } // namespace ghost_tank

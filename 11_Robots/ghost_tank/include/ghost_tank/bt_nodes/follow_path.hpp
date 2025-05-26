@@ -77,8 +77,11 @@ protected:
   std::shared_ptr<TankModel> tank_model_ptr_;
   std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
   motion_planning::Trajectory trajectory_;
-  std::shared_ptr<TankPIDController> m_approach_controller_ptr;
-  std::shared_ptr<TankPIDController> m_settling_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_distance_approach_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_steering_approach_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_distance_settling_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_steering_settling_controller_ptr;
+  
   double fwd_command_{0.0};
   double turn_command_{0.0};
 

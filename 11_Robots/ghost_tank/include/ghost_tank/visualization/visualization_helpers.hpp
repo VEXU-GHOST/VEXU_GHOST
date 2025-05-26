@@ -47,18 +47,92 @@ constexpr double TRAJECTORY_ARROW_SHAFT_DIAMETER = 0.015;
 constexpr double TRAJECTORY_ARROW_HEAD_DIAMETER = 0.025;
 constexpr float TRAJECTORY_SPHERE_ALPHA = 0.5f;
 constexpr float TRAJECTORY_ARROW_ALPHA = 1.0f;
-constexpr double TRAJECTORY_Z_OFFSET = 0.1;
+constexpr double MARKER_Z_OFFSET = 0.01;
+constexpr double MARKER_SPHERE_DIAM = 0.1;
+
+std_msgs::msg::ColorRGBA getColorRGBA(double r, double g, double b, double a)
+{
+  std_msgs::msg::ColorRGBA color;
+
+  color.r = r;
+  color.g = g;
+  color.b = b;
+  color.a = a;
+
+  return color;
+}
 
 // Constants for the new arc/line marker
 constexpr double ARC_LINE_WIDTH = 0.015;
-const std_msgs::msg::ColorRGBA ARC_LINE_COLOR = []() {
-    std_msgs::msg::ColorRGBA color;
-    color.r = 1.0f;
-    color.g = 0.5f;
-    color.b = 0.0f;
-    color.a = 1.0f;
-    return color;
-  }();
+const std_msgs::msg::ColorRGBA ARC_LINE_COLOR = getColorRGBA(1.0, 0.5, 0.0, 1.0);
+
+/**
+ * @brief Creates and adds a point marker to the MarkerArray.
+ * @param viz_msg The MarkerArray to add the marker to.
+ * @param position The Eigen::Vector2d position of the point.
+ * @param color The color of the point marker.
+ * @param diameter The diameter of the sphere representing the point.
+ * @param z_offset_m optional param to plot the marker above the ground plane
+ * @param ns The namespace for the marker.
+ */
+inline void getPointMarker(
+  visualization_msgs::msg::MarkerArray & viz_msg,
+  const Eigen::Vector2d & position,
+  const std_msgs::msg::ColorRGBA & color,
+  double diameter = MARKER_SPHERE_DIAM,
+  const double z_offset_m = MARKER_Z_OFFSET,
+  const std::string & ns = "")
+{
+  visualization_msgs::msg::Marker marker;
+  marker.header.frame_id = "map";
+  marker.header.stamp = rclcpp::Clock().now();
+  marker.ns = ns;
+  marker.id = viz_msg.markers.size();
+  marker.type = visualization_msgs::msg::Marker::SPHERE;
+  marker.action = visualization_msgs::msg::Marker::ADD;
+  marker.pose.position.x = position.x();
+  marker.pose.position.y = position.y();
+  marker.pose.position.z = z_offset_m;
+  marker.scale.x = diameter;
+  marker.scale.y = diameter;
+  marker.scale.z = diameter;
+  marker.color = color;
+  viz_msg.markers.push_back(marker);
+}
+
+/**
+ * @brief Creates and adds a circle marker to the MarkerArray.
+ * @param viz_msg The MarkerArray to add the marker to.
+ * @param center The Eigen::Vector2d center of the circle.
+ * @param radius The radius of the circle.
+ * @param color The color of the circle marker.
+ * @param z_offset_m optional param to plot the marker above the ground plane
+ * @param ns The namespace for the marker.
+ */
+inline void getCircleMarker(
+  visualization_msgs::msg::MarkerArray & viz_msg,
+  const Eigen::Vector2d & center,
+  double radius,
+  const std_msgs::msg::ColorRGBA & color,
+  const double z_offset_m = MARKER_Z_OFFSET,
+  const std::string & ns = "")
+{
+  visualization_msgs::msg::Marker marker;
+  marker.header.frame_id = "map";
+  marker.header.stamp = rclcpp::Clock().now();
+  marker.ns = ns;
+  marker.id = viz_msg.markers.size();
+  marker.type = visualization_msgs::msg::Marker::SPHERE; // SPHERE type can render as a circle if Z scale is small
+  marker.action = visualization_msgs::msg::Marker::ADD;
+  marker.pose.position.x = center.x();
+  marker.pose.position.y = center.y();
+  marker.pose.position.z = z_offset_m;
+  marker.scale.x = radius * 2.0;
+  marker.scale.y = radius * 2.0;
+  marker.scale.z = 0.01; // Make Z very small to appear as a flat circle
+  marker.color = color;
+  viz_msg.markers.push_back(marker);
+}
 
 
 /**
@@ -106,7 +180,7 @@ void getTrajectoryMsg(
   visualization_msgs::msg::Marker sphere_list_marker;
   sphere_list_marker.header.frame_id = "map";
   sphere_list_marker.header.stamp = current_ros_time;
-  sphere_list_marker.ns = "ghost_tank";
+  sphere_list_marker.ns = "";
   sphere_list_marker.id = viz_msg.markers.size();
   sphere_list_marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
   sphere_list_marker.action = visualization_msgs::msg::Marker::ADD;
@@ -193,7 +267,7 @@ void getTrajectoryMsg(
       // Set position of the arrow, elevated slightly in Z
       arrow_marker.pose.position.x = path.x[i];
       arrow_marker.pose.position.y = path.y[i];
-      arrow_marker.pose.position.z = TRAJECTORY_Z_OFFSET; // Elevated Z for visibility
+      arrow_marker.pose.position.z = MARKER_Z_OFFSET; // Elevated Z for visibility
 
       // Set orientation of the arrow based on theta using custom utility
       ghost_util::yawToQuaternionRad(
@@ -246,7 +320,7 @@ void getArcOrLineMarker(
   visualization_msgs::msg::Marker marker;
   marker.header.frame_id = "map";
   marker.header.stamp = rclcpp::Clock().now(); // Get current ROS time internally
-  marker.ns = "ghost_tank";
+  marker.ns = "";
   marker.id = viz_msg.markers.size(); // Use current size for unique ID
   marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
   marker.action = visualization_msgs::msg::Marker::ADD;
@@ -293,13 +367,13 @@ void getArcOrLineMarker(
     geometry_msgs::msg::Point p_start;
     p_start.x = start_point.x();
     p_start.y = start_point.y();
-    p_start.z = TRAJECTORY_Z_OFFSET;
+    p_start.z = MARKER_Z_OFFSET;
     marker.points.push_back(p_start);
 
     geometry_msgs::msg::Point p_end;
     p_end.x = end_point.x();
     p_end.y = end_point.y();
-    p_end.z = TRAJECTORY_Z_OFFSET;
+    p_end.z = MARKER_Z_OFFSET;
     marker.points.push_back(p_end);
   }
 
