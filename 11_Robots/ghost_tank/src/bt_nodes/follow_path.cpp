@@ -24,6 +24,7 @@
 
 #include "ghost_tank/bt_nodes/follow_path.hpp"
 #include <ghost_util/angle_util.hpp>
+#include <ghost_tank/visualization/visualization_helpers.hpp>
 
 namespace ghost_tank
 {
@@ -44,6 +45,7 @@ FollowPath::FollowPath(const std::string & name, const BT::NodeConfig & config)
 
   path_viz_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/autonomy/follow_path/viz_markers", 10);
   exit_threshold_viz_pub_ptr_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/autonomy/follow_path/exit_threshold_viz", 10);
+  twist_command_pub_ptr_ = node_ptr_->create_publisher<geometry_msgs::msg::TwistStamped>("/autonomy/follow_path/cmd_vel", 10);
 }
 
 BT::PortsList FollowPath::getBaseInputPorts()
@@ -124,6 +126,9 @@ void FollowPath::updateVisualization()
   path_viz_pub_ptr_->publish(viz_msg_);
 
   publishExitThresholds();
+
+  auto twist_msg = visualization::createTwistStampedMsg(tank_model_ptr_->getWorldTwist());
+  twist_command_pub_ptr_->publish(twist_msg);
 }
 
 void FollowPath::publishExitThresholds()

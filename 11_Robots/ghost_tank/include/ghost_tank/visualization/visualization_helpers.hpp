@@ -26,6 +26,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <std_msgs/msg/color_rgba.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <algorithm>
@@ -65,6 +66,31 @@ std_msgs::msg::ColorRGBA getColorRGBA(double r, double g, double b, double a)
 // Constants for the new arc/line marker
 constexpr double ARC_LINE_WIDTH = 0.015;
 const std_msgs::msg::ColorRGBA ARC_LINE_COLOR = getColorRGBA(1.0, 0.5, 0.0, 1.0);
+
+/**
+ * @brief Creates a geometry_msgs::msg::Twist message from linear (x, y) and angular (z) components.
+ *
+ * This function is a utility to convert common linear and angular velocity representations
+ * into a standard ROS geometry_msgs::msg::Twist message. It assumes 2D planar motion,
+ * setting linear.z, angular.x, and angular.y to 0.0.
+ *
+ * @param linear_vel The robot's linear velocity as an Eigen::Vector2d (linear.x, linear.y).
+ * @param angular_vel_z The robot's angular velocity around the Z-axis (angular.z).
+ * @return A populated geometry_msgs::msg::Twist message.
+ */
+inline geometry_msgs::msg::TwistStamped createTwistStampedMsg(
+  const Eigen::Vector3d & twist2D)
+{
+  geometry_msgs::msg::TwistStamped twist_msg;
+  twist_msg.header.frame_id = "base_link";
+  twist_msg.header.stamp = rclcpp::Clock().now();
+
+  twist_msg.twist.linear.x = twist2D.x();
+  twist_msg.twist.linear.y = twist2D.y();
+  twist_msg.twist.angular.z = twist2D.z();
+
+  return twist_msg;
+}
 
 /**
  * @brief Creates and adds a point marker to the MarkerArray.

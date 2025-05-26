@@ -123,7 +123,7 @@ public:
    * @param desired_angular_velocity_rad_s The target angular velocity (in radians/second).
    * @return maximum linear velocity (in meters/second).
    */
-  double getMaxLinearVelocityForAngularVelocity(double desired_angular_velocity_rad_s) const;
+  double getMaxLinearVelocityFromAngularVelocity(double desired_angular_velocity_rad_s) const;
 
   const Eigen::Vector3d & getWorldPose()
   {

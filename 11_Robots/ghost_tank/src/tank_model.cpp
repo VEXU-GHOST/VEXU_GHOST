@@ -26,6 +26,7 @@
 #include <ghost_util/math_util.hpp>
 #include <ghost_util/vector_util.hpp>
 #include "ghost_util/unit_conversion_utils.hpp"
+#include <cmath>
 
 using geometry::Line2d;
 using ghost_util::angleBetweenVectorsRadians;
@@ -91,7 +92,7 @@ void TankModel::validateConfig()
 void TankModel::calculateMaxBaseTwist()
 {
   // max motor speed is 600 rpm = 10 rps
-  m_max_base_lin_vel = M_2PI * m_config.wheel_radius_in * ghost_util::INCHES_TO_METERS* m_config.wheel_gear_ratio * 10;
+  m_max_base_lin_vel = M_2PI * m_config.wheel_radius_in * ghost_util::INCHES_TO_METERS * m_config.wheel_gear_ratio * 10;
   m_max_base_ang_vel = m_max_base_lin_vel / (m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS);
 }
 
@@ -117,9 +118,11 @@ Eigen::Vector2d TankModel::chassisTwistToWheelVelocities(Eigen::Vector2d chassis
   return Eigen::Vector2d(left_vel, right_vel);
 }
 
-double TankModel::getMaxLinearVelocityForAngularVelocity(double desired_angular_velocity_rad_s) const
+double TankModel::getMaxLinearVelocityFromAngularVelocity(double desired_angular_velocity_rad_s) const
 {
-  return 0.0;
+  double angular_vel_component = desired_angular_velocity_rad_s * m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS;
+  double max_allowed_linear_vel = m_max_base_lin_vel - std::fabs(angular_vel_component);
+  return std::max(0.0, max_allowed_linear_vel);
 }
 
 void TankModel::driveCommand(double fwd_pct, double ang_pct)
