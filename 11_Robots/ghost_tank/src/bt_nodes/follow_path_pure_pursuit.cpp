@@ -55,7 +55,7 @@ BT::NodeStatus FollowPathPurePursuit::onStart()
 
   // Get Pure Pursuit specific parameters
   k_lookahead_ = BT_Util::get_input<double>(this, "k_lookahead");
-  min_lookahead_distance_m_ = BT_Util::get_input<double>(this, "min_lookahead_distance_tiles") * ghost_util::TILES_TO_METERS;
+  min_pursuit_radius_ = BT_Util::get_input<double>(this, "min_pursuit_radius_tiles") * ghost_util::TILES_TO_METERS;
 
   return BT::NodeStatus::RUNNING;
 }
@@ -77,7 +77,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   projected_position_on_path_ = Eigen::Vector2d(trajectory_.x[closest_point_index], trajectory_.y[closest_point_index]);
 
   // Calculate dynamic lookahead distance
-  dynamic_lookahead_distance_ = std::max(min_lookahead_distance_m_, k_lookahead_ * current_linear_speed);
+  dynamic_pursuit_radius_ = std::max(min_pursuit_radius_, k_lookahead_ * current_linear_speed);
 
   // --- Determine the carrot point using the pursuit radius method ---
   carrot_point_ = goal_pose_.head<2>(); // Default to goal in case no valid point is found
@@ -99,7 +99,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     // This finds intersections of a circle (robot center, lookahead_distance radius) with a line segment
     double A = segment_vec.dot(segment_vec);
     double B = 2 * robot_to_p1.dot(segment_vec);
-    double C = robot_to_p1.dot(robot_to_p1) - dynamic_lookahead_distance_ * dynamic_lookahead_distance_;
+    double C = robot_to_p1.dot(robot_to_p1) - dynamic_pursuit_radius_ * dynamic_pursuit_radius_;
 
     double discriminant = B * B - 4 * A * C;
 
@@ -275,8 +275,8 @@ void FollowPathPurePursuit::populateVisualizationMarkers()
 
   // Scale the sphere to represent the circle's diameter
   // Scale.x and scale.y control the diameter in XY plane
-  pursuit_radius_circle_marker.scale.x = dynamic_lookahead_distance_ * 2.0;
-  pursuit_radius_circle_marker.scale.y = dynamic_lookahead_distance_ * 2.0;
+  pursuit_radius_circle_marker.scale.x = dynamic_pursuit_radius_ * 2.0;
+  pursuit_radius_circle_marker.scale.y = dynamic_pursuit_radius_ * 2.0;
   pursuit_radius_circle_marker.scale.z = 0.01; // Make Z very small to appear as a flat circle
 
   pursuit_radius_circle_marker.color.a = 0.3; // Semi-transparent
