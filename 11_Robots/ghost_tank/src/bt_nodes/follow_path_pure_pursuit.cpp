@@ -37,7 +37,6 @@ BT::PortsList FollowPathPurePursuit::providedPorts()
   // auto input_ports = FollowPath::getBaseInputPorts();
   // input_ports.insert(BT::InputPort<double>("lookahead_distance_tiles"));
   // return input_ports;
-
   return  {BT::InputPort<double>("xy_exit_threshold_tiles"),
     BT::InputPort<double>("angle_exit_threshold_deg"),
     BT::InputPort<double>("lin_vel_exit_threshold_tps", 1000.0, ""),
@@ -69,28 +68,29 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 {
   // Get current and terminal states
   Eigen::Vector2d current_pos = Eigen::Vector2d(tank_model_ptr_->getWorldPose().head<2>());
-  goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());
 
-  // Find closest point in path
+  // Find closest point in path to the current robot position
   int index = trajectory_.getIndexOfClosestPoint(current_pos);
   double dist_to_end = trajectory_.remaining_path_length[index];
 
-  Eigen::Vector2d desired_pose;
+  // Store the projected point of the robot's current position onto the path
+  projected_position_on_path_ = Eigen::Vector2d(trajectory_.x[index], trajectory_.y[index]);
 
   if (dist_to_end <= lookahead_distance_m_) {
-    desired_pose = goal_pose_.head<2>();
+    carrot_point_ = goal_pose_.head<2>();
   } else {
     auto carrot_dist_from_end = trajectory_.remaining_path_length[index] - lookahead_distance_m_;
     auto carrot_index = std::lower_bound(
       trajectory_.remaining_path_length.begin() + index,
       trajectory_.remaining_path_length.end(),
-      carrot_dist_from_end) - trajectory_.remaining_path_length.begin();
-    desired_pose = Eigen::Vector2d(trajectory_.x[carrot_index], trajectory_.y[carrot_index]);
+      carrot_dist_from_end,
+      std::greater<double>() // Use std::greater for reverse sorted remaining_path_length
+      ) - trajectory_.remaining_path_length.begin();
+    carrot_point_ = Eigen::Vector2d(trajectory_.x[carrot_index], trajectory_.y[carrot_index]);
   }
 
   // Select control strategy based on distance to target
   double dist_err = (goal_pose_.head<2>() - current_pos).norm();
-  bool within_pursuit_radius = dist_err < lookahead_distance_m_;
   bool within_xy_exit_threshold = dist_err < xy_exit_threshold_m_;
 
   TankState current_state(dist_to_end, tank_model_ptr_->getWorldTwist().head<2>().norm(), tank_model_ptr_->getWorldPose().z(), tank_model_ptr_->getWorldTwist().z());
@@ -111,8 +111,45 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 
 void FollowPathPurePursuit::populateVisualizationMarkers()
 {
+  auto stamp = node_ptr_->now();
 
+  // Marker for Projected Position On Path (Closest point to robot's current pose)
+  visualization_msgs::msg::Marker projected_pos_marker;
+  projected_pos_marker.header.frame_id = "map";
+  projected_pos_marker.header.stamp = stamp;
+  projected_pos_marker.ns = "pure_pursuit_viz";
+  projected_pos_marker.id = viz_msg_.markers.size();
+  projected_pos_marker.type = visualization_msgs::msg::Marker::SPHERE;
+  projected_pos_marker.action = visualization_msgs::msg::Marker::ADD;
+  projected_pos_marker.pose.position.x = projected_position_on_path_.x();
+  projected_pos_marker.pose.position.y = projected_position_on_path_.y();
+  projected_pos_marker.scale.x = 0.1;
+  projected_pos_marker.scale.y = 0.1;
+  projected_pos_marker.scale.z = 0.1;
+  projected_pos_marker.color.a = 1.0;
+  projected_pos_marker.color.r = 1.0;
+  viz_msg_.markers.push_back(projected_pos_marker);
+
+  // Marker for Lookahead Carrot Point
+  visualization_msgs::msg::Marker carrot_point_marker;
+  carrot_point_marker.header.frame_id = "map";
+  carrot_point_marker.header.stamp = stamp;
+  carrot_point_marker.ns = "pure_pursuit_viz";
+  carrot_point_marker.id = viz_msg_.markers.size();
+  carrot_point_marker.type = visualization_msgs::msg::Marker::SPHERE;
+  carrot_point_marker.action = visualization_msgs::msg::Marker::ADD;
+  carrot_point_marker.pose.position.x = carrot_point_.x();
+  carrot_point_marker.pose.position.y = carrot_point_.y();
+  carrot_point_marker.pose.position.z = 0.0;
+  carrot_point_marker.scale.x = 0.15;
+  carrot_point_marker.scale.y = 0.15;
+  carrot_point_marker.scale.z = 0.15;
+  carrot_point_marker.color.a = 1.0;
+  carrot_point_marker.color.r = 0.0;
+  carrot_point_marker.color.g = 1.0;
+  carrot_point_marker.color.b = 0.0;
+  viz_msg_.markers.push_back(carrot_point_marker);
 }
 
 
-} // namespace ghost_tank {
+} // namespace ghost_tank

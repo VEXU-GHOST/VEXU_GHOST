@@ -20,22 +20,19 @@
  *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *   SOFTWARE.
  */
-
 #pragma once
 
 #include <ghost_tank/bt_nodes/follow_path.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 namespace ghost_tank
 {
 
-// SyncActionNode (synchronous action) with an input port.
 class FollowPathPurePursuit : public FollowPath
 {
 public:
-  // If your Node has ports, you must use this constructor signature
   FollowPathPurePursuit(const std::string & name, const BT::NodeConfig & config);
 
-  // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
   BT::NodeStatus onStart() override;
@@ -44,10 +41,10 @@ public:
 
   void populateVisualizationMarkers() override;
 
-
 protected:
   double lookahead_distance_m_{0.0};
-  int last_carrot_index_{0};
+  Eigen::Vector2d projected_position_on_path_;
+  Eigen::Vector2d carrot_point_;
 };
 
 } // namespace ghost_tank
