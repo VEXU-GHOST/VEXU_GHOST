@@ -41,7 +41,7 @@ BT::PortsList FollowPathPurePursuit::providedPorts()
 {
   auto input_ports = FollowPath::getBaseInputPorts();
   input_ports.insert(BT::InputPort<double>("k_lookahead"));
-  input_ports.insert(BT::InputPort<double>("min_lookahead_distance_tiles"));
+  input_ports.insert(BT::InputPort<double>("min_pursuit_radius_tiles"));
   return input_ports;
 }
 

@@ -26,6 +26,10 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+
+#include <math/line2d.h>
+#include <math/geometry.h>
+#include <math/math_util.h>
 namespace ghost_tank
 {
 

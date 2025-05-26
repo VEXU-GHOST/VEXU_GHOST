@@ -261,6 +261,7 @@ foreach(NODE ${FOLLOW_PATH_NODES})
   )
   target_link_libraries(${NODE}
     follow_path
+    ghost_estimation::amrl_shared_lib
   )
   ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
   install(
