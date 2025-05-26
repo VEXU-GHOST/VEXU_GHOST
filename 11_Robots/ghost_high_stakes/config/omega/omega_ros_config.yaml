@@ -77,4 +77,4 @@ competition_state_machine_node:
 
       init_x_tiles: 2.4
       init_y_tiles: 0.4
-      init_theta_degrees: -20.0
+      init_theta_degrees: -10.0

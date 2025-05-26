@@ -6,6 +6,7 @@
   <include path="worlds/bt_center_rush_after_side_rush.xml"/>
   <include path="worlds/bt_grab_goal_after_rush.xml"/>
   <include path="bt_clear_corner.xml"/>
+  <include path="bt_corner_shove.xml"/>
   <include path="bt_intake_middle_ring.xml"/>
   <!-- <include path="bt_skills.xml"/> -->
 
@@ -13,11 +14,16 @@
     <Sequence>
       <Sequence>
         <Logging message="Starting main tree" />
-        <!-- <SubTree ID="worlds_goal_rush" _autoremap="true"/> -->
         <SubTree ID="win_point" _autoremap="true"/>
         <SubTree ID="grab_middle_goal" _autoremap="true"/>
         <SubTree ID="clear_negative_corner" _autoremap="true"/>
         <SubTree ID="intake_middle_ring" _autoremap="true"/>
+        <IntakeCmd auto="false"
+          ground_intake="false"/>
+        <SetMirrored mirrored="true"/>
+        <SubTree ID="clear_negative_corner" _autoremap="true"/>
+        <SubTree ID="corner_shove" _autoremap="true"/>
+        <SetMirrored mirrored="false"/>
         
       </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true"/>
@@ -36,17 +42,6 @@
     <Sequence>
       <Logging message="Starting jerryio"/>
       <ClampCmd clamp_closed="false"/>
-      <!-- <MoveToPoseJERRYIO file_path="test_path.txt"
-        search_radius_tiles="0.3"
-        xy_exit_threshold_tiles="0.20"
-        angle_exit_threshold_deg="10.0"
-        lin_vel_exit_threshold_tps="0.1"
-        ang_vel_exit_threshold_dps="5.0"
-        max_speed_linear_percent="0.4"
-        max_speed_angular_percent="0.4"
-        timeout_ms="5000"
-        use_theta="true"
-        backwards="true"/> -->
       <ArcturnToPoint posX_tiles="3.0"
         posY_tiles="1.0"
         timeout_ms="3000"
@@ -59,20 +54,6 @@
         max_effort_percent="0.3"
         timeout_ms="2000"
         xy_exit_threshold_tiles="-0.5"/>
-      <!-- <MoveToPoseBezier posX_tiles="3.0"
-        posY_tiles="1.0"
-        theta_deg="180.0"
-        search_radius_tiles="0.5"
-        xy_exit_threshold_tiles="0.05"
-        angle_exit_threshold_deg="3.0"
-        lin_vel_exit_threshold_tps="0.1"
-        ang_vel_exit_threshold_dps="1.0"
-        lead="0.2"
-        max_speed_linear_percent="0.3"
-        max_speed_angular_percent="0.3"
-        timeout_ms="2000"
-        use_theta="false"
-        backwards="true"/> -->
       <ClampCmd clamp_closed="true"/>
       <BiteCmd bite_closed="true"/>
       <IntakeCmd auto="true"

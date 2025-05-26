@@ -3,13 +3,15 @@
   <BehaviorTree ID="intake_middle_ring">
     <Sequence>
       <Logging message="Starting intake_middle_ring" />
-      <TurnToPoint posX_tiles="1.5"
+      <ArcturnToPoint posX_tiles="3.0"
                   posY_tiles="0.5"
                   timeout_ms="2000"
-                  angle_exit_threshold_deg="1.0"/>
-      <MoveToPoseBezier posX_tiles="3.5"
-        posY_tiles="0.7"
-        theta_deg="180.0"
+                  angle_exit_threshold_deg="1.0"
+                  face_backwards="false"
+                  drive_backwards="true"/>
+      <MoveToPoseBezier posX_tiles="3.2"
+        posY_tiles="0.6"
+        theta_deg="0.0"
         search_radius_tiles="0.5"
         xy_exit_threshold_tiles="0.2"
         angle_exit_threshold_deg="10.0"

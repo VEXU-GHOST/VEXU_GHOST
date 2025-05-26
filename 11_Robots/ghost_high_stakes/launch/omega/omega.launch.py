@@ -157,7 +157,7 @@ def generate_launch_description():
         color_sensor_intake,
         color_classifier_intake,
         color_sensor_goal_rush_l,
-        color_sensor_goal_rush_r,
+        # color_sensor_goal_rush_r,
         competition_state_machine_node,
         gpio_expander,
     ])

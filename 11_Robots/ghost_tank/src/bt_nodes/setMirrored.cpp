@@ -50,6 +50,9 @@ BT::PortsList SetMirrored::providedPorts()
 BT::NodeStatus SetMirrored::tick()
 {
   bool mirrored = BT_Util::get_input<bool>(this, "mirrored");
+  if (BT_Util::get_from_blackboard<bool>(blackboard_, "mirrored")){
+    mirrored = !mirrored;
+  }
   BT_Util::put_in_blackboard(blackboard_, "mirrored", mirrored);
 
   return BT::NodeStatus::SUCCESS;

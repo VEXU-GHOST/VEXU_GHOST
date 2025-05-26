@@ -447,7 +447,7 @@ void TankRobotPlugin::autonomous(double current_time)
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
-  bt_->set_variable<bool>("mirrored", m_mirrored);
+  // bt_->set_variable<bool>("mirrored", m_mirrored);
 
   try {
     bt_->tick_tree();
@@ -1108,6 +1108,7 @@ void TankRobotPlugin::resetWorldPose()
   } else {
     std::cout << "Done reset: regular" << std::endl;
   }
+  bt_->set_variable<bool>("mirrored", m_mirrored);
 }
 
 void TankRobotPlugin::publishCurrentTwist(

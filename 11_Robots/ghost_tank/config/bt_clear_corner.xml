@@ -5,52 +5,29 @@
       <Logging message="Go to corner stack"/>
       <ParallelAll>
         <NeutralStakeCmd state="0"
-                        timeout="3.000"/>
+                        timeout="2.000"/>
         <Sequence>
           <MoveToPoseJERRYIO file_path="test_path.txt"
-                            search_radius_tiles="0.5"
-                            xy_exit_threshold_tiles="0.40"
+                            search_radius_tiles="0.7"
+                            xy_exit_threshold_tiles="0.10"
                             angle_exit_threshold_deg="10.0"
                             lin_vel_exit_threshold_tps="100.0"
                             ang_vel_exit_threshold_dps="100.0"
-                            max_speed_linear_percent="0.7"
+                            max_speed_linear_percent="0.5"
                             max_speed_angular_percent="1.0"
-                            timeout_ms="2000"
+                            timeout_ms="1500"
                             use_theta="false"
                             backwards="false"/>
-          <!-- <MoveToPoseBezier posX_tiles="1.5"
-                              posY_tiles="0.75"
-                              theta_deg="180.0"
-                              search_radius_tiles="0.5"
-                              xy_exit_threshold_tiles="0.2"
-                              angle_exit_threshold_deg="10.0"
-                              lead="0.5"
-                              max_speed_linear_percent="0.6"
-                              max_speed_angular_percent="1.0"
-                              timeout_ms="2000"
-                              use_theta="true"
-                              backwards="false"/>
-          <MoveToPoseBezier posX_tiles="1.0"
-                              posY_tiles="1.0"
-                              theta_deg="135.0"
-                              search_radius_tiles="0.5"
-                              xy_exit_threshold_tiles="0.1"
-                              angle_exit_threshold_deg="10.0"
-                              lead="0.5"
-                              max_speed_linear_percent="0.6"
-                              max_speed_angular_percent="1.0"
-                              timeout_ms="2000"
-                              use_theta="false"
-                              backwards="false"/> -->
+          <ShutoffNode/>
+          <BiteCmd bite_closed="true"/>
+          <ArcturnToPoint posX_tiles="0.2"
+            posY_tiles="0.2"
+            timeout_ms="2000"
+            angle_exit_threshold_deg="1.0"
+            drive_backwards="true"
+            face_backwards="false"/>
         </Sequence>
       </ParallelAll>
-      <BiteCmd bite_closed="true"/>
-      <ArcturnToPoint posX_tiles="0.0"
-                  posY_tiles="0.0"
-                  timeout_ms="2000"
-                  angle_exit_threshold_deg="1.0"
-                  drive_backwards="true"
-                  face_backwards="false"/>
       <Logging message="Processing Corner Stack"/>
       <IntakeCmd auto="true"
                  ground_intake="false"/>
@@ -62,7 +39,7 @@
             kd="0.0"
             max_effort_percent="0.3"
             timeout_ms="2000"
-            xy_exit_threshold_tiles="0.7"/>
+            xy_exit_threshold_tiles="1.0"/>
           <ShutoffNode/>
           <!-- <MoveVoltage forward_effort="-0.3" angular_effort="0.0" timeout_ms="500"/> -->
           <MoveToPoint 
@@ -72,8 +49,8 @@
             timeout_ms="2000"
             xy_exit_threshold_tiles="-0.5"/>
           <ShutoffNode/>
-          <ArcturnToPoint posX_tiles="0.0"
-                      posY_tiles="0.0"
+          <ArcturnToPoint posX_tiles="0.2"
+                      posY_tiles="0.2"
                       timeout_ms="1000"
                       angle_exit_threshold_deg="1.0"
                       drive_backwards="false"
