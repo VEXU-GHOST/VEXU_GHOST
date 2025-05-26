@@ -32,6 +32,10 @@ namespace ghost_tank
 class FollowPathPurePursuit : public FollowPath
 {
 public:
+  static constexpr double CARROT_POINT_MARKER_DIAM = 0.05;
+  static constexpr double PROJ_POINT_MARKER_DIAM = 0.05;
+  static constexpr double MARKER_Z_OFFSET = 0.05;
+
   FollowPathPurePursuit(const std::string & name, const BT::NodeConfig & config);
 
   static BT::PortsList providedPorts();
@@ -43,7 +47,6 @@ public:
   void populateVisualizationMarkers() override;
 
 protected:
-  double lookahead_distance_m_{0.0};
   double k_lookahead_{0.0};
   double min_lookahead_distance_m_{0.0};
 

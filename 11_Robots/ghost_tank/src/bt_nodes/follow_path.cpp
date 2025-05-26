@@ -131,12 +131,12 @@ void FollowPath::publishExitThresholds()
   );
 
   // Set the diagonal elements for X, Y, and Yaw (Z-rotation)
-  double xy_variance = std::pow(xy_exit_threshold_m_ / 2.0, 2);
-  double angle_variance = std::pow(angle_exit_threshold_rad_ / 2.0, 2);
+  double xy_variance = std::pow(xy_exit_threshold_m_, 2);
+  double angle_variance = std::pow(angle_exit_threshold_rad_, 2);
 
-  exit_threshold_msg.pose.covariance[0] = xy_variance;    // Variance of X (row 0, col 0)
-  exit_threshold_msg.pose.covariance[7] = xy_variance;    // Variance of Y (row 1, col 1)
-  exit_threshold_msg.pose.covariance[35] = angle_variance; // Variance of Yaw (row 5, col 5)
+  exit_threshold_msg.pose.covariance[0] = xy_variance;
+  exit_threshold_msg.pose.covariance[7] = xy_variance;
+  exit_threshold_msg.pose.covariance[35] = angle_variance;
 
   exit_threshold_viz_pub_ptr_->publish(exit_threshold_msg);
 }

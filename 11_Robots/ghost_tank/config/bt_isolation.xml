@@ -15,7 +15,8 @@
     <Sequence>
       <Sequence>
         <Logging message="Starting main tree" />
-        <SubTree ID="test_new_mtp" _autoremap="true"/>
+        <SubTree ID="test_new_mtp"
+          _autoremap="true"/>
         <!-- <SubTree ID="worlds_goal_rush" _autoremap="true"/> -->
         <!-- <SubTree ID="win_point" _autoremap="true"/> -->
         <!-- <SubTree ID="grab_middle_goal" _autoremap="true"/> -->
@@ -33,42 +34,31 @@
   <BehaviorTree ID="test_new_mtp">
     <Sequence>
       <GenerateBezierPath end_x_tiles="4.0"
-        end_y_tiles="2.0"
+        end_y_tiles="1.5"
         end_theta_deg="45.0"
         lead_tiles="1.0"
         backwards="false"
         type="CUBIC_BEZIER"
         num_points="250"/>
-      <WaitCmd seconds="3.0"
-        shutoff_motors="true" />
-      <GenerateBezierPath end_x_tiles="4.0"
-        end_y_tiles="2.0"
-        end_theta_deg="0.0"
-        lead_tiles="1.0"
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.25"
+        angle_exit_threshold_deg="15.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="1.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="60000"
+        use_theta="false"
         backwards="false"
-        type="QUADRATIC_BEZIER"
-        num_points="250"/>
-      <WaitCmd seconds="3.0"
-        shutoff_motors="true" />
+        min_lookahead_distance_tiles="0.3"
+        k_lookahead="0.0" />
 
-      <GenerateBezierPath end_x_tiles="2.0"
-        end_y_tiles="2.0"
-        end_theta_deg="45.0"
-        lead_tiles="1.0"
-        backwards="true"
-        type="CUBIC_BEZIER"
-        num_points="250"/>
-      <WaitCmd seconds="3.0"
-        shutoff_motors="true" />
-      <GenerateBezierPath end_x_tiles="2.0"
-        end_y_tiles="2.0"
-        end_theta_deg="45.0"
-        lead_tiles="1.0"
-        backwards="true"
-        type="QUADRATIC_BEZIER"
-        num_points="250"/>
-      <WaitCmd seconds="3.0"
-        shutoff_motors="true" />
+      <!-- <GenerateBezierPath end_x_tiles="4.0" end_y_tiles="2.0" end_theta_deg="0.0" lead_tiles="1.0" backwards="false" type="QUADRATIC_BEZIER" num_points="250"/>
+      <WaitCmd seconds="3.0" shutoff_motors="true" />
+
+      <GenerateBezierPath end_x_tiles="2.0" end_y_tiles="2.0" end_theta_deg="45.0" lead_tiles="1.0" backwards="true" type="CUBIC_BEZIER" num_points="250"/>
+      <WaitCmd seconds="3.0" shutoff_motors="true" />
+      <GenerateBezierPath end_x_tiles="2.0" end_y_tiles="2.0" end_theta_deg="45.0" lead_tiles="1.0" backwards="true" type="QUADRATIC_BEZIER" num_points="250"/>
+      <WaitCmd seconds="3.0" shutoff_motors="true" /> -->
 
     </Sequence>
   </BehaviorTree>
@@ -101,10 +91,10 @@
       <WaitCmd seconds="0.3"
         shutoff_motors="true"/>
       <!-- <ParallelAll> -->
-        <!-- <Sequence> -->
-          <!-- <MoveToPoseBezier posX_tiles="1.5" posY_tiles="0.75" theta_deg="180.0" search_radius_tiles="0.5" xy_exit_threshold_tiles="0.1" angle_exit_threshold_deg="3.0" lin_vel_exit_threshold_tps="0.1" ang_vel_exit_threshold_dps="1.0" lead="0.5" max_speed_linear_percent="0.6" max_speed_angular_percent="1.0" timeout_ms="2000" use_theta="true" backwards="false"/> -->
-          <!-- <MoveToPoseBezier posX_tiles="1.0" posY_tiles="1.0" theta_deg="135.0" search_radius_tiles="0.5" xy_exit_threshold_tiles="0.1" angle_exit_threshold_deg="3.0" lin_vel_exit_threshold_tps="0.1" ang_vel_exit_threshold_dps="1.0" lead="0.5" max_speed_linear_percent="0.6" max_speed_angular_percent="1.0" timeout_ms="2000" use_theta="true" backwards="false"/> -->
-        <!-- </Sequence> -->
+      <!-- <Sequence> -->
+      <!-- <MoveToPoseBezier posX_tiles="1.5" posY_tiles="0.75" theta_deg="180.0" search_radius_tiles="0.5" xy_exit_threshold_tiles="0.1" angle_exit_threshold_deg="3.0" lin_vel_exit_threshold_tps="0.1" ang_vel_exit_threshold_dps="1.0" lead="0.5" max_speed_linear_percent="0.6" max_speed_angular_percent="1.0" timeout_ms="2000" use_theta="true" backwards="false"/> -->
+      <!-- <MoveToPoseBezier posX_tiles="1.0" posY_tiles="1.0" theta_deg="135.0" search_radius_tiles="0.5" xy_exit_threshold_tiles="0.1" angle_exit_threshold_deg="3.0" lin_vel_exit_threshold_tps="0.1" ang_vel_exit_threshold_dps="1.0" lead="0.5" max_speed_linear_percent="0.6" max_speed_angular_percent="1.0" timeout_ms="2000" use_theta="true" backwards="false"/> -->
+      <!-- </Sequence> -->
       <!-- </ParallelAll> -->
     </Sequence>
   </BehaviorTree>
@@ -293,45 +283,21 @@
       <input_port name="num_points"
         default="250"/>
     </Action>
-    <!-- <Action ID="MoveToPoseBoomerang" editable="true">
-      <input_port name="posX_tiles"/>
-      <input_port name="posY_tiles"/>
-      <input_port name="theta_deg"/>
-      <input_port name="search_radius_tiles"/>
+    <Action ID="FollowPathPurePursuit"
+      editable="true">
       <input_port name="xy_exit_threshold_tiles"/>
       <input_port name="angle_exit_threshold_deg"/>
       <input_port name="lin_vel_exit_threshold_tps"/>
       <input_port name="ang_vel_exit_threshold_dps"/>
-      <input_port name="lead"/>
-      <input_port name="max_speed_linear_percent"/>
-      <input_port name="max_speed_angular_percent"/>
+      <input_port name="max_speed_linear_percent" />
+      <input_port name="max_speed_angular_percent" />
       <input_port name="timeout_ms"/>
       <input_port name="use_theta"/>
       <input_port name="backwards"/>
+      <input_port name="lookahead_distance_tiles"/>
+      <input_port name="k_lookahead"/>
+      <input_port name="min_lookahead_distance_tiles"/>
     </Action>
-    <Action ID="MoveToPoseBezier" editable="true">
-      <input_port name="posX_tiles"/>
-      <input_port name="posY_tiles"/>
-      <input_port name="theta_deg"/>
-      <input_port name="search_radius_tiles"/>
-      <input_port name="xy_exit_threshold_tiles"/>
-      <input_port name="angle_exit_threshold_deg"/>
-      <input_port name="lin_vel_exit_threshold_tps"/>
-      <input_port name="ang_vel_exit_threshold_dps"/>
-      <input_port name="lead"/>
-      <input_port name="max_speed_linear_percent"/>
-      <input_port name="max_speed_angular_percent"/>
-      <input_port name="timeout_ms"/>
-      <input_port name="use_theta"/>
-      <input_port name="backwards"/>
-    </Action>
-    <Action ID="MoveToPosePurepursuit" editable="true">
-      <input_port name="fileName"/>
-      <input_port name="angle_threshold" default="5.0">m</input_port>
-      <input_port name="threshold" default="0.025">m</input_port>
-      <input_port name="timeout" default="5000">ms</input_port>
-      <input_port name="use_theta" default="false"/>
-    </Action> -->
     <Action ID="ShutoffNode"
       editable="true"/>
   </TreeNodesModel>

@@ -39,9 +39,8 @@ FollowPathPurePursuit::FollowPathPurePursuit(const std::string & name, const BT:
 BT::PortsList FollowPathPurePursuit::providedPorts()
 {
   auto input_ports = FollowPath::getBaseInputPorts();
-  input_ports.insert(BT::InputPort<double>("lookahead_distance_tiles"));
-  input_ports.insert(BT::InputPort<double>("k_lookahead", 0.0, "Gain for dynamic lookahead (m/mps)"));
-  input_ports.insert(BT::InputPort<double>("min_lookahead_distance_tiles", 0.0, "Minimum lookahead distance (tiles)"));
+  input_ports.insert(BT::InputPort<double>("k_lookahead"));
+  input_ports.insert(BT::InputPort<double>("min_lookahead_distance_tiles"));
   return input_ports;
 }
 
@@ -56,14 +55,8 @@ BT::NodeStatus FollowPathPurePursuit::onStart()
   // Get Pure Pursuit specific parameters
   // The 'lookahead_distance_tiles' input will now serve as a default or base for min_lookahead_distance_m_
   // if min_lookahead_distance_tiles is not explicitly set.
-  lookahead_distance_m_ = BT_Util::get_input<double>(this, "lookahead_distance_tiles") * ghost_util::TILES_TO_METERS;
   k_lookahead_ = BT_Util::get_input<double>(this, "k_lookahead");
   min_lookahead_distance_m_ = BT_Util::get_input<double>(this, "min_lookahead_distance_tiles") * ghost_util::TILES_TO_METERS;
-
-  // If min_lookahead_distance_m_ was not provided, use the old lookahead_distance_m_ as the minimum
-  if (min_lookahead_distance_m_ == 0.0) { // Assuming 0.0 is the default value if not provided
-    min_lookahead_distance_m_ = lookahead_distance_m_;
-  }
 
   return BT::NodeStatus::RUNNING;
 }
@@ -175,7 +168,8 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     command = Eigen::Vector2d(fwd_command_, turn_command_);
   }
 
-  return command;
+  // return command;
+  return Eigen::Vector2d(0.0, 0.0);
 }
 
 void FollowPathPurePursuit::populateVisualizationMarkers()
@@ -192,11 +186,13 @@ void FollowPathPurePursuit::populateVisualizationMarkers()
   projected_pos_marker.action = visualization_msgs::msg::Marker::ADD;
   projected_pos_marker.pose.position.x = projected_position_on_path_.x();
   projected_pos_marker.pose.position.y = projected_position_on_path_.y();
-  projected_pos_marker.scale.x = 0.1;
-  projected_pos_marker.scale.y = 0.1;
-  projected_pos_marker.scale.z = 0.1;
+  projected_pos_marker.pose.position.z = MARKER_Z_OFFSET;
+  projected_pos_marker.scale.x = PROJ_POINT_MARKER_DIAM;
+  projected_pos_marker.scale.y = PROJ_POINT_MARKER_DIAM;
+  projected_pos_marker.scale.z = PROJ_POINT_MARKER_DIAM;
   projected_pos_marker.color.a = 1.0;
   projected_pos_marker.color.r = 1.0;
+  projected_pos_marker.color.g = 0.65;
   viz_msg_.markers.push_back(projected_pos_marker);
 
   // Marker for Lookahead Carrot Point
@@ -209,14 +205,13 @@ void FollowPathPurePursuit::populateVisualizationMarkers()
   carrot_point_marker.action = visualization_msgs::msg::Marker::ADD;
   carrot_point_marker.pose.position.x = carrot_point_.x();
   carrot_point_marker.pose.position.y = carrot_point_.y();
-  carrot_point_marker.pose.position.z = 0.0;
-  carrot_point_marker.scale.x = 0.15;
-  carrot_point_marker.scale.y = 0.15;
-  carrot_point_marker.scale.z = 0.15;
+  carrot_point_marker.pose.position.z = MARKER_Z_OFFSET;
+  carrot_point_marker.scale.x = CARROT_POINT_MARKER_DIAM;
+  carrot_point_marker.scale.y = CARROT_POINT_MARKER_DIAM;
+  carrot_point_marker.scale.z = CARROT_POINT_MARKER_DIAM;
   carrot_point_marker.color.a = 1.0;
-  carrot_point_marker.color.r = 0.0;
-  carrot_point_marker.color.g = 1.0;
-  carrot_point_marker.color.b = 0.0;
+  projected_pos_marker.color.r = 1.0;
+  projected_pos_marker.color.g = 0.65;
   viz_msg_.markers.push_back(carrot_point_marker);
 
   ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_robot_theta_, carrot_point_, curvature_);
