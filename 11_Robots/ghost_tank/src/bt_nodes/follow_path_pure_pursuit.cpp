@@ -129,12 +129,27 @@ Eigen::Vector2d FollowPathPurePursuit::calculateCarrotPoint() const
 }
 
 Eigen::Vector2d FollowPathPurePursuit::calculateKinematicallyFeasibleVelocities(
-  double desired_linear_vel_unconstrained,
+  double des_lin_vel_unconstrained,
   double curvature,
-  double max_single_wheel_linear_vel,
-  double half_track_width_meters) const
+  double max_wheel_lin_vel,
+  double wheel_dist_m) const
 {
+  // Calculate wheel velocities based on unconstrained linear velocity
+  double left_vel_unconstrained = des_lin_vel_unconstrained * (1 - curvature * wheel_dist_m);
+  double right_vel_unconstrained = des_lin_vel_unconstrained * (1 + curvature * wheel_dist_m);
+  double max_wheel_speed_unconstrained = std::max(std::fabs(left_vel_unconstrained), std::fabs(right_vel_unconstrained));
 
+  // Exit early if limits are satisfied
+  if (max_wheel_speed_unconstrained <= max_wheel_lin_vel) {
+    return Eigen::Vector2d(des_lin_vel_unconstrained, des_lin_vel_unconstrained * curvature);
+  }
+
+  double scaling_factor = max_wheel_lin_vel / max_wheel_speed_unconstrained;
+
+  // Calculate the maximum linear velocity kinematically possible for this curvature.
+  double constrained_linear_vel = des_lin_vel_unconstrained * scaling_factor;
+
+  return Eigen::Vector2d(constrained_linear_vel, constrained_linear_vel * curvature);
 }
 
 
@@ -156,11 +171,19 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
   // Calculate curvature
   curvature_ = (2.0 * carrot_point_robot_frame.y()) / (dist_to_carrot * dist_to_carrot);
 
-  // Get kinematically feasbible base velocities
-  Eigen::Vector2d vel_cmd = getKinematicallyFeasibleVelocity(); // Fill this in with whatever args you need
+  // Calculate desired linear velocity (unconstrained by kinematic limits initially)
+  double des_lin_vel_unconstrained = max_speed_linear_percent_ * tank_model_ptr_->getMaxBaseLinearVelocity();
 
-  double speed_error = vel_cmd.x() - tank_model_ptr_->getWorldTwist().head<2>().norm();
-  fwd_command_ = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, speed_error);
+  // Get kinematically feasible base velocities (this method handles the conditional limiting)
+  Eigen::Vector2d vel_cmd = calculateKinematicallyFeasibleVelocities(
+    des_lin_vel_unconstrained,
+    curvature_,
+    tank_model_ptr_->getMaxBaseLinearVelocity(),
+    tank_model_ptr_->getWheelDistMeters()
+  );
+
+  double current_speed = tank_model_ptr_->getWorldTwist().head<2>().norm();
+  fwd_command_ = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, vel_cmd.x() - current_speed);
 
   double angle_error = ghost_util::SmallestAngleDistRad(atan2(carrot_point_robot_frame.y(), carrot_point_robot_frame.x()), current_angle_);
   double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();

@@ -29,7 +29,7 @@
 #include <ghost_tank/control/tank_pid_controller.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
-#include <geometry_msgs/msg/twist.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 
 namespace ghost_tank
 {

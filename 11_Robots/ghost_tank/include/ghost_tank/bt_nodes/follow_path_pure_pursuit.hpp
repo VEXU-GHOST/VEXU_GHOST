@@ -68,10 +68,10 @@ private:
    * @return Eigen::Vector2d containing (constrained_linear_vel, constrained_angular_vel).
    */
   Eigen::Vector2d calculateKinematicallyFeasibleVelocities(
-    double desired_linear_vel_unconstrained,
+    double des_lin_vel_unconstrained,
     double curvature,
-    double max_single_wheel_linear_vel,
-    double half_track_width_meters) const;
+    double max_wheel_lin_vel,
+    double wheel_dist_m) const;
 
   double k_lookahead_{0.0};
   double min_pursuit_radius_{0.0};
