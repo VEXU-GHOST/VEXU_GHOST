@@ -62,6 +62,8 @@ protected:
   void updateVisualization();
   void publishExitThresholds();
 
+  void updateCurrentState();
+
   std::shared_ptr<rclcpp::Node> node_ptr_;
   BT::Blackboard::Ptr blackboard_;
 
@@ -89,7 +91,11 @@ protected:
   double max_speed_angular_percent_{0.0};
   int timeout_ms_{0};
   bool use_theta_{false};
+
+
   Eigen::Vector3d goal_pose_;
+  Eigen::Vector2d current_position_;
+  double current_robot_theta_;
 
   // State Transition Handling
   std::chrono::time_point<std::chrono::system_clock> start_time_;

@@ -88,6 +88,8 @@ BT::NodeStatus FollowPath::onRunning()
     return BT::NodeStatus::SUCCESS;
   }
 
+  updateCurrentState();
+
   // Get control commands from derived class
   auto cmd = calculateControllerCommand();
   fwd_command_ = cmd.x();
@@ -102,6 +104,13 @@ BT::NodeStatus FollowPath::onRunning()
   updateVisualization();
 
   return BT::NodeStatus::RUNNING;
+}
+
+void FollowPath::updateCurrentState()
+{
+  current_position_ = tank_model_ptr_->getWorldPose().head<2>();
+  current_robot_theta_ = tank_model_ptr_->getWorldPose().z();
+  goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());
 }
 
 void FollowPath::updateVisualization()

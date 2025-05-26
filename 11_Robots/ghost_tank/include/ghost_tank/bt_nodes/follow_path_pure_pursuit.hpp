@@ -51,12 +51,16 @@ public:
   void populateVisualizationMarkers() override;
 
 protected:
+  Eigen::Vector2d calculateCarrotPoint() const;
+  Eigen::Vector2d calculatePurePursuitDriveCommand();
+
+
   double k_lookahead_{0.0};
   double min_pursuit_radius_{0.0};
   double dynamic_pursuit_radius_{0.0};
 
-  Eigen::Vector2d current_position_;
-  double current_robot_theta_;
+  int closest_point_index_{0};
+
   Eigen::Vector2d projected_position_on_path_;
   Eigen::Vector2d carrot_point_;
   double curvature_{0.0};
