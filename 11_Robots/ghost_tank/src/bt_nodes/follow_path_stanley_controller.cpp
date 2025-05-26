@@ -38,12 +38,12 @@ FollowPathStanleyController::FollowPathStanleyController(const std::string & nam
 {
 }
 
-BT::PortsList FollowPathStanleyController::providedPorts()
+BT::PortsList FollowPathPurePursuit::providedPorts()
 {
-  auto input_ports = getBaseInputPorts();
-  // We can add specific Stanley controller parameters here if needed, e.g., K_STANLEY_GAIN
+  auto input_ports = FollowPath::getBaseInputPorts();
   return input_ports;
 }
+
 
 
 BT::NodeStatus FollowPathStanleyController::onStart()
