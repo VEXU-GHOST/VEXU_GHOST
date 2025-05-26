@@ -60,6 +60,7 @@ protected:
   bool checkEndConditions();
   void normalizeControllerCommand();
   void updateVisualization();
+  void publishExitThresholds();
 
   std::shared_ptr<rclcpp::Node> node_ptr_;
   BT::Blackboard::Ptr blackboard_;

@@ -23,6 +23,7 @@
 
 
 #include "ghost_tank/bt_nodes/follow_path.hpp"
+#include <ghost_util/angle_util.hpp>
 
 namespace ghost_tank
 {
@@ -38,6 +39,7 @@ FollowPath::FollowPath(const std::string & name, const BT::NodeConfig & config)
   BT_Util::get_from_blackboard(blackboard_, "settling_controller_ptr", m_settling_controller_ptr);
 
   path_viz_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/autonomy/follow_path/viz_markers", 10);
+  exit_threshold_viz_pub_ptr_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/autonomy/follow_path/exit_threshold_viz", 10);
 }
 
 BT::PortsList FollowPath::getBaseInputPorts()
@@ -64,7 +66,7 @@ BT::NodeStatus FollowPath::onStart()
   // Get Blackboard Inputs
   xy_exit_threshold_m_ = BT_Util::get_input<double>(this, "xy_exit_threshold_tiles") * ghost_util::TILES_TO_METERS;
   angle_exit_threshold_rad_ = BT_Util::get_input<double>(this, "angle_exit_threshold_deg") * ghost_util::DEG_TO_RAD;
-  lin_vel_exit_threshold_mps_ = BT_Util::get_input<double>(this, "lin_vel_exit_threshold_tiles") * ghost_util::TILES_TO_METERS;
+  lin_vel_exit_threshold_mps_ = BT_Util::get_input<double>(this, "lin_vel_exit_threshold_tps") * ghost_util::TILES_TO_METERS;
   ang_vel_exit_threshold_radps_ = BT_Util::get_input<double>(this, "ang_vel_exit_threshold_dps") * ghost_util::DEG_TO_RAD;
   max_speed_linear_percent_ = BT_Util::get_input<double>(this, "max_speed_linear_percent");
   max_speed_angular_percent_ = BT_Util::get_input<double>(this, "max_speed_angular_percent");
@@ -107,7 +109,36 @@ void FollowPath::updateVisualization()
   populateVisualizationMarkers();
   path_viz_pub_ptr_->publish(viz_msg_);
 
-  
+  publishExitThresholds();
+}
+
+void FollowPath::publishExitThresholds()
+{
+  geometry_msgs::msg::PoseWithCovarianceStamped exit_threshold_msg;
+  exit_threshold_msg.header.stamp = node_ptr_->now();
+  exit_threshold_msg.header.frame_id = "map"; // Assuming "odom" is the relevant frame
+
+  exit_threshold_msg.pose.pose.position.x = goal_pose_.x();
+  exit_threshold_msg.pose.pose.position.y = goal_pose_.y();
+  exit_threshold_msg.pose.pose.position.z = 0.0; // Assuming 2D planning, z is 0
+
+  ghost_util::yawToQuaternionRad(
+    goal_pose_.z(),
+    exit_threshold_msg.pose.pose.orientation.w,
+    exit_threshold_msg.pose.pose.orientation.x,
+    exit_threshold_msg.pose.pose.orientation.y,
+    exit_threshold_msg.pose.pose.orientation.z
+  );
+
+  // Set the diagonal elements for X, Y, and Yaw (Z-rotation)
+  double xy_variance = std::pow(xy_exit_threshold_m_ / 2.0, 2);
+  double angle_variance = std::pow(angle_exit_threshold_rad_ / 2.0, 2);
+
+  exit_threshold_msg.pose.covariance[0] = xy_variance;    // Variance of X (row 0, col 0)
+  exit_threshold_msg.pose.covariance[7] = xy_variance;    // Variance of Y (row 1, col 1)
+  exit_threshold_msg.pose.covariance[35] = angle_variance; // Variance of Yaw (row 5, col 5)
+
+  exit_threshold_viz_pub_ptr_->publish(exit_threshold_msg);
 }
 
 void FollowPath::normalizeControllerCommand()
@@ -163,4 +194,4 @@ void FollowPath::onHalted()
   resetStatus();
 }
 
-} // namespace ghost_tank {
+} // namespace ghost_tank
