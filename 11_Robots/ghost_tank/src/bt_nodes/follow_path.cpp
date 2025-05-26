@@ -106,6 +106,7 @@ BT::NodeStatus FollowPath::onRunning()
 
 void FollowPath::updateVisualization()
 {
+  viz_msg_.markers.clear();
   populateVisualizationMarkers();
   path_viz_pub_ptr_->publish(viz_msg_);
 

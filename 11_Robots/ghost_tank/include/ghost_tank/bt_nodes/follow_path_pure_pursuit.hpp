@@ -32,8 +32,8 @@ namespace ghost_tank
 class FollowPathPurePursuit : public FollowPath
 {
 public:
-  static constexpr double CARROT_POINT_MARKER_DIAM = 0.05;
-  static constexpr double PROJ_POINT_MARKER_DIAM = 0.05;
+  static constexpr double CARROT_POINT_MARKER_DIAM = 0.025;
+  static constexpr double PROJ_POINT_MARKER_DIAM = 0.025;
   static constexpr double MARKER_Z_OFFSET = 0.05;
 
   FollowPathPurePursuit(const std::string & name, const BT::NodeConfig & config);

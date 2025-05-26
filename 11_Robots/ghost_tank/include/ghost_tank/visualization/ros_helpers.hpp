@@ -50,12 +50,12 @@ constexpr float TRAJECTORY_ARROW_ALPHA = 1.0f;
 constexpr double TRAJECTORY_ARROW_Z_OFFSET = 0.1;
 
 // Constants for the new arc/line marker
-constexpr double ARC_LINE_WIDTH = 0.05;
+constexpr double ARC_LINE_WIDTH = 0.015;
 const std_msgs::msg::ColorRGBA ARC_LINE_COLOR = []() {
     std_msgs::msg::ColorRGBA color;
-    color.r = 0.0f;
-    color.g = 0.0f;
-    color.b = 1.0f;
+    color.r = 1.0f;
+    color.g = 0.5f;
+    color.b = 0.0f;
     color.a = 1.0f;
     return color;
   }();

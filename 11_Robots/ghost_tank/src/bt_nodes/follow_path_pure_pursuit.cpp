@@ -192,7 +192,8 @@ void FollowPathPurePursuit::populateVisualizationMarkers()
   projected_pos_marker.scale.z = PROJ_POINT_MARKER_DIAM;
   projected_pos_marker.color.a = 1.0;
   projected_pos_marker.color.r = 1.0;
-  projected_pos_marker.color.g = 0.65;
+  projected_pos_marker.color.g = 1.0;
+  projected_pos_marker.color.b = 1.0;
   viz_msg_.markers.push_back(projected_pos_marker);
 
   // Marker for Lookahead Carrot Point
@@ -210,8 +211,8 @@ void FollowPathPurePursuit::populateVisualizationMarkers()
   carrot_point_marker.scale.y = CARROT_POINT_MARKER_DIAM;
   carrot_point_marker.scale.z = CARROT_POINT_MARKER_DIAM;
   carrot_point_marker.color.a = 1.0;
-  projected_pos_marker.color.r = 1.0;
-  projected_pos_marker.color.g = 0.65;
+  carrot_point_marker.color.r = 1.0;
+  carrot_point_marker.color.g = 0.5;
   viz_msg_.markers.push_back(carrot_point_marker);
 
   ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_robot_theta_, carrot_point_, curvature_);
