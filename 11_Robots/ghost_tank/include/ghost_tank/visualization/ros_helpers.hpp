@@ -47,7 +47,7 @@ constexpr double TRAJECTORY_ARROW_SHAFT_DIAMETER = 0.015;
 constexpr double TRAJECTORY_ARROW_HEAD_DIAMETER = 0.025;
 constexpr float TRAJECTORY_SPHERE_ALPHA = 0.5f;
 constexpr float TRAJECTORY_ARROW_ALPHA = 1.0f;
-constexpr double TRAJECTORY_ARROW_Z_OFFSET = 0.1;
+constexpr double TRAJECTORY_Z_OFFSET = 0.1;
 
 // Constants for the new arc/line marker
 constexpr double ARC_LINE_WIDTH = 0.015;
@@ -193,7 +193,7 @@ void getTrajectoryMsg(
       // Set position of the arrow, elevated slightly in Z
       arrow_marker.pose.position.x = path.x[i];
       arrow_marker.pose.position.y = path.y[i];
-      arrow_marker.pose.position.z = TRAJECTORY_ARROW_Z_OFFSET; // Elevated Z for visibility
+      arrow_marker.pose.position.z = TRAJECTORY_Z_OFFSET; // Elevated Z for visibility
 
       // Set orientation of the arrow based on theta using custom utility
       ghost_util::yawToQuaternionRad(
@@ -293,13 +293,13 @@ void getArcOrLineMarker(
     geometry_msgs::msg::Point p_start;
     p_start.x = start_point.x();
     p_start.y = start_point.y();
-    p_start.z = 0.0;
+    p_start.z = TRAJECTORY_Z_OFFSET;
     marker.points.push_back(p_start);
 
     geometry_msgs::msg::Point p_end;
     p_end.x = end_point.x();
     p_end.y = end_point.y();
-    p_end.z = 0.0;
+    p_end.z = TRAJECTORY_Z_OFFSET;
     marker.points.push_back(p_end);
   }
 
