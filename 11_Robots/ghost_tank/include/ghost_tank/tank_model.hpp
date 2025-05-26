@@ -116,6 +116,15 @@ public:
    */
   Eigen::Vector2d chassisTwistToWheelVelocities(Eigen::Vector2d chassis_twist) const;
 
+  /**
+   * @brief Given a desired angular velocity, calculate the maximum linear velocity
+   * the robot can achieve without exceeding the maximum wheel speed.
+   *
+   * @param desired_angular_velocity_rad_s The target angular velocity (in radians/second).
+   * @return maximum linear velocity (in meters/second).
+   */
+  double getMaxLinearVelocityForAngularVelocity(double desired_angular_velocity_rad_s) const;
+
   const Eigen::Vector3d & getWorldPose()
   {
     return m_world_pose;

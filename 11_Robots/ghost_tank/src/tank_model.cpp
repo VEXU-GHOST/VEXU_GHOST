@@ -117,6 +117,11 @@ Eigen::Vector2d TankModel::chassisTwistToWheelVelocities(Eigen::Vector2d chassis
   return Eigen::Vector2d(left_vel, right_vel);
 }
 
+double TankModel::getMaxLinearVelocityForAngularVelocity(double desired_angular_velocity_rad_s) const
+{
+  return 0.0;
+}
+
 void TankModel::driveCommand(double fwd_pct, double ang_pct)
 {
   ghost_util::clamp(fwd_pct, -1.0, 1.0);
