@@ -44,9 +44,9 @@ struct TankConfig
 {
   std::vector<std::string> motor_list_left;
   std::vector<std::string> motor_list_right;
-  double wheel_radius;
+  double wheel_radius_in;
   double wheel_gear_ratio;
-  double wheel_dist;
+  double wheel_dist_in;
 };
 
 class TankModel
@@ -97,6 +97,24 @@ public:
   {
     return m_odom_pose.z();
   }
+
+  /**
+   * @brief Given the tank drive velocity at the wheels (left_wheel_linear_velocity, right_wheel_linear_velocity),
+   * return the corresponding (x_vel, theta_vel) for the robot base link.
+   *
+   * @param wheel_velocities (left_wheel_linear_velocity, right_wheel_linear_velocity)
+   * @return Eigen::Vector2d (forward_linear_velocity, angular_velocity)
+   */
+  Eigen::Vector2d wheelVelocitiesToChassisTwist(Eigen::Vector2d wheel_velocities) const;
+
+  /**
+   * @brief Given (x_vel, theta_vel) for the robot base link, return the tank drive velocity at the wheels
+   * (left_wheel_linear_velocity, right_wheel_linear_velocity).
+   *
+   * @param chassis_twist (forward_linear_velocity, angular_velocity)
+   * @return Eigen::Vector2d (left_wheel_linear_velocity, right_wheel_linear_velocity)
+   */
+  Eigen::Vector2d chassisTwistToWheelVelocities(Eigen::Vector2d chassis_twist) const;
 
   const Eigen::Vector3d & getWorldPose()
   {
