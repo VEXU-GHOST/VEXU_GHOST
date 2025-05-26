@@ -115,7 +115,7 @@ BT::NodeStatus FollowPath::onRunning()
 void FollowPath::updateCurrentState()
 {
   current_position_ = tank_model_ptr_->getWorldPose().head<2>();
-  current_robot_theta_ = tank_model_ptr_->getWorldPose().z();
+  current_angle_ = tank_model_ptr_->getWorldPose().z();
   goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());
 }
 

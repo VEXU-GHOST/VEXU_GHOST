@@ -26,6 +26,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
 #include "eigen3/Eigen/Geometry"
@@ -58,7 +59,7 @@ public:
     TankConfig config);
 
   /**
-   * @brief Get the Tank Model Configration
+   * @brief Get the Tank Model Configuration
    *
    * @return const TankConfig&
    */
@@ -86,6 +87,18 @@ public:
   {
     return m_max_base_ang_vel;
   }
+
+  /**
+   * @brief Get the wheel distance in meters (half track width).
+   * This is the distance from the robot's center to the center of a wheel.
+   *
+   * @return double
+   */
+  double getWheelDistMeters() const
+  {
+    return m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS;
+  }
+
 
   // Base States
   const Eigen::Vector3d & getOdometryPose()

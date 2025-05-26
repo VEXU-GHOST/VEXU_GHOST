@@ -26,6 +26,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <Eigen/Geometry>
 
 #include <math/line2d.h>
 #include <math/geometry.h>
@@ -54,6 +55,23 @@ protected:
   Eigen::Vector2d calculateCarrotPoint() const;
   Eigen::Vector2d calculatePurePursuitDriveCommand();
 
+private:
+  /**
+   * @brief Calculates the maximum kinematically feasible linear and angular velocities
+   * for a given curvature, ensuring no wheel exceeds its maximum speed.
+   * This method assumes the relationship omega = V * curvature.
+   *
+   * @param desired_linear_vel_unconstrained The ideal linear velocity before kinematic limiting.
+   * @param curvature The path curvature (1/radius).
+   * @param max_single_wheel_linear_vel The maximum linear velocity of a single wheel.
+   * @param half_track_width_meters The distance from the robot's center to a wheel's center.
+   * @return Eigen::Vector2d containing (constrained_linear_vel, constrained_angular_vel).
+   */
+  Eigen::Vector2d calculateKinematicallyFeasibleVelocities(
+    double desired_linear_vel_unconstrained,
+    double curvature,
+    double max_single_wheel_linear_vel,
+    double half_track_width_meters) const;
 
   double k_lookahead_{0.0};
   double min_pursuit_radius_{0.0};

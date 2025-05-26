@@ -29,7 +29,7 @@
 #include <ghost_tank/control/tank_pid_controller.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
-#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 
 namespace ghost_tank
 {
@@ -100,7 +100,7 @@ protected:
 
   Eigen::Vector3d goal_pose_;
   Eigen::Vector2d current_position_;
-  double current_robot_theta_;
+  double current_angle_;
 
   // State Transition Handling
   std::chrono::time_point<std::chrono::system_clock> start_time_;

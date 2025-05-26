@@ -103,7 +103,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateCarrotPoint() const
 
       // Transform the intersection point to the robot's local frame to check if it's forward.
       Eigen::Vector2d vector_to_intersection_world = current_intersection - current_position_;
-      Eigen::Rotation2D<double> rotation_to_robot_frame(-current_robot_theta_);
+      Eigen::Rotation2D<double> rotation_to_robot_frame(-current_angle_);
       Eigen::Vector2d intersection_point_robot_frame = rotation_to_robot_frame * vector_to_intersection_world;
 
       // Only consider points that are ahead of the robot (positive x in robot frame).
@@ -128,11 +128,21 @@ Eigen::Vector2d FollowPathPurePursuit::calculateCarrotPoint() const
   return carrot_point;
 }
 
+Eigen::Vector2d FollowPathPurePursuit::calculateKinematicallyFeasibleVelocities(
+  double desired_linear_vel_unconstrained,
+  double curvature,
+  double max_single_wheel_linear_vel,
+  double half_track_width_meters) const
+{
+
+}
+
+
 Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
 {
   // Transform carrot_point_ to robot's local frame
   Eigen::Vector2d vector_to_carrot_world = carrot_point_ - current_position_;
-  Eigen::Vector2d carrot_point_robot_frame = Eigen::Rotation2D<double>(-current_robot_theta_) * vector_to_carrot_world;
+  Eigen::Vector2d carrot_point_robot_frame = Eigen::Rotation2D<double>(-current_angle_) * vector_to_carrot_world;
 
   // Calculate actual lookahead distance (distance from robot to carrot point)
   double dist_to_carrot = vector_to_carrot_world.norm();
@@ -146,16 +156,16 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
   // Calculate curvature
   curvature_ = (2.0 * carrot_point_robot_frame.y()) / (dist_to_carrot * dist_to_carrot);
 
-  // Determine desired linear velocity (can be constant or from trajectory speed profile)
-  double desired_speed = max_speed_linear_percent_ * tank_model_ptr_->getMaxBaseLinearVelocity();
-  double current_speed = tank_model_ptr_->getWorldTwist().head<2>().norm();
-  fwd_command_ = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, desired_speed - current_speed);
+  // Get kinematically feasbible base velocities
+  Eigen::Vector2d vel_cmd = getKinematicallyFeasibleVelocity(); // Fill this in with whatever args you need
 
-  double angle_error = ghost_util::SmallestAngleDistRad(atan2(carrot_point_robot_frame.y(), carrot_point_robot_frame.x()), current_robot_theta_);
-  double ang_vel_error = desired_speed * curvature_ - tank_model_ptr_->getWorldTwist().z();
+  double speed_error = vel_cmd.x() - tank_model_ptr_->getWorldTwist().head<2>().norm();
+  fwd_command_ = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, speed_error);
+
+  double angle_error = ghost_util::SmallestAngleDistRad(atan2(carrot_point_robot_frame.y(), carrot_point_robot_frame.x()), current_angle_);
+  double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();
   turn_command_ = m_steering_approach_controller_ptr->calculateCommand(angle_error, ang_vel_error);
 
-  // Account for backwards movement in desired linear speed
   if (backwards_) {
     fwd_command_ *= -1.0;
   }
@@ -182,7 +192,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   Eigen::Vector2d command;
   if (dist_to_goal_ < xy_exit_threshold_m_ || settling_) {
     // Use the settling controller
-    double angle_error = ghost_util::SmallestAngleDistRad(goal_pose_.z(), current_robot_theta_);
+    double angle_error = ghost_util::SmallestAngleDistRad(goal_pose_.z(), current_angle_);
     command.x() = m_distance_settling_controller_ptr->calculateCommand(dist_to_goal_ * cos(angle_error), -tank_model_ptr_->getWorldTwist().head<2>().norm());
     command.y() = m_steering_settling_controller_ptr->calculateCommand(angle_error, -tank_model_ptr_->getWorldTwist().z());
 
@@ -203,7 +213,7 @@ void FollowPathPurePursuit::populateVisualizationMarkers()
   visualization::getPointMarker(viz_msg_, carrot_point_, visualization::getColorRGBA(1.0, 0.5, 0.0, 1.0));
   visualization::getCircleMarker(viz_msg_, current_position_, dynamic_pursuit_radius_, visualization::getColorRGBA(0.0, 0.0, 1.0, 0.3));
   if (!settling_) {
-    ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_robot_theta_, carrot_point_, curvature_);
+    ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_angle_, carrot_point_, curvature_);
   }
 }
 
