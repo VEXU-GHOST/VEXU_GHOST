@@ -215,7 +215,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   Eigen::Vector2d command;
   if (dist_to_goal_ < xy_exit_threshold_m_ || settling_) {
     // Use the settling controller
-    Eigen::Vector2d robot_to_goal_vector = goal_pose_ - current_position_;
+    Eigen::Vector2d robot_to_goal_vector = goal_pose_.head<2>() - current_position_;
     double alignment_angle = ghost_util::SmallestAngleDistRad(atan2(robot_to_goal_vector.y(), robot_to_goal_vector.x()), current_angle_);
     command.x() = m_distance_settling_controller_ptr->calculateCommand(dist_to_goal_ * cos(alignment_angle), -tank_model_ptr_->getWorldTwist().head<2>().norm());
 
