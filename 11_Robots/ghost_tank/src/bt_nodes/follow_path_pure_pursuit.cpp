@@ -38,7 +38,7 @@ BT::PortsList FollowPathPurePursuit::providedPorts()
   // input_ports.insert(BT::InputPort<double>("lookahead_distance_tiles"));
   // return input_ports;
 
-    return  {BT::InputPort<double>("xy_exit_threshold_tiles"),
+  return  {BT::InputPort<double>("xy_exit_threshold_tiles"),
     BT::InputPort<double>("angle_exit_threshold_deg"),
     BT::InputPort<double>("lin_vel_exit_threshold_tps", 1000.0, ""),
     BT::InputPort<double>("ang_vel_exit_threshold_dps", 1000.0, ""),
@@ -98,16 +98,20 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 
   Eigen::Vector2d command;
   if (within_xy_exit_threshold || settling_) {
-    // We are within xy_exit_threshold, switch to pure angle control
-    command = m_approach_controller_ptr->calculateDriveCommand(current_state, desired_state, backwards_);
+    command = m_settling_controller_ptr->calculateDriveCommand(current_state, desired_state, backwards_);
+
     // Once we start settling, never exit to avoid instability.
     settling_ = true;
   } else {
-    // Chase the carrot. If within pursuit radius, ignore lateral error in xy control.
-    command = m_settling_controller_ptr->calculateDriveCommand(current_state, desired_state, backwards_, within_pursuit_radius);
+    command = m_approach_controller_ptr->calculateDriveCommand(current_state, desired_state, backwards_);
   }
 
   return command;
+}
+
+void FollowPathPurePursuit::populateVisualizationMarkers()
+{
+
 }
 
 

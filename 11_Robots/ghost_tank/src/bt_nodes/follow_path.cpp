@@ -36,6 +36,8 @@ FollowPath::FollowPath(const std::string & name, const BT::NodeConfig & config)
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "approach_controller_ptr", m_approach_controller_ptr);
   BT_Util::get_from_blackboard(blackboard_, "settling_controller_ptr", m_settling_controller_ptr);
+
+  path_viz_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/autonomy/follow_path/viz_markers", 10);
 }
 
 BT::PortsList FollowPath::getBaseInputPorts()
@@ -57,6 +59,7 @@ BT::NodeStatus FollowPath::onStart()
   first_loop_ = true;
   start_time_ = std::chrono::system_clock::now();
   settling_ = false;
+  viz_msg_.markers.clear();
 
   // Get Blackboard Inputs
   xy_exit_threshold_m_ = BT_Util::get_input<double>(this, "xy_exit_threshold_tiles") * ghost_util::TILES_TO_METERS;
@@ -83,14 +86,26 @@ BT::NodeStatus FollowPath::onRunning()
     return BT::NodeStatus::SUCCESS;
   }
 
+  // Get control commands from derived class
   auto cmd = calculateControllerCommand();
   fwd_command_ = cmd.x();
   turn_command_ = cmd.y();
 
+  // Normalize to avoid controller saturation
   normalizeControllerCommand();
 
+  // Send final command to drivetrain
   tank_model_ptr_->driveCommand(fwd_command_, turn_command_);
+
+  // Publish debug information
+  populateVisualizationMarkers();
+  path_viz_pub_ptr_->publish(viz_msg_);
+
   return BT::NodeStatus::RUNNING;
+}
+
+void FollowPath::visualizeExitThresholds(){
+
 }
 
 void FollowPath::normalizeControllerCommand()

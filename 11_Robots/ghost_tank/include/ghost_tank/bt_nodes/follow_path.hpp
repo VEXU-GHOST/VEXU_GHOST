@@ -27,6 +27,7 @@
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 #include <ghost_tank/control/trajectory.hpp>
 #include <ghost_tank/control/tank_pid_controller.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 namespace ghost_tank
 {
@@ -50,6 +51,7 @@ public:
   void onHalted() override;
 
   virtual Eigen::Vector2d calculateControllerCommand() = 0;
+  virtual void populateVisualizationMarkers(){};
 
   static BT::PortsList getBaseInputPorts();
 
@@ -60,15 +62,18 @@ protected:
   std::shared_ptr<rclcpp::Node> node_ptr_;
   BT::Blackboard::Ptr blackboard_;
 
-  double fwd_command_{0.0};
-  double turn_command_{0.0};
+  // Visualization
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr path_viz_pub_ptr_;
+  visualization_msgs::msg::MarkerArray viz_msg_;
 
+  // Tank Drive Control
   std::shared_ptr<TankModel> tank_model_ptr_;
   std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
   motion_planning::Trajectory trajectory_;
-
   std::shared_ptr<TankPIDController> m_approach_controller_ptr;
   std::shared_ptr<TankPIDController> m_settling_controller_ptr;
+  double fwd_command_{0.0};
+  double turn_command_{0.0};
 
   // Path Config
   double xy_exit_threshold_m_{0.0};

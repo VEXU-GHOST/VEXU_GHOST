@@ -42,6 +42,9 @@ public:
 
   Eigen::Vector2d calculateControllerCommand() override;
 
+  void populateVisualizationMarkers() override;
+
+
 protected:
   double lookahead_distance_m_{0.0};
   int last_carrot_index_{0};
