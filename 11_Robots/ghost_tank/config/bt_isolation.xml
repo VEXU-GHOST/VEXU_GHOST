@@ -36,7 +36,7 @@
       <GenerateBezierPath end_x_tiles="4.0"
         end_y_tiles="1.5"
         end_theta_deg="45.0"
-        lead_tiles="0.8"
+        lead_tiles="0.5"
         backwards="false"
         type="CUBIC_BEZIER"
         num_points="250"/>

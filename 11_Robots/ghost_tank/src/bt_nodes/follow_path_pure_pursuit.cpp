@@ -183,17 +183,17 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
   );
 
   double current_speed = tank_model_ptr_->getWorldTwist().head<2>().norm();
-  fwd_command_ = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, vel_cmd.x() - current_speed);
+  auto fwd_cmd = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, vel_cmd.x() - current_speed);
 
   double angle_error = ghost_util::SmallestAngleDistRad(atan2(carrot_point_robot_frame.y(), carrot_point_robot_frame.x()), current_angle_);
   double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();
-  turn_command_ = m_steering_approach_controller_ptr->calculateCommand(angle_error, ang_vel_error);
+  auto turn_cmd = m_steering_approach_controller_ptr->calculateCommand(angle_error, ang_vel_error);
 
   if (backwards_) {
-    fwd_command_ *= -1.0;
+    fwd_cmd *= -1.0;
   }
 
-  return Eigen::Vector2d(fwd_command_, turn_command_);
+  return Eigen::Vector2d(fwd_cmd, turn_cmd);
 }
 
 
@@ -217,8 +217,8 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     // Use the settling controller
     Eigen::Vector2d robot_to_goal_vector = goal_pose_.head<2>() - current_position_;
     double alignment_angle = ghost_util::SmallestAngleDistRad(atan2(robot_to_goal_vector.y(), robot_to_goal_vector.x()), current_angle_);
-    command.x() = m_distance_settling_controller_ptr->calculateCommand(dist_to_goal_ * cos(alignment_angle), -tank_model_ptr_->getWorldTwist().head<2>().norm());
-
+    settling_alignment_error_ = dist_to_goal_ * cos(alignment_angle);
+    command.x() = m_distance_settling_controller_ptr->calculateCommand(settling_alignment_error_, -tank_model_ptr_->getWorldTwist().head<2>().norm());
 
     double angle_error = ghost_util::SmallestAngleDistRad(goal_pose_.z(), current_angle_);
     command.y() = m_steering_settling_controller_ptr->calculateCommand(angle_error, -tank_model_ptr_->getWorldTwist().z());
@@ -231,16 +231,18 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     command = calculatePurePursuitDriveCommand();
   }
 
-  return Eigen::Vector2d(0.0, 0.0);
+  return command;
 }
 
 void FollowPathPurePursuit::populateVisualizationMarkers()
 {
-  visualization::getPointMarker(viz_msg_, projected_position_on_path_, visualization::getColorRGBA(1.0, 1.0, 1.0, 1.0));
-  visualization::getPointMarker(viz_msg_, carrot_point_, visualization::getColorRGBA(1.0, 0.5, 0.0, 1.0));
-  visualization::getCircleMarker(viz_msg_, current_position_, dynamic_pursuit_radius_, visualization::getColorRGBA(0.0, 0.0, 1.0, 0.3));
+  Eigen::Vector2d end_point = goal_pose_.head<2>() + 
+
+  visualization::getPointMarker(viz_msg_, projected_position_on_path_, visualization::getColorRGBA(1.0, 1.0, 1.0, 1.0), 0.5 * visualization::MARKER_Z_OFFSET);
+  visualization::getPointMarker(viz_msg_, carrot_point_, visualization::getColorRGBA(1.0, 0.5, 0.0, 1.0), 0.5 * visualization::MARKER_Z_OFFSET);
+  visualization::getCircleMarker(viz_msg_, current_position_, dynamic_pursuit_radius_, visualization::getColorRGBA(0.0, 0.0, 1.0, 0.3), 0.0);
   if (!settling_) {
-    ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_angle_, carrot_point_, curvature_);
+    ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_angle_, carrot_point_, curvature_, 0.5 * visualization::MARKER_Z_OFFSET);
   }
 }
 

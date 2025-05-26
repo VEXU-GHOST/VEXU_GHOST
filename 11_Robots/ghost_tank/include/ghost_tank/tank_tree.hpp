@@ -48,7 +48,6 @@
 #include "ghost_tank/bt_nodes/turnToPoint.hpp"
 #include "ghost_tank/bt_nodes/generate_bezier_path.hpp"
 #include "ghost_tank/bt_nodes/follow_path_pure_pursuit.hpp"
-// #include "ghost_tank/bt_nodes/follow_path_stanley_controller.hpp"
 // #include "ghost_tank/bt_nodes/arcturnToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
 

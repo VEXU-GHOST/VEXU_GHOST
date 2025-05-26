@@ -44,12 +44,12 @@ namespace visualization
 
 constexpr double TRAJECTORY_SPHERE_DIAMETER = 0.02;
 constexpr double TRAJECTORY_ARROW_LENGTH = 0.075;
-constexpr double TRAJECTORY_ARROW_SHAFT_DIAMETER = 0.015;
+constexpr double TRAJECTORY_ARROW_SHAFT_DIAMETER = 0.01;
 constexpr double TRAJECTORY_ARROW_HEAD_DIAMETER = 0.025;
 constexpr float TRAJECTORY_SPHERE_ALPHA = 0.5f;
 constexpr float TRAJECTORY_ARROW_ALPHA = 1.0f;
-constexpr double MARKER_Z_OFFSET = 0.01;
-constexpr double MARKER_SPHERE_DIAM = 0.05;
+constexpr double MARKER_Z_OFFSET = 0.1;
+constexpr double MARKER_SPHERE_DIAM = 0.025;
 
 std_msgs::msg::ColorRGBA getColorRGBA(double r, double g, double b, double a)
 {
@@ -335,13 +335,15 @@ void getTrajectoryMsg(
  * @param start_orientation_rad The orientation (yaw) at the start point in radians.
  * @param end_point The 2D ending point of the arc/line.
  * @param curvature The calculated curvature (kappa) for the arc.
+ * @param z_offset_m optional param to plot the arc above the ground plane
  */
 void getArcOrLineMarker(
   visualization_msgs::msg::MarkerArray & viz_msg,
   const Eigen::Vector2d & start_point,
   double start_orientation_rad,
   const Eigen::Vector2d & end_point,
-  double curvature)
+  double curvature,
+  const double z_offset_m = MARKER_Z_OFFSET)
 {
   visualization_msgs::msg::Marker marker;
   marker.header.frame_id = "map";
@@ -393,13 +395,13 @@ void getArcOrLineMarker(
     geometry_msgs::msg::Point p_start;
     p_start.x = start_point.x();
     p_start.y = start_point.y();
-    p_start.z = MARKER_Z_OFFSET;
+    p_start.z = z_offset_m;
     marker.points.push_back(p_start);
 
     geometry_msgs::msg::Point p_end;
     p_end.x = end_point.x();
     p_end.y = end_point.y();
-    p_end.z = MARKER_Z_OFFSET;
+    p_end.z = z_offset_m;
     marker.points.push_back(p_end);
   }
 

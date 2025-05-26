@@ -83,9 +83,7 @@ protected:
   std::shared_ptr<ghost_control::PIDController> m_steering_approach_controller_ptr;
   std::shared_ptr<ghost_control::PIDController> m_distance_settling_controller_ptr;
   std::shared_ptr<ghost_control::PIDController> m_steering_settling_controller_ptr;
-  
-  double fwd_command_{0.0};
-  double turn_command_{0.0};
+
 
   // Path Config
   double xy_exit_threshold_m_{0.0};
@@ -107,6 +105,10 @@ protected:
   bool first_loop_{true};
   bool settling_{false};
   bool backwards_{false};
+
+private:
+  double fwd_command_{0.0};
+  double turn_command_{0.0};
 };
 
 } // namespace ghost_tank

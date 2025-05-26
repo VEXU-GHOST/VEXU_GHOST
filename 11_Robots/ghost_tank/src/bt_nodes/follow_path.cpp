@@ -97,12 +97,9 @@ BT::NodeStatus FollowPath::onRunning()
   updateCurrentState();
 
   // Get control commands from derived class
-  auto cmd = calculateControllerCommand();
-  fwd_command_ = cmd.x();
-  turn_command_ = cmd.y();
-
-  // Normalize to avoid controller saturation
-  normalizeControllerCommand();
+  auto command = calculateControllerCommand();
+  fwd_command_ = 0.0;
+  turn_command_ = 0.0;
 
   // Send final command to drivetrain
   tank_model_ptr_->driveCommand(fwd_command_, turn_command_);
