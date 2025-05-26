@@ -231,7 +231,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     command = calculatePurePursuitDriveCommand();
   }
 
-  return command;
+  return Eigen::Vector2d(0.0, 0.0);
 }
 
 void FollowPathPurePursuit::populateVisualizationMarkers()

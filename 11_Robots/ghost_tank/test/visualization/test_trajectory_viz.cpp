@@ -56,16 +56,16 @@ private:
     viz_msg.markers.clear();
 
     // Define common parameters for trajectory generation
-    int num_points_per_segment = 50;    // Number of points for each bezier segment
-    double bezier_lead_distance = 1.0;  // Lead distance for control points
+    int num_points_per_segment = 250;    // Number of points for each bezier segment
+    double bezier_lead_distance = 0.5;  // Lead distance for control points
     int num_arrows_to_display = 5;      // Number of arrows for each segment
 
     // Segment 1: Cubic Bezier from (0, 0, 0 deg) to (2, 2, 0 deg)
-    Eigen::Vector2d cubic_start_pos(0.0, 0.0);
+    Eigen::Vector2d cubic_start_pos(3.0, 1.0);
     double cubic_start_angle_rad = 0.0 * ghost_util::DEG_TO_RAD; // 0 degrees
 
-    Eigen::Vector2d cubic_end_pos(2.0, 2.0);
-    double cubic_end_angle_rad = 0.0 * ghost_util::DEG_TO_RAD;   // 0 degrees
+    Eigen::Vector2d cubic_end_pos(4.0, 1.5);
+    double cubic_end_angle_rad = 45.0 * ghost_util::DEG_TO_RAD;   // 0 degrees
 
     ghost_tank::motion_planning::Trajectory cubic_segment =
       ghost_tank::motion_planning::generateCubicBezierCurve(

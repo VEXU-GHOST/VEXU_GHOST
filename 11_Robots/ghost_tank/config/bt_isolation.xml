@@ -36,7 +36,7 @@
       <GenerateBezierPath end_x_tiles="4.0"
         end_y_tiles="1.5"
         end_theta_deg="45.0"
-        lead_tiles="1.0"
+        lead_tiles="0.8"
         backwards="false"
         type="CUBIC_BEZIER"
         num_points="250"/>
@@ -49,7 +49,7 @@
         timeout_ms="60000"
         use_theta="false"
         backwards="false"
-        min_lookahead_distance_tiles="0.3"
+        min_pursuit_radius_tiles="0.25"
         k_lookahead="0.0" />
 
       <!-- <GenerateBezierPath end_x_tiles="4.0" end_y_tiles="2.0" end_theta_deg="0.0" lead_tiles="1.0" backwards="false" type="QUADRATIC_BEZIER" num_points="250"/>

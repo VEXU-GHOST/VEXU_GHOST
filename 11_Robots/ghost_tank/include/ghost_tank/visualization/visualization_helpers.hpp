@@ -49,7 +49,7 @@ constexpr double TRAJECTORY_ARROW_HEAD_DIAMETER = 0.025;
 constexpr float TRAJECTORY_SPHERE_ALPHA = 0.5f;
 constexpr float TRAJECTORY_ARROW_ALPHA = 1.0f;
 constexpr double MARKER_Z_OFFSET = 0.01;
-constexpr double MARKER_SPHERE_DIAM = 0.1;
+constexpr double MARKER_SPHERE_DIAM = 0.05;
 
 std_msgs::msg::ColorRGBA getColorRGBA(double r, double g, double b, double a)
 {
