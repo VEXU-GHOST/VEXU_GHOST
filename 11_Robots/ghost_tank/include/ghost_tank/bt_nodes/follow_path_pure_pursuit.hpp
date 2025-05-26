@@ -49,6 +49,7 @@ public:
 protected:
   double k_lookahead_{0.0};
   double min_lookahead_distance_m_{0.0};
+  double dynamic_lookahead_distance_{0.0};
 
   Eigen::Vector2d current_position_;
   double current_robot_theta_;

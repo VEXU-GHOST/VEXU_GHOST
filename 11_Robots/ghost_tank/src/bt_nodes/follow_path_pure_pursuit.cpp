@@ -24,6 +24,7 @@
 
 #include <Eigen/Geometry>
 #include <cmath>
+#include <limits>
 
 #include "ghost_tank/bt_nodes/follow_path_pure_pursuit.hpp"
 #include <ghost_tank/visualization/ros_helpers.hpp>
@@ -53,8 +54,6 @@ BT::NodeStatus FollowPathPurePursuit::onStart()
   }
 
   // Get Pure Pursuit specific parameters
-  // The 'lookahead_distance_tiles' input will now serve as a default or base for min_lookahead_distance_m_
-  // if min_lookahead_distance_tiles is not explicitly set.
   k_lookahead_ = BT_Util::get_input<double>(this, "k_lookahead");
   min_lookahead_distance_m_ = BT_Util::get_input<double>(this, "min_lookahead_distance_tiles") * ghost_util::TILES_TO_METERS;
 
@@ -72,31 +71,73 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());
 
   // Find closest point in path to the current robot position
-  int index = trajectory_.getIndexOfClosestPoint(current_position_);
-  double dist_to_end = trajectory_.remaining_path_length[index];
+  int closest_point_index = trajectory_.getIndexOfClosestPoint(current_position_);
 
   // Store the projected point of the robot's current position onto the path for visualization
-  projected_position_on_path_ = Eigen::Vector2d(trajectory_.x[index], trajectory_.y[index]);
+  projected_position_on_path_ = Eigen::Vector2d(trajectory_.x[closest_point_index], trajectory_.y[closest_point_index]);
 
   // Calculate dynamic lookahead distance
-  // This will be used to find the carrot point along the path
-  double dynamic_lookahead_distance = std::max(min_lookahead_distance_m_, k_lookahead_ * current_linear_speed);
+  dynamic_lookahead_distance_ = std::max(min_lookahead_distance_m_, k_lookahead_ * current_linear_speed);
 
-  // Determine the carrot point
-  if (dist_to_end <= dynamic_lookahead_distance) {
-    // If remaining path is less than lookahead, target the final goal
-    carrot_point_ = goal_pose_.head<2>();
-  } else {
-    // Find the point on the path at the dynamic_lookahead_distance from the projected point
-    double carrot_dist_from_end = trajectory_.remaining_path_length[index] - dynamic_lookahead_distance;
-    auto carrot_index = std::lower_bound(
-      trajectory_.remaining_path_length.begin() + index,
-      trajectory_.remaining_path_length.end(),
-      carrot_dist_from_end,
-      std::greater<double>() // Use std::greater for reverse sorted remaining_path_length
-      ) - trajectory_.remaining_path_length.begin();
-    carrot_point_ = Eigen::Vector2d(trajectory_.x[carrot_index], trajectory_.y[carrot_index]);
+  // --- Determine the carrot point using the pursuit radius method ---
+  carrot_point_ = goal_pose_.head<2>(); // Default to goal in case no valid point is found
+  double min_remaining_path_length_for_carrot = std::numeric_limits<double>::max();
+
+  // Iterate through path segments starting from the closest point
+  // We need at least two points for a segment, so loop up to size() - 1
+  for (int i = closest_point_index; i < trajectory_.x.size() - 1; ++i) {
+    Eigen::Vector2d p1(trajectory_.x[i], trajectory_.y[i]);
+    Eigen::Vector2d p2(trajectory_.x[i+1], trajectory_.y[i+1]);
+
+    // Vector representing the line segment
+    Eigen::Vector2d segment_vec = p2 - p1;
+
+    // Vector from robot to p1 (relative to robot's current position)
+    Eigen::Vector2d robot_to_p1 = p1 - current_position_;
+
+    // Coefficients for the quadratic equation At^2 + Bt + C = 0
+    // This finds intersections of a circle (robot center, lookahead_distance radius) with a line segment
+    double A = segment_vec.dot(segment_vec);
+    double B = 2 * robot_to_p1.dot(segment_vec);
+    double C = robot_to_p1.dot(robot_to_p1) - dynamic_lookahead_distance_ * dynamic_lookahead_distance_;
+
+    double discriminant = B * B - 4 * A * C;
+
+    if (discriminant < 0) {
+      // No real intersection points for this segment (circle does not intersect line)
+      continue;
+    }
+
+    double sqrt_discriminant = std::sqrt(discriminant);
+    double t_values[] = {
+      (-B + sqrt_discriminant) / (2 * A),
+      (-B - sqrt_discriminant) / (2 * A)
+    };
+
+    // Check both potential intersection points
+    for (double t : t_values) {
+      // Ensure the intersection point lies within the segment [0, 1]
+      if (t >= 0.0 && t <= 1.0) {
+        Eigen::Vector2d intersection_point = p1 + t * segment_vec;
+
+        // Linearly interpolate the remaining path length for the intersection point.
+        // We're looking for the point that is *furthest along the path*,
+        // which corresponds to the *smallest* remaining_path_length value.
+        double interpolated_remaining_length =
+            trajectory_.remaining_path_length[i] * (1.0 - t) +
+            trajectory_.remaining_path_length[i+1] * t;
+
+        // If this intersection point is further along the path than the current best candidate,
+        // update the carrot point.
+        if (interpolated_remaining_length < min_remaining_path_length_for_carrot) {
+          min_remaining_path_length_for_carrot = interpolated_remaining_length;
+          carrot_point_ = intersection_point;
+        }
+      }
+    }
   }
+
+  // --- End carrot point determination ---
 
   // Select control strategy based on distance to target
   double dist_err = (goal_pose_.head<2>() - current_position_).norm();
@@ -141,7 +182,8 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     if (actual_lookahead_distance < 1e-6) {
       command = Eigen::Vector2d(0.0, 0.0);   // Stop if at the carrot point
       curvature_ = 0.0;
-      return command;
+      // Since we want zero output for testing, ensure this path returns zeros
+      return Eigen::Vector2d(0.0, 0.0);
     }
 
     // 3. Calculate curvature (kappa)
@@ -165,10 +207,11 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     fwd_command_ = desired_linear_speed;
     turn_command_ = desired_angular_velocity;
 
+    // Assign calculated command, but then override to zero for safe testing
     command = Eigen::Vector2d(fwd_command_, turn_command_);
   }
 
-  // return command;
+  // Always return zero command for safe testing, as requested.
   return Eigen::Vector2d(0.0, 0.0);
 }
 
@@ -213,7 +256,35 @@ void FollowPathPurePursuit::populateVisualizationMarkers()
   carrot_point_marker.color.a = 1.0;
   carrot_point_marker.color.r = 1.0;
   carrot_point_marker.color.g = 0.5;
+  carrot_point_marker.color.b = 0.0;
   viz_msg_.markers.push_back(carrot_point_marker);
+
+  // --- New: Marker for Pursuit Radius Circle ---
+  visualization_msgs::msg::Marker pursuit_radius_circle_marker;
+  pursuit_radius_circle_marker.header.frame_id = "map";
+  pursuit_radius_circle_marker.header.stamp = stamp;
+  pursuit_radius_circle_marker.ns = "pure_pursuit_viz";
+  pursuit_radius_circle_marker.id = viz_msg_.markers.size();
+  pursuit_radius_circle_marker.type = visualization_msgs::msg::Marker::SPHERE; // SPHERE type can render as a circle if Z scale is small
+  pursuit_radius_circle_marker.action = visualization_msgs::msg::Marker::ADD;
+
+  // Center the circle at the robot's current position
+  pursuit_radius_circle_marker.pose.position.x = current_position_.x();
+  pursuit_radius_circle_marker.pose.position.y = current_position_.y();
+  pursuit_radius_circle_marker.pose.position.z = MARKER_Z_OFFSET; // Keep it above the map for visibility
+
+  // Scale the sphere to represent the circle's diameter
+  // Scale.x and scale.y control the diameter in XY plane
+  pursuit_radius_circle_marker.scale.x = dynamic_lookahead_distance_ * 2.0;
+  pursuit_radius_circle_marker.scale.y = dynamic_lookahead_distance_ * 2.0;
+  pursuit_radius_circle_marker.scale.z = 0.01; // Make Z very small to appear as a flat circle
+
+  pursuit_radius_circle_marker.color.a = 0.3; // Semi-transparent
+  pursuit_radius_circle_marker.color.r = 0.0;
+  pursuit_radius_circle_marker.color.g = 0.0;
+  pursuit_radius_circle_marker.color.b = 1.0; // Blue color
+  viz_msg_.markers.push_back(pursuit_radius_circle_marker);
+  // --- End new marker ---
 
   ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_robot_theta_, carrot_point_, curvature_);
 }
