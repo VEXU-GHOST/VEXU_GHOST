@@ -97,15 +97,17 @@ BT::NodeStatus FollowPath::onRunning()
   // Send final command to drivetrain
   tank_model_ptr_->driveCommand(fwd_command_, turn_command_);
 
-  // Publish debug information
-  populateVisualizationMarkers();
-  path_viz_pub_ptr_->publish(viz_msg_);
+  updateVisualization();
 
   return BT::NodeStatus::RUNNING;
 }
 
-void FollowPath::visualizeExitThresholds(){
+void FollowPath::updateVisualization()
+{
+  populateVisualizationMarkers();
+  path_viz_pub_ptr_->publish(viz_msg_);
 
+  
 }
 
 void FollowPath::normalizeControllerCommand()

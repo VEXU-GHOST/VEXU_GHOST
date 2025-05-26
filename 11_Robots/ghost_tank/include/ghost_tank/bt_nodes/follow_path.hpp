@@ -28,6 +28,7 @@
 #include <ghost_tank/control/trajectory.hpp>
 #include <ghost_tank/control/tank_pid_controller.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 
 namespace ghost_tank
 {
@@ -51,13 +52,14 @@ public:
   void onHalted() override;
 
   virtual Eigen::Vector2d calculateControllerCommand() = 0;
-  virtual void populateVisualizationMarkers(){};
+  virtual void populateVisualizationMarkers() {}
 
   static BT::PortsList getBaseInputPorts();
 
 protected:
   bool checkEndConditions();
   void normalizeControllerCommand();
+  void updateVisualization();
 
   std::shared_ptr<rclcpp::Node> node_ptr_;
   BT::Blackboard::Ptr blackboard_;
@@ -65,6 +67,8 @@ protected:
   // Visualization
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr path_viz_pub_ptr_;
   visualization_msgs::msg::MarkerArray viz_msg_;
+
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr exit_threshold_viz_pub_ptr_;
 
   // Tank Drive Control
   std::shared_ptr<TankModel> tank_model_ptr_;
@@ -93,4 +97,4 @@ protected:
   bool backwards_{false};
 };
 
-} // namespace ghost_tank {
+} // namespace ghost_tank
