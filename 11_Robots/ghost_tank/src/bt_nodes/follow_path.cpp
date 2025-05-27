@@ -34,7 +34,7 @@ FollowPath::FollowPath(const std::string & name, const BT::NodeConfig & config)
 {
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-  
+
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_trajectory_ptr", tank_trajectory_ptr_);
 
@@ -102,7 +102,7 @@ BT::NodeStatus FollowPath::onRunning()
   turn_command_ = command.y();
 
   // Send final command to drivetrain
-  tank_model_ptr_->driveCommand(0.0, 0.0);
+  tank_model_ptr_->driveCommand(fwd_command_, turn_command_);
 
   updateVisualization();
 
