@@ -91,8 +91,8 @@ void TankModel::validateConfig()
 
 void TankModel::calculateMaxBaseTwist()
 {
-  // max motor speed is 600 rpm = 10 rps
-  m_max_base_lin_vel = M_2PI * m_config.wheel_radius_in * ghost_util::INCHES_TO_METERS * m_config.wheel_gear_ratio * 10;
+  // max motor speed is 11.4 is about 680ish RPM
+  m_max_base_lin_vel = M_2PI * m_config.wheel_radius_in * ghost_util::INCHES_TO_METERS * m_config.wheel_gear_ratio * 11.4;
   m_max_base_ang_vel = m_max_base_lin_vel / (m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS);
 }
 

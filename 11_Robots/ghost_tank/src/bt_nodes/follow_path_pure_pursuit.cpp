@@ -153,7 +153,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateKinematicallyFeasibleVelocities(
 }
 
 
-Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
+Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool within_radius)
 {
   // Transform carrot_point_ to robot's local frame
   Eigen::Vector2d vector_to_carrot_world = carrot_point_ - current_position_;
@@ -182,18 +182,30 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
     tank_model_ptr_->getWheelDistMeters()
   );
 
-  double current_speed = tank_model_ptr_->getWorldTwist().head<2>().norm();
-  auto fwd_cmd = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, vel_cmd.x() - current_speed);
+  // Select Controllers
+  ghost_control::PIDController * distance_controller_ptr;
+  ghost_control::PIDController * steering_controller_ptr;
 
-  double angle_error = ghost_util::SmallestAngleDistRad(atan2(carrot_point_robot_frame.y(), carrot_point_robot_frame.x()), current_angle_);
+  if (within_radius) {
+    distance_controller_ptr = m_distance_settling_controller_ptr.get();
+    steering_controller_ptr = m_steering_settling_controller_ptr.get();
+  } else {
+    distance_controller_ptr = m_distance_approach_controller_ptr.get();
+    steering_controller_ptr = m_steering_approach_controller_ptr.get();
+  }
+
+  // Calculate Commands
+  double fwd_cmd = distance_controller_ptr->calculateCommand(dist_to_carrot, -tank_model_ptr_->getWorldTwist().head<2>().norm());
+
+  double angle_error = ghost_util::SmallestAngleDistRad(trajectory_.theta[closest_point_index_], current_angle_);
   double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();
-  auto turn_cmd = m_steering_approach_controller_ptr->calculateCommand(angle_error, ang_vel_error);
+  double ang_cmd = steering_controller_ptr->calculateCommand(angle_error, ang_vel_error);
 
   if (backwards_) {
     fwd_cmd *= -1.0;
   }
 
-  return Eigen::Vector2d(fwd_cmd, turn_cmd);
+  return Eigen::Vector2d(fwd_cmd, ang_cmd);
 }
 
 
@@ -206,7 +218,8 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
 
   dist_to_goal_ = (goal_pose_.head<2>() - current_position_).norm();
 
-  if (dist_to_goal_ <= dynamic_pursuit_radius_) {
+  bool within_pursuit_radius = dist_to_goal_ <= dynamic_pursuit_radius_;
+  if (within_pursuit_radius) {
     carrot_point_ = goal_pose_.head<2>();
   } else {
     carrot_point_ = calculateCarrotPoint();
@@ -228,7 +241,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     curvature_ = 0.0;
   } else {
     // Use approach controller with Pure Pursuit
-    command = calculatePurePursuitDriveCommand();
+    command = calculatePurePursuitDriveCommand(within_pursuit_radius);
   }
 
   return command;
@@ -243,7 +256,7 @@ void FollowPathPurePursuit::visualizeSettlingError()
     viz_msg_,
     current_position_,
     alignment_point_world,
-    0.25*visualization::MARKER_Z_OFFSET,
+    0.25 * visualization::MARKER_Z_OFFSET,
     visualization::getColorRGBA(1.0, 0.0, 0.0, 1.0)
   );
 
@@ -252,7 +265,7 @@ void FollowPathPurePursuit::visualizeSettlingError()
     viz_msg_,
     alignment_point_world,
     goal_pose_.head<2>(),
-    0.25*visualization::MARKER_Z_OFFSET,
+    0.25 * visualization::MARKER_Z_OFFSET,
     visualization::getColorRGBA(0.0, 0.0, 1.0, 1.0)
   );
 }
