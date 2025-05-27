@@ -54,6 +54,7 @@ BT::PortsList FollowPath::getBaseInputPorts()
     BT::InputPort<double>("angle_exit_threshold_deg"),
     BT::InputPort<double>("lin_vel_exit_threshold_tps", 1000.0, ""),
     BT::InputPort<double>("ang_vel_exit_threshold_dps", 1000.0, ""),
+    BT::InputPort<double>("xy_settling_radius_tiles"),
     BT::InputPort<double>("max_speed_linear_percent"),
     BT::InputPort<double>("max_speed_angular_percent"),
     BT::InputPort<int>("timeout_ms"),
@@ -74,6 +75,7 @@ BT::NodeStatus FollowPath::onStart()
   angle_exit_threshold_rad_ = BT_Util::get_input<double>(this, "angle_exit_threshold_deg") * ghost_util::DEG_TO_RAD;
   lin_vel_exit_threshold_mps_ = BT_Util::get_input<double>(this, "lin_vel_exit_threshold_tps") * ghost_util::TILES_TO_METERS;
   ang_vel_exit_threshold_radps_ = BT_Util::get_input<double>(this, "ang_vel_exit_threshold_dps") * ghost_util::DEG_TO_RAD;
+  xy_settling_radius_m_ = BT_Util::get_input<double>(this, "xy_settling_radius_tiles") * ghost_util::TILES_TO_METERS;
   max_speed_linear_percent_ = BT_Util::get_input<double>(this, "max_speed_linear_percent");
   max_speed_angular_percent_ = BT_Util::get_input<double>(this, "max_speed_angular_percent");
   timeout_ms_ = BT_Util::get_input<int>(this, "timeout_ms");
@@ -120,12 +122,14 @@ void FollowPath::updateVisualization()
 {
   viz_msg_.markers.clear();
   populateVisualizationMarkers();
-  path_viz_pub_ptr_->publish(viz_msg_);
+  visualization::getCircleMarker(viz_msg_, goal_pose_.head<2>(), xy_settling_radius_m_, visualization::getColorRGBA(1.0, 0.0, 0.0, 0.25), 0.0);
 
   publishExitThresholds();
 
   auto twist_msg = visualization::createTwistStampedMsg(Eigen::Vector3d(fwd_command_, 0.0, turn_command_));
   twist_command_pub_ptr_->publish(twist_msg);
+
+  path_viz_pub_ptr_->publish(viz_msg_);
 }
 
 void FollowPath::publishExitThresholds()

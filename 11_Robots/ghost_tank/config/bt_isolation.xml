@@ -33,24 +33,25 @@
 
   <BehaviorTree ID="test_new_mtp">
     <Sequence>
-      <GenerateBezierPath end_x_tiles="4.0"
-        end_y_tiles="1.5"
-        end_theta_deg="45.0"
+      <GenerateBezierPath end_x_tiles="5.0"
+        end_y_tiles="1.0"
+        end_theta_deg="0.0"
         lead_tiles="0.5"
         backwards="false"
         type="CUBIC_BEZIER"
         num_points="250"/>
       <FollowPathPurePursuit xy_exit_threshold_tiles="0.05"
-        angle_exit_threshold_deg="3.0"
+        angle_exit_threshold_deg="0.001"
         lin_vel_exit_threshold_tps="1.0"
         ang_vel_exit_threshold_dps="1.0"
+        xy_settling_radius_tiles="0.25"
         max_speed_linear_percent="1.0"
         max_speed_angular_percent="1.0"
         timeout_ms="60000"
         use_theta="true"
         backwards="false"
-        min_pursuit_radius_tiles="0.3"
-        k_lookahead="0.1" />
+        min_pursuit_radius_tiles="0.5"
+        k_lookahead="0.0" />
 
       <!-- <GenerateBezierPath end_x_tiles="4.0" end_y_tiles="2.0" end_theta_deg="0.0" lead_tiles="1.0" backwards="false" type="QUADRATIC_BEZIER" num_points="250"/>
       <WaitCmd seconds="3.0" shutoff_motors="true" />
@@ -289,6 +290,7 @@
       <input_port name="angle_exit_threshold_deg"/>
       <input_port name="lin_vel_exit_threshold_tps"/>
       <input_port name="ang_vel_exit_threshold_dps"/>
+      <input_port name="xy_settling_radius_tiles"/>
       <input_port name="max_speed_linear_percent" />
       <input_port name="max_speed_angular_percent" />
       <input_port name="timeout_ms"/>

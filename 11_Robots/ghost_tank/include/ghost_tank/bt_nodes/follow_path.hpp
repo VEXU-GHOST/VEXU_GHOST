@@ -89,6 +89,7 @@ protected:
   double angle_exit_threshold_rad_{0.0};
   double lin_vel_exit_threshold_mps_{0.0};
   double ang_vel_exit_threshold_radps_{0.0};
+  double xy_settling_radius_m_{0.0};
   double max_speed_linear_percent_{0.0};
   double max_speed_angular_percent_{0.0};
   int timeout_ms_{0};
