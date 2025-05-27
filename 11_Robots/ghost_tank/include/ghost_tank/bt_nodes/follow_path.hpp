@@ -104,7 +104,6 @@ protected:
   std::chrono::time_point<std::chrono::system_clock> start_time_;
   bool first_loop_{true};
   bool settling_{false};
-  bool backwards_{false};
 
 private:
   double fwd_command_{0.0};

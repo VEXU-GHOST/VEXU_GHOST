@@ -208,10 +208,6 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
   double ang_vel_ff = trajectory_.omega[closest_point_index_] / tank_model_ptr_->getMaxBaseAngularVelocity();
   double ang_cmd = steering_controller_ptr->calculateCommand(angle_error, ang_vel_error, ang_vel_ff);
 
-  if (backwards_) {
-    fwd_cmd *= -1.0;
-  }
-
   return Eigen::Vector2d(fwd_cmd, ang_cmd);
 }
 
@@ -253,6 +249,10 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   } else {
     // Use approach controller with Pure Pursuit
     command = calculatePurePursuitDriveCommand(dist_to_goal_ < xy_settling_radius_m_);
+  }
+
+  if (trajectory_.backwards) {
+    command.x() *= -1.0;
   }
 
   return command;

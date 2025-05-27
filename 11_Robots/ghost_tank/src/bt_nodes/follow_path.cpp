@@ -59,7 +59,6 @@ BT::PortsList FollowPath::getBaseInputPorts()
     BT::InputPort<double>("max_speed_angular_percent"),
     BT::InputPort<int>("timeout_ms"),
     BT::InputPort<bool>("use_theta"),
-    BT::InputPort<bool>("backwards"),
   };
 }
 
@@ -80,7 +79,6 @@ BT::NodeStatus FollowPath::onStart()
   max_speed_angular_percent_ = BT_Util::get_input<double>(this, "max_speed_angular_percent");
   timeout_ms_ = BT_Util::get_input<int>(this, "timeout_ms");
   use_theta_ = BT_Util::get_input<bool>(this, "use_theta");
-  backwards_ = BT_Util::get_input<bool>(this, "backwards");
 
   // Update local trajectory copy
   trajectory_ = *tank_trajectory_ptr_;
@@ -115,7 +113,7 @@ void FollowPath::updateCurrentState()
 {
   current_position_ = tank_model_ptr_->getWorldPose().head<2>();
   current_angle_ = tank_model_ptr_->getWorldPose().z();
-  if (backwards_) {
+  if (trajectory_.backwards) {
     current_angle_ = ghost_util::FlipAnglePI(current_angle_);
   }
   goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());

@@ -110,6 +110,10 @@ BT::NodeStatus GenerateBezierPath::onRunning()
     trajectory_viz_pub_ptr_->publish(viz_msg_);
   }
 
+  if (BT_Util::get_input<bool>(this, "backwards")) {
+    traj.backwards = true;
+  }
+
   *tank_trajectory_ptr_ = traj;
   return BT::NodeStatus::SUCCESS;
 }

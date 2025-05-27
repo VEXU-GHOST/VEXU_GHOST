@@ -136,6 +136,7 @@ struct Trajectory
   std::vector<double> theta;
   std::vector<double> omega;
   std::vector<double> remaining_path_length;
+  bool backwards{false};
 };
 
 } //namespace motion_planning
