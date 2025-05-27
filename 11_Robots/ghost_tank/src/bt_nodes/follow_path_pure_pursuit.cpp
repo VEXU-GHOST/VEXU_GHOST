@@ -193,7 +193,6 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
     distance_controller_ptr = m_distance_settling_controller_ptr.get();
     steering_controller_ptr = m_steering_settling_controller_ptr.get();
     vel_cmd.x() = 0.0;
-    // vel_cmd.x() *= std::max(std::min(0.3, dist_to_goal_ - 0.1) / 0.3, 0.0);
   } else {
     distance_controller_ptr = m_distance_approach_controller_ptr.get();
     steering_controller_ptr = m_steering_approach_controller_ptr.get();

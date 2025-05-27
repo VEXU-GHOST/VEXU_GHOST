@@ -84,6 +84,7 @@ BT::NodeStatus GenerateBezierPath::onRunning()
 
   if (BT_Util::get_input<bool>(this, "backwards")) {
     start_angle = ghost_util::FlipAnglePI(start_angle);
+    end_theta_rad = ghost_util::FlipAnglePI(end_theta_rad);
   }
 
   // Mirror path about center line of VEX field
