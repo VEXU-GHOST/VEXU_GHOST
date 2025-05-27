@@ -98,11 +98,11 @@ BT::NodeStatus FollowPath::onRunning()
 
   // Get control commands from derived class
   auto command = calculateControllerCommand();
-  fwd_command_ = 0.0;
-  turn_command_ = 0.0;
+  fwd_command_ = command.x();
+  turn_command_ = command.y();
 
   // Send final command to drivetrain
-  tank_model_ptr_->driveCommand(fwd_command_, turn_command_);
+  tank_model_ptr_->driveCommand(0.0, 0.0);
 
   updateVisualization();
 
@@ -124,7 +124,7 @@ void FollowPath::updateVisualization()
 
   publishExitThresholds();
 
-  auto twist_msg = visualization::createTwistStampedMsg(tank_model_ptr_->getWorldTwist());
+  auto twist_msg = visualization::createTwistStampedMsg(Eigen::Vector3d(fwd_command_, 0.0, turn_command_));
   twist_command_pub_ptr_->publish(twist_msg);
 }
 
@@ -155,23 +155,6 @@ void FollowPath::publishExitThresholds()
   exit_threshold_msg.pose.covariance[35] = angle_variance;
 
   exit_threshold_viz_pub_ptr_->publish(exit_threshold_msg);
-}
-
-void FollowPath::normalizeControllerCommand()
-{
-  // Clamp steering and lateral thrust to bounds
-  fwd_command_ = ghost_util::clamp(fwd_command_, -max_speed_linear_percent_, max_speed_linear_percent_);
-  turn_command_ = ghost_util::clamp(turn_command_, -max_speed_angular_percent_, max_speed_angular_percent_);
-
-  // Normalize to avoid output saturation.
-  double left_cmd = fwd_command_ - turn_command_;
-  double right_cmd = fwd_command_ + turn_command_;
-
-  // Scale commands so that max command equals full thrust
-  double normalizer = 1.0 / std::max(1.0, std::max(std::fabs(left_cmd), std::fabs(right_cmd)));
-  // double normalizer = 1.0;
-  fwd_command_ *= normalizer;
-  turn_command_ *= normalizer;
 }
 
 bool FollowPath::checkEndConditions()

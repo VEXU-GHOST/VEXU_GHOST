@@ -54,6 +54,7 @@ public:
 protected:
   Eigen::Vector2d calculateCarrotPoint() const;
   Eigen::Vector2d calculatePurePursuitDriveCommand();
+  void visualizeSettlingError();
 
 private:
   /**

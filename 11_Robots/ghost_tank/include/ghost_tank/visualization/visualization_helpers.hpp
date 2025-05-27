@@ -66,6 +66,8 @@ std_msgs::msg::ColorRGBA getColorRGBA(double r, double g, double b, double a)
 // Constants for the new arc/line marker
 constexpr double ARC_LINE_WIDTH = 0.015;
 const std_msgs::msg::ColorRGBA ARC_LINE_COLOR = getColorRGBA(1.0, 0.5, 0.0, 1.0);
+const std_msgs::msg::ColorRGBA DEFAULT_LINE_COLOR = getColorRGBA(0.0, 0.0, 1.0, 1.0); // Default blue for new line marker
+constexpr double DEFAULT_LINE_WIDTH = 0.01; // Default width for new line marker
 
 /**
  * @brief Creates a geometry_msgs::msg::Twist message from linear (x, y) and angular (z) components.
@@ -407,6 +409,62 @@ void getArcOrLineMarker(
 
   viz_msg.markers.push_back(marker);
 }
+
+/**
+ * @brief Adds a visualization_msgs::msg::Marker for a line between two points to a MarkerArray.
+ *
+ * This function creates a LINE_STRIP marker between two specified 2D points.
+ * It's useful for visualizing simple connections or paths in RViz.
+ *
+ * NOTE: This function *appends* markers to the provided viz_msg.
+ * The caller is responsible for clearing viz_msg.markers if a fresh set of markers is desired.
+ * Marker IDs are generated based on the current size of viz_msg.markers to ensure uniqueness.
+ *
+ * @param viz_msg The output MarkerArray message that will be populated.
+ * @param start_point The 2D starting point of the line.
+ * @param end_point The 2D ending point of the line.
+ * @param color The color of the line marker. Defaults to a blue color.
+ * @param width The width of the line marker. Defaults to 0.01 meters.
+ * @param z_offset_m Optional parameter to plot the line above the ground plane. Defaults to MARKER_Z_OFFSET.
+ * @param ns The namespace for the marker. Defaults to an empty string.
+ */
+inline void getLineMarker(
+  visualization_msgs::msg::MarkerArray & viz_msg,
+  const Eigen::Vector2d & start_point,
+  const Eigen::Vector2d & end_point,
+  const double z_offset_m = MARKER_Z_OFFSET,
+  const std_msgs::msg::ColorRGBA & color = DEFAULT_LINE_COLOR,
+  const std::string & ns = "")
+{
+  visualization_msgs::msg::Marker marker;
+  marker.header.frame_id = "map";
+  marker.header.stamp = rclcpp::Clock().now();
+  marker.ns = ns;
+  marker.id = viz_msg.markers.size();
+  marker.type = visualization_msgs::msg::Marker::LINE_STRIP;
+  marker.action = visualization_msgs::msg::Marker::ADD;
+
+  // Set line properties
+  marker.scale.x = DEFAULT_LINE_WIDTH; // LINE_STRIP uses scale.x for width
+  marker.color = color;
+
+  // Add start point
+  geometry_msgs::msg::Point p_start;
+  p_start.x = start_point.x();
+  p_start.y = start_point.y();
+  p_start.z = z_offset_m;
+  marker.points.push_back(p_start);
+
+  // Add end point
+  geometry_msgs::msg::Point p_end;
+  p_end.x = end_point.x();
+  p_end.y = end_point.y();
+  p_end.z = z_offset_m;
+  marker.points.push_back(p_end);
+
+  viz_msg.markers.push_back(marker);
+}
+
 
 } // namespace visualization
 } // namespace ghost_tank

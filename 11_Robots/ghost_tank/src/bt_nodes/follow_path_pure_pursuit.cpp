@@ -234,15 +234,39 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   return command;
 }
 
+void FollowPathPurePursuit::visualizeSettlingError()
+{
+  Eigen::Vector2d alignment_point_world = current_position_ + settling_alignment_error_ * Eigen::Vector2d(std::cos(current_angle_), std::sin(current_angle_));
+
+  // Draw the red line (longitudinal alignment distance)
+  visualization::getLineMarker(
+    viz_msg_,
+    current_position_,
+    alignment_point_world,
+    visualization::MARKER_Z_OFFSET + 0.01,
+    visualization::getColorRGBA(1.0, 0.0, 0.0, 1.0)
+  );
+
+  // Draw the blue line (lateral ignored distance)
+  visualization::getLineMarker(
+    viz_msg_,
+    alignment_point_world,
+    goal_pose_.head<2>(),
+    visualization::MARKER_Z_OFFSET + 0.01,
+    visualization::getColorRGBA(0.0, 0.0, 1.0, 1.0)
+  );
+}
+
 void FollowPathPurePursuit::populateVisualizationMarkers()
 {
-  Eigen::Vector2d end_point = goal_pose_.head<2>() + 
-
+  FollowPath::populateVisualizationMarkers();
   visualization::getPointMarker(viz_msg_, projected_position_on_path_, visualization::getColorRGBA(1.0, 1.0, 1.0, 1.0), 0.5 * visualization::MARKER_Z_OFFSET);
   visualization::getPointMarker(viz_msg_, carrot_point_, visualization::getColorRGBA(1.0, 0.5, 0.0, 1.0), 0.5 * visualization::MARKER_Z_OFFSET);
   visualization::getCircleMarker(viz_msg_, current_position_, dynamic_pursuit_radius_, visualization::getColorRGBA(0.0, 0.0, 1.0, 0.3), 0.0);
   if (!settling_) {
     ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_angle_, carrot_point_, curvature_, 0.5 * visualization::MARKER_Z_OFFSET);
+  } else {
+    visualizeSettlingError();
   }
 }
 

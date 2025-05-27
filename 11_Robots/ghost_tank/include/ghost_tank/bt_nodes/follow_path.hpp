@@ -59,7 +59,6 @@ public:
 
 protected:
   bool checkEndConditions();
-  void normalizeControllerCommand();
   void updateVisualization();
   void publishExitThresholds();
 
