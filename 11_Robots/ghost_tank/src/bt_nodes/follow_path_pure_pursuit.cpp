@@ -243,7 +243,7 @@ void FollowPathPurePursuit::visualizeSettlingError()
     viz_msg_,
     current_position_,
     alignment_point_world,
-    visualization::MARKER_Z_OFFSET + 0.01,
+    0.25*visualization::MARKER_Z_OFFSET,
     visualization::getColorRGBA(1.0, 0.0, 0.0, 1.0)
   );
 
@@ -252,7 +252,7 @@ void FollowPathPurePursuit::visualizeSettlingError()
     viz_msg_,
     alignment_point_world,
     goal_pose_.head<2>(),
-    visualization::MARKER_Z_OFFSET + 0.01,
+    0.25*visualization::MARKER_Z_OFFSET,
     visualization::getColorRGBA(0.0, 0.0, 1.0, 1.0)
   );
 }

@@ -170,7 +170,7 @@ bool FollowPath::checkEndConditions()
   // Check exit conditions
   if (xy_satisfied && ang_vel_satisfied && xy_vel_satisfied) {
     bool translation_only = !use_theta_;
-    if (translation_only || use_theta_ && ang_vel_satisfied) {
+    if (translation_only || use_theta_ && angle_satisfied) {
       RCLCPP_INFO(node_ptr_->get_logger(), "MoveToPose: Success");
       return true;
     }
