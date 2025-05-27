@@ -182,24 +182,12 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool wit
     tank_model_ptr_->getWheelDistMeters()
   );
 
-  // Select Controllers
-  ghost_control::PIDController * distance_controller_ptr;
-  ghost_control::PIDController * steering_controller_ptr;
-
-  if (within_radius) {
-    distance_controller_ptr = m_distance_settling_controller_ptr.get();
-    steering_controller_ptr = m_steering_settling_controller_ptr.get();
-  } else {
-    distance_controller_ptr = m_distance_approach_controller_ptr.get();
-    steering_controller_ptr = m_steering_approach_controller_ptr.get();
-  }
-
   // Calculate Commands
-  double fwd_cmd = distance_controller_ptr->calculateCommand(dist_to_carrot, -tank_model_ptr_->getWorldTwist().head<2>().norm());
+  double fwd_cmd = m_distance_approach_controller_ptr->calculateCommand(dist_to_carrot, -tank_model_ptr_->getWorldTwist().head<2>().norm());
 
   double angle_error = ghost_util::SmallestAngleDistRad(trajectory_.theta[closest_point_index_], current_angle_);
   double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();
-  double ang_cmd = steering_controller_ptr->calculateCommand(angle_error, ang_vel_error);
+  double ang_cmd = m_steering_approach_controller_ptr->calculateCommand(angle_error, ang_vel_error);
 
   if (backwards_) {
     fwd_cmd *= -1.0;
