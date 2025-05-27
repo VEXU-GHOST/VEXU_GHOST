@@ -115,6 +115,9 @@ void FollowPath::updateCurrentState()
 {
   current_position_ = tank_model_ptr_->getWorldPose().head<2>();
   current_angle_ = tank_model_ptr_->getWorldPose().z();
+  if (backwards_) {
+    current_angle_ = ghost_util::FlipAnglePI(current_angle_);
+  }
   goal_pose_ = Eigen::Vector3d(trajectory_.x.back(), trajectory_.y.back(), trajectory_.theta.back());
 }
 

@@ -33,9 +33,9 @@
 
   <BehaviorTree ID="test_new_mtp">
     <Sequence>
-      <GenerateBezierPath end_x_tiles="5.0"
-        end_y_tiles="1.0"
-        end_theta_deg="0.0"
+      <GenerateBezierPath end_x_tiles="4.5"
+        end_y_tiles="1.5"
+        end_theta_deg="45.0"
         lead_tiles="0.5"
         backwards="false"
         type="CUBIC_BEZIER"
@@ -44,13 +44,13 @@
         angle_exit_threshold_deg="0.001"
         lin_vel_exit_threshold_tps="1.0"
         ang_vel_exit_threshold_dps="1.0"
-        xy_settling_radius_tiles="0.25"
+        xy_settling_radius_tiles="0.5"
         max_speed_linear_percent="1.0"
         max_speed_angular_percent="1.0"
         timeout_ms="60000"
         use_theta="true"
         backwards="false"
-        min_pursuit_radius_tiles="0.5"
+        min_pursuit_radius_tiles="0.4"
         k_lookahead="0.0" />
 
       <!-- <GenerateBezierPath end_x_tiles="4.0" end_y_tiles="2.0" end_theta_deg="0.0" lead_tiles="1.0" backwards="false" type="QUADRATIC_BEZIER" num_points="250"/>
