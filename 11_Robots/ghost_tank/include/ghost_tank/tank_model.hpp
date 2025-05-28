@@ -187,6 +187,16 @@ public:
     m_world_twist.z() = omega;
   }
 
+  /**
+   * @brief Scales [forward_cmd, angular_cmd] between -1.0 and 1.0 to avoid controller saturation removing angular control authority at high speed.
+   * These commands represent the percentage of max voltage to apply to the motors.
+   *
+   * The cmd is passed by reference and modified internally such that it returns scaled.
+   *
+   * @param cmd (forward_cmd, angular_cmd)
+   */
+  void normalizeArcadeCommand(Eigen::Vector2d & cmd);
+
   void driveCommand(double fwd_vel, double ang_vel);
   void driveCommandJoystick(double fwd_vel, double ang_vel, double deadzone);
 

@@ -86,6 +86,10 @@ private:
 
   double settling_alignment_error_{0.0};
   double dist_to_goal_{0.0};
+
+  double deceleration_start_distance_m_;
+  double deceleration_exponent_;
+  double min_approach_velocity_mps_;
 };
 
 } // namespace ghost_tank

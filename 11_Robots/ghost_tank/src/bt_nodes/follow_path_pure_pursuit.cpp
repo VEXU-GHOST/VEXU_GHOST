@@ -42,6 +42,9 @@ BT::PortsList FollowPathPurePursuit::providedPorts()
   auto input_ports = FollowPath::getBaseInputPorts();
   input_ports.insert(BT::InputPort<double>("k_lookahead"));
   input_ports.insert(BT::InputPort<double>("min_pursuit_radius_tiles"));
+  input_ports.insert(BT::InputPort<double>("deceleration_start_distance_tiles"));
+  input_ports.insert(BT::InputPort<double>("deceleration_exponent"));
+  input_ports.insert(BT::InputPort<double>("min_approach_velocity_tps"));
   return input_ports;
 }
 
@@ -56,6 +59,11 @@ BT::NodeStatus FollowPathPurePursuit::onStart()
   // Get Pure Pursuit specific parameters
   k_lookahead_ = BT_Util::get_input<double>(this, "k_lookahead");
   min_pursuit_radius_ = BT_Util::get_input<double>(this, "min_pursuit_radius_tiles") * ghost_util::TILES_TO_METERS;
+
+  // Get deceleration parameters from BT ports
+  deceleration_start_distance_m_ = BT_Util::get_input<double>(this, "deceleration_start_distance_tiles") * ghost_util::TILES_TO_METERS;
+  deceleration_exponent_ = BT_Util::get_input<double>(this, "deceleration_exponent");
+  min_approach_velocity_mps_ = BT_Util::get_input<double>(this, "min_approach_velocity_tps") * ghost_util::TILES_TO_METERS;
 
   // closest_point_index_ is updated in calculateControllerCommand, no need to initialize here.
 
@@ -172,11 +180,30 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
   curvature_ = (2.0 * carrot_point_robot_frame.y()) / (dist_to_carrot * dist_to_carrot);
 
   // Calculate desired linear velocity (unconstrained by kinematic limits initially)
-  double des_lin_vel_unconstrained = max_speed_linear_percent_ * tank_model_ptr_->getMaxBaseLinearVelocity();
+  double des_lin_vel = max_speed_linear_percent_ * tank_model_ptr_->getMaxBaseLinearVelocity();
+  double desired_linear_velocity_to_track; // This will hold the final desired linear velocity
+
+  double path_len_to_goal = trajectory_.remaining_path_length[closest_point_index_];
+
+  // Apply velocity profile for smooth deceleration using runtime configurable parameters
+  if (path_len_to_goal < deceleration_start_distance_m_) {
+    // Calculate normalized distance from 0 (at goal) to 1 (at deceleration_start_distance_)
+    double normalized_distance_factor = path_len_to_goal / deceleration_start_distance_m_;
+    normalized_distance_factor = math_util::Clamp(normalized_distance_factor, 0.0, 1.0);
+
+    // Apply exponent to shape the deceleration curve
+    double shaped_factor = std::pow(normalized_distance_factor, deceleration_exponent_);
+
+    // Interpolate between min_approach_velocity_mps_ and des_lin_vel
+    // based on the shaped_factor
+    des_lin_vel = min_approach_velocity_mps_ +
+      (des_lin_vel - min_approach_velocity_mps_) * shaped_factor;
+  }
+
 
   // Get kinematically feasible base velocities (this method handles the conditional limiting)
   Eigen::Vector2d vel_cmd = calculateKinematicallyFeasibleVelocities(
-    des_lin_vel_unconstrained,
+    des_lin_vel,
     curvature_,
     tank_model_ptr_->getMaxBaseLinearVelocity(),
     tank_model_ptr_->getWheelDistMeters()
@@ -200,11 +227,11 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
 
   // Calculate Commands
   double dist_ff = vel_cmd.x() / tank_model_ptr_->getMaxBaseLinearVelocity();
-  double fwd_cmd = distance_controller_ptr->calculateCommand(dist_to_goal_, vel_cmd.x() - tank_model_ptr_->getWorldTwist().head<2>().norm(), dist_ff);
+  double fwd_cmd = distance_controller_ptr->calculateCommand(path_len_to_goal, vel_cmd.x() - tank_model_ptr_->getWorldTwist().head<2>().norm(), dist_ff);
 
   double angle_error = ghost_util::SmallestAngleDistRad(trajectory_.theta[closest_point_index_], current_angle_);
   double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();
-  double ang_vel_ff = trajectory_.omega[closest_point_index_] / tank_model_ptr_->getMaxBaseAngularVelocity();
+  double ang_vel_ff = (trajectory_.omega[closest_point_index_] + vel_cmd.y()) / tank_model_ptr_->getMaxBaseAngularVelocity();
   double ang_cmd = steering_controller_ptr->calculateCommand(angle_error, ang_vel_error, ang_vel_ff);
 
   return Eigen::Vector2d(fwd_cmd, ang_cmd);

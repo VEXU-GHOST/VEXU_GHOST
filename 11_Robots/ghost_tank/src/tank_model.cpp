@@ -125,6 +125,22 @@ double TankModel::getMaxLinearVelocityFromAngularVelocity(double desired_angular
   return std::max(0.0, max_allowed_linear_vel);
 }
 
+void TankModel::normalizeArcadeCommand(Eigen::Vector2d & cmd)
+{
+  auto & fwd_cmd = cmd.x();
+  auto & ang_cmd = cmd.y();
+
+  auto left_cmd = fwd_cmd - ang_cmd;
+  auto right_cmd = fwd_cmd + ang_cmd;
+
+
+  auto max_magnitude = std::max(std::fabs(left_cmd), std::fabs(right_cmd));
+  auto scale = 1.0 / std::max(1.0, max_magnitude);
+
+  cmd *= scale;
+}
+
+
 void TankModel::driveCommand(double fwd_pct, double ang_pct)
 {
   ghost_util::clamp(fwd_pct, -1.0, 1.0);

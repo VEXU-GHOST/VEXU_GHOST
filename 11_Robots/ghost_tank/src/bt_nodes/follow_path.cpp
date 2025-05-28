@@ -97,11 +97,14 @@ BT::NodeStatus FollowPath::onRunning()
   updateCurrentState();
 
   // Get control commands from derived class
-  auto command = calculateControllerCommand();
+  Eigen::Vector2d command = calculateControllerCommand();
+
+  // Normalize to avoid saturation
+  tank_model_ptr_->normalizeArcadeCommand(command);
+
+  // Unpack and send final command to drivetrain
   fwd_command_ = command.x();
   turn_command_ = command.y();
-
-  // Send final command to drivetrain
   tank_model_ptr_->driveCommand(fwd_command_, turn_command_);
 
   updateVisualization();
