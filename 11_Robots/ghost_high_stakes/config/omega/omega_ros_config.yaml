@@ -55,7 +55,7 @@ competition_state_machine_node:
       distance_approach:
         kp: 0.0
         ki: 0.0
-        kd: 0.2
+        kd: 0.4
         integral_limit: 0.0
         integral_activation_bound: 0.0
 
@@ -67,23 +67,18 @@ competition_state_machine_node:
         integral_activation_bound: 0.0
 
       distance_settling:
-        kp: 1.0
-        ki: 5.0
-        kd: 0.075
-        integral_limit: 0.5
-        integral_activation_bound: 2.0
+        kp: 0.0
+        ki: 0.0
+        kd: 0.0
+        integral_limit: 0.0
+        integral_activation_bound: 0.0
 
       steering_settling:
-        # kp: 0.0
-        # ki: 0.0
-        # kd: 0.0
-        # integral_limit: 0.0
-        # integral_activation_bound: 0.0
-        kp: 0.2
-        ki: 1.0
-        kd: 0.075
-        integral_limit: 0.5
-        integral_activation_bound: 1.0
+        kp: 0.0
+        ki: 0.0
+        kd: 0.00
+        integral_limit: 0.0
+        integral_activation_bound: 0.0
 
       init_x_tiles: 3.0 # 2.4
       init_y_tiles: 1.0 # 0.4

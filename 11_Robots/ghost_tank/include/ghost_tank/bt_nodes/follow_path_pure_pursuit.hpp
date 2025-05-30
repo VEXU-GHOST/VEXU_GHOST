@@ -55,6 +55,7 @@ protected:
   Eigen::Vector2d calculateCarrotPoint() const;
   Eigen::Vector2d calculatePurePursuitDriveCommand(bool use_settling_controller);
   void visualizeSettlingError();
+  void visualizeDeccelerationZone();
 
 private:
   /**

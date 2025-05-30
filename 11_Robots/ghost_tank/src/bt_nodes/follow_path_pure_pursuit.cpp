@@ -181,8 +181,6 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
 
   // Calculate desired linear velocity (unconstrained by kinematic limits initially)
   double des_lin_vel = max_speed_linear_percent_ * tank_model_ptr_->getMaxBaseLinearVelocity();
-  double desired_linear_velocity_to_track; // This will hold the final desired linear velocity
-
   double path_len_to_goal = trajectory_.remaining_path_length[closest_point_index_];
 
   // Apply velocity profile for smooth deceleration using runtime configurable parameters
@@ -209,6 +207,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
     tank_model_ptr_->getWheelDistMeters()
   );
 
+  // TBH delete settling controller once we stabilize.
   // Select Controller
   ghost_control::PIDController * distance_controller_ptr;
   ghost_control::PIDController * steering_controller_ptr;
@@ -231,7 +230,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
 
   double angle_error = ghost_util::SmallestAngleDistRad(trajectory_.theta[closest_point_index_], current_angle_);
   double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();
-  double ang_vel_ff = (trajectory_.omega[closest_point_index_] + vel_cmd.y()) / tank_model_ptr_->getMaxBaseAngularVelocity();
+  double ang_vel_ff = trajectory_.omega[closest_point_index_] / tank_model_ptr_->getMaxBaseAngularVelocity();
   double ang_cmd = steering_controller_ptr->calculateCommand(angle_error, ang_vel_error, ang_vel_ff);
 
   return Eigen::Vector2d(fwd_cmd, ang_cmd);
@@ -259,8 +258,10 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     carrot_point_ = calculateCarrotPoint();
   }
 
+  bool close_to_goal = trajectory_.remaining_path_length[closest_point_index_] < dynamic_pursuit_radius_;
+
   Eigen::Vector2d command;
-  if (dist_to_goal_ < xy_exit_threshold_m_ || settling_ || (within_pursuit_radius && goal_is_behind_robot)) {
+  if (dist_to_goal_ < xy_exit_threshold_m_ || settling_ || (close_to_goal && goal_is_behind_robot)) {
     // Use the settling controller
     double alignment_angle = ghost_util::SmallestAngleDistRad(atan2(robot_to_goal_vector.y(), robot_to_goal_vector.x()), current_angle_);
     settling_alignment_error_ = dist_to_goal_ * cos(alignment_angle);
@@ -307,12 +308,26 @@ void FollowPathPurePursuit::visualizeSettlingError()
   );
 }
 
+void FollowPathPurePursuit::visualizeDeccelerationZone()
+{
+  // Find point along path where we will begin Deccelerating, draw circle centered on goal to intersect
+  const auto & remaining_path = trajectory_.remaining_path_length;
+
+  int index = std::lower_bound(remaining_path.begin(), remaining_path.end(), deceleration_start_distance_m_, std::greater<double>()) - remaining_path.begin();
+  index = ghost_util::clamp(index, 0, static_cast<int>(remaining_path.size() - 1));
+  double approach_zone_radius = (Eigen::Vector2d(trajectory_.x[index], trajectory_.y[index]) - goal_pose_.head<2>()).norm();
+  visualization::getCircleMarker(viz_msg_, goal_pose_.head<2>(), approach_zone_radius, visualization::getColorRGBA(0.0, 1.0, 0.0, 0.2), -0.02);
+}
+
 void FollowPathPurePursuit::populateVisualizationMarkers()
 {
   FollowPath::populateVisualizationMarkers();
   visualization::getPointMarker(viz_msg_, projected_position_on_path_, visualization::getColorRGBA(1.0, 1.0, 1.0, 1.0), 0.5 * visualization::MARKER_Z_OFFSET);
   visualization::getPointMarker(viz_msg_, carrot_point_, visualization::getColorRGBA(1.0, 0.5, 0.0, 1.0), 0.5 * visualization::MARKER_Z_OFFSET);
-  visualization::getCircleMarker(viz_msg_, current_position_, dynamic_pursuit_radius_, visualization::getColorRGBA(0.0, 0.0, 1.0, 0.3), 0.0);
+  visualization::getCircleMarker(viz_msg_, current_position_, dynamic_pursuit_radius_, visualization::getColorRGBA(1.0, 0.0, 0.0, 0.2), -0.01);
+
+  visualizeDeccelerationZone();
+
   if (!settling_) {
     ghost_tank::visualization::getArcOrLineMarker(viz_msg_, current_position_, current_angle_, carrot_point_, curvature_, 0.5 * visualization::MARKER_Z_OFFSET);
   } else {
