@@ -161,7 +161,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateKinematicallyFeasibleVelocities(
 }
 
 
-Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use_settling_controller)
+Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand()
 {
   // Transform carrot_point_ to robot's local frame
   Eigen::Vector2d vector_to_carrot_world = carrot_point_ - current_position_;
@@ -198,7 +198,6 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
       (des_lin_vel - min_approach_velocity_mps_) * shaped_factor;
   }
 
-
   // Get kinematically feasible base velocities (this method handles the conditional limiting)
   Eigen::Vector2d vel_cmd = calculateKinematicallyFeasibleVelocities(
     des_lin_vel,
@@ -207,31 +206,14 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool use
     tank_model_ptr_->getWheelDistMeters()
   );
 
-  // TBH delete settling controller once we stabilize.
-  // Select Controller
-  ghost_control::PIDController * distance_controller_ptr;
-  ghost_control::PIDController * steering_controller_ptr;
-
-  // Scale Pure Pursuit velocity down as we approach target
-  // When we get within threshold, make it zero.
-
-  if (use_settling_controller) {
-    distance_controller_ptr = m_distance_settling_controller_ptr.get();
-    steering_controller_ptr = m_steering_settling_controller_ptr.get();
-    vel_cmd.x() = 0.0;
-  } else {
-    distance_controller_ptr = m_distance_approach_controller_ptr.get();
-    steering_controller_ptr = m_steering_approach_controller_ptr.get();
-  }
-
   // Calculate Commands
   double dist_ff = vel_cmd.x() / tank_model_ptr_->getMaxBaseLinearVelocity();
-  double fwd_cmd = distance_controller_ptr->calculateCommand(path_len_to_goal, vel_cmd.x() - tank_model_ptr_->getWorldTwist().head<2>().norm(), dist_ff);
+  double fwd_cmd = m_distance_approach_controller_ptr->calculateCommand(path_len_to_goal, vel_cmd.x() - tank_model_ptr_->getWorldTwist().head<2>().norm(), dist_ff);
 
   double angle_error = ghost_util::SmallestAngleDistRad(trajectory_.theta[closest_point_index_], current_angle_);
   double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();
   double ang_vel_ff = trajectory_.omega[closest_point_index_] / tank_model_ptr_->getMaxBaseAngularVelocity();
-  double ang_cmd = steering_controller_ptr->calculateCommand(angle_error, ang_vel_error, ang_vel_ff);
+  double ang_cmd = m_steering_approach_controller_ptr->calculateCommand(angle_error, ang_vel_error, ang_vel_ff);
 
   return Eigen::Vector2d(fwd_cmd, ang_cmd);
 }
@@ -275,7 +257,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     curvature_ = 0.0;
   } else {
     // Use approach controller with Pure Pursuit
-    command = calculatePurePursuitDriveCommand(dist_to_goal_ < xy_settling_radius_m_);
+    command = calculatePurePursuitDriveCommand();
   }
 
   if (trajectory_.backwards) {

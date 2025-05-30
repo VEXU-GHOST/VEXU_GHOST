@@ -54,13 +54,13 @@ competition_state_machine_node:
 
       distance_approach:
         kp: 0.0
-        ki: 0.0
+        ki: 1.0
         kd: 0.4
-        integral_limit: 0.0
-        integral_activation_bound: 0.0
+        integral_limit: 0.3
+        integral_activation_bound: 0.75
 
       steering_approach:
-        kp: 0.1
+        kp: 0.0
         ki: 0.0
         kd: 0.2
         integral_limit: 0.0
