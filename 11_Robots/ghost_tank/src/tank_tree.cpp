@@ -46,9 +46,7 @@ void TankTree::init_tree()
   factory.registerNodeType<LoggingNode>("Logging");
   factory.registerNodeType<AutoDone>("AutoDone");
   factory.registerNodeType<AutonTimer>("AutonTimer");
-  factory.registerNodeType<MoveToPoseBezier>("MoveToPoseBezier");
-  factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-  factory.registerNodeType<MoveToPoseJERRYIO>("MoveToPoseJERRYIO");
+  factory.registerNodeType<LoadPathFromCSV>("LoadPathFromCSV");
   factory.registerNodeType<BiteCmd>("BiteCmd");
   factory.registerNodeType<ClampCmd>("ClampCmd");
   factory.registerNodeType<ClimbCmd>("ClimbCmd");
@@ -66,6 +64,8 @@ void TankTree::init_tree()
   factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
   factory.registerNodeType<MoveVoltage>("MoveVoltage");
   factory.registerNodeType<TurnToPoint>("TurnToPoint");
+  factory.registerNodeType<GenerateBezierPath>("GenerateBezierPath");
+  factory.registerNodeType<FollowPathPurePursuit>("FollowPathPurePursuit");
   factory.registerNodeType<ArcturnToPoint>("ArcturnToPoint");
   factory.registerNodeType<MoveToPoint>("MoveToPoint");
   factory.registerNodeType<MoveScissor>("MoveScissor");

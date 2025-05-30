@@ -21,6 +21,7 @@
  *   SOFTWARE.
  */
 
+
 #pragma once
 
 #include <memory>
@@ -29,18 +30,20 @@
 #include <vector>
 #include "ghost_util/math_util.hpp"
 #include <iostream>
+#include <eigen3/Eigen/Core>
 
 namespace ghost_tank
 {
 
 namespace motion_planning
 {
-  
+
 struct Trajectory
 {
-  Trajectory(int size = 0){
+  Trajectory(int size = 0)
+  {
     resize(size);
-  };
+  }
 
   void resize(int size)
   {
@@ -52,7 +55,7 @@ struct Trajectory
     remaining_path_length.resize(size, 0.0);
   }
 
-  int size()
+  int size() const
   {
     return t.size();
   }
@@ -69,7 +72,7 @@ struct Trajectory
 
   bool calculateRemainingPathLengths()
   {
-    if (t.size() != x.size() || t.size() != y.size()) {
+    if (t.empty() || t.size() != x.size() || t.size() != y.size()) {
       std::cout << "[ghost_tank::motion_planning::Trajectory::calculateRemainingPathLengths]" <<
         "Error: t, x, and y trajactories have mismatched dimension!" << std::endl;
       return false;
@@ -94,12 +97,46 @@ struct Trajectory
     return true;
   }
 
+  /**
+   * @brief Finds the index of the point on the trajectory closest to a given position.
+   *
+   * This method iterates through all points in the trajectory and calculates the
+   * Euclidean distance to the `current_pos`. It returns the index of the
+   * point with the minimum distance.
+   *
+   * @param current_pos The 2D Eigen::Vector2d representing the position to match.
+   * @return The index of the closest point in the trajectory. Returns -1 if the
+   * trajectory is empty.
+   */
+  int getIndexOfClosestPoint(const Eigen::Vector2d & current_pos) const
+  {
+    if (size() == 0) {
+      return -1; // Return -1 if the trajectory is empty
+    }
+
+    double min_dist = std::numeric_limits<double>::max();
+    int closest_idx = 0;
+
+    for (int i = 0; i < size(); ++i) {
+      Eigen::Vector2d trajectory_point(x[i], y[i]);
+      double dist = (trajectory_point - current_pos).norm();
+
+      if (dist < min_dist) {
+        min_dist = dist;
+        closest_idx = i;
+      }
+    }
+    return closest_idx;
+  }
+
+
   std::vector<double> t;
   std::vector<double> x;
   std::vector<double> y;
   std::vector<double> theta;
   std::vector<double> omega;
   std::vector<double> remaining_path_length;
+  bool backwards{false};
 };
 
 } //namespace motion_planning

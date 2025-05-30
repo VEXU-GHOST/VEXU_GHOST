@@ -1,4 +1,4 @@
-#include "ghost_tank/pdcontrol.hpp"
+#include "ghost_tank/control/tank_pid_controller.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
 #include <cmath>
 

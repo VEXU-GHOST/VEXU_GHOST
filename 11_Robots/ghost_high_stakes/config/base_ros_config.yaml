@@ -36,7 +36,7 @@ competition_state_machine_node:
       drive_motor_ticks_per_rotation: 360.0
       drive_gear_ratio: 1.15 # 23/20
       drive_wheel_rad_in: 1.375
-      wheel_base_inches: 12.5
+      wheel_base_inches: 12.6875
       
       cmd_twist_topic: "/cmd_vel" # from ekf
       bag_recorder_start_topic: "bag_recorder/start"

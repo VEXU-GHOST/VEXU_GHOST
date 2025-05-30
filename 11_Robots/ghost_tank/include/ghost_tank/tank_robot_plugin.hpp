@@ -43,7 +43,10 @@
 
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
-#include <ghost_tank/pdcontrol.hpp>
+#include <ghost_tank/control/tank_pid_controller.hpp>
+#include <ghost_tank/control/trajectory.hpp>
+
+#include <ghost_control/pid_controller.hpp>
 
 namespace ghost_tank
 {
@@ -70,9 +73,9 @@ protected:
   void initROSComms();
   void initEstimation();
   void initIntake();
-  void initNeutralStakeArm();
   void initTankModel();
   void initAutonomy();
+  ghost_control::PIDConfig loadPIDConfig(const std::string & param_prefix);
 
   // onNewSensorData
   void updateConveyorPositionSensing();
@@ -101,17 +104,17 @@ protected:
    * @param current_time
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
-  
+
   void updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time);
   void updateConveyorOnly(bool active);
   void toggleBite(bool signal);
-  
+
   void updateClamp(bool close, bool open, bool shift2);
   void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
- 
+
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
   void updateMusic(double current_time, JoyPtr joy_data);
-  
+
   void updateDrivetrain(JoyPtr joy_data);
 
   void resetBT();
@@ -123,7 +126,7 @@ protected:
   void colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void resetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
- 
+
   void resetWorldPose();
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
@@ -157,7 +160,7 @@ protected:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_pose_sub;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr m_robot_backup_pose_sub;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub;
-  
+
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_robot_color;
   void colorCallback(const std_msgs::msg::String msg)
   {
@@ -178,6 +181,11 @@ protected:
 
   // Tank Model
   std::shared_ptr<TankModel> m_tank_model_ptr;
+  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
+  std::shared_ptr<ghost_control::PIDController> m_distance_approach_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_steering_approach_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_distance_settling_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_steering_settling_controller_ptr;
 
   // Autonomy
   std::string bt_path_;
@@ -189,19 +197,13 @@ protected:
   Eigen::Vector3d m_desired_pose = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_desired_twist = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_final_pose = Eigen::Vector3d::Zero();
-  double m_move_to_pose_kp_xy = 0.0;
-  double m_move_to_pose_kd_xy = 0.0;
-  double m_move_to_pose_kp_theta = 0.0;
-  double m_move_to_pose_kd_theta = 0.0;
 
   // Odometry
   std::shared_ptr<TankOdometry> m_odom_ptr;
   double m_imu_yaw_rad;
   double m_imu_offset_rad{0.0};
   Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
-
   Eigen::Vector3d m_curr_odom_pose = Eigen::Vector3d::Zero();
-
   Eigen::Vector3d m_curr_odom_std = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_curr_odom_cov = Eigen::Vector3d::Zero();
   double m_k1 = 0.0;
@@ -270,10 +272,6 @@ protected:
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;
-
-  std::shared_ptr<PDControl> m_pd_control;
-  std::shared_ptr<PDControl> m_pd_control_threshold;
-  std::shared_ptr<PDControl> m_pd_control_arc;
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;

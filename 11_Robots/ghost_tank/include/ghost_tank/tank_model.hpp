@@ -26,6 +26,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
 #include "eigen3/Eigen/Geometry"
@@ -44,9 +45,9 @@ struct TankConfig
 {
   std::vector<std::string> motor_list_left;
   std::vector<std::string> motor_list_right;
-  double wheel_radius;
+  double wheel_radius_in;
   double wheel_gear_ratio;
-  double wheel_dist;
+  double wheel_dist_in;
 };
 
 class TankModel
@@ -58,7 +59,7 @@ public:
     TankConfig config);
 
   /**
-   * @brief Get the Tank Model Configration
+   * @brief Get the Tank Model Configuration
    *
    * @return const TankConfig&
    */
@@ -87,6 +88,18 @@ public:
     return m_max_base_ang_vel;
   }
 
+  /**
+   * @brief Get the wheel distance in meters (half track width).
+   * This is the distance from the robot's center to the center of a wheel.
+   *
+   * @return double
+   */
+  double getWheelDistMeters() const
+  {
+    return m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS;
+  }
+
+
   // Base States
   const Eigen::Vector3d & getOdometryPose()
   {
@@ -97,6 +110,33 @@ public:
   {
     return m_odom_pose.z();
   }
+
+  /**
+   * @brief Given the tank drive velocity at the wheels (left_wheel_linear_velocity, right_wheel_linear_velocity),
+   * return the corresponding (x_vel, theta_vel) for the robot base link.
+   *
+   * @param wheel_velocities (left_wheel_linear_velocity, right_wheel_linear_velocity)
+   * @return Eigen::Vector2d (forward_linear_velocity, angular_velocity)
+   */
+  Eigen::Vector2d wheelVelocitiesToChassisTwist(Eigen::Vector2d wheel_velocities) const;
+
+  /**
+   * @brief Given (x_vel, theta_vel) for the robot base link, return the tank drive velocity at the wheels
+   * (left_wheel_linear_velocity, right_wheel_linear_velocity).
+   *
+   * @param chassis_twist (forward_linear_velocity, angular_velocity)
+   * @return Eigen::Vector2d (left_wheel_linear_velocity, right_wheel_linear_velocity)
+   */
+  Eigen::Vector2d chassisTwistToWheelVelocities(Eigen::Vector2d chassis_twist) const;
+
+  /**
+   * @brief Given a desired angular velocity, calculate the maximum linear velocity
+   * the robot can achieve without exceeding the maximum wheel speed.
+   *
+   * @param desired_angular_velocity_rad_s The target angular velocity (in radians/second).
+   * @return maximum linear velocity (in meters/second).
+   */
+  double getMaxLinearVelocityFromAngularVelocity(double desired_angular_velocity_rad_s) const;
 
   const Eigen::Vector3d & getWorldPose()
   {
@@ -146,6 +186,16 @@ public:
   {
     m_world_twist.z() = omega;
   }
+
+  /**
+   * @brief Scales [forward_cmd, angular_cmd] between -1.0 and 1.0 to avoid controller saturation removing angular control authority at high speed.
+   * These commands represent the percentage of max voltage to apply to the motors.
+   *
+   * The cmd is passed by reference and modified internally such that it returns scaled.
+   *
+   * @param cmd (forward_cmd, angular_cmd)
+   */
+  void normalizeArcadeCommand(Eigen::Vector2d & cmd);
 
   void driveCommand(double fwd_vel, double ang_vel);
   void driveCommandJoystick(double fwd_vel, double ang_vel, double deadzone);

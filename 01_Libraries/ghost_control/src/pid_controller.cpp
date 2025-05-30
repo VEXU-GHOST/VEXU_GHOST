@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2024 Jake Wendling
+ *   Copyright (c) 2025 Maxx Wilson
  *   All rights reserved.
 
  *   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,35 +20,41 @@
  *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *   SOFTWARE.
  */
+#include <ghost_control/pid_controller.hpp>
 
-#pragma once
-
-#include "ghost_tank/pdcontrol.hpp"
-#include "ghost_tank/bt_nodes/moveToPose.hpp"
-#include "ghost_util/read_path.hpp"
-
-using std::placeholders::_1;
-
-namespace ghost_tank
+namespace ghost_control
 {
 
-// SyncActionNode (synchronous action) with an input port.
-class MoveToPoseJERRYIO : public MoveToPose {
-public:
-	// If your Node has ports, you must use this constructor signature
-	MoveToPoseJERRYIO(const std::string& name, const BT::NodeConfig& config);
+PIDController::PIDController(const PIDConfig & config, double dt)
+: config_(config), dt_(dt)
+{
+  reset();
+}
 
-  // It is mandatory to define this STATIC method.
-  static BT::PortsList providedPorts();
+void PIDController::reset()
+{
+  integral_sum_ = 0.0;
+  last_error_ = 0.0;
+}
 
-private:
-  std::string file_path;
-  std::string config_path;
+double PIDController::calculateCommand(double error, double error_deriv, double additional_terms)
+{
+  // Check for integral reset
+  if (last_error_ * error < 0) {
+    integral_sum_ = 0.0;
+  }
+  last_error_ = error;
 
-  // gets all member variables from ports, must deal with mirrored also 
-  void GetBlackboardData();
-  void FirstLoop();
-  void GeneratePath();
-};
+  // Calculate Integral Component
+  double integral_component = 0.0;
+  if (std::fabs(error) <= config_.integral_activation_bound) {
+    integral_sum_ += error * dt_;
+    integral_component = ghost_util::clamp(config_.ki * integral_sum_, -config_.integral_limit, config_.integral_limit);
+  } else {
+    integral_sum_ = 0.0;  // Optional: clear it when outside zone
+  }
 
-} // namespace ghost_tank {
+  return config_.kp * error + integral_component + config_.kd * error_deriv + additional_terms;
+}
+
+} // namespace ghost_control

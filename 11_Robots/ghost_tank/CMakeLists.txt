@@ -87,27 +87,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-add_library(pdcontrol SHARED src/pdcontrol.cpp)
-target_include_directories(pdcontrol
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(pdcontrol
-  ${DEPENDENCIES}
-)
-ament_export_libraries(
-  pdcontrol
-)
-ament_export_targets(pdcontrol HAS_LIBRARY_TARGET)
-install(
-  TARGETS pdcontrol
-  EXPORT pdcontrol
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
 add_library(tank_robot_plugin SHARED src/tank_robot_plugin.cpp)
 target_include_directories(tank_robot_plugin
   PUBLIC
@@ -117,7 +96,6 @@ target_include_directories(tank_robot_plugin
     tank_model
     tank_odom
     tank_tree
-    pdcontrol
   )
 ament_target_dependencies(tank_robot_plugin
   ${DEPENDENCIES}
@@ -144,7 +122,6 @@ target_include_directories(alpha_jerry_plugin
     tank_model
     tank_odom
     tank_tree
-    pdcontrol
     tank_robot_plugin
   )
 ament_target_dependencies(alpha_jerry_plugin
@@ -172,7 +149,6 @@ target_include_directories(omega_jerry_plugin
     tank_model
     tank_odom
     tank_tree
-    pdcontrol
     tank_robot_plugin
   )
 ament_target_dependencies(omega_jerry_plugin
@@ -216,35 +192,8 @@ set(NODES
   arcturnToPoint
   moveToPoint
   moveScissor
-)
-
-# bt node libraries
-set(MOVETOPOSENODES
-  moveToPoseBezier
-  moveToPoseBoomerang
-  moveToPoseJERRYIO
-)
-
-add_library(moveToPose SHARED
-  src/bt_nodes/moveToPose.cpp
-)
-target_include_directories(moveToPose
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(moveToPose
-  ${DEPENDENCIES}
-)
-target_link_libraries(moveToPose
-)
-ament_export_targets(moveToPose HAS_LIBRARY_TARGET)
-install(
-  TARGETS moveToPose
-  EXPORT moveToPose
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
+  generate_bezier_path
+  load_path_from_csv
 )
 
 foreach(NODE ${NODES})
@@ -271,7 +220,36 @@ foreach(NODE ${NODES})
   )
 endforeach()
 
-foreach(NODE ${MOVETOPOSENODES})
+###################
+### Follow Path ###
+###################
+
+add_library(follow_path SHARED
+  src/bt_nodes/follow_path.cpp
+)
+target_include_directories(follow_path
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(follow_path
+  ${DEPENDENCIES}
+)
+target_link_libraries(follow_path
+)
+ament_export_targets(follow_path HAS_LIBRARY_TARGET)
+install(
+  TARGETS follow_path
+  EXPORT follow_path
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+set(FOLLOW_PATH_NODES
+  follow_path_pure_pursuit
+)
+foreach(NODE ${FOLLOW_PATH_NODES})
   add_library(${NODE} SHARED
     src/bt_nodes/${NODE}.cpp
   )
@@ -283,8 +261,8 @@ foreach(NODE ${MOVETOPOSENODES})
     ${DEPENDENCIES}
   )
   target_link_libraries(${NODE}
-    pdcontrol
-    moveToPose
+    follow_path
+    ghost_estimation::amrl_shared_lib
   )
   ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
   install(
@@ -310,7 +288,7 @@ ament_target_dependencies(tank_tree
 )
 target_link_libraries(tank_tree
   ${NODES}
-  ${MOVETOPOSENODES}
+  ${FOLLOW_PATH_NODES}
 )
 ament_export_targets(tank_tree HAS_LIBRARY_TARGET)
 install(
@@ -343,7 +321,17 @@ foreach(TEST ${TEST_FILES})
   $<INSTALL_INTERFACE:include>)
 endforeach()
 
-add_executable(test_path_generators test/motion_planning/test_path_generators.cpp)
+ament_add_gtest(test_trajectory test/control/test_trajectory.cpp)
+  ament_target_dependencies(test_trajectory ${DEPENDENCIES})
+  target_link_libraries(test_trajectory
+    gtest_main
+  )
+  target_include_directories(test_trajectory PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
+  $<INSTALL_INTERFACE:include>)
+
+add_executable(test_path_generators test/control/test_path_generators.cpp)
 ament_target_dependencies(test_path_generators
   ${DEPENDENCIES}
   )
@@ -357,6 +345,18 @@ target_include_directories(test_path_generators
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
   test_path_generators
+  DESTINATION lib/${PROJECT_NAME})
+
+add_executable(test_trajectory_viz test/visualization/test_trajectory_viz.cpp)
+ament_target_dependencies(test_trajectory_viz
+  ${DEPENDENCIES}
+  )
+target_include_directories(test_trajectory_viz
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+test_trajectory_viz
   DESTINATION lib/${PROJECT_NAME})
 
 ###################

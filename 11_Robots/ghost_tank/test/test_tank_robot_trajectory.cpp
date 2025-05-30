@@ -21,7 +21,7 @@
  *   SOFTWARE.
  */
 
-#include <ghost_tank/motion_planning/trajectory.hpp>
+#include <ghost_tank/control/trajectory.hpp>
 #include <gtest/gtest.h>
 
 using ghost_tank::motion_planning::Trajectory;

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ghost_tank/motion_planning/trajectory.hpp>
+#include <ghost_tank/control/trajectory.hpp>
 #include <eigen3/Eigen/Core>
 
 namespace ghost_tank
@@ -31,6 +31,17 @@ namespace ghost_tank
 
 namespace motion_planning
 {
+
+enum class trajectory_type_e
+{
+  CUBIC_BEZIER,
+  QUADRATIC_BEZIER
+};
+
+const std::unordered_map<std::string, trajectory_type_e> TRAJECTORY_STRING_ENUM_MAP{
+  {"CUBIC_BEZIER", trajectory_type_e::CUBIC_BEZIER},
+  {"QUADRATIC_BEZIER", trajectory_type_e::QUADRATIC_BEZIER}
+};
 
 Trajectory generateCubicBezierCurve(
   Eigen::Vector2d start_point,
@@ -57,7 +68,7 @@ Trajectory generateCubicBezierCurve(
     path.x[i] = p.x();
     path.y[i] = p.y();
     path.theta[i] = atan2(v.y(), v.x());
-    path.omega[i] = (v.x()*a.y() - v.y()*a.x())/(v.x()*v.x() + v.y()*v.y());
+    path.omega[i] = (v.x() * a.y() - v.y() * a.x()) / (v.x() * v.x() + v.y() * v.y());
   }
 
   path.calculateRemainingPathLengths();
@@ -80,15 +91,15 @@ Trajectory generateQuadraticBezierCurve(
 
   for (int i = 0; i < num_points; i++) {
     double t = static_cast<double>(i) / static_cast<double>(num_points);
-    Eigen::Vector2d p = pow(1-t, 2)*P0 + 2*(1-t)*t*PC + t*t*P1;
-    Eigen::Vector2d v = 2*(1-t)*(PC-P0) + 2*t*(P1-PC);
-    Eigen::Vector2d a = 2*(P1-2*PC+P0);
+    Eigen::Vector2d p = pow(1 - t, 2) * P0 + 2 * (1 - t) * t * PC + t * t * P1;
+    Eigen::Vector2d v = 2 * (1 - t) * (PC - P0) + 2 * t * (P1 - PC);
+    Eigen::Vector2d a = 2 * (P1 - 2 * PC + P0);
 
     path.t[i] = t;
     path.x[i] = p.x();
     path.y[i] = p.y();
     path.theta[i] = atan2(v.y(), v.x());
-    path.omega[i] = (v.x()*a.y() - v.y()*a.x())/(v.x()*v.x() + v.y()*v.y());
+    path.omega[i] = (v.x() * a.y() - v.y() * a.x()) / (v.x() * v.x() + v.y() * v.y());
   }
 
   path.calculateRemainingPathLengths();
