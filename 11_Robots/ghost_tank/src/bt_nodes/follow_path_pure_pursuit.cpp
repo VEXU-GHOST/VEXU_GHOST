@@ -214,9 +214,9 @@ Eigen::Vector2d FollowPathPurePursuit::calculatePurePursuitDriveCommand(bool wit
 
   // Only use Angle control when going straight to carrot
   double angle_error = 0.0;
-  // if (within_pursuit_radius) {
+  if (within_pursuit_radius) {
     angle_error = ghost_util::SmallestAngleDistRad(angle_to_carrot, current_angle_);
-  // }
+  }
 
   double ang_vel_error = vel_cmd.y() - tank_model_ptr_->getWorldTwist().z();
   double ang_vel_ff = trajectory_.omega[closest_point_index_] / tank_model_ptr_->getMaxBaseAngularVelocity();
@@ -236,13 +236,14 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   dist_to_goal_ = (goal_pose_.head<2>() - current_position_).norm();
   double path_len_to_goal = trajectory_.remaining_path_length[closest_point_index_];
 
-  bool within_pursuit_radius = dist_to_goal_ <= dynamic_pursuit_radius_;
+  bool within_dyn_pursuit_radius = dist_to_goal_ <= dynamic_pursuit_radius_;
+  bool within_min_pursuit_radius = dist_to_goal_ <= dynamic_pursuit_radius_;
 
   Eigen::Vector2d robot_to_goal_vector = goal_pose_.head<2>() - current_position_;
   Eigen::Vector2d goal_in_robot_frame = Eigen::Rotation2D<double>(-current_angle_) * robot_to_goal_vector;
   bool goal_is_behind_robot = goal_in_robot_frame.x() < 0.0; // Goal has negative x in robot frame
 
-  if (within_pursuit_radius) {
+  if (within_dyn_pursuit_radius) {
     carrot_point_ = goal_pose_.head<2>();
   } else {
     carrot_point_ = calculateCarrotPoint();
@@ -265,7 +266,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     curvature_ = 0.0;
   } else {
     // Use approach controller with Pure Pursuit
-    command = calculatePurePursuitDriveCommand(within_pursuit_radius);
+    command = calculatePurePursuitDriveCommand(within_min_pursuit_radius);
   }
 
   if (trajectory_.backwards) {
