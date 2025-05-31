@@ -28,12 +28,16 @@ public:
     BT::NodeStatus onStart();
     BT::NodeStatus onRunning();
     void onHalted();
+    void visualization();
 
 private:
     std::shared_ptr<TankModel> tank_model_ptr_;
     std::chrono::time_point<std::chrono::system_clock> start_time_;
     BT::Blackboard::Ptr blackboard_;
     std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
+    visualization_msgs::msg::MarkerArray viz_msg_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr path_viz_pub_ptr_;
+    std::shared_ptr<rclcpp::Node> node_ptr_;
 
     double posX_m;
     double posY_m;

@@ -25,8 +25,10 @@
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
+#include <visualization_msgs/msg/marker_array.hpp>
 #include "ghost_util/read_path.hpp"
 #include <ghost_tank/control/trajectory.hpp>
+
 
 using std::placeholders::_1;
 
@@ -53,6 +55,9 @@ public:
   void onHalted();
 
 private:
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+  visualization_msgs::msg::MarkerArray viz_msg_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_viz_pub_ptr_;
   std::string config_path;
   BT::Blackboard::Ptr blackboard_;
   std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;

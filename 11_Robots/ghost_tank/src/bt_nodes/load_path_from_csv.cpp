@@ -22,6 +22,7 @@
  */
 
 #include "ghost_tank/bt_nodes/load_path_from_csv.hpp"
+#include <ghost_tank/visualization/visualization_helpers.hpp>
 
 namespace ghost_tank
 {
@@ -33,8 +34,13 @@ LoadPathFromCSV::LoadPathFromCSV(const std::string & name, const BT::NodeConfig 
   std::cout << "[LoadPathFromCSV::LoadPathFromCSV]" << std::endl;
   
   blackboard_ = config.blackboard;
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "config_path", config_path);
   BT_Util::get_from_blackboard(blackboard_, "tank_trajectory_ptr", tank_trajectory_ptr_);
+
+  if (node_ptr_) {
+    trajectory_viz_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/autonomy/current_tank_trajectory", 10);
+  }
 }
 
 // It is mandatory to define this STATIC method.
@@ -74,6 +80,12 @@ BT::NodeStatus LoadPathFromCSV::onRunning()
   }
 
   tank_trajectory_ptr_->calculateRemainingPathLengths();
+
+  if (node_ptr_) {
+    viz_msg_.markers.clear();
+    visualization::getTrajectoryMsg(*tank_trajectory_ptr_, viz_msg_, 10);
+    trajectory_viz_pub_ptr_->publish(viz_msg_);
+  }
 
   return BT::NodeStatus::SUCCESS;
 }
