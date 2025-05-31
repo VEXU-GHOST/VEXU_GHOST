@@ -33,6 +33,7 @@ skip=(
     ghost_swerve
     plotjuggler
     plotjuggler_ros
+    librealsense2
 )
 
 # Build ignores simulator packages on embedded devices

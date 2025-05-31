@@ -32,6 +32,8 @@ ClampCmd::ClampCmd(
   const std::string & name, const BT::NodeConfig & config)
 : BT::SyncActionNode(name, config)
 {
+  std::cout << "[ClampCmd::ClampCmd]" << std::endl;
+  
   blackboard_ = config.blackboard;
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
 	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
@@ -51,9 +53,10 @@ BT::NodeStatus ClampCmd::tick()
 {
   bool clamp_closed = BT_Util::get_input<bool>(this, "clamp_closed");
 
-  std::unordered_map<std::string, int> digital_io_port_map;
-  BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
-  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], clamp_closed);
+  // std::unordered_map<std::string, int> digital_io_port_map;
+  // BT_Util::get_from_blackboard(blackboard_, "digital_io_port_map", digital_io_port_map);
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], clamp_closed);
+  BT_Util::put_in_blackboard(blackboard_, "clamp_closed", clamp_closed);
 
   return BT::NodeStatus::SUCCESS;
 }

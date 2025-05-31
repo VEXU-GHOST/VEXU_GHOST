@@ -1,80 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
-  <BehaviorTree ID="clear_corner">
+  <BehaviorTree ID="clear_negative_corner">
     <Sequence>
-      <Logging message="clear corner left"/>
       <Logging message="Go to corner stack"/>
-      <MoveToPoseBezier posX_tiles="0.8"
-                            posY_tiles="0.7"
-                            theta_deg="225.0"
-                            search_radius_m="0.3"
-                            threshold_m="0.05"
-                            angle_threshold_deg="3.0"
-                            threshold_vel_mps="0.1"
-                            angle_threshold_vel_dps="1.0"
-                            lead="0.5"
-                            max_speed_linear_pct="1.0"
-                            max_speed_angular_pct="1.0"
-                            timeout_ms="-1000"
+      <ParallelAll>
+        <NeutralStakeCmd state="0"
+                        timeout="2.000"/>
+        <Sequence>
+          <LoadPathFromCSV
+            file_path="test_path.txt"/>
+          <FollowPathPurePursuit 
+            xy_exit_threshold_tiles="0.05"
+            angle_exit_threshold_deg="10.0"
+            lin_vel_exit_threshold_tps="100.0"
+            ang_vel_exit_threshold_dps="100.0"
+            max_speed_linear_percent="1.0"
+            max_speed_angular_percent="1.0"
+            timeout_ms="2000"
+            use_theta="false"
+            min_pursuit_radius_tiles="0.7"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="1.0"
+            deceleration_exponent="1.5"
+            min_approach_velocity_tps="0.05"/>
+
+          <!-- <MoveToPoseJERRYIO file_path="test_path.txt"
+                            search_radius_tiles="0.7"
+                            xy_exit_threshold_tiles="0.10"
+                            angle_exit_threshold_deg="10.0"
+                            lin_vel_exit_threshold_tps="100.0"
+                            ang_vel_exit_threshold_dps="100.0"
+                            max_speed_linear_percent="0.5"
+                            max_speed_angular_percent="1.0"
+                            timeout_ms="1500"
                             use_theta="false"
-                            backwards="false"/>
-      <ShutoffNode/>
-      <!-- <WaitCmd seconds="100.00" -->
-                <!-- shutoff_motors="true"/> -->
+                            backwards="false"/> -->
+          <ShutoffNode/>
+          <BiteCmd bite_closed="true"/>
+          <ArcturnToPoint posX_tiles="0.7"
+            posY_tiles="0.7"
+            timeout_ms="2000"
+            angle_exit_threshold_deg="1.0"
+            drive_backwards="true"
+            face_backwards="false"/>
+          <GenerateBezierPath end_x_tiles="0.7"
+            end_y_tiles="0.7"
+            end_theta_deg="-135.0"
+            lead_tiles="0.5"
+            backwards="false"
+            type="QUADRATIC_BEZIER"
+            num_points="250"/>
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.05"
+            angle_exit_threshold_deg="3.0"
+            lin_vel_exit_threshold_tps="1.0"
+            ang_vel_exit_threshold_dps="10.0"
+            max_speed_linear_percent="0.4"
+            max_speed_angular_percent="1.0"
+            timeout_ms="2000"
+            use_theta="true"
+            min_pursuit_radius_tiles="0.3"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="0.5"
+            deceleration_exponent="1.5"
+            min_approach_velocity_tps="0.05"/>
+        </Sequence>
+      </ParallelAll>
       <Logging message="Processing Corner Stack"/>
-      <IntakeCmd active="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
       <Repeat num_cycles="2">
         <Sequence>
-          <MoveToPoseBezier posX_tiles="0.375"
-                                  posY_tiles="0.375"
-                                  theta_deg="225.0"
-                                  search_radius_m="0.05"
-                                  threshold_m="0.02"
-                                  angle_threshold_deg="1.0"
-                                  threshold_vel_mps="0.1"
-                                  angle_threshold_vel_dps="1.0"
-                                  lead="0.5"
-                                  max_speed_linear_pct="0.8"
-                                  max_speed_angular_pct="1.0"
-                                  timeout_ms="-750"
-                                  use_theta="true"
-                                  backwards="false"/>
-            <ShutoffNode/>
-
-              <MoveToPoseBezier
-                posX_tiles="0.7"
-                posY_tiles="0.7"
-                theta_deg="-135.0"
-                search_radius_m="0.05"
-                threshold_m="0.02"
-                angle_threshold_deg="3.0"
-                threshold_vel_mps="0.1"
-                angle_threshold_vel_dps="1.0"
-                lead="0.5"
-                max_speed_linear_pct="0.5"
-                max_speed_angular_pct="1.0"
-                timeout_ms="-500"
-                use_theta="true"
-                backwards="true"/>
-            <ShutoffNode/>
-          </Sequence>
-        </Repeat>
-
-      <MoveToPoseBezier
-        posX_tiles="1.0"
-        posY_tiles="1.0"
-        theta_deg="-135.0"
-        search_radius_m="0.3"
-        threshold_m="0.02"
-        angle_threshold_deg="3.0"
-        threshold_vel_mps="0.1"
-        angle_threshold_vel_dps="1.0"
-        lead="0.5"
-        max_speed_linear_pct="1.0"
-        max_speed_angular_pct="1.0"
-        timeout_ms="-500"
-        use_theta="true"
-        backwards="true"/>
+          <!-- <MoveVoltage forward_effort="0.3" angular_effort="0.0" timeout_ms="500"/> -->
+          <MoveToPoint 
+            kp="5.0"
+            kd="0.0"
+            max_effort_percent="0.5"
+            timeout_ms="2000"
+            xy_exit_threshold_tiles="1.0"/>
+          <ShutoffNode/>
+          <!-- <MoveVoltage forward_effort="-0.3" angular_effort="0.0" timeout_ms="500"/> -->
+          <MoveToPoint 
+            kp="5.0"
+            kd="0.0"
+            max_effort_percent="0.5"
+            timeout_ms="2000"
+            xy_exit_threshold_tiles="-0.5"/>
+          <ShutoffNode/>
+          <ArcturnToPoint posX_tiles="0.0"
+                      posY_tiles="0.0"
+                      timeout_ms="1000"
+                      angle_exit_threshold_deg="1.0"
+                      drive_backwards="false"
+                      face_backwards="false"/>
+        </Sequence>
+      </Repeat>
+      <MoveVoltage forward_effort="-0.3" angular_effort="0.0" timeout_ms="400"/>
       <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
@@ -95,7 +115,7 @@
     </Action>
     <Action ID="GoalRushCmd"
             editable="true">
-      <input_port name="arm_down"/>
+      <input_port name="goal_rush_down"/>
     </Action>
     <Action ID="SetMirrored"
             editable="true">
@@ -108,23 +128,6 @@
     <Action ID="Logging"
             editable="true">
       <input_port name="message"/>
-    </Action>
-    <Action ID="MoveToPoseBezier"
-            editable="true">
-      <input_port name="posX_tiles"/>
-      <input_port name="posY_tiles"/>
-      <input_port name="theta_deg"/>
-      <input_port name="search_radius_m"/>
-      <input_port name="threshold_m"/>
-      <input_port name="angle_threshold_deg"/>
-      <input_port name="threshold_vel_mps"/>
-      <input_port name="angle_threshold_vel_dps"/>
-      <input_port name="lead"/>
-      <input_port name="max_speed_linear_pct"/>
-      <input_port name="max_speed_angular_pct"/>
-      <input_port name="timeout_ms"/>
-      <input_port name="use_theta"/>
-      <input_port name="backwards"/>
     </Action>
     <Action ID="MoveToPosePurepursuit"
             editable="true">

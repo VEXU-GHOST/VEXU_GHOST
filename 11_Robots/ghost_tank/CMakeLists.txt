@@ -87,69 +87,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-add_library(boomerang SHARED src/boomerang.cpp)
-target_include_directories(boomerang
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(boomerang
-  ${DEPENDENCIES}
-)
-ament_export_libraries(
-  boomerang
-)
-ament_export_targets(boomerang HAS_LIBRARY_TARGET)
-install(
-  TARGETS boomerang
-  EXPORT boomerang
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-add_library(bezier_curve SHARED src/bezier_curve.cpp)
-target_include_directories(bezier_curve
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(bezier_curve
-  ${DEPENDENCIES}
-)
-ament_export_libraries(
-  bezier_curve
-)
-ament_export_targets(bezier_curve HAS_LIBRARY_TARGET)
-install(
-  TARGETS bezier_curve
-  EXPORT bezier_curve
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
-add_library(pdcontrol SHARED src/pdcontrol.cpp)
-target_include_directories(pdcontrol
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(pdcontrol
-  ${DEPENDENCIES}
-)
-ament_export_libraries(
-  pdcontrol
-)
-ament_export_targets(pdcontrol HAS_LIBRARY_TARGET)
-install(
-  TARGETS pdcontrol
-  EXPORT pdcontrol
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include
-)
-
 add_library(tank_robot_plugin SHARED src/tank_robot_plugin.cpp)
 target_include_directories(tank_robot_plugin
   PUBLIC
@@ -159,9 +96,6 @@ target_include_directories(tank_robot_plugin
     tank_model
     tank_odom
     tank_tree
-    boomerang
-    bezier_curve
-    pdcontrol
   )
 ament_target_dependencies(tank_robot_plugin
   ${DEPENDENCIES}
@@ -171,8 +105,62 @@ ament_export_libraries(
 )
 ament_export_targets(tank_robot_plugin HAS_LIBRARY_TARGET)
 install(
-TARGETS tank_robot_plugin
-EXPORT tank_robot_plugin
+  TARGETS tank_robot_plugin
+  EXPORT tank_robot_plugin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+add_library(alpha_jerry_plugin SHARED src/alpha_jerry_plugin.cpp)
+target_include_directories(alpha_jerry_plugin
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+  target_link_libraries(alpha_jerry_plugin
+    tank_model
+    tank_odom
+    tank_tree
+    tank_robot_plugin
+  )
+ament_target_dependencies(alpha_jerry_plugin
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  alpha_jerry_plugin
+)
+ament_export_targets(alpha_jerry_plugin HAS_LIBRARY_TARGET)
+install(
+TARGETS alpha_jerry_plugin
+EXPORT alpha_jerry_plugin
+LIBRARY DESTINATION lib
+ARCHIVE DESTINATION lib
+RUNTIME DESTINATION bin
+INCLUDES DESTINATION include
+)
+
+add_library(omega_jerry_plugin SHARED src/omega_jerry_plugin.cpp)
+target_include_directories(omega_jerry_plugin
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+  target_link_libraries(omega_jerry_plugin
+    tank_model
+    tank_odom
+    tank_tree
+    tank_robot_plugin
+  )
+ament_target_dependencies(omega_jerry_plugin
+  ${DEPENDENCIES}
+)
+ament_export_libraries(
+  omega_jerry_plugin
+)
+ament_export_targets(omega_jerry_plugin HAS_LIBRARY_TARGET)
+install(
+TARGETS omega_jerry_plugin
+EXPORT omega_jerry_plugin
 LIBRARY DESTINATION lib
 ARCHIVE DESTINATION lib
 RUNTIME DESTINATION bin
@@ -184,13 +172,12 @@ set(NODES
   loggingNode
   autoDone
   autonTimer
-  moveToPoseBezier
-  moveToPoseBoomerang
-  moveToPosePurepursuit
   biteCmd
   clampCmd
+  climbCmd
   shutoffNode
   intakeCmd
+  isHanging
   goalRushCmd
   setMirrored
   conveyorCmd
@@ -198,6 +185,15 @@ set(NODES
   neutralStakeCmd
   setColorTarget
   goalRushDetected
+  goalDetected
+  boundaryCheck
+  moveVoltage
+  turnToPoint
+  arcturnToPoint
+  moveToPoint
+  moveScissor
+  generate_bezier_path
+  load_path_from_csv
 )
 
 foreach(NODE ${NODES})
@@ -212,9 +208,61 @@ foreach(NODE ${NODES})
     ${DEPENDENCIES}
   )
   target_link_libraries(${NODE}
-    boomerang
-    bezier_curve
-    pdcontrol
+  )
+  ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
+  install(
+    TARGETS ${NODE}
+    EXPORT ${NODE}
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+  )
+endforeach()
+
+###################
+### Follow Path ###
+###################
+
+add_library(follow_path SHARED
+  src/bt_nodes/follow_path.cpp
+)
+target_include_directories(follow_path
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(follow_path
+  ${DEPENDENCIES}
+)
+target_link_libraries(follow_path
+)
+ament_export_targets(follow_path HAS_LIBRARY_TARGET)
+install(
+  TARGETS follow_path
+  EXPORT follow_path
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+set(FOLLOW_PATH_NODES
+  follow_path_pure_pursuit
+)
+foreach(NODE ${FOLLOW_PATH_NODES})
+  add_library(${NODE} SHARED
+    src/bt_nodes/${NODE}.cpp
+  )
+  target_include_directories(${NODE}
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  ament_target_dependencies(${NODE}
+    ${DEPENDENCIES}
+  )
+  target_link_libraries(${NODE}
+    follow_path
+    ghost_estimation::amrl_shared_lib
   )
   ament_export_targets(${NODE} HAS_LIBRARY_TARGET)
   install(
@@ -240,6 +288,7 @@ ament_target_dependencies(tank_tree
 )
 target_link_libraries(tank_tree
   ${NODES}
+  ${FOLLOW_PATH_NODES}
 )
 ament_export_targets(tank_tree HAS_LIBRARY_TARGET)
 install(
@@ -255,6 +304,8 @@ install(
 ###### Tests ######
 ###################
 set(TEST_FILES
+  test_tank_robot_trajectory
+  test_tank_odom
 )
 
 foreach(TEST ${TEST_FILES})
@@ -270,12 +321,43 @@ foreach(TEST ${TEST_FILES})
   $<INSTALL_INTERFACE:include>)
 endforeach()
 
-ament_add_gtest(test_tank_odom test/test_tank_odom.cpp)
-target_link_libraries(test_tank_odom
-  gtest
-  tank_odom
-)
+ament_add_gtest(test_trajectory test/control/test_trajectory.cpp)
+  ament_target_dependencies(test_trajectory ${DEPENDENCIES})
+  target_link_libraries(test_trajectory
+    gtest_main
+  )
+  target_include_directories(test_trajectory PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
+  $<INSTALL_INTERFACE:include>)
 
+add_executable(test_path_generators test/control/test_path_generators.cpp)
+ament_target_dependencies(test_path_generators
+  ${DEPENDENCIES}
+  )
+  target_link_libraries(test_path_generators
+  matplotlib_cpp::matplotlib_cpp
+  ${PYTHON_LIBRARIES}
+  )
+target_include_directories(test_path_generators
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  test_path_generators
+  DESTINATION lib/${PROJECT_NAME})
+
+add_executable(test_trajectory_viz test/visualization/test_trajectory_viz.cpp)
+ament_target_dependencies(test_trajectory_viz
+  ${DEPENDENCIES}
+  )
+target_include_directories(test_trajectory_viz
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+test_trajectory_viz
+  DESTINATION lib/${PROJECT_NAME})
 
 ###################
 ##### Install #####

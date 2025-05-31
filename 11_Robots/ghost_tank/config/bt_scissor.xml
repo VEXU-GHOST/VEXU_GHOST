@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="deploy_scissor">
+    <Sequence>
+          <!-- <SetBlackboard value="false" output_key="shoot"/> -->
+
+      <ClimbCmd climb_extended="true"/>
+      <WaitCmd seconds="0.8" shutoff_motors="false" />
+      <MoveScissor scissor_position_in="13" offset="0.2" timeout_ms="5000"/>
+      <ClimbCmd climb_extended="false"/>
+      <WaitCmd seconds="1.0" shutoff_motors="false" />
+      <MoveScissor scissor_position_in="8" offset="0.2" timeout_ms="5000"/>
+      <!-- <ClimbCmd climb_extended="true"/>
+      <WaitCmd seconds="0.2" shutoff_motors="false" />
+      <ClimbCmd climb_extended="false"/>
+      <MoveScissor scissor_position_in="16" offset="1" timeout_ms="5000"/>
+      <WaitCmd seconds="0.2" shutoff_motors="false" />
+      <SetBlackboard value="false" output_key="shoot"/> -->
+      <ShutoffNode/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+            editable="true">
+      <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="ClampCmd"
+            editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
+    <Action ID="ClimbCmd"
+            editable="true">
+      <input_port name="climb_extended"/>
+    </Action>
+    <Action ID="ConveyorCmd"
+            editable="true">
+      <input_port name="fwd"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+            editable="true">
+      <input_port name="arm_down"/>
+    </Action>
+    <Action ID="SetMirrored"
+            editable="true">
+      <input_port name="mirrored"/>
+    </Action>
+    <Action ID="IntakeCmd"
+            editable="true">
+      <input_port name="active"/>
+    </Action>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="ShutoffNode"
+            editable="true"/>
+    <Action ID="MoveScissor" editable="true">
+      <input_port name="scissor_position_in" />
+      <input_port name="offset" />
+      <input_port name="timeout_ms" />
+    </Action>
+  </TreeNodesModel>
+
+</root>

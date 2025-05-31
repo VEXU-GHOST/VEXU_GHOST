@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="corner_shove">
+    <Sequence>
+      <ClampCmd clamp_closed="true"/>
+      <Repeat num_cycles="1">
+        <Sequence>
+          <GenerateBezierPath end_x_tiles="1.0"
+            end_y_tiles="1.0"
+            end_theta_deg="45.0"
+            lead_tiles="0.2"
+            backwards="false"
+            type="QUADRATIC_BEZIER"
+            num_points="250"/>
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.05"
+            angle_exit_threshold_deg="3.0"
+            lin_vel_exit_threshold_tps="1.0"
+            ang_vel_exit_threshold_dps="10.0"
+            max_speed_linear_percent="1.0"
+            max_speed_angular_percent="1.0"
+            timeout_ms="2000"
+            use_theta="true"
+            min_pursuit_radius_tiles="0.3"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="1.0"
+            deceleration_exponent="1.5"
+            min_approach_velocity_tps="0.05"/>
+          <ShutoffNode/>
+          <ClampCmd clamp_closed="false"/>
+          <GenerateBezierPath end_x_tiles="0.25"
+            end_y_tiles="0.25"
+            end_theta_deg="45.0"
+            lead_tiles="0.2"
+            backwards="true"
+            type="QUADRATIC_BEZIER"
+            num_points="250"/>
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.05"
+            angle_exit_threshold_deg="3.0"
+            lin_vel_exit_threshold_tps="1.0"
+            ang_vel_exit_threshold_dps="10.0"
+            max_speed_linear_percent="1.0"
+            max_speed_angular_percent="1.0"
+            timeout_ms="2000"
+            use_theta="true"
+            min_pursuit_radius_tiles="0.3"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="1.0"
+            deceleration_exponent="1.5"
+            min_approach_velocity_tps="0.05"/>
+          <ShutoffNode/>
+        </Sequence>
+      </Repeat>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+            editable="true">
+      <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="ClampCmd"
+            editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
+    <Action ID="ConveyorCmd"
+            editable="true">
+      <input_port name="fwd"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+            editable="true">
+      <input_port name="goal_rush_down"/>
+    </Action>
+    <Action ID="SetMirrored"
+            editable="true">
+      <input_port name="mirrored"/>
+    </Action>
+    <Action ID="IntakeCmd"
+            editable="true">
+      <input_port name="auto"/>
+      <input_port name="ground_intake"/>
+    </Action>
+    <Action ID="Logging"
+            editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="ShutoffNode"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>

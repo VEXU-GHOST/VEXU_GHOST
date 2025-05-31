@@ -39,11 +39,14 @@
 #include <std_msgs/msg/string.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <std_msgs/msg/int64.hpp>
 
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
-#include <ghost_tank/pdcontrol.hpp>
-#include <ghost_tank/boomerang.hpp>
+#include <ghost_tank/control/tank_pid_controller.hpp>
+#include <ghost_tank/control/trajectory.hpp>
+
+#include <ghost_control/pid_controller.hpp>
 
 namespace ghost_tank
 {
@@ -51,6 +54,8 @@ namespace ghost_tank
 class TankRobotPlugin : public ghost_ros_interfaces::V5RobotBase
 {
 public:
+  using JoyPtr = std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData>;
+
   TankRobotPlugin();
 
   void initialize() override;
@@ -68,9 +73,9 @@ protected:
   void initROSComms();
   void initEstimation();
   void initIntake();
-  void initNeutralStakeArm();
   void initTankModel();
   void initAutonomy();
+  ghost_control::PIDConfig loadPIDConfig(const std::string & param_prefix);
 
   // onNewSensorData
   void updateConveyorPositionSensing();
@@ -80,8 +85,8 @@ protected:
   void publishTrajectoryVisualization();
 
   // Teleop
-  bool runAutonFromDriver(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
-  void toggleBagRecorder(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  bool runAutonFromDriver(JoyPtr joy_data, double current_time);
+  void toggleBagRecorder(JoyPtr joy_data);
 
   /**
    * @brief Handles intaking logic
@@ -99,19 +104,28 @@ protected:
    * @param current_time
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
-  void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateGoalRush(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateNeutralStakeArm(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
-  void updateNeutralStakeArmPosition(int arm_mode);
-  void ringDetector(bool active, double current_time, bool want_red);
-  void updateMusic(double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+
+  void updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time);
+  void updateConveyorOnly(bool active);
+  void toggleBite(bool signal);
+
+  void updateClamp(bool close, bool open, bool shift2);
+  void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
+
+  void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
+  void updateMusic(double current_time, JoyPtr joy_data);
+
+  void updateDrivetrain(JoyPtr joy_data);
+
+  void resetBT();
 
   // Output
   void playMusic(std::string m);
   void playTTS(std::string m);
- 
+
+  void colorTargetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
+  void mirroredButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
+  void resetButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
 
   void resetWorldPose();
 
@@ -131,7 +145,6 @@ protected:
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_tts_pub;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_music_pub;
 
-  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_ekf_pub;
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr m_reset_pf_pub;
 
   void publishDesiredTwist(Eigen::Vector3d twist);
@@ -156,12 +169,24 @@ protected:
   std::string m_color;
   double m_first_color_detect_inches = INFINITY;
 
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_color_target_sub;
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_mirrored_sub;
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_reset_sub;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr m_led_color_red_pub;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr m_led_side_right_pub;
+
   // Service Clients
   rclcpp::Client<ghost_msgs::srv::StartRecorder>::SharedPtr m_start_recorder_client;
   rclcpp::Client<ghost_msgs::srv::StopRecorder>::SharedPtr m_stop_recorder_client;
 
   // Tank Model
   std::shared_ptr<TankModel> m_tank_model_ptr;
+  std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
+  std::shared_ptr<ghost_control::PIDController> m_distance_approach_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_steering_approach_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_distance_settling_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_steering_settling_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
 
   // Autonomy
   std::string bt_path_;
@@ -173,18 +198,13 @@ protected:
   Eigen::Vector3d m_desired_pose = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_desired_twist = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_final_pose = Eigen::Vector3d::Zero();
-  double m_move_to_pose_kp_xy = 0.0;
-  double m_move_to_pose_kd_xy = 0.0;
-  double m_move_to_pose_kp_theta = 0.0;
-  double m_move_to_pose_kd_theta = 0.0;
 
   // Odometry
   std::shared_ptr<TankOdometry> m_odom_ptr;
-  double m_imu_yaw;
+  double m_imu_yaw_rad;
+  double m_imu_offset_rad{0.0};
   Eigen::Vector3d m_last_odom_pose = Eigen::Vector3d::Zero();
-
   Eigen::Vector3d m_curr_odom_pose = Eigen::Vector3d::Zero();
-
   Eigen::Vector3d m_curr_odom_std = Eigen::Vector3d::Zero();
   Eigen::Vector3d m_curr_odom_cov = Eigen::Vector3d::Zero();
   double m_k1 = 0.0;
@@ -201,20 +221,18 @@ protected:
   double m_init_sigma_x = 0.2;              // 99% within +-24" (two tiles)
   double m_init_sigma_y = 0.2;              // 99% within +-24" (two tiles)
   double m_init_sigma_theta = 0.35;         // 99% within 60 degrees
-  double m_init_world_x = 0.0;
-  double m_init_world_y = 0.0;
-  double m_init_world_theta = 0.0;
   static constexpr size_t m_cov_n = 6 * 6;
 
-  std::vector<double> m_reset_pose;
-  std::vector<double> m_initial_estimate_covariance;
+  Eigen::Vector2d m_reset_pose_xy_m;
+  double m_reset_pose_angle_rad;
 
   bool m_use_backup_estimator = false;
   bool m_reset_world_pose = false;
-  bool m_clamp_closed{true};
-  bool m_bite_closed{true};
+  bool m_clamp_closed{false};
+  bool m_bite_closed{false};
   bool m_goal_rush_active{false};
   bool m_goal_rush_clamp_active{false};
+  bool m_running_auton = false;
 
   // Conveyor
   double m_conveyor_ticks_per_loop{0.0};
@@ -235,17 +253,10 @@ protected:
   bool m_conveyor_hook_is_ejecting{false};
   bool m_conveyor_is_throwing{false};
 
-  // Neutral Stake Arm
-  double m_neutral_stake_arm_kp{0.0};
-  double m_neutral_stake_arm_gear_ratio{0.0};
-  double m_neutral_stake_arm_rest_pos_deg{0.0};
-  double m_neutral_stake_arm_loading_pos_deg{0.0};
-  double m_neutral_stake_arm_loaded_pos_deg{0.0};
-  double m_neutral_stake_arm_score_neutral_pos_deg{0.0};
-  double m_neutral_stake_arm_score_alliance_pos_deg{0.0};
-  double m_neutral_stake_arm_down_pos_deg{0.0};
-  double m_neutral_stake_arm_des_pos{0.0};
-  int m_arm_mode{0};
+  double m_rush_held{false};
+  double m_rush_button_pressed{false};
+  bool m_buddy_extended{false};
+  bool m_buddy_pressed{false};
 
   // Digital IO
   std::vector<bool> m_digital_io;
@@ -255,42 +266,13 @@ protected:
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
 
-
-  // Field vs Robot Oriented Control
-  bool m_toggle_tank_field_control_btn_pressed = false;
-
-  // Angle vs Velocity Control
-  bool m_toggle_tank_angle_control_btn_pressed = false;
-  double m_angle_target = 0.0;
-  double m_joy_angle_control_threshold = 0.0;
-
-  // Slew Rate Control
-  double m_joystick_slew_rate = 2.0;
-  double m_last_x_cmd = 0.0;
-  double m_last_y_cmd = 0.0;
-  double m_last_theta_cmd = 0.0;
-  double m_curr_x_cmd = 0.0;
-  double m_curr_y_cmd = 0.0;
-  double m_curr_theta_cmd = 0.0;
-
   // Auton States
-  bool m_auton_button_pressed = false;
-  int m_auton_index = 0;
+  bool m_color_target_red = false;
+  bool m_mirrored = false;
+  bool m_reset = false;
 
   bool m_interaction_started = false;
   bool m_sim_mode = false;
-
-  // boomerang
-  double m_max_speed_linear;
-  double m_max_speed_angular;
-
-  // pure pursuit
-  int m_past_index = 0;
-  int m_next_index = 0;
-
-  std::shared_ptr<Boomerang> m_boomerang;
-  std::shared_ptr<PDControl> m_pd_control;
-  std::shared_ptr<PDControl> m_pd_control_threshold;
 
   std::vector<std::string> m_right_drive_motor_names;
   std::vector<std::string> m_left_drive_motor_names;

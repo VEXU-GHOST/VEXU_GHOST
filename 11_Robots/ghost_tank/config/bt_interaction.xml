@@ -4,7 +4,7 @@
 
   <BehaviorTree ID="main">
     <Sequence>
-      <Logging message="test">
+      <Logging message="test"/>
     </Sequence>
   </BehaviorTree>
 

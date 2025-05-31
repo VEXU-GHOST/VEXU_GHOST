@@ -53,18 +53,21 @@ BT::NodeStatus ConveyorCmd::tick()
   
   // Conveyor control
   // We assume any manual conveyor control misaligns the hooks
-  double conveyor_power = 0;
-  int32_t conveyor_current = 0;
-  if (fwd) {
-    conveyor_power = 1.0;
-    conveyor_current = 2500;
-  } else {
-    conveyor_power = -1.0;
-    conveyor_current = 2500;
-  }
+  // double conveyor_power = 0;
+  // int32_t conveyor_current = 0;
+  // if (fwd) {
+  //   conveyor_power = 1.0;
+  //   conveyor_current = 2500;
+  // } else {
+  //   conveyor_power = -1.0;
+  //   conveyor_current = 2500;
+  // }
   
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor", conveyor_current);
+  // rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
+  // rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
+  BT_Util::put_in_blackboard<bool>(blackboard_, "conveyor_active", fwd);
 
   return BT::NodeStatus::SUCCESS;
 }

@@ -1,0 +1,92 @@
+ghost_serial_node:
+  ros__parameters:
+    port_name: "/dev/ttyACM1"
+    backup_port_name: "/dev/ttyACM2"
+    verbose: false
+
+imu_filter_node:
+  ros__parameters:
+    input_imu_topic: /sensors/imu
+    output_imu_topic: /estimation/imu/filtered
+    calculate_bias: false
+    calculate_covariance: false
+    calibration_time: 5.0
+    sensor_frequency: 100.0
+    heading_covariance: 0.001
+
+    accel_bias_x: 0.0409958
+    accel_bias_y: 0.991383
+    accel_bias_z: 0.032677
+
+    gyro_bias_x: 0.0
+    gyro_bias_y: 0.0
+    gyro_bias_z: 0.0
+
+    accel_covariance:
+      [
+        1.64868e-06, 1.95563e-07, 8.17889e-08,
+        1.95563e-07, 5.70874e-06, 5.11217e-08,
+        8.17889e-08, 5.11217e-08, 1.22049e-06,
+      ]
+
+    gyro_covariance:
+      [
+        1.0e-5, 0.0, 0.0,
+        0.0, 1.0e-05, 0.0,
+        0.0, 0.0, 1.0e-5
+      ]
+
+    # This is a Intrinsic ZYX rotation from base link to imu!
+    sensor_roll: 0.0
+    sensor_pitch: 0.0
+    sensor_yaw: 0.0
+
+competition_state_machine_node:
+  ros__parameters:
+    tank_robot_plugin:
+      neutral_stake_arm_kp: 0.03
+      neutral_stake_arm_gear_ratio: 9.0 #3.0
+      neutral_stake_arm_rest_pos_deg: 0.0
+      neutral_stake_arm_loading_pos_deg: 30.0
+      neutral_stake_arm_score_neutral_pos_deg: 110.0
+      neutral_stake_arm_score_alliance_pos_deg: 165.0
+      neutral_stake_arm_down_pos_deg: 240.0
+
+      distance_approach:
+        kp: 0.0
+        ki: 1.0
+        kd: 0.4
+        integral_limit: 0.3
+        integral_activation_bound: 0.75
+
+      steering_approach:
+        kp: 0.0
+        ki: 0.0
+        kd: 0.15
+        integral_limit: 0.0
+        integral_activation_bound: 0.0
+
+      distance_settling:
+        kp: 0.2
+        ki: 2.0
+        kd: 0.1
+        integral_limit: 0.35
+        integral_activation_bound: 1.0
+
+      steering_settling:
+        kp: 0.2
+        ki: 2.0
+        kd: 0.2
+        integral_limit: 0.5
+        integral_activation_bound: 10.0
+
+      arc_turn:
+        kp: 0.4
+        ki: 2.0
+        kd: 0.2
+        integral_limit: 0.5
+        integral_activation_bound: 10.0
+
+      init_x_tiles: 2.4
+      init_y_tiles: 0.4
+      init_theta_degrees: -10.0

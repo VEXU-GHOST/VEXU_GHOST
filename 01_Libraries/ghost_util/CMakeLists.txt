@@ -63,8 +63,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-
-
 add_library(angle_util SHARED
   src/angle_util.cpp
 )
@@ -123,6 +121,11 @@ target_link_libraries(test_vector_list
 
 ament_add_gtest(test_parsing_util test/test_parsing_util.cpp)
 target_link_libraries(test_parsing_util
+  gtest
+)
+
+ament_add_gtest(test_read_path test/test_read_path.cpp)
+target_link_libraries(test_read_path
   gtest
 )
 
