@@ -37,13 +37,13 @@
                             backwards="false"/> -->
           <ShutoffNode/>
           <BiteCmd bite_closed="true"/>
-          <ArcturnToPoint posX_tiles="0.7"
-            posY_tiles="0.7"
+          <ArcturnToPoint posX_tiles="0.2"
+            posY_tiles="0.2"
             timeout_ms="2000"
             angle_exit_threshold_deg="1.0"
             drive_backwards="true"
             face_backwards="false"/>
-          <GenerateBezierPath end_x_tiles="0.7"
+          <!-- <GenerateBezierPath end_x_tiles="0.7"
             end_y_tiles="0.7"
             end_theta_deg="-135.0"
             lead_tiles="0.5"
@@ -62,7 +62,7 @@
             k_lookahead="0.3"
             deceleration_start_distance_tiles="0.5"
             deceleration_exponent="1.5"
-            min_approach_velocity_tps="0.05"/>
+            min_approach_velocity_tps="0.05"/> -->
         </Sequence>
       </ParallelAll>
       <Logging message="Processing Corner Stack"/>

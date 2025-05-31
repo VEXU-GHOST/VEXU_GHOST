@@ -99,7 +99,7 @@ def generate_launch_description():
         rplidar_node,
         # realsense_node,
         bag_recorder_service,
-        tts_music_node,
+        # tts_music_node,
         OpaqueFunction(function = launch_setup),
     ])
 

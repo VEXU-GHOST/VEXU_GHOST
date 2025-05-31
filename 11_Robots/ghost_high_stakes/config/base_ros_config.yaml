@@ -92,7 +92,7 @@ competition_state_machine_node:
       blue:
         hue_center: 190
         hue_range: 30
-        sat_min: 0.4
+        sat_min: 0.2
         sat_max: 1.0
         val_min: 0.002
         val_max: 1.0
