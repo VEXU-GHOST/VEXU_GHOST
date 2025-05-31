@@ -2,9 +2,9 @@
 <root BTCPP_format="4"
   main_tree_to_execute="main_tree">
   <!-- <include path="bt_goal_rush.xml"/> -->
-  <include path="worlds/bt_worlds_goal_rush_omega.xml" />
-  <include path="worlds/bt_center_rush_after_side_rush.xml"/>
-  <include path="worlds/bt_grab_goal_after_rush.xml"/>
+  <!-- <include path="worlds/bt_worlds_goal_rush_omega.xml" /> -->
+  <!-- <include path="worlds/bt_center_rush_after_side_rush.xml"/> -->
+  <!-- <include path="worlds/bt_grab_goal_after_rush.xml"/> -->
   <include path="bt_clear_corner.xml"/>
   <include path="bt_corner_shove.xml"/>
   <include path="bt_intake_middle_ring.xml"/>

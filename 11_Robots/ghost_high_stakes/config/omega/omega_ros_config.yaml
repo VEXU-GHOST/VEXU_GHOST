@@ -80,6 +80,13 @@ competition_state_machine_node:
         integral_limit: 0.5
         integral_activation_bound: 10.0
 
+      arc_turn:
+        kp: 0.8
+        ki: 6.0
+        kd: 0.1
+        integral_limit: 0.7
+        integral_activation_bound: 10.0
+
       init_x_tiles: 2.4
       init_y_tiles: 0.4
       init_theta_degrees: -10.0

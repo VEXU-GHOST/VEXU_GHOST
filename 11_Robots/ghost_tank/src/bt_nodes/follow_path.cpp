@@ -32,6 +32,8 @@ namespace ghost_tank
 FollowPath::FollowPath(const std::string & name, const BT::NodeConfig & config)
 : BT::StatefulActionNode(name, config)
 {
+  std::cout << "[FollowPath::FollowPath]" << std::endl;
+
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
 
@@ -74,7 +76,6 @@ BT::NodeStatus FollowPath::onStart()
   angle_exit_threshold_rad_ = BT_Util::get_input<double>(this, "angle_exit_threshold_deg") * ghost_util::DEG_TO_RAD;
   lin_vel_exit_threshold_mps_ = BT_Util::get_input<double>(this, "lin_vel_exit_threshold_tps") * ghost_util::TILES_TO_METERS;
   ang_vel_exit_threshold_radps_ = BT_Util::get_input<double>(this, "ang_vel_exit_threshold_dps") * ghost_util::DEG_TO_RAD;
-  xy_settling_radius_m_ = BT_Util::get_input<double>(this, "xy_settling_radius_tiles") * ghost_util::TILES_TO_METERS;
   max_speed_linear_percent_ = BT_Util::get_input<double>(this, "max_speed_linear_percent");
   max_speed_angular_percent_ = BT_Util::get_input<double>(this, "max_speed_angular_percent");
   timeout_ms_ = BT_Util::get_input<int>(this, "timeout_ms");
@@ -126,7 +127,7 @@ void FollowPath::updateVisualization()
 {
   viz_msg_.markers.clear();
   populateVisualizationMarkers();
-  visualization::getCircleMarker(viz_msg_, goal_pose_.head<2>(), xy_settling_radius_m_, visualization::getColorRGBA(1.0, 0.0, 0.0, 0.25), 0.0);
+  // visualization::getCircleMarker(viz_msg_, goal_pose_.head<2>(), xy_settling_radius_m_, visualization::getColorRGBA(1.0, 0.0, 0.0, 0.25), 0.0);
 
   publishExitThresholds();
 

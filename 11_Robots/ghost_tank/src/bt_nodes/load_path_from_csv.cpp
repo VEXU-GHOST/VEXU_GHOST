@@ -30,9 +30,11 @@ namespace ghost_tank
 LoadPathFromCSV::LoadPathFromCSV(const std::string & name, const BT::NodeConfig & config)
 : BT::StatefulActionNode(name, config)
 {
+  std::cout << "[LoadPathFromCSV::LoadPathFromCSV]" << std::endl;
+  
+  blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "config_path", config_path);
   BT_Util::get_from_blackboard(blackboard_, "tank_trajectory_ptr", tank_trajectory_ptr_);
-
 }
 
 // It is mandatory to define this STATIC method.

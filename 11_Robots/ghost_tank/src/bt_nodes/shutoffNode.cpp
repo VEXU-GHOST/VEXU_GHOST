@@ -32,10 +32,12 @@
    const std::string & name, const BT::NodeConfig & config)
  : BT::SyncActionNode(name, config)
  {
-   blackboard_ = config.blackboard;
-	 BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-	 BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
-   BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
+  std::cout << "[ShutoffNode::ShutoffNode]" << std::endl;
+  
+  blackboard_ = config.blackboard;
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
  }
  
  // It is mandatory to define this STATIC method.

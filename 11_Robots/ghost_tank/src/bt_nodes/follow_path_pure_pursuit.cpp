@@ -35,6 +35,7 @@ namespace ghost_tank
 FollowPathPurePursuit::FollowPathPurePursuit(const std::string & name, const BT::NodeConfig & config)
 : FollowPath(name, config)
 {
+  std::cout << "[FollowPathPurePursuit::FollowPathPurePursuit]" << std::endl;
 }
 
 BT::PortsList FollowPathPurePursuit::providedPorts()

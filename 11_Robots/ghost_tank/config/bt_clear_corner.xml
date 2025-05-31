@@ -7,7 +7,24 @@
         <NeutralStakeCmd state="0"
                         timeout="2.000"/>
         <Sequence>
-          <MoveToPoseJERRYIO file_path="test_path.txt"
+          <LoadPathFromCSV
+            file_path="test_path.txt"/>
+          <FollowPathPurePursuit 
+            xy_exit_threshold_tiles="0.10"
+            angle_exit_threshold_deg="10.0"
+            lin_vel_exit_threshold_tps="100.0"
+            ang_vel_exit_threshold_dps="100.0"
+            max_speed_linear_percent="1.0"
+            max_speed_angular_percent="1.0"
+            timeout_ms="1500"
+            use_theta="false"
+            min_pursuit_radius_tiles="0.3"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="1.0"
+            deceleration_exponent="1.5"
+            min_approach_velocity_tps="0.05"/>
+
+          <!-- <MoveToPoseJERRYIO file_path="test_path.txt"
                             search_radius_tiles="0.7"
                             xy_exit_threshold_tiles="0.10"
                             angle_exit_threshold_deg="10.0"
@@ -17,7 +34,7 @@
                             max_speed_angular_percent="1.0"
                             timeout_ms="1500"
                             use_theta="false"
-                            backwards="false"/>
+                            backwards="false"/> -->
           <ShutoffNode/>
           <BiteCmd bite_closed="true"/>
           <ArcturnToPoint posX_tiles="0.2"
@@ -91,23 +108,6 @@
     <Action ID="Logging"
             editable="true">
       <input_port name="message"/>
-    </Action>
-    <Action ID="MoveToPoseBezier"
-            editable="true">
-      <input_port name="posX_tiles"/>
-      <input_port name="posY_tiles"/>
-      <input_port name="theta_deg"/>
-      <input_port name="search_radius_tiles"/>
-      <input_port name="xy_exit_threshold_tiles"/>
-      <input_port name="angle_exit_threshold_deg"/>
-      <input_port name="lin_vel_exit_threshold_tps"/>
-      <input_port name="ang_vel_exit_threshold_dps"/>
-      <input_port name="lead"/>
-      <input_port name="max_speed_linear_percent"/>
-      <input_port name="max_speed_angular_percent"/>
-      <input_port name="timeout_ms"/>
-      <input_port name="use_theta"/>
-      <input_port name="backwards"/>
     </Action>
     <Action ID="MoveToPosePurepursuit"
             editable="true">

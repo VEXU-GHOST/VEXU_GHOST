@@ -7,6 +7,8 @@ namespace ghost_tank
 MoveToPoint::MoveToPoint(const std::string & name, const BT::NodeConfig & config)
 : BT::StatefulActionNode(name, config)
 {
+  std::cout << "[MoveToPoint::MoveToPoint]" << std::endl;
+
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   first_loop_ = true;
