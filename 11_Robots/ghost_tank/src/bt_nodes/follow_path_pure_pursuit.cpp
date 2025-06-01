@@ -238,7 +238,7 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
   double path_len_to_goal = trajectory_.remaining_path_length[closest_point_index_];
 
   bool within_dyn_pursuit_radius = dist_to_goal_ <= dynamic_pursuit_radius_;
-  bool within_min_pursuit_radius = dist_to_goal_ <= dynamic_pursuit_radius_;
+  bool within_min_pursuit_radius = dist_to_goal_ <= min_pursuit_radius_;
 
   Eigen::Vector2d robot_to_goal_vector = goal_pose_.head<2>() - current_position_;
   Eigen::Vector2d goal_in_robot_frame = Eigen::Rotation2D<double>(-current_angle_) * robot_to_goal_vector;

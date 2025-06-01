@@ -114,6 +114,9 @@ BT::NodeStatus GenerateBezierPath::onRunning()
   if (BT_Util::get_input<bool>(this, "backwards")) {
     traj.backwards = true;
   }
+  else{
+    traj.backwards = false;
+  }
 
   *tank_trajectory_ptr_ = traj;
   return BT::NodeStatus::SUCCESS;

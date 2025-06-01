@@ -62,7 +62,7 @@ BT::NodeStatus LoadPathFromCSV::onRunning()
   // Load path from file
   auto file_path = BT_Util::get_input<std::string>(this, "file_path");
   auto path = ghost_util::readPathFromFile(config_path + '/' + file_path);
-  bool backwards = BT_Util::get_input<bool>(this, "backwards");
+  bool backwards = BT_Util::get_input<bool>(this, "backwards", false);
 
   // Clear trajectory
   int num_points = path[0].size();
@@ -79,7 +79,7 @@ BT::NodeStatus LoadPathFromCSV::onRunning()
       tank_trajectory_ptr_->theta[i] = ghost_util::WrapAngle2PI(M_PI - tank_trajectory_ptr_->theta[i]);
 
       if (backwards) {
-        tank_trajectory_ptr_->theta[i] = ghost_util::FlipAnglePi(tank_trajectory_ptr_->theta[i]);
+        tank_trajectory_ptr_->theta[i] = ghost_util::FlipAnglePI(tank_trajectory_ptr_->theta[i]);
       }
     }
     tank_trajectory_ptr_->t[i] = static_cast<double>(i) / static_cast<double>(num_points);
@@ -88,7 +88,7 @@ BT::NodeStatus LoadPathFromCSV::onRunning()
   tank_trajectory_ptr_->calculateRemainingPathLengths();
 
   if (backwards) {
-    traj.backwards = true;
+    tank_trajectory_ptr_->backwards = true;
   }
 
   if (node_ptr_) {

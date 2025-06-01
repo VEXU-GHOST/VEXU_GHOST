@@ -129,55 +129,55 @@ void TankRobotPlugin::initROSComms()
   // Publishers
   node_ptr_->declare_parameter("joint_state_topic", "/joint_states");
   std::string joint_state_topic = node_ptr_->get_parameter("joint_state_topic").as_string();
-  m_joint_state_pub = node_ptr_->create_publisher<sensor_msgs::msg::JointState>(joint_state_topic, 10);
+  m_joint_state_pub = node_ptr_->create_publisher<sensor_msgs::msg::JointState>(joint_state_topic, rclcpp::SensorDataQoS());
 
   node_ptr_->declare_parameter("trajectory_marker_topic", "/trajectory_markers");
   std::string trajectory_marker_topic = node_ptr_->get_parameter("trajectory_marker_topic").as_string();
-  m_trajectory_viz_pub = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>(trajectory_marker_topic, 10);
+  m_trajectory_viz_pub = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>(trajectory_marker_topic, rclcpp::SensorDataQoS());
 
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_twist_topic", "/cmd_vel");
   std::string cmd_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_twist_topic").as_string();
-  m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(cmd_twist_topic, 10);
+  m_base_twist_cmd_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(cmd_twist_topic, rclcpp::SensorDataQoS());
 
   node_ptr_->declare_parameter("odom_topic", "/sensors/wheel_odom");
   std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
-  m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(odom_topic, 10);
+  m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(odom_topic, rclcpp::SensorDataQoS());
 
   // Subscriptions
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
   std::string pose_topic = node_ptr_->get_parameter("pose_topic").as_string();
-  m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
+  m_robot_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(pose_topic, rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::worldOdometryUpdateCallback, this, _1));
 
   node_ptr_->declare_parameter("backup_pose_topic", "/odom_ekf/odometry");
   std::string backup_pose_topic = node_ptr_->get_parameter("backup_pose_topic").as_string();
-  m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, 10, std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
+  m_robot_backup_pose_sub = node_ptr_->create_subscription<nav_msgs::msg::Odometry>(backup_pose_topic, rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::worldOdometryUpdateCallbackBackup, this, _1));
 
-  m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensors/intake/color", 10, std::bind(&TankRobotPlugin::colorCallback, this, _1));
+  m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensors/intake/color", rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::colorCallback, this, _1));
 
   // Tank-Specific Publishers
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
   std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
-  m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(cmd_pose_topic, 10);
+  m_set_pose_publisher = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(cmd_pose_topic, rclcpp::SensorDataQoS());
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_twist_topic", "/des_vel");
   std::string des_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.des_twist_topic").as_string();
-  m_des_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(des_twist_topic, 10);
+  m_des_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(des_twist_topic, rclcpp::SensorDataQoS());
 
   node_ptr_->declare_parameter("tank_robot_plugin.cur_twist_topic", "/cur_vel");
   std::string cur_twist_topic = node_ptr_->get_parameter("tank_robot_plugin.cur_twist_topic").as_string();
-  m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(cur_twist_topic, 10);
+  m_cur_twist_pub = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(cur_twist_topic, rclcpp::SensorDataQoS());
 
   node_ptr_->declare_parameter("tank_robot_plugin.des_pos_topic", "/des_pos");
   std::string des_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.des_pos_topic").as_string();
-  m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(des_pos_topic, 10);
+  m_des_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(des_pos_topic, rclcpp::SensorDataQoS());
 
   node_ptr_->declare_parameter("tank_robot_plugin.err_pos_topic", "/err_pos");
   std::string err_pos_topic = node_ptr_->get_parameter("tank_robot_plugin.err_pos_topic").as_string();
-  m_err_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(err_pos_topic, 10);
+  m_err_pos_pub = node_ptr_->create_publisher<geometry_msgs::msg::Pose>(err_pos_topic, rclcpp::SensorDataQoS());
 
   node_ptr_->declare_parameter("input_imu_topic", "/sensors/imu");
   std::string input_imu_topic = node_ptr_->get_parameter("input_imu_topic").as_string();
-  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(input_imu_topic, 10);
+  imu_pub = node_ptr_->create_publisher<sensor_msgs::msg::Imu>(input_imu_topic, rclcpp::SensorDataQoS());
 
   m_tts_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/tts", 1);
   m_music_pub = node_ptr_->create_publisher<std_msgs::msg::String>("/io/speaker/music", 1);
@@ -188,13 +188,13 @@ void TankRobotPlugin::initROSComms()
     ->create_publisher<std_msgs::msg::Int64>("/io/leds/side_right", 1);
 
   m_button_color_target_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
-    "/io/buttons/color_target", 10,
+    "/io/buttons/color_target", rclcpp::SensorDataQoS(),
     std::bind(&TankRobotPlugin::colorTargetButtonCallback, this, _1));
   m_button_mirrored_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
-    "/io/buttons/mirrored", 10,
+    "/io/buttons/mirrored", rclcpp::SensorDataQoS(),
     std::bind(&TankRobotPlugin::mirroredButtonCallback, this, _1));
   m_button_reset_sub = node_ptr_->create_subscription<std_msgs::msg::Int64>(
-    "/io/buttons/reset", 10,
+    "/io/buttons/reset", rclcpp::SensorDataQoS(),
     std::bind(&TankRobotPlugin::resetButtonCallback, this, _1));
 }
 
@@ -339,7 +339,7 @@ void TankRobotPlugin::initTankModel()
 
   auto steering_settling_config = loadPIDConfig("steering_settling");
   m_steering_settling_controller_ptr = std::make_shared<PIDController>(steering_settling_config);
-  
+
   auto arc_turn_config = loadPIDConfig("arc_turn");
   m_arc_turn_controller_ptr = std::make_shared<PIDController>(arc_turn_config);
 }
@@ -460,13 +460,6 @@ void TankRobotPlugin::autonomous(double current_time)
   // auto curr_pose = m_tank_model_ptr->getWorldPose();
   auto curr_twist = m_tank_model_ptr->getWorldTwist();
 
-  publishCurrentTwist(curr_twist);
-  // publishDesiredTwist(m_desired_twist);
-
-  if (bt_->get_variable("desired_pose", m_desired_pose)) {
-    publishDesiredPose(m_desired_pose);
-  }
-
   bool ring_detector_active = false;
   bool want_red = m_color_target_red;
   bool store_ring = false;
@@ -501,6 +494,13 @@ void TankRobotPlugin::autonomous(double current_time)
   bt_->get_variable("fwd_cmd", msg.linear.x);
   bt_->get_variable("turn_cmd", msg.angular.z);
   m_base_twist_cmd_pub->publish(msg);
+
+  publishCurrentTwist(curr_twist);
+  // publishDesiredTwist(m_desired_twist);
+
+  if (bt_->get_variable("desired_pose", m_desired_pose)) {
+    publishDesiredPose(m_desired_pose);
+  }
 }
 
 void TankRobotPlugin::resetBT()

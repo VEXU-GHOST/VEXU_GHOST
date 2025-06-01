@@ -72,6 +72,7 @@ private:
   double integral_sum_;
   double last_error_;
   double dt_;
+  bool use_integral_{false};
 };
 
 } // namespace ghost_control

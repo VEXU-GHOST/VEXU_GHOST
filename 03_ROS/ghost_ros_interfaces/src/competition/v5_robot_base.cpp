@@ -46,17 +46,17 @@ void V5RobotBase::configure()
 
   sensor_update_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::V5SensorUpdate>(
     "/v5/sensor_update",
-    10,
+    rclcpp::SensorDataQoS(),
     std::bind(&V5RobotBase::sensorUpdateCallback, this, _1)
   );
 
   actuator_command_pub_ = node_ptr_->create_publisher<ghost_msgs::msg::V5ActuatorCommand>(
     "/v5/actuator_command",
-    10);
+    rclcpp::SensorDataQoS());
 
   trajectory_sub_ = node_ptr_->create_subscription<ghost_msgs::msg::RobotTrajectory>(
     "/motion_planner/trajectory",
-    10,
+    rclcpp::SensorDataQoS(),
     std::bind(&V5RobotBase::trajectoryCallback, this, _1)
   );
 
@@ -94,10 +94,10 @@ void V5RobotBase::loadRobotHardwareInterface()
 
 void V5RobotBase::sensorUpdateCallback(const ghost_msgs::msg::V5SensorUpdate::SharedPtr msg)
 {
-  if(!configured_){
+  if (!configured_) {
     return;
   }
-  
+
   // Update Competition State Machine
   updateCompetitionState(
     msg->competition_status.is_disabled,
@@ -155,7 +155,7 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
   {
     // DISABLED -> AUTONOMOUS
     start_time_ = std::chrono::system_clock::now();
-    if (should_record_){
+    if (should_record_) {
       // start bag recording
       auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
       m_start_recorder_client->async_send_request(req);
@@ -163,7 +163,8 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
   }
 
   if ((last_comp_state_ == robot_state_e::AUTONOMOUS) &&
-    (curr_comp_state_ == robot_state_e::DISABLED)) {
+    (curr_comp_state_ == robot_state_e::DISABLED))
+  {
     // AUTONOMOUS -> DISABLED
     m_is_first_auton_loop = false;
   }
@@ -178,7 +179,7 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
   {
     // TELEOP->DISABLE
     start_time_ = std::chrono::system_clock::now();
-    if (should_record_){
+    if (should_record_) {
       // stop bag recording
       auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
       m_stop_recorder_client->async_send_request(req);

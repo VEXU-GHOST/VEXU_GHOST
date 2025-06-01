@@ -23,7 +23,7 @@ ArcturnToPoint::ArcturnToPoint(const std::string & name, const BT::NodeConfig & 
   drive_backwards = BT_Util::get_input<bool>(this, "drive_backwards");
   face_backwards = BT_Util::get_input<bool>(this, "face_backwards");
 
-  path_viz_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/autonomy/follow_path/viz_markers", 10);
+  path_viz_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/autonomy/follow_path/viz_markers", rclcpp::SensorDataQoS());
 
 }
 
@@ -93,17 +93,22 @@ BT::NodeStatus ArcturnToPoint::onRunning()
 
   auto command = m_arc_turn_controller_ptr->calculateCommand(theta_err_rad, -tank_model_ptr_->getWorldTwist().z());
 
+  std::cout << std::endl;
+
   double cmd_sign = (command > 0.0) ? 1.0 : -1.0;
   cmd_sign = (std::fabs(command) > 0.01) ? cmd_sign : 0.0;
   double breaking = 0.01 * cmd_sign;
 
+  std::cout << "theta_err_rad: " << theta_err_rad << std::endl;
+  std::cout << "vel err: " << -tank_model_ptr_->getWorldTwist().z() << std::endl;
   if (use_right_side) {
-    tank_model_ptr_->driveCommandTank(-breaking, command);
+    std::cout << "right command: " << command << std::endl;
+    tank_model_ptr_->driveCommandTank(0.0, command);
   } else {
-    tank_model_ptr_->driveCommandTank(-command, breaking);
+    std::cout << "left command: " << -command << std::endl;
+    tank_model_ptr_->driveCommandTank(-command, 0.0);
   }
 
-  std::cout << std::endl;
   visualization();
 
   return BT::NodeStatus::RUNNING;

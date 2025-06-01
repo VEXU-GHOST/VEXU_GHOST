@@ -94,12 +94,12 @@ JetsonV5SerialNode::JetsonV5SerialNode()
     verbose_);
 
   // Sensor Update Msg Publisher
-  sensor_update_pub_ = create_publisher<ghost_msgs::msg::V5SensorUpdate>("v5/sensor_update", 10);
+  sensor_update_pub_ = create_publisher<ghost_msgs::msg::V5SensorUpdate>("v5/sensor_update", rclcpp::SensorDataQoS());
 
   // Actuator Command Msg Subscriber
   actuator_command_sub_ = create_subscription<ghost_msgs::msg::V5ActuatorCommand>(
     "v5/actuator_command",
-    10,
+    rclcpp::SensorDataQoS(),
     std::bind(&JetsonV5SerialNode::actuatorCommandCallback, this, _1));
 
   // Start Serial Thread

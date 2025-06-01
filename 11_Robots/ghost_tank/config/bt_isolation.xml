@@ -171,13 +171,12 @@
 
   <BehaviorTree ID="grab_middle_goal">
     <Sequence>
-      <Logging message="Starting jerryio"/>
       <ClampCmd clamp_closed="false"/>
       <ArcturnToPoint posX_tiles="6.0"
         posY_tiles="1.0"
         timeout_ms="3000"
         angle_exit_threshold_deg="5.0"
-        ang_vel_exit_threshold_dps="180.0"
+        ang_vel_exit_threshold_dps="10.0"
         drive_backwards="true"
         face_backwards="true"/>
       <WaitCmd seconds="0.01"
@@ -185,7 +184,7 @@
       <MoveToPoint kp="3.0"
         kd="0.0"
         max_effort_percent="0.3"
-        timeout_ms="750"
+        timeout_ms="1000"
         backwards="true"
         distance_tiles="0.5"/>
       <ClampCmd clamp_closed="true"/>

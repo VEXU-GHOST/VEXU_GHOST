@@ -81,6 +81,11 @@ BT::NodeStatus FollowPath::onStart()
   timeout_ms_ = BT_Util::get_input<int>(this, "timeout_ms");
   use_theta_ = BT_Util::get_input<bool>(this, "use_theta");
 
+  m_distance_approach_controller_ptr->reset();
+  m_distance_settling_controller_ptr->reset();
+  m_steering_approach_controller_ptr->reset();
+  m_steering_settling_controller_ptr->reset();
+
   // Update local trajectory copy
   trajectory_ = *tank_trajectory_ptr_;
 
@@ -100,8 +105,12 @@ BT::NodeStatus FollowPath::onRunning()
   // Get control commands from derived class
   Eigen::Vector2d command = calculateControllerCommand();
 
+  std::cout << "Raw command: " << command << std::endl;
+
   // Normalize to avoid saturation
   tank_model_ptr_->normalizeArcadeCommand(command);
+
+  std::cout << "normalizeArcadeCommand: " << command << std::endl;
 
   // Unpack and send final command to drivetrain
   fwd_command_ = command.x();
