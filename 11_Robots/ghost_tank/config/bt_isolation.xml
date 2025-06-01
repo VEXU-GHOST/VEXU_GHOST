@@ -50,7 +50,7 @@
       <ArcturnToPoint posX_tiles="3.0"
         posY_tiles="2.0"
         timeout_ms="3000"
-        angle_exit_threshold_deg="3.0"
+        angle_exit_threshold_deg="1.0"
         ang_vel_exit_threshold_dps="10.0"
         drive_backwards="false"
         face_backwards="false"/>
@@ -60,7 +60,7 @@
       <ArcturnToPoint posX_tiles="0.0"
         posY_tiles="0.0"
         timeout_ms="3000"
-        angle_exit_threshold_deg="3.0"
+        angle_exit_threshold_deg="1.0"
         ang_vel_exit_threshold_dps="10.0"
         drive_backwards="false"
         face_backwards="true"/>
@@ -70,7 +70,7 @@
       <ArcturnToPoint posX_tiles="0.0"
         posY_tiles="6.0"
         timeout_ms="3000"
-        angle_exit_threshold_deg="3.0"
+        angle_exit_threshold_deg="1.0"
         ang_vel_exit_threshold_dps="10.0"
         drive_backwards="true"
         face_backwards="false"/>
@@ -80,7 +80,7 @@
       <ArcturnToPoint posX_tiles="3.0"
         posY_tiles="3.0"
         timeout_ms="3000"
-        angle_exit_threshold_deg="3.0"
+        angle_exit_threshold_deg="1.0"
         ang_vel_exit_threshold_dps="10.0"
         drive_backwards="true"
         face_backwards="true"/>
