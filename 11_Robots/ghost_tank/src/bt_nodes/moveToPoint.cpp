@@ -58,7 +58,7 @@ BT::NodeStatus MoveToPoint::onRunning()
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
   if (xy_satisfied || time_elapsed > timeout_ms) {
-    tank_model_ptr_->driveCommand(0.0, 0.0);
+    tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
   }
   move();
@@ -88,7 +88,7 @@ void MoveToPoint::move()
   }
 
   BT_Util::put_in_blackboard(blackboard_, "fwd_cmd", fwd_cmd);//store back in to memory 
-  tank_model_ptr_->driveCommand(fwd_cmd, 0.0);
+  tank_model_ptr_->driveCommandArcade(fwd_cmd, 0.0);
 }
 
 
