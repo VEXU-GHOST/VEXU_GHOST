@@ -19,6 +19,7 @@ ArcturnToPoint::ArcturnToPoint(const std::string & name, const BT::NodeConfig & 
   posY_m = BT_Util::get_input<double>(this, "posY_tiles") * ghost_util::TILES_TO_METERS;
   timeout_ms = BT_Util::get_input<int>(this, "timeout_ms");
   angle_exit_threshold_rad = BT_Util::get_input<double>(this, "angle_exit_threshold_deg") * ghost_util::DEG_TO_RAD;
+  ang_vel_exit_threshold_rps = BT_Util::get_input<double>(this, "ang_vel_exit_threshold_dps") * ghost_util::DEG_TO_RAD;
   drive_backwards = BT_Util::get_input<bool>(this, "drive_backwards");
   face_backwards = BT_Util::get_input<bool>(this, "face_backwards");
 
@@ -33,6 +34,7 @@ BT::PortsList ArcturnToPoint::providedPorts()
     BT::InputPort<double>("posY_tiles"),
     BT::InputPort<int>("timeout_ms"),
     BT::InputPort<double>("angle_exit_threshold_deg"),
+    BT::InputPort<double>("ang_vel_exit_threshold_dps"),
     BT::InputPort<bool>("face_backwards"),
     BT::InputPort<bool>("drive_backwards")
   };
@@ -56,28 +58,30 @@ BT::NodeStatus ArcturnToPoint::onRunning()
   double cur_y = tank_model_ptr_->getWorldPose().y();
 
   des_ang_rad = std::atan2(posY_m - cur_y, posX_m - cur_x);
-
+  
   if (face_backwards) {
     des_ang_rad = ghost_util::FlipAnglePI(des_ang_rad);
   }
 
   double theta_err_rad = ghost_util::SmallestAngleDistRad(des_ang_rad, tank_model_ptr_->getWorldPose().z());
   bool angle_satisfied = std::fabs(theta_err_rad) < angle_exit_threshold_rad;
+  bool ang_vel_satisfied = std::fabs(tank_model_ptr_->getWorldTwist().z()) < ang_vel_exit_threshold_rps;
 
   std::cout << "theta error: " << theta_err_rad << std::endl;
-  
+
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
   std::cout << "time elapsed: " << time_elapsed << std::endl;
-  if (angle_satisfied || time_elapsed > timeout_ms) {
-    tank_model_ptr_->driveCommand(0.0, 0.0);
+  if ((angle_satisfied && ang_vel_satisfied) || time_elapsed > timeout_ms) {
+    tank_model_ptr_->driveCommandTank(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
   }
 
   auto command = m_arc_turn_controller_ptr->calculateCommand(theta_err_rad, -tank_model_ptr_->getWorldTwist().z());
-  if (drive_backwards){
-    tank_model_ptr_->driveCommand(-abs(command), command);
+
+  if (use_left_side) {
+    tank_model_ptr_->driveCommandTank(command, 0.0);
   } else {
-    tank_model_ptr_->driveCommand(abs(command), command);
+    tank_model_ptr_->driveCommandTank(0.0, command);
   }
   visualization();
 
@@ -89,7 +93,8 @@ void ArcturnToPoint::onHalted()
   resetStatus();
 }
 
-void ArcturnToPoint::visualization(){
+void ArcturnToPoint::visualization()
+{
   viz_msg_.markers.clear();
 
   Eigen::Vector2d target(posX_m, posY_m);

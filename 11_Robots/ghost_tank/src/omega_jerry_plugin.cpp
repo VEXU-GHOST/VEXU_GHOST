@@ -124,6 +124,7 @@ void OmegaJerryPlugin::initNeutralStakeArm()
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_score_neutral_pos_deg", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_score_alliance_pos_deg", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_down_pos_deg", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_settled_threshold_deg", 0.0);
 
   m_neutral_stake_arm_kp = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_kp").as_double();
   m_neutral_stake_arm_gear_ratio = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_gear_ratio").as_double();

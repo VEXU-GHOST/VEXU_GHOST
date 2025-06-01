@@ -51,6 +51,7 @@ competition_state_machine_node:
       neutral_stake_arm_score_neutral_pos_deg: 110.0
       neutral_stake_arm_score_alliance_pos_deg: 165.0
       neutral_stake_arm_down_pos_deg: 240.0
+      neutral_stake_arm_settled_threshold_deg: 5.0
 
       distance_approach:
         kp: 0.0
@@ -81,12 +82,16 @@ competition_state_machine_node:
         integral_activation_bound: 10.0
 
       arc_turn:
-        kp: 0.3
-        ki: 1.0
-        kd: 0.3
-        integral_limit: 0.3
-        integral_activation_bound: 10.0
+        kp: 1.0
+        ki: 0.0
+        kd: 0.0
+        integral_limit: 0.0
+        integral_activation_bound: 0.0
 
-      init_x_tiles: 2.4
-      init_y_tiles: 0.55
-      init_theta_degrees: -20.0
+      init_x_tiles: 2.0
+      init_y_tiles: 1.0
+      init_theta_degrees: 0.0
+
+      # init_x_tiles: 2.4
+      # init_y_tiles: 0.55
+      # init_theta_degrees: -20.0

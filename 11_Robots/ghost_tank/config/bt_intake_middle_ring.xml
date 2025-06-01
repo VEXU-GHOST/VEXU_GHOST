@@ -8,6 +8,7 @@
         posY_tiles="0.5"
         timeout_ms="2000"
         angle_exit_threshold_deg="1.0"
+        ang_vel_exit_threshold_dps="10.0"
         face_backwards="false"
         drive_backwards="true"/>
       <GenerateBezierPath end_x_tiles="3.2"

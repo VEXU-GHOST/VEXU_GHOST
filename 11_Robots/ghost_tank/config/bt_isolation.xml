@@ -14,22 +14,82 @@
     <Sequence>
       <Sequence>
         <Logging message="Starting main tree" />
-        <SubTree ID="win_point" _autoremap="true"/>
-        <SubTree ID="grab_middle_goal" _autoremap="true"/>
-        <SubTree ID="clear_negative_corner" _autoremap="true"/>
-        <SubTree ID="intake_middle_ring" _autoremap="true"/>
-        <!-- <IntakeCmd auto="false"
-          ground_intake="false"/> -->
+        <SubTree ID="test_arc_turns"
+          _autoremap="true"/>
+        <WaitCmd seconds="500.0"
+          shutoff_motors="true"/>
+
+        <SubTree ID="win_point"
+          _autoremap="true"/>
+        <SubTree ID="grab_middle_goal"
+          _autoremap="true"/>
+
+        <WaitCmd seconds="500.0"
+          shutoff_motors="true"/>
+
+        <SubTree ID="clear_negative_corner"
+          _autoremap="true"/>
+        <SubTree ID="intake_middle_ring"
+          _autoremap="true"/>
+        <!-- <IntakeCmd auto="false" ground_intake="false"/> -->
         <SetMirrored mirrored="true"/>
-        <SubTree ID="clear_negative_corner" _autoremap="true"/>
-        <SubTree ID="corner_shove" _autoremap="true"/>
+        <SubTree ID="clear_negative_corner"
+          _autoremap="true"/>
+        <SubTree ID="corner_shove"
+          _autoremap="true"/>
         <SetMirrored mirrored="false"/>
-        
+
       </Sequence>
       <WaitCmd seconds="500.0"
         shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
+
+  <BehaviorTree ID="test_arc_turns">
+    <Sequence>
+      <ArcturnToPoint posX_tiles="3.0"
+        posY_tiles="2.0"
+        timeout_ms="3000"
+        angle_exit_threshold_deg="3.0"
+        ang_vel_exit_threshold_dps="10.0"
+        drive_backwards="false"
+        face_backwards="false"/>
+      <WaitCmd seconds="1.0"
+        shutoff_motors="true"/>
+
+      <ArcturnToPoint posX_tiles="0.0"
+        posY_tiles="0.0"
+        timeout_ms="3000"
+        angle_exit_threshold_deg="3.0"
+        ang_vel_exit_threshold_dps="10.0"
+        drive_backwards="false"
+        face_backwards="true"/>
+      <WaitCmd seconds="1.0"
+        shutoff_motors="true"/>
+
+      <ArcturnToPoint posX_tiles="0.0"
+        posY_tiles="6.0"
+        timeout_ms="3000"
+        angle_exit_threshold_deg="3.0"
+        ang_vel_exit_threshold_dps="10.0"
+        drive_backwards="false"
+        face_backwards="true"/>
+      <WaitCmd seconds="1.0"
+        shutoff_motors="true"/>
+
+      <ArcturnToPoint posX_tiles="3.0"
+        posY_tiles="3.0"
+        timeout_ms="3000"
+        angle_exit_threshold_deg="3.0"
+        ang_vel_exit_threshold_dps="10.0"
+        drive_backwards="false"
+        face_backwards="false"/>
+      <WaitCmd seconds="1.0"
+        shutoff_motors="true"/>
+    </Sequence>
+
+  </BehaviorTree>
+
 
   <BehaviorTree ID="test_new_mtp">
     <Sequence>
@@ -109,7 +169,7 @@
     <Sequence>
       <Logging message="Starting winpoint"/>
       <NeutralStakeCmd state="3"
-          timeout="2.000"/>
+        timeout="2.000"/>
     </Sequence>
   </BehaviorTree>
 
@@ -121,10 +181,10 @@
         posY_tiles="1.0"
         timeout_ms="3000"
         angle_exit_threshold_deg="3.0"
-        drive_backwards="true"
-        face_backwards="true"/>
-      <MoveToPoint 
-        kp="3.0"
+        ang_vel_exit_threshold_dps="10.0"
+        drive_backwards="false"
+        backwards="true"/>
+      <MoveToPoint kp="3.0"
         kd="0.0"
         max_effort_percent="0.3"
         timeout_ms="2000"
@@ -132,8 +192,9 @@
       <ClampCmd clamp_closed="true"/>
       <BiteCmd bite_closed="true"/>
       <IntakeCmd auto="true"
-          ground_intake="false"/>
-      <WaitCmd seconds="0.3" shutoff_motors="true"/>
+        ground_intake="false"/>
+      <WaitCmd seconds="0.3"
+        shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
 
