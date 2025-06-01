@@ -18,8 +18,8 @@
         <SubTree ID="grab_middle_goal" _autoremap="true"/>
         <SubTree ID="clear_negative_corner" _autoremap="true"/>
         <SubTree ID="intake_middle_ring" _autoremap="true"/>
-        <IntakeCmd auto="false"
-          ground_intake="false"/>
+        <!-- <IntakeCmd auto="false"
+          ground_intake="false"/> -->
         <SetMirrored mirrored="true"/>
         <SubTree ID="clear_negative_corner" _autoremap="true"/>
         <SubTree ID="corner_shove" _autoremap="true"/>

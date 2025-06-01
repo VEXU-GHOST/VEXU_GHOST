@@ -37,8 +37,8 @@
                             backwards="false"/> -->
           <ShutoffNode/>
           <BiteCmd bite_closed="true"/>
-          <ArcturnToPoint posX_tiles="0.2"
-            posY_tiles="0.2"
+          <ArcturnToPoint posX_tiles="0.1"
+            posY_tiles="0.1"
             timeout_ms="2000"
             angle_exit_threshold_deg="1.0"
             drive_backwards="true"
@@ -68,14 +68,14 @@
       <Logging message="Processing Corner Stack"/>
       <IntakeCmd auto="true"
                  ground_intake="false"/>
-      <Repeat num_cycles="2">
+      <Repeat num_cycles="3">
         <Sequence>
           <!-- <MoveVoltage forward_effort="0.3" angular_effort="0.0" timeout_ms="500"/> -->
           <MoveToPoint 
             kp="5.0"
             kd="0.0"
             max_effort_percent="0.5"
-            timeout_ms="2000"
+            timeout_ms="1000"
             xy_exit_threshold_tiles="1.0"/>
           <ShutoffNode/>
           <!-- <MoveVoltage forward_effort="-0.3" angular_effort="0.0" timeout_ms="500"/> -->
@@ -83,7 +83,7 @@
             kp="5.0"
             kd="0.0"
             max_effort_percent="0.5"
-            timeout_ms="2000"
+            timeout_ms="1000"
             xy_exit_threshold_tiles="-0.5"/>
           <ShutoffNode/>
           <ArcturnToPoint posX_tiles="0.0"
@@ -94,7 +94,7 @@
                       face_backwards="false"/>
         </Sequence>
       </Repeat>
-      <MoveVoltage forward_effort="-0.3" angular_effort="0.0" timeout_ms="400"/>
+      <!-- <MoveVoltage forward_effort="-0.3" angular_effort="0.0" timeout_ms="400"/> -->
       <ShutoffNode/>
     </Sequence>
   </BehaviorTree>
