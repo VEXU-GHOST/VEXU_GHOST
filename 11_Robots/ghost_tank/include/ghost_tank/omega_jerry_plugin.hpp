@@ -74,7 +74,7 @@ protected:
   // void initTankModel();
   // void initAutonomy();
   
-  void updateNeutralStakeArmPosition(int arm_mode);
+  bool updateNeutralStakeArmPosition(int arm_mode);
   void updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active);
 
   // Neutral Stake Arm
@@ -86,6 +86,7 @@ protected:
   double m_neutral_stake_arm_score_neutral_pos_deg{0.0};
   double m_neutral_stake_arm_score_alliance_pos_deg{0.0};
   double m_neutral_stake_arm_down_pos_deg{0.0};
+  double m_neutral_stake_arm_settled_threshold_deg{0.0};
   double m_neutral_stake_arm_des_pos{0.0};
   int m_arm_mode{0};
 

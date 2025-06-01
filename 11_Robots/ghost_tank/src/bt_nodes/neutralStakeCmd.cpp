@@ -72,10 +72,15 @@ BT::NodeStatus NeutralStakeCmd::onRunning()
   BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
   BT_Util::put_in_blackboard(blackboard_, "neutral_stake_pos", state);
 
+
   if (timeout > (current_time - start_time_)) {
-    return BT::NodeStatus::RUNNING;
-  } else {
+    std::cout << "Neutral Stake Arm timed out, exiting." << std::endl;
     return BT::NodeStatus::SUCCESS;
+  } else if (BT_Util::get_input<bool>(this, "neutral_stake_settled")) {
+    std::cout << "Neutral Stake Arm reached target, exiting." << std::endl;
+    return BT::NodeStatus::SUCCESS;
+  } else {
+    return BT::NodeStatus::RUNNING;
   }
 }
 

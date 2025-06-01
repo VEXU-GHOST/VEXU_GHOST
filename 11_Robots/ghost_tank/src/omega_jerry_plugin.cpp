@@ -133,6 +133,7 @@ void OmegaJerryPlugin::initNeutralStakeArm()
   m_neutral_stake_arm_score_neutral_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_score_neutral_pos_deg").as_double();
   m_neutral_stake_arm_score_alliance_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_score_alliance_pos_deg").as_double();
   m_neutral_stake_arm_down_pos_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_down_pos_deg").as_double();
+  m_neutral_stake_arm_settled_threshold_deg = node_ptr_->get_parameter("tank_robot_plugin.neutral_stake_arm_settled_threshold_deg").as_double();
 
   m_neutral_stake_arm_des_pos = m_neutral_stake_arm_rest_pos_deg;
 }
@@ -157,15 +158,17 @@ void OmegaJerryPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("conveyor_active", false);
     bt_->set_variable<bool>("store_ring", false);
     bt_->set_variable<bool>("ring_detector_active", false);
+    bt_->set_variable<bool>("neutral_stake_settled", false);
   }
 
   TankRobotPlugin::autonomous(current_time);
 
   int neutral_stake_pos = 0;
   if (bt_->get_variable<int>("neutral_stake_pos", neutral_stake_pos)) {
-    updateNeutralStakeArmPosition(neutral_stake_pos);
+    bool is_settled = updateNeutralStakeArmPosition(neutral_stake_pos);
+    bt_->set_variable<bool>("neutral_stake_settled", is_settled);
   }
-  
+
   // Update Pneumatics
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<int>("clamp_closed"));
   if (m_mirrored) {
@@ -194,11 +197,11 @@ void OmegaJerryPlugin::teleop(double current_time)
   if (joy_data->btn_r && joy_data->btn_y && !m_buddy_pressed) {
     m_buddy_pressed = true;
     m_buddy_extended = !m_buddy_extended;
-  } else if(!joy_data->btn_r && !joy_data->btn_y) m_buddy_pressed = false;
+  } else if (!joy_data->btn_r && !joy_data->btn_y) {m_buddy_pressed = false;}
   rhi_ptr_->setDigitalOut(digital_io_port_map["buddy"], m_buddy_extended);
 }
 
-void OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
+bool OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
 {
   std::vector<double> arm_mode_position_map{
     m_neutral_stake_arm_rest_pos_deg,
@@ -238,10 +241,12 @@ void OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
 
   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", current_ma);
-  m_loop_current_limits.push_back(2*current_ma);
+  m_loop_current_limits.push_back(2 * current_ma);
 
   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", power);
   rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", power);
+
+  return std::fabs(position_error) < m_neutral_stake_arm_settled_threshold_deg;
 }
 
 void OmegaJerryPlugin::updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active)
@@ -280,7 +285,7 @@ void OmegaJerryPlugin::updateNeutralStakeArmController(bool up_btn, bool down_bt
   if (command_given) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", current_ma);
-    m_loop_current_limits.push_back(2*current_ma);
+    m_loop_current_limits.push_back(2 * current_ma);
     rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", power);
     rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", power);
   } else {
