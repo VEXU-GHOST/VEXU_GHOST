@@ -33,7 +33,8 @@
                   kd="0.0"
                   max_effort_percent="1.0"
                   timeout_ms="1000"
-                  xy_exit_threshold_tiles="1.0" />
+                  backwards="false"
+                  distance_tiles="1.0" />
               </BoundaryCheck>
               <Logging message="Timed Out" />
             </Sequence>

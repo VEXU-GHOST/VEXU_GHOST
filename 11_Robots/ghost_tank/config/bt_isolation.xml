@@ -14,11 +14,6 @@
     <Sequence>
       <Sequence>
         <Logging message="Starting main tree" />
-        <SubTree ID="test_arc_turns"
-          _autoremap="true"/>
-        <WaitCmd seconds="500.0"
-          shutoff_motors="true"/>
-
         <SubTree ID="win_point"
           _autoremap="true"/>
         <SubTree ID="grab_middle_goal"
@@ -169,7 +164,9 @@
     <Sequence>
       <Logging message="Starting winpoint"/>
       <NeutralStakeCmd state="3"
-        timeout="2.000"/>
+        timeout_ms="2000"/>
+      <NeutralStakeCmd state="2"
+        timeout_ms="10"/>
     </Sequence>
   </BehaviorTree>
 
@@ -177,18 +174,19 @@
     <Sequence>
       <Logging message="Starting jerryio"/>
       <ClampCmd clamp_closed="false"/>
-      <ArcturnToPoint posX_tiles="3.0"
+      <ArcturnToPoint posX_tiles="6.0"
         posY_tiles="1.0"
         timeout_ms="3000"
-        angle_exit_threshold_deg="3.0"
-        ang_vel_exit_threshold_dps="10.0"
-        drive_backwards="false"
+        angle_exit_threshold_deg="5.0"
+        ang_vel_exit_threshold_dps="180.0"
+        drive_backwards="true"
         face_backwards="true"/>
       <MoveToPoint kp="3.0"
         kd="0.0"
         max_effort_percent="0.3"
-        timeout_ms="2000"
-        xy_exit_threshold_tiles="-0.5"/>
+        timeout_ms="750"
+        backwards="true"
+        distance_tiles="0.5"/>
       <ClampCmd clamp_closed="true"/>
       <BiteCmd bite_closed="true"/>
       <IntakeCmd auto="true"

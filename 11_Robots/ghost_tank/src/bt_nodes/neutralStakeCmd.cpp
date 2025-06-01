@@ -45,7 +45,7 @@ BT::PortsList NeutralStakeCmd::providedPorts()
 {
   return {
     BT::InputPort<int>("state"),
-    BT::InputPort<double>("timeout"),
+    BT::InputPort<double>("timeout_ms"),
   };
 }
 
@@ -67,16 +67,16 @@ void NeutralStakeCmd::onHalted()
 BT::NodeStatus NeutralStakeCmd::onRunning()
 {
   int state = BT_Util::get_input<int>(this, "state");
-  double timeout = BT_Util::get_input<double>(this, "timeout");
+  double timeout_s = BT_Util::get_input<double>(this, "timeout_ms") / 1000.0;
   double current_time = 0.0;
   BT_Util::get_from_blackboard(blackboard_, "auton_time_elapsed", current_time);
   BT_Util::put_in_blackboard(blackboard_, "neutral_stake_pos", state);
 
 
-  if (timeout > (current_time - start_time_)) {
+  if (current_time > (start_time_ + timeout_s)) {
     std::cout << "Neutral Stake Arm timed out, exiting." << std::endl;
     return BT::NodeStatus::SUCCESS;
-  } else if (BT_Util::get_input<bool>(this, "neutral_stake_settled")) {
+  } else if (BT_Util::get_from_blackboard<bool>(blackboard_, "neutral_stake_settled")) {
     std::cout << "Neutral Stake Arm reached target, exiting." << std::endl;
     return BT::NodeStatus::SUCCESS;
   } else {

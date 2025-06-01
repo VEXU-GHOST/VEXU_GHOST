@@ -42,6 +42,8 @@ BT::PortsList ArcturnToPoint::providedPorts()
 
 BT::NodeStatus ArcturnToPoint::onStart()
 {
+  m_arc_turn_controller_ptr->reset();
+
   bool mirrored;
   BT_Util::get_from_blackboard(blackboard_, "mirrored", mirrored);
   start_time_ = std::chrono::system_clock::now();
@@ -87,7 +89,6 @@ BT::NodeStatus ArcturnToPoint::onRunning()
   std::cout << "theta error: " << theta_err_rad << std::endl;
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
-  std::cout << "time elapsed: " << time_elapsed << std::endl;
   if ((angle_satisfied && ang_vel_satisfied) || time_elapsed > timeout_ms) {
     tank_model_ptr_->driveCommandTank(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
@@ -95,16 +96,19 @@ BT::NodeStatus ArcturnToPoint::onRunning()
 
   auto command = m_arc_turn_controller_ptr->calculateCommand(theta_err_rad, -tank_model_ptr_->getWorldTwist().z());
 
-
   double cmd_sign = (command > 0.0) ? 1.0 : -1.0;
   cmd_sign = (std::fabs(command) > 0.01) ? cmd_sign : 0.0;
   double breaking = 0.01 * cmd_sign;
 
   if (use_right_side) {
+    std::cout << "use_right" << command << std::endl;
     tank_model_ptr_->driveCommandTank(-breaking, command);
   } else {
+    std::cout << "use_left: " << -command << std::endl;
     tank_model_ptr_->driveCommandTank(-command, breaking);
   }
+
+  std::cout << std::endl;
   visualization();
 
   return BT::NodeStatus::RUNNING;

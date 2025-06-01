@@ -44,14 +44,14 @@ imu_filter_node:
 competition_state_machine_node:
   ros__parameters:
     tank_robot_plugin:
-      neutral_stake_arm_kp: 0.03
+      neutral_stake_arm_kp: 0.05
       neutral_stake_arm_gear_ratio: 9.0 #3.0
       neutral_stake_arm_rest_pos_deg: 0.0
       neutral_stake_arm_loading_pos_deg: 30.0
       neutral_stake_arm_score_neutral_pos_deg: 110.0
-      neutral_stake_arm_score_alliance_pos_deg: 165.0
+      neutral_stake_arm_score_alliance_pos_deg: 160.0
       neutral_stake_arm_down_pos_deg: 240.0
-      neutral_stake_arm_settled_threshold_deg: 5.0
+      neutral_stake_arm_settled_threshold_deg: 15.0
 
       distance_approach:
         kp: 0.0
@@ -88,10 +88,6 @@ competition_state_machine_node:
         integral_limit: 0.35
         integral_activation_bound: 0.75
 
-      init_x_tiles: 2.0
-      init_y_tiles: 1.0
-      init_theta_degrees: 0.0
-
-      # init_x_tiles: 2.4
-      # init_y_tiles: 0.55
-      # init_theta_degrees: -20.0
+      init_x_tiles: 2.4
+      init_y_tiles: 0.55
+      init_theta_degrees: -20.0

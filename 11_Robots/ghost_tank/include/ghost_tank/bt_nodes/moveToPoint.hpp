@@ -39,8 +39,9 @@ private:
   double Kd{0.0};
   double Kp{0.0};
   int timeout_ms{0};
-  double xy_exit_threshold_m{0.0};
+  double distance_m{0.0};
   Eigen::Vector2d start_position_;
+  bool backwards{false};
 
   static constexpr double tile_to_meters = 0.6096;
 

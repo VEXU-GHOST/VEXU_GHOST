@@ -5,7 +5,7 @@
       <Logging message="Go to corner stack"/>
       <ParallelAll>
         <NeutralStakeCmd state="0"
-                        timeout="2.000"/>
+                        timeout_ms="2000"/>
         <Sequence>
           <LoadPathFromCSV
             file_path="test_path.txt"/>
@@ -77,7 +77,8 @@
             kd="0.0"
             max_effort_percent="0.5"
             timeout_ms="1000"
-            xy_exit_threshold_tiles="1.0"/>
+            backwards="true"
+            distance_tiles="1.0"/>
           <ShutoffNode/>
           <!-- <MoveVoltage forward_effort="-0.3" angular_effort="0.0" timeout_ms="500"/> -->
           <MoveToPoint 
@@ -85,7 +86,8 @@
             kd="0.0"
             max_effort_percent="0.5"
             timeout_ms="1000"
-            xy_exit_threshold_tiles="-0.5"/>
+            backwards="true"
+            distance_tiles="0.5"/>
           <ShutoffNode/>
           <ArcturnToPoint posX_tiles="0.0"
                       posY_tiles="0.0"
