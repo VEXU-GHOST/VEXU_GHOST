@@ -83,10 +83,10 @@ competition_state_machine_node:
 
       arc_turn:
         kp: 3.0
-        ki: 3.0
+        ki: 1.0
         kd: 0.3
         integral_limit: 0.35
-        integral_activation_bound: 0.75
+        integral_activation_bound: 0.5
 
       init_x_tiles: 2.4
       init_y_tiles: 0.55

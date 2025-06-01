@@ -49,7 +49,14 @@ double PIDController::calculateCommand(double error, double error_deriv, double 
   double integral_component = 0.0;
   if (std::fabs(error) <= config_.integral_activation_bound) {
     integral_sum_ += error * dt_;
-    integral_component = ghost_util::clamp(config_.ki * integral_sum_, -config_.integral_limit, config_.integral_limit);
+
+    double integral_sign = (integral_sum_ >= 0.0) ? 1.0 : -1.0;
+
+    if (std::fabs(config_.ki * integral_sum_) >= config_.integral_limit) {
+      integral_sum_ = integral_sign * config_.integral_limit / config_.ki;
+    }
+
+    integral_component = config_.ki * integral_sum_;
   } else {
     integral_sum_ = 0.0;  // Optional: clear it when outside zone
   }

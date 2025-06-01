@@ -32,7 +32,7 @@ LoadPathFromCSV::LoadPathFromCSV(const std::string & name, const BT::NodeConfig 
 : BT::StatefulActionNode(name, config)
 {
   std::cout << "[LoadPathFromCSV::LoadPathFromCSV]" << std::endl;
-  
+
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "config_path", config_path);
@@ -48,6 +48,7 @@ BT::PortsList LoadPathFromCSV::providedPorts()
 {
   return {
     BT::InputPort<std::string>("file_path"),
+    BT::InputPort<std::string>("backwards")
   };
 }
 
@@ -61,6 +62,7 @@ BT::NodeStatus LoadPathFromCSV::onRunning()
   // Load path from file
   auto file_path = BT_Util::get_input<std::string>(this, "file_path");
   auto path = ghost_util::readPathFromFile(config_path + '/' + file_path);
+  bool backwards = BT_Util::get_input<bool>(this, "backwards");
 
   // Clear trajectory
   int num_points = path[0].size();
@@ -75,11 +77,19 @@ BT::NodeStatus LoadPathFromCSV::onRunning()
     if (BT_Util::get_from_blackboard<bool>(blackboard_, "mirrored")) {
       tank_trajectory_ptr_->x[i] = 6.0 * ghost_util::TILES_TO_METERS - tank_trajectory_ptr_->x[i];
       tank_trajectory_ptr_->theta[i] = ghost_util::WrapAngle2PI(M_PI - tank_trajectory_ptr_->theta[i]);
+
+      if (backwards) {
+        tank_trajectory_ptr_->theta[i] = ghost_util::FlipAnglePi(tank_trajectory_ptr_->theta[i]);
+      }
     }
     tank_trajectory_ptr_->t[i] = static_cast<double>(i) / static_cast<double>(num_points);
   }
 
   tank_trajectory_ptr_->calculateRemainingPathLengths();
+
+  if (backwards) {
+    traj.backwards = true;
+  }
 
   if (node_ptr_) {
     viz_msg_.markers.clear();

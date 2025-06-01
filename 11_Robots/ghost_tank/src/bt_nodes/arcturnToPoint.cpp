@@ -85,9 +85,6 @@ BT::NodeStatus ArcturnToPoint::onRunning()
   double theta_err_rad = ghost_util::SmallestAngleDistRad(des_ang_rad, tank_model_ptr_->getWorldPose().z());
   bool angle_satisfied = std::fabs(theta_err_rad) < angle_exit_threshold_rad;
   bool ang_vel_satisfied = std::fabs(tank_model_ptr_->getWorldTwist().z()) < ang_vel_exit_threshold_rps;
-
-  std::cout << "theta error: " << theta_err_rad << std::endl;
-
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
   if ((angle_satisfied && ang_vel_satisfied) || time_elapsed > timeout_ms) {
     tank_model_ptr_->driveCommandTank(0.0, 0.0);
@@ -101,10 +98,8 @@ BT::NodeStatus ArcturnToPoint::onRunning()
   double breaking = 0.01 * cmd_sign;
 
   if (use_right_side) {
-    std::cout << "use_right" << command << std::endl;
     tank_model_ptr_->driveCommandTank(-breaking, command);
   } else {
-    std::cout << "use_left: " << -command << std::endl;
     tank_model_ptr_->driveCommandTank(-command, breaking);
   }
 
