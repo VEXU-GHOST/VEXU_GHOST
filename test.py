@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 from visualization_msgs.msg import Marker
+from std_msgs.msg import Float64MultiArray # Import Float64MultiArray
 from cv_bridge import CvBridge
 import numpy as np
 import cv2
@@ -9,9 +10,9 @@ from ultralytics import YOLO
 import time
 
 
-class RealSenseYOLO(Node):
+class RealSenseYOLOCombined(Node):
     def __init__(self):
-        super().__init__('realsense_yolo_node')
+        super().__init__('realsense_yolo_combined_node')
         self.model = YOLO("/home/ghost/VEXU_GHOST/best.pt")
         self.bridge = CvBridge()
 
@@ -25,8 +26,11 @@ class RealSenseYOLO(Node):
 
         self.marker_pub = self.create_publisher(Marker, '/detected_objects_marker', 10)
         self.processed_image_pub = self.create_publisher(Image, '/yolo_processed_image', 10)
+        # New publisher for X, Y coordinates
+        self.xy_publisher = self.create_publisher(Float64MultiArray, '/object_xy_positions', 10)
 
-        self.get_logger().info("RealSense YOLO node initialized.")
+
+        self.get_logger().info("RealSense YOLO Combined node initialized.")
 
     def camera_info_callback(self, msg):
         self.fx = msg.k[0]
@@ -102,19 +106,38 @@ class RealSenseYOLO(Node):
                 lowest_20 = sorted_depths[:num_low]
                 depth_m = np.mean(lowest_20) / 1000.0
 
-                X = (cx_px - self.cx) * depth_m / self.fx  # horizontal (RealSense X)
-                Y = (cy_px - self.cy) * depth_m / self.fy  # vertical (RealSense Y)
-                Z = depth_m  # forward (RealSense Z)
+                # RealSense camera coordinates
+                # X: horizontal (right from camera's perspective)
+                # Y: vertical (down from camera's perspective)
+                # Z: depth/forward (out from camera)
+                rs_X = (cx_px - self.cx) * depth_m / self.fx
+                rs_Y = (cy_px - self.cy) * depth_m / self.fy
+                rs_Z = depth_m
 
-                label = f"{class_name}: {box.conf.item():.2f}, Z: {Z:.2f}m"
+                # Map RealSense coordinates to RViz 'base_link' frame
+                # Assumption: RViz X is forward, RViz Y is left
+                # RealSense Z (forward) -> RViz X
+                # RealSense -X (left)   -> RViz Y
+                # RealSense Y (down)    -> RViz -Z (or 0.0 for 2D plane projection)
+                rviz_x = rs_Z
+                rviz_y = -rs_X # Note the negative sign for RViz Y
+
+                label = f"{class_name}: {box.conf.item():.2f}, Z: {rs_Z:.2f}m" # Label uses RealSense Z for clarity
                 cv2.putText(frame, label, (x1, lower_y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
                 self.get_logger().info(
-                    f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {Z:.2f}m, Y: {-X:.2f}m"
+                    f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {rviz_x:.2f}m, Y: {rviz_y:.2f}m"
                 )
 
-                # Fixed axis mapping for RViz (2D top-down): RealSense Z → RViz X, -RealSense X → RViz Y
-                self.publish_marker(Z, -X, 0.0)
+                # Publish Marker using the RViz X and Y
+                self.publish_marker(rviz_x, rviz_y, 0.0) # Z set to 0.0 for 2D plane visualization
+
+                # Publish X and Y coordinates as Float64MultiArray using the RViz X and Y
+                xy_array_msg = Float64MultiArray()
+                xy_array_msg.data = [rviz_x, rviz_y] # Using rviz_x and rviz_y directly
+                self.xy_publisher.publish(xy_array_msg)
+                self.get_logger().info(f"Published X: {rviz_x:.2f}, Y: {rviz_y:.2f} on /object_xy_positions")
+
 
         # Save processed image locally (optional)
         timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -152,7 +175,7 @@ class RealSenseYOLO(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = RealSenseYOLO()
+    node = RealSenseYOLOCombined()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
@@ -164,3 +187,7 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
+    #/detected_objects_marker
+    #/yolo_processed_image
+    #/object_xy_positions
