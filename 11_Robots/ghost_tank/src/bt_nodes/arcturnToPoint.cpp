@@ -42,26 +42,43 @@ BT::PortsList ArcturnToPoint::providedPorts()
 
 BT::NodeStatus ArcturnToPoint::onStart()
 {
+  bool mirrored;
   BT_Util::get_from_blackboard(blackboard_, "mirrored", mirrored);
   start_time_ = std::chrono::system_clock::now();
   m_arc_turn_controller_ptr->reset();
   if (mirrored) {
-    posX_m = 6.0 * tile_to_meters - posX_m;
+    posX_m = 6.0 * ghost_util::TILES_TO_METERS - posX_m;
+  }
+
+  calculateDesiredAngle();
+
+  double init_error = ghost_util::SmallestAngleDistRad(des_ang_rad, tank_model_ptr_->getWorldPose().z());
+  bool turn_right = init_error > 0.0;
+
+  if (drive_backwards) {
+    use_right_side = !turn_right;
+  } else {
+    use_right_side = turn_right;
   }
 
   return BT::NodeStatus::RUNNING;
 }
 
-BT::NodeStatus ArcturnToPoint::onRunning()
+void ArcturnToPoint::calculateDesiredAngle()
 {
   double cur_x = tank_model_ptr_->getWorldPose().x();
   double cur_y = tank_model_ptr_->getWorldPose().y();
 
   des_ang_rad = std::atan2(posY_m - cur_y, posX_m - cur_x);
-  
+
   if (face_backwards) {
     des_ang_rad = ghost_util::FlipAnglePI(des_ang_rad);
   }
+}
+
+BT::NodeStatus ArcturnToPoint::onRunning()
+{
+  calculateDesiredAngle();
 
   double theta_err_rad = ghost_util::SmallestAngleDistRad(des_ang_rad, tank_model_ptr_->getWorldPose().z());
   bool angle_satisfied = std::fabs(theta_err_rad) < angle_exit_threshold_rad;
@@ -78,16 +95,21 @@ BT::NodeStatus ArcturnToPoint::onRunning()
 
   auto command = m_arc_turn_controller_ptr->calculateCommand(theta_err_rad, -tank_model_ptr_->getWorldTwist().z());
 
-  if (use_left_side) {
-    tank_model_ptr_->driveCommandTank(command, 0.0);
+
+  double cmd_sign = (command > 0.0) ? 1.0 : -1.0;
+  cmd_sign = (std::fabs(command) > 0.01) ? cmd_sign : 0.0;
+  double breaking = 0.01 * cmd_sign;
+
+  if (use_right_side) {
+    tank_model_ptr_->driveCommandTank(-breaking, command);
   } else {
-    tank_model_ptr_->driveCommandTank(0.0, command);
+    tank_model_ptr_->driveCommandTank(-command, breaking);
   }
   visualization();
 
   return BT::NodeStatus::RUNNING;
-}
 
+}
 void ArcturnToPoint::onHalted()
 {
   resetStatus();

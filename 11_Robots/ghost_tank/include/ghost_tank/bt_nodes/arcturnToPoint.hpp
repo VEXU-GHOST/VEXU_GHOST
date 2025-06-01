@@ -33,6 +33,7 @@ public:
   void visualization();
 
 private:
+  void calculateDesiredAngle();
   std::shared_ptr<TankModel> tank_model_ptr_;
   std::chrono::time_point<std::chrono::system_clock> start_time_;
   BT::Blackboard::Ptr blackboard_;
@@ -47,9 +48,9 @@ private:
   double angle_exit_threshold_rad;
   double ang_vel_exit_threshold_rps;
   double des_ang_rad;
-    bool drive_backwards;
-    bool face_backwards;
-  static constexpr double tile_to_meters = 0.6096;
+  bool drive_backwards;
+  bool face_backwards;
+  bool use_right_side;
 };
 
 } // namespace ghost_tank

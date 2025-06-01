@@ -72,8 +72,8 @@
         timeout_ms="3000"
         angle_exit_threshold_deg="3.0"
         ang_vel_exit_threshold_dps="10.0"
-        drive_backwards="false"
-        face_backwards="true"/>
+        drive_backwards="true"
+        face_backwards="false"/>
       <WaitCmd seconds="1.0"
         shutoff_motors="true"/>
 
@@ -82,8 +82,8 @@
         timeout_ms="3000"
         angle_exit_threshold_deg="3.0"
         ang_vel_exit_threshold_dps="10.0"
-        drive_backwards="false"
-        face_backwards="false"/>
+        drive_backwards="true"
+        face_backwards="true"/>
       <WaitCmd seconds="1.0"
         shutoff_motors="true"/>
     </Sequence>
@@ -183,7 +183,7 @@
         angle_exit_threshold_deg="3.0"
         ang_vel_exit_threshold_dps="10.0"
         drive_backwards="false"
-        backwards="true"/>
+        face_backwards="true"/>
       <MoveToPoint kp="3.0"
         kd="0.0"
         max_effort_percent="0.3"
