@@ -91,7 +91,7 @@ BT::NodeStatus FollowPath::onStart()
 BT::NodeStatus FollowPath::onRunning()
 {
   if (checkEndConditions()) {
-    tank_model_ptr_->driveCommand(0.0, 0.0);
+    tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
   }
 
@@ -106,7 +106,7 @@ BT::NodeStatus FollowPath::onRunning()
   // Unpack and send final command to drivetrain
   fwd_command_ = command.x();
   turn_command_ = command.y();
-  tank_model_ptr_->driveCommand(fwd_command_, turn_command_);
+  tank_model_ptr_->driveCommandArcade(fwd_command_, turn_command_);
 
   updateVisualization();
 
@@ -198,7 +198,7 @@ bool FollowPath::checkEndConditions()
 
 void FollowPath::onHalted()
 {
-  tank_model_ptr_->driveCommand(0.0, 0.0);
+  tank_model_ptr_->driveCommandArcade(0.0, 0.0);
   resetStatus();
 }
 

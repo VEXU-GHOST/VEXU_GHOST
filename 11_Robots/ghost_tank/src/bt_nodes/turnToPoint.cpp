@@ -54,11 +54,11 @@ BT::NodeStatus TurnToPoint::onRunning()
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
   if (angle_satisfied || time_elapsed > timeout_ms) {
-    tank_model_ptr_->driveCommand(0.0, 0.0);
+    tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
   }
 
-  tank_model_ptr_->driveCommand(0.0, m_arc_turn_controller_ptr->calculateCommand(theta_err_rad, -tank_model_ptr_->getWorldTwist().z()));
+  tank_model_ptr_->driveCommandArcade(0.0, m_arc_turn_controller_ptr->calculateCommand(theta_err_rad, -tank_model_ptr_->getWorldTwist().z()));
   return BT::NodeStatus::RUNNING;
 }
 

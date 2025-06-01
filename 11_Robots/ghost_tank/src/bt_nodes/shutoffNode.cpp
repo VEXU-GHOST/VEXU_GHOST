@@ -50,7 +50,7 @@
  
  BT::NodeStatus ShutoffNode::tick()
  {
-	tank_model_ptr_->driveCommand(0.0, 0.0);
+	tank_model_ptr_->driveCommandArcade(0.0, 0.0);
 
 	return BT::NodeStatus::SUCCESS;
  }

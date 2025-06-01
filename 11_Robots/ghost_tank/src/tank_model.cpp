@@ -141,7 +141,7 @@ void TankModel::normalizeArcadeCommand(Eigen::Vector2d & cmd)
 }
 
 
-void TankModel::driveCommand(double fwd_pct, double ang_pct)
+void TankModel::driveCommandArcade(double fwd_pct, double ang_pct)
 {
   ghost_util::clamp(fwd_pct, -1.0, 1.0);
   ghost_util::clamp(ang_pct, -1.0, 1.0);
@@ -159,6 +159,22 @@ void TankModel::driveCommand(double fwd_pct, double ang_pct)
   }
 }
 
+void TankModel::driveCommandTank(double left_pct, double right_pct)
+{
+  ghost_util::clamp(left_pct, -1.0, 1.0);
+  ghost_util::clamp(right_pct, -1.0, 1.0);
+
+  for (const auto motor_name: m_config.motor_list_left) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_name, left_pct);
+  }
+
+  for (const auto motor_name: m_config.motor_list_right) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_name, right_pct);
+  }
+}
+
 void TankModel::driveCommandJoystick(double fwd, double ang, double deadzone)
 {
   double forward_vel = fwd / 127.0;
@@ -167,7 +183,7 @@ void TankModel::driveCommandJoystick(double fwd, double ang, double deadzone)
   forward_vel = (std::fabs(forward_vel) < deadzone) ? 0.0 : forward_vel;
   angular_vel = (std::fabs(angular_vel) < deadzone) ? 0.0 : angular_vel;
 
-  driveCommand(forward_vel, angular_vel);
+  driveCommandArcade(forward_vel, angular_vel);
 }
 
 } // namespace ghost_tank

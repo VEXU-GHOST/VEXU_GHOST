@@ -63,7 +63,7 @@ BT::NodeStatus WaitCmd::onRunning() {
   double timeout = BT_Util::get_input<double>(this, "seconds");
   bool shutoff = BT_Util::get_input<bool>(this, "shutoff_motors", false);
   if (shutoff){
-	  tank_model_ptr_->driveCommand(0.0, 0.0);
+	  tank_model_ptr_->driveCommandArcade(0.0, 0.0);
   }
 
   double current_time = 0.0;

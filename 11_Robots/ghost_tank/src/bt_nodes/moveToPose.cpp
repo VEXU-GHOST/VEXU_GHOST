@@ -188,7 +188,7 @@ void MoveToPose::PurePursuit()
   BT_Util::put_in_blackboard(blackboard_, "fwd_cmd", fwd_cmd);
   BT_Util::put_in_blackboard(blackboard_, "turn_cmd", turn_cmd);
 
-  tank_model_ptr_->driveCommand(fwd_cmd, turn_cmd);
+  tank_model_ptr_->driveCommandArcade(fwd_cmd, turn_cmd);
 }
 
 void MoveToPose::publishDrivetrainCommands(double fwd_cmd, double turn_cmd)

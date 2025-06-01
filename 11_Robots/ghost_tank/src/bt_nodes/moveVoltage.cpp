@@ -63,17 +63,17 @@ BT::NodeStatus MoveVoltage::onRunning()
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
   if (time_elapsed > abs(timeout_ms)) {
-    tank_model_ptr_->driveCommand(0.0, 0.0);
+    tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
   }
 
-  tank_model_ptr_->driveCommand(forward_effort, angular_effort);
+  tank_model_ptr_->driveCommandArcade(forward_effort, angular_effort);
   return BT::NodeStatus::RUNNING;
 }
 
 void MoveVoltage::onHalted()
 {
-  tank_model_ptr_->driveCommand(0.0, 0.0);
+  tank_model_ptr_->driveCommandArcade(0.0, 0.0);
   resetStatus();
 }
 

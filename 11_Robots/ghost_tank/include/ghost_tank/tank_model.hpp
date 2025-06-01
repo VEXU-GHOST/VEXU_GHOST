@@ -197,7 +197,9 @@ public:
    */
   void normalizeArcadeCommand(Eigen::Vector2d & cmd);
 
-  void driveCommand(double fwd_vel, double ang_vel);
+  void driveCommandArcade(double fwd_vel, double ang_vel);
+  void driveCommandTank(double left_pct, double right_pct);
+
   void driveCommandJoystick(double fwd_vel, double ang_vel, double deadzone);
 
 protected:
