@@ -41,6 +41,7 @@ private:
     int timeout_ms;
     double angle_exit_threshold_rad;
     double des_ang_rad;
+    bool backwards;
 };
 
 } // namespace ghost_tank

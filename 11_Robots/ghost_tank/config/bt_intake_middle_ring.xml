@@ -91,14 +91,14 @@
         deceleration_exponent="1.5"
         min_approach_velocity_tps="0.05"/>
 
-      <GenerateBezierPath end_x_tiles="4.0"
-        end_y_tiles="1.5"
+      <GenerateBezierPath end_x_tiles="3.25"
+        end_y_tiles="1.2"
         end_theta_deg="0.0"
         lead_tiles="0.8"
         backwards="false"
         type="CUBIC_BEZIER"
         num_points="250"/>
-      <FollowPathPurePursuit xy_exit_threshold_tiles="0.75"
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.5"
         angle_exit_threshold_deg="10.0"
         lin_vel_exit_threshold_tps="3.0"
         ang_vel_exit_threshold_dps="90.0"

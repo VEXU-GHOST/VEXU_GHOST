@@ -49,7 +49,7 @@ competition_state_machine_node:
       neutral_stake_arm_rest_pos_deg: 0.0
       neutral_stake_arm_loading_pos_deg: 30.0
       neutral_stake_arm_score_neutral_pos_deg: 110.0
-      neutral_stake_arm_score_alliance_pos_deg: 160.0
+      neutral_stake_arm_score_alliance_pos_deg: 165.0
       neutral_stake_arm_down_pos_deg: 240.0
       neutral_stake_arm_settled_threshold_deg: 15.0
 
@@ -71,22 +71,22 @@ competition_state_machine_node:
         kp: 0.2
         ki: 2.0
         kd: 0.1
-        integral_limit: 0.35
+        integral_limit: 0.5
         integral_activation_bound: 1.0
 
       steering_settling:
-        kp: 0.2
+        kp: 0.4
         ki: 2.0
-        kd: 0.2
+        kd: 0.3
         integral_limit: 0.5
         integral_activation_bound: 10.0
 
       arc_turn:
         kp: 2.0
-        ki: 3.0
+        ki: 10.0
         kd: 0.2
         integral_limit: 0.4
-        integral_activation_bound: 0.5
+        integral_activation_bound: 0.2
 
       init_x_tiles: 2.4
       init_y_tiles: 0.55

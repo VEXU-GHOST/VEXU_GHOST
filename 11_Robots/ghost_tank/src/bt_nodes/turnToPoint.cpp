@@ -16,6 +16,7 @@ TurnToPoint::TurnToPoint(const std::string & name, const BT::NodeConfig & config
   posX_m = BT_Util::get_input<double>(this, "posX_tiles") * ghost_util::TILES_TO_METERS;
   posY_m = BT_Util::get_input<double>(this, "posY_tiles") * ghost_util::TILES_TO_METERS;
   timeout_ms = BT_Util::get_input<int>(this, "timeout_ms");
+  backwards = BT_Util::get_input<bool>(this, "backwards");
   angle_exit_threshold_rad = BT_Util::get_input<double>(this, "angle_exit_threshold_deg", 5.0) * ghost_util::DEG_TO_RAD;
 }
 
@@ -24,6 +25,7 @@ BT::PortsList TurnToPoint::providedPorts()
   return {
     BT::InputPort<double>("posX_tiles"),
     BT::InputPort<double>("posY_tiles"),
+    BT::InputPort<bool>("backwards"),
     BT::InputPort<int>("timeout_ms"),
     BT::InputPort<double>("angle_exit_threshold_deg")
   };
@@ -43,6 +45,11 @@ BT::NodeStatus TurnToPoint::onStart()
 
   start_time_ = std::chrono::system_clock::now();
   des_ang_rad = std::atan2(posY_m - cur_y, posX_m - cur_x);
+
+  if (backwards) {
+    des_ang_rad = ghost_util::FlipAnglePI(des_ang_rad);
+  }
+
   m_arc_turn_controller_ptr->reset();
   return BT::NodeStatus::RUNNING;
 }
