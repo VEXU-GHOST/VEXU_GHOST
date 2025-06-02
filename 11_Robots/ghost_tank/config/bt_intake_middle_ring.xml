@@ -67,6 +67,53 @@
     </Sequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="skip_middle_ring">
+    <Sequence>
+      <Logging message="Skipping intake_middle_ring" />
+      <GenerateBezierPath end_x_tiles="1.0"
+        end_y_tiles="1.5"
+        end_theta_deg="-0.0"
+        lead_tiles="0.8"
+        backwards="true"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.25"
+        angle_exit_threshold_deg="10.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="90.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="3000"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.5"
+        min_approach_velocity_tps="0.05"/>
+
+      <GenerateBezierPath end_x_tiles="4.0"
+        end_y_tiles="1.5"
+        end_theta_deg="0.0"
+        lead_tiles="0.8"
+        backwards="false"
+        type="CUBIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.75"
+        angle_exit_threshold_deg="10.0"
+        lin_vel_exit_threshold_tps="3.0"
+        ang_vel_exit_threshold_dps="90.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="3000"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="0.1"
+        deceleration_exponent="1.0"
+        min_approach_velocity_tps="0.05"/>
+    </Sequence>
+  </BehaviorTree>
+
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
     <Action ID="BiteCmd"

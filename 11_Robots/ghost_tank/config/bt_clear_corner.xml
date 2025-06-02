@@ -76,7 +76,7 @@
 
         <MoveToPoint kp="5.0"
           kd="0.0"
-          max_effort_percent="0.5"
+          max_effort_percent="1.0"
           timeout_ms="1000"
           backwards="true"
           distance_tiles="0.75"/>
