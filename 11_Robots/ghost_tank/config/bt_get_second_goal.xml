@@ -34,14 +34,14 @@
           <WaitCmd seconds="0.25" shutoff_motors="false" />
 
           <MoveToPoint kp="5.0"
-            kd="1.0"
+            kd="0.2"
             max_effort_percent="0.5"
             timeout_ms="850"
             backwards="true"
             distance_tiles="0.5"/>
 
           <MoveToPoint kp="5.0"
-            kd="1.0"
+            kd="0.2"
             max_effort_percent="0.5"
             timeout_ms="850"
             backwards="false"
