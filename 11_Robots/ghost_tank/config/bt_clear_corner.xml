@@ -7,10 +7,10 @@
         <NeutralStakeCmd state="0"
           timeout_ms="10"/>
         <Sequence>
-          <GenerateBezierPath end_x_tiles="0.75"
-            end_y_tiles="1.5"
-            end_theta_deg="115.0"
-            lead_tiles="1.25"
+          <GenerateBezierPath end_x_tiles="0.7"
+            end_y_tiles="1.75"
+            end_theta_deg="100.0"
+            lead_tiles="1.3"
             backwards="false"
             type="QUADRATIC_BEZIER"
             num_points="250"/>
@@ -86,22 +86,19 @@
       <Sequence>
         <MoveToPoint kp="5.0"
           kd="0.0"
-          max_effort_percent="1.0"
+          max_effort_percent="0.7"
           timeout_ms="1000"
           backwards="false"
           distance_tiles="1.0"/>
         <ShutoffNode/>
 
         <MoveToPoint kp="5.0"
-          kd="0.0"
+          kd="0.2"
           max_effort_percent="1.0"
           timeout_ms="1500"
           backwards="true"
           distance_tiles="0.75"/>
         <ShutoffNode/>
-
-        <WaitCmd seconds="0.25"
-          shutoff_motors="true" />
 
         <MoveToPoint kp="5.0"
           kd="0.0"
@@ -110,8 +107,6 @@
           backwards="false"
           distance_tiles="1.0"/>
         <ShutoffNode/>
-        <WaitCmd seconds="0.25"
-          shutoff_motors="true" />
       </Sequence>
       <ShutoffNode/>
     </Sequence>

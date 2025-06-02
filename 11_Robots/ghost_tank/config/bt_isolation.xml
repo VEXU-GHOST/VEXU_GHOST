@@ -178,8 +178,8 @@
       <ArcturnToPoint posX_tiles="6.0"
         posY_tiles="1.0"
         timeout_ms="3000"
-        angle_exit_threshold_deg="5.0"
-        ang_vel_exit_threshold_dps="30.0"
+        angle_exit_threshold_deg="7.5"
+        ang_vel_exit_threshold_dps="40.0"
         drive_backwards="true"
         face_backwards="true"/>
       <MoveToPoint kp="3.0"
