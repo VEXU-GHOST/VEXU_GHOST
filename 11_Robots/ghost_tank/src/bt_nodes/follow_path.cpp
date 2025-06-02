@@ -105,12 +105,8 @@ BT::NodeStatus FollowPath::onRunning()
   // Get control commands from derived class
   Eigen::Vector2d command = calculateControllerCommand();
 
-  std::cout << "Raw command: " << command << std::endl;
-
   // Normalize to avoid saturation
   tank_model_ptr_->normalizeArcadeCommand(command);
-
-  std::cout << "normalizeArcadeCommand: " << command << std::endl;
 
   // Unpack and send final command to drivetrain
   fwd_command_ = command.x();
