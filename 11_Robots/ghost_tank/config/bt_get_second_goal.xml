@@ -4,12 +4,14 @@
     <Sequence>
       <ParallelAll>
         <IntakeCmd auto="true"
-          ground_intake="true"/>
+          ground_intake="true"
+          store_ring="true"/>
+        <ClampCmd clamp_closed="false"/>
         <Sequence>
           <GenerateBezierPath end_x_tiles="1.75"
             end_y_tiles="1.5"
             end_theta_deg="150.0"
-            lead_tiles="0.5"
+            lead_tiles="0.75"
             backwards="false"
             type="QUADRATIC_BEZIER"
             num_points="250"/>
@@ -20,14 +22,12 @@
             max_speed_linear_percent="0.75"
             max_speed_angular_percent="1.0"
             timeout_ms="2000"
-            use_theta="true"
+            use_theta="false"
             min_pursuit_radius_tiles="0.3"
             k_lookahead="0.2"
             deceleration_start_distance_tiles="1.0"
             deceleration_exponent="2.0"
             min_approach_velocity_tps="0.1"/>
-          <!-- 
-            <ArcturnToPoint posX_tiles="0.0" posY_tiles="0.0" timeout_ms="3000" angle_exit_threshold_deg="1.0" ang_vel_exit_threshold_dps="10.0" drive_backwards="false" face_backwards="true"/> -->
 
           <GenerateBezierPath end_x_tiles="0.5"
             end_y_tiles="2.0"
@@ -36,7 +36,7 @@
             backwards="false"
             type="QUADRATIC_BEZIER"
             num_points="250"/>
-          <FollowPathPurePursuit xy_exit_threshold_tiles="0.15"
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
             angle_exit_threshold_deg="10.0"
             lin_vel_exit_threshold_tps="2.0"
             ang_vel_exit_threshold_dps="20.0"
@@ -52,7 +52,7 @@
 
           <GenerateBezierPath end_x_tiles="1.0"
             end_y_tiles="1.5"
-            end_theta_deg="-90.0"
+            end_theta_deg="90.0"
             lead_tiles="0.5"
             backwards="true"
             type="QUADRATIC_BEZIER"
@@ -64,14 +64,49 @@
             max_speed_linear_percent="1.0"
             max_speed_angular_percent="1.0"
             timeout_ms="2000"
-            use_theta="true"
+            use_theta="false"
             min_pursuit_radius_tiles="0.3"
             k_lookahead="0.2"
             deceleration_start_distance_tiles="1.0"
             deceleration_exponent="2.0"
             min_approach_velocity_tps="0.1"/>
+
+          <TurnToPoint posX_tiles="1.0"
+            posY_tiles="3.0"
+            timeout_ms="1500"
+            backwards="true"
+            angle_exit_threshold_deg="1.0"/>
+
+
+          <GenerateBezierPath end_x_tiles="1.0"
+            end_y_tiles="2.8"
+            end_theta_deg="-90.0"
+            lead_tiles="0.5"
+            backwards="true"
+            type="CUBIC_BEZIER"
+            num_points="250"/>
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+            angle_exit_threshold_deg="5.0"
+            lin_vel_exit_threshold_tps="0.2"
+            ang_vel_exit_threshold_dps="30.0"
+            max_speed_linear_percent="0.4"
+            max_speed_angular_percent="1.0"
+            timeout_ms="2000"
+            use_theta="false"
+            min_pursuit_radius_tiles="0.3"
+            k_lookahead="0.2"
+            deceleration_start_distance_tiles="1.0"
+            deceleration_exponent="2.0"
+            min_approach_velocity_tps="0.1"/>
+
+
         </Sequence>
       </ParallelAll>
+      <ClampCmd clamp_closed="true"/>
+
+      <IntakeCmd auto="true"
+        ground_intake="false"
+        store_ring="false"/>
     </Sequence>
   </BehaviorTree>
 

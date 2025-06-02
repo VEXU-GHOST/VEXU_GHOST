@@ -85,7 +85,7 @@ competition_state_machine_node:
         kp: 2.0
         ki: 10.0
         kd: 0.2
-        integral_limit: 0.4
+        integral_limit: 0.75
         integral_activation_bound: 0.2
 
       init_x_tiles: 2.4
