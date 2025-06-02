@@ -8,6 +8,7 @@
   <include path="bt_clear_corner.xml"/>
   <include path="bt_corner_shove.xml"/>
   <include path="bt_intake_middle_ring.xml"/>
+  <include path="bt_grab_top_ring_neg_stack.xml"/>
   <!-- <include path="bt_skills.xml"/> -->
 
   <BehaviorTree ID="main_tree">
@@ -20,15 +21,12 @@
           _autoremap="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
-
-
+        <SubTree ID="grab_top_ring_neg_stack"
+          _autoremap="true"/>
         <SubTree ID="intake_middle_ring"
           _autoremap="true"/>
 
-        <!-- <WaitCmd seconds="500.0"
-          shutoff_motors="true"/> -->
-        <!-- <IntakeCmd auto="false" ground_intake="false"/> -->
-        <SetMirrored mirrored="true"/>
+          <SetMirrored mirrored="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
         <SubTree ID="corner_shove"
