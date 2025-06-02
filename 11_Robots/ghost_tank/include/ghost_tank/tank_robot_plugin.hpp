@@ -286,6 +286,8 @@ protected:
 
   // ring detection
   bool m_ring_found = false;
+  double m_ring_score_timeout = 0.5;
+  double m_ring_prewait_time = 0.0;
   int m_ring_color = 0;
   std::map<std::string, int> m_color_map;
 };

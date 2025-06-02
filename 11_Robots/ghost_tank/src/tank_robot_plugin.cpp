@@ -353,6 +353,12 @@ void TankRobotPlugin::initAutonomy()
   node_ptr_->declare_parameter<std::string>("config_path");
   std::string config_path = node_ptr_->get_parameter("config_path").as_string();
 
+  node_ptr_->declare_parameter<double>("tank_robot_plugin.ring_score_timeout");
+  m_ring_score_timeout = node_ptr_->get_parameter("tank_robot_plugin.ring_score_timeout").as_double();
+  
+  node_ptr_->declare_parameter<double>("tank_robot_plugin.ring_prewait_time");
+  m_ring_prewait_time = node_ptr_->get_parameter("tank_robot_plugin.ring_prewait_time").as_double();
+
   bt_ = std::make_shared<TankTree>(bt_path);
   bt_->set_variable("rhi_ptr", rhi_ptr_);
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
@@ -552,6 +558,10 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   static bool running = false;
   static bool retry_mode = false;
   static double retry_start_time = 0.0;
+  static int last_color = 0;
+
+  static std::queue<int> ring_queue;
+  static std::queue<double> ring_time_queue;
 
   // Constants (adjust as needed for your specific system)
   const double STUCK_TIMEOUT = 1.5;      // Time to consider a ring stuck
@@ -605,58 +615,68 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   }
 
   // Normal processing
-  bool ring_prewaited = (current_time - ring_found_time > 0.3) && m_ring_found && !retry_mode;
-  if (ring_prewaited) {
-    last_input_time = current_time;
+  bool hook = false;
+  bool ring_prewaited = (current_time - ring_found_time > m_ring_prewait_time);
+  if (ring_prewaited && m_ring_found && !retry_mode) {
+    // last_input_time = current_time;
+    hook = true;
+  } else if (ring_prewaited && !m_ring_found) {
+    ring_found_time = 1000000.0;
+    ring_queue.push(last_color);
+    ring_time_queue.push(current_time);
   }
 
   // Determine hook and eject status
-  bool hook = false;
   if (retry_mode) {
     // During retry: alternate between hook on/off with a small cooldown period
     double retry_cycle = fmod(current_time - retry_start_time, COOLDOWN_PERIOD * 2);
     hook = (retry_cycle < COOLDOWN_PERIOD);
-  } else {
+  } else if (!ring_queue.empty()) {
     // Normal hook logic
     if (store_ring) {
       // should not score the ring, will be stored in the center of the robot
-      hook = ring_prewaited;
+      hook = true;
     } else {
       // If not storing, keep hooks moving for an extra period of time to ensure scoring
-      hook = ring_prewaited || (current_time - last_input_time < 0.5);
-    }
-    if (store_ring) {
-      // should not score the ring, will be stored in the center of the robot
-      hook = ring_prewaited;
-    } else {
-      // If not storing, keep hooks moving for an extra period of time to ensure scoring
-      hook = ring_prewaited || (current_time - last_input_time < 0.5);
+      bool scoring_ring = current_time - ring_time_queue.front() < m_ring_score_timeout;
+      hook = true;
+      if (!scoring_ring) {
+        ring_queue.pop();
+        ring_time_queue.pop();
+      }
     }
   }
 
   bool ejecting = false;
   static double last_eject_time = 0.0;
   bool eject = false;
-  if (!retry_mode) {  // Don't eject during retry attempts
+  if (!retry_mode && !ring_queue.empty()) {  // Don't eject during retry attempts
     if (want_red) {
-      eject = (m_ring_color == m_color_map["blue"]); //&& ring_prewaited;
+      ejecting = (ring_queue.front() == m_color_map["blue"]); //&& ring_prewaited;
     } else {
-      eject = (m_ring_color == m_color_map["red"]); //&& ring_prewaited;
+      ejecting = (ring_queue.front() == m_color_map["red"]); //&& ring_prewaited;
     }
   }
 
-  if (eject) {
-    last_eject_time = current_time;
-  }
-  if (current_time - last_eject_time < 0.0) {
-    last_eject_time = 0.0;
-  }
-  if (current_time - last_eject_time < 1.0) {
-    ejecting = true;
-  }
+  // if (eject) {
+  //   last_eject_time = current_time;
+  // }
+  // if (current_time - last_eject_time < 0.0) {
+  //   last_eject_time = 0.0;
+  // }
+  // if (current_time - last_eject_time < 1.0) {
+  //   ejecting = true;
+  // }
   if (ejecting) {
     hook = false;
   }
+  // std::cout << "hook: " << hook << std::endl;
+  // std::cout << "ejecting: " << ejecting << std::endl;
+  // std::cout << "queue.size: " << ring_queue.size() << std::endl;
+  // std::cout << "queue.front: " << ring_queue.front() << std::endl;
+
+  last_color = m_ring_color;
+  // std::cout << "queue.back: " << ring_queue.back() << std::endl;
   // Call motor control with determined states
   updateIntake(true, hook, ejecting, !hook && retry_mode, current_time);
 }

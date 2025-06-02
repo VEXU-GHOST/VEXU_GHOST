@@ -25,6 +25,9 @@ competition_state_machine_node:
       conveyor_hook_throw_fraction: 0.5
       conveyor_hook_throw_duration: 0.25
 
+      ring_score_timeout: 0.3
+      ring_prewait_time: 0.05
+
       neutral_stake_arm_kp: 0.03
       neutral_stake_arm_gear_ratio: 3.0
       neutral_stake_arm_rest_pos_deg: 0.0

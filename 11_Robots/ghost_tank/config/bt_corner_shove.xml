@@ -10,7 +10,7 @@
             end_theta_deg="45.0"
             lead_tiles="0.2"
             backwards="false"
-            type="QUADRATIC_BEZIER"
+            type="CUBIC_BEZIER"
             num_points="250"/>
           <FollowPathPurePursuit xy_exit_threshold_tiles="0.05"
             angle_exit_threshold_deg="3.0"
