@@ -20,11 +20,13 @@
           _autoremap="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
-        <WaitCmd seconds="500.0"
-          shutoff_motors="true"/>
+
 
         <SubTree ID="intake_middle_ring"
           _autoremap="true"/>
+
+        <WaitCmd seconds="500.0"
+          shutoff_motors="true"/>
         <!-- <IntakeCmd auto="false" ground_intake="false"/> -->
         <SetMirrored mirrored="true"/>
         <SubTree ID="clear_negative_corner"
@@ -176,23 +178,19 @@
         posY_tiles="1.0"
         timeout_ms="3000"
         angle_exit_threshold_deg="5.0"
-        ang_vel_exit_threshold_dps="10.0"
+        ang_vel_exit_threshold_dps="30.0"
         drive_backwards="true"
         face_backwards="true"/>
-      <WaitCmd seconds="0.01"
-        shutoff_motors="true"/>
       <MoveToPoint kp="3.0"
         kd="0.0"
-        max_effort_percent="0.3"
-        timeout_ms="1000"
+        max_effort_percent="0.4"
+        timeout_ms="800"
         backwards="true"
-        distance_tiles="0.5"/>
+        distance_tiles="0.4"/>
       <ClampCmd clamp_closed="true"/>
       <BiteCmd bite_closed="true"/>
       <IntakeCmd auto="true"
         ground_intake="false"/>
-      <WaitCmd seconds="0.1"
-        shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
 
