@@ -40,7 +40,7 @@
             angle_exit_threshold_deg="10.0"
             lin_vel_exit_threshold_tps="2.0"
             ang_vel_exit_threshold_dps="20.0"
-            max_speed_linear_percent="0.5"
+            max_speed_linear_percent="0.75"
             max_speed_angular_percent="1.0"
             timeout_ms="2000"
             use_theta="false"

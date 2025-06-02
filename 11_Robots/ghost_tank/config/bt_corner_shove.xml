@@ -15,7 +15,7 @@
           posY_tiles="0.1"
           timeout_ms="1000"
           backwards="true"
-          angle_exit_threshold_deg="0.3"/>
+          angle_exit_threshold_deg="1.0"/>
 
         <ClampCmd clamp_closed="false"/>
         <MoveToPoint kp="5.0"
