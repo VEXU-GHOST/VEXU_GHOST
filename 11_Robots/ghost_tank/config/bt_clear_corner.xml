@@ -50,35 +50,34 @@
             deceleration_exponent="1.5"
             min_approach_velocity_tps="0.05"/>
 
-          <GenerateBezierPath end_x_tiles="0.75"
-            end_y_tiles="0.75"
+          <GenerateBezierPath end_x_tiles="1.0"
+            end_y_tiles="1.0"
             end_theta_deg="-135.0"
-            lead_tiles="0.5"
+            lead_tiles="1.0"
             backwards="false"
-            type="CUBIC_BEZIER"
+            type="QUADRATIC_BEZIER"
             num_points="250"/>
 
-          <FollowPathPurePursuit xy_exit_threshold_tiles="0.05"
-            angle_exit_threshold_deg="2.0"
-            lin_vel_exit_threshold_tps="1.0"
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.25"
+            angle_exit_threshold_deg="10.0"
+            lin_vel_exit_threshold_tps="10.0"
             ang_vel_exit_threshold_dps="10.0"
-            max_speed_linear_percent="0.5"
+            max_speed_linear_percent="1.0"
             max_speed_angular_percent="1.0"
             timeout_ms="2000"
-            use_theta="true"
-            min_pursuit_radius_tiles="0.25"
-            k_lookahead="0.2"
-            deceleration_start_distance_tiles="0.5"
+            use_theta="false"
+            min_pursuit_radius_tiles="0.7"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="0.25"
             deceleration_exponent="1.5"
             min_approach_velocity_tps="0.05"/>
           <ArcturnToPoint posX_tiles="0.0"
             posY_tiles="0.0"
-            timeout_ms="2000"
-            angle_exit_threshold_deg="1.0"
-            ang_vel_exit_threshold_dps="0.5"
-            drive_backwards="true"
+            timeout_ms="1000"
+            angle_exit_threshold_deg="2.0"
+            ang_vel_exit_threshold_dps="10.0"
+            drive_backwards="false"
             face_backwards="false"/>
-
         </Sequence>
       </ParallelAll>
       <Logging message="Processing Corner Stack"/>
@@ -87,27 +86,32 @@
       <Sequence>
         <MoveToPoint kp="5.0"
           kd="0.0"
-          max_effort_percent="0.5"
-          timeout_ms="1000"
-          backwards="false"
-          distance_tiles="1.25"/>
-        <ShutoffNode/>
-
-        <MoveToPoint kp="6.0"
-          kd="0.0"
           max_effort_percent="1.0"
-          timeout_ms="1000"
-          backwards="true"
-          distance_tiles="0.5"/>
+          timeout_ms="100"
+          backwards="false"
+          distance_tiles="1.0"/>
         <ShutoffNode/>
 
         <MoveToPoint kp="5.0"
           kd="0.0"
-          max_effort_percent="0.5"
-          timeout_ms="1000"
-          backwards="false"
+          max_effort_percent="1.0"
+          timeout_ms="1500"
+          backwards="true"
           distance_tiles="0.75"/>
         <ShutoffNode/>
+
+        <WaitCmd seconds="0.25"
+          shutoff_motors="true" />
+
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.4"
+          timeout_ms="1500"
+          backwards="false"
+          distance_tiles="1.0"/>
+        <ShutoffNode/>
+        <WaitCmd seconds="0.25"
+          shutoff_motors="true" />
       </Sequence>
       <ShutoffNode/>
     </Sequence>
