@@ -52,52 +52,52 @@ namespace ghost_tank
 
 TankRobotPlugin::TankRobotPlugin()
 {
-  populateMotorNames();
-  populateDigitalIONames();
+  // populateMotorNames();
+  // populateDigitalIONames();
 }
 
-void TankRobotPlugin::populateMotorNames()
-{
-  m_right_drive_motor_names = {
-    // "drive_r1",
-    "drive_r2",
-    "drive_r3",
-    "drive_r4",
-    "drive_r5",
-    "drive_r6",
-    "drive_r7",
-    "drive_r8",
-  };
-  m_left_drive_motor_names = {
-    "drive_l1",
-    "drive_l2",
-    "drive_l3",
-    "drive_l4",
-    // "drive_l5",
-    "drive_l6",
-    "drive_l7",
-    "drive_l8",
-  };
+// void TankRobotPlugin::populateMotorNames()
+// {
+//   m_right_drive_motor_names = {
+//     // "drive_r1",
+//     "drive_r2",
+//     "drive_r3",
+//     "drive_r4",
+//     "drive_r5",
+//     "drive_r6",
+//     "drive_r7",
+//     "drive_r8",
+//   };
+//   m_left_drive_motor_names = {
+//     "drive_l1",
+//     "drive_l2",
+//     "drive_l3",
+//     "drive_l4",
+//     // "drive_l5",
+//     "drive_l6",
+//     "drive_l7",
+//     "drive_l8",
+//   };
 
-  m_all_drive_motor_names.insert(
-    m_all_drive_motor_names.end(),
-    m_left_drive_motor_names.begin(),
-    m_left_drive_motor_names.end());
+//   m_all_drive_motor_names.insert(
+//     m_all_drive_motor_names.end(),
+//     m_left_drive_motor_names.begin(),
+//     m_left_drive_motor_names.end());
 
-  m_all_drive_motor_names.insert(
-    m_all_drive_motor_names.end(),
-    m_right_drive_motor_names.begin(),
-    m_right_drive_motor_names.end());
-}
+//   m_all_drive_motor_names.insert(
+//     m_all_drive_motor_names.end(),
+//     m_right_drive_motor_names.begin(),
+//     m_right_drive_motor_names.end());
+// }
 
-void TankRobotPlugin::populateDigitalIONames()
-{
-  digital_io_port_map["goal_rush_l"] = 0;
-  digital_io_port_map["climb"] = 1;
-  digital_io_port_map["goal_rush_r"] = 2;
-  digital_io_port_map["bite"] = 3;
-  digital_io_port_map["clamp"] = 4;
-}
+// void TankRobotPlugin::populateDigitalIONames()
+// {
+//   digital_io_port_map["goal_rush_l"] = 0;
+//   digital_io_port_map["climb"] = 1;
+//   digital_io_port_map["goal_rush_r"] = 2;
+//   digital_io_port_map["bite"] = 3;
+//   digital_io_port_map["clamp"] = 4;
+// }
 
 //////////////////////
 /// Initialization ///

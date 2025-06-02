@@ -62,11 +62,11 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_l8:
-            port: 14
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
+        # drive_l8:
+        #     port: 14
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
         drive_r1:
             port: 1
             type: MOTOR
@@ -82,11 +82,10 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_r4:
+        imu:
             port: 4
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
+            type: INERTIAL_SENSOR
+            config: inertial_sensor_config
         drive_r5:
             port: 17
             type: MOTOR

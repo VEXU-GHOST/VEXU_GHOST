@@ -2,19 +2,16 @@
 <root BTCPP_format="4" main_tree_to_execute="main_tree">
 
   <!-- Includes -->
-  <include path="worlds/bt_worlds_goal_rush.xml" />
-  <include path="worlds/bt_center_rush_after_side_rush.xml"/>
-  <include path="worlds/bt_grab_goal_after_rush.xml"/>
-  <include path="bt_skills.xml" />
-  <include path="bt_neutral_stake.xml" />
-  <include path="bt_aj_rings.xml" />
+  <!-- <include path="worlds/bt_worlds_goal_rush.xml" /> -->
+  <!-- <include path="worlds/bt_center_rush_after_side_rush.xml"/> -->
+  <!-- <include path="worlds/bt_grab_goal_after_rush.xml"/> -->
+  <!-- <include path="bt_skills.xml" /> -->
   <include path="bt_scissor.xml" />
 
   <BehaviorTree ID="main_tree">
     <Sequence>
       <Sequence>
         <Logging message="Starting main tree" />
-        <SetMirrored mirrored="false" />
         <!-- <SubTree ID="worlds_goal_rush" _autoremap="true" />
         <SubTree ID="center_rush_after_side_rush" _autoremap="true" /> -->
         <SubTree ID="deploy_scissor" _autoremap="true" />
@@ -134,7 +131,7 @@
 
   <BehaviorTree ID="mtp_testing">
     <Sequence>
-      <MoveToPoseBezier posX_tiles="2.0"
+      <!-- <MoveToPoseBezier posX_tiles="2.0"
         posY_tiles="1.0"
         theta_deg="0.0"
         search_radius_tiles="0.5"
@@ -147,9 +144,9 @@
         max_speed_angular_percent="1.0"
         timeout_ms="100000"
         use_theta="true"
-        backwards="false" />
+        backwards="false" /> -->
       <WaitCmd seconds="0.5" shutoff_motors="true" />
-      <MoveToPoseBezier posX_tiles="2.0"
+      <!-- <MoveToPoseBezier posX_tiles="2.0"
         posY_tiles="1.0"
         theta_deg="90.0"
         search_radius_tiles="0.5"
@@ -162,9 +159,9 @@
         max_speed_angular_percent="1.0"
         timeout_ms="100000"
         use_theta="true"
-        backwards="false" />
+        backwards="false" /> -->
       <WaitCmd seconds="0.5" shutoff_motors="true" />
-      <MoveToPoseBezier posX_tiles="2.0"
+      <!-- <MoveToPoseBezier posX_tiles="2.0"
         posY_tiles="2.0"
         theta_deg="0.0"
         search_radius_tiles="0.2"
@@ -177,7 +174,7 @@
         max_speed_angular_percent="1.0"
         timeout_ms="2000"
         use_theta="true"
-        backwards="false" />
+        backwards="false" /> -->
       <WaitCmd seconds="0.5" shutoff_motors="true" />
     </Sequence>
   </BehaviorTree>
@@ -187,7 +184,8 @@
     <Fallback>
       <BoundaryCheck y_threshold_tiles="1.0">
         <Sequence>
-          <MoveToPoseBezier posX_tiles="1.0"
+      <WaitCmd seconds="0.5" shutoff_motors="true" />
+          <!-- <MoveToPoseBezier posX_tiles="1.0"
             posY_tiles="3.5"
             theta_deg="90.0"
             search_radius_tiles="0.5"
@@ -200,12 +198,12 @@
             max_speed_angular_percent="1.0"
             timeout_ms="100000"
             use_theta="true"
-            backwards="false" />
+            backwards="false" /> -->
         </Sequence>
       </BoundaryCheck>
       <Sequence>
         <WaitCmd seconds="1.0" shutoff_motors="true" />
-        <MoveToPoseBezier posX_tiles="1.0"
+        <!-- <MoveToPoseBezier posX_tiles="1.0"
           posY_tiles="1.0"
           theta_deg="90.0"
           search_radius_tiles="0.2"
@@ -218,7 +216,7 @@
           max_speed_angular_percent="1.0"
           timeout_ms="10000"
           use_theta="true"
-          backwards="true" />
+          backwards="true" /> -->
         <WaitCmd seconds="0.5" shutoff_motors="true" />
       </Sequence>
     </Fallback>
@@ -250,7 +248,7 @@
           </Timeout>
           <ClampCmd clamp_closed="true" />
         </Fallback>
-        <MoveToPoseBezier posX_tiles="2.0"
+        <!-- <MoveToPoseBezier posX_tiles="2.0"
           posY_tiles="1.0"
           theta_deg="45.0"
           search_radius_tiles="0.2"
@@ -261,7 +259,7 @@
           max_speed_angular_percent="0.3"
           timeout_ms="-5000"
           use_theta="true"
-          backwards="false" />
+          backwards="false" /> -->
       </ParallelAll>
       <WaitCmd seconds="2.0"
         shutoff_motors="true" />
@@ -274,7 +272,7 @@
           </Timeout>
           <ClampCmd clamp_closed="true" />
         </Fallback>
-        <MoveToPoseBezier posX_tiles="2.0"
+        <!-- <MoveToPoseBezier posX_tiles="2.0"
           posY_tiles="1.0"
           theta_deg="135.0"
           search_radius_tiles="0.2"
@@ -285,7 +283,7 @@
           max_speed_angular_percent="0.3"
           timeout_ms="-5000"
           use_theta="true"
-          backwards="true" />
+          backwards="true" /> -->
       </ParallelAll>
       <WaitCmd seconds="2.0"
         shutoff_motors="true" />
@@ -300,7 +298,7 @@
       <!-- <Logging message="test"/> -->
       <IntakeCmd auto="true"
         ground_intake="false" />
-      <MoveToPoseBezier posX_tiles="4.0"
+      <!-- <MoveToPoseBezier posX_tiles="4.0"
         posY_tiles="2.0"
         theta_deg="135.0"
         search_radius_tiles="0.2"
@@ -311,10 +309,10 @@
         max_speed_angular_percent="0.3"
         timeout_ms="-5000"
         use_theta="true"
-        backwards="false" />
+        backwards="false" /> -->
       <WaitCmd seconds="2.0"
         shutoff_motors="true" />
-      <MoveToPoseBezier posX_tiles="5.0"
+      <!-- <MoveToPoseBezier posX_tiles="5.0"
         posY_tiles="1.0"
         theta_deg="135.0"
         search_radius_tiles="0.2"
@@ -325,7 +323,7 @@
         max_speed_angular_percent="0.3"
         timeout_ms="-5000"
         use_theta="true"
-        backwards="true" />
+        backwards="true" /> -->
       <WaitCmd seconds="2.0"
         shutoff_motors="true" />
     </Sequence>
@@ -362,11 +360,11 @@
   <BehaviorTree ID="jerryiotest">
     <Sequence>
       <Logging message="test" />
-      <MoveToPosePurepursuit fileName="~/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
+      <!-- <MoveToPosePurepursuit fileName="~/VEXU_GHOST/11_Robots/ghost_tank/config/path.txt"
         angle_threshold="165.0"
         threshold="0.2"
         timeout="1000"
-        use_theta="false" />
+        use_theta="false" /> -->
       <Logging message="testover" />
       <ShutoffNode />
     </Sequence>
