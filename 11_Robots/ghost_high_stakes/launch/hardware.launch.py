@@ -59,8 +59,8 @@ def generate_launch_description():
                     )
                 ),
                 launch_arguments={
-                    "enable_depth": "false",
-                    "enable_color": "false",
+                    "enable_depth": "true",
+                    "enable_color": "true",
                     # "enable_gyro": "true",
                     "initial_reset": "false",
                     # "gyro_qos": "SENSOR_DATA",
