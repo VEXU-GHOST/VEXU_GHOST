@@ -74,6 +74,17 @@ def generate_launch_description():
         ]
     )
 
+    #############################
+    ### Bounding Box Disabled ###
+    #############################
+    # bounding_box_node = Node(
+    #     package="your_bounding_box_pkg",
+    #     executable="bounding_box_processor",
+    #     name="bbox_node",
+    #     parameters=[base_ros_config_file],
+    #     output="screen",
+    # )
+
     #######################
     ### Robot Overrides ###
     #######################
@@ -104,6 +115,6 @@ def generate_launch_description():
         realsense_node,
         bag_recorder_service,
         tts_music_node,
-        OpaqueFunction(function = launch_setup),
+        # bounding_box_node,  # <-- Intentionally disabled
+        OpaqueFunction(function=launch_setup),
     ])
-

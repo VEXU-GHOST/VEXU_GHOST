@@ -1,181 +1,35 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image, CameraInfo
-from visualization_msgs.msg import Marker
-from std_msgs.msg import Float64MultiArray # Import Float64MultiArray
+from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-import numpy as np
 import cv2
-from ultralytics import YOLO
 import time
+import os
 
 
-class RealSenseYOLOCombined(Node):
+class RealSenseImageSaver(Node):
     def __init__(self):
-        super().__init__('realsense_yolo_combined_node')
-        self.model = YOLO("/home/ghost/VEXU_GHOST/best.pt")
+        super().__init__('realsense_image_saver_node')
         self.bridge = CvBridge()
-
-        self.color_image = None
-        self.depth_image = None
-        self.fx = self.fy = self.cx = self.cy = None
-
         self.color_sub = self.create_subscription(Image, '/camera/camera/color/image_raw', self.color_callback, 10)
-        self.depth_sub = self.create_subscription(Image, '/camera/camera/depth/image_rect_raw', self.depth_callback, 10)
-        self.info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
+        self.get_logger().info("RealSense Image Saver node initialized.")
 
-        self.marker_pub = self.create_publisher(Marker, '/detected_objects_marker', 10)
-        self.processed_image_pub = self.create_publisher(Image, '/yolo_processed_image', 10)
-        # New publisher for X, Y coordinates
-        self.xy_publisher = self.create_publisher(Float64MultiArray, '/object_xy_positions', 10)
-
-
-        self.get_logger().info("RealSense YOLO Combined node initialized.")
-
-    def camera_info_callback(self, msg):
-        self.fx = msg.k[0]
-        self.fy = msg.k[4]
-        self.cx = msg.k[2]
-        self.cy = msg.k[5]
-        self.get_logger().info(f"Camera intrinsics received: fx={self.fx}, fy={self.fy}, cx={self.cx}, cy={self.cy}")
+        # Optional: save path
+        self.save_dir = "/home/ghost/VEXU_GHOST/saved_images"
+        os.makedirs(self.save_dir, exist_ok=True)
 
     def color_callback(self, msg):
-        print("Received color image!")
-        self.color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-        self.try_process()
-
-    def depth_callback(self, msg):
-        print("Received depth image!")
-        self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='16UC1')
-        self.try_process()
-
-    def try_process(self):
-        if self.color_image is None:
-            self.get_logger().warn("Skipping processing — color image not yet received.")
-            return
-        if self.depth_image is None:
-            self.get_logger().warn("Skipping processing — depth image not yet received.")
-            return
-        if None in (self.fx, self.fy, self.cx, self.cy):
-            self.get_logger().warn("Skipping processing — camera intrinsics not yet received.")
-            return
-
-        self.get_logger().info("Processing frame...")
-
-        frame = self.color_image.copy()
-        results = self.model(frame)
-
-        for result in results:
-            boxes = result.boxes
-            if boxes is None:
-                continue
-            for box in boxes:
-                class_name = result.names[int(box.cls)]
-                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-
-                h, w = self.depth_image.shape
-                box_height = y2 - y1
-
-                if class_name == "rings-goals":
-                    lower_y1 = y2 - int(0.2 * box_height)
-                    upper_y1 = y2
-                    box_color = (0, 255, 255)
-                else:
-                    lower_y1 = y2 - int(0.30 * box_height)
-                    upper_y1 = y2 - int(0.05 * box_height)
-                    box_color = (0, 255, 0)
-
-                cv2.rectangle(frame, (x1, lower_y1), (x2, upper_y1), box_color, 2)
-
-                cx_px = int((x1 + x2) / 2)
-                cy_px = int((lower_y1 + upper_y1) / 2)
-
-                x_start = max(cx_px - 2, 0)
-                x_end = min(cx_px + 3, w)
-                y_start = max(cy_px - 2, 0)
-                y_end = min(cy_px + 3, h)
-
-                roi = self.depth_image[y_start:y_end, x_start:x_end]
-                valid_depths = roi[roi > 0].flatten()
-                if valid_depths.size < 3:
-                    self.get_logger().warn(f"No valid depth values for {class_name}, skipping.")
-                    continue
-
-                sorted_depths = np.sort(valid_depths)
-                num_low = max(1, int(0.2 * len(sorted_depths)))
-                lowest_20 = sorted_depths[:num_low]
-                depth_m = np.mean(lowest_20) / 1000.0
-
-                # RealSense camera coordinates
-                # X: horizontal (right from camera's perspective)
-                # Y: vertical (down from camera's perspective)
-                # Z: depth/forward (out from camera)
-                rs_X = (cx_px - self.cx) * depth_m / self.fx
-                rs_Y = (cy_px - self.cy) * depth_m / self.fy
-                rs_Z = depth_m
-
-                # Map RealSense coordinates to RViz 'base_link' frame
-                # Assumption: RViz X is forward, RViz Y is left
-                # RealSense Z (forward) -> RViz X
-                # RealSense -X (left)   -> RViz Y
-                # RealSense Y (down)    -> RViz -Z (or 0.0 for 2D plane projection)
-                rviz_x = rs_Z
-                rviz_y = -rs_X # Note the negative sign for RViz Y
-
-                label = f"{class_name}: {box.conf.item():.2f}, Z: {rs_Z:.2f}m" # Label uses RealSense Z for clarity
-                cv2.putText(frame, label, (x1, lower_y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-
-                self.get_logger().info(
-                    f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {rviz_x:.2f}m, Y: {rviz_y:.2f}m"
-                )
-
-                # Publish Marker using the RViz X and Y
-                self.publish_marker(rviz_x, rviz_y, 0.0) # Z set to 0.0 for 2D plane visualization
-
-                # Publish X and Y coordinates as Float64MultiArray using the RViz X and Y
-                xy_array_msg = Float64MultiArray()
-                xy_array_msg.data = [rviz_x, rviz_y] # Using rviz_x and rviz_y directly
-                self.xy_publisher.publish(xy_array_msg)
-                self.get_logger().info(f"Published X: {rviz_x:.2f}, Y: {rviz_y:.2f} on /object_xy_positions")
-
-
-        # Save processed image locally (optional)
+        self.get_logger().info("Received color image.")
+        image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        cv2.imwrite(f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg", frame)
-
-        # Publish processed image to RViz
-        processed_msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
-        processed_msg.header.stamp = self.get_clock().now().to_msg()
-        processed_msg.header.frame_id = "camera_color_optical_frame"
-        self.processed_image_pub.publish(processed_msg)
-
-    def publish_marker(self, x, y, z):
-        marker = Marker()
-        marker.header.frame_id = "base_link"
-        marker.header.stamp = self.get_clock().now().to_msg()
-        marker.ns = "detections"
-        marker.id = int(time.time() * 1000) % 100000
-        marker.type = Marker.SPHERE
-        marker.action = Marker.ADD
-        marker.pose.position.x = x
-        marker.pose.position.y = y
-        marker.pose.position.z = z
-        marker.pose.orientation.w = 1.0
-        marker.scale.x = 0.1
-        marker.scale.y = 0.1
-        marker.scale.z = 0.1
-        marker.color.r = 1.0
-        marker.color.g = 0.0
-        marker.color.b = 0.0
-        marker.color.a = 1.0
-        marker.lifetime.sec = 1
-
-        self.marker_pub.publish(marker)
+        filename = os.path.join(self.save_dir, f"color_{timestamp}.jpg")
+        cv2.imwrite(filename, image)
+        self.get_logger().info(f"Saved image to {filename}")
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = RealSenseYOLOCombined()
+    node = RealSenseImageSaver()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
@@ -187,7 +41,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-    #/detected_objects_marker
-    #/yolo_processed_image
-    #/object_xy_positions
