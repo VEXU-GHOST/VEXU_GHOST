@@ -8,7 +8,7 @@ port_configuration:
         F: OUT
     devices:
         conveyor_motor_bottom:
-            port: 5
+            port: 4
             type: MOTOR
             reversed: true
             config: intake_motor_config
@@ -83,7 +83,7 @@ port_configuration:
             reversed: true
             config: drive_motor_config
         imu:
-            port: 4
+            port: 5
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
         drive_r5:

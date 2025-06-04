@@ -6,11 +6,11 @@ ghost_serial_node:
 
 imu_filter_node:
   ros__parameters:
-    input_imu_topic: /camera/camera/gyro/sample
+    input_imu_topic: /sensors/imu
     output_imu_topic: /estimation/imu/filtered
     calculate_bias: false
     calculate_covariance: false
-    calibration_time: 60.0
+    calibration_time: 5.0
     sensor_frequency: 100.0
     heading_covariance: 0.001
 
@@ -18,9 +18,9 @@ imu_filter_node:
     accel_bias_y: 0.991383
     accel_bias_z: 0.032677
 
-    gyro_bias_x: -0.00469872
-    gyro_bias_y:  0.00181398
-    gyro_bias_z: -0.00054047
+    gyro_bias_x: 0.0
+    gyro_bias_y: 0.0
+    gyro_bias_z: 0.0
 
     accel_covariance:
       [
