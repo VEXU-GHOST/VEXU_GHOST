@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 from visualization_msgs.msg import Marker
-from std_msgs.msg import Float64MultiArray # Import Float64MultiArray
+from std_msgs.msg import Float64MultiArray
 from cv_bridge import CvBridge
 import numpy as np
 import cv2
@@ -26,9 +26,7 @@ class RealSenseYOLOCombined(Node):
 
         self.marker_pub = self.create_publisher(Marker, '/detected_objects_marker', 10)
         self.processed_image_pub = self.create_publisher(Image, '/yolo_processed_image', 10)
-        # New publisher for X, Y coordinates
         self.xy_publisher = self.create_publisher(Float64MultiArray, '/object_xy_positions', 10)
-
 
         self.get_logger().info("RealSense YOLO Combined node initialized.")
 
@@ -40,27 +38,16 @@ class RealSenseYOLOCombined(Node):
         self.get_logger().info(f"Camera intrinsics received: fx={self.fx}, fy={self.fy}, cx={self.cx}, cy={self.cy}")
 
     def color_callback(self, msg):
-        print("Received color image!")
         self.color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.try_process()
 
     def depth_callback(self, msg):
-        print("Received depth image!")
         self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='16UC1')
         self.try_process()
 
     def try_process(self):
-        if self.color_image is None:
-            self.get_logger().warn("Skipping processing — color image not yet received.")
+        if self.color_image is None or self.depth_image is None or None in (self.fx, self.fy, self.cx, self.cy):
             return
-        if self.depth_image is None:
-            self.get_logger().warn("Skipping processing — depth image not yet received.")
-            return
-        if None in (self.fx, self.fy, self.cx, self.cy):
-            self.get_logger().warn("Skipping processing — camera intrinsics not yet received.")
-            return
-
-        self.get_logger().info("Processing frame...")
 
         frame = self.color_image.copy()
         results = self.model(frame)
@@ -69,27 +56,19 @@ class RealSenseYOLOCombined(Node):
             boxes = result.boxes
             if boxes is None:
                 continue
+
             for box in boxes:
-                class_name = result.names[int(box.cls)]
+                class_id = int(box.cls)
+                class_name = result.names[class_id]
+
+                if class_name != "mobile-goal":
+                    continue
+
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                cx_px = int((x1 + x2) / 2)
+                cy_px = int((y1 + y2) / 2)
 
                 h, w = self.depth_image.shape
-                box_height = y2 - y1
-
-                if class_name == "rings-goals":
-                    lower_y1 = y2 - int(0.2 * box_height)
-                    upper_y1 = y2
-                    box_color = (0, 255, 255)
-                else:
-                    lower_y1 = y2 - int(0.30 * box_height)
-                    upper_y1 = y2 - int(0.05 * box_height)
-                    box_color = (0, 255, 0)
-
-                cv2.rectangle(frame, (x1, lower_y1), (x2, upper_y1), box_color, 2)
-
-                cx_px = int((x1 + x2) / 2)
-                cy_px = int((lower_y1 + upper_y1) / 2)
-
                 x_start = max(cx_px - 2, 0)
                 x_end = min(cx_px + 3, w)
                 y_start = max(cy_px - 2, 0)
@@ -104,46 +83,37 @@ class RealSenseYOLOCombined(Node):
                 sorted_depths = np.sort(valid_depths)
                 num_low = max(1, int(0.2 * len(sorted_depths)))
                 lowest_20 = sorted_depths[:num_low]
-                depth_m = np.mean(lowest_20) / 1000.0
+                depth_m = np.mean(lowest_20) / 1000.0  # Convert mm to meters
 
-                # RealSense camera coordinates
-                # X: horizontal (right from camera's perspective)
-                # Y: vertical (down from camera's perspective)
-                # Z: depth/forward (out from camera)
                 rs_X = (cx_px - self.cx) * depth_m / self.fx
                 rs_Y = (cy_px - self.cy) * depth_m / self.fy
                 rs_Z = depth_m
 
-                # Map RealSense coordinates to RViz 'base_link' frame
-                # Assumption: RViz X is forward, RViz Y is left
-                # RealSense Z (forward) -> RViz X
-                # RealSense -X (left)   -> RViz Y
-                # RealSense Y (down)    -> RViz -Z (or 0.0 for 2D plane projection)
+                # RealSense -> RViz conversion
                 rviz_x = rs_Z
-                rviz_y = -rs_X # Note the negative sign for RViz Y
+                rviz_y = -rs_X
 
-                label = f"{class_name}: {box.conf.item():.2f}, Z: {rs_Z:.2f}m" # Label uses RealSense Z for clarity
-                cv2.putText(frame, label, (x1, lower_y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                label = f"{class_name}: {box.conf.item():.2f}, Z: {rs_Z:.2f}m"
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
                 self.get_logger().info(
                     f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {rviz_x:.2f}m, Y: {rviz_y:.2f}m"
                 )
 
-                # Publish Marker using the RViz X and Y
-                self.publish_marker(rviz_x, rviz_y, 0.0) # Z set to 0.0 for 2D plane visualization
+                # Publish marker and coordinate array
+                self.publish_marker(rviz_x, rviz_y, 0.0)
 
-                # Publish X and Y coordinates as Float64MultiArray using the RViz X and Y
                 xy_array_msg = Float64MultiArray()
-                xy_array_msg.data = [rviz_x, rviz_y] # Using rviz_x and rviz_y directly
+                xy_array_msg.data = [rviz_x, rviz_y]
                 self.xy_publisher.publish(xy_array_msg)
                 self.get_logger().info(f"Published X: {rviz_x:.2f}, Y: {rviz_y:.2f} on /object_xy_positions")
 
-
-        # Save processed image locally (optional)
+        # Save image
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         cv2.imwrite(f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg", frame)
 
-        # Publish processed image to RViz
+        # Publish image
         processed_msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
         processed_msg.header.stamp = self.get_clock().now().to_msg()
         processed_msg.header.frame_id = "camera_color_optical_frame"
@@ -187,7 +157,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-    #/detected_objects_marker
-    #/yolo_processed_image
-    #/object_xy_positions
