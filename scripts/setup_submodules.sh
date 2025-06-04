@@ -40,7 +40,7 @@ install_submodule() {
         exit_unsupported_pkg $pkg
     fi
 
-    # Check if given arch is supported 
+    # Check if given arch is supported
     if [[ ! " ${supported_archs[*]} " =~ " $arch " ]]; then
         exit_unsupported_arch $arch
     fi
@@ -50,17 +50,6 @@ install_submodule() {
     sudo rm ghost-$pkg-$arch.deb
 }
 
-
-# Verify repo path is set
-if [ -z "${VEXU_HOME}" ]
-then
-    echo "Failure: repository path variable VEXU_HOME is unset."
-    exit -1
-fi
-
-cd $VEXU_HOME
-git submodule init
-git submodule update --recursive
 
 # Get processor architecture to determine proper .deb source
 arch=$(dpkg --print-architecture)
@@ -107,6 +96,7 @@ install_submodule rplidar
 echo; echo
 
 echo "--------------- BTCPP ---------------"
+sudo apt install libzmq3-dev -y
 install_submodule btcpp
 echo; echo
 

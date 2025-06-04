@@ -1,0 +1,7 @@
+{
+	"name": "VEXU-GHOST",
+	"build": {
+		"context": "..",
+        "dockerfile": "Dockerfile"
+	}
+}
