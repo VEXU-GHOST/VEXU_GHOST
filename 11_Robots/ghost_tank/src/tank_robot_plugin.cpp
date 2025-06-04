@@ -566,11 +566,15 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   
   static double last_time = 0.0;
   static double time_sum = 0.0;
-  if (store_ring && ring_queue.size() >= 2){
+  // if (!store_ring && ring_queue.size() < 2){
     time_sum += std::clamp(current_time - last_time, 0.0, 0.05);
-  }
+  // }
   last_time = current_time;
   current_time = time_sum;
+
+  std::cout << "current_time: " << current_time << std::endl;
+  std::cout << "last_time: " << last_time << std::endl;
+  std::cout << "time_sum: " << time_sum << std::endl;
 
   // Constants (adjust as needed for your specific system)
   const double STUCK_TIMEOUT = 1.5;      // Time to consider a ring stuck
@@ -644,7 +648,9 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
     // Normal hook logic
     if (store_ring) {
       // should not score the ring, will be stored in the center of the robot
-      hook = false;
+      // hook = false;
+      bool scoring_ring = current_time - ring_time_queue.front() < m_ring_score_timeout / 2.0;
+      hook = scoring_ring;
     } else {
       // If not storing, keep hooks moving for an extra period of time to ensure scoring
       bool scoring_ring = current_time - ring_time_queue.front() < m_ring_score_timeout;

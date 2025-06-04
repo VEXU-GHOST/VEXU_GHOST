@@ -328,8 +328,13 @@
       <ClampCmd clamp_closed="true"/>
       <IntakeCmd auto="true"
         ground_intake="false"
+        store_ring="true"/>
+      <WaitCmd seconds="5.0"
+        shutoff_motors="true"/>
+      <IntakeCmd auto="true"
+        ground_intake="false"
         store_ring="false"/>
-      <WaitCmd seconds="500.0"
+      <WaitCmd seconds="2.0"
         shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>
