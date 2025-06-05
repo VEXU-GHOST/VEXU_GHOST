@@ -12,15 +12,54 @@
     <Sequence>
       <Sequence>
         <Logging message="Starting main tree" />
-        <!-- <SubTree ID="worlds_goal_rush" _autoremap="true" />
-        <SubTree ID="center_rush_after_side_rush" _autoremap="true" /> -->
-        <SubTree ID="deploy_scissor" _autoremap="true" />
-        <!-- <SubTree ID="grab_goal_after_rush" _autoremap="true" /> -->
-
+        <BiteCmd bite_closed="true" />
+        <!-- <SubTree ID="worlds_goal_rush" _autoremap="true" /> -->
+        <!-- <SubTree ID="deploy_scissor" _autoremap="true" /> -->
+        <ClimbCmd climb_extended="true"/>
+        <SubTree ID="go_to_ladder" _autoremap="true" />
+        <ClimbCmd climb_extended="false"/>
+        <MoveVoltage forward_effort="1.0" angular_effort="0.0" timeout_ms="2000" />
+        
+        
         <!-- <MoveScissor scissor_position_in="5" offset="1" timeout_ms="5000"/> -->
 
       </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true" />
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="go_to_ladder">
+    <Sequence>
+      <Sequence>
+        <Logging message="going to ladder" />
+        <GenerateBezierPath end_x_tiles="1.65"
+          end_y_tiles="2.35"
+          end_theta_deg="50.0"
+          lead_tiles="0.5"
+          backwards="false"
+          type="CUBIC_BEZIER"
+          num_points="250"/>
+        <FollowPathPurePursuit xy_exit_threshold_tiles="0.05"
+          angle_exit_threshold_deg="3.0"
+          lin_vel_exit_threshold_tps="1.0"
+          ang_vel_exit_threshold_dps="10.0"
+          max_speed_linear_percent="0.7"
+          max_speed_angular_percent="1.0"
+          timeout_ms="3000"
+          use_theta="true"
+          min_pursuit_radius_tiles="0.3"
+          k_lookahead="0.0"
+          deceleration_start_distance_tiles="1.0"
+          deceleration_exponent="1.5"
+          min_approach_velocity_tps="0.05"/>
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.3"
+          timeout_ms="2000"
+          backwards="false"
+          distance_tiles="0.3"/>
+      </Sequence>
+      <!-- <WaitCmd seconds="500.0" shutoff_motors="true" /> -->
     </Sequence>
   </BehaviorTree>
 
