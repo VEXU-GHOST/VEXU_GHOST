@@ -68,6 +68,12 @@ class RealSenseYOLOCombined(Node):
                 cx_px = int((x1 + x2) / 2)
                 cy_px = int((y1 + y2) / 2)
 
+                # Draw bounding box regardless of depth
+                label = f"{class_name}: {box.conf.item():.2f}"
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+                rviz_x = rviz_y = rs_Z = None
+
                 h, w = self.depth_image.shape
                 x_start = max(cx_px - 2, 0)
                 x_end = min(cx_px + 3, w)
@@ -76,42 +82,41 @@ class RealSenseYOLOCombined(Node):
 
                 roi = self.depth_image[y_start:y_end, x_start:x_end]
                 valid_depths = roi[roi > 0].flatten()
-                if valid_depths.size < 3:
-                    self.get_logger().warn(f"No valid depth values for {class_name}, skipping.")
-                    continue
 
-                sorted_depths = np.sort(valid_depths)
-                num_low = max(1, int(0.2 * len(sorted_depths)))
-                lowest_20 = sorted_depths[:num_low]
-                depth_m = np.mean(lowest_20) / 1000.0  # Convert mm to meters
+                if valid_depths.size >= 3:
+                    sorted_depths = np.sort(valid_depths)
+                    num_low = max(1, int(0.2 * len(sorted_depths)))
+                    lowest_20 = sorted_depths[:num_low]
+                    depth_m = np.mean(lowest_20) / 1000.0  # mm to meters
 
-                rs_X = (cx_px - self.cx) * depth_m / self.fx
-                rs_Y = (cy_px - self.cy) * depth_m / self.fy
-                rs_Z = depth_m
+                    rs_X = (cx_px - self.cx) * depth_m / self.fx
+                    rs_Y = (cy_px - self.cy) * depth_m / self.fy
+                    rs_Z = depth_m
 
-                # RealSense -> RViz conversion
-                rviz_x = rs_Z
-                rviz_y = -rs_X
+                    rviz_x = rs_Z
+                    rviz_y = -rs_X
+                    label += f", Z: {rs_Z:.2f}m"
 
-                label = f"{class_name}: {box.conf.item():.2f}, Z: {rs_Z:.2f}m"
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    self.get_logger().info(
+                        f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {rviz_x:.2f}m, Y: {rviz_y:.2f}m"
+                    )
+
+                    self.publish_marker(rviz_x, rviz_y, 0.0)
+
+                    xy_array_msg = Float64MultiArray()
+                    xy_array_msg.data = [rviz_x, rviz_y]
+                    self.xy_publisher.publish(xy_array_msg)
+                    self.get_logger().info(f"Published X: {rviz_x:.2f}, Y: {rviz_y:.2f} on /object_xy_positions")
+                else:
+                    self.get_logger().warn(f"No valid depth values for {class_name}, drawing box only.")
+
                 cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-
-                self.get_logger().info(
-                    f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {rviz_x:.2f}m, Y: {rviz_y:.2f}m"
-                )
-
-                # Publish marker and coordinate array
-                self.publish_marker(rviz_x, rviz_y, 0.0)
-
-                xy_array_msg = Float64MultiArray()
-                xy_array_msg.data = [rviz_x, rviz_y]
-                self.xy_publisher.publish(xy_array_msg)
-                self.get_logger().info(f"Published X: {rviz_x:.2f}, Y: {rviz_y:.2f} on /object_xy_positions")
 
         # Save image
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        cv2.imwrite(f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg", frame)
+        save_path = f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg"
+        cv2.imwrite(save_path, frame)
+        self.get_logger().info(f"Saved processed image to {save_path}")
 
         # Publish image
         processed_msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
