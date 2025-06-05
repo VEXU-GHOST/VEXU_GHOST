@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 from visualization_msgs.msg import Marker
-from std_msgs.msg import Float64MultiArray # Import Float64MultiArray
+from std_msgs.msg import Float64MultiArray
 from cv_bridge import CvBridge
 import numpy as np
 import cv2
@@ -26,9 +26,8 @@ class RealSenseYOLOCombined(Node):
 
         self.marker_pub = self.create_publisher(Marker, '/detected_objects_marker', 10)
         self.processed_image_pub = self.create_publisher(Image, '/yolo_processed_image', 10)
-        # New publisher for X, Y coordinates
         self.xy_publisher = self.create_publisher(Float64MultiArray, '/object_xy_positions', 10)
-
+        self.goal_confidence_pub = self.create_publisher(Float64MultiArray, '/mobile_goal_confidence_stats', 10)
 
         self.get_logger().info("RealSense YOLO Combined node initialized.")
 
@@ -64,6 +63,8 @@ class RealSenseYOLOCombined(Node):
 
         frame = self.color_image.copy()
         results = self.model(frame)
+
+        mobile_goal_confidences = []
 
         for result in results:
             boxes = result.boxes
@@ -106,44 +107,43 @@ class RealSenseYOLOCombined(Node):
                 lowest_20 = sorted_depths[:num_low]
                 depth_m = np.mean(lowest_20) / 1000.0
 
-                # RealSense camera coordinates
-                # X: horizontal (right from camera's perspective)
-                # Y: vertical (down from camera's perspective)
-                # Z: depth/forward (out from camera)
                 rs_X = (cx_px - self.cx) * depth_m / self.fx
                 rs_Y = (cy_px - self.cy) * depth_m / self.fy
                 rs_Z = depth_m
 
-                # Map RealSense coordinates to RViz 'base_link' frame
-                # Assumption: RViz X is forward, RViz Y is left
-                # RealSense Z (forward) -> RViz X
-                # RealSense -X (left)   -> RViz Y
-                # RealSense Y (down)    -> RViz -Z (or 0.0 for 2D plane projection)
                 rviz_x = rs_Z
-                rviz_y = -rs_X # Note the negative sign for RViz Y
+                rviz_y = -rs_X
 
-                label = f"{class_name}: {box.conf.item():.2f}, Z: {rs_Z:.2f}m" # Label uses RealSense Z for clarity
+                label = f"{class_name}: {box.conf.item():.2f}, Z: {rs_Z:.2f}m"
                 cv2.putText(frame, label, (x1, lower_y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
                 self.get_logger().info(
                     f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {rviz_x:.2f}m, Y: {rviz_y:.2f}m"
                 )
 
-                # Publish Marker using the RViz X and Y
-                self.publish_marker(rviz_x, rviz_y, 0.0) # Z set to 0.0 for 2D plane visualization
+                self.publish_marker(rviz_x, rviz_y, 0.0)
 
-                # Publish X and Y coordinates as Float64MultiArray using the RViz X and Y
                 xy_array_msg = Float64MultiArray()
-                xy_array_msg.data = [rviz_x, rviz_y] # Using rviz_x and rviz_y directly
+                xy_array_msg.data = [rviz_x, rviz_y]
                 self.xy_publisher.publish(xy_array_msg)
                 self.get_logger().info(f"Published X: {rviz_x:.2f}, Y: {rviz_y:.2f} on /object_xy_positions")
 
+                # Track mobile-goal confidences
+                if class_name == "mobile-goal":
+                    mobile_goal_confidences.append(box.conf.item())
 
-        # Save processed image locally (optional)
+        # Publish mobile-goal statistics
+        num_mobile_goals = len(mobile_goal_confidences)
+        avg_confidence = float(np.mean(mobile_goal_confidences)) if mobile_goal_confidences else 0.0
+
+        goal_stats_msg = Float64MultiArray()
+        goal_stats_msg.data = [num_mobile_goals, avg_confidence]
+        self.goal_confidence_pub.publish(goal_stats_msg)
+        self.get_logger().info(f"Published mobile-goal stats | Count: {num_mobile_goals}, Avg Confidence: {avg_confidence:.2f}")
+
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         cv2.imwrite(f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg", frame)
 
-        # Publish processed image to RViz
         processed_msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
         processed_msg.header.stamp = self.get_clock().now().to_msg()
         processed_msg.header.frame_id = "camera_color_optical_frame"

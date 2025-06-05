@@ -1,27 +1,76 @@
 import os
 import xacro
 from launch import LaunchDescription
-
 from ament_index_python import get_package_share_directory
-from launch_ros.actions import Node, SetRemap
-from launch.actions import IncludeLaunchDescription, GroupAction, DeclareLaunchArgument, OpaqueFunction
+from launch_ros.actions import Node
+from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration
 
 def generate_launch_description():
-    ghost_high_stakes_base_dir = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_high_stakes")
+    home_dir = os.path.expanduser("~")
+    ghost_high_stakes_base_dir = os.path.join(
+        home_dir, "VEXU_GHOST", "11_Robots", "ghost_high_stakes"
+    )
+    ghost_ros_base_dir = os.path.join(
+        home_dir, "VEXU_GHOST", "03_ROS", "ghost_ros_interfaces"
+    )
 
-    # This contains parameters shared between both robots
-    base_ros_config_file = os.path.join(ghost_high_stakes_base_dir, "config/base_ros_config.yaml")
+    # This contains all the parameters for our ROS nodes
+    ros_config_file = os.path.join(ghost_high_stakes_base_dir, "config/ros_config.yaml")
+
+    # This contains all the port and device info that gets compiled on to the V5 Brain
+    robot_config_yaml_path = os.path.join(
+        ghost_high_stakes_base_dir, "config/robot_hardware_config_tank.yaml"
+    )
+
+    plugin_type = "ghost_tank::TankRobotPlugin"
+    robot_name = "GHOST_TANK"
+
+    ghost_tank_share_dir = get_package_share_directory("ghost_tank")
+    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation.xml")
+    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
+    config_path = os.path.join(ghost_tank_share_dir, "config")
+
+    mtp_test = os.path.join(ghost_tank_share_dir, "config", "move_to_pose_test.xml")
     
-    #############################
-    ### Base Node Definitions ###
-    #############################
+    ########################
+    ### Node Definitions ###
+    ########################
+    serial_node = Node(
+        package="ghost_ros_interfaces",
+        executable="jetson_v5_serial_node",
+        name="ghost_serial_node",
+        output="screen",
+        parameters=[
+            ros_config_file,
+            {"robot_config_yaml_path": robot_config_yaml_path},
+        ],
+        # arguments=["--ros-args", "--log-level", "debug"]
+    )
+
+    competition_state_machine_node = Node(
+        package="ghost_ros_interfaces",
+        executable="competition_state_machine_node",
+        output="screen",
+        parameters=[
+            ros_config_file,
+            {
+                "robot_config_yaml_path": robot_config_yaml_path,
+                "bt_path": bt_path,
+                "bt_path_interaction": bt_path_interaction,
+                "config_path": config_path,
+            },
+        ],
+        arguments=[plugin_type, robot_name],
+        # arguments=["--ros-args", "--log-level", "debug"]
+    )
+
     bag_recorder_service = Node(
         package="ghost_ros_interfaces",
         executable="bag_recorder_service",
         output="screen",
-        parameters=[base_ros_config_file],
+        parameters=[ros_config_file],
+        # arguments=["--ros-args", "--log-level", "debug"]
     )
 
     rplidar_node = Node(
@@ -40,70 +89,122 @@ def generate_launch_description():
         ],
     )
 
+    imu_filter_node = Node(
+        package="ghost_sensing",
+        executable="imu_filter_node",
+        name="imu_filter_node",
+        output="screen",
+        parameters=[ros_config_file],
+    )
+    gpio_expander = Node(
+        package="ghost_io",
+        executable="gpio_expander",
+        name="gpio_expander",
+        output="screen",
+        parameters=[ros_config_file, {
+            "system_i2c_bus_path" : "/dev/i2c-7"
+        }],
+    )
+
+    color_sensor_node = Node(
+        package="ghost_sensing",
+        executable="tcs_color_sensor",
+        name="tcs_color_sensor_0",
+        output="screen",
+        parameters=[ros_config_file, {
+            "system_i2c_bus_path" : "/dev/i2c-7"
+        }],
+    )
+    color_classifier_node = Node(
+        package="ghost_sensing",
+        executable="color_classifier",
+        name="color_classifier_0",
+        output="screen",
+        parameters=[ros_config_file],
+    )
+
     tts_music_node = Node(
         package="ghost_io_py",
         executable="ghost_tts",
         name="tts_music_node",
         output="screen",
-        parameters=[base_ros_config_file],
+        parameters=[ros_config_file],
     )
 
-    realsense_node = GroupAction(
-        actions=[
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(
-                        get_package_share_directory("realsense2_camera"),
-                        "launch",
-                        "rs_launch.py",
-                    )
-                ),
-                launch_arguments={
-                    "enable_depth": "false",
-                    "enable_color": "false",
-                    # "enable_gyro": "true",
-                    "initial_reset": "false",
-                    # "gyro_qos": "SENSOR_DATA",
-                    # "gyro_fps": "200",  # 200 or 400
-                    "color_fps": "1",
-                    "depth_fps": "1",
-                    "color_width": "640",
-                    "color_height": "480",
-                }.items(),
+    realsense_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("realsense2_camera"),
+                "launch",
+                "rs_launch.py",
             )
-        ]
+        ),
+        launch_arguments={
+            # "unite_imu_method": "2",
+            "enable_depth": "true",
+            "enable_color": "true",
+            # "enable_sync": "true",
+            # "enable_gyro": "true",
+            # "enable_accel": "true",
+            "initial_reset": "false",
+            # "gyro_fps": "200",  # 200 or 400
+            # "accel_fps": "63",  # 63 or 250
+            "color_fps": "1",
+            "depth_fps": "1",
+            "color_width": "640",
+            "color_height": "480",
+            
+        }.items(),
     )
 
-    #######################
-    ### Robot Overrides ###
-    #######################
+    odom_ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="odom_ekf_node",
+        output="screen",
+        parameters=[ros_config_file],
+        remappings=[("odometry/filtered", "/odom_ekf/odometry")],
+    )
 
-    def launch_setup(context, *args, **kwargs): 
-        robot_name = LaunchConfiguration("robot_name").perform(context)
-        name_options = ["alpha", "omega"]
+    map_ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="map_ekf_node",
+        output="screen",
+        parameters=[ros_config_file],
+        remappings=[("odometry/filtered", "/map_ekf/odometry")],
+    )
 
-        if robot_name not in name_options:
-            print()
-            print("ERROR: Invalid robot_name:", robot_name + "!")
-            print("Launching without robot-specific nodes.")
-            print()
-            return []
-        else:
-            print("Launching robot_name:", robot_name)
-            robot_launch = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(ghost_high_stakes_base_dir, "launch", robot_name, robot_name + ".launch.py")
-                ),
-                launch_arguments={'base_params_file': base_ros_config_file}.items()
-            )
-            return [robot_launch]
+    ekf_pf_node = Node(
+        package="ghost_localization",
+        executable="ekf_pf_node",
+        name="ekf_pf_node",
+        output="screen",
+        parameters=[ros_config_file],
+    )
+
+    # ADDITION: RealSense YOLO Detection Node
+    yolo_node = Node(
+        package="ghost_vision_nodes",  # replace with your actual package name
+        executable="realsense_yolo_combined",  # or just use 'python3' and a path to test.py
+        name="realsense_yolo_node",
+        output="screen",
+        parameters=[ros_config_file],
+    )
 
     return LaunchDescription([
-        DeclareLaunchArgument("robot_name", default_value="None"),
-        rplidar_node,
-        realsense_node,
-        bag_recorder_service,
-        tts_music_node,
-        OpaqueFunction(function = launch_setup),
+        #serial_node,
+         #bag_recorder_service,
+         ekf_pf_node,
+         realsense_node,
+         imu_filter_node,
+         odom_ekf_node,
+         map_ekf_node,
+         rplidar_node,
+        # color_classifier_node,
+        # color_sensor_node,
+        # tts_music_node,
+        competition_state_machine_node,
+        # gpio_expander,
+        yolo_node,  # <- new node added here
     ])
-
