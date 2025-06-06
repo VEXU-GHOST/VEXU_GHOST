@@ -350,6 +350,9 @@ void TankRobotPlugin::initAutonomy()
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
+  node_ptr_->declare_parameter<std::string>("bt_path_interaction");
+  m_bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
+
   node_ptr_->declare_parameter<std::string>("config_path");
   std::string config_path = node_ptr_->get_parameter("config_path").as_string();
 
@@ -442,6 +445,10 @@ void TankRobotPlugin::autonomous(double current_time)
     playTTS("starting autonomous");
     // m_odom_ptr->resetPose();
     // resetWorldPose();
+    if (m_interaction){
+      bt_->set_path(m_bt_path_interaction);
+      resetBT();
+    }
 
     bt_->set_variable<bool>("clamp_closed", false);
     bt_->set_variable<bool>("bite_closed", false);

@@ -155,6 +155,7 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
   {
     // DISABLED -> AUTONOMOUS
     start_time_ = std::chrono::system_clock::now();
+    m_is_first_auton_loop = true;
     if (should_record_) {
       // start bag recording
       auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
@@ -166,7 +167,7 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
     (curr_comp_state_ == robot_state_e::DISABLED))
   {
     // AUTONOMOUS -> DISABLED
-    m_is_first_auton_loop = false;
+    m_interaction = true;
   }
 
   if ((curr_comp_state_ == robot_state_e::TELEOP) && (last_comp_state_ != robot_state_e::TELEOP)) {

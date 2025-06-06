@@ -67,6 +67,8 @@ public:
   TankTree(std::string bt_path);
   void tick_tree();
   void init_tree();
+  void set_path(std::string path);
+
   template<typename T>
   void set_variable(std::string name, T value)
   {
