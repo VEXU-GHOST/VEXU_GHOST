@@ -352,6 +352,13 @@ void TankRobotPlugin::initAutonomy()
 
   node_ptr_->declare_parameter<std::string>("bt_path_interaction");
   m_bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
+  auto bt_interaction = std::make_shared<TankTree>(m_bt_path_interaction);
+  try {
+    std::cout << "Initializing Interaction Behavior Tree" << std::endl;
+    bt_interaction->init_tree();
+  } catch (std::exception & e) {
+    std::cout << "Error init_tree: " << e.what() << std::endl;
+  }
 
   node_ptr_->declare_parameter<std::string>("config_path");
   std::string config_path = node_ptr_->get_parameter("config_path").as_string();
@@ -460,8 +467,6 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("store_ring", false);
     bt_->set_variable<bool>("ring_detector_active", false);
   }
-  std::cout << "current_time" << current_time << std::endl;
-  std::cout << "m_interaction" << m_interaction << std::endl;
   
   bt_->set_variable("auton_time_elapsed", current_time);
   // bt_->set_variable<bool>("mirrored", m_mirrored);
