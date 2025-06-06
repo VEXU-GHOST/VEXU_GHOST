@@ -448,8 +448,9 @@ void TankRobotPlugin::autonomous(double current_time)
     if (m_interaction){
       bt_->set_path(m_bt_path_interaction);
       resetBT();
+      m_tank_model_ptr->driveCommandTank(0.0, 0.0);
     }
-
+    
     bt_->set_variable<bool>("clamp_closed", false);
     bt_->set_variable<bool>("bite_closed", false);
     bt_->set_variable<bool>("goal_rush_down", false);
@@ -459,7 +460,9 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("store_ring", false);
     bt_->set_variable<bool>("ring_detector_active", false);
   }
-
+  std::cout << "current_time" << current_time << std::endl;
+  std::cout << "m_interaction" << m_interaction << std::endl;
+  
   bt_->set_variable("auton_time_elapsed", current_time);
   // bt_->set_variable<bool>("mirrored", m_mirrored);
 

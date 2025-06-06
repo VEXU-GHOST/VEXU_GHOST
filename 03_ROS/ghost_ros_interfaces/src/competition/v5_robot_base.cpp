@@ -167,6 +167,7 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
     (curr_comp_state_ == robot_state_e::DISABLED))
   {
     // AUTONOMOUS -> DISABLED
+    m_is_first_auton_loop = true;
     m_interaction = true;
   }
 

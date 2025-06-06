@@ -169,8 +169,6 @@
       <Logging message="Starting winpoint"/>
       <NeutralStakeCmd state="3"
         timeout_ms="2000"/>
-      <NeutralStakeCmd state="2"
-        timeout_ms="10"/>
     </Sequence>
   </BehaviorTree>
 
@@ -184,6 +182,8 @@
         ang_vel_exit_threshold_dps="40.0"
         drive_backwards="true"
         face_backwards="true"/>
+      <NeutralStakeCmd state="2"
+        timeout_ms="10"/>
       <MoveToPoint kp="3.0"
         kd="0.0"
         max_effort_percent="0.4"
