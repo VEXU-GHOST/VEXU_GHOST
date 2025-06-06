@@ -1322,7 +1322,9 @@ void TankRobotPlugin::mirroredButtonCallback(const std_msgs::msg::Int64::SharedP
       RCLCPP_WARN(node_ptr_->get_logger(), "Received unknown button command: %ld", msg->data);
     }
     resetWorldPose();
+    bt_->set_variable<bool>("og_mirrored", m_mirrored);
   }
+
   auto message = std_msgs::msg::Int64();
   message.data = m_mirrored;
   m_led_side_right_pub->publish(message);

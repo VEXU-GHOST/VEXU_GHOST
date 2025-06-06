@@ -26,36 +26,36 @@
 namespace ghost_tank
 {
 
-// SyncActionNode (synchronous action) with an input port.
-// If your Node has ports, you must use this constructor signature
-SetMirrored::SetMirrored(
-  const std::string & name, const BT::NodeConfig & config)
-: BT::SyncActionNode(name, config)
-{
-  blackboard_ = config.blackboard;
-	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
-	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
-  BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
-}
-
-// It is mandatory to define this STATIC method.
-BT::PortsList SetMirrored::providedPorts()
-{
-  // This action has a single input port called "message"
-  return {
-    BT::InputPort<bool>("mirrored"),
-  };
-}
-
-BT::NodeStatus SetMirrored::tick()
-{
-  bool mirrored = BT_Util::get_input<bool>(this, "mirrored");
-  if (BT_Util::get_from_blackboard<bool>(blackboard_, "mirrored")){
-    mirrored = !mirrored;
+  // SyncActionNode (synchronous action) with an input port.
+  // If your Node has ports, you must use this constructor signature
+  SetMirrored::SetMirrored(
+      const std::string &name, const BT::NodeConfig &config)
+      : BT::SyncActionNode(name, config)
+  {
+    blackboard_ = config.blackboard;
+    BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+    BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+    BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
   }
-  BT_Util::put_in_blackboard(blackboard_, "mirrored", mirrored);
 
-  return BT::NodeStatus::SUCCESS;
-}
+  // It is mandatory to define this STATIC method.
+  BT::PortsList SetMirrored::providedPorts()
+  {
+    // This action has a single input port called "message"
+    return {
+        BT::InputPort<bool>("mirrored"),
+    };
+  }
+
+  BT::NodeStatus SetMirrored::tick()
+  { // NOTE: the original intent of this funciton seemed to be to XOR the switch value. For that, we can't get blackboard, because in subsequent calls to this function it will already be flipped.
+    // NOTE: therefore, we must put the original, unmodified 'switch' value in the blackboard somewhere
+    bool inp = BT_Util::get_input<bool>(this, "mirrored");
+    bool mirrored_button = BT_Util::get_from_blackboard<bool>(blackboard_, "og_mirrored");
+
+    BT_Util::put_in_blackboard(blackboard_, "mirrored",(bool) (mirrored_button ^ inp));
+
+    return BT::NodeStatus::SUCCESS;
+  }
 
 } // ghost_tank
