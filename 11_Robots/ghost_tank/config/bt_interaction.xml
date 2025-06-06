@@ -3,16 +3,68 @@
       main_tree_to_execute="main">
 
   <BehaviorTree ID="main">
-    <Sequence>
+    <Fallback>
       <KeepRunningUntilFailure>
-        <AutonTimer seconds="60">
+        <AutonTimer seconds="55">
+          <GenerateBezierPath end_x_tiles="5.0"
+            end_y_tiles="1.0"
+            end_theta_deg="135.0"
+            lead_tiles="1.0"
+            backwards="true"
+            type="QUADRATIC_BEZIER"
+            num_points="250"/>
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.25"
+            angle_exit_threshold_deg="3.0"
+            lin_vel_exit_threshold_tps="1.0"
+            ang_vel_exit_threshold_dps="10.0"
+            xy_settling_radius_tiles="0.0"
+            max_speed_linear_percent="1.0"
+            max_speed_angular_percent="1.0"
+            timeout_ms="3500"
+            use_theta="true"
+            min_pursuit_radius_tiles="0.3"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="1.0"
+            deceleration_exponent="1.5"
+            min_approach_velocity_tps="0.05"/>
           <Repeat num_cycles="-1">
-            <Logging message="not buddy time"/>
+            <Logging message="interacting"/>
           </Repeat>
-        </AutonTimer>
-      </KeepRunningUntilFailure>
-      <!-- INSERT WHATEVER BUDDY CLIMB CODE HERE -->
-    </Sequence>
+        </KeepRunningUntilFailure>
+
+      </AutonTimer>
+      <Sequence>
+        <ClampCmd clamp_closed="false"/>
+        <Logging message="leave corner"/>
+        <GenerateBezierPath end_x_tiles="6.0"
+          end_y_tiles="2.0"
+          end_theta_deg="135.0"
+          lead_tiles="1.0"
+          backwards="false"
+          type="QUADRATIC_BEZIER"
+          num_points="250"/>
+        <FollowPathPurePursuit xy_exit_threshold_tiles="0.25"
+          angle_exit_threshold_deg="3.0"
+          lin_vel_exit_threshold_tps="1.0"
+          ang_vel_exit_threshold_dps="10.0"
+          xy_settling_radius_tiles="0.0"
+          max_speed_linear_percent="1.0"
+          max_speed_angular_percent="1.0"
+          timeout_ms="3500"
+          use_theta="true"
+          min_pursuit_radius_tiles="0.3"
+          k_lookahead="0.3"
+          deceleration_start_distance_tiles="1.0"
+          deceleration_exponent="1.5"
+          min_approach_velocity_tps="0.05"/>
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.2"
+          timeout_ms="3000"
+          backwards="false"
+          distance_tiles="0.4"/>
+      </Sequence>
+    </Fallback>
   </BehaviorTree>
 
 </root>
