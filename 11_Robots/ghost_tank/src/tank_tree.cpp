@@ -74,6 +74,11 @@ void TankTree::init_tree()
   std::cout << "Tree created: " << bt_path_ << std::endl;
 }
 
+void TankTree::set_path(std::string path)
+{
+  bt_path_ = path;
+}
+
 void TankTree::tick_tree()
 {
   tree_.tickExactlyOnce();

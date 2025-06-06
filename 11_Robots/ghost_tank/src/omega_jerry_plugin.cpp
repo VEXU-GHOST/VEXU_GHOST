@@ -146,7 +146,7 @@ void OmegaJerryPlugin::disabled()
 void OmegaJerryPlugin::autonomous(double current_time)
 {
   if (m_is_first_auton_loop) {
-    m_is_first_auton_loop = false;
+    // m_is_first_auton_loop = false;
     playTTS("starting autonomous");
     m_odom_ptr->resetPose();
     // resetWorldPose();

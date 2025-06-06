@@ -7,7 +7,9 @@
   <!-- <include path="worlds/bt_grab_goal_after_rush.xml"/> -->
   <include path="bt_clear_corner.xml"/>
   <include path="bt_corner_shove.xml"/>
+  <include path="bt_get_second_goal.xml"/>
   <include path="bt_intake_middle_ring.xml"/>
+  <include path="bt_grab_top_ring_neg_stack.xml"/>
   <!-- <include path="bt_skills.xml"/> -->
 
   <BehaviorTree ID="main_tree">
@@ -18,23 +20,24 @@
           _autoremap="true"/>
         <SubTree ID="grab_middle_goal"
           _autoremap="true"/>
+        <ClampCmd clamp_closed="true"/>
+        <BiteCmd bite_closed="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
+        <!-- <SubTree ID="intake_middle_ring" _autoremap="true"/> -->
 
-
-        <SubTree ID="intake_middle_ring"
+        <SubTree ID="skip_middle_ring"
           _autoremap="true"/>
 
-        <!-- <WaitCmd seconds="500.0"
-          shutoff_motors="true"/> -->
-        <!-- <IntakeCmd auto="false" ground_intake="false"/> -->
-        <SetMirrored mirrored="true"/>
+        <!-- <SetMirrored mirrored="true"/>
         <SubTree ID="clear_negative_corner"
-          _autoremap="true"/>
-        <SubTree ID="corner_shove"
           _autoremap="true"/>
         <SetMirrored mirrored="false"/>
 
+        <SubTree ID="corner_shove"
+          _autoremap="true"/>
+        <SubTree ID="get_far_goal"
+          _autoremap="true"/> -->
       </Sequence>
       <WaitCmd seconds="500.0"
         shutoff_motors="true"/>
@@ -166,8 +169,6 @@
       <Logging message="Starting winpoint"/>
       <NeutralStakeCmd state="3"
         timeout_ms="2000"/>
-      <NeutralStakeCmd state="2"
-        timeout_ms="10"/>
     </Sequence>
   </BehaviorTree>
 
@@ -177,10 +178,12 @@
       <ArcturnToPoint posX_tiles="6.0"
         posY_tiles="1.0"
         timeout_ms="3000"
-        angle_exit_threshold_deg="5.0"
-        ang_vel_exit_threshold_dps="30.0"
+        angle_exit_threshold_deg="7.5"
+        ang_vel_exit_threshold_dps="40.0"
         drive_backwards="true"
         face_backwards="true"/>
+      <NeutralStakeCmd state="2"
+        timeout_ms="10"/>
       <MoveToPoint kp="3.0"
         kd="0.0"
         max_effort_percent="0.4"
@@ -200,11 +203,13 @@
       <TurnToPoint posX_tiles="0.0"
         posY_tiles="0.0"
         timeout_ms="2000"
+        backwards="false"
         angle_exit_threshold_deg="1.0"/>
       <Logging message="done"/>
       <TurnToPoint posX_tiles="1.0"
         posY_tiles="3.0"
         timeout_ms="2000"
+        backwards="true"
         angle_exit_threshold_deg="1.0"/>
       <WaitCmd seconds="500.0"
         shutoff_motors="true" />
@@ -325,8 +330,13 @@
       <ClampCmd clamp_closed="true"/>
       <IntakeCmd auto="true"
         ground_intake="false"
+        store_ring="true"/>
+      <WaitCmd seconds="5.0"
+        shutoff_motors="true"/>
+      <IntakeCmd auto="true"
+        ground_intake="false"
         store_ring="false"/>
-      <WaitCmd seconds="500.0"
+      <WaitCmd seconds="2.0"
         shutoff_motors="true"/>
     </Sequence>
   </BehaviorTree>

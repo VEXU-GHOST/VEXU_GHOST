@@ -190,8 +190,9 @@ protected:
 
   // Autonomy
   std::string bt_path_;
+  std::string m_bt_path_interaction;
   std::shared_ptr<TankTree> bt_;
-  std::shared_ptr<TankTree> bt_interaction;
+  // std::shared_ptr<TankTree> bt_interaction;
 
   // Motion Planner
   double m_search_radius = 0.0;

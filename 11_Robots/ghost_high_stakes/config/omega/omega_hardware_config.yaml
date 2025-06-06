@@ -162,7 +162,7 @@ port_configuration:
                 send_velocity_command: false
                 send_voltage_command: true
         neutral_stake_motor_config:
-            gearset: 200
+            gearset: 600
             brake_mode: BRAKE
             encoder_units: DEGREES
             controller:

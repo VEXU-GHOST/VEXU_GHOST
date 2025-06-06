@@ -4,12 +4,9 @@
 
   <BehaviorTree ID="main">
     <Sequence>
-      <AutonTimer seconds="5">
-        <Repeat num_cycles="-1">
-          <Logging message="interacting"/>
-        </Repeat>
-      </AutonTimer>
-
+      <Repeat num_cycles="-1">
+        <Logging message="interacting"/>
+      </Repeat>
     </Sequence>
   </BehaviorTree>
 

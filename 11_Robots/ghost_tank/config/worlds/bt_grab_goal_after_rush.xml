@@ -218,6 +218,7 @@
       <TurnToPoint posX_tiles="0.0"
         posY_tiles="0.0"
         timeout_ms="1000"
+        backwards="false"
         angle_exit_threshold_deg="1.0" />
 
       <MoveVoltage forward_effort="0.5" angular_effort="0.0" timeout_ms="1000" />

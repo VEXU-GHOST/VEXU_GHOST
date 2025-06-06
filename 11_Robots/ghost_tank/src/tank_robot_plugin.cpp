@@ -350,6 +350,9 @@ void TankRobotPlugin::initAutonomy()
   node_ptr_->declare_parameter<std::string>("bt_path");
   std::string bt_path = node_ptr_->get_parameter("bt_path").as_string();
 
+  node_ptr_->declare_parameter<std::string>("bt_path_interaction");
+  m_bt_path_interaction = node_ptr_->get_parameter("bt_path_interaction").as_string();
+
   node_ptr_->declare_parameter<std::string>("config_path");
   std::string config_path = node_ptr_->get_parameter("config_path").as_string();
 
@@ -442,7 +445,12 @@ void TankRobotPlugin::autonomous(double current_time)
     playTTS("starting autonomous");
     // m_odom_ptr->resetPose();
     // resetWorldPose();
-
+    if (m_interaction){
+      bt_->set_path(m_bt_path_interaction);
+      resetBT();
+      m_tank_model_ptr->driveCommandTank(0.0, 0.0);
+    }
+    
     bt_->set_variable<bool>("clamp_closed", false);
     bt_->set_variable<bool>("bite_closed", false);
     bt_->set_variable<bool>("goal_rush_down", false);
@@ -452,7 +460,9 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("store_ring", false);
     bt_->set_variable<bool>("ring_detector_active", false);
   }
-
+  std::cout << "current_time" << current_time << std::endl;
+  std::cout << "m_interaction" << m_interaction << std::endl;
+  
   bt_->set_variable("auton_time_elapsed", current_time);
   // bt_->set_variable<bool>("mirrored", m_mirrored);
 
@@ -552,6 +562,7 @@ void TankRobotPlugin::teleop(double current_time)
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
 {
+  
   static double last_input_time = 0.0;
   static double ring_found_time = 0.0;
   static double stuck_detection_time = 0.0;
@@ -559,9 +570,21 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   static bool retry_mode = false;
   static double retry_start_time = 0.0;
   static int last_color = 0;
-
+  
   static std::queue<int> ring_queue;
   static std::queue<double> ring_time_queue;
+  
+  static double last_time = 0.0;
+  static double time_sum = 0.0;
+  // if (!store_ring && ring_queue.size() < 2){
+    time_sum += std::clamp(current_time - last_time, 0.0, 0.05);
+  // }
+  last_time = current_time;
+  current_time = time_sum;
+
+  std::cout << "current_time: " << current_time << std::endl;
+  std::cout << "last_time: " << last_time << std::endl;
+  std::cout << "time_sum: " << time_sum << std::endl;
 
   // Constants (adjust as needed for your specific system)
   const double STUCK_TIMEOUT = 1.5;      // Time to consider a ring stuck
@@ -635,7 +658,9 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
     // Normal hook logic
     if (store_ring) {
       // should not score the ring, will be stored in the center of the robot
-      hook = true;
+      // hook = false;
+      bool scoring_ring = current_time - ring_time_queue.front() < m_ring_score_timeout / 2.0;
+      hook = scoring_ring;
     } else {
       // If not storing, keep hooks moving for an extra period of time to ensure scoring
       bool scoring_ring = current_time - ring_time_queue.front() < m_ring_score_timeout;
@@ -675,10 +700,12 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   // std::cout << "queue.size: " << ring_queue.size() << std::endl;
   // std::cout << "queue.front: " << ring_queue.front() << std::endl;
 
+  bool ground_intake = !store_ring || !(ring_queue.size() >= 2 && store_ring);
+
   last_color = m_ring_color;
   // std::cout << "queue.back: " << ring_queue.back() << std::endl;
   // Call motor control with determined states
-  updateIntake(true, hook, ejecting, !hook && retry_mode, current_time);
+  updateIntake(ground_intake, hook, ejecting, !hook && retry_mode, current_time);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(JoyPtr joy_data, double current_time)
