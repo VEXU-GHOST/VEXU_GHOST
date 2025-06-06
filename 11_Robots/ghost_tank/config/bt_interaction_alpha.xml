@@ -4,8 +4,6 @@
 
   <BehaviorTree ID="main">
     <Sequence>
-      <!-- ADD ALL PNEUMATICS HERE AGAIN -->
-      <!-- they will all reset when starting interaction -->
       <KeepRunningUntilFailure>
         <AutonTimer seconds="60">
           <Repeat num_cycles="-1">
@@ -16,17 +14,5 @@
       <!-- INSERT WHATEVER BUDDY CLIMB CODE HERE -->
     </Sequence>
   </BehaviorTree>
-
-  <!-- Description of Node Models (used by Groot) -->
-  <TreeNodesModel>
-    <Decorator ID="AutonTimer"
-            editable="true">
-      <input_port name="seconds"/>
-    </Decorator>
-    <Action ID="Logging"
-            editable="true">
-      <input_port name="message"/>
-    </Action>
-  </TreeNodesModel>
 
 </root>
