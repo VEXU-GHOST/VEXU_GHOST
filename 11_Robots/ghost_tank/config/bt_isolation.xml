@@ -20,6 +20,8 @@
           _autoremap="true"/>
         <SubTree ID="grab_middle_goal"
           _autoremap="true"/>
+        <ClampCmd clamp_closed="true"/>
+        <BiteCmd bite_closed="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
         <!-- <SubTree ID="intake_middle_ring" _autoremap="true"/> -->
@@ -27,7 +29,7 @@
         <SubTree ID="skip_middle_ring"
           _autoremap="true"/>
 
-        <SetMirrored mirrored="true"/>
+        <!-- <SetMirrored mirrored="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
         <SetMirrored mirrored="false"/>
@@ -35,7 +37,7 @@
         <SubTree ID="corner_shove"
           _autoremap="true"/>
         <SubTree ID="get_far_goal"
-          _autoremap="true"/>
+          _autoremap="true"/> -->
       </Sequence>
       <WaitCmd seconds="500.0"
         shutoff_motors="true"/>
