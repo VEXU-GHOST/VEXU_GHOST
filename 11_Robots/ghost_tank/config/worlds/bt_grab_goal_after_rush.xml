@@ -219,6 +219,7 @@
         posY_tiles="0.0"
         timeout_ms="1000"
         backwards="false"
+                  ang_vel_exit_threshold_dps="10.0"
         angle_exit_threshold_deg="1.0" />
 
       <MoveVoltage forward_effort="0.5" angular_effort="0.0" timeout_ms="1000" />

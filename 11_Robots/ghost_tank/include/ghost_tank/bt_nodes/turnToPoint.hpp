@@ -40,6 +40,7 @@ private:
     double posY_m;
     int timeout_ms;
     double angle_exit_threshold_rad;
+    double angle_vel_exit_threshold_rps;
     double des_ang_rad;
     bool backwards;
 };

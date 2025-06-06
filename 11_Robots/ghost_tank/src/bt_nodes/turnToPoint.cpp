@@ -18,6 +18,7 @@ TurnToPoint::TurnToPoint(const std::string & name, const BT::NodeConfig & config
   timeout_ms = BT_Util::get_input<int>(this, "timeout_ms");
   backwards = BT_Util::get_input<bool>(this, "backwards");
   angle_exit_threshold_rad = BT_Util::get_input<double>(this, "angle_exit_threshold_deg", 5.0) * ghost_util::DEG_TO_RAD;
+  angle_vel_exit_threshold_rps = BT_Util::get_input<double>(this, "ang_vel_exit_threshold_dps") * ghost_util::DEG_TO_RAD;
 }
 
 BT::PortsList TurnToPoint::providedPorts()
@@ -27,7 +28,8 @@ BT::PortsList TurnToPoint::providedPorts()
     BT::InputPort<double>("posY_tiles"),
     BT::InputPort<bool>("backwards"),
     BT::InputPort<int>("timeout_ms"),
-    BT::InputPort<double>("angle_exit_threshold_deg")
+    BT::InputPort<double>("angle_exit_threshold_deg"),
+    BT::InputPort<double>("ang_vel_exit_threshold_dps"),
   };
 }
 
@@ -58,9 +60,10 @@ BT::NodeStatus TurnToPoint::onRunning()
 {
   double theta_err_rad = ghost_util::SmallestAngleDistRad(des_ang_rad, tank_model_ptr_->getWorldPose().z());
   bool angle_satisfied = std::fabs(theta_err_rad) < angle_exit_threshold_rad;
+  bool ang_vel_satisfied = std::fabs(tank_model_ptr_->getWorldTwist().z()) < angle_vel_exit_threshold_rps;
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
-  if (angle_satisfied || time_elapsed > timeout_ms) {
+  if ((angle_satisfied && ang_vel_satisfied) || time_elapsed > timeout_ms) {
     tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
   }

@@ -151,7 +151,7 @@ void AlphaJerryPlugin::autonomous(double current_time)
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], (bt_->get_variable<int>("goal_rush_l_down")));
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], (bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down")));
   }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
 }
 
 void AlphaJerryPlugin::teleop(double current_time)
@@ -161,6 +161,10 @@ void AlphaJerryPlugin::teleop(double current_time)
   bool shift_l = joy_data->btn_d;
 
   TankRobotPlugin::teleop(current_time);
+
+  if (m_running_auton) {
+    return;
+  }
 
   updateScissor(joy_data->btn_l1, joy_data->btn_l2, shift_r);
   updateT1Climb(joy_data->btn_r1, joy_data->btn_r2, shift_r);

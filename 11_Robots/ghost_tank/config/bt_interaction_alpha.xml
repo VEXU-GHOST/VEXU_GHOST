@@ -3,16 +3,19 @@
       main_tree_to_execute="main">
 
   <BehaviorTree ID="main">
-    <Sequence>
-      <KeepRunningUntilFailure>
-        <AutonTimer seconds="60">
-          <Repeat num_cycles="-1">
-            <Logging message="not buddy time"/>
-          </Repeat>
-        </AutonTimer>
-      </KeepRunningUntilFailure>
-      <!-- INSERT WHATEVER BUDDY CLIMB CODE HERE -->
-    </Sequence>
+    <Fallback>
+      <Sequence>
+        <ClampCmd clamp_closed="true"/>
+        <KeepRunningUntilFailure>
+          <AutonTimer seconds="85">
+            <Repeat num_cycles="-1">
+              <Logging message="not buddy time"/>
+            </Repeat>
+          </AutonTimer>
+        </KeepRunningUntilFailure>
+      </Sequence>
+      <ClampCmd clamp_closed="false"/>
+    </Fallback>
   </BehaviorTree>
 
 </root>

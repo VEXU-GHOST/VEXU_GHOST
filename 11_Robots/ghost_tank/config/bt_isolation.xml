@@ -204,12 +204,14 @@
         posY_tiles="0.0"
         timeout_ms="2000"
         backwards="false"
+                  ang_vel_exit_threshold_dps="10.0"
         angle_exit_threshold_deg="1.0"/>
       <Logging message="done"/>
       <TurnToPoint posX_tiles="1.0"
         posY_tiles="3.0"
         timeout_ms="2000"
         backwards="true"
+                  ang_vel_exit_threshold_dps="10.0"
         angle_exit_threshold_deg="1.0"/>
       <WaitCmd seconds="500.0"
         shutoff_motors="true" />

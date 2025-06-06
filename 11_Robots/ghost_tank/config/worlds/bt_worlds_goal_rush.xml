@@ -5,8 +5,6 @@
       <Logging message="goal_rush" />
       <GoalRushCmd goal_rush_down="true" />
       <BiteCmd bite_closed="true" />
-      <IntakeCmd auto="false" ground_intake="true" />
-
       <Parallel failure_count="2" success_count="1">
         <ForceSuccess>
           <Fallback>
@@ -45,15 +43,33 @@
       <GoalRushCmd goal_rush_down="false" />
       <IntakeCmd auto="false" ground_intake="false" />
       <MoveVoltage forward_effort="-0.1" angular_effort="0.0" timeout_ms="50" />
+      <WaitCmd seconds="0.1" shutoff_motors="false" />
 
       <MoveToPoint 
-        kp="3.5"
+        kp="5.0"
         kd="0.0"
-        max_effort_percent="-1.0"
+        max_effort_percent="1.0"
         timeout_ms="700"
-        backwards="false"
-        distance_tiles="0.5"/>
+        backwards="true"
+        distance_tiles="1.0"/>
       <GoalRushCmd goal_rush_down="true" />
+      <WaitCmd seconds="0.25" shutoff_motors="false" />
+      <MoveToPoint 
+      kp="5.0"
+      kd="0.0"
+      max_effort_percent="1.0"
+      timeout_ms="1500"
+      backwards="true"
+      distance_tiles="1.0"/>
+      <GoalRushCmd goal_rush_down="false" />
+      <WaitCmd seconds="0.25" shutoff_motors="false" />
+      <MoveToPoint 
+      kp="5.0"
+      kd="0.0"
+      max_effort_percent="1.0"
+      timeout_ms="1500"
+      backwards="false"
+      distance_tiles="0.5"/>
     </Sequence>
   </BehaviorTree>
 
