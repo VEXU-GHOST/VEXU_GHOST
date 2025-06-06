@@ -41,7 +41,8 @@ BT::NodeStatus MoveScissor::onRunning()
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
     std::chrono::system_clock::now() - start_time_).count();
   if (time_elapsed > std::abs(timeout_ms)) {
-    return BT::NodeStatus::FAILURE;
+    std::cout << "[MoveScissor::onRunning] Timed Out." << std::endl;
+    return BT::NodeStatus::SUCCESS;
   }
 
   double current_position = rhi_ptr_->getMotorPosition("scissor_motor");
