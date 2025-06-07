@@ -24,20 +24,21 @@
         <BiteCmd bite_closed="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
-        <!-- <SubTree ID="intake_middle_ring" _autoremap="true"/> -->
+        <SubTree ID="intake_middle_ring" _autoremap="true"/>
 
-        <SubTree ID="skip_middle_ring"
-          _autoremap="true"/>
+        <!-- <SubTree ID="skip_middle_ring"
+          _autoremap="true"/> -->
 
         <SetMirrored mirrored="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
-        <SetMirrored mirrored="false"/>
 
         <SubTree ID="corner_shove"
           _autoremap="true"/>
         <SubTree ID="get_far_goal"
           _autoremap="true"/>
+        <SetMirrored mirrored="false"/>
+        
       </Sequence>
       <WaitCmd seconds="500.0"
         shutoff_motors="true"/>
@@ -175,21 +176,44 @@
   <BehaviorTree ID="grab_middle_goal">
     <Sequence>
       <ClampCmd clamp_closed="false"/>
-      <ArcturnToPoint posX_tiles="6.0"
-        posY_tiles="1.0"
-        timeout_ms="3000"
-        angle_exit_threshold_deg="7.5"
-        ang_vel_exit_threshold_dps="40.0"
-        drive_backwards="true"
-        face_backwards="true"/>
       <NeutralStakeCmd state="2"
-        timeout_ms="10"/>
+      timeout_ms="10"/>
+      
+      <Parallel failure_count="2" success_count="1">
+        <Sequence>
+          <ArcturnToPoint posX_tiles="6.0"
+            posY_tiles="0.9"
+            timeout_ms="3000"
+            angle_exit_threshold_deg="3.0"
+            ang_vel_exit_threshold_dps="40.0"
+            drive_backwards="true"
+            face_backwards="true"/>
+          <MoveToPoint kp="5.0"
+            kd="0.0"
+            max_effort_percent="0.4"
+            timeout_ms="1500"
+            backwards="true"
+            distance_tiles="0.7"/>
+        </Sequence>
+        <Fallback>
+          <Sequence>
+            <Delay delay_msec="500">
+              <RetryUntilSuccessful num_attempts="-1">
+                <GoalDetected threshold="0.65" />
+              </RetryUntilSuccessful>
+            </Delay>
+            <Logging message="Goal detected!" />
+          </Sequence>
+          <Logging message="Goal detection failed" />
+        </Fallback>
+      </Parallel>
+
       <MoveToPoint kp="3.0"
         kd="0.0"
-        max_effort_percent="0.4"
+        max_effort_percent="0.2"
         timeout_ms="1500"
         backwards="true"
-        distance_tiles="0.7"/>
+        distance_tiles="0.4"/>
       <ClampCmd clamp_closed="true"/>
       <BiteCmd bite_closed="true"/>
       <IntakeCmd auto="true"

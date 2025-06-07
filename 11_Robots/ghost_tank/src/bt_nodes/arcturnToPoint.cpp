@@ -99,13 +99,13 @@ BT::NodeStatus ArcturnToPoint::onRunning()
   cmd_sign = (std::fabs(command) > 0.01) ? cmd_sign : 0.0;
   double breaking = 0.01 * cmd_sign;
 
-  std::cout << "theta_err_rad: " << theta_err_rad << std::endl;
-  std::cout << "vel err: " << -tank_model_ptr_->getWorldTwist().z() << std::endl;
+  // std::cout << "theta_err_rad: " << theta_err_rad << std::endl;
+  // std::cout << "vel err: " << -tank_model_ptr_->getWorldTwist().z() << std::endl;
   if (use_right_side) {
-    std::cout << "right command: " << command << std::endl;
+    // std::cout << "right command: " << command << std::endl;
     tank_model_ptr_->driveCommandTank(0.0, command);
   } else {
-    std::cout << "left command: " << -command << std::endl;
+    // std::cout << "left command: " << -command << std::endl;
     tank_model_ptr_->driveCommandTank(-command, 0.0);
   }
 

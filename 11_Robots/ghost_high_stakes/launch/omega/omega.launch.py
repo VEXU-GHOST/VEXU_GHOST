@@ -108,7 +108,7 @@ def generate_launch_description():
         output="screen",
         namespace="/sensors/color_sensors/goal_rush_l",
         parameters=[ros_config_file, base_params_file, {
-            "address": 0x39 ^ 0x70, # both address translator switches off so ^ 0x70
+            "address": 0x69, # both address translator switches off so ^ 0x70
         }],
     )
     color_sensor_goal_rush_r = Node(
@@ -118,7 +118,17 @@ def generate_launch_description():
         output="screen",
         namespace="/sensors/color_sensors/goal_rush_r",
         parameters=[ros_config_file, base_params_file, {
-            "address": 0x39 ^ 0x50, # one switch on idk which trial and error so ^ 0x40
+            "address": 0x99, # one switch on idk which trial and error so ^ 0x40
+        }],
+    )
+    color_sensor_goal_clamp = Node(
+        package="ghost_sensing",
+        executable="avago_color_sensor",
+        name="avago_color_sensor_goal_clamp",
+        output="screen",
+        namespace="/sensors/color_sensors/goal_clamp",
+        parameters=[ros_config_file, base_params_file, {
+            "address": 0x39, # one switch on idk which trial and error so ^ 0x40
         }],
     )
 
@@ -158,8 +168,10 @@ def generate_launch_description():
         map_ekf_node,
         color_sensor_intake,
         color_classifier_intake,
-        color_sensor_goal_rush_l,
+        # color_sensor_goal_rush_l,
         # color_sensor_goal_rush_r,
+        color_sensor_goal_clamp,
+
         competition_state_machine_node,
         gpio_expander,
     ])

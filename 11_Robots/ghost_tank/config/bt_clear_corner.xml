@@ -80,7 +80,7 @@
             posY_tiles="0.0"
             timeout_ms="5000"
             angle_exit_threshold_deg="1.0"
-            ang_vel_exit_threshold_dps="10.0"
+            ang_vel_exit_threshold_dps="20.0"
             drive_backwards="false"
             face_backwards="false"/>
         </Sequence>

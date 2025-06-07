@@ -5,11 +5,12 @@
   <BehaviorTree ID="main">
     <Fallback>
       <KeepRunningUntilFailure>
-        <AutonTimer seconds="55">
+        <AutonTimer seconds="2">
           <Sequence>
-            <SetMirrored mirrored="false"/>
-            <ClampCmd clamp_closed="true"/>
-            <GenerateBezierPath end_x_tiles="1.0"
+            <SetMirrored mirrored="true"/>
+            <BiteCmd bite_closed="true"/>
+            <!-- <ClampCmd clamp_closed="true"/> -->
+            <!-- <GenerateBezierPath end_x_tiles="1.0"
               end_y_tiles="1.0"
               end_theta_deg="45.0"
               lead_tiles="1.0"
@@ -29,7 +30,7 @@
               k_lookahead="0.3"
               deceleration_start_distance_tiles="1.0"
               deceleration_exponent="1.5"
-              min_approach_velocity_tps="0.05"/>
+              min_approach_velocity_tps="0.05"/> -->
             <Repeat num_cycles="-1">
               <Logging message="interacting"/>
             </Repeat>
@@ -37,7 +38,7 @@
         </AutonTimer>
       </KeepRunningUntilFailure>
       <Sequence>
-        <ClampCmd clamp_closed="false"/>
+        <ClampCmd clamp_closed="true"/>
         <Logging message="leave corner"/>
         <GenerateBezierPath end_x_tiles="1.0"
           end_y_tiles="2.0"
@@ -60,6 +61,9 @@
           deceleration_start_distance_tiles="1.0"
           deceleration_exponent="1.5"
           min_approach_velocity_tps="0.05"/>
+
+        <Logging message="facing ladder"/>
+
         <TurnToPoint posX_tiles="2.0"
           posY_tiles="3.0"
           timeout_ms="2000"
@@ -78,16 +82,69 @@
           timeout_ms="3000"
           backwards="true"
           distance_tiles="0.4"/>
-        <BiteCmd bite_closed="true"/>
+
+        <Logging message="turning around"/>
+
+        <TurnToPoint posX_tiles="2.0"
+          posY_tiles="3.0"
+          timeout_ms="2000"
+          backwards="true"
+          angle_exit_threshold_deg="1.0"/>
         <IntakeCmd auto="false"
           ground_intake="false"
           store_ring="false"/>
+
+        <Logging message="shoving ring under"/>
+        
+        <Repeat num_cycles="3">
+          <Sequence>
+            <MoveToPoint kp="5.0"
+              kd="0.0"
+              max_effort_percent="0.5"
+              timeout_ms="2000"
+              backwards="true"
+              distance_tiles="0.6"/>
+            <MoveToPoint kp="5.0"
+              kd="0.0"
+              max_effort_percent="0.2"
+              timeout_ms="2000"
+              backwards="false"
+              distance_tiles="0.4"/>
+          </Sequence>
+        </Repeat>
+        
+        <Logging message="facing ladder to climb"/>
+        <TurnToPoint posX_tiles="2.0"
+          posY_tiles="3.0"
+          timeout_ms="2000"
+          backwards="false"
+          angle_exit_threshold_deg="1.0"/>
+        <BiteCmd bite_closed="false"/>
         <MoveToPoint kp="5.0"
           kd="0.0"
           max_effort_percent="0.2"
           timeout_ms="3000"
           backwards="false"
           distance_tiles="0.6"/>
+
+        <Logging message="waiting until end of match"/>
+        
+        <Fallback>
+          <KeepRunningUntilFailure>
+            <AutonTimer seconds="87">
+              <WaitCmd seconds="500.0"
+                shutoff_motors="true"/>
+            </AutonTimer>
+          </KeepRunningUntilFailure>
+          <Sequence>
+            <MoveToPoint kp="5.0"
+              kd="0.0"
+              max_effort_percent="0.8"
+              timeout_ms="3000"
+              backwards="true"
+              distance_tiles="0.7"/>
+          </Sequence>
+        </Fallback>
         <WaitCmd seconds="500.0"
           shutoff_motors="true"/>
       </Sequence>
