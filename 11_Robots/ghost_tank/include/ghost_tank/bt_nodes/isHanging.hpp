@@ -25,34 +25,35 @@
 
 #include "behaviortree_cpp/behavior_tree.h"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
-#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
-#include "nav_msgs/msg/odometry.hpp"
+#include "ghost_tank/tank_model.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
 using std::placeholders::_1;
 
-namespace ghost_tank {
+namespace ghost_tank
+{
 
-class IsHanging : public BT::StatefulActionNode {
-public:
-    IsHanging(const std::string& name, const BT::NodeConfig& config);
+    class IsHanging : public BT::StatefulActionNode
+    {
+    public:
+        IsHanging(const std::string &name, const BT::NodeConfig &config);
 
-    static BT::PortsList providedPorts();
-    
-    BT::NodeStatus onStart();
-    BT::NodeStatus onRunning();
-    void ekfCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+        static BT::PortsList providedPorts();
 
-private:
-    std::shared_ptr<rclcpp::Node> node_ptr_;
-    std::shared_ptr<rclcpp::Subscription<nav_msgs::msg::Odometry>> ekf_sub_;
-    BT::Blackboard::Ptr blackboard_;
+        BT::NodeStatus onStart();
+        BT::NodeStatus onRunning();
+        void onHalted();
 
-    rclcpp::Time start_time_;
-    double threshold_;
-    double test_duration_;
-    bool hanging_;
-};
+    private:
+        std::shared_ptr<TankModel> tank_model_ptr_;
+        BT::Blackboard::Ptr blackboard_;
+        bool first_loop_;
+        std::chrono::time_point<std::chrono::system_clock> start_time_;
+
+        double vel_threshold_mps_;
+        double test_thrust_pct_;
+        int test_duration_ms_;
+    };
 
 } // namespace ghost_tank

@@ -202,6 +202,8 @@ public:
 
   void driveCommandJoystick(double fwd_vel, double ang_vel, double deadzone);
 
+  double getCurrentHighestWheelLinearVelocity();
+
 protected:
   // Initialization
   void validateConfig();

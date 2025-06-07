@@ -39,6 +39,18 @@
   </Fallback>
   </BehaviorTree>
 
+
+  <BehaviorTree ID="test_is_hanging">
+    <Fallback>
+    <Sequence>
+        <IsHanging vel_threshold_tps="3.0" test_thrust_pct="1.0" test_duration_ms="1000"/>
+        <Logging message="Success! Robot is hanging!" />
+      </Sequence>
+      <Logging message="Failed! Robot is not hanging!" />
+    </Fallback>
+  </BehaviorTree>
+
+
   <BehaviorTree ID="go_straight_to_ladder">
     <Sequence>
       <Sequence>
@@ -544,6 +556,12 @@
       editable="true">
       <input_port name="message" />
     </Action>
+  <Action ID="IsHanging"
+    editable="true">
+    <input_port name="vel_threshold_tps" />
+    <input_port name="test_thrust_pct" />
+    <input_port name="test_duration_ms" />
+  </Action>
     <Action ID="MoveToPoseBezier"
       editable="true">
       <input_port name="posX_tiles" />
