@@ -7,8 +7,35 @@
         ground_intake="true"
         store_ring="false"/>
       <ClampCmd clamp_closed="false"/>
-      <BiteCmd bite_closed="true"/>
+      <!-- <BiteCmd bite_closed="true"/> -->
       <Sequence>
+        <TurnToPoint posX_tiles="5.0"
+          posY_tiles="1.0"
+          timeout_ms="1500"
+          backwards="false"
+          angle_exit_threshold_deg="1.0"/>
+        <BiteCmd bite_closed="false"/>
+        
+        <MoveToPoint kp="5.0"
+          kd="0.2"
+          max_effort_percent="0.5"
+          timeout_ms="850"
+          backwards="false"
+          distance_tiles="0.5"/>
+
+        <MoveToPoint kp="5.0"
+          kd="0.2"
+          max_effort_percent="0.5"
+          timeout_ms="850"
+          backwards="true"
+          distance_tiles="0.5"/>
+        
+        <TurnToPoint posX_tiles="1.0"
+          posY_tiles="5.0"
+          timeout_ms="1500"
+          backwards="false"
+          angle_exit_threshold_deg="1.0"/>
+
         <GenerateBezierPath end_x_tiles="0.9"
           end_y_tiles="2.0"
           end_theta_deg="90.0"
