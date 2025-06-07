@@ -34,6 +34,9 @@ BT::NodeStatus MoveScissor::onRunning()
   double tolerance = BT_Util::get_input<double>(this, "offset") * INCH_TO_DEG;
   timeout_ms = BT_Util::get_input<int>(this, "timeout_ms");
 
+
+
+
   if (first_loop_) {
     start_time_ = std::chrono::system_clock::now();
     first_loop_ = false;
@@ -47,6 +50,12 @@ BT::NodeStatus MoveScissor::onRunning()
 
   double current_position = rhi_ptr_->getMotorPosition("scissor_motor");
   double error = target - current_position;
+
+  std::cout << "current_position:" << current_position << std::endl;
+  std::cout << "target:" << target << std::endl;
+  std::cout << "error:" << error << std::endl;
+  std::cout << std::endl;
+
 
   if (std::fabs(error) > tolerance) {
     // Bang bang control: full voltage in the direction of the error

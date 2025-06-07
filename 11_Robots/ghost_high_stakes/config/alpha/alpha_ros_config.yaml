@@ -54,7 +54,7 @@ competition_state_machine_node:
       steering_approach:
         kp: 0.0
         ki: 0.0
-        kd: 0.15
+        kd: 0.15 #0.11
         integral_limit: 0.0
         integral_activation_bound: 0.0
 
@@ -75,11 +75,16 @@ competition_state_machine_node:
       arc_turn:
         kp: 2.0
         ki: 3.0
-        kd: 0.2
+        kd: 0.2 # 0.4
         integral_limit: 0.4
-        integral_activation_bound: 0.5
+        integral_activation_bound: 0.5 #0.25
 
       init_x_tiles: 1.5
       init_y_tiles: 1.15
       init_theta_degrees: 113.0
+      
+      # init_x_tiles: 1.5
+      # init_y_tiles: 1.0
+      # init_theta_degrees: 90.0
+
 

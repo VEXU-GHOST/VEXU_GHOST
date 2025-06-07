@@ -97,7 +97,7 @@ BT::NodeStatus ArcturnToPoint::onRunning()
 
   double cmd_sign = (command > 0.0) ? 1.0 : -1.0;
   cmd_sign = (std::fabs(command) > 0.01) ? cmd_sign : 0.0;
-  double breaking = 0.01 * cmd_sign;
+  double breaking = 0.05 * cmd_sign;
 
   std::cout << "theta_err_rad: " << theta_err_rad << std::endl;
   std::cout << "vel err: " << -tank_model_ptr_->getWorldTwist().z() << std::endl;

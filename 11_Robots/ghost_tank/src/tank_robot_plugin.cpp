@@ -424,10 +424,10 @@ void TankRobotPlugin::publishIMUData()
     imu_msg.angular_velocity.x = rhi_ptr_->getInertialSensorXRate("imu") * ghost_util::DEG_TO_RAD;
   }
   if (!std::isnan(rhi_ptr_->getInertialSensorYRate("imu"))) {
-    imu_msg.angular_velocity.y = rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD;
+    imu_msg.angular_velocity.y = -rhi_ptr_->getInertialSensorYRate("imu") * ghost_util::DEG_TO_RAD; // TODO: random unconfigured negative sign
   }
   if (!std::isnan(rhi_ptr_->getInertialSensorZRate("imu"))) {
-    imu_msg.angular_velocity.z = rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;
+    imu_msg.angular_velocity.z = -rhi_ptr_->getInertialSensorZRate("imu") * ghost_util::DEG_TO_RAD;// TODO: random unconfigured negative sign, use config.yml probably
   }
   double world_yaw;
   if (!std::isnan(rhi_ptr_->getInertialSensorHeading("imu"))) {
