@@ -57,6 +57,8 @@ namespace ghost_tank
         test_thrust_pct_ = BT_Util::get_input<double>(this, "test_thrust_pct") * ghost_util::TILES_TO_METERS;
         test_duration_ms_ = BT_Util::get_input<int>(this, "test_duration_ms") * ghost_util::TILES_TO_METERS;
 
+        double wheel_speed = tank_model_ptr_->getCurrentHighestWheelLinearVelocity();
+
         int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
         if (time_elapsed < test_duration_ms_)
         {
@@ -65,8 +67,12 @@ namespace ghost_tank
         }
         else
         {
+            bool hanging = (wheel_speed > vel_threshold_mps_);
+
+            std::cout << "[IsHanging::onRunning] Current Wheel Linear Speed (m/s): " << wheel_speed << std::endl;
+            std::cout << "[IsHanging::onRunning] Velocity Threshold (m/s): " << vel_threshold_mps_ << std::endl;
+
             tank_model_ptr_->driveCommandArcade(0.0, 0.0);
-            bool hanging = (tank_model_ptr_->getCurrentHighestWheelLinearVelocity() > vel_threshold_mps_);
             return hanging ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
         }
     }

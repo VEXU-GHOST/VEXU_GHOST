@@ -63,15 +63,21 @@ namespace ghost_tank
 
     for (const auto motor_name : m_config.motor_list_left)
     {
-      max_vel = std::max<double>(std::fabs(rhi_ptr_->getMotorVelocityRPM(motor_name)), max_vel);
+      double wheel_vel = rhi_ptr_->getMotorVelocityRPM(motor_name);
+      std::cout << "\t" << motor_name << ": " << wheel_vel << std::endl;
+      max_vel = std::max<double>(std::fabs(wheel_vel), max_vel);
     }
 
     for (const auto motor_name : m_config.motor_list_right)
     {
-      max_vel = std::max<double>(std::fabs(rhi_ptr_->getMotorVelocityRPM(motor_name)), max_vel);
+      double wheel_vel = rhi_ptr_->getMotorVelocityRPM(motor_name);
+      std::cout << "\t" << motor_name << ": " << wheel_vel << std::endl;
+      max_vel = std::max<double>(std::fabs(wheel_vel), max_vel);
     }
 
-    max_vel *= M_2PI * m_config.wheel_radius_in * ghost_util::INCHES_TO_METERS * m_config.wheel_gear_ratio;
+    std::cout << "[TankModel::getCurrentHighestWheelLinearVelocity] Max Wheel RPM: " << max_vel << std::endl;
+
+    max_vel *= M_2PI * m_config.wheel_radius_in * ghost_util::INCHES_TO_METERS * m_config.wheel_gear_ratio / 60.0;
 
     return max_vel;
   }

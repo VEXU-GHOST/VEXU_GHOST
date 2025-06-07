@@ -15,7 +15,6 @@
         </KeepRunningUntilFailure>
       </Sequence>
       <ClampCmd clamp_closed="false"/>
-      <MoveScissor scissor_position_in="20" offset="1" timeout_ms="5000"/>
     </Fallback>
   </BehaviorTree>
 

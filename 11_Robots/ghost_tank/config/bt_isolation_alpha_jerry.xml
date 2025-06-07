@@ -34,27 +34,6 @@
       <!-- Go to Ladder -->
       <Logging message="going to ladder" />
 
-      <!-- <GenerateBezierPath end_x_tiles="2.0"
-          end_y_tiles="3.0"
-          end_theta_deg="45.0"
-          lead_tiles="0.7"
-          backwards="false"
-          type="QUADRATIC_BEZIER"
-          num_points="250"/>
-        <FollowPathPurePursuit xy_exit_threshold_tiles="0.15"
-          angle_exit_threshold_deg="10.0"
-          lin_vel_exit_threshold_tps="0.5"
-          ang_vel_exit_threshold_dps="30.0"
-          max_speed_linear_percent="0.8"
-          max_speed_angular_percent="1.0"
-          timeout_ms="1500"
-          use_theta="true"
-          min_pursuit_radius_tiles="0.3"
-          k_lookahead="0.15"
-          deceleration_start_distance_tiles="1.25"
-          deceleration_exponent="1.5"
-          min_approach_velocity_tps="0.05"/>  -->
-
       <MoveToPoint kp="2.5"
         kd="0.1"
         max_effort_percent="1.0"
@@ -69,10 +48,6 @@
         ang_vel_exit_threshold_dps="10.0"
         drive_backwards="false"
         face_backwards="false" />
-
-      <!-- Settling -->
-      <Logging message="Settling" />
-      <WaitCmd seconds="0.250" shutoff_motors="true" />
 
       <!-- Engage Ladder -->
       <SubTree ID="engage_ladder" _autoremap="true" />
@@ -102,19 +77,24 @@
     <Sequence>
       <Logging message="Engaging Ladder!" />
       <MoveVoltage forward_effort="0.75" angular_effort="0.0" timeout_ms="1000" />
+
+      <!-- Settling -->
+      <Logging message="Settling" />
+      <WaitCmd seconds="0.25" shutoff_motors="true" />
+
       <ParallelAll>
         <MoveVoltage forward_effort="1.0" angular_effort="0.0" timeout_ms="1000" />
         <ClimbCmd climb_extended="false" />
       </ParallelAll>
+      <WaitCmd seconds="0.25" shutoff_motors="true" />
       <SubTree ID="attempt_high_stake" _autoremap="true" />
     </Sequence>
   </BehaviorTree>
 
-
   <BehaviorTree ID="attempt_high_stake">
     <Fallback>
       <Sequence>
-        <IsHanging vel_threshold_tps="3.0" test_thrust_pct="1.0" test_duration_ms="1000" />
+        <IsHanging vel_threshold_tps="1.75" test_thrust_pct="-1.0" test_duration_ms="500" />
         <Logging message="Success! Robot is hanging!" />
         <Logging message="Score the High Stake!" />
         <MoveScissor scissor_position_in="20" offset="1" timeout_ms="5000" />
