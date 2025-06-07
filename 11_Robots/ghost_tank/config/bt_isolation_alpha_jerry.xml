@@ -10,54 +10,31 @@
 
   <BehaviorTree ID="main_tree">
     <Fallback>
-    <Sequence>
       <Sequence>
-        <Logging message="Starting main tree" />
-        <BiteCmd bite_closed="true" />
-        
-        <!-- <ClimbCmd climb_extended="true"/> -->
-        <!-- <SubTree ID="go_straight_to_ladder" _autoremap="true" /> -->
-        
-        <SubTree ID="worlds_goal_rush" _autoremap="true" />
-        <ClimbCmd climb_extended="true"/>
-        <SubTree ID="go_to_ladder_with_rush" _autoremap="true" />
-        
-        <MoveVoltage forward_effort="0.75" angular_effort="0.0" timeout_ms="1000" />
-        
-        <ParallelAll>
-        <MoveVoltage forward_effort="1.0" angular_effort="0.0" timeout_ms="1000" />
-        <ClimbCmd climb_extended="false"/>
-      </ParallelAll>
-        
-        
-        <MoveScissor scissor_position_in="20" offset="1" timeout_ms="5000"/>
+        <SubTree ID="hang_no_rush" _autoremap="true" />
+        <!-- <SubTree ID="hang_with_rush" _autoremap="true" /> -->
 
+        <!-- Prepare Buddy Climb -->
+        <ClampCmd clamp_closed="true" />
+
+        <WaitCmd seconds="500.0" shutoff_motors="true" />
       </Sequence>
       <WaitCmd seconds="500.0" shutoff_motors="true" />
-    </Sequence>
-    <WaitCmd seconds="500.0" shutoff_motors="true" />
-  </Fallback>
-  </BehaviorTree>
-
-
-  <BehaviorTree ID="test_is_hanging">
-    <Fallback>
-    <Sequence>
-        <IsHanging vel_threshold_tps="3.0" test_thrust_pct="1.0" test_duration_ms="1000"/>
-        <Logging message="Success! Robot is hanging!" />
-      </Sequence>
-      <Logging message="Failed! Robot is not hanging!" />
     </Fallback>
   </BehaviorTree>
 
-
-  <BehaviorTree ID="go_straight_to_ladder">
+  <BehaviorTree ID="hang_no_rush">
     <Sequence>
-      <Sequence>
-        <BiteCmd bite_closed="true" />
-        <Logging message="going to ladder" />
+      <Logging message="hang_no_rush" />
 
-        <!-- <GenerateBezierPath end_x_tiles="2.0"
+      <!-- Engage Pneumatics -->
+      <BiteCmd bite_closed="true" />
+      <ClimbCmd climb_extended="true" />
+
+      <!-- Go to Ladder -->
+      <Logging message="going to ladder" />
+
+      <!-- <GenerateBezierPath end_x_tiles="2.0"
           end_y_tiles="3.0"
           end_theta_deg="45.0"
           lead_tiles="0.7"
@@ -78,25 +55,84 @@
           deceleration_exponent="1.5"
           min_approach_velocity_tps="0.05"/>  -->
 
-          <MoveToPoint kp="2.5"
-          kd="0.1"
-          max_effort_percent="1.0"
-          timeout_ms="1000"
-          backwards="false"
-          distance_tiles="1.2"/>
+      <MoveToPoint kp="2.5"
+        kd="0.1"
+        max_effort_percent="1.0"
+        timeout_ms="1000"
+        backwards="false"
+        distance_tiles="1.2" />
 
-          <ArcturnToPoint posX_tiles="2.5"
-          posY_tiles="3.25"
-          timeout_ms="1000"
-          angle_exit_threshold_deg="5.0"
-          ang_vel_exit_threshold_dps="10.0"
-          drive_backwards="false"
-          face_backwards="false"/>
+      <ArcturnToPoint posX_tiles="2.5"
+        posY_tiles="3.25"
+        timeout_ms="1000"
+        angle_exit_threshold_deg="5.0"
+        ang_vel_exit_threshold_dps="10.0"
+        drive_backwards="false"
+        face_backwards="false" />
 
+      <!-- Settling -->
+      <Logging message="Settling" />
       <WaitCmd seconds="0.250" shutoff_motors="true" />
 
-      </Sequence>
+      <!-- Engage Ladder -->
+      <SubTree ID="engage_ladder" _autoremap="true" />
     </Sequence>
+
+  </BehaviorTree>
+
+  <BehaviorTree ID="hang_with_rush">
+    <Sequence>
+      <Logging message="hang_with_rush" />
+
+      <!-- Rush Goal -->
+      <BiteCmd bite_closed="true" />
+      <SubTree ID="worlds_goal_rush" _autoremap="true" />
+
+      <!-- Go to Ladder -->
+      <ClimbCmd climb_extended="true" />
+      <SubTree ID="go_to_ladder_with_rush" _autoremap="true" />
+
+      <!-- Engage Ladder -->
+      <SubTree ID="engage_ladder" _autoremap="true" />
+    </Sequence>
+
+  </BehaviorTree>
+
+  <BehaviorTree ID="engage_ladder">
+    <Sequence>
+      <Logging message="Engaging Ladder!" />
+      <MoveVoltage forward_effort="0.75" angular_effort="0.0" timeout_ms="1000" />
+      <ParallelAll>
+        <MoveVoltage forward_effort="1.0" angular_effort="0.0" timeout_ms="1000" />
+        <ClimbCmd climb_extended="false" />
+      </ParallelAll>
+      <SubTree ID="attempt_high_stake" _autoremap="true" />
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="attempt_high_stake">
+    <Fallback>
+      <Sequence>
+        <IsHanging vel_threshold_tps="3.0" test_thrust_pct="1.0" test_duration_ms="1000" />
+        <Logging message="Success! Robot is hanging!" />
+        <Logging message="Score the High Stake!" />
+        <MoveScissor scissor_position_in="20" offset="1" timeout_ms="5000" />
+      </Sequence>
+      <Logging message="Failed! Robot is not hanging!" />
+      <AlwaysSuccess name="Don't get DQed!" />
+    </Fallback>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="test_is_hanging">
+    <Fallback>
+      <Sequence>
+        <IsHanging vel_threshold_tps="3.0" test_thrust_pct="1.0" test_duration_ms="1000" />
+        <Logging message="Success! Robot is hanging!" />
+      </Sequence>
+      <Logging message="Failed! Robot is not hanging!" />
+    </Fallback>
   </BehaviorTree>
 
   <BehaviorTree ID="go_to_ladder_with_rush">
@@ -109,7 +145,7 @@
           lead_tiles="0.5"
           backwards="false"
           type="CUBIC_BEZIER"
-          num_points="250"/>
+          num_points="250" />
         <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
           angle_exit_threshold_deg="8.0"
           lin_vel_exit_threshold_tps="1.0"
@@ -122,14 +158,14 @@
           k_lookahead="0.0"
           deceleration_start_distance_tiles="1.0"
           deceleration_exponent="1.5"
-          min_approach_velocity_tps="0.05"/>
+          min_approach_velocity_tps="0.05" />
 
-          <TurnToPoint posX_tiles="3.0"
+        <TurnToPoint posX_tiles="3.0"
           posY_tiles="1.0"
           timeout_ms="1000"
           backwards="false"
-                    ang_vel_exit_threshold_dps="10.0"
-          angle_exit_threshold_deg="1.0"/>
+          ang_vel_exit_threshold_dps="10.0"
+          angle_exit_threshold_deg="1.0" />
 
         <GenerateBezierPath end_x_tiles="1.6"
           end_y_tiles="2.5"
@@ -137,7 +173,7 @@
           lead_tiles="0.5"
           backwards="true"
           type="CUBIC_BEZIER"
-          num_points="250"/>
+          num_points="250" />
         <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
           angle_exit_threshold_deg="8.0"
           lin_vel_exit_threshold_tps="1.0"
@@ -150,20 +186,20 @@
           k_lookahead="0.0"
           deceleration_start_distance_tiles="1.0"
           deceleration_exponent="1.5"
-          min_approach_velocity_tps="0.05"/>
+          min_approach_velocity_tps="0.05" />
 
-          <TurnToPoint posX_tiles="2.1"
+        <TurnToPoint posX_tiles="2.1"
           posY_tiles="3.1"
           timeout_ms="1750"
           backwards="false"
           ang_vel_exit_threshold_dps="10.0"
-          angle_exit_threshold_deg="1.0"/>
+          angle_exit_threshold_deg="1.0" />
         <MoveToPoint kp="5.0"
           kd="0.0"
           max_effort_percent="0.3"
           timeout_ms="1000"
           backwards="false"
-          distance_tiles="0.5"/>
+          distance_tiles="0.5" />
       </Sequence>
       <!-- <WaitCmd seconds="500.0" shutoff_motors="true" /> -->
     </Sequence>
@@ -329,7 +365,7 @@
     <Fallback>
       <BoundaryCheck y_threshold_tiles="1.0">
         <Sequence>
-      <WaitCmd seconds="0.5" shutoff_motors="true" />
+          <WaitCmd seconds="0.5" shutoff_motors="true" />
           <!-- <MoveToPoseBezier posX_tiles="1.0"
             posY_tiles="3.5"
             theta_deg="90.0"
@@ -556,12 +592,12 @@
       editable="true">
       <input_port name="message" />
     </Action>
-  <Action ID="IsHanging"
-    editable="true">
-    <input_port name="vel_threshold_tps" />
-    <input_port name="test_thrust_pct" />
-    <input_port name="test_duration_ms" />
-  </Action>
+    <Action ID="IsHanging"
+      editable="true">
+      <input_port name="vel_threshold_tps" />
+      <input_port name="test_thrust_pct" />
+      <input_port name="test_duration_ms" />
+    </Action>
     <Action ID="MoveToPoseBezier"
       editable="true">
       <input_port name="posX_tiles" />
