@@ -27,8 +27,8 @@ def generate_launch_description():
 
     # Get BT Path for autons
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
-    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation.xml")
-    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
+    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_skills.xml")
+    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_skills.xml")
 
     ########################
     ### Node Definitions ###

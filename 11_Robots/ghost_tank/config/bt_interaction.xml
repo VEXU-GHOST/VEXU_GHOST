@@ -68,6 +68,7 @@
           posY_tiles="3.0"
           timeout_ms="2000"
           backwards="false"
+                    vel_thresh="10.0"
           angle_exit_threshold_deg="1.0"/>
         <BiteCmd bite_closed="false"/>
         <MoveToPoint kp="5.0"
@@ -89,6 +90,7 @@
           posY_tiles="3.0"
           timeout_ms="2000"
           backwards="true"
+                    vel_thresh="10.0"
           angle_exit_threshold_deg="1.0"/>
         <IntakeCmd auto="false"
           ground_intake="false"
@@ -118,6 +120,7 @@
           posY_tiles="3.0"
           timeout_ms="2000"
           backwards="false"
+                    vel_thresh="10.0"
           angle_exit_threshold_deg="1.0"/>
         <BiteCmd bite_closed="false"/>
         <MoveToPoint kp="5.0"

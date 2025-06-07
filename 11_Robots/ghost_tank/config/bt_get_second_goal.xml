@@ -13,6 +13,7 @@
           posY_tiles="1.0"
           timeout_ms="1500"
           backwards="false"
+                    vel_thresh="10.0"
           angle_exit_threshold_deg="1.0"/>
         <BiteCmd bite_closed="false"/>
         
@@ -34,6 +35,7 @@
           posY_tiles="5.0"
           timeout_ms="1500"
           backwards="false"
+                    vel_thresh="10.0"
           angle_exit_threshold_deg="1.0"/>
 
         <GenerateBezierPath end_x_tiles="0.9"
