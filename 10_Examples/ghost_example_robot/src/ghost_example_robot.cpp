@@ -132,6 +132,39 @@ void GhostExampleRobot::teleop(double current_time)
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
   }
+  if (joy_data->btn_r1) {
+    auto joy_data = rhi_ptr_->getMainJoystickData();
+
+    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
+    double forward_vel = joy_data->left_y / 127.0;
+    double angular_vel = joy_data->right_x / 127.0;
+    double threshold = 0.05;
+    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+    // 
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", forward_vel + angular_vel);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", forward_vel - angular_vel);
+
+    // 
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    // Now we can get motor data and print it.
+    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    std::cout << std::endl;
+  } else {
+    // Don't forget to turn motors off!
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+  }
 }
 } // namespace ghost_example_robot
 
