@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ghost_example_robot</name>
+  <version>0.0.0</version>
+  <description>Provides Example Robot Plugin for interacting with V5 Hardware</description>
+  <maintainer email="jessemaxxwilson@utexas.edu">maxx</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_export_depend>ament_cmake</build_export_depend>
+  <depend>ament_cmake_gtest</depend>
+  <depend>ghost_ros_interfaces</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
