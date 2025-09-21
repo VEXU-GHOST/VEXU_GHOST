@@ -105,7 +105,7 @@ void GhostExampleRobot::teleop(double current_time)
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
     double left_wheel_power = joy_data->left_y / 127.0;
     double right_wheel_power = joy_data->right_y / 127.0;
-
+    
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
