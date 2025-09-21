@@ -60,6 +60,8 @@ void GhostExampleRobot::autonomous(double current_time)
 
 void GhostExampleRobot::teleop(double current_time)
 {
+  bool useTankDrive = true;
+
   static int loop_count = 0;
   if (loop_count++ % 100 == 0) {
     std::cout << "Teleop " << current_time << std::endl;
@@ -69,8 +71,10 @@ void GhostExampleRobot::teleop(double current_time)
 
   if (joy_data->btn_a) {
     std::cout << "Button A!" << std::endl;
+    useTankDrive = true;
   } else if (joy_data->btn_b) {
     std::cout << "Button B!" << std::endl;
+    useTankDrive = false;
   } else if (joy_data->btn_x) {
     std::cout << "Button X!" << std::endl;
   } else if (joy_data->btn_y) {
@@ -102,16 +106,31 @@ void GhostExampleRobot::teleop(double current_time)
 
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
-    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double forward_vel = joy_data->left_y / 127.0;
-    double angular_vel = joy_data->right_x / 127.0;
+    double left_wheel_power = 0.00;
+    double right_wheel_power = 0.00;
 
-    double threshold = 0.05;
-    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
-    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+    if (!useTankDrive)
+    {
+      // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
+      double forward_vel = joy_data->left_y / 127.0;
+      double angular_vel = joy_data->right_x / 127.0;
 
-    double left_wheel_power = 0.5*(forward_vel + angular_vel);
-    double right_wheel_power = 0.5*(forward_vel - angular_vel);
+      //Create dead zone for joystick
+      double threshold = 0.05;
+      forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+      angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+
+      //Translate forward and angular movement to wheel power
+      left_wheel_power = 0.5*(forward_vel + angular_vel);
+      right_wheel_power = 0.5*(forward_vel - angular_vel);
+    }
+    else
+    {
+      // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
+      left_wheel_power = joy_data->left_y / 127.0;
+      right_wheel_power = joy_data->right_y / 127.0;
+    }
+
 
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
