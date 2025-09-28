@@ -1,0 +1,6 @@
+add_executable(hello_world src/hello_world.cpp)
+
+install(TARGETS
+  hello_world
+  DESTINATION lib/${PROJECT_NAME}
+)
