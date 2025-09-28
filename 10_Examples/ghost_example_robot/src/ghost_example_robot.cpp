@@ -57,7 +57,7 @@ void GhostExampleRobot::autonomous(double current_time)
 {
   std::cout << "Autonomous" << current_time << std::endl;
 }
-
+int switcher = 0;
 void GhostExampleRobot::teleop(double current_time)
 {
   static int loop_count = 0;
@@ -99,9 +99,15 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << "Right Y: " << joy_data->right_y << std::endl;
     std::cout << std::endl;
   }
-
+  
   // While holding button R2, send motor commands based on joystick values
-  if (joy_data->btn_r2) {
+  if (joy_data->btn_a){
+    switcher = 0;
+  }
+  else if (joy_data->btn_b){
+    switcher = 1;
+  }
+  if (switcher = 0) {
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
     double left_wheel_power = joy_data->left_y / 127.0;
     double right_wheel_power = joy_data->right_y / 127.0;
@@ -124,26 +130,17 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << "Left Motor: " << left_position << " deg" << std::endl;
     std::cout << "Right Motor: " << right_position << " deg" << std::endl;
     std::cout << std::endl;
-  } else {
-    // Don't forget to turn motors off!
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
-  }
-  if (joy_data->btn_r1) {
-    auto joy_data = rhi_ptr_->getMainJoystickData();
-
-    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
+  } 
+  else if(switcher = 1){
+  // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
     double forward_vel = joy_data->left_y / 127.0;
     double angular_vel = joy_data->right_x / 127.0;
     double threshold = 0.05;
     forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
     angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
     // 
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", forward_vel + angular_vel);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", forward_vel - angular_vel);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.5*(forward_vel + angular_vel));
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.5*(forward_vel - angular_vel));
 
     // 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
@@ -157,14 +154,17 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << "Left Motor: " << left_position << " deg" << std::endl;
     std::cout << "Right Motor: " << right_position << " deg" << std::endl;
     std::cout << std::endl;
-  } else {
+  }
+  else {
     // Don't forget to turn motors off!
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
 
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+    
   }
+  
 }
 } // namespace ghost_example_robot
 
