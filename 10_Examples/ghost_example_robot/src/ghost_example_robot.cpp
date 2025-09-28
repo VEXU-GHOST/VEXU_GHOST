@@ -100,39 +100,84 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << std::endl;
   }
 
-  // While holding button R2, send motor commands based on joystick values
-  if (joy_data->btn_r2) {
-    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double left_wheel_power = joy_data->left_y / 127.0;
-    double right_wheel_power = joy_data->right_y / 127.0;
+//   // While holding button R2, send motor commands based on joystick values
+//   if (joy_data->btn_r2) {
+//     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
+//     double left_wheel_power = joy_data->left_y / 127.0;
+//     double right_wheel_power = joy_data->right_y / 127.0;
 
-    // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+//     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
+//     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+//     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
 
-    // Each motor has a current limit that defaults to zero.
-    // This is so we can carefully allocate battery power between systems.
-    // If we don't set these, the motors will be extremely weak, if they move at all.
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+//     // Each motor has a current limit that defaults to zero.
+//     // This is so we can carefully allocate battery power between systems.
+//     // If we don't set these, the motors will be extremely weak, if they move at all.
+//     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+//     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
 
-    // Now we can get motor data and print it.
-    double left_position = rhi_ptr_->getMotorPosition("left_motor");
-    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+//     // Now we can get motor data and print it.
+//     double left_position = rhi_ptr_->getMotorPosition("left_motor");
+//     double right_position = rhi_ptr_->getMotorPosition("right_motor");
 
-    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
-    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
-    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
-    std::cout << std::endl;
-  } else {
-    // Don't forget to turn motors off!
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+//     // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+//     std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+//     std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+//     std::cout << std::endl;
+//   } else {
+//     // Don't forget to turn motors off!
+//     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+//     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
 
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
-  }
+//     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+//     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+//   }
+// }
+
+// While holding button R2, send motor commands based on joystick values
+if (joy_data->btn_r2) {
+  double forward_vel = joy_data->left_y / 127.0;   // forward/backno
+
+  double angular_vel = joy_data->right_x / 127.0;  // rotation
+
+  // Apply deadband threshold
+  double threshold = 0.05;
+  forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+  angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+
+  // Arcade drive mixing
+  double left_wheel_power  = forward_vel + angular_vel;
+  double right_wheel_power = forward_vel - angular_vel; 
+
+  // Clamp values to [-1, 1] to avoid overflow
+  left_wheel_power  = std::max(-1.0, std::min(1.0, left_wheel_power));
+  right_wheel_power = std::max(-1.0, std::min(1.0, right_wheel_power));
+
+  // Set motor power
+  rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+  rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+
+  // Current limits
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+  // Print motor positions
+  double left_position = rhi_ptr_->getMotorPosition("left_motor");
+  double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+  std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+  std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+  std::cout << std::endl;
+} else {
+  // Stop motors when R2 is not pressed
+  rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+  rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
 }
+}
+
 } // namespace ghost_example_robot
 
 PLUGINLIB_EXPORT_CLASS(
