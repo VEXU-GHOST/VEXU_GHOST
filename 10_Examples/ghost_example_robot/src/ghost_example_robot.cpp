@@ -58,10 +58,6 @@ void GhostExampleRobot::autonomous(double current_time)
   std::cout << "Autonomous" << current_time << std::endl;
 }
 
-double forward_vel = joy_data->left_y / 127.0;
-double angular_vel = joy_data->right_x / 127.0;
-double threshold = 0.05;
-
 
 
 
@@ -88,7 +84,7 @@ void GhostExampleRobot::teleop(double current_time)
   if (std::fabs(distance) < 0.1){  // stops robot when reaches goal
     distance -= rhi_ptr_->getMotorPosition("left_motor") - distance_before;
     distance_before = rhi_ptr_->getMotorPosition("left_motor");
-  }
+
 }else{
   if (istank) { // tank controls
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_vel);
