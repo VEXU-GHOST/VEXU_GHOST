@@ -41,6 +41,15 @@ bool get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T &val
 }
 
 template<typename T>
+T get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key){
+  T value;
+    if(!blackboard->get(key, value)){
+        std::cout << key << " not found in blackboard" << std::endl;
+    }
+    return value;
+}
+
+template<typename T>
 void get_from_blackboard(BT::Blackboard::Ptr blackboard, std::string key, T &value, T default_value){
     if(!blackboard->get(key, value)){
         std::cout << key << " not found in blackboard" << std::endl;

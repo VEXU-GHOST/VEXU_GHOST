@@ -32,36 +32,51 @@
 namespace ghost_tank
 {
 
-TankTree::TankTree(std::string bt_path) :
-	bt_path_(bt_path){
-	global_blackboard_ = BT::Blackboard::create();
+TankTree::TankTree(std::string bt_path)
+: bt_path_(bt_path)
+{
+  global_blackboard_ = BT::Blackboard::create();
 }
 
-void TankTree::init_tree(){
-	BT::BehaviorTreeFactory factory;
+void TankTree::init_tree()
+{
+  BT::BehaviorTreeFactory factory;
 
-	// add all nodes here
-	factory.registerNodeType<LoggingNode>("Logging");
-	factory.registerNodeType<AutoDone>("AutoDone");
-	factory.registerNodeType<AutonTimer>("AutonTimer");
-	factory.registerNodeType<MoveToPoseBezier>("MoveToPoseBezier");
-	factory.registerNodeType<MoveToPoseBoomerang>("MoveToPoseBoomerang");
-	factory.registerNodeType<MoveToPosePurepursuit>("MoveToPosePurepursuit"); 
-	factory.registerNodeType<BiteCmd>("BiteCmd"); 
-	factory.registerNodeType<ClampCmd>("ClampCmd");
-	factory.registerNodeType<ShutoffNode>("ShutoffNode");
-	factory.registerNodeType<IntakeCmd>("IntakeCmd");
-	factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
-	factory.registerNodeType<SetColorTarget>("SetColorTarget");
-	factory.registerNodeType<SetMirrored>("SetMirrored");
-	factory.registerNodeType<ConveyorCmd>("ConveyorCmd");
-	factory.registerNodeType<WaitCmd>("WaitCmd");
-	factory.registerNodeType<NeutralStakeCmd>("NeutralStakeCmd");
-	factory.registerNodeType<GoalRushDetected>("GoalRushDetected");
-	factory.registerNodeType<GoalDetected>("GoalDetected");
+  // add all nodes here
+  factory.registerNodeType<LoggingNode>("Logging");
+  factory.registerNodeType<AutoDone>("AutoDone");
+  factory.registerNodeType<AutonTimer>("AutonTimer");
+  factory.registerNodeType<LoadPathFromCSV>("LoadPathFromCSV");
+  factory.registerNodeType<BiteCmd>("BiteCmd");
+  factory.registerNodeType<ClampCmd>("ClampCmd");
+  factory.registerNodeType<ClimbCmd>("ClimbCmd");
+  factory.registerNodeType<ShutoffNode>("ShutoffNode");
+  factory.registerNodeType<IntakeCmd>("IntakeCmd");
+  factory.registerNodeType<IntakeCmd>("IsHanging");
+  factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
+  factory.registerNodeType<SetColorTarget>("SetColorTarget");
+  factory.registerNodeType<SetMirrored>("SetMirrored");
+  factory.registerNodeType<ConveyorCmd>("ConveyorCmd");
+  factory.registerNodeType<WaitCmd>("WaitCmd");
+  factory.registerNodeType<NeutralStakeCmd>("NeutralStakeCmd");
+  factory.registerNodeType<GoalRushDetected>("GoalRushDetected");
+  factory.registerNodeType<GoalDetected>("GoalDetected");
+  factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
+  factory.registerNodeType<MoveVoltage>("MoveVoltage");
+  factory.registerNodeType<TurnToPoint>("TurnToPoint");
+  factory.registerNodeType<GenerateBezierPath>("GenerateBezierPath");
+  factory.registerNodeType<FollowPathPurePursuit>("FollowPathPurePursuit");
+  factory.registerNodeType<ArcturnToPoint>("ArcturnToPoint");
+  factory.registerNodeType<MoveToPoint>("MoveToPoint");
+  factory.registerNodeType<MoveScissor>("MoveScissor");
 
-    tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
-	std::cout << "Tree created: " << bt_path_ << std::endl;
+  tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
+  std::cout << "Tree created: " << bt_path_ << std::endl;
+}
+
+void TankTree::set_path(std::string path)
+{
+  bt_path_ = path;
 }
 
 void TankTree::tick_tree()

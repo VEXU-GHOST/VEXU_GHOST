@@ -82,7 +82,7 @@ def generate_launch_description():
             DeclareLaunchArgument(name="channel_id", default_value="1"),
             DeclareLaunchArgument("sim_gui", default_value="true"),
             DeclareLaunchArgument("verbose", default_value="true"),
-            simulation,
+            # simulation,
             rviz_node,
             OpaqueFunction(function=launch_setup),
         ]

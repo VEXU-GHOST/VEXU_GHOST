@@ -137,6 +137,7 @@ protected:
   // Auton
   double m_auton_start_time = 0.0;
   bool m_is_first_auton_loop = true;
+  bool m_interaction = false;
 
   double getTimeFromStart() const;
 

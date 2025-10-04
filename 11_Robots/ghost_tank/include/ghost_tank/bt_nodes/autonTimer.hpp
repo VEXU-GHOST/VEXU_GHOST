@@ -28,6 +28,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "ghost_tank/tank_tree.hpp"
 #include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
 namespace ghost_tank {
 
@@ -49,7 +50,7 @@ public:
 
 private:
   std::shared_ptr<rclcpp::Node> node_ptr_;
-	std::shared_ptr<TankModel> tank_ptr_;
+	std::shared_ptr<TankModel> tank_model_ptr_;
   BT::Blackboard::Ptr blackboard_;
 };
 

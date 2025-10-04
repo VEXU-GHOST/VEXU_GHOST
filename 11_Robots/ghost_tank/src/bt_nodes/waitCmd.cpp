@@ -22,7 +22,6 @@
  */
 
 #include "ghost_tank/bt_nodes/waitCmd.hpp"
-#include "ghost_tank/pdcontrol.hpp"
 
 using std::placeholders::_1;
 
@@ -32,8 +31,6 @@ namespace ghost_tank
 // If your Node has ports, you must use this constructor signature
 WaitCmd::WaitCmd(const std::string& name, const BT::NodeConfig& config):
 	BT::StatefulActionNode(name, config){
-  std::cout << "[WaitCmd::WaitCmd]" << std::endl;
-		
 	blackboard_ = config.blackboard;
 
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
@@ -66,7 +63,7 @@ BT::NodeStatus WaitCmd::onRunning() {
   double timeout = BT_Util::get_input<double>(this, "seconds");
   bool shutoff = BT_Util::get_input<bool>(this, "shutoff_motors", false);
   if (shutoff){
-	  tank_model_ptr_->driveCommand(0.0, 0.0);
+	  tank_model_ptr_->driveCommandArcade(0.0, 0.0);
   }
 
   double current_time = 0.0;

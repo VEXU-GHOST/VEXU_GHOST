@@ -65,16 +65,15 @@ BT::PortsList GoalRushDetected::providedPorts()
   // This action has a single input port called "message"
   return {
     BT::InputPort<float>("threshold"),
-    BT::InputPort<bool>("right"),
   };
 }
 
 BT::NodeStatus GoalRushDetected::tick()
 {
+  bool mirrored = BT_Util::get_from_blackboard<bool>(blackboard_, "mirrored");
 
-  static int count = 0;
   float thresh = BT_Util::get_input<float>(this, "threshold");
-  float val = BT_Util::get_input<bool>(this, "right") ? goal_rush_r_ : goal_rush_l_;
+  float val = mirrored ? goal_rush_l_ : goal_rush_r_;
 
   if (val > thresh) {
     return BT::NodeStatus::SUCCESS;

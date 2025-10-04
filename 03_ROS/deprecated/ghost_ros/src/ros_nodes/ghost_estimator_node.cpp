@@ -74,7 +74,7 @@ GhostEstimatorNode::GhostEstimatorNode()
 
   encoder_sub_ = this->create_subscription<ghost_msgs::msg::V5SensorUpdate>(
     "/v5/sensor_update",
-    10,
+    rclcpp::SensorDataQoS(),
     std::bind(&GhostEstimatorNode::EncoderCallback, this, _1));
 
   initial_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
@@ -86,15 +86,15 @@ GhostEstimatorNode::GhostEstimatorNode()
   map_qos.durability(rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
 
   // Publishers
-  cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
+  cloud_viz_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", rclcpp::SensorDataQoS());
   map_viz_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("map_viz", map_qos);
   debug_viz_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
     "estimation_debug",
-    10);
-  world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", 10);
-  joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
+    rclcpp::SensorDataQoS());
+  world_tf_pub_ = this->create_publisher<tf2_msgs::msg::TFMessage>("tf", rclcpp::SensorDataQoS());
+  joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", rclcpp::SensorDataQoS());
   robot_state_pub_ = this->create_publisher<ghost_msgs::msg::GhostRobotState>(
-    "/estimation/robot_state", 10);
+    "/estimation/robot_state", rclcpp::SensorDataQoS());
 
   // Init debug msg
   viz_msg_ = visualization_msgs::msg::MarkerArray{};
