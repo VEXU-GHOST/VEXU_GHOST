@@ -62,6 +62,14 @@ void GhostExampleRobot::teleop(double current_time)
 {
   bool useTankDrive = true;
 
+  // enum MoveState {Idle, Forward10, Backward10, Left90, Right90};
+
+  // float wheelDiameter = 4f; // Wheel Diameter in in.
+  // float wheelSeperation = 5f; //Distance between wheels in in.
+  // float wheelCircumference = 2*wheelDiameter*std::numbers::pi;
+
+  // enum MoveState moveState = Idle;
+
   static int loop_count = 0;
   if (loop_count++ % 100 == 0) {
     std::cout << "Teleop " << current_time << std::endl;
@@ -81,12 +89,16 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << "Button Y!" << std::endl;
   } else if (joy_data->btn_u) {
     std::cout << "Button U!" << std::endl;
+    //moveState = Forward10;
   } else if (joy_data->btn_d) {
     std::cout << "Button D!" << std::endl;
+    //moveState = Backward10;
   } else if (joy_data->btn_l) {
     std::cout << "Button L!" << std::endl;
+    //moveState = Left90;
   } else if (joy_data->btn_r) {
     std::cout << "Button R!" << std::endl;
+    //moveState = Right90;
   } else if (joy_data->btn_l1) {
     std::cout << "Button L1!" << std::endl;
   } else if (joy_data->btn_l2) {
@@ -103,6 +115,48 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << "Right Y: " << joy_data->right_y << std::endl;
     std::cout << std::endl;
   }
+
+  // if (moveState != Idle)
+  // {
+  //   // Get Motor data 
+  //   double left_position = rhi_ptr_->getMotorPosition("left_motor");
+  //   double right_position = rhi_ptr_->getMotorPosition("right_motor");
+
+  //   double target = 360 * 10 / wheelCircumference;
+
+  //   double leftError = target-left_position;
+  //   double rightError = target-right_position;
+
+  //   double kp = 0.01;
+  //   double kd = 0.015;
+
+  //   double left_wheel_power = kp*leftError + kd;
+  //   double right_wheel_power = kp*rightError + kd;
+
+  //   // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
+  //   rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+
+  //   // Each motor has a current limit that defaults to zero.
+  //   // This is so we can carefully allocate battery power between systems.
+  //   // If we don't set these, the motors will be extremely weak, if they move at all.
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+  //   // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
+  //   std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+  //   std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+  //   std::cout << std::endl;
+  // }
+  // else
+  // {
+  //   //Turn the motors off
+  //   rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+  // }
 
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
