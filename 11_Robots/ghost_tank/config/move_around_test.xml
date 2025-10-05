@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+    <BehaviorTree ID="move_around_test">
+        <Sequence>
+            <MoveToPoseBezier posX_tiles="3.0"
+                        posY_tiles="3.0"
+                        theta_deg="315.0"
+                        search_radius_m="0.2"
+                        threshold_m="0.1"
+                        angle_threshold_deg="5.0"
+                        threshold_vel_mps="0.1"
+                        angle_threshold_vel_dps="1.0"
+                        lead="0.2"
+                        max_speed_linear_pct="1.0"
+                        max_speed_angular_pct="1.0"
+                        timeout_ms="-5000"
+                        use_theta="true"
+                        backwards="false"/>
+            <MoveToPoseBezier posX_tiles="5.0"
+                        posY_tiles="1.0"
+                        theta_deg="180.0"
+                        search_radius_m="0.2"
+                        threshold_m="0.1"
+                        angle_threshold_deg="5.0"
+                        threshold_vel_mps="0.1"
+                        angle_threshold_vel_dps="1.0"
+                        lead="0.2"
+                        max_speed_linear_pct="1.0"
+                        max_speed_angular_pct="1.0"
+                        timeout_ms="-5000"
+                        use_theta="true"
+                        backwards="false"/>
+            <MoveToPoseBezier posX_tiles="1.0"
+                        posY_tiles="1.0"
+                        theta_deg="180.0"
+                        search_radius_m="0.2"
+                        threshold_m="0.1"
+                        angle_threshold_deg="5.0"
+                        threshold_vel_mps="0.1"
+                        angle_threshold_vel_dps="1.0"
+                        lead="0.2"
+                        max_speed_linear_pct="1.0"
+                        max_speed_angular_pct="1.0"
+                        timeout_ms="-5000"
+                        use_theta="true"
+                        backwards="false"/>
+            <MoveToPoseBezier posX_tiles="3.0"
+                        posY_tiles="1.5"
+                        theta_deg="90.0"
+                        search_radius_m="0.3"
+                        threshold_m="0.1"
+                        angle_threshold_deg="5.0"
+                        threshold_vel_mps="0.1"
+                        angle_threshold_vel_dps="1.0"
+                        lead="0.2"
+                        max_speed_linear_pct="1.0"
+                        max_speed_angular_pct="1.0"
+                        timeout_ms="-5000"
+                        use_theta="true"
+                        backwards="false"/>
+        </Sequence>
+    </BehaviorTree>
+</root>
