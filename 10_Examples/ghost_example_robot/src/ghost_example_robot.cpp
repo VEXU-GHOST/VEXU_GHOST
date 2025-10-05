@@ -24,6 +24,7 @@
 #include <iostream>
 #include <ghost_example_robot/ghost_example_robot.hpp>
 #include <pluginlib/class_list_macros.hpp>
+#include <algorithm>  // for std::clamp
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -101,30 +102,43 @@ void GhostExampleRobot::teleop(double current_time)
   }
 
   // While holding button R2, send motor commands based on joystick values
+    // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
-    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double left_wheel_power = joy_data->left_y / 127.0;
-    double right_wheel_power = joy_data->right_y / 127.0;
+    // Arcade drive scheme:
+    //  - Forward/back: left joystick Y
+    //  - Turn left/right: right joystick X
+    double forward = joy_data->left_y / 127.0;
+    double turn    = joy_data->right_x / 127.0;
 
-    // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+    // Apply a small deadzone to ignore joystick drift
+    constexpr double kDeadzone = 0.05;
+    if (std::fabs(forward) < kDeadzone) forward = 0.0;
+    if (std::fabs(turn)    < kDeadzone) turn    = 0.0;
 
-    // Each motor has a current limit that defaults to zero.
-    // This is so we can carefully allocate battery power between systems.
-    // If we don't set these, the motors will be extremely weak, if they move at all.
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    // Combine forward and turning into left/right power
+    double left_power  = forward + turn;
+    double right_power = forward - turn;
+
+    // Clamp to [-1.0, 1.0] so we never overdrive the motors
+    left_power  = std::clamp(left_power,  -1.0, 1.0);
+    right_power = std::clamp(right_power, -1.0, 1.0);
+
+    // Send motor commands (maps ±1.0 to ±12000 mV internally)
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor",  left_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_power);
+
+    // Set current limits while active
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor",  2500.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
 
-    // Now we can get motor data and print it.
-    double left_position = rhi_ptr_->getMotorPosition("left_motor");
+    // Optional: print motor positions for debugging
+    double left_position  = rhi_ptr_->getMotorPosition("left_motor");
     double right_position = rhi_ptr_->getMotorPosition("right_motor");
-
-    // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
-    std::cout << "Left Motor: " << left_position << " deg" << std::endl;
+    std::cout << "Left Motor: "  << left_position  << " deg" << std::endl;
     std::cout << "Right Motor: " << right_position << " deg" << std::endl;
     std::cout << std::endl;
-  } else {
+    } else {
+
     // Don't forget to turn motors off!
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
