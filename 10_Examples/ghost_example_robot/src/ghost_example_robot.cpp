@@ -24,6 +24,7 @@
 #include <iostream>
 #include <ghost_example_robot/ghost_example_robot.hpp>
 #include <pluginlib/class_list_macros.hpp>
+#include <cmath>
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -102,13 +103,34 @@ void GhostExampleRobot::teleop(double current_time)
 
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
+
+    auto joy_data = rhi_ptr_->getMainJoystickData();
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double left_wheel_power = joy_data->left_y / 127.0;
-    double right_wheel_power = joy_data->right_y / 127.0;
+    // double left_wheel_power = joy_data->left_y / 127.0;
+    // double right_wheel_power = joy_data->right_y / 127.0;
+    double forward_vel = joy_data->left_y/127.0;
+    double angular_vel = joy_data->right_x/127.0;
+
+
+    float left_motor_value = forward_vel + angular_vel;
+    float right_motor_value = forward_vel - angular_vel;
+
+    float left_abs = std::abs(left_motor_value);
+    float right_abs = std::abs(right_motor_value);
+
+    if (left_abs > 1 || right_abs > 1) {
+        if (left_abs > right_abs) {
+          right_motor_value/=left_abs;
+          left_motor_value/=left_abs;
+        } else {
+          left_motor_value/=right_abs;
+          right_motor_value/=right_abs;
+        }
+    }
 
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_motor_value);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_motor_value);
 
     // Each motor has a current limit that defaults to zero.
     // This is so we can carefully allocate battery power between systems.
