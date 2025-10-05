@@ -130,7 +130,7 @@ ekf_pf_node:
       sigma_observation: 0.2 # Prof recommends 0.15-0.2 based on sensor specs
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
-      min_update_dist: 999999 #0.05
+      min_update_dist: 999999.0 #0.05
       min_update_angle: 10.0 #0.005
       max_update_angular_velocity: 1.0
 
