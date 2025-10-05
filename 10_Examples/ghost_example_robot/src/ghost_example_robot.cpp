@@ -24,6 +24,8 @@
 #include <iostream>
 #include <ghost_example_robot/ghost_example_robot.hpp>
 #include <pluginlib/class_list_macros.hpp>
+#include <cmath>
+#include <algorithm>
 
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
@@ -103,12 +105,29 @@ void GhostExampleRobot::teleop(double current_time)
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double left_wheel_power = joy_data->left_y / 127.0;
-    double right_wheel_power = joy_data->right_y / 127.0;
+    // double left_wheel_power = joy_data->left_y / 127.0;
+    // double right_wheel_power = joy_data->right_y / 127.0;
+    double forward_vel = joy_data->left_y / 127.0;
+    double angular_vel = joy_data->right_x / 127.0;
+
+    double threshold = 0.05;
+    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+
 
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+    // rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+    // rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+    double leftVelocity = forward_vel + angular_vel;
+    double rightVelocity = forward_vel - angular_vel;
+    double maxValue = std::max(std::abs(leftVelocity), std::abs(rightVelocity));
+    if(maxValue > 1) {
+      leftVelocity /= maxValue;
+      rightVelocity /= maxValue;
+    }
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", leftVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", rightVelocity);
 
     // Each motor has a current limit that defaults to zero.
     // This is so we can carefully allocate battery power between systems.
