@@ -102,9 +102,22 @@ void GhostExampleRobot::teleop(double current_time)
 
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
-    // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double left_wheel_power = joy_data->left_y / 127.0;
-    double right_wheel_power = joy_data->right_y / 127.0;
+    // Left joystick up-down controls forward velocity, right joystick left-right controls angular velocity
+    double forward_vel = joy_data->left_y / 127.0;   // -1.0 (back) to 1.0 (forward)
+    double angular_vel = joy_data->right_x / 127.0;  // -1.0 (left turn) to 1.0 (right turn)
+
+    // Threshold to avoid drift
+    double threshold = 0.05;
+    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+
+    // Differential drive: left = forward - angular, right = forward + angular
+    double left_wheel_power = forward_vel - angular_vel;
+    double right_wheel_power = forward_vel + angular_vel;
+
+    // Clamp to [-1.0, 1.0]
+    left_wheel_power = std::max(-1.0, std::min(1.0, left_wheel_power));
+    right_wheel_power = std::max(-1.0, std::min(1.0, right_wheel_power));
 
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
@@ -135,6 +148,126 @@ void GhostExampleRobot::teleop(double current_time)
 }
 } // namespace ghost_example_robot
 
-PLUGINLIB_EXPORT_CLASS(
-  ghost_example_robot::GhostExampleRobot,
-  ghost_ros_interfaces::V5RobotBase)
+// PLUGINLIB_EXPORT_CLASS(
+//   ghost_example_robot::GhostExampleRobot,
+//   ghost_ros_interfaces::V5RobotBase)
+
+// enum class DriveMode { TANK, ARCADE };
+
+// void GhostExampleRobot::customTeleop(double current_time)
+// {
+//   static DriveMode drive_mode = DriveMode::ARCADE;
+//   static bool action_in_progress = false;
+//   static double action_target_left = 0.0;
+//   static double action_target_right = 0.0;
+
+//   auto joy_data = rhi_ptr_->getMainJoystickData();
+
+//   // Mode switching
+//   if (joy_data->btn_a) {drive_mode = DriveMode::TANK;}
+//   if (joy_data->btn_b) {drive_mode = DriveMode::ARCADE;}
+
+//   // Robot dimensions (inches)
+//   constexpr double WHEEL_DIAMETER_IN = 4.0;
+//   constexpr double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER_IN * M_PI;
+//   constexpr double ROBOT_TRACK_WIDTH_IN = 12.0;   // distance between wheels
+
+//   // Helper: inches to degrees
+//   auto inchesToDegrees = [](double inches) {
+//       return (inches / WHEEL_CIRCUMFERENCE) * 360.0;
+//     };
+
+//   // Helper: degrees to inches
+//   auto degreesToInches = [](double deg) {
+//       return (deg / 360.0) * WHEEL_CIRCUMFERENCE;
+//     };
+
+//   // Action triggers
+//   if (!action_in_progress) {
+//     double left_pos = rhi_ptr_->getMotorPosition("left_motor");
+//     double right_pos = rhi_ptr_->getMotorPosition("right_motor");
+
+//     if (joy_data->btn_u) {
+//       // Forward 10"
+//       double delta_deg = inchesToDegrees(10.0);
+//       action_target_left = left_pos + delta_deg;
+//       action_target_right = right_pos + delta_deg;
+//       action_in_progress = true;
+//     } else if (joy_data->btn_d) {
+//       // Backward 10"
+//       double delta_deg = inchesToDegrees(10.0);
+//       action_target_left = left_pos - delta_deg;
+//       action_target_right = right_pos - delta_deg;
+//       action_in_progress = true;
+//     } else if (joy_data->btn_l) {
+//       // Turn left 90 deg (robot)
+//       double turn_circum = ROBOT_TRACK_WIDTH_IN * M_PI;
+//       double arc_len = turn_circum * (90.0 / 360.0);
+//       double delta_deg = inchesToDegrees(arc_len);
+//       action_target_left = left_pos - delta_deg;
+//       action_target_right = right_pos + delta_deg;
+//       action_in_progress = true;
+//     } else if (joy_data->btn_r) {
+//       // Turn right 90 deg (robot)
+//       double turn_circum = ROBOT_TRACK_WIDTH_IN * M_PI;
+//       double arc_len = turn_circum * (90.0 / 360.0);
+//       double delta_deg = inchesToDegrees(arc_len);
+//       action_target_left = left_pos + delta_deg;
+//       action_target_right = right_pos - delta_deg;
+//       action_in_progress = true;
+//     }
+//   }
+
+//   // PID constants
+//   constexpr double kP = 0.01;
+//   constexpr double max_power = 0.5;
+
+//   if (action_in_progress) {
+//     double left_pos = rhi_ptr_->getMotorPosition("left_motor");
+//     double right_pos = rhi_ptr_->getMotorPosition("right_motor");
+//     double left_err = action_target_left - left_pos;
+//     double right_err = action_target_right - right_pos;
+
+//     double left_cmd = std::clamp(kP * left_err, -max_power, max_power);
+//     double right_cmd = std::clamp(kP * right_err, -max_power, max_power);
+
+//     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_cmd);
+//     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_cmd);
+//     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+//     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+//     // Consider action done if both errors are small
+//     if (std::fabs(left_err) < 5.0 && std::fabs(right_err) < 5.0) {
+//       action_in_progress = false;
+//       rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+//       rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+//       rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+//       rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+//     }
+//     return;
+//   }
+
+//   // Drive control
+//   double left_cmd = 0.0, right_cmd = 0.0;
+//   if (drive_mode == DriveMode::TANK) {
+//     left_cmd = joy_data->left_y / 127.0;
+//     right_cmd = joy_data->right_y / 127.0;
+//   } else {   // ARCADE
+//     double forward = joy_data->left_y / 127.0;
+//     double turn = joy_data->right_x / 127.0;
+//     left_cmd = forward - turn;
+//     right_cmd = forward + turn;
+//   }
+//   // Clamp
+//   left_cmd = std::clamp(left_cmd, -1.0, 1.0);
+//   right_cmd = std::clamp(right_cmd, -1.0, 1.0);
+
+//   // Deadband
+//   if (std::fabs(left_cmd) < 0.05) {left_cmd = 0.0;}
+//   if (std::fabs(right_cmd) < 0.05) {right_cmd = 0.0;}
+
+//   rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_cmd);
+//   rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_cmd);
+//   rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+//   rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+// }
