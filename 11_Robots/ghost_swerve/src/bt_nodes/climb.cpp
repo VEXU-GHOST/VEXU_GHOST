@@ -95,14 +95,12 @@ BT::NodeStatus Climb::onRunning()
   double posR = rhi_ptr_->getMotorPosition("lift_r1");
   double posL = rhi_ptr_->getMotorPosition("lift_l1");
   RCLCPP_INFO(node_ptr_->get_logger(), "up: %f", lift_target_up);
-  
 
-  if (posL > lift_target_up)
-  {
+
+  if (posL > lift_target_up) {
     reaching_ = false;
     climbing_ = true;
-  } else if (posL < lift_target_down && climbing_)
-  {
+  } else if (posL < lift_target_down && climbing_) {
     climbing_ = false;
     reaching_ = false;
   }
@@ -122,7 +120,7 @@ BT::NodeStatus Climb::onRunning()
 
   m_digital_io[m_digital_io_name_map.at("claw")] = !claw_open;
 
-  rhi_ptr_->setDigitalIO(m_digital_io);
+  // rhi_ptr_->setDigitalIO(m_digital_io);
 
   if (reaching_) {
     RCLCPP_INFO(node_ptr_->get_logger(), "Reaching");

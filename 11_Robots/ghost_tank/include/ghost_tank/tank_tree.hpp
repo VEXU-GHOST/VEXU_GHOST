@@ -23,20 +23,40 @@
 
 #pragma once
 #include "behaviortree_cpp/bt_factory.h"
-#include "bt_nodes/checkForRestart.hpp"
-#include "bt_nodes/intakeCmd.hpp"
-#include "bt_nodes/loggingNode.hpp"
-#include "bt_nodes/moveToPoseCubic.hpp"
-#include "bt_nodes/autoDone.hpp"
-#include "bt_nodes/autonTimer.hpp"
+
+#include "ghost_tank/bt_nodes/loggingNode.hpp"
+#include "ghost_tank/bt_nodes/autoDone.hpp"
+#include "ghost_tank/bt_nodes/autonTimer.hpp"
+#include "ghost_tank/bt_nodes/load_path_from_csv.hpp"
+#include "ghost_tank/bt_nodes/biteCmd.hpp"
+#include "ghost_tank/bt_nodes/clampCmd.hpp"
+#include "ghost_tank/bt_nodes/climbCmd.hpp"
+#include "ghost_tank/bt_nodes/shutoffNode.hpp"
+#include "ghost_tank/bt_nodes/intakeCmd.hpp"
+#include "ghost_tank/bt_nodes/isHanging.hpp"
+#include "ghost_tank/bt_nodes/goalRushCmd.hpp"
+#include "ghost_tank/bt_nodes/setMirrored.hpp"
+#include "ghost_tank/bt_nodes/setColorTarget.hpp"
+#include "ghost_tank/bt_nodes/conveyorCmd.hpp"
+#include "ghost_tank/bt_nodes/waitCmd.hpp"
+#include "ghost_tank/bt_nodes/neutralStakeCmd.hpp"
+#include "ghost_tank/bt_nodes/goalRushDetected.hpp"
+#include "ghost_tank/bt_nodes/goalDetected.hpp"
+#include "ghost_tank/bt_nodes/boundaryCheck.hpp"
+#include "ghost_tank/bt_nodes/moveVoltage.hpp"
+#include "ghost_tank/bt_nodes/moveScissor.hpp"
+#include "ghost_tank/bt_nodes/turnToPoint.hpp"
+#include "ghost_tank/bt_nodes/generate_bezier_path.hpp"
+#include "ghost_tank/bt_nodes/follow_path_pure_pursuit.hpp"
+#include "ghost_tank/bt_nodes/arcturnToPoint.hpp"
+#include "ghost_tank/bt_nodes/moveToPoint.hpp"
+
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+
 #include "ghost_tank/tank_model.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
-
-// file that contains the custom nodes definitions
-// #include "dummy_nodes.h"
-// using namespace DummyNodes;
 
 namespace ghost_tank
 {
@@ -44,20 +64,48 @@ namespace ghost_tank
 class TankTree
 {
 public:
-	TankTree(std::string bt_path,
-			   std::string bt_path_interaction,
-	           std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
-	           std::shared_ptr<TankModel> tank_ptr,
-	           std::shared_ptr<rclcpp::Node> node_ptr);
-	void tick_tree();
-	void tick_tree_interaction();
+  TankTree(std::string bt_path);
+  void tick_tree();
+  void init_tree();
+  void set_path(std::string path);
+
+  template<typename T>
+  void set_variable(std::string name, T value)
+  {
+    if (global_blackboard_) {
+      global_blackboard_->set<T>(name, value);
+      // std::cout << "Set bt variable:" << name << std::endl;
+    } else {
+      std::cout << "ERROR: Tried to set BT variable before the BT constructor" << std::endl;
+    }
+  }
+  template<typename T>
+  bool get_variable(std::string name, T & value)
+  {
+    if (!global_blackboard_) {
+      std::cout << "ERROR: Tried to get BT variable before the BT constructor" << std::endl;
+      return false;
+    } else {
+      return global_blackboard_->get<T>(name, value);
+    }
+  }
+
+  template<typename T>
+  T get_variable(std::string name)
+  {
+    T value;
+    if (!global_blackboard_) {
+      std::cout << "ERROR: Tried to get BT variable before the BT constructor" << std::endl;
+    } else {
+      bool result = global_blackboard_->get<T>(name, value);
+    }
+    return value;
+  }
 
 private:
   std::string bt_path_;
-  std::string bt_path_interaction_;
+  BT::Blackboard::Ptr global_blackboard_;
   BT::Tree tree_;
-  BT::Tree tree_interaction_;
-  std::shared_ptr<rclcpp::Node> node_ptr_;
 };
 
 } // namespace ghost_tank

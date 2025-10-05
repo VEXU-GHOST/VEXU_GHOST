@@ -23,42 +23,31 @@
 
 #pragma once
 
+#include <string>
 #include "behaviortree_cpp/behavior_tree.h"
-#include "ghost_tank/tank_model.hpp"
-#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "ghost_tank/tank_tree.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
-namespace ghost_tank
-{
+namespace ghost_tank {
 
-class IntakeCmd : public BT::SyncActionNode
-{
+class IntakeCmd : public BT::SyncActionNode {
 public:
-	IntakeCmd(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<rclcpp::Node> node_ptr,
-	          std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
-	          std::shared_ptr<TankModel> tank_ptr);
+  // If your Node has ports, you must use this constructor signature
+  IntakeCmd(const std::string& name, const BT::NodeConfig& config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 
   BT::NodeStatus tick();
-
+  
 private:
-  template<typename T>
-  T get_input(std::string key);
-
-  bool intake_stalling_;
-  bool intake_cooling_down_;
-  double burnout_absolute_rpm_threshold_;
-  double burnout_stall_duration_ms_;
-  double burnout_cooldown_duration_ms_;
-	double lift_setpoint_;
-  std::chrono::time_point<std::chrono::system_clock> intake_stall_start_;
-  std::chrono::time_point<std::chrono::system_clock> intake_cooldown_start_;
-
-  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
   std::shared_ptr<rclcpp::Node> node_ptr_;
-  std::shared_ptr<TankModel> tank_ptr_;
+	std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
+  BT::Blackboard::Ptr blackboard_;
 };
 
-} // namespace ghost_tank
+} // ghost_tank

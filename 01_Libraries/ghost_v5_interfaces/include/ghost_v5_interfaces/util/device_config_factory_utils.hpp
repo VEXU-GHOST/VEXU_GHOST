@@ -41,7 +41,13 @@ namespace util
  * YAML files must have the following form.
  *
  * port_configuration:
- *              use_partner_joystick = false/true
+ *      use_partner_joystick = false/true
+ *      digital_io:
+ *        A: IN
+ *        B: OUT
+ *        ...
+ *        H: NONE
+ *
  *      devices:
  *          my_motor_name_here:
  *              port: 1

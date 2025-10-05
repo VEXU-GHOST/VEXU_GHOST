@@ -78,10 +78,16 @@ public:
     }
   };
 
+  enum TrajectoryType {
+    BOOMERANG = 0,
+    PUREPURSUIT = 1
+  };
+
   RobotTrajectory();
   Trajectory x_trajectory;
   Trajectory y_trajectory;
   Trajectory theta_trajectory;
+  TrajectoryType trajectory_type;
 
   bool operator==(const RobotTrajectory & rhs) const
   {

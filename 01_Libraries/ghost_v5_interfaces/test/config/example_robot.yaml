@@ -1,5 +1,14 @@
 port_configuration:
     use_partner_joystick: false
+    digital_io:
+        A: IN
+        B: IN
+        C: IN
+        D: IN
+        E: OUT
+        F: OUT
+        G: OUT
+        H: OUT
     devices:
         rotation_sensor_1:
             port: 4

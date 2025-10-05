@@ -25,6 +25,7 @@
 
 #include <chrono>
 #include <memory>
+#include <atomic>
 
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
@@ -136,6 +137,7 @@ protected:
   // Auton
   double m_auton_start_time = 0.0;
   bool m_is_first_auton_loop = true;
+  bool m_interaction = false;
 
   double getTimeFromStart() const;
 
@@ -145,7 +147,8 @@ private:
   void updateCompetitionState(bool is_disabled, bool is_autonomous);
   void trajectoryCallback(const ghost_msgs::msg::RobotTrajectory::SharedPtr msg);
 
-  bool configured_ = false;
+  std::atomic_bool configured_ = false;
+  bool should_record_ = false;
   robot_state_e last_comp_state_ = robot_state_e::TELEOP;
   robot_state_e curr_comp_state_ = robot_state_e::TELEOP;
   rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_sub_;

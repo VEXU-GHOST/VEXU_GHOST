@@ -32,7 +32,19 @@
 #include <atomic>
 
 // Global Variables
-namespace v5_globals {
+namespace v5_globals
+{
+
+const std::vector<std::string> adi_ports_name_map {
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+};
 
 uint32_t last_cmd_time = 0;
 uint32_t cmd_timeout_ms = 50;
@@ -47,43 +59,32 @@ pros::Controller controller_partner(pros::E_CONTROLLER_PARTNER);
 std::shared_ptr<ghost_v5_interfaces::devices::DeviceConfigMap> robot_device_config_map_ptr;
 std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr;
 
-std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface> > motor_interfaces;
-std::unordered_map<std::string, std::shared_ptr<pros::Rotation> > encoders;
-std::unordered_map<std::string, std::shared_ptr<pros::Imu> > imus;
+std::unordered_map<std::string, std::shared_ptr<ghost_v5::V5MotorInterface>> motor_interfaces;
+std::unordered_map<std::string, std::shared_ptr<pros::Rotation>> encoders;
+std::unordered_map<std::string, std::shared_ptr<pros::Imu>> imus;
+std::unordered_map<std::string, std::shared_ptr<pros::ADIDigitalOut>> digital_outputs;
+std::unordered_map<std::string, std::shared_ptr<pros::ADIDigitalIn>> digital_inputs;
 
 const pros::controller_analog_e_t joy_channels[4] = {
-	ANALOG_LEFT_X,
-	ANALOG_LEFT_Y,
-	ANALOG_RIGHT_X,
-	ANALOG_RIGHT_Y};
+  ANALOG_LEFT_X,
+  ANALOG_LEFT_Y,
+  ANALOG_RIGHT_X,
+  ANALOG_RIGHT_Y};
 
 const pros::controller_digital_e_t joy_btns[12] = {
-	DIGITAL_A,
-	DIGITAL_B,
-	DIGITAL_X,
-	DIGITAL_Y,
-	DIGITAL_UP,
-	DIGITAL_DOWN,
-	DIGITAL_LEFT,
-	DIGITAL_RIGHT,
-	DIGITAL_L1,
-	DIGITAL_L2,
-	DIGITAL_R1,
-	DIGITAL_R2,
+  DIGITAL_A,
+  DIGITAL_B,
+  DIGITAL_X,
+  DIGITAL_Y,
+  DIGITAL_UP,
+  DIGITAL_DOWN,
+  DIGITAL_LEFT,
+  DIGITAL_RIGHT,
+  DIGITAL_L1,
+  DIGITAL_L2,
+  DIGITAL_R1,
+  DIGITAL_R2,
 };
-
-pros::ADIDigitalOut adi_ports[8] = {
-	pros::ADIDigitalOut('A', false),
-	pros::ADIDigitalOut('B', false),
-	pros::ADIDigitalOut('C', false),
-	pros::ADIDigitalOut('D', false),
-	pros::ADIDigitalOut('E', false),
-	pros::ADIDigitalOut('F', false),
-	pros::ADIDigitalOut('G', false),
-	pros::ADIDigitalOut('H', false),
-};
-
-std::vector<bool> digital_out_cmds(8, false);
 
 // Serial Port
 std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;

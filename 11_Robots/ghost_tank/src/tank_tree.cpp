@@ -32,36 +32,56 @@
 namespace ghost_tank
 {
 
-TankTree::TankTree(std::string bt_path,
-					   std::string bt_path_interaction,
-                       std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> robot_hardware_interface_ptr,
-                       std::shared_ptr<TankModel> tank_ptr,
-                       std::shared_ptr<rclcpp::Node> node_ptr) :
-	bt_path_(bt_path),
-	bt_path_interaction_(bt_path_interaction),
-	node_ptr_(node_ptr){
-	BT::BehaviorTreeFactory factory;
+TankTree::TankTree(std::string bt_path)
+: bt_path_(bt_path)
+{
+  global_blackboard_ = BT::Blackboard::create();
+}
 
-	// add all nodes here
-	factory.registerNodeType<LoggingNode>("Logging", node_ptr_);
-	factory.registerNodeType<CheckForRestart>("CheckForRestart", node_ptr_, robot_hardware_interface_ptr);
-	factory.registerNodeType<MoveToPoseCubic>("MoveToPoseCubic", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
-	factory.registerNodeType<IntakeCmd>("IntakeCmd", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
-	factory.registerNodeType<AutoDone>("AutoDone", node_ptr_, robot_hardware_interface_ptr, tank_ptr);
-	factory.registerNodeType<AutonTimer>("AutonTimer", node_ptr_, tank_ptr);
+void TankTree::init_tree()
+{
+  BT::BehaviorTreeFactory factory;
 
-    tree_ = factory.createTreeFromFile(bt_path_);
-	tree_interaction_ = factory.createTreeFromFile(bt_path_interaction_);
+  // add all nodes here
+  factory.registerNodeType<LoggingNode>("Logging");
+  factory.registerNodeType<AutoDone>("AutoDone");
+  factory.registerNodeType<AutonTimer>("AutonTimer");
+  factory.registerNodeType<LoadPathFromCSV>("LoadPathFromCSV");
+  factory.registerNodeType<BiteCmd>("BiteCmd");
+  factory.registerNodeType<ClampCmd>("ClampCmd");
+  factory.registerNodeType<ClimbCmd>("ClimbCmd");
+  factory.registerNodeType<ShutoffNode>("ShutoffNode");
+  factory.registerNodeType<IntakeCmd>("IntakeCmd");
+  factory.registerNodeType<IntakeCmd>("IsHanging");
+  factory.registerNodeType<GoalRushCmd>("GoalRushCmd");
+  factory.registerNodeType<SetColorTarget>("SetColorTarget");
+  factory.registerNodeType<SetMirrored>("SetMirrored");
+  factory.registerNodeType<ConveyorCmd>("ConveyorCmd");
+  factory.registerNodeType<WaitCmd>("WaitCmd");
+  factory.registerNodeType<NeutralStakeCmd>("NeutralStakeCmd");
+  factory.registerNodeType<GoalRushDetected>("GoalRushDetected");
+  factory.registerNodeType<GoalDetected>("GoalDetected");
+  factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
+  factory.registerNodeType<MoveVoltage>("MoveVoltage");
+  factory.registerNodeType<TurnToPoint>("TurnToPoint");
+  factory.registerNodeType<GenerateBezierPath>("GenerateBezierPath");
+  factory.registerNodeType<FollowPathPurePursuit>("FollowPathPurePursuit");
+  factory.registerNodeType<ArcturnToPoint>("ArcturnToPoint");
+  factory.registerNodeType<MoveToPoint>("MoveToPoint");
+  factory.registerNodeType<MoveScissor>("MoveScissor");
+
+  tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
+  std::cout << "Tree created: " << bt_path_ << std::endl;
+}
+
+void TankTree::set_path(std::string path)
+{
+  bt_path_ = path;
 }
 
 void TankTree::tick_tree()
 {
   tree_.tickExactlyOnce();
-}
-
-void TankTree::tick_tree_interaction()
-{
-  tree_interaction_.tickExactlyOnce();
 }
 
 } // namespace ghost_tank

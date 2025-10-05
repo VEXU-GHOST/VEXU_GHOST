@@ -4,6 +4,13 @@ log
 .vscode
 *.pyc
 .cache/*
+sound_effects
+*.wav
+*.mp3
+
+# Voice Models
+*.onnx
+*.onnx.json
 
 # These are symlinked from 01_Libraries (and thus duplicated)
 02_V5/ghost_pros/include/ghost_v5_interfaces/**
@@ -17,6 +24,8 @@ log
 02_V5/ghost_pros/src/ghost_estimation/**
 02_V5/ghost_pros/src/ghost_control/**
 02_V5/ghost_pros/src/ghost_util/**
+
+09_External/*deb
 
 # Auto-generated
 02_V5/ghost_pros/include/robot_config.hpp

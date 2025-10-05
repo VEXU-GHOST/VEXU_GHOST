@@ -1,0 +1,26 @@
+port_configuration:
+  digital_io:
+    A: IN
+    B: OUT
+  devices:
+    left_motor:
+      port: 1
+      type: MOTOR
+      reversed: false
+      config: drive_motor_config
+    right_motor:
+      port: 2
+      type: MOTOR
+      reversed: true
+      config: drive_motor_config
+  device_configurations:
+    drive_motor_config:
+      gearset: 600
+      brake_mode: COAST
+      encoder_units: DEGREES
+      model:
+        gear_ratio: 6.0
+      serial:
+        send_position_command: false
+        send_velocity_command: true
+        send_voltage_command: true

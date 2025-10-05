@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="corner_shove">
+    <Sequence>
+      <ClampCmd clamp_closed="true"/>
+      <Sequence>
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="1.0"
+          timeout_ms="1500"
+          backwards="true"
+          distance_tiles="0.5"/>
+
+        <TurnToPoint posX_tiles="0.0"
+          posY_tiles="0.1"
+          timeout_ms="1000"
+          backwards="true"
+          angle_exit_threshold_deg="1.0"/>
+
+        <ClampCmd clamp_closed="false"/>
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.5"
+          timeout_ms="1000"
+          backwards="true"
+          distance_tiles="1.0"/>
+        <ShutoffNode/>
+      </Sequence>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+      editable="true">
+      <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="ClampCmd"
+      editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
+    <Action ID="ConveyorCmd"
+      editable="true">
+      <input_port name="fwd"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+      editable="true">
+      <input_port name="goal_rush_down"/>
+    </Action>
+    <Action ID="SetMirrored"
+      editable="true">
+      <input_port name="mirrored"/>
+    </Action>
+    <Action ID="IntakeCmd"
+      editable="true">
+      <input_port name="auto"/>
+      <input_port name="ground_intake"/>
+    </Action>
+    <Action ID="Logging"
+      editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="ShutoffNode"
+      editable="true"/>
+  </TreeNodesModel>
+
+</root>

@@ -1,105 +1,186 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4"
-      main_tree_to_execute="skills">
+<root BTCPP_format="4">
   <BehaviorTree ID="skills">
     <Sequence>
-      <Repeat num_cycles="-1">
-        <ReactiveSequence>
-          <Inverter>
-            <IntakeCmd in="false"/>
-          </Inverter>
-          <Repeat num_cycles="-1">
-            <SwipeTail num_swipes="40"/>
-          </Repeat>
-        </ReactiveSequence>
-      </Repeat>
-      <!-- <SubTree ID="push"/> -->
+      <SetMirrored mirrored="false"/>
+      <SetColorTarget target_red="true"/>
+      <IntakeCmd auto="true"
+                 ground_intake="false"/>
+      <BiteCmd bite_closed="true"/>
+
+      <!-- mobile goal 1 -->
+      <GenerateBezierPath end_x_tiles="1.0"
+        end_y_tiles="2.0"
+        end_theta_deg="160.0"
+        lead_tiles="0.75"
+        backwards="false"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="10.0"
+        xy_settling_radius_tiles="0.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1500"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.5"
+        min_approach_velocity_tps="0.05"/>
+
+      <ClampCmd clamp_closed="true"/>
+
+      <!-- ring 1 -->
+      <GenerateBezierPath end_x_tiles="1.0"
+        end_y_tiles="1.0"
+        end_theta_deg="180.0"
+        lead_tiles="0.75"
+        backwards="false"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="10.0"
+        xy_settling_radius_tiles="0.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1500"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.5"
+        min_approach_velocity_tps="0.05"/>
+      
+      <!-- /ring 2 -->
+      <GenerateBezierPath end_x_tiles="2.0"
+        end_y_tiles="2.0"
+        end_theta_deg="-45.0"
+        lead_tiles="0.75"
+        backwards="false"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="10.0"
+        xy_settling_radius_tiles="0.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1500"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.5"
+        min_approach_velocity_tps="0.05"/>
+
+        <!-- /ring 3 -->
+        <GenerateBezierPath end_x_tiles="3.0"
+        end_y_tiles="1.0"
+        end_theta_deg="-135.0"
+        lead_tiles="0.75"
+        backwards="false"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="10.0"
+        xy_settling_radius_tiles="0.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1500"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.5"
+        min_approach_velocity_tps="0.05"/>
+
+      <!-- /ring 4 -->
+      <GenerateBezierPath end_x_tiles="4.0"
+        end_y_tiles="2.0"
+        end_theta_deg="-45.0"
+        lead_tiles="0.75"
+        backwards="false"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="10.0"
+        xy_settling_radius_tiles="0.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1500"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.5"
+        min_approach_velocity_tps="0.05"/>
+
+      <!-- /ring 5 -->
+      <GenerateBezierPath end_x_tiles="5.0"
+        end_y_tiles="1.0"
+        end_theta_deg="-135.0"
+        lead_tiles="0.75"
+        backwards="false"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="10.0"
+        xy_settling_radius_tiles="0.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1500"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.5"
+        min_approach_velocity_tps="0.05"/>
+
+      <!-- /ring 6 -->
+      <GenerateBezierPath end_x_tiles="6.0"
+        end_y_tiles="0.0"
+        end_theta_deg="-135.0"
+        lead_tiles="0.75"
+        backwards="false"
+        type="QUADRATIC_BEZIER"
+        num_points="250"/>
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+        angle_exit_threshold_deg="3.0"
+        lin_vel_exit_threshold_tps="1.0"
+        ang_vel_exit_threshold_dps="10.0"
+        xy_settling_radius_tiles="0.0"
+        max_speed_linear_percent="1.0"
+        max_speed_angular_percent="1.0"
+        timeout_ms="1500"
+        use_theta="false"
+        min_pursuit_radius_tiles="0.3"
+        k_lookahead="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.5"
+        min_approach_velocity_tps="0.05"/>
+
+      <!-- DROP OFF GOAL AT + CORNER -->
+      <TurnToPoint posX_tiles="6.0"
+        posY_tiles="0.0"
+        timeout_ms="2000"
+        backwards="true"
+        angle_exit_threshold_deg="1.0"/>
+      
+      <ClampCmd clamp_closed="true"/>
+
     </Sequence>
   </BehaviorTree>
-
-  <BehaviorTree ID="push">
-    <Sequence>
-      <MoveToPoseCubic posX="-1.5"
-                       posY="2.5"
-                       theta="180"
-                       velX="0.0"
-                       velY="0.0"
-                       omega="0.0"
-                       threshold="0.05"
-                       angle_threshold="5.0"
-                       timeout="-1500"
-                       speed="0.5"/>
-      <MoveToPoseCubic posX="1.0"
-                       posY="2.5"
-                       theta="180"
-                       velX="0.0"
-                       velY="0.0"
-                       omega="0.0"
-                       threshold="0.05"
-                       angle_threshold="5.0"
-                       timeout="-5000"
-                       speed="0.8"/>
-      </Sequence>
-  </BehaviorTree>
-
-  <!-- Description of Node Models (used by Groot) -->
-  <TreeNodesModel>
-    <Decorator ID="AutonTimer"
-            editable="true">
-      <input_port name="seconds"/>
-    </Decorator>
-    <Action ID="CheckForRestart"
-            editable="true"/>
-    <Action ID="Climb"
-            editable="true"/>
-    <!-- <Action ID="AutoDone"
-            editable="true"/> -->
-    <Action ID="IntakeCmd"
-            editable="true">
-      <input_port name="in"/>
-    </Action>
-    <Action ID="Logging"
-            editable="true">
-      <input_port name="message"/>
-    </Action>
-    <Action ID="MoveToPoseCubic"
-            editable="true">
-      <input_port name="posX">m</input_port>
-      <input_port name="posY">m</input_port>
-      <input_port name="theta">deg</input_port>
-      <input_port name="velX">m.s</input_port>
-      <input_port name="velY">m.s</input_port>
-      <input_port name="omega">deg.s</input_port>
-      <input_port name="threshold"
-                  default="0.025">m</input_port>
-      <input_port name="angle_threshold"
-                  default="5.0">m</input_port>
-      <input_port name="timeout"
-                  default="5000">ms</input_port>
-      <input_port name="speed"
-                  default="0.5">m.s</input_port>
-    </Action>
-    <Action ID="MoveToPoseTrapezoid"
-            editable="true">
-      <input_port name="posX">m</input_port>
-      <input_port name="posY">m</input_port>
-      <input_port name="theta">deg</input_port>
-      <input_port name="velX">m.s</input_port>
-      <input_port name="velY">m.s</input_port>
-      <input_port name="omega">deg.s</input_port>
-      <input_port name="threshold"
-                  default="0.025">m</input_port>
-      <input_port name="angle_threshold"
-                  default="5.0">m</input_port>
-      <input_port name="timeout"
-                  default="5000">ms</input_port>
-      <input_port name="max_speed"
-                  default="0.5">m.s</input_port>
-    </Action>
-    <Action ID="SwipeTail"
-            editable="true">
-      <input_port name="num_swipes"/>
-    </Action>
-  </TreeNodesModel>
 
 </root>

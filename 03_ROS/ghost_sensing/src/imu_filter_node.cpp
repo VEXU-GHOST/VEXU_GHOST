@@ -167,7 +167,7 @@ IMUFilterNode::IMUFilterNode()
 
   // ROS Topics
   m_imu_sub = this->create_subscription<sensor_msgs::msg::Imu>(
-    input_imu_topic, 10, std::bind(&IMUFilterNode::imu_callback, this, _1));
+    input_imu_topic, rclcpp::SensorDataQoS(), std::bind(&IMUFilterNode::imu_callback, this, _1));
 
   m_filtered_imu_pub = this->create_publisher<sensor_msgs::msg::Imu>(
     output_imu_topic, 10);

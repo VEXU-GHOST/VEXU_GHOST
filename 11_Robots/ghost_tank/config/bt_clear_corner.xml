@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="clear_negative_corner">
+    <Sequence>
+      <Logging message="Go to corner stack"/>
+      <ParallelAll>
+        <NeutralStakeCmd state="0"
+          timeout_ms="10"/>
+        <Sequence>
+          <IntakeCmd auto="true"
+            ground_intake="true"/>
+          <GenerateBezierPath end_x_tiles="0.8"
+            end_y_tiles="1.5"
+            end_theta_deg="100.0"
+            lead_tiles="1.0"
+            backwards="false"
+            type="QUADRATIC_BEZIER"
+            num_points="250"/>
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.25"
+            angle_exit_threshold_deg="10.0"
+            lin_vel_exit_threshold_tps="10.0"
+            ang_vel_exit_threshold_dps="10.0"
+            max_speed_linear_percent="1.0"
+            max_speed_angular_percent="1.0"
+            timeout_ms="2000"
+            use_theta="false"
+            min_pursuit_radius_tiles="0.3"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="0.8"
+            deceleration_exponent="1.25"
+            min_approach_velocity_tps="0.00"/>
+
+          <GenerateBezierPath end_x_tiles="1.25"
+            end_y_tiles="1.25"
+            end_theta_deg="-135.0"
+            lead_tiles="0.5"
+            backwards="true"
+            type="QUADRATIC_BEZIER"
+            num_points="250"/>
+
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.1"
+            angle_exit_threshold_deg="2.0"
+            lin_vel_exit_threshold_tps="1.0"
+            ang_vel_exit_threshold_dps="10.0"
+            max_speed_linear_percent="1.0"
+            max_speed_angular_percent="1.0"
+            timeout_ms="2000"
+            use_theta="false"
+            min_pursuit_radius_tiles="0.3"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="0.5"
+            deceleration_exponent="1.5"
+            min_approach_velocity_tps="0.05"/>
+
+          <IntakeCmd auto="true"
+            ground_intake="false"/>
+
+          <GenerateBezierPath end_x_tiles="0.8"
+            end_y_tiles="0.8"
+            end_theta_deg="-135.0"
+            lead_tiles="1.0"
+            backwards="false"
+            type="QUADRATIC_BEZIER"
+            num_points="250"/>
+
+          <FollowPathPurePursuit xy_exit_threshold_tiles="0.25"
+            angle_exit_threshold_deg="10.0"
+            lin_vel_exit_threshold_tps="10.0"
+            ang_vel_exit_threshold_dps="10.0"
+            max_speed_linear_percent="1.0"
+            max_speed_angular_percent="1.0"
+            timeout_ms="2000"
+            use_theta="false"
+            min_pursuit_radius_tiles="0.7"
+            k_lookahead="0.3"
+            deceleration_start_distance_tiles="0.25"
+            deceleration_exponent="1.5"
+            min_approach_velocity_tps="0.05"/>
+          <ArcturnToPoint posX_tiles="0.0"
+            posY_tiles="0.0"
+            timeout_ms="5000"
+            angle_exit_threshold_deg="1.0"
+            ang_vel_exit_threshold_dps="20.0"
+            drive_backwards="false"
+            face_backwards="false"/>
+        </Sequence>
+      </ParallelAll>
+      <Logging message="Processing Corner Stack"/>
+      <IntakeCmd auto="true"
+        ground_intake="true"/>
+      <Sequence>
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.3"
+          timeout_ms="2000"
+          backwards="false"
+          distance_tiles="0.1"/>
+        <ShutoffNode/>
+
+        <ArcturnToPoint posX_tiles="0.0"
+          posY_tiles="0.0"
+          timeout_ms="3000"
+          angle_exit_threshold_deg="1.0"
+          ang_vel_exit_threshold_dps="10.0"
+          drive_backwards="false"
+          face_backwards="false"/>
+
+        <!-- <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.3"
+          timeout_ms="2000"
+          backwards="false"
+          distance_tiles="0.2"/>
+        <ShutoffNode/> -->
+
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="1.0"
+          timeout_ms="1000"
+          backwards="false"
+          distance_tiles="0.7"/>
+        <ShutoffNode/>
+
+        <MoveToPoint kp="7.0"
+          kd="0.0"
+          max_effort_percent="1.0"
+          timeout_ms="1500"
+          backwards="true"
+          distance_tiles="0.75"/>
+        <ShutoffNode/>
+
+        <ArcturnToPoint posX_tiles="0.0"
+          posY_tiles="0.0"
+          timeout_ms="3000"
+          angle_exit_threshold_deg="1.0"
+          ang_vel_exit_threshold_dps="10.0"
+          drive_backwards="false"
+          face_backwards="false"/>
+
+        <MoveToPoint kp="5.0"
+          kd="0.0"
+          max_effort_percent="0.3"
+          timeout_ms="1500"
+          backwards="false"
+          distance_tiles="1.0"/>
+        <ShutoffNode/>
+      </Sequence>
+      <ShutoffNode/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+      editable="true">
+      <input_port name="bite_closed"/>
+    </Action>
+    <Action ID="ClampCmd"
+      editable="true">
+      <input_port name="clamp_closed"/>
+    </Action>
+    <Action ID="ConveyorCmd"
+      editable="true">
+      <input_port name="fwd"/>
+    </Action>
+    <Action ID="GoalRushCmd"
+      editable="true">
+      <input_port name="goal_rush_down"/>
+    </Action>
+    <Action ID="SetMirrored"
+      editable="true">
+      <input_port name="mirrored"/>
+    </Action>
+    <Action ID="IntakeCmd"
+      editable="true">
+      <input_port name="active"/>
+    </Action>
+    <Action ID="Logging"
+      editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="MoveToPosePurepursuit"
+      editable="true">
+      <input_port name="fileName"/>
+      <input_port name="angle_threshold"
+        default="5.0">m</input_port>
+      <input_port name="threshold"
+        default="0.025">m</input_port>
+      <input_port name="timeout"
+        default="5000">ms</input_port>
+      <input_port name="use_theta"
+        default="false"/>
+    </Action>
+    <Action ID="ShutoffNode"
+      editable="true"/>
+  </TreeNodesModel>
+
+</root>

@@ -1,0 +1,10 @@
+port_configuration:
+    digital_io:
+        A: IN
+        B: OUT
+        C: 5
+        D: TEST
+        E: NONE
+        F:
+        # G: IN
+        H: IN

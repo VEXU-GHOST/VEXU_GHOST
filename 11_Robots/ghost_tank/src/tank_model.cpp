@@ -26,37 +26,39 @@
 #include <ghost_util/math_util.hpp>
 #include <ghost_util/vector_util.hpp>
 #include "ghost_util/unit_conversion_utils.hpp"
+#include <cmath>
 
 using geometry::Line2d;
 using ghost_util::angleBetweenVectorsRadians;
 namespace ghost_tank
 {
 
-TankModel::TankModel(TankConfig config)
+TankModel::TankModel(
+  std::shared_ptr<rclcpp::Node> node_ptr,
+  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr,
+  TankConfig config)
+: node_ptr_(node_ptr),
+  rhi_ptr_(rhi_ptr)
 {
   m_config = config;
 
   validateConfig();
   calculateMaxBaseTwist();
 
-  // Initialize module specific data
-  // for (const auto & [name, _] : m_config.module_positions) {
-  //   m_current_module_states[name] = ModuleState();
-  //   m_previous_module_states[name] = ModuleState();
-  //   m_module_commands[name] = ModuleCommand();
-  //   m_error_sum_map[name] = 0.0;
-  // }
+  node_ptr_->declare_parameter("particle_filter.rviz_set_pose_topic", "/set_pf_pose");
+  std::string particle_filter_set_pose_topic = node_ptr_->get_parameter(
+    "particle_filter.rviz_set_pose_topic").as_string();
+
+  m_particle_filter_set_pose_publisher =
+    node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+    particle_filter_set_pose_topic,
+    10);
 }
 
 void TankModel::validateConfig()
 {
   std::unordered_map<std::string, double> larger_than_zero_params{
-    // {"max_wheel_lin_vel", m_config.max_wheel_lin_vel},
-    // {"steering_ratio", m_config.steering_ratio},
-    // {"wheel_ratio", m_config.wheel_ratio},
-    // {"wheel_radius", m_config.wheel_radius},
-    // {"controller_dt", m_config.controller_dt},
-    // {"max_wheel_actuator_vel", m_config.max_wheel_actuator_vel}
+    {"wheel_radius_in", m_config.wheel_radius_in},
   };
 
   for (const auto & [key, val] : larger_than_zero_params) {
@@ -69,10 +71,6 @@ void TankModel::validateConfig()
   }
 
   std::unordered_map<std::string, double> larger_or_equal_to_zero_params{
-    // {"steering_kd", m_config.steering_kd},
-    // {"steering_ki", m_config.steering_ki},
-    // {"steering_ki_limit", m_config.steering_ki_limit},
-    // {"steering_control_deadzone", m_config.steering_control_deadzone},
   };
 
   for (const auto & [key, val] : larger_or_equal_to_zero_params) {
@@ -82,9 +80,6 @@ void TankModel::validateConfig()
       throw std::runtime_error(err_string);
     }
   }
-
-  // LIN_VEL_TO_RPM = ghost_util::METERS_TO_INCHES / m_config.wheel_radius *
-  //   ghost_util::RAD_PER_SEC_TO_RPM;
 
   // Initialize Base States
   m_odom_pose = Eigen::Vector3d::Zero();
@@ -96,51 +91,99 @@ void TankModel::validateConfig()
 
 void TankModel::calculateMaxBaseTwist()
 {
-  // // Get Max Base Speeds
-  // double max_wheel_dist = 0.0;
-  // for (const auto & [key, val] : m_config.module_positions) {
-  //   max_wheel_dist = std::max(max_wheel_dist, (double) val.norm());
-  // }
-
-  // m_max_base_lin_vel = m_config.max_wheel_lin_vel;
-  // m_max_base_ang_vel = m_max_base_lin_vel / max_wheel_dist;
+  // max motor speed is 11.4 is about 680ish RPM
+  m_max_base_lin_vel = M_2PI * m_config.wheel_radius_in * ghost_util::INCHES_TO_METERS * m_config.wheel_gear_ratio * 11.4;
+  m_max_base_ang_vel = m_max_base_lin_vel / (m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS);
 }
 
-// Assumes all module states have been updated prior to update
-void TankModel::updateTankModel()
+Eigen::Vector2d TankModel::wheelVelocitiesToChassisTwist(Eigen::Vector2d wheel_velocities) const
 {
-  updateBaseTwist();
-  calculateOdometry();
+  double left_vel = wheel_velocities.x();
+  double right_vel = wheel_velocities.y();
+
+  double linear_x_vel = (left_vel + right_vel) / 2.0;
+  double angular_z_vel = (right_vel - left_vel) / (2.0 * m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS);
+
+  return Eigen::Vector2d(linear_x_vel, angular_z_vel);
 }
 
-void TankModel::updateBaseTwist()
+Eigen::Vector2d TankModel::chassisTwistToWheelVelocities(Eigen::Vector2d chassis_twist) const
 {
-  // Eigen::VectorXd module_velocity_vector(2 * m_num_modules);
-  // int n = 0;
-  // for (const auto & [name, state] : m_current_module_states) {
-  //   module_velocity_vector[2 * n] = state.wheel_velocity / LIN_VEL_TO_RPM * cos(
-  //     state.steering_angle * ghost_util::DEG_TO_RAD);
-  //   module_velocity_vector[2 * n + 1] = state.wheel_velocity / LIN_VEL_TO_RPM * sin(
-  //     state.steering_angle * ghost_util::DEG_TO_RAD);
-  //   n++;
-  // }
+  double linear_x_vel = chassis_twist.x();
+  double angular_z_vel = chassis_twist.y();
 
-  // m_base_vel_curr = m_task_space_jacobian * module_velocity_vector;
-  // m_ls_error_metric =
-  //   (module_velocity_vector - m_task_space_jacobian_inverse * m_base_vel_curr).norm();
+  double left_vel = linear_x_vel - (angular_z_vel * m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS);
+  double right_vel = linear_x_vel + (angular_z_vel * m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS);
 
-  // m_base_vel_curr[0] = (std::fabs(m_base_vel_curr[0]) > 0.01) ? m_base_vel_curr[0] : 0.0;
-  // m_base_vel_curr[1] = (std::fabs(m_base_vel_curr[1]) > 0.01) ? m_base_vel_curr[1] : 0.0;
-  // m_base_vel_curr[2] = (std::fabs(m_base_vel_curr[2]) > 0.02) ? m_base_vel_curr[2] : 0.0;
+  return Eigen::Vector2d(left_vel, right_vel);
 }
 
-void TankModel::calculateOdometry()
+double TankModel::getMaxLinearVelocityFromAngularVelocity(double desired_angular_velocity_rad_s) const
 {
-  // auto rotate_base_to_odom = Eigen::Rotation2D<double>(m_odom_angle).toRotationMatrix();
-  // m_odom_loc += rotate_base_to_odom *
-  //   Eigen::Vector2d(m_base_vel_curr.x(), m_base_vel_curr.y()) * 0.01;
-  // m_odom_angle += m_base_vel_curr.z() * 0.01;
-  // m_odom_angle = ghost_util::WrapAngle2PI(m_odom_angle);
+  double angular_vel_component = desired_angular_velocity_rad_s * m_config.wheel_dist_in * ghost_util::INCHES_TO_METERS;
+  double max_allowed_linear_vel = m_max_base_lin_vel - std::fabs(angular_vel_component);
+  return std::max(0.0, max_allowed_linear_vel);
+}
+
+void TankModel::normalizeArcadeCommand(Eigen::Vector2d & cmd)
+{
+  auto & fwd_cmd = cmd.x();
+  auto & ang_cmd = cmd.y();
+
+  auto left_cmd = fwd_cmd - ang_cmd;
+  auto right_cmd = fwd_cmd + ang_cmd;
+
+
+  auto max_magnitude = std::max(std::fabs(left_cmd), std::fabs(right_cmd));
+  auto scale = 1.0 / std::max(1.0, max_magnitude);
+
+  cmd *= scale;
+}
+
+
+void TankModel::driveCommandArcade(double fwd_pct, double ang_pct)
+{
+  ghost_util::clamp(fwd_pct, -1.0, 1.0);
+  ghost_util::clamp(ang_pct, -1.0, 1.0);
+  double left_cmd = fwd_pct - ang_pct;
+  double right_cmd = fwd_pct + ang_pct;
+
+  for (const auto motor_name: m_config.motor_list_left) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_name, left_cmd);
+  }
+
+  for (const auto motor_name: m_config.motor_list_right) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_name, right_cmd);
+  }
+}
+
+void TankModel::driveCommandTank(double left_pct, double right_pct)
+{
+  ghost_util::clamp(left_pct, -1.0, 1.0);
+  ghost_util::clamp(right_pct, -1.0, 1.0);
+
+  for (const auto motor_name: m_config.motor_list_left) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_name, left_pct);
+  }
+
+  for (const auto motor_name: m_config.motor_list_right) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent(motor_name, right_pct);
+  }
+}
+
+void TankModel::driveCommandJoystick(double fwd, double ang, double deadzone)
+{
+  double forward_vel = fwd / 127.0;
+  double angular_vel = ang / 127.0;
+
+  forward_vel = (std::fabs(forward_vel) < deadzone) ? 0.0 : forward_vel;
+  angular_vel = (std::fabs(angular_vel) < deadzone) ? 0.0 : angular_vel;
+
+  driveCommandArcade(forward_vel, angular_vel);
 }
 
 } // namespace ghost_tank

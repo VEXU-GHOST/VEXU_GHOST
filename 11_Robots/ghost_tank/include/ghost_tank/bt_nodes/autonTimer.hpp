@@ -27,6 +27,8 @@
 #include "behaviortree_cpp/behavior_tree.h"
 #include "rclcpp/rclcpp.hpp"
 #include "ghost_tank/tank_tree.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
 namespace ghost_tank {
 
@@ -35,9 +37,7 @@ class AutonTimer : public BT::DecoratorNode
 public:
   // If your Node has ports, you must use this constructor signature
   AutonTimer(
-    const std::string & name, const BT::NodeConfig & config,
-    std::shared_ptr<rclcpp::Node> node_ptr,
-    std::shared_ptr<TankModel> tank_ptr);
+    const std::string & name, const BT::NodeConfig & config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -50,7 +50,8 @@ public:
 
 private:
   std::shared_ptr<rclcpp::Node> node_ptr_;
-	std::shared_ptr<TankModel> tank_ptr_;
+	std::shared_ptr<TankModel> tank_model_ptr_;
+  BT::Blackboard::Ptr blackboard_;
 };
 
 } // ghost_tank
