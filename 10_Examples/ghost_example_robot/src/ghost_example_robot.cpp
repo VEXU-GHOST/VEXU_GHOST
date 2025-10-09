@@ -126,18 +126,30 @@ void GhostExampleRobot::teleop(double current_time)
       rightVelocity /= maxValue;
     }
 
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", leftVelocity);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", rightVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor1", leftVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor1", rightVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor2", leftVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor2", rightVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor3", leftVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor3", rightVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor4", leftVelocity);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor4", rightVelocity);
 
     // Each motor has a current limit that defaults to zero.
     // This is so we can carefully allocate battery power between systems.
     // If we don't set these, the motors will be extremely weak, if they move at all.
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor1", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor1", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor2", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor2", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor3", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor3", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor4", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor4", 2500.0);
 
     // Now we can get motor data and print it.
-    double left_position = rhi_ptr_->getMotorPosition("left_motor");
-    double right_position = rhi_ptr_->getMotorPosition("right_motor");
+    double left_position = rhi_ptr_->getMotorPosition("left_motor1");
+    double right_position = rhi_ptr_->getMotorPosition("right_motor1");
 
     // These are in degrees. Units and other data can be configured in example_hardware_config.yaml.
     std::cout << "Left Motor: " << left_position << " deg" << std::endl;
@@ -145,11 +157,14 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << std::endl;
   } else {
     // Don't forget to turn motors off!
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor1", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor1", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor2", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor2", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor3", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor3", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor4", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor4", 0.0);
   }
 }
 } // namespace ghost_example_robot

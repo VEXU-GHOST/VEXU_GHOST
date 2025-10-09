@@ -29,7 +29,7 @@ port_configuration:
             port: 14
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
-        drive_l1:
+        left_motor:
             port: 3
             type: MOTOR
             reversed: false
@@ -59,7 +59,7 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_r1:
+        right_motor:
             port: 20
             type: MOTOR
             reversed: true

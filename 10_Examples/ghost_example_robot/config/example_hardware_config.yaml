@@ -3,15 +3,45 @@ port_configuration:
     A: IN
     B: OUT
   devices:
-    left_motor:
-      port: 1
+    left_motor1:
+      port: 7
+      type: MOTOR
+      reversed: true
+      config: drive_motor_config
+    left_motor2:
+      port: 8
       type: MOTOR
       reversed: false
       config: drive_motor_config
-    right_motor:
-      port: 2
+    left_motor3:
+      port: 9
       type: MOTOR
       reversed: true
+      config: drive_motor_config
+    left_motor4:
+      port: 10
+      type: MOTOR
+      reversed: false
+      config: drive_motor_config
+    right_motor1:
+      port: 3
+      type: MOTOR
+      reversed: true
+      config: drive_motor_config
+    right_motor2:
+      port: 2
+      type: MOTOR
+      reversed: false
+      config: drive_motor_config
+    right_motor3:
+      port: 1
+      type: MOTOR
+      reversed: true
+      config: drive_motor_config
+    right_motor4:
+      port: 17
+      type: MOTOR
+      reversed: false
       config: drive_motor_config
   device_configurations:
     drive_motor_config:
