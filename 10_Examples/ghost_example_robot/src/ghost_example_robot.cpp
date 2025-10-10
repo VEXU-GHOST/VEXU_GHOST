@@ -25,7 +25,7 @@
 #include <ghost_example_robot/ghost_example_robot.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <algorithm>  // for std::clamp
-
+#include <std.h>
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
@@ -110,33 +110,63 @@ void GhostExampleRobot::teleop(double current_time)
     double forward = joy_data->left_y / 127.0;
     double turn    = joy_data->right_x / 127.0;
 
+
     // Apply a small deadzone to ignore joystick drift
     constexpr double kDeadzone = 0.05;
     if (std::fabs(forward) < kDeadzone) forward = 0.0;
     if (std::fabs(turn)    < kDeadzone) turn    = 0.0;
 
-    // Combine forward and turning into left/right power
     double left_power  = forward + turn;
     double right_power = forward - turn;
 
-    // Clamp to [-1.0, 1.0] so we never overdrive the motors
-    left_power  = std::clamp(left_power,  -1.0, 1.0);
-    right_power = std::clamp(right_power, -1.0, 1.0);
+    // check if either power is outside of [-1.0, 1.0]
+
+    // if so, scale both values down proportionally so that the highest
+
+    // absolute value is 1.0
+
+    double maxMagnitude = std::max(std::fabs(left_power), std::fabs(right_power));
+    if (maxMagnitude > 1.0) {
+      left_power /= maxMagnitude;
+      right_power /= maxMagnitude;
+    }
 
     // Send motor commands (maps ±1.0 to ±12000 mV internally)
+
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor",  left_power);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_power);
-
     // Set current limits while active
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor",  2500.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor",  250
+0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500
+.0);
+      
 
-    // Optional: print motor positions for debugging
-    double left_position  = rhi_ptr_->getMotorPosition("left_motor");
-    double right_position = rhi_ptr_->getMotorPosition("right_motor");
-    std::cout << "Left Motor: "  << left_position  << " deg" << std::endl;
-    std::cout << "Right Motor: " << right_position << " deg" << std::endl;
-    std::cout << std::endl;
+    // Tank drive scheme:
+
+
+    // // Combine forward and turning into left/right power
+    // double left_power  = forward + turn;
+    // double right_power = forward - turn;
+
+    // // Clamp to [-1.0, 1.0] so we never overdrive the motors
+    // left_power  = std::clamp(left_power,  -1.0, 1.0);
+    // right_power = std::clamp(right_power, -1.0, 1.0);
+
+    // // Send motor commands (maps ±1.0 to ±12000 mV internally)
+    // rhi_ptr_->setMotorVoltageCommandPercent("left_motor",  left_power);
+    // rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_power);
+
+    // // Set current limits while active
+    // rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor",  2500.0);
+    // rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    // // Optional: print motor positions for debugging
+    // double left_position  = rhi_ptr_->getMotorPosition("left_motor");
+    // double right_position = rhi_ptr_->getMotorPosition("right_motor");
+    // std::cout << "Left Motor: "  << left_position  << " deg" << std::endl;
+    // std::cout << "Right Motor: " << right_position << " deg" << std::endl;
+    // std::cout << std::endl;
     } else {
 
     // Don't forget to turn motors off!
