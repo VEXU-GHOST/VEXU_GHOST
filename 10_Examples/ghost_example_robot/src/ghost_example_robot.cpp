@@ -89,23 +89,25 @@ void GhostExampleRobot::teleop(double current_time)
     };
 
   // Action triggers
-  if (true) {
     double left_pos = rhi_ptr_->getMotorPosition("left_motor");
     double right_pos = rhi_ptr_->getMotorPosition("right_motor");
 
     if (joy_data->btn_u) {
+      std::cout << "Button U pressed: Forward 10\"" << std::endl;
       // Forward 10"
       double delta_deg = inchesToDegrees(10.0);
       action_target_left = left_pos + delta_deg;
       action_target_right = right_pos + delta_deg;
       action_in_progress = true;
     } else if (joy_data->btn_d) {
+      std::cout << "Button D pressed: Backward 10\"" << std::endl;
       // Backward 10"
       double delta_deg = inchesToDegrees(10.0);
       action_target_left = left_pos - delta_deg;
       action_target_right = right_pos - delta_deg;
       action_in_progress = true;
     } else if (joy_data->btn_l) {
+      std::cout << "Button L pressed: Turn left 90 deg" << std::endl;
       // Turn left 90 deg (robot)
       double turn_circum = ROBOT_TRACK_WIDTH_IN * M_PI;
       double arc_len = turn_circum * (90.0 / 360.0);
@@ -114,6 +116,7 @@ void GhostExampleRobot::teleop(double current_time)
       action_target_right = right_pos + delta_deg;
       action_in_progress = true;
     } else if (joy_data->btn_r) {
+      std::cout << "Button R pressed: Turn right 90 deg" << std::endl;
       // Turn right 90 deg (robot)
       double turn_circum = ROBOT_TRACK_WIDTH_IN * M_PI;
       double arc_len = turn_circum * (90.0 / 360.0);
@@ -122,40 +125,49 @@ void GhostExampleRobot::teleop(double current_time)
       action_target_right = right_pos - delta_deg;
       action_in_progress = true;
     }
-  }
 
   // implements controls to go to the positions
   rhi_ptr_->setMotorPositionCommand("left_motor", action_target_left);
   rhi_ptr_->setMotorPositionCommand("right_motor", action_target_right);
 
-  // // PID constants
-  // constexpr double kP = 0.01;
-  // constexpr double max_power = 0.5;
+  // PID constants
+  constexpr double kP = 0.01;
+  constexpr double max_power = 0.5;
 
-  // if (action_in_progress) {
-  //   double left_pos = rhi_ptr_->getMotorPosition("left_motor");
-  //   double right_pos = rhi_ptr_->getMotorPosition("right_motor");
-  //   double left_err = action_target_left - left_pos;
-  //   double right_err = action_target_right - right_pos;
+  double left_integral = 0.0;
+  double right_integral = 0.0;
+  constexpr double kI = 0.0002; // Integral gain
 
-  //   double left_cmd = std::clamp(kP * left_err, -max_power, max_power);
-  //   double right_cmd = std::clamp(kP * right_err, -max_power, max_power);
+  if (action_in_progress) {
+    double left_pos = rhi_ptr_->getMotorPosition("left_motor");
+    double right_pos = rhi_ptr_->getMotorPosition("right_motor");
+    double left_err = action_target_left - left_pos;
+    double right_err = action_target_right - right_pos;
 
-  //   rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_cmd);
-  //   rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_cmd);
-  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
-  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+    // Integrate error
+    left_integral += left_err;
+    right_integral += right_err;
 
-  //   // Consider action done if both errors are small
-  //   if (std::fabs(left_err) < 5.0 && std::fabs(right_err) < 5.0) {
-  //     action_in_progress = false;
-  //     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-  //     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
-  //     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-  //     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
-  //   }
-  //   return;
-  // }
+    double left_cmd = std::clamp(kP * left_err + kI * left_integral, -max_power, max_power);
+    double right_cmd = std::clamp(kP * right_err + kI * right_integral, -max_power, max_power);
+
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_cmd);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_cmd);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+    // Consider action done if both errors are small
+    if (std::fabs(left_err) < 5.0 && std::fabs(right_err) < 5.0) {
+      action_in_progress = false;
+      left_integral = 0.0;
+      right_integral = 0.0;
+      rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+      rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+    }
+    return;
+  }
 
 
   // Drive control
