@@ -25,7 +25,6 @@
 #include <ghost_example_robot/ghost_example_robot.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <algorithm>  // for std::clamp
-#include <std.h>
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
@@ -102,21 +101,21 @@ void GhostExampleRobot::teleop(double current_time)
   }
 
   // While holding button R2, send motor commands based on joystick values
-    // While holding button R2, send motor commands based on joystick values
+  // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
     // Arcade drive scheme:
     //  - Forward/back: left joystick Y
     //  - Turn left/right: right joystick X
     double forward = joy_data->left_y / 127.0;
-    double turn    = joy_data->right_x / 127.0;
+    double turn = joy_data->right_x / 127.0;
 
 
     // Apply a small deadzone to ignore joystick drift
     constexpr double kDeadzone = 0.05;
-    if (std::fabs(forward) < kDeadzone) forward = 0.0;
-    if (std::fabs(turn)    < kDeadzone) turn    = 0.0;
+    if (std::fabs(forward) < kDeadzone) {forward = 0.0;}
+    if (std::fabs(turn) < kDeadzone) {turn = 0.0;}
 
-    double left_power  = forward + turn;
+    double left_power = forward + turn;
     double right_power = forward - turn;
 
     // check if either power is outside of [-1.0, 1.0]
@@ -133,14 +132,12 @@ void GhostExampleRobot::teleop(double current_time)
 
     // Send motor commands (maps ±1.0 to ±12000 mV internally)
 
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor",  left_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_power);
     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_power);
     // Set current limits while active
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor",  250
-0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500
-.0);
-      
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
 
     // Tank drive scheme:
 
@@ -167,7 +164,7 @@ void GhostExampleRobot::teleop(double current_time)
     // std::cout << "Left Motor: "  << left_position  << " deg" << std::endl;
     // std::cout << "Right Motor: " << right_position << " deg" << std::endl;
     // std::cout << std::endl;
-    } else {
+  } else {
 
     // Don't forget to turn motors off!
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
