@@ -89,7 +89,7 @@ void GhostExampleRobot::teleop(double current_time)
     };
 
   // Action triggers
-  if (!action_in_progress) {
+  if (true) {
     double left_pos = rhi_ptr_->getMotorPosition("left_motor");
     double right_pos = rhi_ptr_->getMotorPosition("right_motor");
 
@@ -124,34 +124,39 @@ void GhostExampleRobot::teleop(double current_time)
     }
   }
 
-  // PID constants
-  constexpr double kP = 0.01;
-  constexpr double max_power = 0.5;
+  // implements controls to go to the positions
+  rhi_ptr_->setMotorPositionCommand("left_motor", action_target_left);
+  rhi_ptr_->setMotorPositionCommand("right_motor", action_target_right);
 
-  if (action_in_progress) {
-    double left_pos = rhi_ptr_->getMotorPosition("left_motor");
-    double right_pos = rhi_ptr_->getMotorPosition("right_motor");
-    double left_err = action_target_left - left_pos;
-    double right_err = action_target_right - right_pos;
+  // // PID constants
+  // constexpr double kP = 0.01;
+  // constexpr double max_power = 0.5;
 
-    double left_cmd = std::clamp(kP * left_err, -max_power, max_power);
-    double right_cmd = std::clamp(kP * right_err, -max_power, max_power);
+  // if (action_in_progress) {
+  //   double left_pos = rhi_ptr_->getMotorPosition("left_motor");
+  //   double right_pos = rhi_ptr_->getMotorPosition("right_motor");
+  //   double left_err = action_target_left - left_pos;
+  //   double right_err = action_target_right - right_pos;
 
-    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_cmd);
-    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_cmd);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+  //   double left_cmd = std::clamp(kP * left_err, -max_power, max_power);
+  //   double right_cmd = std::clamp(kP * right_err, -max_power, max_power);
 
-    // Consider action done if both errors are small
-    if (std::fabs(left_err) < 5.0 && std::fabs(right_err) < 5.0) {
-      action_in_progress = false;
-      rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
-      rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
-    }
-    return;
-  }
+  //   rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_cmd);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_cmd);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+  //   // Consider action done if both errors are small
+  //   if (std::fabs(left_err) < 5.0 && std::fabs(right_err) < 5.0) {
+  //     action_in_progress = false;
+  //     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+  //     rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+  //     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
+  //     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
+  //   }
+  //   return;
+  // }
+
 
   // Drive control
   double left_cmd = 0.0, right_cmd = 0.0;
@@ -271,5 +276,3 @@ void GhostExampleRobot::teleop(double current_time)
 PLUGINLIB_EXPORT_CLASS(
   ghost_example_robot::GhostExampleRobot,
   ghost_ros_interfaces::V5RobotBase)
-
-
