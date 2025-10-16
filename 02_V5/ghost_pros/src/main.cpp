@@ -13,8 +13,9 @@
 #include "ghost_v5_interfaces/util/device_type_helpers.hpp"
 
 #include "ghost_v5/motor/v5_motor_interface.hpp"
-#include "ghost_v5/screen/screen_interface.hpp"
+// #include "ghost_v5/screen/screen_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
+#include "lv_tutorial_responsive.h"
 
 using ghost_v5_interfaces::devices::hardware_type_e::V5_BRAIN;
 using namespace ghost_v5;
@@ -40,17 +41,17 @@ void calibrateIMU(std::shared_ptr<pros::Imu> imu_ptr)
     }
     // indicate error
     pros::c::controller_rumble(pros::E_CONTROLLER_MASTER, "---");
-    v5_globals::screen_interface_ptr->addToPrintQueue(
-      "IMU failed to calibrate! Attempt #{}",
-      attempt);
+    // v5_globals::screen_interface_ptr->addToPrintQueue(
+    //   "IMU failed to calibrate! Attempt #{}",
+    //   attempt);
     attempt++;
   }
   // check if calibration attempts were successful
-  if (attempt > 5) {
-    v5_globals::screen_interface_ptr->addToPrintQueue("IMU calibration failed");
-  } else {
-    v5_globals::screen_interface_ptr->addToPrintQueue("IMU calibrated!");
-  }
+  // if (attempt > 5) {
+  //   v5_globals::screen_interface_ptr->addToPrintQueue("IMU calibration failed");
+  // } else {
+  //   v5_globals::screen_interface_ptr->addToPrintQueue("IMU calibrated!");
+  // }
 }
 
 void exit_main_loop(const std::exception & e)
@@ -58,11 +59,11 @@ void exit_main_loop(const std::exception & e)
   v5_globals::run = false;
 
   // Clear current screen data
-  v5_globals::screen_interface_ptr->reset();
+  // v5_globals::screen_interface_ptr->reset();
 
-  // Update screen with error data
-  v5_globals::screen_interface_ptr->setTitle("ERROR");
-  v5_globals::screen_interface_ptr->addToPrintQueue(e.what());
+  // // Update screen with error data
+  // v5_globals::screen_interface_ptr->setTitle("ERROR");
+  // v5_globals::screen_interface_ptr->addToPrintQueue(e.what());
 }
 
 void zero_actuators()
@@ -92,11 +93,13 @@ void update_actuators()
 
 void screen_update_loop()
 {
+  // put new screen code here so it repeatedly updates
+
   uint32_t loop_time = pros::millis();
-  auto refresh_rate = v5_globals::screen_interface_ptr->getRefreshRateMilliseconds();
+  // auto refresh_rate = v5_globals::screen_interface_ptr->getRefreshRateMilliseconds();
   while (true) {
-    v5_globals::screen_interface_ptr->updateScreen();
-    pros::c::task_delay_until(&loop_time, refresh_rate);
+    // v5_globals::screen_interface_ptr->updateScreen();
+    pros::c::task_delay_until(&loop_time, 10);
   }
 }
 
@@ -162,8 +165,9 @@ void ghost_main_loop()
 void initialize()
 {
   try {
+    lv_tutorial_responsive();
     // Setup LCD Screen
-    v5_globals::screen_interface_ptr = std::make_shared<ghost_v5::ScreenInterface>();
+    // v5_globals::screen_interface_ptr = std::make_shared<ghost_v5::ScreenInterface>();
     pros::Task screen_output_thread(screen_update_loop, "screen_update_thread");
 
     // Get Robot Device Configuration from compile-time generated file
@@ -219,11 +223,11 @@ void initialize()
             for (int i = 0; i < 8; i++) {
               auto port_name = v5_globals::adi_ports_name_map[i];
               if (input_mask_vector[i]) {
-                v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Input on port ", port_name);
+                // v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Input on port ", port_name);
                 v5_globals::digital_inputs[port_name] = std::make_shared<pros::ADIDigitalIn>(i + 1);
 
               } else if (output_mask_vector[i]) {
-                v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Output on port ", port_name);
+                // v5_globals::screen_interface_ptr->addToPrintQueue("Adding Digital Output on port ", port_name);
                 v5_globals::digital_outputs[port_name] = std::make_shared<pros::ADIDigitalOut>(i + 1);
               }
             }
