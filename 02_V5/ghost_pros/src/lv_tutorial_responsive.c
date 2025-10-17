@@ -86,12 +86,11 @@
  
 void lv_tutorial_responsive(void)
 {
+    // adding text
     /*Create a Label on the currently active screen*/
     lv_obj_t * label1 =  lv_label_create(lv_scr_act(), NULL);
-
     /*Modify the Label's text*/
     lv_label_set_text(label1, "Hello world!");
-
     /* Align the Label to the center
      * NULL means align on parent (which is the screen now)
      * 0, 0 at the end means an x, y offset after alignment*/
@@ -99,7 +98,7 @@ void lv_tutorial_responsive(void)
     
     
     
-    
+    // creating a button
     lv_obj_t * label;
 
     /*LV_DPI*/
@@ -119,6 +118,14 @@ void lv_tutorial_responsive(void)
     label = lv_label_create(btn2, NULL);
     lv_label_set_text(label, "Align");
 
+    uint8_t id = lv_obj_get_free_num(btn1);
+
+    if (id == 0) {
+        char buffer[100];
+		sprintf(buffer, "button was clicked %i milliseconds from start", pros::millis());
+		lv_label_set_text(myLabel, buffer);
+    }
+    
     /*AUTO FIT*/
     lv_obj_t * btn3;
     btn3 = lv_btn_create(lv_scr_act(), btn1);

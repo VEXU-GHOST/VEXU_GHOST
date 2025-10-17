@@ -93,12 +93,12 @@ void update_actuators()
 
 void screen_update_loop()
 {
-  // put new screen code here so it repeatedly updates
-
   uint32_t loop_time = pros::millis();
   // auto refresh_rate = v5_globals::screen_interface_ptr->getRefreshRateMilliseconds();
   while (true) {
     // v5_globals::screen_interface_ptr->updateScreen();
+    // put new screen code here so it repeatedly updates
+    lv_tutorial_responsive()
     pros::c::task_delay_until(&loop_time, 10);
   }
 }
