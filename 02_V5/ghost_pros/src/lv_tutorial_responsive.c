@@ -51,8 +51,6 @@
 #include "lv_tutorial_responsive.h"
 #include "display/lvgl.h"
 
-
-
 /*********************
  *      DEFINES
  *********************/
@@ -81,58 +79,71 @@
  * Create some objects an animate them
  */
 
- 
+     
+// creating a button
+lv_obj_t * label1;
+lv_obj_t * label2;
+lv_obj_t * label3;
+lv_obj_t * label4;
 
+static lv_res_t btn_click_action(lv_obj_t * btn)
+{
+    uint8_t id = lv_obj_get_free_num(btn); //id useful when there are multiple buttons
+
+    if(id == 0)
+    {
+        // char buffer[100];
+		// sprintf(buffer, "clicked");
+		lv_label_set_text(label1, "clicked");
+    }
+
+    return LV_RES_OK;
+}
  
 void lv_tutorial_responsive(void)
 {
     // adding text
     /*Create a Label on the currently active screen*/
-    lv_obj_t * label1 =  lv_label_create(lv_scr_act(), NULL);
+    //label1 =  lv_label_create(lv_scr_act(), NULL);
     /*Modify the Label's text*/
-    lv_label_set_text(label1, "Hello world!");
+    //lv_label_set_text(label1, "Hello world!");
     /* Align the Label to the center
      * NULL means align on parent (which is the screen now)
      * 0, 0 at the end means an x, y offset after alignment*/
-    lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, 0);
+    //lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, 0);
     
-    
-    
-    // creating a button
-    lv_obj_t * label;
+
 
     /*LV_DPI*/
     lv_obj_t * btn1;
     btn1 = lv_btn_create(lv_scr_act(), NULL);
-    lv_obj_set_pos(btn1, LV_DPI / 10, LV_DPI / 10);     /*Use LV_DPI to set the position*/
+    //lv_obj_set_pos(btn1, LV_DPI / 10, LV_DPI / 10);     /*Use LV_DPI to set the position*/
+    //lv_obj_set_align(btn1, LV_ALIGN_CENTER);
+    //lv_obj_align(btn1, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_pos(btn1, LV_DPI - 80, LV_DPI / 10); 
     lv_obj_set_size(btn1, LV_DPI, LV_DPI / 2);          /*Use LVDOI to set the size*/
 
-    label = lv_label_create(btn1, NULL);
-    lv_label_set_text(label, "LV_DPI");
+    label1 = lv_label_create(btn1, NULL);
+    lv_label_set_text(label1, "LV_DPI");
+    
+    
+    
 
     /*ALIGN*/
     lv_obj_t * btn2;
     btn2 = lv_btn_create(lv_scr_act(), btn1);
     lv_obj_align(btn2, btn1, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
 
-    label = lv_label_create(btn2, NULL);
-    lv_label_set_text(label, "Align");
-
-    uint8_t id = lv_obj_get_free_num(btn1);
-
-    if (id == 0) {
-        char buffer[100];
-		sprintf(buffer, "button was clicked %i milliseconds from start", pros::millis());
-		lv_label_set_text(myLabel, buffer);
-    }
+    label2 = lv_label_create(btn2, NULL);
+    lv_label_set_text(label2, "Align");
     
     /*AUTO FIT*/
     lv_obj_t * btn3;
     btn3 = lv_btn_create(lv_scr_act(), btn1);
     lv_btn_set_fit(btn3, true, true);
 
-    label = lv_label_create(btn3, NULL);
-    lv_label_set_text(label, "Fit");
+    label3 = lv_label_create(btn3, NULL);
+    lv_label_set_text(label3, "Fit");
 
     lv_obj_align(btn3, btn1, LV_ALIGN_OUT_BOTTOM_MID, 0, LV_DPI / 4);   /*Align when already resized because of the label*/
 
@@ -142,18 +153,25 @@ void lv_tutorial_responsive(void)
     lv_btn_set_fit(btn4, true, true);           /*Enable fit too*/
     lv_btn_set_layout(btn4, LV_LAYOUT_COL_R);   /*Right aligned column layout*/
 
-    label = lv_label_create(btn4, NULL);
-    lv_label_set_text(label, "First");
+    label4 = lv_label_create(btn4, NULL);
+    lv_label_set_text(label4, "First");
 
-    label = lv_label_create(btn4, NULL);
-    lv_label_set_text(label, "Second");
+    label4 = lv_label_create(btn4, NULL);
+    lv_label_set_text(label4, "Second");
 
-    label = lv_label_create(btn4, NULL);
-    lv_label_set_text(label, "Third");
+    label4 = lv_label_create(btn4, NULL);
+    lv_label_set_text(label4, "Third");
 
     lv_obj_align(btn4, btn2, LV_ALIGN_OUT_BOTTOM_MID, 0, LV_DPI / 4);   /*Align when already resized because of the label*/
 
+
+    // code for when button is clicked
+    // lv_obj_set_free_num(btn1, 0); // set button is to 0
+    lv_btn_set_action(btn1, LV_BTN_ACTION_CLICK, btn_click_action); //set function to be called on button click
+
 }
+
+
 
 /**********************
  *   STATIC FUNCTIONS

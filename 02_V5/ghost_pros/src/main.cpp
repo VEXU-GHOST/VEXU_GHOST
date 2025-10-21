@@ -98,7 +98,7 @@ void screen_update_loop()
   while (true) {
     // v5_globals::screen_interface_ptr->updateScreen();
     // put new screen code here so it repeatedly updates
-    lv_tutorial_responsive()
+    lv_tutorial_responsive();
     pros::c::task_delay_until(&loop_time, 10);
   }
 }
@@ -166,6 +166,8 @@ void initialize()
 {
   try {
     lv_tutorial_responsive();
+
+    
     // Setup LCD Screen
     // v5_globals::screen_interface_ptr = std::make_shared<ghost_v5::ScreenInterface>();
     pros::Task screen_output_thread(screen_update_loop, "screen_update_thread");
