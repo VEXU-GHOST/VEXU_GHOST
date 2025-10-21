@@ -86,15 +86,17 @@ lv_obj_t * label2;
 lv_obj_t * label3;
 lv_obj_t * label4;
 
+char buffer[100];
+
 static lv_res_t btn_click_action(lv_obj_t * btn)
 {
     uint8_t id = lv_obj_get_free_num(btn); //id useful when there are multiple buttons
 
     if(id == 0)
     {
-        // char buffer[100];
-		// sprintf(buffer, "clicked");
-		lv_label_set_text(label1, "clicked");
+        //char buffer[100];
+		sprintf(buffer, "clicked");
+		lv_label_set_text(label1, buffer);
     }
 
     return LV_RES_OK;
@@ -118,13 +120,12 @@ void lv_tutorial_responsive(void)
     lv_obj_t * btn1;
     btn1 = lv_btn_create(lv_scr_act(), NULL);
     //lv_obj_set_pos(btn1, LV_DPI / 10, LV_DPI / 10);     /*Use LV_DPI to set the position*/
-    //lv_obj_set_align(btn1, LV_ALIGN_CENTER);
-    //lv_obj_align(btn1, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_pos(btn1, LV_DPI - 80, LV_DPI / 10); 
     lv_obj_set_size(btn1, LV_DPI, LV_DPI / 2);          /*Use LVDOI to set the size*/
 
     label1 = lv_label_create(btn1, NULL);
-    lv_label_set_text(label1, "LV_DPI");
+    sprintf(buffer, "LV_DPI");
+    lv_label_set_text(label1, buffer);
     
     
     
