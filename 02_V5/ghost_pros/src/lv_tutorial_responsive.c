@@ -86,7 +86,6 @@ lv_obj_t * label2;
 lv_obj_t * label3;
 lv_obj_t * label4;
 
-char buffer[100];
 
 static lv_res_t btn_click_action(lv_obj_t * btn)
 {
@@ -94,10 +93,11 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
 
     if(id == 0)
     {
-        //char buffer[100];
-		sprintf(buffer, "clicked");
-		lv_label_set_text(label1, buffer);
+        lv_label_set_text(label1, "clicked");        
     }
+    if(id == 1) lv_label_set_text(label2, "clicked");
+    if(id == 2) lv_label_set_text(label3, "clicked");
+    if(id == 3) lv_label_set_text(label4, "clicked");
 
     return LV_RES_OK;
 }
@@ -124,10 +124,8 @@ void lv_tutorial_responsive(void)
     lv_obj_set_size(btn1, LV_DPI, LV_DPI / 2);          /*Use LVDOI to set the size*/
 
     label1 = lv_label_create(btn1, NULL);
-    sprintf(buffer, "LV_DPI");
-    lv_label_set_text(label1, buffer);
-    
-    
+    lv_label_set_text(label1, "LV_DPI");
+
     
 
     /*ALIGN*/
@@ -167,7 +165,10 @@ void lv_tutorial_responsive(void)
 
 
     // code for when button is clicked
-    // lv_obj_set_free_num(btn1, 0); // set button is to 0
+    lv_obj_set_free_num(btn1, 0); // set button is to 0
+    // lv_obj_set_free_num(btn2, 1); 
+    // lv_obj_set_free_num(btn3, 2); 
+    // lv_obj_set_free_num(btn4, 3); 
     lv_btn_set_action(btn1, LV_BTN_ACTION_CLICK, btn_click_action); //set function to be called on button click
 
 }
