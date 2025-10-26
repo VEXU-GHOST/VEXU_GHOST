@@ -47,37 +47,8 @@
  *      INCLUDES
  *********************/
 
-
 #include "lv_tutorial_responsive.h"
 #include "display/lvgl.h"
-
-/*********************
- *      DEFINES
- *********************/
-
-/**********************
- *      TYPEDEFS
- **********************/
-
-/**********************
- *  STATIC PROTOTYPES
- **********************/
-
-/**********************
- *  STATIC VARIABLES
- **********************/
-
-/**********************
- *      MACROS
- **********************/
-
-/**********************
- *   GLOBAL FUNCTIONS
- **********************/
-
-/**
- * Create some objects an animate them
- */
 
      
 // creating a button
@@ -86,6 +57,13 @@ lv_obj_t * label2;
 lv_obj_t * label3;
 lv_obj_t * label4;
 
+lv_obj_t * btn1;
+lv_obj_t * btn2;
+
+lv_obj_t * btn3;
+
+lv_obj_t * screen1;
+lv_obj_t * screen2;
 
 static lv_res_t btn_click_action(lv_obj_t * btn)
 {
@@ -93,11 +71,11 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
 
     if(id == 0)
     {
-        lv_label_set_text(label1, "clicked");        
+        // lv_disp_load_screen(screen2);
+        // lv_label_set_text(label1, "clicked");      
+        lv_scr_load(screen2);  
     }
     if(id == 1) lv_label_set_text(label2, "clicked");
-    if(id == 2) lv_label_set_text(label3, "clicked");
-    if(id == 3) lv_label_set_text(label4, "clicked");
 
     return LV_RES_OK;
 }
@@ -114,67 +92,52 @@ void lv_tutorial_responsive(void)
      * 0, 0 at the end means an x, y offset after alignment*/
     //lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, 0);
     
+    
+
 
 
     /*LV_DPI*/
-    lv_obj_t * btn1;
-    btn1 = lv_btn_create(lv_scr_act(), NULL);
+    lv_obj_create(screen1, NULL);
+    lv_obj_create(screen2, NULL);
+    //screen2 = lv_obj_create(NULL);
+
+    // lv_disp_load_scr(screen1); //makes screen1 the active screen
+    // lv_disp_set_default(screen1);
+    // lv_disp_load_scr(screen1);
+    // lv_disp_set_default(disp);
+    // lv_disp_get_scr_act(disp);
+
+
+    btn3 = lv_btn_create(lv_scr_act(), screen2);
+    lv_obj_set_pos(btn3, LV_DPI - 80, LV_DPI / 10); 
+    lv_obj_set_size(btn3, LV_DPI, LV_DPI / 2);     
+    label3 = lv_label_create(btn3, NULL);
+    lv_label_set_text(label3, "MADE IT TO RED");
+
+
+    btn1 = lv_btn_create(lv_scr_act(), NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
     //lv_obj_set_pos(btn1, LV_DPI / 10, LV_DPI / 10);     /*Use LV_DPI to set the position*/
     lv_obj_set_pos(btn1, LV_DPI - 80, LV_DPI / 10); 
     lv_obj_set_size(btn1, LV_DPI, LV_DPI / 2);          /*Use LVDOI to set the size*/
 
     label1 = lv_label_create(btn1, NULL);
-    lv_label_set_text(label1, "LV_DPI");
-
-    
+    lv_label_set_text(label1, "RED");
 
     /*ALIGN*/
-    lv_obj_t * btn2;
+    
     btn2 = lv_btn_create(lv_scr_act(), btn1);
     lv_obj_align(btn2, btn1, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
 
     label2 = lv_label_create(btn2, NULL);
-    lv_label_set_text(label2, "Align");
-    
-    /*AUTO FIT*/
-    lv_obj_t * btn3;
-    btn3 = lv_btn_create(lv_scr_act(), btn1);
-    lv_btn_set_fit(btn3, true, true);
-
-    label3 = lv_label_create(btn3, NULL);
-    lv_label_set_text(label3, "Fit");
-
-    lv_obj_align(btn3, btn1, LV_ALIGN_OUT_BOTTOM_MID, 0, LV_DPI / 4);   /*Align when already resized because of the label*/
-
-    /*LAYOUT*/
-    lv_obj_t * btn4;
-    btn4 = lv_btn_create(lv_scr_act(), btn1);
-    lv_btn_set_fit(btn4, true, true);           /*Enable fit too*/
-    lv_btn_set_layout(btn4, LV_LAYOUT_COL_R);   /*Right aligned column layout*/
-
-    label4 = lv_label_create(btn4, NULL);
-    lv_label_set_text(label4, "First");
-
-    label4 = lv_label_create(btn4, NULL);
-    lv_label_set_text(label4, "Second");
-
-    label4 = lv_label_create(btn4, NULL);
-    lv_label_set_text(label4, "Third");
-
-    lv_obj_align(btn4, btn2, LV_ALIGN_OUT_BOTTOM_MID, 0, LV_DPI / 4);   /*Align when already resized because of the label*/
+    lv_label_set_text(label2, "BLUE");
 
 
     // code for when button is clicked
     lv_obj_set_free_num(btn1, 0); // set button is to 0
-    // lv_obj_set_free_num(btn2, 1); 
-    // lv_obj_set_free_num(btn3, 2); 
-    // lv_obj_set_free_num(btn4, 3); 
+    lv_obj_set_free_num(btn2, 1); 
     lv_btn_set_action(btn1, LV_BTN_ACTION_CLICK, btn_click_action); //set function to be called on button click
+    lv_btn_set_action(btn2, LV_BTN_ACTION_CLICK, btn_click_action);
+
 
 }
 
-
-
-/**********************
- *   STATIC FUNCTIONS
- **********************/
