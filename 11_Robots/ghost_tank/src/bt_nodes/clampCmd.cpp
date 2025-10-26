@@ -32,6 +32,8 @@ ClampCmd::ClampCmd(
   const std::string & name, const BT::NodeConfig & config)
 : BT::SyncActionNode(name, config)
 {
+  std::cout << "[ClampCmd::ClampCmd]" << std::endl;
+  
   blackboard_ = config.blackboard;
 	BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
 	BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
