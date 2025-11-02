@@ -89,6 +89,23 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << "Button L2!" << std::endl;
   }
 
+enum DriveMode {tank, arcade};
+
+enum class ActionState {
+    IDLE,
+    DRIVE_FORWARD,
+    DRIVE_BACKWARD,
+    TURN_LEFT,
+    TURN_RIGHT
+};
+
+ActionState action_state_ = ActionState::IDLE;
+DriveMode drive_mode_ = DriveMode::tank; 
+
+double action_start_time_ = 0.0;
+double action_duration_ = 0.0;
+
+
   // Print joystick data!
   if (joy_data->btn_r1) {
     // Left joystick up-down axis is "left_y", left-right axis is "left_x"
@@ -132,8 +149,111 @@ void GhostExampleRobot::teleop(double current_time)
     rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0.0);
   }
+
+if (joy_data->btn_a) {
+        drive_mode_ = DriveMode::tank;
+        std::cout << "Switched to TANK mode\n";
+    }
+if (joy_data->btn_b) {
+        drive_mode_ = DriveMode::arcade;
+        std::cout << "Switched to ARCADE mode\n";
+    }
+
+    // 10 forward
+if (joy_data->btn_u){
+  action_state_ = ActionState::DRIVE_FORWARD;
+  action_start_time_ = current_time;
+  action_duration_   = 1.0;   // placeholder duration
+  std::cout << "Driving forward 10 in\n";
+    }
+
+    // 10 backward
+if (joy_data->btn_d) {
+  action_state_ = ActionState::DRIVE_BACKWARD;
+  action_start_time_ = current_time;
+  action_duration_   = 1.0;
+  std::cout << "Driving backward 10 in\n";
+    }
+
+    // turn left 90
+if (joy_data->btn_l) {
+  action_state_ = ActionState::TURN_LEFT;
+  action_start_time_ = current_time;
+  action_duration_   = 1.0;
+  std::cout << "Turning left 90°\n";
+    }
+
+    // turn right 90
+if (joy_data->btn_r) {
+  action_state_ = ActionState::TURN_RIGHT;
+  action_start_time_ = current_time;
+  action_duration_   = 1.0;
+  std::cout << "Turning right 90°\n";
+    }
+
+  double left_cmd  = 0.0;
+  double right_cmd = 0.0;
+
+if (action_state_ != ActionState::IDLE){
+        // action still active?
+  if (current_time < action_start_time_ + action_duration_)
+        {
+    switch (action_state_) {
+      case ActionState::DRIVE_FORWARD:
+        left_cmd  =  0.3;
+        right_cmd =  0.3;
+        break;
+
+      case ActionState::DRIVE_BACKWARD:
+        left_cmd  = -0.3;
+        right_cmd = -0.3;
+        break;
+
+      case ActionState::TURN_LEFT:
+        left_cmd  = -0.3;
+        right_cmd =  0.3;
+        break;
+
+      case ActionState::TURN_RIGHT:
+        left_cmd  =  0.3;
+        right_cmd = -0.3;
+        break;
+
+      default:
+        break;
+  }
+  } else {
+      action_state_ = ActionState::IDLE;
+  }
+} else {
+
+// joystick control
+        if (drive_mode_ == DriveMode::tank) {
+            left_cmd  = joy_data->left_y  / 127.0;
+            right_cmd = joy_data->right_y / 127.0;
+        }
+        else if (drive_mode_ == DriveMode::arcade) {
+            double forward = joy_data->left_y  / 127.0;
+            double turn    = joy_data->right_x / 127.0;
+
+            left_cmd  = forward + turn;
+            right_cmd = forward - turn;
+        }
+    }
+
+    // motor command
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor",  left_cmd);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_cmd);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor",  2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+
 }
+
+
 } // namespace ghost_example_robot
+
 
 PLUGINLIB_EXPORT_CLASS(
   ghost_example_robot::GhostExampleRobot,
