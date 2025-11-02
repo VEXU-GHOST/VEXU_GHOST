@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <memory>
-#include "driver_tcs34725_interface.h"
+#include "linux_i2c_interface.h"
 
 namespace ghost_sensing {
 
@@ -130,7 +130,7 @@ public:
     bool readAllSensors(sensor_data_t& data);
 
 private:
-    std::shared_ptr<tcs_i2c_interface> m_i2c_communication;
+    std::shared_ptr<linux_i2c_interface> m_i2c_communication;
 
     // Helper functions for register access
     bool writeRegister(uint8_t reg, uint8_t data);
