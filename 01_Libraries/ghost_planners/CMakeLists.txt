@@ -85,6 +85,48 @@ install(
   INCLUDES DESTINATION include
 )
 
+add_library(boomerang SHARED src/boomerang.cpp)
+target_include_directories(boomerang
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(boomerang
+  ${DEPENDENCIES}
+)
+# ament_export_libraries(
+#   boomerang
+# )
+ament_export_targets(boomerang HAS_LIBRARY_TARGET)
+install(
+  TARGETS boomerang
+  EXPORT boomerang
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+add_library(bezier_curve SHARED src/bezier_curve.cpp)
+target_include_directories(bezier_curve
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(bezier_curve
+  ${DEPENDENCIES}
+)
+# ament_export_libraries(
+#   bezier_curve
+# )
+ament_export_targets(bezier_curve HAS_LIBRARY_TARGET)
+install(
+  TARGETS bezier_curve
+  EXPORT bezier_curve
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 ######################
 ### Casadi Example ###
 ######################

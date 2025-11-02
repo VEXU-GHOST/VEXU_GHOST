@@ -32,9 +32,7 @@ AutonTimer::AutonTimer(
   const std::string & name, const BT::NodeConfig & config)
   : BT::DecoratorNode(name, config){
     blackboard_ = config.blackboard;
-	  if(!blackboard_->get("node_ptr", node_ptr_)){
-        std::cout << name << ": node_ptr not found in blackboard" << std::endl;
-    }
+    BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
 }
 
 // It is mandatory to define this STATIC method.
@@ -54,13 +52,6 @@ void AutonTimer::halt()
 // Override the virtual function tick()
 BT::NodeStatus AutonTimer::tick()
 {
-  // BT::Expected<double> seconds = getInput<double>("seconds");
-  // // Check if expected is valid. If not, throw its error
-  // if (!seconds) {
-  //   throw BT::RuntimeError(
-  //           "missing required input [message]: ",
-  //           seconds.error() );
-  // }
   double timeout = BT_Util::get_input<double>(this, "seconds");
   
   // double timeout = seconds.value();

@@ -148,15 +148,18 @@ void EkfPfNode::LoadROSParams()
   declare_parameter("particle_filter.laser_angle_offset", 0.0);
   declare_parameter("particle_filter.min_update_dist", 0.0);
   declare_parameter("particle_filter.min_update_angle", 0.0);
-  declare_parameter("particle_filter.max_update_angular_velocity", 0.0);
+  declare_parameter("particle_filter.max_update_yaw_velocity", 0.0);
+  declare_parameter("particle_filter.max_update_tilt_velocity", 0.0);
   config_params.laser_offset_x = get_parameter("particle_filter.laser_offset_x").as_double();
   config_params.laser_offset_y = get_parameter("particle_filter.laser_offset_y").as_double();
   config_params.laser_angle_offset =
     get_parameter("particle_filter.laser_angle_offset").as_double();
   config_params.min_update_dist = get_parameter("particle_filter.min_update_dist").as_double();
   config_params.min_update_angle = get_parameter("particle_filter.min_update_angle").as_double();
-  config_params.max_update_angular_velocity = get_parameter(
-    "particle_filter.max_update_angular_velocity").as_double();
+  config_params.max_update_yaw_velocity = get_parameter(
+    "particle_filter.max_update_yaw_velocity").as_double();
+  config_params.max_update_tilt_velocity = get_parameter(
+    "particle_filter.max_update_tilt_velocity").as_double();
 
   declare_parameter("particle_filter.sigma_observation", 0.0);
   declare_parameter("particle_filter.gamma", 0.0);
@@ -261,7 +264,10 @@ void EkfPfNode::EkfCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     last_filtered_odom_msg_.pose.pose.orientation.z,
     last_filtered_odom_msg_.pose.pose.orientation.w);
 
-  particle_filter_.setAngularVelocity(msg->twist.twist.angular.z);
+  particle_filter_.setYawAngularVelocity(msg->twist.twist.angular.z);
+
+  float max_tilt_vel = std::max(std::fabs(msg->twist.twist.angular.x), std::fabs(msg->twist.twist.angular.y));
+  particle_filter_.setTiltAngularVelocity(max_tilt_vel);
 
   try {
     Vector2f robot_loc(0, 0);

@@ -1,4 +1,9 @@
-9.0,10.0,11.0
-11.0,12.0,13.0
-14.0,15.0,16.0
-1.0, 2.0, 3.0
+#PATH-POINTS-START Path
+-1000,1000,0,180
+-177.8,0,0
+-177.8,-177.8,0,45
+0,0,0
+177.8,177.8,0,180
+177.8,0,0
+1000,-1000,0,180
+#PATH.JERRYIO-DATA {"appVersion":"0.9.0","format":"path.jerryio v0.1","gc":{"robotWidth":30,"robotHeight":30,"robotIsHolonomic":false,"showRobot":false,"uol":1,"pointDensity":2,"controlMagnetDistance":5,"fieldImage":{"displayName":"V5RC 2025 - High Stakes","signature":"V5RC 2025 - High Stakes","origin":{"__type":"built-in"}},"coordinateSystem":"VEX Gaming Positioning System"},"paths":[{"segments":[{"controls":[{"uid":"eJvOtjR2wB","x":-177.8,"y":177.8,"lock":false,"visible":true,"heading":180,"__type":"end-point"},{"uid":"kFHFzwDT6q","x":-177.8,"y":-177.8,"lock":false,"visible":true,"heading":45,"__type":"end-point"}],"speedProfiles":[],"lookaheadKeyframes":[],"uid":"W6Zl4q4xpL"},{"controls":[{"uid":"kFHFzwDT6q","x":-177.8,"y":-177.8,"lock":false,"visible":true,"heading":45,"__type":"end-point"},{"uid":"Bq6Uhz0DXa","x":0,"y":0,"lock":false,"visible":true,"heading":45,"__type":"end-point"}],"speedProfiles":[],"lookaheadKeyframes":[],"uid":"RVkomZ3Cli"},{"controls":[{"uid":"Bq6Uhz0DXa","x":0,"y":0,"lock":false,"visible":true,"heading":45,"__type":"end-point"},{"uid":"0BOteYZ7Bc","x":177.8,"y":177.8,"lock":false,"visible":true,"heading":180,"__type":"end-point"}],"speedProfiles":[],"lookaheadKeyframes":[],"uid":"h79T6yW9ge"},{"controls":[{"uid":"0BOteYZ7Bc","x":177.8,"y":177.8,"lock":false,"visible":true,"heading":180,"__type":"end-point"},{"uid":"7KlVdG8HTK","x":177.8,"y":-177.8,"lock":false,"visible":true,"heading":180,"__type":"end-point"}],"speedProfiles":[],"lookaheadKeyframes":[],"uid":"HSsDHeKEDb"}],"pc":{"speedLimit":{"minLimit":{"value":0,"label":"0"},"maxLimit":{"value":600,"label":"600"},"step":1,"from":40,"to":0},"bentRateApplicableRange":{"minLimit":{"value":0,"label":"0"},"maxLimit":{"value":1,"label":"1"},"step":0.001,"from":0,"to":0.1}},"name":"Path","uid":"PHXFZXix1A","lock":false,"visible":true}]}

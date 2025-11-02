@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="worlds_goal_rush">
+    <Sequence>
+      <Logging message="goal_rush" />
+      <GoalRushCmd goal_rush_down="true" />
+      <IntakeCmd auto="false" ground_intake="true" />
+
+      <Parallel failure_count="2" success_count="2">
+        <ForceSuccess>
+          <Fallback>
+            <Sequence>
+              <BoundaryCheck
+                x_lower_bound_tiles="0.0"
+                y_lower_bound_tiles="0.0"
+                x_upper_bound_tiles="6.0"
+                y_upper_bound_tiles="2.25">
+                <MoveToPoint 
+                  kp="2.5"
+                  kd="0.0" 
+                  max_effort_percent="1.0"
+                  timeout_ms="1200"
+                  backwards="false"
+                  distance_tiles="1.333"/>
+              </BoundaryCheck>
+              <Logging message="Timed Out" />
+            </Sequence>
+            <Logging message="Hit Boundary" />
+          </Fallback>
+        </ForceSuccess>
+        <Fallback>
+          <Sequence>
+            <Delay delay_msec="500">
+              <RetryUntilSuccessful num_attempts="-1">
+                <GoalRushDetected threshold="0.4" />
+              </RetryUntilSuccessful>
+            </Delay>
+            <Logging message="Goal Rush detected!" />
+          </Sequence>
+          <Logging message="Goal Rush detection failed" />
+        </Fallback>
+        <ForceSuccess>
+          <Delay delay_msec="500">
+            <Sequence>
+              <BiteCmd bite_closed="true"/>
+            </Sequence>
+          </Delay>
+        </ForceSuccess>
+      </Parallel>
+      
+      <BiteCmd bite_closed="true"/>
+      <GoalRushCmd goal_rush_down="false" />
+      <!-- <IntakeCmd auto="false" ground_intake="false" /> -->
+      <MoveVoltage forward_effort="-0.1" angular_effort="0.0" timeout_ms="50" />
+
+      <MoveToPoint 
+        kp="3.5"
+        kd="0.0"
+        max_effort_percent="-1.0"
+        timeout_ms="1000"
+        backwards="false"
+        distance_tiles="0.8"/>
+      <GoalRushCmd goal_rush_down="true"/>
+      <WaitCmd seconds="0.500"
+        shutoff_motors="true"/>
+      <MoveVoltage forward_effort="-0.2" angular_effort="0.0" timeout_ms="500" />      
+      <GoalRushCmd goal_rush_down="false" />
+      <WaitCmd seconds="0.300" shutoff_motors="true"/>
+      <IntakeCmd auto="false" ground_intake="false" />
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="BiteCmd"
+      editable="true">
+      <input_port name="bite_closed" />
+    </Action>
+    <Action ID="ClampCmd"
+      editable="true">
+      <input_port name="clamp_closed" />
+    </Action>
+    <Action ID="ConveyorCmd"
+      editable="true">
+      <input_port name="fwd" />
+    </Action>
+    <Action ID="GoalRushCmd"
+      editable="true">
+      <input_port name="goal_rush_l_down" />
+      <input_port name="goal_rush_r_down" />
+    </Action>
+    <Action ID="SetMirrored"
+      editable="true">
+      <input_port name="mirrored" />
+    </Action>
+    <Action ID="IntakeCmd"
+      editable="true">
+      <input_port name="auto" />
+      <input_port name="ground_intake" />
+    </Action>
+    <Action ID="Logging"
+      editable="true">
+      <input_port name="message" />
+    </Action>
+    <Action ID="BoundaryCheck"
+      editable="true">
+      <input_port name="x_lower_bound_tiles" />
+      <input_port name="y_lower_bound_tiles" />
+      <input_port name="x_upper_bound_tiles" />
+      <input_port name="y_upper_bound_tiles" />
+    </Action>
+    <Action ID="ShutoffNode"
+      editable="true" />
+    <Action ID="GoalRushDetected" editable="true" />
+    <Action ID="MoveVoltage" editable="true">
+      <input_port name="forward_effort" />
+      <input_port name="angular_effort" />
+      <input_port name="timeout_ms" />
+    </Action>
+  </TreeNodesModel>
+
+</root>

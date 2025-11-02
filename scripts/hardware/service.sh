@@ -70,8 +70,8 @@ EOF
 	# Run the installation script with root privileges
 	sudo ./install-realsense-modules.sh
 	
-
-
+    # make sure you add ROBOT_NAME="robotname" to /etc/environment (ex: ROBOT_NAME="alpha")
+    # same name as needed in hardware.launch.py
 	;;
     *)
         echo "Usage: service.sh [restart/stop/kill/shutdown/install]"
