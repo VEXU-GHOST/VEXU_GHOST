@@ -39,6 +39,10 @@ TEMPLATE_FILES=$(INCDIR)/**/*.h $(INCDIR)/**/*.hpp
 
 .DEFAULT_GOAL=quick
 
+CFLAGS += -I$(INCDIR)
+
+
+
 ################################################################################
 ################################################################################
 ########## Nothing below this line should be edited by typical users ###########
