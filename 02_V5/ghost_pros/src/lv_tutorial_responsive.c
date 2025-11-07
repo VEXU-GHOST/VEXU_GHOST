@@ -63,10 +63,22 @@ lv_obj_t * btn2;
 
 lv_obj_t * btn3;
 
-lv_disp_t newDisp;
-lv_disp_drv_init(&(newDisp.driver));
-lv_disp_drv_register(&(newDisp.driver));
-lv_disp_set_active(&newDisp);
+// lv_disp_t newDisp;
+
+lv_disp_t * disp;
+lv_disp_drv_t driver;
+// lv_disp_drv_init(&newDisp.driver);
+// lv_disp_drv_register(&newDisp.driver);
+// lv_disp_set_active(&newDisp);
+
+lv_disp_drv_init(&driver);
+lv_disp_t * newDisp = lv_disp_drv_register(&driver);
+lv_disp_set_active(disp);
+lv_disp_t * lv_disp_get_active(void);
+
+
+lv_display_t * display1 = lv_display_create(hor_res, ver_res);
+
 
 
 //void lv_disp_drv_init(lv_disp_drv_t *driver);
@@ -86,7 +98,7 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
     {
         // lv_disp_load_screen(screen2);
         // lv_label_set_text(label1, "clicked");
-        lv_disp_load_scr(disp, screen2)   
+        lv_disp_load_scr(newDisp, screen2);   
         // lv_scr_load(screen2);  
     }
     if(id == 1) lv_label_set_text(label2, "clicked");
