@@ -61,6 +61,7 @@ void GhostExampleRobot::autonomous(double current_time)
 void GhostExampleRobot::teleop(double current_time)
 {
   static int loop_count = 0;
+  static bool drive_type = false; //tank = 0, arcade = 1
   if (loop_count++ % 100 == 0) {
     std::cout << "Teleop " << current_time << std::endl;
   }
@@ -68,8 +69,10 @@ void GhostExampleRobot::teleop(double current_time)
   auto joy_data = rhi_ptr_->getMainJoystickData();
 
   if (joy_data->btn_a) {
+    drive_type = false;
     std::cout << "Button A!" << std::endl;
   } else if (joy_data->btn_b) {
+    drive_type = true;
     std::cout << "Button B!" << std::endl;
   } else if (joy_data->btn_x) {
     std::cout << "Button X!" << std::endl;
@@ -87,6 +90,65 @@ void GhostExampleRobot::teleop(double current_time)
     std::cout << "Button L1!" << std::endl;
   } else if (joy_data->btn_l2) {
     std::cout << "Button L2!" << std::endl;
+  }
+
+  if (abs(joy_data->left_y) > 13 || abs(joy_data->right_y) > 13) {
+    if (drive_type == false) { //tank drive
+      double left_wheel_power = joy_data->left_y / 127.0;
+      double right_wheel_power = joy_data->right_y / 127.0;
+
+      // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
+      rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+      rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+
+      // Each motor has a current limit that defaults to zero.
+      // This is so we can carefully allocate battery power between systems.
+      // If we don't set these, the motors will be extremely weak, if they move at all.
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+      // Now we can get motor data and print it.
+      double left_position = rhi_ptr_->getMotorPosition("left_motor");
+      double right_position = rhi_ptr_->getMotorPosition("right_motor");
+    }
+  }
+  else if (abs(joy_data->right_x) > 13|| abs(joy_data->right_y) > 13) {
+    if (drive_type == true) { //arcade drive
+      double rotate = joy_data->right_x / 127.0;
+      double drive = joy_data->right_y / 127.0;
+
+      double left_wheel_power = drive + rotate;
+      double right_wheel_power = drive - rotate;
+
+      if(abs(left_wheel_power) > 1) {
+        left_wheel_power /= abs(left_wheel_power);
+        right_wheel_power /= abs(left_wheel_power);
+      }
+      if(abs(right_wheel_power) > 1) {
+        left_wheel_power /= abs(right_wheel_power);
+        right_wheel_power /= abs(right_wheel_power);
+      }
+      // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
+      rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
+      rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_wheel_power);
+      // Each motor has a current limit that defaults to zero.
+
+      // This is so we can carefully allocate battery power between systems.
+      // If we don't set these, the motors will be extremely weak, if they move at all.
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+      rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0);
+
+      // Now we can get motor data and print it.
+      double left_position = rhi_ptr_->getMotorPosition("left_motor");
+      double right_position = rhi_ptr_->getMotorPosition("right_motor");
+    }
+  }
+  else {
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0);
+
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0);
   }
 
   // Print joystick data!
