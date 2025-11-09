@@ -57,37 +57,20 @@ lv_obj_t * label1;
 lv_obj_t * label2;
 lv_obj_t * label3;
 lv_obj_t * label4;
+lv_obj_t * label5;
+lv_obj_t * label6;
 
 lv_obj_t * btn1;
 lv_obj_t * btn2;
-
 lv_obj_t * btn3;
-
-// lv_disp_t newDisp;
-
-lv_disp_t * disp;
-lv_disp_drv_t driver;
-// lv_disp_drv_init(&newDisp.driver);
-// lv_disp_drv_register(&newDisp.driver);
-// lv_disp_set_active(&newDisp);
-
-// lv_disp_drv_init(&driver);
-// lv_disp_t * newDisp = lv_disp_drv_register(&driver);
-// lv_disp_set_active(disp);
-// lv_disp_t * lv_disp_get_active(void);
+lv_obj_t * btn4;
+lv_obj_t * btn5;
+lv_obj_t * btn6;
 
 
-lv_display_t * display1 = lv_display_create(hor_res, ver_res);
-
-
-
-//void lv_disp_drv_init(lv_disp_drv_t *driver);
-//lv_disp_t * lv_disp_drv_register(lv_disp_drv_t *driver);
-//void lv_disp_set_active(lv_disp_t * disp);
-//lv_disp_set_default(disp);
-
-lv_obj_t * screen1 = lv_obj_create(NULL);
-lv_obj_t * screen2 = lv_obj_create(NULL);
+lv_obj_t * homeScreen;
+lv_obj_t * redScreen;
+lv_obj_t * blueScreen;
 // lv_obj_t * scr = lv_obj_create(NULL, screen2);
 
 static lv_res_t btn_click_action(lv_obj_t * btn)
@@ -95,14 +78,19 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
     uint8_t id = lv_obj_get_free_num(btn); //id useful when there are multiple buttons
 
     if(id == 0)
-    {
-        // lv_disp_load_screen(screen2);
-        // lv_label_set_text(label1, "clicked");
-        // lv_disp_load_scr(newDisp, screen2);   
-        lv_screen_load(screen2);
-        // lv_scr_load(screen2);  
+    {  
+        lv_scr_load(redScreen);
     }
-    if(id == 1) lv_label_set_text(label2, "clicked");
+    if(id == 1) {
+        //lv_label_set_text(label2, "clicked");
+        lv_scr_load(redScreen);
+    }
+    if(id == 3) {  
+        lv_scr_load(homeScreen);
+    }
+    if(id == 5) {  
+        lv_scr_load(homeScreen);
+    }
 
     return LV_RES_OK;
 }
@@ -119,30 +107,18 @@ void lv_tutorial_responsive(void)
      * 0, 0 at the end means an x, y offset after alignment*/
     //lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, 0);
     
-    
 
+    homeScreen = lv_obj_create(NULL, NULL);
+    redScreen = lv_obj_create(NULL, NULL);
+    blueScreen = lv_obj_create(NULL, NULL);
 
+    lv_scr_load(homeScreen);
 
     /*LV_DPI*/
-    // lv_obj_create(screen1, NULL);
-    // lv_obj_create(screen2, NULL);
-    //screen2 = lv_obj_create(NULL);
-
-    // lv_disp_load_scr(screen1); //makes screen1 the active screen
-    // lv_disp_set_default(screen1);
-    // lv_disp_load_scr(screen1);
-    // lv_disp_set_default(disp);
-    // lv_disp_get_scr_act(disp);
 
 
-    btn3 = lv_btn_create(screen2, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
-    lv_obj_set_pos(btn3, LV_DPI - 80, LV_DPI / 10); 
-    lv_obj_set_size(btn3, LV_DPI, LV_DPI / 2);     
-    label3 = lv_label_create(btn3, NULL);
-    lv_label_set_text(label3, "MADE IT TO RED");
-
-
-    btn1 = lv_btn_create(screen1, NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
+    // homeScreen
+    btn1 = lv_btn_create(homeScreen, NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
     //lv_obj_set_pos(btn1, LV_DPI / 10, LV_DPI / 10);     /*Use LV_DPI to set the position*/
     lv_obj_set_pos(btn1, LV_DPI - 80, LV_DPI / 10); 
     lv_obj_set_size(btn1, LV_DPI, LV_DPI / 2);          /*Use LVDOI to set the size*/
@@ -152,18 +128,52 @@ void lv_tutorial_responsive(void)
 
     /*ALIGN*/
     
-    btn2 = lv_btn_create(screen1, btn1);
+    btn2 = lv_btn_create(homeScreen, btn1);
     lv_obj_align(btn2, btn1, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
-
     label2 = lv_label_create(btn2, NULL);
     lv_label_set_text(label2, "BLUE");
+
+
+    // redSceen
+    btn3 = lv_btn_create(redScreen, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
+    lv_obj_set_pos(btn3, LV_DPI - 80, LV_DPI / 10); 
+    lv_obj_set_size(btn3, LV_DPI, LV_DPI / 2);     
+    label3 = lv_label_create(btn3, NULL);
+    lv_label_set_text(label3, "MADE IT TO RED");
+
+    btn4 = lv_btn_create(redScreen, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
+    lv_obj_align(btn4, btn3, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);   
+    label4 = lv_label_create(btn4, NULL);
+    lv_label_set_text(label4, "Back to Home");
+
+
+    // blueScreen
+    btn5 = lv_btn_create(blueScreen, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
+    lv_obj_set_pos(btn5, LV_DPI - 80, LV_DPI / 10); 
+    lv_obj_set_size(btn5, LV_DPI, LV_DPI / 2);     
+    label5 = lv_label_create(btn5, NULL);
+    lv_label_set_text(label5, "MADE IT TO BLUE");
+
+    btn6 = lv_btn_create(blueScreen, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
+    lv_obj_align(btn6, btn5, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);   
+    label6 = lv_label_create(btn6, NULL);
+    lv_label_set_text(label6, "Back to Home");
+
 
 
     // code for when button is clicked
     lv_obj_set_free_num(btn1, 0); // set button is to 0
     lv_obj_set_free_num(btn2, 1); 
+    lv_obj_set_free_num(btn3, 2); 
+    lv_obj_set_free_num(btn4, 3); 
+    lv_obj_set_free_num(btn5, 4); 
+    lv_obj_set_free_num(btn6, 5); 
     lv_btn_set_action(btn1, LV_BTN_ACTION_CLICK, btn_click_action); //set function to be called on button click
     lv_btn_set_action(btn2, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(btn3, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(btn4, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(btn5, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(btn6, LV_BTN_ACTION_CLICK, btn_click_action);
 
 
 }
