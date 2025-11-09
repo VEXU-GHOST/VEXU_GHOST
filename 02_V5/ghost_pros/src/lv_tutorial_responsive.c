@@ -83,7 +83,7 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
     }
     if(id == 1) {
         //lv_label_set_text(label2, "clicked");
-        lv_scr_load(redScreen);
+        lv_scr_load(blueScreen);
     }
     if(id == 3) {  
         lv_scr_load(homeScreen);
@@ -137,27 +137,27 @@ void lv_tutorial_responsive(void)
     // redSceen
     btn3 = lv_btn_create(redScreen, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
     lv_obj_set_pos(btn3, LV_DPI - 80, LV_DPI / 10); 
-    lv_obj_set_size(btn3, LV_DPI, LV_DPI / 2);     
+    // lv_obj_set_size(btn3, LV_DPI, LV_DPI / 2);     
     label3 = lv_label_create(btn3, NULL);
     lv_label_set_text(label3, "MADE IT TO RED");
 
     btn4 = lv_btn_create(redScreen, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
     lv_obj_align(btn4, btn3, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);   
     label4 = lv_label_create(btn4, NULL);
-    lv_label_set_text(label4, "Back to Home");
+    lv_label_set_text(label4, "HOME");
 
 
     // blueScreen
     btn5 = lv_btn_create(blueScreen, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
     lv_obj_set_pos(btn5, LV_DPI - 80, LV_DPI / 10); 
-    lv_obj_set_size(btn5, LV_DPI, LV_DPI / 2);     
+    //lv_obj_set_size(btn5, LV_DPI, LV_DPI / 2);     
     label5 = lv_label_create(btn5, NULL);
     lv_label_set_text(label5, "MADE IT TO BLUE");
 
     btn6 = lv_btn_create(blueScreen, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
     lv_obj_align(btn6, btn5, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);   
     label6 = lv_label_create(btn6, NULL);
-    lv_label_set_text(label6, "Back to Home");
+    lv_label_set_text(label6, "HOME");
 
 
 
