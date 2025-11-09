@@ -71,10 +71,10 @@ lv_disp_drv_t driver;
 // lv_disp_drv_register(&newDisp.driver);
 // lv_disp_set_active(&newDisp);
 
-lv_disp_drv_init(&driver);
-lv_disp_t * newDisp = lv_disp_drv_register(&driver);
-lv_disp_set_active(disp);
-lv_disp_t * lv_disp_get_active(void);
+// lv_disp_drv_init(&driver);
+// lv_disp_t * newDisp = lv_disp_drv_register(&driver);
+// lv_disp_set_active(disp);
+// lv_disp_t * lv_disp_get_active(void);
 
 
 lv_display_t * display1 = lv_display_create(hor_res, ver_res);
@@ -86,8 +86,8 @@ lv_display_t * display1 = lv_display_create(hor_res, ver_res);
 //void lv_disp_set_active(lv_disp_t * disp);
 //lv_disp_set_default(disp);
 
-lv_obj_t * screen1;
-lv_obj_t * screen2;
+lv_obj_t * screen1 = lv_obj_create(NULL);
+lv_obj_t * screen2 = lv_obj_create(NULL);
 // lv_obj_t * scr = lv_obj_create(NULL, screen2);
 
 static lv_res_t btn_click_action(lv_obj_t * btn)
@@ -98,7 +98,8 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
     {
         // lv_disp_load_screen(screen2);
         // lv_label_set_text(label1, "clicked");
-        lv_disp_load_scr(newDisp, screen2);   
+        // lv_disp_load_scr(newDisp, screen2);   
+        lv_screen_load(screen2);
         // lv_scr_load(screen2);  
     }
     if(id == 1) lv_label_set_text(label2, "clicked");
@@ -123,8 +124,8 @@ void lv_tutorial_responsive(void)
 
 
     /*LV_DPI*/
-    lv_obj_create(screen1, NULL);
-    lv_obj_create(screen2, NULL);
+    // lv_obj_create(screen1, NULL);
+    // lv_obj_create(screen2, NULL);
     //screen2 = lv_obj_create(NULL);
 
     // lv_disp_load_scr(screen1); //makes screen1 the active screen
@@ -134,14 +135,14 @@ void lv_tutorial_responsive(void)
     // lv_disp_get_scr_act(disp);
 
 
-    btn3 = lv_btn_create(lv_scr_act(), screen2); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
+    btn3 = lv_btn_create(screen2, NULL); // CHANGE TO ONLY SHOW ON SCREEN2 lv_btn_create(screen2, NULL)
     lv_obj_set_pos(btn3, LV_DPI - 80, LV_DPI / 10); 
     lv_obj_set_size(btn3, LV_DPI, LV_DPI / 2);     
     label3 = lv_label_create(btn3, NULL);
     lv_label_set_text(label3, "MADE IT TO RED");
 
 
-    btn1 = lv_btn_create(lv_scr_act(), NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
+    btn1 = lv_btn_create(screen1, NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
     //lv_obj_set_pos(btn1, LV_DPI / 10, LV_DPI / 10);     /*Use LV_DPI to set the position*/
     lv_obj_set_pos(btn1, LV_DPI - 80, LV_DPI / 10); 
     lv_obj_set_size(btn1, LV_DPI, LV_DPI / 2);          /*Use LVDOI to set the size*/
@@ -151,7 +152,7 @@ void lv_tutorial_responsive(void)
 
     /*ALIGN*/
     
-    btn2 = lv_btn_create(lv_scr_act(), btn1);
+    btn2 = lv_btn_create(screen1, btn1);
     lv_obj_align(btn2, btn1, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
 
     label2 = lv_label_create(btn2, NULL);
