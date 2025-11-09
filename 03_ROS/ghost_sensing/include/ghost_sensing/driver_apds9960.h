@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <memory>
-#include "driver_tcs34725_interface.h"
+#include "I2C_interfacing.h"
 
 namespace ghost_sensing {
 
@@ -90,7 +90,7 @@ public:
     static const int8_t DIR_DOWN  = 4;
 
     // Constructor / destructor
-    color_sensor_apds9960(std::shared_ptr<tcs_i2c_interface> iface, uint8_t address);
+    color_sensor_apds9960(std::shared_ptr<I2C_interfacing> iface, uint8_t address);
     ~color_sensor_apds9960();
 
     // Initialization and deinitialization
@@ -130,7 +130,7 @@ public:
     bool readAllSensors(sensor_data_t& data);
 
 private:
-    std::shared_ptr<tcs_i2c_interface> m_i2c_communication;
+    std::shared_ptr<I2C_interfacing> m_i2c_communication;
 
     // Helper functions for register access
     bool writeRegister(uint8_t reg, uint8_t data);

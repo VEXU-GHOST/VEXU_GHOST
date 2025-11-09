@@ -59,7 +59,7 @@
 namespace ghost_sensing
 {
 
-class tcs_i2c_interface
+class I2C_interfacing
 {
 private:
   int gs_fd = -1;            /**< file descriptor */
@@ -67,7 +67,7 @@ private:
   rclcpp::Logger logger;
 
 public:
-  tcs_i2c_interface(std::string iFilename, rclcpp::Logger iLogger)
+  I2C_interfacing(std::string iFilename, rclcpp::Logger iLogger)
   : filename(iFilename), logger(iLogger) {}
 /**
  * @brief  interface iic bus init
