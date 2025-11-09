@@ -420,6 +420,8 @@ private:
   bool is_disabled_ = true;
   bool is_autonomous_ = false;
   bool is_connected_ = false;
+  short color = 0; // 0 = unselected, 1 = red, 2 = blue, 3 = skills
+  short auton_num = 0; // 0 = none, otherwise is the index from the array of autons + 1
 
   // Serialization
   int msg_id_ = 0;

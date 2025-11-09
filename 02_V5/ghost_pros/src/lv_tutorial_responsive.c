@@ -50,7 +50,6 @@
 #include "lv_tutorial_responsive.h"
 #include "display/lvgl.h"
 #include "display/lv_hal/lv_hal_disp.h"
-
      
 // creating a button
 lv_obj_t * label1;
@@ -73,6 +72,11 @@ lv_obj_t * redScreen;
 lv_obj_t * blueScreen;
 // lv_obj_t * scr = lv_obj_create(NULL, screen2);
 
+char * autons[] = {"Auton 1", "Auton 2"};
+
+lv_obj_t * dropdown;
+
+
 static lv_res_t btn_click_action(lv_obj_t * btn)
 {
     uint8_t id = lv_obj_get_free_num(btn); //id useful when there are multiple buttons
@@ -80,10 +84,15 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
     if(id == 0)
     {  
         lv_scr_load(redScreen);
+        dropdown = lv_dropdown_create(redScreen);
+        for (int i = 0; i < sizeof(autons); i++) {
+            lv_dropdown_add_option(dropdown, autons[i], i);
+        }
     }
     if(id == 1) {
         //lv_label_set_text(label2, "clicked");
         lv_scr_load(blueScreen);
+        // for()
     }
     if(id == 3) {  
         lv_scr_load(homeScreen);
@@ -113,6 +122,7 @@ void lv_tutorial_responsive(void)
     blueScreen = lv_obj_create(NULL, NULL);
 
     lv_scr_load(homeScreen);
+
 
     /*LV_DPI*/
 
