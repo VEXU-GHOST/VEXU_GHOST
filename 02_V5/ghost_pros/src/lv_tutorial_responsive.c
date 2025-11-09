@@ -48,8 +48,10 @@
  *********************/
 
 #include "lv_tutorial_responsive.h"
-#include "display/lvgl.h"
+#include "display/lvgl.h" 
 #include "display/lv_hal/lv_hal_disp.h"
+#include "display/lv_conf.h" 
+
      
 // creating a button
 lv_obj_t * label1;
@@ -84,10 +86,10 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
     if(id == 0)
     {  
         lv_scr_load(redScreen);
-        dropdown = lv_dropdown_create(redScreen);
-        for (int i = 0; i < sizeof(autons); i++) {
-            lv_dropdown_add_option(dropdown, autons[i], i);
-        }
+        //dropdown = lv_dropdown_create(redScreen);
+        // for (int i = 0; i < sizeof(autons); i++) {
+        //     lv_dropdown_add_option(dropdown, autons[i], i);
+        // }
     }
     if(id == 1) {
         //lv_label_set_text(label2, "clicked");
