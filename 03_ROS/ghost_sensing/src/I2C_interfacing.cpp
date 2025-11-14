@@ -1,4 +1,9 @@
 #include "I2C_interfacing.h"
+
+#include <algorithm>
+#include <array>
+#include <cerrno>
+#include <chrono>
 #include <cstdarg>
 #include <string.h>
 
@@ -13,7 +18,7 @@ namespace ghost_sensing
  *         - 1 iic init failed
  * @note   none
  */
-uint8_t I2C_interfacing::init()
+ uint8_t I2C_interfacing::init()
 {
   //std::cout << "opening " << filename << std::endl;
   gs_fd = open(filename.c_str(), O_RDWR);
@@ -54,8 +59,13 @@ uint8_t I2C_interfacing::deinit(void)
  *             - 1 read failed
  * @note       none
  */
-uint8_t I2C_interfacing::read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len)
+virtual uint8_t I2C_interfacing::read(uint8_t reg, uint8_t * buf, uint16_t len)
 {
+  if (len > 0U && buf == nullptr) {
+    RCLCPP_ERROR(logger, "Read buffer is null while requesting %u bytes", len);
+    return 1;
+  }
+
   if (ioctl(gs_fd, I2C_SLAVE, addr) < 0) {
     perror("Failed to set I2C address");
     return 1;
@@ -67,10 +77,6 @@ uint8_t I2C_interfacing::read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t
     return 1;
   }
 
-  if (::read(gs_fd, buf, len) != len) {
-    perror("Failed to read data");
-    return 1;
-  }
 
   return 0;
 }
@@ -86,8 +92,13 @@ uint8_t I2C_interfacing::read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t
  *            - 1 write failed
  * @note      none
  */
-uint8_t I2C_interfacing::write(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len)
+virtual uint8_t I2C_interfacing::write(uint8_t reg, uint8_t * buf)
 {
+  if (len > 0U && buf == nullptr) {
+    RCLCPP_ERROR(logger, "Write buffer is null while attempting to send %u bytes", len);
+    return 1;
+  }
+
   if (ioctl(gs_fd, I2C_SLAVE, addr) < 0) {
     perror("Failed to set I2C address");
     return 1;
@@ -114,7 +125,7 @@ uint8_t I2C_interfacing::write(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_
  */
 void I2C_interfacing::delay_ms(uint32_t ms)
 {
-  usleep(1000 * ms);
+  std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 /**
@@ -131,14 +142,14 @@ void I2C_interfacing::debug_print(const char * const fmt, ...)
   std::string full_fmt = std::string("tcs34725_driver: ") + fmt;
 
   // Define a fixed-size stack buffer.
-  char buffer[256];
+  std::array<char, 256> buffer{};
 
   // Format the message into the stack buffer.
   // If the formatted message is longer than STACK_BUFFER_SIZE, it will be truncated.
-  vsnprintf(buffer, 256, full_fmt.c_str(), args);
+  vsnprintf(buffer.data(), buffer.size(), full_fmt.c_str(), args);
 
   // Log the formatted message.
-  RCLCPP_DEBUG(logger, "%s", buffer);
+  RCLCPP_DEBUG(logger, "%s", buffer.data());
   va_end(args);
 }
 }

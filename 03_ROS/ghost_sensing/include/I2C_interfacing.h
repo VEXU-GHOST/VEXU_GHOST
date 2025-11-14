@@ -55,7 +55,7 @@
  * @ingroup  tcs34725_driver
  * @{
  */
-
+z
 namespace ghost_sensing
 {
 
@@ -85,7 +85,7 @@ public:
  *         - 1 iic deinit failed
  * @note   none
  */
-  uint8_t deinit(void);
+  virtual uint8_t deinit(void);
 
 /**
  * @brief      interface iic bus read
@@ -98,7 +98,7 @@ public:
  *             - 1 read failed
  * @note       none
  */
-  uint8_t read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len);
+  virtual uint8_t read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len);
 
 /**
  * @brief     interface iic bus write
@@ -111,7 +111,7 @@ public:
  *            - 1 write failed
  * @note      none
  */
-  uint8_t write(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len);
+  virtual uint8_t write(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len);
 
 /**
  * @brief     interface delay ms
