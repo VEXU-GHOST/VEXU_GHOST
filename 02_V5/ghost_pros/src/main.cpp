@@ -15,7 +15,7 @@
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 // #include "ghost_v5/screen/screen_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
-#include "lv_tutorial_responsive.h"
+#include "lv_tutorial_responsive.hpp"
 
 using ghost_v5_interfaces::devices::hardware_type_e::V5_BRAIN;
 using namespace ghost_v5;

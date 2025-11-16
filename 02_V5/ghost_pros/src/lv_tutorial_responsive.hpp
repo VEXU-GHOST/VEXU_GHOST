@@ -37,7 +37,8 @@ extern "C" {
 
 
 //short color_chosen; // 0 = unselected, 1 = red, 2 = blue, 3 = skills
-short auton_option; // 0 = none, otherwise is the index from the array of autons + 1
+// short auton_option; // 0 = none, otherwise is the index from the array of autons + 1
+// make get method to access auton_option
 
 enum screen_state_type_e {
     UNSELECTED,
@@ -46,7 +47,9 @@ enum screen_state_type_e {
     SKILLS
 };
 
-enum screen_state_type_e screen_color;
+
+
+
 void lv_tutorial_responsive(void);
 
 
