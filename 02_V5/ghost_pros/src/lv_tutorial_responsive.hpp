@@ -51,6 +51,7 @@ enum screen_state_type_e {
 
 
 void lv_tutorial_responsive(void);
+short get_auton_option();
 
 
 

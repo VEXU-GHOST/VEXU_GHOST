@@ -15,14 +15,14 @@
  * LV_DPI
  * - In lv_conf.h LV_DPI shows how many pixels are there in 1 inch
  * - You should use it as general unit. For example:
- *     lv_obj_set_pos(btn1, LV_DPI / 2, LV_DPI);
+ *     lv_obj_set_pos(go_to_red_btn, LV_DPI / 2, LV_DPI);
  * - Built-in styles and themes also use this to set padding and sizes.
  *   So lowering LV_DPI will make paddings smaller.
  * - This way changing to higher pixel density display won't brake your design
  *
  * ALIGN
  * - Use the 'lv_obj_align()' function to align the object relative to each other
- *     lv_obj_align(btn1, btn2, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 2, 0);
+ *     lv_obj_align(go_to_red_btn, go_to_blue_btn, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 2, 0);
  * - It helps to keep an arrangement even is an object is moved
  * - the align happens only once when you call the function.
  *
@@ -60,25 +60,41 @@ lv_obj_t * label4;
 lv_obj_t * label5;
 lv_obj_t * label6;
 
-lv_obj_t * btn1;
-lv_obj_t * btn2;
+lv_obj_t * go_to_red_btn;
+lv_obj_t * go_to_blue_btn;
+lv_obj_t * go_to_skills_btn;
 lv_obj_t * btn3;
-lv_obj_t * btn4;
+lv_obj_t * red_home_btn;
 lv_obj_t * btn5;
-lv_obj_t * btn6;
+lv_obj_t * blue_home_btn;
+lv_obj_t * scr_color_btn;
+lv_obj_t * red_auton_one_btn;
+lv_obj_t * red_auton_two_btn;
+lv_obj_t * blue_auton_one_btn;
+lv_obj_t * blue_auton_two_btn;
+
+lv_obj_t * at_skills_btn;
+lv_obj_t * skills_home_btn;
+
 
 
 lv_obj_t * homeScreen;
 lv_obj_t * redScreen;
 lv_obj_t * blueScreen;
+lv_obj_t * skillsScreen;
 
 char * red_autons[] = {"Auton 1", "Auton 2"};
 char * blue_autons[] = {"Auton 1", "Auton 2"};
+char * autons_2d[2][2] = {{"Auton 1", "Auton 2"}, {"Auton 1", "Auton 2"}};
+
+// lv_obj_t* auton_buttons[] = {}
+short auton_option;
 
 enum screen_state_type_e screen_color;
+char* colors[] = {"UNSELECTED", "RED", "BLUE", "SKILLS"};
 
 static lv_obj_t* button_create( lv_obj_t * parent_screen, lv_coord_t x_pos, lv_coord_t y_pos, lv_coord_t length, lv_coord_t height, const char* label_name) {
-    lv_obj_t * btn = lv_btn_create(parent_screen, NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
+    lv_obj_t * btn = lv_btn_create(parent_screen, NULL); //if go_to_red_btn appears on screen2, change to lv_btn_create(screen1)
     lv_obj_set_pos(btn, x_pos, y_pos); 
     lv_obj_set_size(btn, length, height);          /*Use LVDOI to set the size*/
 
@@ -102,23 +118,51 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
         // }
         screen_color = RED;
     }
-    if(id == 1) {
+    else if(id == 1) {
         //lv_label_set_text(label2, "clicked");
         lv_scr_load(blueScreen);
         screen_color = BLUE;
-        // for()
     }
-    if(id == 3) {  
+    else if(id == 2){
+        lv_scr_load(skillsScreen);
+        screen_color = UNSELECTED;
+    }
+
+    else if(id == 3) {  
         lv_scr_load(homeScreen);
         screen_color = UNSELECTED;
     }
-    if(id == 5) {  
+    else if(id == 4) {
         lv_scr_load(homeScreen);
         screen_color = UNSELECTED;
+    }
+    else if(id == 5) {  
+        lv_scr_load(homeScreen);
+        screen_color = UNSELECTED;
+    }
+    else if(id == 6) {
+        auton_option = 1;
+    }
+    else if (id == 7) {
+        auton_option = 2;
+    }
+    else if (id == 8) {
+        auton_option = 1;
+    }
+    else if (id == 9) {
+        auton_option = 2;
     }
 
     return LV_RES_OK;
 }
+
+short get_auton_option() {
+    return auton_option;
+}
+
+
+// map myMap = {{1, redScreen}, {2, bluescreen}};
+// lv_scr_load(myMap[id]);
  
 void lv_tutorial_responsive(void)
 {
@@ -136,43 +180,80 @@ void lv_tutorial_responsive(void)
     homeScreen = lv_obj_create(NULL, NULL);
     redScreen = lv_obj_create(NULL, NULL);
     blueScreen = lv_obj_create(NULL, NULL);
+    skillsScreen = lv_obj_create(NULL, NULL);
 
     lv_scr_load(homeScreen);
 
 
     /*LV_DPI*/
-
+    //scr_color_btn = button_create(lv_scr_act(), LV_DPI, LV_DPI, LV_DPI, LV_DPI/2, colors[screen_color]);    
 
     // homeScreen
-    btn1 = button_create(homeScreen, LV_DPI - 80, LV_DPI/10, LV_DPI, LV_DPI/2, "RED");
-    btn2 = button_create(homeScreen, 0, 0, LV_DPI, LV_DPI/2, "BLUE");
-    lv_obj_align(btn2, btn1, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
+    go_to_red_btn = button_create(homeScreen, LV_DPI - 80, LV_DPI/10, LV_DPI, LV_DPI/2, "RED");
+    go_to_blue_btn = button_create(homeScreen, 0, 0, LV_DPI, LV_DPI/2, "BLUE");
+    lv_obj_align(go_to_blue_btn, go_to_red_btn, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
+    go_to_skills_btn = button_create(homeScreen, 0, 0, LV_DPI, LV_DPI/2, "SKILLS");
+    lv_obj_align(go_to_skills_btn, go_to_blue_btn, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
 
 
     // redSceen
     btn3 = button_create(redScreen, LV_DPI - 80, LV_DPI / 10, 200, LV_DPI/2, "MADE IT TO RED");
-    btn4 = button_create(redScreen, 0, 0, LV_DPI, LV_DPI / 2, "HOME");
-    lv_obj_align(btn4, btn3, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0); 
+    red_home_btn = button_create(redScreen, 0, 0, LV_DPI, LV_DPI / 2, "HOME");
+    lv_obj_align(red_home_btn, btn3, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0); 
+
+    red_auton_one_btn = button_create(redScreen, LV_DPI - 80, LV_DPI, LV_DPI, LV_DPI/2, red_autons[0]);
+    red_auton_two_btn = button_create(redScreen, 0, 0, LV_DPI, LV_DPI/2, red_autons[1]);
+    lv_obj_align(red_auton_two_btn, red_auton_one_btn, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
 
 
     // blueScreen
     btn5 = button_create(blueScreen, LV_DPI - 80, LV_DPI / 10, 200, LV_DPI/2, "MADE IT TO BLUE");
-    btn6 = button_create(blueScreen, 0, 0, LV_DPI, LV_DPI / 2, "HOME");
-    lv_obj_align(btn6, btn5, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);   
+    blue_home_btn = button_create(blueScreen, 0, 0, LV_DPI, LV_DPI / 2, "HOME");
+    lv_obj_align(blue_home_btn, btn5, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);   
+
+    blue_auton_one_btn = button_create(blueScreen, LV_DPI - 80, LV_DPI, LV_DPI, LV_DPI/2, blue_autons[0]);
+    blue_auton_two_btn = button_create(blueScreen, 0, 0, LV_DPI, LV_DPI/2, blue_autons[1]);
+    lv_obj_align(blue_auton_two_btn, blue_auton_one_btn, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
+
+    // skillsScreen
+    at_skills_btn = button_create(skillsScreen, LV_DPI - 80, LV_DPI / 10, 200, LV_DPI/2, "MADE IT TO SKILLS");
+    skills_home_btn = button_create(skillsScreen, 0, 0, LV_DPI, LV_DPI / 2, "HOME");
+    lv_obj_align(skills_home_btn, at_skills_btn, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);   
 
 
     // code for when button is clicked
-    lv_obj_set_free_num(btn1, 0); // set button is to 0
-    lv_obj_set_free_num(btn2, 1); 
-    lv_obj_set_free_num(btn3, 2); 
-    lv_obj_set_free_num(btn4, 3); 
-    lv_obj_set_free_num(btn5, 4); 
-    lv_obj_set_free_num(btn6, 5); 
-    lv_btn_set_action(btn1, LV_BTN_ACTION_CLICK, btn_click_action); //set function to be called on button click
-    lv_btn_set_action(btn2, LV_BTN_ACTION_CLICK, btn_click_action);
-    lv_btn_set_action(btn3, LV_BTN_ACTION_CLICK, btn_click_action);
-    lv_btn_set_action(btn4, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_obj_set_free_num(go_to_red_btn, 0); // set button is to 0
+    lv_obj_set_free_num(go_to_blue_btn, 1); 
+    lv_obj_set_free_num(go_to_skills_btn, 2); 
+    // lv_obj_set_free_num(btn3, 2); 
+    lv_obj_set_free_num(red_home_btn, 3); 
+    lv_obj_set_free_num(skills_home_btn, 4); 
+    // lv_obj_set_free_num(btn5, 4); 
+    lv_obj_set_free_num(blue_home_btn, 5); 
+
+    lv_obj_set_free_num(red_auton_one_btn, 6); 
+    lv_obj_set_free_num(red_auton_two_btn, 7); 
+    lv_obj_set_free_num(blue_auton_one_btn, 8); 
+    lv_obj_set_free_num(blue_auton_one_btn, 9); 
+
+    
+
+    lv_btn_set_action(go_to_red_btn, LV_BTN_ACTION_CLICK, btn_click_action); //set function to be called on button click
+    lv_btn_set_action(go_to_blue_btn, LV_BTN_ACTION_CLICK, btn_click_action);
+    // lv_btn_set_action(btn3, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(red_home_btn, LV_BTN_ACTION_CLICK, btn_click_action);
     lv_btn_set_action(btn5, LV_BTN_ACTION_CLICK, btn_click_action);
-    lv_btn_set_action(btn6, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(blue_home_btn, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(go_to_skills_btn, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(skills_home_btn, LV_BTN_ACTION_CLICK, btn_click_action);
+
+    lv_btn_set_action(red_auton_one_btn, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(red_auton_two_btn, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(blue_auton_one_btn, LV_BTN_ACTION_CLICK, btn_click_action);
+    lv_btn_set_action(blue_auton_one_btn, LV_BTN_ACTION_CLICK, btn_click_action);
+
+    
 }
+
+
 
