@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(2025_autonomy_comms_worker)
+project(RF_manager)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -24,8 +24,3 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
-
-add_executable(worker_function src/worker_function.cpp)
-install(TARGETS
-  worker_function
-	  DESTINATION lib/${PROJECT_NAME})
