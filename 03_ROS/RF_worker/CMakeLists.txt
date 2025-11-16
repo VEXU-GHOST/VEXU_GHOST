@@ -24,3 +24,8 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
+
+add_executable(message_example_worker src/message_example_worker.cpp)
+install(TARGETS
+  message_example_worker
+	  DESTINATION lib/${PROJECT_NAME})
