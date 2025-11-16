@@ -151,30 +151,14 @@ void lv_tutorial_responsive(void)
 
     // redSceen
     btn3 = button_create(redScreen, LV_DPI - 80, LV_DPI / 10, 200, LV_DPI/2, "MADE IT TO RED");
-    btn4 = button_create(redScreen, LV_DPI - 80, LV_DPI / 10, 200, LV_DPI/2, "MADE IT TO RED");
-
-
-    btn4 = lv_btn_create(redScreen, NULL);
-    // lv_obj_set_size(btn3, 100, LV_DPI / 2);  
-    lv_obj_set_height(btn4, LV_DPI / 2);
+    btn4 = button_create(redScreen, 0, 0, LV_DPI, LV_DPI / 2, "HOME");
     lv_obj_align(btn4, btn3, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0); 
-    label4 = lv_label_create(btn4, NULL);
-    lv_label_set_text(label4, "HOME");
 
 
     // blueScreen
-    btn5 = lv_btn_create(blueScreen, NULL); 
-    lv_obj_set_pos(btn5, LV_DPI - 80, LV_DPI / 10); 
-    lv_obj_set_size(btn5, 200, LV_DPI / 2);     
-    label5 = lv_label_create(btn5, NULL);
-    lv_label_set_text(label5, "MADE IT TO BLUE");
-
-    btn6 = lv_btn_create(blueScreen, NULL);
-    lv_obj_set_height(btn6, LV_DPI / 2);
+    btn5 = button_create(blueScreen, LV_DPI - 80, LV_DPI / 10, 200, LV_DPI/2, "MADE IT TO BLUE");
+    btn6 = button_create(blueScreen, 0, 0, LV_DPI, LV_DPI / 2, "HOME");
     lv_obj_align(btn6, btn5, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);   
-    label6 = lv_label_create(btn6, NULL);
-    lv_label_set_text(label6, "HOME");
-
 
 
     // code for when button is clicked
@@ -190,7 +174,5 @@ void lv_tutorial_responsive(void)
     lv_btn_set_action(btn4, LV_BTN_ACTION_CLICK, btn_click_action);
     lv_btn_set_action(btn5, LV_BTN_ACTION_CLICK, btn_click_action);
     lv_btn_set_action(btn6, LV_BTN_ACTION_CLICK, btn_click_action);
-
-
 }
 
