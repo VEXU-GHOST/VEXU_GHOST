@@ -1,47 +1,95 @@
-/*----------------------------------------------------------------------------*/
-/* Description: Example Manger VEXlink code */
-/*----------------------------------------------------------------------------*/
+#include <iostream>
+#include <thread>
+#include <chrono>
+#include <mutex>
+#include <string>
 
-#include "vex.h"
-using namespace vex;
+// ---------------------------------------------------------------------------
+//  Simulated Radio Link (replace with serial/UDP/TCP later)
+// ---------------------------------------------------------------------------
+class RadioLink {
+public:
+    RadioLink(const std::string& name)
+        : link_name(name), linked(false)
+    {
+        // Simulate link connection after some time
+        std::thread([this]() {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            linked = true;
+        }).detach();
+    }
 
-// Instance of message link class
-vex::message_link LinkA( PORT11, "vex_robotics_team_1234_A", linkType::manager );
+    bool isLinked() const {
+        return linked;
+    }
 
-// Task to periodically send test messages to worker robot
-int sendTask() 
+    // Send a message with no arguments
+    void send(const std::string& msg) {
+        std::lock_guard<std::mutex> guard(mu);
+        std::cout << "[SEND] " << msg << std::endl;
+    }
+
+    // Send a message with an integer parameter
+    void send(const std::string& msg, int value) {
+        std::lock_guard<std::mutex> guard(mu);
+        std::cout << "[SEND] " << msg << " : " << value << std::endl;
+    }
+
+    // Send a message with float parameter
+    void send(const std::string& msg, double value) {
+        std::lock_guard<std::mutex> guard(mu);
+        std::cout << "[SEND] " << msg << " : " << value << std::endl;
+    }
+
+private:
+    std::string link_name;
+    bool linked;
+    mutable std::mutex mu;
+};
+
+// ---------------------------------------------------------------------------
+//  Background sending loop (replaces VEX sendTask())
+// ---------------------------------------------------------------------------
+int sendTask(RadioLink& link) 
 {
-  // wait for link
-  while( !LinkA.isLinked() )
-  this_thread::sleep_for(50);
+    // Wait for link to come online
+    while (!link.isLinked()) {
+        std::cout << "Waiting for link...\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
 
-  // send demo messages
-  while(1) 
-  {
-    LinkA.send("drive");
-    this_thread::sleep_for(500);
+    std::cout << "Link established.\n";
 
-    LinkA.send("go_forward", 100 );
-    this_thread::sleep_for(500);
-    
-    LinkA.send("start_motor", PORT3, 50.0 );
-    this_thread::sleep_for(1000);
-  }
+    // Loop like original VEX code
+    while (true) 
+    {
+        link.send("drive");
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-  return 0;
+        link.send("go_forward", 100);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        link.send("start_motor", 50.0);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
 }
 
+// ---------------------------------------------------------------------------
+//  Main
+// ---------------------------------------------------------------------------
 int main() 
 {
-  // start demo task
-  thread t1( sendTask );
+    RadioLink link("ros_radio_link");
 
-  // show link status
-  while(1) 
-  {
-    Brain.Screen.printAt( 10, 50, true, "Link: %s", LinkA.isLinked() ? "ok" : "--" );
+    std::thread sender(sendTask, std::ref(link));
 
-    // Allow other tasks to run
-    this_thread::sleep_for(10);
-  }
+    // Main loop showing link status
+    while (true) 
+    {
+        std::cout << "Link: " << (link.isLinked() ? "OK" : "DOWN") << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    sender.join();
+    return 0;
 }

@@ -1,49 +1,167 @@
-/*----------------------------------------------------------------------------*/
-/* Description: Example Worker VEXlink code */
-/*----------------------------------------------------------------------------*/
-#include "vex.h"
-using namespace vex;
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <functional>
+#include <thread>
+#include <chrono>
+#include <mutex>
 
-// Instance of message link class
-vex::message_link LinkA( PORT11, "vex_robotics_team_1234_A", linkType::worker );
+// ============================================================================
+//   Simulated Radio Worker Link
+//   (Replace with real serial, TCP, or UDP receiving later)
+// ============================================================================
 
-// callbacks only print to terminal
-void drive_received( const char *message, const char *linkname, double value ) 
+class RadioLinkWorker {
+public:
+    using CallbackFunc = std::function<void(const std::string&,
+                                            const std::string&,
+                                            int32_t,
+                                            double)>;
+
+    // Constructor
+    RadioLinkWorker(const std::string& link_name)
+        : name(link_name), linked(false)
+    {
+        // Simulate the link coming online after 2 seconds
+        std::thread([this]() {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            linked = true;
+            std::cout << "[Worker] Link established.\n";
+
+            // Fake message reception loop
+            simulateIncomingMessages();
+        }).detach();
+    }
+
+    bool isLinked() const {
+        return linked;
+    }
+
+    // Register a specific message callback
+    void received(const std::string& msgName,
+                  std::function<void(const std::string&, const std::string&, double)> cb)
+    {
+        messageCallbacks[msgName] =
+            [cb](const std::string& m, const std::string& l, int32_t, double v) {
+                cb(m, l, v);
+            };
+    }
+
+    // Register a message+index callback (like start_motor)
+    void received(const std::string& msgName,
+                  std::function<void(const std::string&, const std::string&, int32_t, double)> cb)
+    {
+        messageCallbacks[msgName] = cb;
+    }
+
+    // Register generic fallback callback
+    void received(std::function<void(const std::string&, const std::string&, int32_t, double)> cb)
+    {
+        fallbackCallback = cb;
+    }
+
+private:
+    std::string name;
+    bool linked;
+    std::mutex mu;
+
+    std::unordered_map<std::string, CallbackFunc> messageCallbacks;
+    CallbackFunc fallbackCallback;
+
+    // ------------------------------------------------------------------------
+    // Simulate receiving messages (this replaces LinkA.receive events)
+    // ------------------------------------------------------------------------
+    void simulateIncomingMessages() 
+    {
+        std::thread([this]() {
+            while (true) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(700));
+
+                // Fake messages (mimicking sender in your other file)
+                receiveMessage("drive", -1, 0.0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(700));
+
+                receiveMessage("go_forward", -1, 100.0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(700));
+
+                receiveMessage("start_motor", 3, 50.0);
+            }
+        }).detach();
+    }
+
+    // Core message dispatch system
+    void receiveMessage(const std::string& msgName, int32_t index, double value)
+    {
+        std::lock_guard<std::mutex> guard(mu);
+
+        if (messageCallbacks.count(msgName)) {
+            messageCallbacks[msgName](msgName, name, index, value);
+        } else if (fallbackCallback) {
+            fallbackCallback(msgName, name, index, value);
+        } else {
+            std::cout << "[Worker] Unhandled message: " << msgName << std::endl;
+        }
+    }
+};
+
+// ============================================================================
+//   Callback Implementations  (matches your VEX worker code)
+// ============================================================================
+
+void drive_received(const std::string& msg,
+                    const std::string& linkname,
+                    double value)
 {
-  printf("%s: was received on '%s' link\n", message, linkname );
+    printf("%s: was received on '%s' link\n", msg.c_str(), linkname.c_str());
 }
 
-void go_forward( const char *message, const char *linkname, double value ) 
+void go_forward(const std::string& msg,
+                const std::string& linkname,
+                double value)
 {
-  printf("%s: was received on '%s' link with value %.2f\n", message, linkname, value );
+    printf("%s: was received on '%s' link with value %.2f\n",
+           msg.c_str(), linkname.c_str(), value);
 }
 
-void start_motor( const char *message, const char *linkname, int32_t index, double value ) 
+void start_motor(const std::string& msg,
+                 const std::string& linkname,
+                 int32_t index,
+                 double value)
 {
-  printf("%s: was received on '%s' link wth index %d and value %.2f\n", message, linkname, index, value );
+    printf("%s: was received on '%s' link with index %d and value %.2f\n",
+           msg.c_str(), linkname.c_str(), index, value);
 }
 
-void receive_message( const char *message, const char *linkname, int32_t index, double value ) 
+void receive_message(const std::string& msg,
+                     const std::string& linkname,
+                     int32_t index,
+                     double value)
 {
-  printf("receive_message: %s was receined on %s\n", message, linkname );
+    printf("receive_message: %s was received on %s\n",
+           msg.c_str(), linkname.c_str());
 }
 
-int main() 
+// ============================================================================
+//   Main
+// ============================================================================
+int main()
 {
-  // register callbacks
-  LinkA.received( "drive", drive_received );
-  LinkA.received( "go_forward", go_forward );
-  LinkA.received( "start_motor", start_motor );
+    RadioLinkWorker link("ros_radio_link_worker");
 
-  // A generic callback can be registered as well as specific message callbacks
-  LinkA.received( receive_message );
+    // Register callbacks exactly like VEX API
+    link.received("drive", drive_received);
+    link.received("go_forward", go_forward);
+    link.received("start_motor", start_motor);
 
-  // show link status
-  while(1) 
-  {
-    Brain.Screen.printAt( 10, 50, true, "Link: %s", LinkA.isLinked() ? "ok" : "--" );
-    
-    // Allow other tasks to run
-    this_thread::sleep_for(50);
-  }
+    // Generic fallback callback
+    link.received(receive_message);
+
+    // Display link status
+    while (true)
+    {
+        std::cout << "Link: " << (link.isLinked() ? "OK" : "--") << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+
+    return 0;
 }
