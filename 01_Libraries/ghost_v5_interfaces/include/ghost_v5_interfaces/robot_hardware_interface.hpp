@@ -33,7 +33,7 @@
 #include "ghost_v5_interfaces/devices/motor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/digital_io_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
-
+#include "ghost_v5_interfaces/devices/device_interfaces.hpp"
 
 #if GHOST_DEVICE == GHOST_JETSON
         #define CROSSPLATFORM_MUTEX_T std::mutex

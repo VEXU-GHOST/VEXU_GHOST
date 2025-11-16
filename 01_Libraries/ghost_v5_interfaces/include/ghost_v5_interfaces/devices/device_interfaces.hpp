@@ -56,6 +56,7 @@ enum hardware_type_e
   V5_BRAIN
 };
 
+
 class DeviceBase : public std::enable_shared_from_this<DeviceBase>
 {
 public:

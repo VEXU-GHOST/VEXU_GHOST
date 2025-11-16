@@ -35,7 +35,23 @@ extern "C" {
  * GLOBAL PROTOTYPES
  **********************/
 
+
+//short color_chosen; // 0 = unselected, 1 = red, 2 = blue, 3 = skills
+short auton_option; // 0 = none, otherwise is the index from the array of autons + 1
+
+enum screen_state_type_e {
+    UNSELECTED,
+    RED,
+    BLUE,
+    SKILLS
+};
+
+enum screen_state_type_e screen_color;
 void lv_tutorial_responsive(void);
+
+
+
+
 
 /**********************
  *      MACROS

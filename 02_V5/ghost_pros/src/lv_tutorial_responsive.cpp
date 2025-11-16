@@ -47,12 +47,13 @@
  *      INCLUDES
  *********************/
 
-#include "lv_tutorial_responsive.h"
+#include "lv_tutorial_responsive.hpp"
 #include "display/lvgl.h" 
 #include "display/lv_hal/lv_hal_disp.h"
 #include "display/lv_conf.h" 
+#include "ghost_v5_interfaces/devices/device_interfaces.hpp"
 
-     
+
 // creating a button
 lv_obj_t * label1;
 lv_obj_t * label2;
@@ -74,10 +75,21 @@ lv_obj_t * redScreen;
 lv_obj_t * blueScreen;
 // lv_obj_t * scr = lv_obj_create(NULL, screen2);
 
-char * autons[] = {"Auton 1", "Auton 2"};
+char * red_autons[] = {"Auton 1", "Auton 2"};
+char * blue_autons[] = {"Auton 1", "Auton 2"};
 
 lv_obj_t * dropdown;
 
+static lv_obj_t* button_create(lv_obj_t * parent_screen, int x_pos, int y_pos, int length, int height, char* label_name) {
+    lv_obj_t * btn = lv_btn_create(parent_screen, NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
+    lv_obj_set_pos(btn, x_pos, y_pos); 
+    lv_obj_set_size(btn1, length, height);          /*Use LVDOI to set the size*/
+
+    lv_obj_t * label = lv_label_create(btn, NULL);
+    lv_label_set_text(label, label_name);
+
+    return btn;
+}
 
 static lv_res_t btn_click_action(lv_obj_t * btn)
 {
@@ -88,19 +100,24 @@ static lv_res_t btn_click_action(lv_obj_t * btn)
         lv_scr_load(redScreen);
         //dropdown = lv_dropdown_create(redScreen);
         // for (int i = 0; i < sizeof(autons); i++) {
-        //     lv_dropdown_add_option(dropdown, autons[i], i);
+        //     //lv_dropdown_add_option(dropdown, autons[i], i);
+
         // }
+        screen_color = RED;
     }
     if(id == 1) {
         //lv_label_set_text(label2, "clicked");
         lv_scr_load(blueScreen);
+        screen_color = BLUE;
         // for()
     }
     if(id == 3) {  
         lv_scr_load(homeScreen);
+        screen_color = UNSELECTED;
     }
     if(id == 5) {  
         lv_scr_load(homeScreen);
+        screen_color = UNSELECTED;
     }
 
     return LV_RES_OK;
@@ -130,13 +147,14 @@ void lv_tutorial_responsive(void)
 
 
     // homeScreen
-    btn1 = lv_btn_create(homeScreen, NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
-    //lv_obj_set_pos(btn1, LV_DPI / 10, LV_DPI / 10);     /*Use LV_DPI to set the position*/
-    lv_obj_set_pos(btn1, LV_DPI - 80, LV_DPI / 10); 
-    lv_obj_set_size(btn1, LV_DPI, LV_DPI / 2);          /*Use LVDOI to set the size*/
+    btn1 = button_create(homeScreen, LV_DPI - 80, LV_DPI/10, LV_DPI, LV_DPI/2, "RED");
+        // btn1 = lv_btn_create(homeScreen, NULL); //if btn1 appears on screen2, change to lv_btn_create(screen1)
+        // //lv_obj_set_pos(btn1, LV_DPI / 10, LV_DPI / 10);     /*Use LV_DPI to set the position*/
+        // lv_obj_set_pos(btn1, LV_DPI - 80, LV_DPI / 10); 
+        // lv_obj_set_size(btn1, LV_DPI, LV_DPI / 2);          /*Use LVDOI to set the size*/
 
-    label1 = lv_label_create(btn1, NULL);
-    lv_label_set_text(label1, "RED");
+        // label1 = lv_label_create(btn1, NULL);
+        // lv_label_set_text(label1, "RED");
 
     /*ALIGN*/
     
