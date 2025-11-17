@@ -25,6 +25,7 @@
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
 
+
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces;
 namespace ghost_v5_interfaces
@@ -89,9 +90,15 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
   // Only send competition state and joystick info from V5 Brain to Coprocessor
   if (hardware_type_ == hardware_type_e::V5_BRAIN) {
     serial_data.push_back(
+      // packByte(
+      //   std::vector<bool>{
+      //   is_disabled_, is_autonomous_, is_connected_, 0, 0, 0, 0, 0
+      // }));
       packByte(
         std::vector<bool>{
-        is_disabled_, is_autonomous_, is_connected_, 0, 0, 0, 0, 0
+        is_disabled_, is_autonomous_, is_connected_, 
+        static_cast<bool>(color&(0x0001)),  static_cast<bool>(color&(0x0002)), 
+        static_cast<bool>(auton_num&(0x0001)),  static_cast<bool>(auton_num&(0x0002)), 0
       }));
   }
 
@@ -146,6 +153,8 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
     is_disabled_ = packet_start_byte[0];
     is_autonomous_ = packet_start_byte[1];
     is_connected_ = packet_start_byte[2];
+    color = packet_start_byte[3] + (packet_start_byte[4] << 1);
+    auton_num = packet_start_byte[5] +  (packet_start_byte[6] << 1);
     byte_offset++;
   }
 

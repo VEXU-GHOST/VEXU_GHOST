@@ -41,10 +41,10 @@ extern "C" {
 // make get method to access auton_option
 
 enum screen_state_type_e {
-    UNSELECTED,
-    RED,
-    BLUE,
-    SKILLS
+    UNSELECTED = 0b00,
+    RED = 0b01,
+    BLUE = 0b10,
+    SKILLS = 0b11
 };
 
 
@@ -52,6 +52,7 @@ enum screen_state_type_e {
 
 void lv_tutorial_responsive(void);
 short get_auton_option();
+int get_color();
 
 
 

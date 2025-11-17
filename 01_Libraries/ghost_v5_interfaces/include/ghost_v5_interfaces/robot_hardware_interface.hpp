@@ -34,6 +34,7 @@
 #include "ghost_v5_interfaces/devices/digital_io_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/device_interfaces.hpp"
+#include "src/lv_tutorial_responsive.hpp"
 
 #if GHOST_DEVICE == GHOST_JETSON
         #define CROSSPLATFORM_MUTEX_T std::mutex
@@ -420,8 +421,8 @@ private:
   bool is_disabled_ = true;
   bool is_autonomous_ = false;
   bool is_connected_ = false;
-  short color = 0; // 0 = unselected, 1 = red, 2 = blue, 3 = skills
-  short auton_num = 0; // 0 = none, otherwise is the index from the array of autons + 1
+  int color = get_color(); // 0 = unselected, 1 = red, 2 = blue, 3 = skills
+  short auton_num = get_auton_option(); // 0 = none, otherwise is the index from the array of autons + 1
 
   // Serialization
   int msg_id_ = 0;

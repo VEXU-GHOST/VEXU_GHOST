@@ -160,6 +160,10 @@ short get_auton_option() {
     return auton_option;
 }
 
+int get_color() {
+    return screen_color;
+}
+
 
 // map myMap = {{1, redScreen}, {2, bluescreen}};
 // lv_scr_load(myMap[id]);
