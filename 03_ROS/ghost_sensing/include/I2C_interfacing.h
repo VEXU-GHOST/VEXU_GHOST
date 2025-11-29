@@ -61,14 +61,17 @@ namespace ghost_sensing
 
 class I2C_interfacing
 {
-private:
+protected:
+  uint8_t addr;
+  uint16_t leng;
   int gs_fd = -1;            /**< file descriptor */
   std::string filename;
   rclcpp::Logger logger;
 
 public:
   I2C_interfacing(std::string iFilename, rclcpp::Logger iLogger)
-  : filename(iFilename), logger(iLogger) {}
+  : filename(iFilename), logger(iLogger) {
+  }
 /**
  * @brief  interface iic bus init
  * @return status code
@@ -98,7 +101,7 @@ public:
  *             - 1 read failed
  * @note       none
  */
-  virtual uint8_t read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len);
+  virtual uint8_t read(uint8_t reg, uint8_t * buf, uint16_t len);
 
 /**
  * @brief     interface iic bus write
@@ -111,7 +114,7 @@ public:
  *            - 1 write failed
  * @note      none
  */
-  virtual uint8_t write(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len);
+  virtual uint8_t write(uint8_t reg, uint8_t * buf, uint16_t len);
 
 /**
  * @brief     interface delay ms

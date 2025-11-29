@@ -18,7 +18,7 @@ namespace ghost_sensing
  *         - 1 iic init failed
  * @note   none
  */
- uint8_t I2C_interfacing::init()
+uint8_t I2C_interfacing::init()
 {
   //std::cout << "opening " << filename << std::endl;
   gs_fd = open(filename.c_str(), O_RDWR);
@@ -59,7 +59,7 @@ uint8_t I2C_interfacing::deinit(void)
  *             - 1 read failed
  * @note       none
  */
-virtual uint8_t I2C_interfacing::read(uint8_t reg, uint8_t * buf, uint16_t len)
+uint8_t I2C_interfacing::read(uint8_t reg, uint8_t * buf, uint16_t len)
 {
   if (len > 0U && buf == nullptr) {
     RCLCPP_ERROR(logger, "Read buffer is null while requesting %u bytes", len);
@@ -92,7 +92,7 @@ virtual uint8_t I2C_interfacing::read(uint8_t reg, uint8_t * buf, uint16_t len)
  *            - 1 write failed
  * @note      none
  */
-virtual uint8_t I2C_interfacing::write(uint8_t reg, uint8_t * buf)
+uint8_t I2C_interfacing::write(uint8_t reg, uint8_t * buf, uint16_t len)
 {
   if (len > 0U && buf == nullptr) {
     RCLCPP_ERROR(logger, "Write buffer is null while attempting to send %u bytes", len);
