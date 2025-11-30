@@ -15,9 +15,7 @@ namespace ghost_sensing {
 #define TCA9536A 0x40
 #define TCA9536B 0x43
 #define TCA9536C 0x42   // Address options for TCA9536, Default is 0x41 Statements set up so no address needed for 0x41
-#define In 1
-#define Out 0
-#define length 1
+
 class TCA9536 : public I2C_interfacing {
     public:
     
