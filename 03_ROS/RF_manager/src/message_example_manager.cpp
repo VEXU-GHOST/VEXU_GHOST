@@ -1,95 +1,32 @@
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include <mutex>
-#include <string>
+// A_robot_publisher.cpp
 
-// ---------------------------------------------------------------------------
-//  Simulated Radio Link (replace with serial/UDP/TCP later)
-// ---------------------------------------------------------------------------
-class RadioLink {
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+#include <ghost_ros_interfaces/v5_robot_base.hpp>
+
+class TeamTransmitter : public ghost_ros_interfaces::V5RobotBase
+{
 public:
-    RadioLink(const std::string& name)
-        : link_name(name), linked(false)
+  void teleop(double current_time) override
+  {
+    static rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub;
+
+    if (!pub)
     {
-        // Simulate link connection after some time
-        std::thread([this]() {
-            std::this_thread::sleep_for(std::chrono::seconds(2));
-            linked = true;
-        }).detach();
+      pub = this->node_->create_publisher<geometry_msgs::msg::Twist>("/team_drive", 10);
     }
 
-    bool isLinked() const {
-        return linked;
-    }
+    auto joy = rhi_ptr_->getMainJoystickData();
 
-    // Send a message with no arguments
-    void send(const std::string& msg) {
-        std::lock_guard<std::mutex> guard(mu);
-        std::cout << "[SEND] " << msg << std::endl;
-    }
+    geometry_msgs::msg::Twist msg;
 
-    // Send a message with an integer parameter
-    void send(const std::string& msg, int value) {
-        std::lock_guard<std::mutex> guard(mu);
-        std::cout << "[SEND] " << msg << " : " << value << std::endl;
-    }
+    // Convert joystick values (-127 to 127) to -1.0 to 1.0
+    msg.linear.x  = joy->left_y  / 127.0;
+    msg.angular.z = joy->right_x / 127.0;
 
-    // Send a message with float parameter
-    void send(const std::string& msg, double value) {
-        std::lock_guard<std::mutex> guard(mu);
-        std::cout << "[SEND] " << msg << " : " << value << std::endl;
-    }
-
-private:
-    std::string link_name;
-    bool linked;
-    mutable std::mutex mu;
+    pub->publish(msg);
+  }
 };
 
-// ---------------------------------------------------------------------------
-//  Background sending loop (replaces VEX sendTask())
-// ---------------------------------------------------------------------------
-int sendTask(RadioLink& link) 
-{
-    // Wait for link to come online
-    while (!link.isLinked()) {
-        std::cout << "Waiting for link...\n";
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-
-    std::cout << "Link established.\n";
-
-    // Loop like original VEX code
-    while (true) 
-    {
-        link.send("drive");
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-        link.send("go_forward", 100);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-        link.send("start_motor", 50.0);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-}
-
-// ---------------------------------------------------------------------------
-//  Main
-// ---------------------------------------------------------------------------
-int main() 
-{
-    RadioLink link("ros_radio_link");
-
-    std::thread sender(sendTask, std::ref(link));
-
-    // Main loop showing link status
-    while (true) 
-    {
-        std::cout << "Link: " << (link.isLinked() ? "OK" : "DOWN") << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    sender.join();
-    return 0;
-}
+#include <pluginlib/class_list_macros.hpp>
+PLUGINLIB_EXPORT_CLASS(TeamTransmitter, ghost_ros_interfaces::V5RobotBase)
