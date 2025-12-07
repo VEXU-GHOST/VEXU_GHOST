@@ -1,10 +1,9 @@
 /**
- * @file lv_tutorial_responsive.h
- *
+ * @file lv_tutorial_responsive.hpp
  */
 
-#ifndef LV_TUTORIAL_RESPONSIVE_H
-#define LV_TUTORIAL_RESPONSIVE_H
+#ifndef LV_TUTORIAL_RESPONSIVE_HPP
+#define LV_TUTORIAL_RESPONSIVE_HPP
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,11 +16,9 @@ extern "C" {
 #include "lvgl.h"
 #include "lv_ex_conf.h"
 #else
-//#include "../../../lvgl/lvgl.h"
-//#include "../../../lv_ex_conf.h"
+// #include "../../../lvgl/lvgl.h"
+// #include "../../../lv_ex_conf.h"
 #endif
-
-
 
 /*********************
  *      DEFINES
@@ -31,40 +28,28 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 
+// Represents the screen state (color selection)
+enum screen_state_type_e {
+    UNSELECTED = 0b00,
+    RED        = 0b01,
+    BLUE       = 0b10,
+    SKILLS     = 0b11
+};
+
 /**********************
  * GLOBAL PROTOTYPES
  **********************/
 
-
-//short color_chosen; // 0 = unselected, 1 = red, 2 = blue, 3 = skills
-// short auton_option; // 0 = none, otherwise is the index from the array of autons + 1
-// make get method to access auton_option
-
-enum screen_state_type_e {
-    UNSELECTED = 0b00,
-    RED = 0b01,
-    BLUE = 0b10,
-    SKILLS = 0b11
-};
-
-
-
-
 void lv_tutorial_responsive(void);
-short get_auton_option();
-int get_color();
-
-
-
-
+short get_auton_option(void);
+int get_color(void);
 
 /**********************
  *      MACROS
  **********************/
 
-#endif /*USE_LV_TUTORIALS*/
-
 #ifdef __cplusplus
 } /* extern "C" */
+#endif
 
-#endif /*LV_TUTORIAL_ANTMATION_H*/
+#endif /* LV_TUTORIAL_RESPONSIVE_HPP */
