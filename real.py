@@ -15,7 +15,7 @@ class RealSenseYOLOCombined(Node):
         super().__init__('realsense_yolo_combined_node')
         
         # 1. Load the Engine
-        engine_path = "/home/ghost/VEXU_GHOST/best_orin1.engine"
+        engine_path = "/home/ghost/VEXU_GHOST/best.engine"
         self.model = YOLO(engine_path, task='detect')
         
         # 2. PERFORM WARMUP
@@ -43,11 +43,7 @@ class RealSenseYOLOCombined(Node):
         self.processed_image_pub = self.create_publisher(Image, '/yolo_processed_image', 10)
         self.xy_publisher = self.create_publisher(Float64MultiArray, '/object_xy_positions', 10)
 
-        # Ensure directory for logging images exists
-        self.save_dir = "/home/ghost/VEXU_GHOST/runs/detect"
-        if not os.path.exists(self.save_dir):
-            os.makedirs(self.save_dir, exist_ok=True)
-            self.get_logger().info(f"Created directory: {self.save_dir}")
+       
 
     def camera_info_callback(self, msg):
         self.fx, self.fy = msg.k[0], msg.k[4]
@@ -65,21 +61,30 @@ class RealSenseYOLOCombined(Node):
         if self.color_image is None or self.depth_image is None or None in (self.fx, self.fy, self.cx, self.cy):
             return
 
+        # TIME: Frame copy
+        t0 = time.time()
         frame = self.color_image.copy()
+        copy_time = (time.time() - t0) * 1000
         
-        # 3. RUN TRACKING WITH VERBOSE=TRUE
-        # This will print the 0.5ms / 8.0ms / 1.0ms stats you need to the terminal
-        results = self.model.track(frame, persist=True, device=0, conf=0.5, verbose=True)
+        # TIME: YOLO tracking
+        t1 = time.time()
+        results = self.model.predict(frame, device=0, conf=0.5, verbose=True)
+        yolo_time = (time.time() - t1) * 1000
 
+        # TIME: Depth processing and publishing (for all objects)
+        t2 = time.time()
         found_any = False
+        num_objects = 0
+    
         for result in results:
             boxes = result.boxes
-            if boxes is None or boxes.id is None:
+            if boxes is None or len(boxes) == 0:
                 continue
-            
+        
             found_any = True
-            for box in boxes:
-                obj_id = int(box.id[0])
+            for i,box in enumerate(boxes):
+                num_objects += 1
+                obj_id = i
                 class_id = int(box.cls)
                 class_name = result.names[class_id]
                 
@@ -88,13 +93,18 @@ class RealSenseYOLOCombined(Node):
 
                 # Depth logic
                 h, w = self.depth_image.shape
+
+                # Creating 5x5 region of interest
                 x_start, x_end = max(cx_px - 2, 0), min(cx_px + 3, w)
                 y_start, y_end = max(cy_px - 2, 0), min(cy_px + 3, h)
+                # Creates 2D list
                 roi = self.depth_image[y_start:y_end, x_start:x_end]
+
+                # Filter out 0 depth and flatten to 1D
                 valid_depths = roi[roi > 0].flatten()
 
                 if valid_depths.size >= 3:
-                    depth_m = np.mean(np.sort(valid_depths)[:max(1, int(0.2 * len(valid_depths)))]) / 1000.0
+                    depth_m = np.median(valid_depths) / 1000.0
                     rs_X = (cx_px - self.cx) * depth_m / self.fx
                     rs_Z = depth_m
                     rviz_x, rviz_y = rs_Z, -rs_X
@@ -104,22 +114,18 @@ class RealSenseYOLOCombined(Node):
                     xy_msg.data = [rviz_x, rviz_y, float(obj_id)]
                     self.xy_publisher.publish(xy_msg)
 
-                    label = f"ID:{obj_id} {class_name} {rs_Z:.2f}m"
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-        # 4. SAVE IMAGE TO DISK (Every 10th frame to save disk space but keep logs)
-        # if self.img_counter % 10 == 0:
-        #     save_path = os.path.join(self.save_dir, f"frame_{self.img_counter:04d}.jpg")
-        #     cv2.imwrite(save_path, frame)
-        self.img_counter += 1
-
-        # 5. PUBLISH PROCESSED IMAGE
-        processed_msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
-        processed_msg.header.stamp = self.get_clock().now().to_msg()
-        self.processed_image_pub.publish(processed_msg)
-        total_time = (time.time() - start_time) * 1000  # Convert to ms
-        self.get_logger().info(f"Total processing time: {total_time:.1f}ms")
+        depth_publish_time = (time.time() - t2) * 1000
+        
+        total_time = (time.time() - start_time) * 1000
+    
+        # Detailed logging
+        self.get_logger().info(
+            f"[{num_objects} objs] "
+            f"Copy: {copy_time:.1f}ms | "
+            f"YOLO: {yolo_time:.1f}ms | "
+            f"Depth+Pub: {depth_publish_time:.1f}ms | "
+            f"TOTAL: {total_time:.1f}ms"
+        )
 
     def publish_marker(self, x, y, z, obj_id):
         marker = Marker()

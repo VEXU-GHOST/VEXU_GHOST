@@ -12,6 +12,7 @@ model.export(
     device=0, 
     half=True, 
     imgsz=[480, 640],
-    workspace=4,
+    workspace=6,
+    nms=True,
     simplify=True
 )
