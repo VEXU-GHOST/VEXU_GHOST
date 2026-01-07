@@ -8,34 +8,50 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 import time
-
+import os
 
 class RealSenseYOLOCombined(Node):
     def __init__(self):
         super().__init__('realsense_yolo_combined_node')
-        self.model = YOLO("/home/ghost/VEXU_GHOST/best.pt")
-        self.bridge = CvBridge()
+        
+        # 1. Load the Engine
+        engine_path = "/home/ghost/VEXU_GHOST/best.engine"
+        self.model = YOLO(engine_path, task='detect')
+        
+        # 2. PERFORM WARMUP
+        self.get_logger().info("Warming up TensorRT engine...")
+        warmup_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+        # We use predict here just to prime the hardware
+        self.model.predict(warmup_frame, device=0, verbose=False)
+        self.get_logger().info("Warmup complete. Jerry is active.")
 
+        self.bridge = CvBridge()
         self.color_image = None
         self.depth_image = None
         self.fx = self.fy = self.cx = self.cy = None
+        
+        # Counter for unique image filenames
+        self.img_counter = 0
 
+        # Subscriptions (Note: Ensure camera aligns depth to color)
         self.color_sub = self.create_subscription(Image, '/camera/camera/color/image_raw', self.color_callback, 10)
-        self.depth_sub = self.create_subscription(Image, '/camera/camera/depth/image_rect_raw', self.depth_callback, 10)
+        self.depth_sub = self.create_subscription(Image, '/camera/camera/aligned_depth_to_color/image_raw', self.depth_callback, 10)
         self.info_sub = self.create_subscription(CameraInfo, '/camera/camera/color/camera_info', self.camera_info_callback, 10)
 
+        # Publishers
         self.marker_pub = self.create_publisher(Marker, '/detected_objects_marker', 10)
         self.processed_image_pub = self.create_publisher(Image, '/yolo_processed_image', 10)
         self.xy_publisher = self.create_publisher(Float64MultiArray, '/object_xy_positions', 10)
 
-        self.get_logger().info("RealSense YOLO Combined node initialized.")
+        # Ensure directory for logging images exists
+        self.save_dir = "/home/ghost/VEXU_GHOST/runs/detect"
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir, exist_ok=True)
+            self.get_logger().info(f"Created directory: {self.save_dir}")
 
     def camera_info_callback(self, msg):
-        self.fx = msg.k[0]
-        self.fy = msg.k[4]
-        self.cx = msg.k[2]
-        self.cy = msg.k[5]
-        self.get_logger().info(f"Camera intrinsics received: fx={self.fx}, fy={self.fy}, cx={self.cx}, cy={self.cy}")
+        self.fx, self.fy = msg.k[0], msg.k[4]
+        self.cx, self.cy = msg.k[2], msg.k[5]
 
     def color_callback(self, msg):
         self.color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -43,110 +59,76 @@ class RealSenseYOLOCombined(Node):
 
     def depth_callback(self, msg):
         self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='16UC1')
-        self.try_process()
 
     def try_process(self):
         if self.color_image is None or self.depth_image is None or None in (self.fx, self.fy, self.cx, self.cy):
             return
 
         frame = self.color_image.copy()
-        results = self.model(frame)
+        
+        # 3. RUN TRACKING WITH VERBOSE=TRUE
+        # This will print the 0.5ms / 8.0ms / 1.0ms stats you need to the terminal
+        results = self.model.track(frame, persist=True, device=0, conf=0.5, verbose=True)
 
+        found_any = False
         for result in results:
             boxes = result.boxes
-            if boxes is None:
+            if boxes is None or boxes.id is None:
                 continue
-
+            
+            found_any = True
             for box in boxes:
+                obj_id = int(box.id[0])
                 class_id = int(box.cls)
                 class_name = result.names[class_id]
-
-                if class_name != "mobile-goal":
-                    continue
-
+                
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-                cx_px = int((x1 + x2) / 2)
-                cy_px = int((y1 + y2) / 2)
+                cx_px, cy_px = (x1 + x2) // 2, (y1 + y2) // 2
 
-                # Draw bounding box regardless of depth
-                label = f"{class_name}: {box.conf.item():.2f}"
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-
-                rviz_x = rviz_y = rs_Z = None
-
+                # Depth logic
                 h, w = self.depth_image.shape
-                x_start = max(cx_px - 2, 0)
-                x_end = min(cx_px + 3, w)
-                y_start = max(cy_px - 2, 0)
-                y_end = min(cy_px + 3, h)
-
+                x_start, x_end = max(cx_px - 2, 0), min(cx_px + 3, w)
+                y_start, y_end = max(cy_px - 2, 0), min(cy_px + 3, h)
                 roi = self.depth_image[y_start:y_end, x_start:x_end]
                 valid_depths = roi[roi > 0].flatten()
 
                 if valid_depths.size >= 3:
-                    sorted_depths = np.sort(valid_depths)
-                    num_low = max(1, int(0.2 * len(sorted_depths)))
-                    lowest_20 = sorted_depths[:num_low]
-                    depth_m = np.mean(lowest_20) / 1000.0  # mm to meters
-
+                    depth_m = np.mean(np.sort(valid_depths)[:max(1, int(0.2 * len(valid_depths)))]) / 1000.0
                     rs_X = (cx_px - self.cx) * depth_m / self.fx
-                    rs_Y = (cy_px - self.cy) * depth_m / self.fy
                     rs_Z = depth_m
+                    rviz_x, rviz_y = rs_Z, -rs_X
 
-                    rviz_x = rs_Z
-                    rviz_y = -rs_X
-                    label += f", Z: {rs_Z:.2f}m"
+                    self.publish_marker(rviz_x, rviz_y, 0.0, obj_id)
+                    xy_msg = Float64MultiArray()
+                    xy_msg.data = [rviz_x, rviz_y, float(obj_id)]
+                    self.xy_publisher.publish(xy_msg)
 
-                    self.get_logger().info(
-                        f"Detected {class_name} | Conf: {box.conf.item():.2f} | RViz X: {rviz_x:.2f}m, Y: {rviz_y:.2f}m"
-                    )
+                    label = f"ID:{obj_id} {class_name} {rs_Z:.2f}m"
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-                    self.publish_marker(rviz_x, rviz_y, 0.0)
+        # 4. SAVE IMAGE TO DISK (Every 10th frame to save disk space but keep logs)
+        if self.img_counter % 10 == 0:
+            save_path = os.path.join(self.save_dir, f"frame_{self.img_counter:04d}.jpg")
+            cv2.imwrite(save_path, frame)
+        self.img_counter += 1
 
-                    xy_array_msg = Float64MultiArray()
-                    xy_array_msg.data = [rviz_x, rviz_y]
-                    self.xy_publisher.publish(xy_array_msg)
-                    self.get_logger().info(f"Published X: {rviz_x:.2f}, Y: {rviz_y:.2f} on /object_xy_positions")
-                else:
-                    self.get_logger().warn(f"No valid depth values for {class_name}, drawing box only.")
-
-                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-
-        # Save image
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        save_path = f"/home/ghost/VEXU_GHOST/runs/detect/predict_{timestamp}.jpg"
-        cv2.imwrite(save_path, frame)
-        self.get_logger().info(f"Saved processed image to {save_path}")
-
-        # Publish image
+        # 5. PUBLISH PROCESSED IMAGE
         processed_msg = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
         processed_msg.header.stamp = self.get_clock().now().to_msg()
-        processed_msg.header.frame_id = "camera_color_optical_frame"
         self.processed_image_pub.publish(processed_msg)
 
-    def publish_marker(self, x, y, z):
+    def publish_marker(self, x, y, z, obj_id):
         marker = Marker()
-        marker.header.frame_id = "base_link"
+        marker.header.frame_id = "camera_link" # Changed to camera_link for better alignment
         marker.header.stamp = self.get_clock().now().to_msg()
-        marker.ns = "detections"
-        marker.id = int(time.time() * 1000) % 100000
+        marker.id = obj_id
         marker.type = Marker.SPHERE
-        marker.action = Marker.ADD
-        marker.pose.position.x = x
-        marker.pose.position.y = y
-        marker.pose.position.z = z
-        marker.pose.orientation.w = 1.0
-        marker.scale.x = 0.1
-        marker.scale.y = 0.1
-        marker.scale.z = 0.1
-        marker.color.r = 1.0
-        marker.color.g = 0.0
-        marker.color.b = 0.0
-        marker.color.a = 1.0
+        marker.pose.position.x, marker.pose.position.y, marker.pose.position.z = x, y, z
+        marker.scale.x = marker.scale.y = marker.scale.z = 0.15
+        marker.color.r, marker.color.a = 1.0, 1.0
         marker.lifetime.sec = 1
-
         self.marker_pub.publish(marker)
-
 
 def main(args=None):
     rclpy.init(args=args)
@@ -158,7 +140,6 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()
