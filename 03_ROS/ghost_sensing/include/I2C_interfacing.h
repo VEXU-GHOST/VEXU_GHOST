@@ -55,7 +55,7 @@
  * @ingroup  tcs34725_driver
  * @{
  */
-z
+
 namespace ghost_sensing
 {
 
@@ -88,7 +88,7 @@ public:
  *         - 1 iic deinit failed
  * @note   none
  */
-  virtual uint8_t deinit(void);
+ uint8_t deinit(void);
 
 /**
  * @brief      interface iic bus read
@@ -101,7 +101,7 @@ public:
  *             - 1 read failed
  * @note       none
  */
-  virtual uint8_t read(uint8_t reg, uint8_t * buf, uint16_t len);
+ uint8_t read(uint8_t reg, uint8_t * buf, uint16_t len);
 
 /**
  * @brief     interface iic bus write
@@ -114,7 +114,8 @@ public:
  *            - 1 write failed
  * @note      none
  */
-  virtual uint8_t write(uint8_t reg, uint8_t * buf, uint16_t len);
+// To send a single byte command write reg and set buf = 0'00000
+ uint8_t write(uint8_t reg, uint8_t * buf, uint16_t len);
 
 /**
  * @brief     interface delay ms
