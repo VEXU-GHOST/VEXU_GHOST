@@ -111,7 +111,7 @@ class RealSenseYOLOCombined(Node):
 
                     self.publish_marker(rviz_x, rviz_y, 0.0, obj_id)
                     xy_msg = Float64MultiArray()
-                    xy_msg.data = [rviz_x, rviz_y, float(obj_id)]
+                    xy_msg.data = [rviz_x, rviz_y, float(class_id)]
                     self.xy_publisher.publish(xy_msg)
 
         depth_publish_time = (time.time() - t2) * 1000
