@@ -109,7 +109,7 @@ BT::NodeStatus MoveToCVTarget::onRunning()
 
   if (time_elapsed > timeout_ms_) {
     RCLCPP_WARN(node_ptr_->get_logger(), "MoveToCVTarget: Timeout");
-    tank_model_ptr_->driveCommandTank(0.0, 0.0);
+    tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::FAILURE;
   }
 
@@ -138,7 +138,7 @@ BT::NodeStatus MoveToCVTarget::onRunning()
       RCLCPP_INFO(node_ptr_->get_logger(), "MoveToCVTarget: Waiting for target...");
       first_loop_ = false;
     }
-    tank_model_ptr_->driveCommandTank(0.0, 0.0);
+    tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::RUNNING;
   }
 
@@ -152,7 +152,7 @@ BT::NodeStatus MoveToCVTarget::onRunning()
   // Check success condition
   if (distance_to_target < distance_threshold_m_) {
     RCLCPP_INFO(node_ptr_->get_logger(), "MoveToCVTarget: SUCCESS - reached target at %.2fm", distance_to_target);
-    tank_model_ptr_->driveCommandTank(0.0, 0.0);
+    tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::SUCCESS;
   }
 
@@ -185,7 +185,7 @@ BT::NodeStatus MoveToCVTarget::onRunning()
     distance_to_target, angle_to_target * ghost_util::RAD_TO_DEG, fwd_cmd, turn_cmd);
 
   // Send drive command
-  tank_model_ptr_->driveCommandTank(fwd_cmd, turn_cmd);
+  tank_model_ptr_->driveCommandArcade(fwd_cmd, turn_cmd);
 
   return BT::NodeStatus::RUNNING;
 }
@@ -193,7 +193,7 @@ BT::NodeStatus MoveToCVTarget::onRunning()
 void MoveToCVTarget::onHalted()
 {
   RCLCPP_INFO(node_ptr_->get_logger(), "MoveToCVTarget: Halted");
-  tank_model_ptr_->driveCommandTank(0.0, 0.0);
+  tank_model_ptr_->driveCommandArcade(0.0, 0.0);
   resetStatus();
 }
 
