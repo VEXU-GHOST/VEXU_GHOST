@@ -19,8 +19,8 @@ MoveToCVTarget::MoveToCVTarget(const std::string& name, const BT::NodeConfig& co
 
   // Create linear controller with default gains (can be tuned via ports)
   ghost_control::PIDConfig linear_config;
-  linear_config.kp = 1.0;
-  linear_config.kd = 0.1;
+  linear_config.kp = 0.5;
+  linear_config.kd = 0.3;
   linear_controller_ptr_ = std::make_shared<ghost_control::PIDController>(linear_config);
 
   // Subscribe to CV target positions from real.py
@@ -43,8 +43,8 @@ BT::PortsList MoveToCVTarget::providedPorts()
     BT::InputPort<int>("timeout_ms", 10000, "Timeout in milliseconds"),
     BT::InputPort<int>("target_lost_timeout_ms", 500, "How long to wait if target lost (ms)"),
     BT::InputPort<int>("target_object_id", -1, "Object ID to track (-1 = any)"),
-    BT::InputPort<double>("linear_kp", 1.0, "Linear P gain"),
-    BT::InputPort<double>("linear_kd", 0.1, "Linear D gain"),
+    BT::InputPort<double>("linear_kp", 0.5, "Linear P gain"),
+    BT::InputPort<double>("linear_kd", 0.3, "Linear D gain"),
   };
 }
 
@@ -62,6 +62,10 @@ void MoveToCVTarget::cvCallback(const std_msgs::msg::Float64MultiArray::SharedPt
       target_id_ = detected_id;
       has_target_ = true;
       last_detection_time_ = std::chrono::steady_clock::now();
+
+      RCLCPP_INFO(node_ptr_->get_logger(),
+        "MoveToCVTarget: CV callback - target at x=%.2fm, y=%.2fm, id=%d",
+        target_x_, target_y_, target_id_);
     }
   }
 }
@@ -80,8 +84,8 @@ BT::NodeStatus MoveToCVTarget::onStart()
   target_object_id_ = BT_Util::get_input<int>(this, "target_object_id", -1);
 
   // Update linear controller gains from ports
-  double linear_kp = BT_Util::get_input<double>(this, "linear_kp", 1.0);
-  double linear_kd = BT_Util::get_input<double>(this, "linear_kd", 0.1);
+  double linear_kp = BT_Util::get_input<double>(this, "linear_kp", 0.5);
+  double linear_kd = BT_Util::get_input<double>(this, "linear_kd", 0.3);
   ghost_control::PIDConfig linear_config;
   linear_config.kp = linear_kp;
   linear_config.kd = linear_kd;
@@ -134,10 +138,11 @@ BT::NodeStatus MoveToCVTarget::onRunning()
 
   // No target detected - stop and wait
   if (!target_valid) {
-    if (first_loop_) {
-      RCLCPP_INFO(node_ptr_->get_logger(), "MoveToCVTarget: Waiting for target...");
-      first_loop_ = false;
-    }
+    auto time_since_detection = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now() - last_detection_time_).count();
+    RCLCPP_INFO_THROTTLE(node_ptr_->get_logger(), *node_ptr_->get_clock(), 1000,
+      "MoveToCVTarget: Waiting for target... (has_target=%d, stale_ms=%ld, timeout_ms=%d)",
+      has_target_, time_since_detection, target_lost_timeout_ms_);
     tank_model_ptr_->driveCommandArcade(0.0, 0.0);
     return BT::NodeStatus::RUNNING;
   }
@@ -180,9 +185,9 @@ BT::NodeStatus MoveToCVTarget::onRunning()
   }
 
   // Debug logging
-  RCLCPP_DEBUG(node_ptr_->get_logger(),
-    "MoveToCVTarget: dist=%.2fm, angle=%.1fdeg, fwd=%.2f, turn=%.2f",
-    distance_to_target, angle_to_target * ghost_util::RAD_TO_DEG, fwd_cmd, turn_cmd);
+  RCLCPP_INFO_THROTTLE(node_ptr_->get_logger(), *node_ptr_->get_clock(), 200,
+    "MoveToCVTarget: target=(%.2f, %.2f)m, dist=%.2fm, angle=%.1fdeg, fwd=%.2f, turn=%.2f",
+    current_x, current_y, distance_to_target, angle_to_target * ghost_util::RAD_TO_DEG, fwd_cmd, turn_cmd);
 
   // Send drive command
   tank_model_ptr_->driveCommandArcade(fwd_cmd, turn_cmd);
