@@ -166,13 +166,13 @@ def generate_launch_description():
         odom_ekf_node,
         ekf_pf_node,
         map_ekf_node,
-        color_sensor_intake,
-        color_classifier_intake,
+        #color_sensor_intake,
+        #color_classifier_intake,
         # color_sensor_goal_rush_l,
         # color_sensor_goal_rush_r,
-        color_sensor_goal_clamp,
+        #color_sensor_goal_clamp,
 
         competition_state_machine_node,
-        gpio_expander,
+        #gpio_expander,
     ])
 

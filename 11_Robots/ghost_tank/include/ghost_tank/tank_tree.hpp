@@ -50,6 +50,8 @@
 #include "ghost_tank/bt_nodes/follow_path_pure_pursuit.hpp"
 #include "ghost_tank/bt_nodes/arcturnToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
+#include "ghost_tank/bt_nodes/moveToCVTarget.hpp"
+
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 

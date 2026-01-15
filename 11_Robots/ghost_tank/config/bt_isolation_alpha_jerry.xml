@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4" main_tree_to_execute="main_tree">
+<root BTCPP_format="4" main_tree_to_execute="test_cv_target">
 
   <!-- Includes -->
   <include path="worlds/bt_worlds_goal_rush.xml" />
@@ -9,6 +9,19 @@
   <include path="bt_neutral_stake.xml" />
   <include path="bt_aj_rings.xml" />
   <include path="bt_scissor.xml" />
+
+  <BehaviorTree ID="test_cv_target">
+    <Sequence>
+      <Logging message="Starting CV target test" />
+      <MoveToCVTarget 
+        distance_threshold_m="0.3"
+        angle_threshold_deg="10.0"
+        max_linear_speed="0.5"
+        timeout_ms="10000"
+        target_object_id="-1"/>
+      <Logging message="CV target reached" />
+    </Sequence>
+  </BehaviorTree>
 
   <BehaviorTree ID="main_tree">
     <Sequence>

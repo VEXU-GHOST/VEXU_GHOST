@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-  main_tree_to_execute="main_tree">
+  main_tree_to_execute="test_cv_target">
   <!-- <include path="bt_goal_rush.xml"/> -->
   <!-- <include path="worlds/bt_worlds_goal_rush_omega.xml" /> -->
   <!-- <include path="worlds/bt_center_rush_after_side_rush.xml"/> -->
@@ -11,6 +11,19 @@
   <include path="bt_intake_middle_ring.xml"/>
   <include path="bt_grab_top_ring_neg_stack.xml"/>
   <!-- <include path="bt_skills.xml"/> -->
+  
+  <BehaviorTree ID="test_cv_target">
+    <Sequence>
+      <Logging message="Starting CV target test" />
+      <MoveToCVTarget 
+        distance_threshold_m="0.3"
+        angle_threshold_deg="10.0"
+        max_linear_speed="0.5"
+        timeout_ms="10000"
+        target_object_id="-1"/>
+      <Logging message="CV target reached" />
+    </Sequence>
+  </BehaviorTree>
 
   <BehaviorTree ID="main_tree">
     <Sequence>

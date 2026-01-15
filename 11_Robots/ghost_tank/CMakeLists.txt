@@ -194,6 +194,7 @@ set(NODES
   moveScissor
   generate_bezier_path
   load_path_from_csv
+  moveToCVTarget
 )
 
 foreach(NODE ${NODES})

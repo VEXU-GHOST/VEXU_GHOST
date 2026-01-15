@@ -27,6 +27,7 @@ echo "---Building Ghost ROS Packages---"
 skip=(
     behaviortree_cpp
     behaviortree_ros2
+    torchvision
     btcpp_ros2_interfaces
     btcpp_ros2_samples
     rplidar_ros
