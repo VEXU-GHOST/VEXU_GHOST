@@ -43,8 +43,8 @@ BT::PortsList MoveToCVTarget::providedPorts()
     BT::InputPort<int>("timeout_ms", 10000, "Timeout in milliseconds"),
     BT::InputPort<int>("target_lost_timeout_ms", 500, "How long to wait if target lost (ms)"),
     BT::InputPort<int>("target_object_id", -1, "Object ID to track (-1 = any)"),
-    BT::InputPort<double>("linear_kp", 0.5, "Linear P gain"),
-    BT::InputPort<double>("linear_kd", 0.3, "Linear D gain"),
+    BT::InputPort<double>("linear_kp", 0.2, "Linear P gain"),
+    BT::InputPort<double>("linear_kd", 0.5, "Linear D gain"),
   };
 }
 
@@ -75,7 +75,7 @@ BT::NodeStatus MoveToCVTarget::onStart()
   RCLCPP_INFO(node_ptr_->get_logger(), "MoveToCVTarget: Started");
 
   // Read parameters from ports
-  distance_threshold_m_ = BT_Util::get_input<double>(this, "distance_threshold_m", 0.3);
+  distance_threshold_m_ = BT_Util::get_input<double>(this, "distance_threshold_m", 0.1);
   angle_threshold_rad_ = BT_Util::get_input<double>(this, "angle_threshold_deg", 5.0) * ghost_util::DEG_TO_RAD;
   max_linear_speed_ = BT_Util::get_input<double>(this, "max_linear_speed", 0.5);
   max_angular_speed_ = BT_Util::get_input<double>(this, "max_angular_speed", 0.5);
@@ -84,8 +84,8 @@ BT::NodeStatus MoveToCVTarget::onStart()
   target_object_id_ = BT_Util::get_input<int>(this, "target_object_id", -1);
 
   // Update linear controller gains from ports
-  double linear_kp = BT_Util::get_input<double>(this, "linear_kp", 0.5);
-  double linear_kd = BT_Util::get_input<double>(this, "linear_kd", 0.3);
+  double linear_kp = BT_Util::get_input<double>(this, "linear_kp", 0.2);
+  double linear_kd = BT_Util::get_input<double>(this, "linear_kd", 0.5);
   ghost_control::PIDConfig linear_config;
   linear_config.kp = linear_kp;
   linear_config.kd = linear_kd;
@@ -155,33 +155,50 @@ BT::NodeStatus MoveToCVTarget::onRunning()
   double angle_to_target = std::atan2(current_y, current_x);  // Positive = target is to the left
 
   // Check success condition
-  if (distance_to_target < distance_threshold_m_) {
-    RCLCPP_INFO(node_ptr_->get_logger(), "MoveToCVTarget: SUCCESS - reached target at %.2fm", distance_to_target);
+  //double safety_buffer_m = 0.15;
+  if (distance_to_target < (distance_threshold_m_)) {
     tank_model_ptr_->driveCommandArcade(0.0, 0.0);
+    RCLCPP_INFO(node_ptr_->get_logger(), "MoveToCVTarget: SUCCESS - reached target at %.2fm", distance_to_target);    
     return BT::NodeStatus::SUCCESS;
   }
 
   // Control strategy:
   // 1. Turn to face target (reduce angle_to_target)
   // 2. Drive forward (reduce distance_to_target)
-
   // Get robot velocity for derivative term
+
   double angular_velocity = tank_model_ptr_->getWorldTwist().z();
+
   double linear_velocity = tank_model_ptr_->getWorldTwist().head<2>().norm();
 
-  // Calculate turn command (positive angle_to_target = target on left = turn left = positive turn)
+  // Get robot velocity for derivative term
+  // 1. Calculate the turn command (This part is solid)
   double turn_cmd = turn_controller_ptr_->calculateCommand(angle_to_target, -angular_velocity);
   turn_cmd = ghost_util::clamp(turn_cmd, -max_angular_speed_, max_angular_speed_);
 
-  // Calculate forward command (only drive forward if roughly aligned)
-  double fwd_cmd = 0.0;
-  if (std::fabs(angle_to_target) < angle_threshold_rad_ * 3) {  // Within 3x threshold, start moving
-    // Scale forward speed by how well aligned we are
-    double alignment_factor = std::cos(angle_to_target);
-    alignment_factor = std::max(0.0, alignment_factor);  // Only move forward when roughly facing target
+  // 2. Calculate the BASE forward command using current_x (the Forward component)
+  // Negative current_x makes the error (0 - (-current_x)) positive
+  //double base_fwd = linear_controller_ptr_->calculateCommand(-current_x, -linear_velocity);
 
-    fwd_cmd = linear_controller_ptr_->calculateCommand(distance_to_target, -linear_velocity);
-    fwd_cmd = ghost_util::clamp(fwd_cmd * alignment_factor, 0.0, max_linear_speed_);
+  double base_fwd = linear_controller_ptr_->calculateCommand(current_x, -linear_velocity);
+  // 3. Apply the Speed Ceiling (Hardware governor)
+  // As current_x approaches 0, max possible speed approaches 0.
+  double speed_limit = std::abs(current_x) * 0.4; // Try 0.3 if still too fast
+  double capped_fwd = ghost_util::clamp(base_fwd, -speed_limit, speed_limit);
+
+  // 4. Apply the Alignment Factor 
+  // This ensures we only give it gas if we are facing the right way
+  double alignment_factor = std::cos(angle_to_target);
+  alignment_factor = std::max(0.0, alignment_factor); // Don't drive backwards if facing away
+
+  // 5. Final Command
+  double fwd_cmd = capped_fwd * alignment_factor;
+  fwd_cmd = ghost_util::clamp(fwd_cmd, -max_linear_speed_, max_linear_speed_);
+
+  // 6. Hard Stop Safety
+  // If we are super close, just kill the fwd_cmd entirely to let momentum carry us
+  if (distance_to_target < (distance_threshold_m_)) {
+    fwd_cmd = 0.0;
   }
 
   // Debug logging
@@ -190,7 +207,7 @@ BT::NodeStatus MoveToCVTarget::onRunning()
     current_x, current_y, distance_to_target, angle_to_target * ghost_util::RAD_TO_DEG, fwd_cmd, turn_cmd);
 
   // Send drive command
-  tank_model_ptr_->driveCommandArcade(fwd_cmd, turn_cmd);
+  tank_model_ptr_->driveCommandArcade(-fwd_cmd, turn_cmd);
 
   return BT::NodeStatus::RUNNING;
 }
