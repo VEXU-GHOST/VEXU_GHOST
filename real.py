@@ -71,24 +71,24 @@ class RealSenseYOLOCombined(Node):
         results = self.model.predict(frame, device=0, conf=0.5, verbose=True)
         yolo_time = (time.time() - t1) * 1000
 
-        # TIME: Depth processing and publishing (for all objects)
+        # TIME: Depth processing and publishing (only closest blue object)
         t2 = time.time()
-        found_any = False
-        num_objects = 0
-    
+        num_blue_objects = 0
+
+        # Find closest blue object
+        closest_blue = None  # (rviz_x, rviz_y, class_id, depth)
+
         for result in results:
             boxes = result.boxes
             if boxes is None or len(boxes) == 0:
                 continue
-        
-            found_any = True
-            for i,box in enumerate(boxes):
-                num_objects += 1
-                obj_id = i
+
+            for i, box in enumerate(boxes):
                 class_id = int(box.cls)
                 class_name = result.names[class_id]
 
                 if class_name == "blue":
+                    num_blue_objects += 1
                     x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                     cx_px, cy_px = (x1 + x2) // 2, (y1 + y2) // 2
 
@@ -110,10 +110,18 @@ class RealSenseYOLOCombined(Node):
                         rs_Z = depth_m
                         rviz_x, rviz_y = rs_Z, -rs_X
 
-                        self.publish_marker(rviz_x, rviz_y, 0.0, obj_id)
-                        xy_msg = Float64MultiArray()
-                        xy_msg.data = [rviz_x, rviz_y, float(class_id)]
-                        self.xy_publisher.publish(xy_msg)
+                        # Keep track of closest blue object
+                        if closest_blue is None or depth_m < closest_blue[3]:
+                            closest_blue = (rviz_x, rviz_y, class_id, depth_m)
+
+        # Publish only the closest blue object
+        if closest_blue is not None:
+            rviz_x, rviz_y, class_id, depth_m = closest_blue
+            self.publish_marker(rviz_x, rviz_y, 0.0, 0)
+            xy_msg = Float64MultiArray()
+            xy_msg.data = [rviz_x, rviz_y, float(class_id)]
+            self.xy_publisher.publish(xy_msg)
+            self.get_logger().info(f"Published closest blue: x={rviz_x:.2f}m, y={rviz_y:.2f}m, depth={depth_m:.2f}m")
 
         depth_publish_time = (time.time() - t2) * 1000
         
@@ -121,7 +129,7 @@ class RealSenseYOLOCombined(Node):
     
         # Detailed logging
         self.get_logger().info(
-            f"[{num_objects} objs] "
+            f"[{num_blue_objects} blue] "
             f"Copy: {copy_time:.1f}ms | "
             f"YOLO: {yolo_time:.1f}ms | "
             f"Depth+Pub: {depth_publish_time:.1f}ms | "
