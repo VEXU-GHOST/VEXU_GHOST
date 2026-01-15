@@ -87,32 +87,33 @@ class RealSenseYOLOCombined(Node):
                 obj_id = i
                 class_id = int(box.cls)
                 class_name = result.names[class_id]
-                
-                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-                cx_px, cy_px = (x1 + x2) // 2, (y1 + y2) // 2
 
-                # Depth logic
-                h, w = self.depth_image.shape
+                if class_name == "blue":
+                    x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                    cx_px, cy_px = (x1 + x2) // 2, (y1 + y2) // 2
 
-                # Creating 5x5 region of interest
-                x_start, x_end = max(cx_px - 2, 0), min(cx_px + 3, w)
-                y_start, y_end = max(cy_px - 2, 0), min(cy_px + 3, h)
-                # Creates 2D list
-                roi = self.depth_image[y_start:y_end, x_start:x_end]
+                    # Depth logic
+                    h, w = self.depth_image.shape
 
-                # Filter out 0 depth and flatten to 1D
-                valid_depths = roi[roi > 0].flatten()
+                    # Creating 5x5 region of interest
+                    x_start, x_end = max(cx_px - 2, 0), min(cx_px + 3, w)
+                    y_start, y_end = max(cy_px - 2, 0), min(cy_px + 3, h)
+                    # Creates 2D list
+                    roi = self.depth_image[y_start:y_end, x_start:x_end]
 
-                if valid_depths.size >= 3:
-                    depth_m = np.median(valid_depths) / 1000.0
-                    rs_X = (cx_px - self.cx) * depth_m / self.fx
-                    rs_Z = depth_m
-                    rviz_x, rviz_y = rs_Z, -rs_X
+                    # Filter out 0 depth and flatten to 1D
+                    valid_depths = roi[roi > 0].flatten()
 
-                    self.publish_marker(rviz_x, rviz_y, 0.0, obj_id)
-                    xy_msg = Float64MultiArray()
-                    xy_msg.data = [rviz_x, rviz_y, float(class_id)]
-                    self.xy_publisher.publish(xy_msg)
+                    if valid_depths.size >= 3:
+                        depth_m = np.median(valid_depths) / 1000.0
+                        rs_X = (cx_px - self.cx) * depth_m / self.fx
+                        rs_Z = depth_m
+                        rviz_x, rviz_y = rs_Z, -rs_X
+
+                        self.publish_marker(rviz_x, rviz_y, 0.0, obj_id)
+                        xy_msg = Float64MultiArray()
+                        xy_msg.data = [rviz_x, rviz_y, float(class_id)]
+                        self.xy_publisher.publish(xy_msg)
 
         depth_publish_time = (time.time() - t2) * 1000
         
