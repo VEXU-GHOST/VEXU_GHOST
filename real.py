@@ -3,6 +3,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 from visualization_msgs.msg import Marker
 from std_msgs.msg import Float64MultiArray
+from geometry_msgs.msg import PoseStamped
 from cv_bridge import CvBridge
 import numpy as np
 import cv2
@@ -42,6 +43,7 @@ class RealSenseYOLOCombined(Node):
         self.marker_pub = self.create_publisher(Marker, '/detected_objects_marker', 10)
         self.processed_image_pub = self.create_publisher(Image, '/yolo_processed_image', 10)
         self.xy_publisher = self.create_publisher(Float64MultiArray, '/object_xy_positions', 10)
+        self.pose_publisher = self.create_publisher(PoseStamped, '/detected_object_pose', 10)
 
        
 
@@ -57,10 +59,12 @@ class RealSenseYOLOCombined(Node):
         self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='16UC1')
 
     def try_process(self):
+        # print("YO1")
         start_time = time.time()
         if self.color_image is None or self.depth_image is None or None in (self.fx, self.fy, self.cx, self.cy):
             return
 
+        # print("YO2")
         # TIME: Frame copy
         t0 = time.time()
         frame = self.color_image.copy()
@@ -121,6 +125,17 @@ class RealSenseYOLOCombined(Node):
             xy_msg = Float64MultiArray()
             xy_msg.data = [rviz_x, rviz_y, float(class_id)]
             self.xy_publisher.publish(xy_msg)
+            
+            # Publish PoseStamped
+            pose_msg = PoseStamped()
+            pose_msg.header.frame_id = "base_link" # TODO "camera_link"
+            pose_msg.header.stamp = self.get_clock().now().to_msg()
+            pose_msg.pose.position.x = rviz_x
+            pose_msg.pose.position.y = rviz_y
+            pose_msg.pose.position.z = 0.0
+            pose_msg.pose.orientation.w = 1.0
+            self.pose_publisher.publish(pose_msg)
+            
             self.get_logger().info(f"Published closest blue: x={rviz_x:.2f}m, y={rviz_y:.2f}m, depth={depth_m:.2f}m")
 
         depth_publish_time = (time.time() - t2) * 1000

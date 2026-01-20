@@ -57,8 +57,8 @@ void MoveToCVTarget::cvCallback(const std_msgs::msg::Float64MultiArray::SharedPt
 
     // Only update if we're tracking any object (-1) or this specific object
     if (target_object_id_ == -1 || detected_id == target_object_id_) {
-      target_x_ = msg->data[0];  // Forward distance
-      target_y_ = msg->data[1];  // Lateral distance (+ = left)
+      target_y_ = msg->data[0];  // Forward distance
+      target_x_ = -msg->data[1];  // Lateral distance (+ = left)
       target_id_ = detected_id;
       has_target_ = true;
       last_detection_time_ = std::chrono::steady_clock::now();
@@ -152,7 +152,7 @@ BT::NodeStatus MoveToCVTarget::onRunning()
   // Calculate distance and angle to target
   // In camera_link frame: x = forward, y = left
   double distance_to_target = std::sqrt(current_x * current_x + current_y * current_y);
-  double angle_to_target = std::atan2(current_y, current_x);  // Positive = target is to the left
+  double angle_to_target = std::atan2(current_x, current_y);  // Positive = target is to the left
 
   // Check success condition
   //double safety_buffer_m = 0.15;
@@ -171,43 +171,23 @@ BT::NodeStatus MoveToCVTarget::onRunning()
 
   double linear_velocity = tank_model_ptr_->getWorldTwist().head<2>().norm();
 
-  // Get robot velocity for derivative term
-  // 1. Calculate the turn command (This part is solid)
-  double turn_cmd = turn_controller_ptr_->calculateCommand(angle_to_target, -angular_velocity);
-  turn_cmd = ghost_util::clamp(turn_cmd, -max_angular_speed_, max_angular_speed_);
+ 
 
-  // 2. Calculate the BASE forward command using current_x (the Forward component)
-  // Negative current_x makes the error (0 - (-current_x)) positive
-  //double base_fwd = linear_controller_ptr_->calculateCommand(-current_x, -linear_velocity);
+  double fwd_base = distance_to_target * 0.8;
+  double turn_adjust = -angle_to_target * 0.5; 
 
-  double base_fwd = linear_controller_ptr_->calculateCommand(current_x, -linear_velocity);
-  // 3. Apply the Speed Ceiling (Hardware governor)
-  // As current_x approaches 0, max possible speed approaches 0.
-  double speed_limit = std::abs(current_x) * 0.4; // Try 0.3 if still too fast
-  double capped_fwd = ghost_util::clamp(base_fwd, -speed_limit, speed_limit);
-
-  // 4. Apply the Alignment Factor 
-  // This ensures we only give it gas if we are facing the right way
-  double alignment_factor = std::cos(angle_to_target);
-  alignment_factor = std::max(0.0, alignment_factor); // Don't drive backwards if facing away
-
-  // 5. Final Command
-  double fwd_cmd = capped_fwd * alignment_factor;
-  fwd_cmd = ghost_util::clamp(fwd_cmd, -max_linear_speed_, max_linear_speed_);
-
-  // 6. Hard Stop Safety
-  // If we are super close, just kill the fwd_cmd entirely to let momentum carry us
-  if (distance_to_target < (distance_threshold_m_)) {
-    fwd_cmd = 0.0;
-  }
+  // Calculate individual sides
+  double left_cmd = -fwd_base + turn_adjust;
+  double right_cmd = -fwd_base - turn_adjust;  
 
   // Debug logging
-  RCLCPP_INFO_THROTTLE(node_ptr_->get_logger(), *node_ptr_->get_clock(), 200,
-    "MoveToCVTarget: target=(%.2f, %.2f)m, dist=%.2fm, angle=%.1fdeg, fwd=%.2f, turn=%.2f",
-    current_x, current_y, distance_to_target, angle_to_target * ghost_util::RAD_TO_DEG, fwd_cmd, turn_cmd);
-
+  
   // Send drive command
-  tank_model_ptr_->driveCommandArcade(-fwd_cmd, turn_cmd);
+  RCLCPP_INFO(node_ptr_->get_logger(),
+    "DEBUG: current_x= %.2f, current_y = %.2f, left_cmd= %.2f, right_cmd= %.2f, distance_to_target = %.2f, angle_to_target= %.2f",
+    current_x, current_y, left_cmd, right_cmd, distance_to_target, angle_to_target);
+
+  tank_model_ptr_->driveCommandTank(left_cmd, right_cmd);
 
   return BT::NodeStatus::RUNNING;
 }

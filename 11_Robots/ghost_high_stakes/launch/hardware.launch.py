@@ -59,8 +59,9 @@ def generate_launch_description():
                     )
                 ),
                 launch_arguments={
-                    "enable_depth": "false",
-                    "enable_color": "false",
+                    "enable_depth": "true",
+                    "enable_color": "true",
+                    "align_depth.enable": "true",
                     "enable_gyro": "true",
                     "initial_reset": "false",
                     "gyro_qos": "SENSOR_DATA",
@@ -97,7 +98,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("robot_name", default_value="None"),
         rplidar_node,
-        # realsense_node,
+        realsense_node,
         bag_recorder_service,
         # tts_music_node,
         OpaqueFunction(function = launch_setup),

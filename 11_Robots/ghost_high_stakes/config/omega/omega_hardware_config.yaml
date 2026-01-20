@@ -37,85 +37,85 @@ port_configuration:
             reversed: true
             config: neutral_stake_motor_config
         drive_l1:
-            port: 7
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_l2:
-            port: 8
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
-        drive_l3:
-            port: 9
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_l4:
-            port: 10
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
-        # drive_l5:
-        #     port: 14
-        #     type: MOTOR
-        #     reversed: true
-        #     config: drive_motor_config
-        drive_l6:
-            port: 13
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
-        drive_l7:
-            port: 12
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_l8:
-            port: 11
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
-        # drive_r1:
-        #     port: 4
-        #     type: MOTOR
-        #     reversed: false
-        #     config: drive_motor_config
-        drive_r2:
-            port: 3
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_r3:
-            port: 2
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
-        drive_r4:
             port: 1
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_r5:
-            port: 17
-            type: MOTOR
+        # drive_l2:
+        #     port: 8
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
+        # drive_l3:
+        #     port: 9
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
+        # drive_l4:
+        #     port: 10
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
+        # # drive_l5:
+        # #     port: 14
+        # #     type: MOTOR
+        # #     reversed: true
+        # #     config: drive_motor_config
+        # drive_l6:
+        #     port: 13
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
+        # drive_l7:
+        #     port: 12
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
+        # drive_l8:
+        #     port: 11
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
+        drive_r1:
+            port: 2
+            type: MOTORgt
             reversed: false
             config: drive_motor_config
-        drive_r6:
-            port: 18
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_r7:
-            port: 19
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
-        drive_r8:
-            port: 20
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
+        # drive_r2:
+        #     port: 3
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
+        # drive_r3:
+        #     port: 2
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
+        # drive_r4:
+        #     port: 11
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
+        # drive_r5:
+        #     port: 17
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
+        # drive_r6:
+        #     port: 18
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
+        # drive_r7:
+        #     port: 19
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
+        # drive_r8:
+        #     port: 20
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
     device_configurations:
         inertial_sensor_config:
             serial:
