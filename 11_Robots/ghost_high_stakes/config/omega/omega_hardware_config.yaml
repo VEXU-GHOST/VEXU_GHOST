@@ -78,7 +78,7 @@ port_configuration:
         #     config: drive_motor_config
         drive_r1:
             port: 2
-            type: MOTORgt
+            type: MOTOR
             reversed: false
             config: drive_motor_config
         # drive_r2:

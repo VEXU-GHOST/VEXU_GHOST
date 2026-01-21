@@ -173,8 +173,8 @@ BT::NodeStatus MoveToCVTarget::onRunning()
 
  
 
-  double fwd_base = distance_to_target * 0.8 + linear_velocity * 0.3;
-  double turn_adjust = -angle_to_target * 0.5 - angular_velocity * 0.2;
+  double fwd_base = distance_to_target * 0.5;
+  double turn_adjust = -angle_to_target * 0.5; 
 
   // Calculate individual sides
   double left_cmd = -fwd_base + turn_adjust;
