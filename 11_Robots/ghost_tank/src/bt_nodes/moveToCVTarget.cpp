@@ -173,7 +173,7 @@ BT::NodeStatus MoveToCVTarget::onRunning()
 
  
 
-  double fwd_base = distance_to_target * 0.8 - linear_velocity * 0.3;
+  double fwd_base = distance_to_target * 0.8 + linear_velocity * 0.3;
   double turn_adjust = -angle_to_target * 0.5 - angular_velocity * 0.2;
 
   // Calculate individual sides
@@ -184,8 +184,8 @@ BT::NodeStatus MoveToCVTarget::onRunning()
   
   // Send drive command
   RCLCPP_INFO(node_ptr_->get_logger(),
-    "DEBUG: current_x= %.2f, current_y = %.2f, left_cmd= %.2f, right_cmd= %.2f, distance_to_target = %.2f, angle_to_target= %.2f",
-    current_x, current_y, left_cmd, right_cmd, distance_to_target, angle_to_target);
+    "DEBUG: current_x= %.2f, current_y = %.2f, left_cmd= %.2f, right_cmd= %.2f, linear_velocity = %.2f, angular_velocity= %.2f",
+    current_x, current_y, left_cmd, right_cmd, linear_velocity, angular_velocity);
 
   tank_model_ptr_->driveCommandTank(left_cmd, right_cmd);
 
