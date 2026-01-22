@@ -195,6 +195,7 @@ set(NODES
   generate_bezier_path
   load_path_from_csv
   moveToCVTarget
+  publishCVTarget
 )
 
 foreach(NODE ${NODES})
