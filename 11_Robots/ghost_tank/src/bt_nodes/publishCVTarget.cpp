@@ -26,8 +26,8 @@ PublishCVTarget::PublishCVTarget(const std::string& name, const BT::NodeConfig& 
 BT::PortsList PublishCVTarget::providedPorts()
 {
   return {
-    BT::OutputPort<double>("cv_x", 0.0, "object x position"),
-    BT::OutputPort<double>("cv_y", 0.0, "object y position"),
+  //  BT::OutputPort<double>("cv_x", 0.0, "object x position"),
+  //  BT::OutputPort<double>("cv_y", 0.0, "object y position"),
   };
 }
 
@@ -99,8 +99,8 @@ BT::NodeStatus PublishCVTarget::onRunning()
       std::chrono::steady_clock::now() - last_detection_time_).count();
     // Publish target data
     std::lock_guard<std::mutex> lock(target_mutex_);
-    BT_Util::set_output(this, "cv_x", current_x);
-    BT_Util::set_output(this, "cv_y", current_y);
+    blackboard_->set<double>("cv_x", current_x);
+    blackboard_->set<double>("cv_y", current_y);
     return BT::NodeStatus::RUNNING;
   }
 
