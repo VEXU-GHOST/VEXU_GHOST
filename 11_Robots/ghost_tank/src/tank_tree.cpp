@@ -71,7 +71,7 @@ void TankTree::init_tree()
   factory.registerNodeType<MoveScissor>("MoveScissor");
   factory.registerNodeType<MoveToCVTarget>("MoveToCVTarget");
   factory.registerNodeType<PublishCVTarget>("PublishCVTarget");
-  factory.registerNodeType<GenerateBezierPath>("GenerateBezierPath");
+  factory.registerNodeType<GenerateBezierPath_modified>("GenerateBezierPath_modified");
 
   tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
   std::cout << "Tree created: " << bt_path_ << std::endl;
