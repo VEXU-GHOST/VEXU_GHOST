@@ -274,6 +274,12 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     command.x() *= -1.0;
   }
 
+  RCLCPP_INFO(node_ptr_->get_logger(), "PurePursuit: pos: (%.3f, %.3f) -> carrot: (%.3f, %.3f) -> goal: (%.3f, %.3f) cmd: (%.3f, %.3f)",
+              current_position_.x(), current_position_.y(),
+              carrot_point_.x(), carrot_point_.y(),
+              goal_pose_.x(), goal_pose_.y(),
+              command.x(), command.y());
+
   return command;
 }
 
