@@ -101,7 +101,7 @@ BT::NodeStatus PublishCVTarget::onRunning()
     std::lock_guard<std::mutex> lock(target_mutex_);
     blackboard_->set<double>("cv_x", current_x);
     blackboard_->set<double>("cv_y", current_y);
-    return BT::NodeStatus::RUNNING;
+    return BT::NodeStatus::SUCCESS;
   }
 
   

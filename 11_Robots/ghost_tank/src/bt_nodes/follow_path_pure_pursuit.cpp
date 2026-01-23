@@ -52,6 +52,7 @@ BT::PortsList FollowPathPurePursuit::providedPorts()
 BT::NodeStatus FollowPathPurePursuit::onStart()
 {
   // Call base class onStart to initialize common parameters
+  RCLCPP_INFO(node_ptr_->get_logger(), "PurePursuit: Started");
   BT::NodeStatus status = FollowPath::onStart();
   if (status != BT::NodeStatus::RUNNING) {
     return status; // Return if base initialization failed or is not running
@@ -274,11 +275,13 @@ Eigen::Vector2d FollowPathPurePursuit::calculateControllerCommand()
     command.x() *= -1.0;
   }
 
-  RCLCPP_INFO(node_ptr_->get_logger(), "PurePursuit: pos: (%.3f, %.3f) -> carrot: (%.3f, %.3f) -> goal: (%.3f, %.3f) cmd: (%.3f, %.3f)",
-              current_position_.x(), current_position_.y(),
-              carrot_point_.x(), carrot_point_.y(),
-              goal_pose_.x(), goal_pose_.y(),
-              command.x(), command.y());
+  RCLCPP_INFO(node_ptr_->get_logger(), 
+            "PurePursuit: pos: (%.3f, %.3f) theta: %.3f rad -> carrot: (%.3f, %.3f) -> goal: (%.3f, %.3f) cmd: (%.3f, %.3f)",
+            current_position_.x(), current_position_.y(), 
+            current_angle_, // This is the heading debugger
+            carrot_point_.x(), carrot_point_.y(),
+            goal_pose_.x(), goal_pose_.y(),
+            command.x(), command.y());
 
   return command;
 }

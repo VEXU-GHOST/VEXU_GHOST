@@ -133,7 +133,7 @@ BT::NodeStatus GenerateBezierPath_modified::onRunning()
   // 10. Set backwards flag for Pure Pursuit
   traj.backwards = backwards;
   *tank_trajectory_ptr_ = traj;
-  
+  RCLCPP_INFO(node_ptr_->get_logger(), "Bezier: Completed");
   return BT::NodeStatus::SUCCESS;
 }
 
