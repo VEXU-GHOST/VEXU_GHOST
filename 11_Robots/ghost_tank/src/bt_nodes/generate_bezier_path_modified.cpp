@@ -30,7 +30,7 @@ namespace ghost_tank
 
 using motion_planning::TRAJECTORY_STRING_ENUM_MAP;
 
-GenerateBezierPath::GenerateBezierPath(const std::string & name, const BT::NodeConfig & config)
+GenerateBezierPath_modified::GenerateBezierPath_modified(const std::string & name, const BT::NodeConfig & config)
 : BT::StatefulActionNode(name, config)
 {
   blackboard_ = config.blackboard;
@@ -43,7 +43,7 @@ GenerateBezierPath::GenerateBezierPath(const std::string & name, const BT::NodeC
   }
 }
 
-BT::PortsList GenerateBezierPath::providedPorts()
+BT::PortsList GenerateBezierPath_modified::providedPorts()
 {
   return {
    // BT::InputPort<double>("cv_x"),
@@ -56,12 +56,12 @@ BT::PortsList GenerateBezierPath::providedPorts()
   };
 }
 
-BT::NodeStatus GenerateBezierPath::onStart()
+BT::NodeStatus GenerateBezierPath_modified::onStart()
 {
   return BT::NodeStatus::RUNNING;
 }
 
-BT::NodeStatus GenerateBezierPath::onRunning()
+BT::NodeStatus GenerateBezierPath_modified::onRunning()
 {
   double num_points = BT_Util::get_input<int>(this, "num_points");
   motion_planning::Trajectory traj(num_points);
@@ -137,7 +137,7 @@ BT::NodeStatus GenerateBezierPath::onRunning()
   return BT::NodeStatus::SUCCESS;
 }
 
-void GenerateBezierPath::onHalted()
+void GenerateBezierPath_modified::onHalted()
 {
   resetStatus();
 }

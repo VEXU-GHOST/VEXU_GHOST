@@ -34,12 +34,11 @@ namespace ghost_tank
 {
 
 // SyncActionNode (synchronous action) with an input port.
-class GenerateBezierPath : public BT::StatefulActionNode
+class GenerateBezierPath_modified : public BT::StatefulActionNode
 {
 public:
   // If your Node has ports, you must use this constructor signature
-  GenerateBezierPath(const std::string & name, const BT::NodeConfig & config);
-
+  GenerateBezierPath_modified(const std::string & name, const BT::NodeConfig & config);
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
 

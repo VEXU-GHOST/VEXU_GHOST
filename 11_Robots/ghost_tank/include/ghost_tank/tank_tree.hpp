@@ -51,6 +51,8 @@
 #include "ghost_tank/bt_nodes/arcturnToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToCVTarget.hpp"
+#include "ghost_tank/bt_nodes/publishCVTarget.hpp"
+#include "ghost_tank/bt_nodes/generate_bezier_path_modified.hpp"
 
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
