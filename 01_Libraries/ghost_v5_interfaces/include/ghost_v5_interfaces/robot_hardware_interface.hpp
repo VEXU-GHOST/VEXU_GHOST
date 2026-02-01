@@ -35,7 +35,7 @@
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/devices/device_interfaces.hpp"
 // #include "src/lv_tutorial_responsive.hpp"
-#include "/home/ghost/VEXU_GHOST/02_V5/ghost_pros/src/lv_tutorial_responsive.hpp"
+#include "lv_tutorial_responsive.hpp"
 
 #if GHOST_DEVICE == GHOST_JETSON
         #define CROSSPLATFORM_MUTEX_T std::mutex
