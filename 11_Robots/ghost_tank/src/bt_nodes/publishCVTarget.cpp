@@ -40,8 +40,8 @@ void PublishCVTarget::cvCallback(const std_msgs::msg::Float64MultiArray::SharedP
 
     // Only update if we're tracking any object (-1) or this specific object
     if (target_object_id_ == -1 || detected_id == target_object_id_) {
-      target_y_ = msg->data[0];  // Forward distance
-      target_x_ = -msg->data[1];  // Lateral distance (+ = left)
+      target_y_ = msg->data[1];  // Forward distance
+      target_x_ = msg->data[0];  // Lateral distance (+ = left)
       target_id_ = detected_id;
       has_target_ = true;
       last_detection_time_ = std::chrono::steady_clock::now();

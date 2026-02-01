@@ -84,7 +84,7 @@ BT::NodeStatus GenerateBezierPath_modified::onRunning()
   
   // 3. Transform Relative CV Target to World Coordinates
   Eigen::Rotation2D<double> R(start_angle);
-  Eigen::Vector2d cv_rel(cv_fwd, cv_lat);
+  Eigen::Vector2d cv_rel(0.0, -0.5);
   Eigen::Vector2d target_world = R * cv_rel + start_pos;
   
   // 4. Calculate Final Heading (pointing at target)

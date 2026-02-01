@@ -39,7 +39,7 @@ port_configuration:
         drive_l1:
             port: 1
             type: MOTOR
-            reversed: false
+            reversed: true
             config: drive_motor_config
         # drive_l2:
         #     port: 8
@@ -79,7 +79,7 @@ port_configuration:
         drive_r1:
             port: 2
             type: MOTOR
-            reversed: true
+            reversed: false
             config: drive_motor_config
         # drive_r2:
         #     port: 3

@@ -9,7 +9,7 @@
         <PublishCVTarget />
         
         <GenerateBezierPath_modified lead_tiles="1.5" 
-          backwards="false" 
+          backwards="true" 
           type="CUBIC_BEZIER" />
 
        <FollowPathPurePursuit 

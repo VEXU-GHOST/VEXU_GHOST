@@ -20,7 +20,7 @@
         
         <GenerateBezierPath_modified
           lead_tiles="1.5" 
-          backwards="false" 
+          backwards="true" 
           type="CUBIC_BEZIER" />
 
         <FollowPathPurePursuit xy_exit_threshold_tiles="0.25"
