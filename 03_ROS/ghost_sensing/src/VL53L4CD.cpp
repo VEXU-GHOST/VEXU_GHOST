@@ -11,14 +11,11 @@ namespace ghost_sensing {
     {m_i2c_communication->init();
     }
 
-    VL53L4CD::~VL53L4CD()
-    {
-    }
 
-    uint8_t VL53L4CD::init(dev_t dev) {
+    uint8_t VL53L4CD::init() {
          // Set I2C address
 
-    	VL53L4CD_WrByte(dev, VL53L4CD_I2C_SLAVE__DEVICE_ADDRESS,
+    	VL53L4CD_WrByte(VL53L4CD_I2C_SLAVE__DEVICE_ADDRESS,
 			//(uint8_t)(m_i2c_address >> (uint8_t)1));
             (uint8_t)(m_i2c_address));
         
@@ -31,7 +28,7 @@ namespace ghost_sensing {
         uint16_t i = 0;
 
         do{
-            status |= VL53L4CD_RdByte(dev,
+            status |= VL53L4CD_RdByte(
                     VL53L4CD_FIRMWARE__SYSTEM_STATUS, &tmp);
 
             if(tmp == (uint8_t)0x3) /* Sensor booted */
@@ -47,23 +44,23 @@ namespace ghost_sensing {
                 continue_loop = (uint8_t)0;
                 status |= (uint8_t)VL53L4CD_ERROR_TIMEOUT;
             }
-            VL53L4CD_WaitMs(dev, 1);
+            VL53L4CD_WaitMs(1);
         }while(continue_loop == (uint8_t)1);
 
         /* Load default configuration */
         for (Addr = (uint8_t)0x2D; Addr <= (uint8_t)0x87; Addr++)
         {
-            status |= VL53L4CD_WrByte(dev, Addr,
+            status |= VL53L4CD_WrByte(Addr,
                     VL53L4CD_DEFAULT_CONFIGURATION[
                                     Addr - (uint8_t)0x2D]);
         }
 
         /* Start VHV */
-        status |= VL53L4CD_WrByte(dev, VL53L4CD_SYSTEM_START, (uint8_t)0x40);
+        status |= VL53L4CD_WrByte(VL53L4CD_SYSTEM_START, (uint8_t)0x40);
         i  = (uint8_t)0;
         continue_loop = (uint8_t)1;
         do{
-            status |= VL53L4CD_CheckForDataReady(dev, &tmp);
+            status |= VL53L4CD_CheckForDataReady(&tmp);
             if(tmp == (uint8_t)1) /* Data ready */
             {
                 continue_loop = (uint8_t)0;
@@ -77,18 +74,18 @@ namespace ghost_sensing {
                 continue_loop = (uint8_t)0;
                 status |= (uint8_t)VL53L4CD_ERROR_TIMEOUT;
             }
-            VL53L4CD_WaitMs(dev, 1);
+            VL53L4CD_WaitMs(1);
         }while(continue_loop == (uint8_t)1);
 
-        status |= VL53L4CD_ClearInterrupt(dev);
-        status |= VL53L4CD_StopRanging(dev);
-        status |= VL53L4CD_WrByte(dev,
+        status |= VL53L4CD_ClearInterrupt();
+        status |= VL53L4CD_StopRanging();
+        status |= VL53L4CD_WrByte(
                 VL53L4CD_VHV_CONFIG__TIMEOUT_MACROP_LOOP_BOUND, 
                             (uint8_t)0x09);
-        status |= VL53L4CD_WrByte(dev, 0x0B, (uint8_t)0);
-        status |= VL53L4CD_WrWord(dev, 0x0024, 0x500);
+        status |= VL53L4CD_WrByte(0x0B, (uint8_t)0);
+        status |= VL53L4CD_WrWord(0x0024, 0x500);
 
-        status |= VL53L4CD_SetRangeTiming(dev, 50, 0);
+        status |= VL53L4CD_SetRangeTiming(50, 0);
 
         return status;
     }
@@ -103,60 +100,59 @@ namespace ghost_sensing {
     bool VL53L4CD::writeRegisters(uint8_t reg, uint8_t *buf, uint16_t len) {
         return (m_i2c_communication->write(reg, buf, len) == 0);}
     
-    uint8_t VL53L4CD::VL53L4CD_WrByte(Dev_t dev, uint16_t RegisterAdress, uint8_t value){
-        if(!writeRegister((uint8_t)RegisterAdress, value)) {console.log("Failed to write register");}
+    uint8_t VL53L4CD::VL53L4CD_WrByte( uint16_t RegisterAdress, uint8_t value){
+        if(!writeRegister((uint8_t)RegisterAdress, value)) {}
         return 0;      
     }
-    uint8_t VL53L4CD::VL53L4CD_WrWord(Dev_t dev, uint16_t RegisterAdress, uint16_t value){
+    uint8_t VL53L4CD::VL53L4CD_WrWord( uint16_t RegisterAdress, uint16_t value){
         uint8_t buf[2];
     	buf[0] = (uint8_t)(value & 0xFF);  buf[1] = (uint8_t)((value >> 8) & 0xFF);
         if(!writeRegister((uint8_t)RegisterAdress, buf[0])||!writeRegister((uint8_t)(RegisterAdress + 1), buf[1])) {
-            console.log("Failed to write register");
         }
         return 0;
     }
-    uint8_t VL53L4CD::VL53L4CD_WrDWord(Dev_t dev, uint16_t RegisterAdress, uint32_t value){
+    uint8_t VL53L4CD::VL53L4CD_WrDWord( uint16_t RegisterAdress, uint32_t value){
         uint8_t buf[4];
     	buf[0] = (uint8_t)(value & 0xFF);
     	buf[1] = (uint8_t)((value >> 8) & 0xFF);
     	buf[2] = (uint8_t)((value >> 16) & 0xFF);
     	buf[3] = (uint8_t)((value >> 24) & 0xFF);
-    	if(!writeRegister((uint8_t)RegisterAdress, buf[0])) {console.log("Failed to write register");}
-    	if(!writeRegister((uint8_t)(RegisterAdress + 1), buf[1])) {console.log("Failed to write register");}
-    	if(!writeRegister((uint8_t)(RegisterAdress + 2), buf[2])) {console.log("Failed to write register");}
-    	if(!writeRegister((uint8_t)(RegisterAdress + 3), buf[3])) {console.log("Failed to write register");}
+    	if(!writeRegister((uint8_t)RegisterAdress, buf[0])) {}
+    	if(!writeRegister((uint8_t)(RegisterAdress + 1), buf[1])) {}
+    	if(!writeRegister((uint8_t)(RegisterAdress + 2), buf[2])) {}
+    	if(!writeRegister((uint8_t)(RegisterAdress + 3), buf[3])) {}
         return 0;
     }
 
-    uint8_t VL53L4CD::VL53L4CD_WaitMs(Dev_t dev, uint32_t TimeMs){
+    uint8_t VL53L4CD::VL53L4CD_WaitMs( uint32_t TimeMs){
         m_i2c_communication->delay_ms(TimeMs);
         return 0;
     }
 
-    uint8_t VL53L4CD::VL53L4CD_RdDWord(Dev_t dev, uint16_t RegisterAdress, uint32_t *value){
+    uint8_t VL53L4CD::VL53L4CD_RdDWord( uint16_t RegisterAdress, uint32_t *value){
     	uint8_t buf[4];  
          if (!readRegisters((uint8_t)RegisterAdress, buf, sizeof(buf))) {
-             console.log("Failed to read registers");
+             
          }
     	 uint32_t temp = ((uint32_t)buf[3] << 24) | ((uint32_t)buf[2] << 16) | ((uint32_t)buf[1] << 8) | ((uint32_t)buf[0]);
     	 *value = temp;
     	return 0;
     }
 
-    uint8_t VL53L4CD::VL53L4CD_RdWord(Dev_t dev, uint16_t RegisterAdress, uint16_t *value){
+    uint8_t VL53L4CD::VL53L4CD_RdWord( uint16_t RegisterAdress, uint16_t *value){
     	uint8_t buf[2];  
          if (!readRegisters((uint8_t)RegisterAdress, buf, sizeof(buf))) {
-             console.log("Failed to read registers");
+             
          }
     	 uint16_t temp = ((uint16_t)buf[1] << 8) | ((uint16_t)buf[0]);
     	 *value = temp;
     	return 0;
     }
 
-    uint8_t VL53L4CD::VL53L4CD_RdByte(Dev_t dev, uint16_t RegisterAdress, uint8_t *value){
+    uint8_t VL53L4CD::VL53L4CD_RdByte( uint16_t RegisterAdress, uint8_t *value){
     	uint8_t buf[1];  
          if (!readRegisters((uint8_t)RegisterAdress, buf, sizeof(buf))) {
-             console.log("Failed to read registers");
+             
          }
     	 uint8_t temp = buf[0];
     	 *value = temp;
@@ -165,7 +161,7 @@ namespace ghost_sensing {
     
     //actual stuff
     //2 invalid input
-    uint8_t VL53L4CD::VL53L4CD_CalibrateOffset(Dev_t dev, int16_t TargetDistInMm, int16_t *p_measured_offset_mm,
+    uint8_t VL53L4CD::VL53L4CD_CalibrateOffset( int16_t TargetDistInMm, int16_t *p_measured_offset_mm,
             int16_t nb_samples)
       {
       uint8_t status = VL53L4CD_ERROR_NONE;
@@ -182,17 +178,17 @@ namespace ghost_sensing {
         }
         else
         {
-            status |= VL53L4CD_WrWord(dev, VL53L4CD_T_MMRANGE_OFFSET, 0x0);
-            status |= VL53L4CD_WrWord(dev, VL53L4CD_INNER_OFFSET_MM, 0x0);
-            status |= VL53L4CD_WrWord(dev, VL53L4CD_OUTER_OFFSET_MM, 0x0);
+            status |= VL53L4CD_WrWord(VL53L4CD_T_MMRANGE_OFFSET, 0x0);
+            status |= VL53L4CD_WrWord(VL53L4CD_INNER_OFFSET_MM, 0x0);
+            status |= VL53L4CD_WrWord(VL53L4CD_OUTER_OFFSET_MM, 0x0);
             /* Device heat loop (10 samples) */
-            status |= VL53L4CD_StartRanging(dev);
+            status |= VL53L4CD_StartRanging();
             for (i = 0; i < (uint8_t)10; i++) {
                 tmp = (uint8_t)0;
                 j = (uint16_t)0;
                 continue_loop = (uint8_t)1;
                 do{
-                    status |= VL53L4CD_CheckForDataReady(dev, &tmp);
+                    status |= VL53L4CD_CheckForDataReady(&tmp);
                     if(tmp == (uint8_t)1) /* Data ready */
                     {
                         continue_loop = (uint8_t)0;
@@ -206,21 +202,21 @@ namespace ghost_sensing {
                         continue_loop = (uint8_t)0;
                         status |= (uint8_t)VL53L4CD_ERROR_TIMEOUT;
                     }
-                    VL53L4CD_WaitMs(dev, 1);
+                    VL53L4CD_WaitMs(1);
                 }while(continue_loop == (uint8_t)1); //checks for data ready
-                status |= VL53L4CD_GetResult(dev, &results);
-                status |= VL53L4CD_ClearInterrupt(dev);
+                status |= VL53L4CD_GetResult(&results);
+                status |= VL53L4CD_ClearInterrupt();
             }
-            status |= VL53L4CD_StopRanging(dev);
+            status |= VL53L4CD_StopRanging();
 
             /* Device ranging */
-            status |= VL53L4CD_StartRanging(dev);
+            status |= VL53L4CD_StartRanging();
             for (i = 0; i < (uint8_t)nb_samples; i++) {
                 tmp = (uint8_t)0;
                 j = (uint16_t)0;
                 continue_loop = (uint8_t)1;
                 do{
-                    status |= VL53L4CD_CheckForDataReady(dev, &tmp);
+                    status |= VL53L4CD_CheckForDataReady(&tmp);
                     if(tmp == (uint8_t)1) /* Data ready */
                     {
                         continue_loop = (uint8_t)0;
@@ -234,27 +230,27 @@ namespace ghost_sensing {
                         continue_loop = (uint8_t)0;
                         status |= (uint8_t)VL53L4CD_ERROR_TIMEOUT;
                     }
-                    VL53L4CD_WaitMs(dev, 1);
+                    VL53L4CD_WaitMs(1);
                 }while(continue_loop == (uint8_t)1);
 
-                status |= VL53L4CD_GetResult(dev, &results);
-                status |= VL53L4CD_ClearInterrupt(dev);
+                status |= VL53L4CD_GetResult(&results);
+                status |= VL53L4CD_ClearInterrupt();
                 AvgDistance += (int16_t)results.distance_mm;
             }
 
-            status |= VL53L4CD_StopRanging(dev);
+            status |= VL53L4CD_StopRanging();
             AvgDistance = AvgDistance / nb_samples;
             *p_measured_offset_mm = (int16_t)TargetDistInMm - AvgDistance;
             tmpOff = (uint16_t) *p_measured_offset_mm * (uint16_t)4;
-            status |= VL53L4CD_WrWord(dev, VL53L4CD_T_MMRANGE_OFFSET, tmpOff); //write offset
+            status |= VL53L4CD_WrWord(VL53L4CD_T_MMRANGE_OFFSET, tmpOff); //write offset
         }
 
         return status;
     }
 
 
-    uint8_t VLS53L4CD::VL53L4CD_CalibrateXtalk(
-            Dev_t dev,
+    uint8_t VL53L4CD::VL53L4CD_CalibrateXtalk(
+            
             int16_t TargetDistInMm,
             uint16_t *p_measured_xtalk_kcps,
             int16_t nb_samples)
@@ -280,17 +276,17 @@ namespace ghost_sensing {
         else
         {
             /* Disable Xtalk compensation */
-            status |= VL53L4CD_WrWord(dev,
+            status |= VL53L4CD_WrWord(
                 VL53L4CD_XTALK_PLANE_OFFSET_KCPS, *p_measured_xtalk_kcps);
 
             /* Device heat loop (10 samples) */
-            status |= VL53L4CD_StartRanging(dev);
+            status |= VL53L4CD_StartRanging();
             for (i = 0; i < (uint8_t)10; i++) {
                 tmp = (uint8_t)0;
                 j = (uint16_t)0;
                 continue_loop = (uint8_t)1;
                 do{
-                    status |= VL53L4CD_CheckForDataReady(dev, &tmp);
+                    status |= VL53L4CD_CheckForDataReady(&tmp);
                     if(tmp == (uint8_t)1) /* Data ready */
                     {
                         continue_loop = (uint8_t)0;
@@ -304,22 +300,22 @@ namespace ghost_sensing {
                         continue_loop = (uint8_t)0;
                         status |= (uint8_t)VL53L4CD_ERROR_TIMEOUT;
                     }
-                    VL53L4CD_WaitMs(dev, 1);
+                    VL53L4CD_WaitMs(1);
                 }while(continue_loop == (uint8_t)1);
-                status |= VL53L4CD_GetResult(dev, &results);
-                status |= VL53L4CD_ClearInterrupt(dev);
+                status |= VL53L4CD_GetResult(&results);
+                status |= VL53L4CD_ClearInterrupt();
             }
-            status |= VL53L4CD_StopRanging(dev);
+            status |= VL53L4CD_StopRanging();
 
             /* Device ranging loop */
-            status |= VL53L4CD_StartRanging(dev);
+            status |= VL53L4CD_StartRanging();
             for (i = 0; i < (uint8_t)nb_samples; i++)
                 {
                 tmp = (uint8_t)0;
                 j = (uint16_t)0;
                 continue_loop = (uint8_t)1;
                 do{
-                    status |= VL53L4CD_CheckForDataReady(dev, &tmp);
+                    status |= VL53L4CD_CheckForDataReady(&tmp);
                     if(tmp == (uint8_t)1) /* Data ready */
                     {
                         continue_loop = (uint8_t)0;
@@ -333,11 +329,11 @@ namespace ghost_sensing {
                         continue_loop = (uint8_t)0;
                         status |= (uint8_t)VL53L4CD_ERROR_TIMEOUT;
                     }
-                    VL53L4CD_WaitMs(dev, 1);
+                    VL53L4CD_WaitMs(1);
                 }while(continue_loop == (uint8_t)1);
 
-                status |= VL53L4CD_GetResult(dev, &results);
-                status |= VL53L4CD_ClearInterrupt(dev);
+                status |= VL53L4CD_GetResult(&results);
+                status |= VL53L4CD_ClearInterrupt();
 
                 /* Discard invalid measurements and first frame */
                 if (results.range_status == (uint8_t)0
@@ -349,7 +345,7 @@ namespace ghost_sensing {
                     CounterNbSamples++;
                 }
             }
-            status |= VL53L4CD_StopRanging(dev);
+            status |= VL53L4CD_StopRanging();
 
             if (CounterNbSamples == 0)
             {
@@ -375,7 +371,7 @@ namespace ghost_sensing {
 
                     /* Send data to firmware */
                     calXtalk = (uint16_t)(tmp_xtalk * (float_t)512.0);
-                    status |= VL53L4CD_WrWord(dev,
+                    status |= VL53L4CD_WrWord(
                         VL53L4CD_XTALK_PLANE_OFFSET_KCPS, calXtalk); // sets xtalk, idk why its equal what it is, but surely its right
                 }
             }
@@ -398,69 +394,62 @@ namespace ghost_sensing {
         }
 
             uint8_t VL53L4CD::VL53L4CD_GetSensorId(
-                Dev_t dev,
+                
                 uint16_t *p_id)
         {
             uint8_t status = VL53L4CD_ERROR_NONE;
-            status |= VL53L4CD_RdWord(dev, VL53L4CD_IDENTIFICATION__MODEL_ID, p_id);
+            status |= VL53L4CD_RdWord(VL53L4CD_IDENTIFICATION__MODEL_ID, p_id);
             return status;
         }
-
-
-        uint8_t VL53L4CD::VL53L4CD_SensorInit(
-            Dev_t dev)
-    {
-        
-    }
     uint8_t VL53L4CD::VL53L4CD_ClearInterrupt(
-            Dev_t dev)
+           )
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
 
-        status |= VL53L4CD_WrByte(dev, VL53L4CD_SYSTEM__INTERRUPT_CLEAR, 0x01);
+        status |= VL53L4CD_WrByte(VL53L4CD_SYSTEM__INTERRUPT_CLEAR, 0x01);
         return status;
     }
 
         uint8_t VL53L4CD::VL53L4CD_StartRanging(
-            Dev_t dev)
+           )
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
         uint32_t tmp;
 
-        status |= VL53L4CD_RdDWord(dev, VL53L4CD_INTERMEASUREMENT_MS, &tmp);
+        status |= VL53L4CD_RdDWord(VL53L4CD_INTERMEASUREMENT_MS, &tmp);
 
         /* Sensor runs in continuous mode */
         if(tmp == (uint32_t)0)
         {
-            status |= VL53L4CD_WrByte(dev, VL53L4CD_SYSTEM_START, 0x21);
+            status |= VL53L4CD_WrByte(VL53L4CD_SYSTEM_START, 0x21);
         }
         /* Sensor runs in autonomous mode */
         else
         {
-            status |= VL53L4CD_WrByte(dev, VL53L4CD_SYSTEM_START, 0x40);
+            status |= VL53L4CD_WrByte(VL53L4CD_SYSTEM_START, 0x40);
         }
 
         return status;
     }
 
         uint8_t VL53L4CD::VL53L4CD_StopRanging(
-            Dev_t dev)
+           )
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
 
-        status |= VL53L4CD_WrByte(dev, VL53L4CD_SYSTEM_START, 0x80);
+        status |= VL53L4CD_WrByte(VL53L4CD_SYSTEM_START, 0x80);
         return status;
     }
 
         uint8_t VL53L4CD::VL53L4CD_CheckForDataReady(
-            Dev_t dev,
+            
             uint8_t *p_is_data_ready)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
         uint8_t temp;
         uint8_t int_pol;
 
-        status |= VL53L4CD_RdByte(dev, VL53L4CD_GPIO_HV_MUX__CTRL, &temp);
+        status |= VL53L4CD_RdByte(VL53L4CD_GPIO_HV_MUX__CTRL, &temp);
         temp = temp & (uint8_t)0x10;
         temp = temp >> 4;
 
@@ -473,7 +462,7 @@ namespace ghost_sensing {
             int_pol = (uint8_t)1;
         }
 
-        status |= VL53L4CD_RdByte(dev, VL53L4CD_GPIO__TIO_HV_STATUS, &temp);
+        status |= VL53L4CD_RdByte(VL53L4CD_GPIO__TIO_HV_STATUS, &temp);
 
         if ((temp & (uint8_t)1) == int_pol)
         {
@@ -488,7 +477,7 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_SetRangeTiming(
-            Dev_t dev,
+            
             uint32_t timing_budget_ms,
             uint32_t inter_measurement_ms)
     {
@@ -497,7 +486,7 @@ namespace ghost_sensing {
         uint32_t macro_period_us = 0, timing_budget_us = 0, ls_byte, tmp;
         float_t inter_measurement_factor = (float_t)1.055;
 
-        status |= VL53L4CD_RdWord(dev, 0x0006, &osc_frequency);
+        status |= VL53L4CD_RdWord(0x0006, &osc_frequency);
         if(osc_frequency != (uint16_t)0)
         {
             timing_budget_us = timing_budget_ms*(uint32_t)1000;
@@ -518,19 +507,19 @@ namespace ghost_sensing {
         /* Sensor runs in continuous mode */
         else if(inter_measurement_ms == (uint32_t)0)
         {
-            status |= VL53L4CD_WrDWord(dev,VL53L4CD_INTERMEASUREMENT_MS, 0);
+            status |= VL53L4CD_WrDWord(VL53L4CD_INTERMEASUREMENT_MS, 0);
             timing_budget_us -= (uint32_t)2500;
         }
         /* Sensor runs in autonomous low power mode */
         else if(inter_measurement_ms > timing_budget_ms)
         {
-            status |= VL53L4CD_RdWord(dev,
+            status |= VL53L4CD_RdWord(
                     VL53L4CD_RESULT__OSC_CALIBRATE_VAL, &clock_pll);
             clock_pll = clock_pll & (uint16_t)0x3FF;
                     inter_measurement_factor = inter_measurement_factor
                     * (float_t)inter_measurement_ms
                     * (float_t)clock_pll;
-            status |= VL53L4CD_WrDWord(dev, VL53L4CD_INTERMEASUREMENT_MS,
+            status |= VL53L4CD_WrDWord(VL53L4CD_INTERMEASUREMENT_MS,
                     (uint32_t)inter_measurement_factor);
 
             timing_budget_us -= (uint32_t)4300;
@@ -557,7 +546,7 @@ namespace ghost_sensing {
                     }
                     ms_byte = (uint16_t)(ms_byte << 8)
                 + (uint16_t) (ls_byte & (uint32_t)0xFF);
-                    status |= VL53L4CD_WrWord(dev, VL53L4CD_RANGE_CONFIG_A,ms_byte);
+                    status |= VL53L4CD_WrWord(VL53L4CD_RANGE_CONFIG_A,ms_byte);
 
                     ms_byte = 0;
                     tmp = macro_period_us*(uint32_t)12;
@@ -570,14 +559,14 @@ namespace ghost_sensing {
                     }
                     ms_byte = (uint16_t)(ms_byte << 8)
                 + (uint16_t) (ls_byte & (uint32_t)0xFF);
-                    status |= VL53L4CD_WrWord(dev, VL53L4CD_RANGE_CONFIG_B,ms_byte);
+                    status |= VL53L4CD_WrWord(VL53L4CD_RANGE_CONFIG_B,ms_byte);
         }
 
         return status;
     }
 
         uint8_t VL53L4CD::VL53L4CD_GetRangeTiming(
-            Dev_t dev,
+            
             uint32_t *p_timing_budget_ms,
             uint32_t *p_inter_measurement_ms)
     {
@@ -587,8 +576,8 @@ namespace ghost_sensing {
         float_t clock_pll_factor = (float_t)1.065;
 
         /* Get InterMeasurement */
-        status |= VL53L4CD_RdDWord(dev, VL53L4CD_INTERMEASUREMENT_MS, &tmp);
-        status |= VL53L4CD_RdWord(dev,
+        status |= VL53L4CD_RdDWord(VL53L4CD_INTERMEASUREMENT_MS, &tmp);
+        status |= VL53L4CD_RdWord(
                 VL53L4CD_RESULT__OSC_CALIBRATE_VAL, &clock_pll);
         clock_pll = clock_pll & (uint16_t)0x3FF;
         clock_pll_factor = clock_pll_factor * (float_t)clock_pll;
@@ -596,8 +585,8 @@ namespace ghost_sensing {
         *p_inter_measurement_ms = (uint16_t)(tmp/(uint32_t)clock_pll);
 
         /* Get TimingBudget */
-        status |= VL53L4CD_RdWord(dev, 0x0006, &osc_frequency);
-        status |= VL53L4CD_RdWord(dev, VL53L4CD_RANGE_CONFIG_A,
+        status |= VL53L4CD_RdWord(0x0006, &osc_frequency);
+        status |= VL53L4CD_RdWord(VL53L4CD_RANGE_CONFIG_A,
             &range_config_macrop_high);
 
         macro_period_us = (uint32_t)((uint32_t)2304 * ((uint32_t)0x40000000
@@ -634,7 +623,7 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_GetResult(
-            Dev_t dev,
+            
             VL53L4CD_ResultsData_t *p_result)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
@@ -646,7 +635,7 @@ namespace ghost_sensing {
                 0, 255, 255, 9, 13, 255, 255, 255, 255, 10, 6,
                 255, 255, 11, 12 };
 
-        status |= VL53L4CD_RdByte(dev, VL53L4CD_RESULT__RANGE_STATUS,
+        status |= VL53L4CD_RdByte(VL53L4CD_RESULT__RANGE_STATUS,
             &temp_8);
         temp_8 = temp_8 & (uint8_t)0x1F;
         if (temp_8 < (uint8_t)24)
@@ -655,24 +644,24 @@ namespace ghost_sensing {
         }
         p_result->range_status = temp_8;
 
-        status |= VL53L4CD_RdWord(dev, VL53L4CD_RESULT__SPAD_NB,
+        status |= VL53L4CD_RdWord(VL53L4CD_RESULT__SPAD_NB,
             &temp_16);
         raw_spads=temp_16;
         p_result->number_of_spad = temp_16 / (uint16_t) 256;
 
-        status |= VL53L4CD_RdWord(dev, VL53L4CD_RESULT__SIGNAL_RATE,
+        status |= VL53L4CD_RdWord(VL53L4CD_RESULT__SIGNAL_RATE,
             &temp_16);
         p_result->signal_rate_kcps = (uint32_t)temp_16 *  8;
 
-        status |= VL53L4CD_RdWord(dev, VL53L4CD_RESULT__AMBIENT_RATE,
+        status |= VL53L4CD_RdWord(VL53L4CD_RESULT__AMBIENT_RATE,
             &temp_16);
         p_result->ambient_rate_kcps = (uint32_t)temp_16 *  8;
 
-        status |= VL53L4CD_RdWord(dev, VL53L4CD_RESULT__SIGMA,
+        status |= VL53L4CD_RdWord(VL53L4CD_RESULT__SIGMA,
             &temp_16);
         p_result->sigma_mm = temp_16 / (uint16_t) 4;
 
-        status |= VL53L4CD_RdWord(dev, VL53L4CD_RESULT__DISTANCE,
+        status |= VL53L4CD_RdWord(VL53L4CD_RESULT__DISTANCE,
             &temp_16);
         p_result->distance_mm = temp_16;
 
@@ -685,7 +674,7 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_SetOffset(
-            Dev_t dev,
+            
             int16_t OffsetValueInMm)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
@@ -693,20 +682,20 @@ namespace ghost_sensing {
 
         temp = (uint16_t)((uint16_t)OffsetValueInMm*(uint16_t)4);
 
-        status |= VL53L4CD_WrWord(dev, VL53L4CD_RANGE_OFFSET_MM, temp);
-        status |= VL53L4CD_WrWord(dev, VL53L4CD_INNER_OFFSET_MM, (uint8_t)0x0);
-        status |= VL53L4CD_WrWord(dev, VL53L4CD_OUTER_OFFSET_MM, (uint8_t)0x0);
+        status |= VL53L4CD_WrWord(VL53L4CD_T_MMRANGE_OFFSET, temp);
+        status |= VL53L4CD_WrWord(VL53L4CD_INNER_OFFSET_MM, (uint8_t)0x0);
+        status |= VL53L4CD_WrWord(VL53L4CD_OUTER_OFFSET_MM, (uint8_t)0x0);
         return status;
     }
 
         uint8_t VL53L4CD::VL53L4CD_GetOffset(
-            Dev_t dev,
+            
             int16_t *p_offset)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
         uint16_t temp;
 
-        status |= VL53L4CD_RdWord(dev,VL53L4CD_RANGE_OFFSET_MM, &temp);
+        status |= VL53L4CD_RdWord(VL53L4CD_T_MMRANGE_OFFSET, &temp);
 
         temp = temp<<3;
         temp = temp>>5;
@@ -721,16 +710,16 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_SetXtalk(
-            Dev_t dev,
+            
             uint16_t XtalkValueKcps)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
 
-        status |= VL53L4CD_WrWord(dev,
+        status |= VL53L4CD_WrWord(
             VL53L4CD_XTALK_X_PLANE_GRADIENT_KCPS, 0x0000);
-        status |= VL53L4CD_WrWord(dev,
+        status |= VL53L4CD_WrWord(
             VL53L4CD_XTALK_Y_PLANE_GRADIENT_KCPS, 0x0000);
-        status |= VL53L4CD_WrWord(dev,
+        status |= VL53L4CD_WrWord(
             VL53L4CD_XTALK_PLANE_OFFSET_KCPS,
             (XtalkValueKcps<<9));
             
@@ -738,13 +727,13 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_GetXtalk(
-            Dev_t dev,
+            
             uint16_t *p_xtalk_kcps)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
         float_t tmp_xtalk;
 
-        status |= VL53L4CD_RdWord(dev,
+        status |= VL53L4CD_RdWord(
             VL53L4CD_XTALK_PLANE_OFFSET_KCPS, p_xtalk_kcps);
             
         tmp_xtalk = (float_t)*p_xtalk_kcps / (float_t)512.0;
@@ -754,52 +743,52 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_SetDetectionThresholds(
-            Dev_t dev,
+            
             uint16_t distance_low_mm,
             uint16_t distance_high_mm,
             uint8_t window)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
 
-        status |= VL53L4CD_WrByte(dev, VL53L4CD_SYSTEM__INTERRUPT, window);
-        status |= VL53L4CD_WrWord(dev, VL53L4CD_THRESH_HIGH, distance_high_mm);
-        status |= VL53L4CD_WrWord(dev, VL53L4CD_THRESH_LOW, distance_low_mm);
+        status |= VL53L4CD_WrByte(VL53L4CD_SYSTEM__INTERRUPT, window);
+        status |= VL53L4CD_WrWord(VL53L4CD_THRESH_HIGH, distance_high_mm);
+        status |= VL53L4CD_WrWord(VL53L4CD_THRESH_LOW, distance_low_mm);
         return status;
     }
 
-    uint8_t VL53L4CD::VL53L4CD_GetDetectionThresholds(Dev_t dev,
+    uint8_t VL53L4CD::VL53L4CD_GetDetectionThresholds(
             uint16_t *p_distance_low_mm,
             uint16_t *p_distance_high_mm,
             uint8_t *p_window)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
 
-        status |= VL53L4CD_RdWord(dev, VL53L4CD_THRESH_HIGH,p_distance_high_mm);
-        status |= VL53L4CD_RdWord(dev, VL53L4CD_THRESH_LOW, p_distance_low_mm);
-        status |= VL53L4CD_RdByte(dev, VL53L4CD_SYSTEM__INTERRUPT, p_window);
+        status |= VL53L4CD_RdWord(VL53L4CD_THRESH_HIGH,p_distance_high_mm);
+        status |= VL53L4CD_RdWord(VL53L4CD_THRESH_LOW, p_distance_low_mm);
+        status |= VL53L4CD_RdByte(VL53L4CD_SYSTEM__INTERRUPT, p_window);
         *p_window = (*p_window & (uint8_t)0x7);
 
         return status;
     }
 
         uint8_t VL53L4CD::VL53L4CD_SetSignalThreshold(
-            Dev_t dev,
+            
             uint16_t signal_kcps)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
-        status |= VL53L4CD_WrWord(dev,
+        status |= VL53L4CD_WrWord(
                 VL53L4CD_MIN_COUNT_RATE_RTN_LIMIT_MCPS,signal_kcps>>3);
         return status;
     }
 
     uint8_t VL53L4CD::VL53L4CD_GetSignalThreshold(
-            Dev_t dev,
+            
             uint16_t 	*p_signal_kcps)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
         uint16_t tmp = 0;
 
-        status |= VL53L4CD_RdWord(dev,
+        status |= VL53L4CD_RdWord(
                 VL53L4CD_MIN_COUNT_RATE_RTN_LIMIT_MCPS, &tmp);
         *p_signal_kcps = tmp <<3;
 
@@ -807,7 +796,7 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_SetSigmaThreshold(
-            Dev_t dev,
+            
             uint16_t 	sigma_mm)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
@@ -817,7 +806,7 @@ namespace ghost_sensing {
         }
         else
         {
-            status |= VL53L4CD_WrWord(dev,
+            status |= VL53L4CD_WrWord(
                 VL53L4CD_RANGE_CONFIG__SIGMA_THRESH, sigma_mm<<2);
         }
 
@@ -825,12 +814,12 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_GetSigmaThreshold(
-            Dev_t dev,
+            
             uint16_t 	*p_sigma_mm)
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
 
-        status |= VL53L4CD_RdWord(dev,
+        status |= VL53L4CD_RdWord(
                 VL53L4CD_RANGE_CONFIG__SIGMA_THRESH, p_sigma_mm);
         *p_sigma_mm = *p_sigma_mm >> 2;
 
@@ -838,19 +827,19 @@ namespace ghost_sensing {
     }
 
         uint8_t VL53L4CD::VL53L4CD_StartTemperatureUpdate(
-            Dev_t dev)
+           )
     {
         uint8_t status = VL53L4CD_ERROR_NONE;
         uint8_t tmp = 0, continue_loop = 1;
         uint16_t i = 0;
 
-        status |= VL53L4CD_WrByte(dev,
+        status |= VL53L4CD_WrByte(
             VL53L4CD_VHV_CONFIG__TIMEOUT_MACROP_LOOP_BOUND, (uint8_t)0x81);
-        status |= VL53L4CD_WrByte(dev, 0x0B, (uint8_t)0x92);
-        status |= VL53L4CD_StartRanging(dev);
+        status |= VL53L4CD_WrByte(0x0B, (uint8_t)0x92);
+        status |= VL53L4CD_StartRanging();
 
         do{
-                status |= VL53L4CD_CheckForDataReady(dev, &tmp);
+                status |= VL53L4CD_CheckForDataReady(&tmp);
                 if(tmp == (uint8_t)1) /* Data ready */
                 {
                         continue_loop = (uint8_t)0;
@@ -864,15 +853,15 @@ namespace ghost_sensing {
                         continue_loop = (uint8_t)0;
                         status = (uint8_t)VL53L4CD_ERROR_TIMEOUT;
                 }
-                VL53L4CD_WaitMs(dev, 1);
+                VL53L4CD_WaitMs(1);
         }while(continue_loop == (uint8_t)1);
 
-        status |= VL53L4CD_ClearInterrupt(dev);
-        status |= VL53L4CD_StopRanging(dev);
+        status |= VL53L4CD_ClearInterrupt();
+        status |= VL53L4CD_StopRanging();
 
-        status += VL53L4CD_WrByte(dev,
+        status += VL53L4CD_WrByte(
             VL53L4CD_VHV_CONFIG__TIMEOUT_MACROP_LOOP_BOUND, 0x09);
-        status += VL53L4CD_WrByte(dev, 0x0B, 0);
+        status += VL53L4CD_WrByte(0x0B, 0);
         return status;
     }
 }

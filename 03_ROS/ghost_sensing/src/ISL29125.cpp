@@ -11,9 +11,7 @@ ISL29125::ISL29125(std::shared_ptr<I2C_interfacing> iface, uint8_t address)
 {m_i2c_communication->init();
 }
 
-ISL29125::~ISL29125()
-{
-}
+
 
 bool ISL29125::init() {
      uint8_t id = 0;
@@ -25,17 +23,17 @@ bool ISL29125::init() {
          return false;
      }
     
-     Initialize with defaults
+     //Initialize with defaults
 
      uint8_t colors = ALLCOLORS; // Default configuration value
      uint8_t sensor_range = LARGE_SENSOR_RANGE;
      uint8_t total = colors + sensor_range; // Default configuration value
 
      if (!writeRegister(CONFIG_REG, total) ||          //set colors and range
-         !writeRegister(OFFSET_REG, DEFAULT_OFFSET) ||  // Set integration time
+         !writeRegister(OFFSET_REG, DEFAULT_OFFSET))  // Set integration time
       
          return false;
-     }
+     
  return true;
 }
 
@@ -101,7 +99,7 @@ bool ISL29125::SetInterupts(uint8_t interupts) {//0 = disable; 1 = 1 interupt; 2
     uint8_t regVal;
     readRegister(INTERUPT_REG, regVal);
     if(interupts == 0){
-        regVal &= 0xF7
+        regVal &= 0xF7;
         return writeRegister(INTERUPT_REG, regVal);
     }
     if(interupts <=4){
@@ -136,4 +134,5 @@ bool ISL29125::SetHighThreshold(uint16_t threshold) {
         return false;
     }
     return true;
+}
 }
