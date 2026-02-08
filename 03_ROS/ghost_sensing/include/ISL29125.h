@@ -102,6 +102,6 @@ private:
 
 };
 
-} // namespace ghost_sensing
+}; // namespace ghost_sensing
 
 #endif
