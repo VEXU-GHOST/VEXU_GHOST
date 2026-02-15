@@ -109,7 +109,7 @@ protected:
   void updateConveyorOnly(bool active);
   void toggleBite(bool signal);
 
-  void updateClamp(bool close, bool open, bool shift2);
+  void updateDescore(bool close, bool open, bool shift2);
   void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
 
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
@@ -229,7 +229,10 @@ protected:
 
   bool m_use_backup_estimator = false;
   bool m_reset_world_pose = false;
-  bool m_clamp_closed{false};
+  bool m_descore_up{false};
+  bool m_score_pos_up{false};
+  bool m_match_loading_up{false};
+  bool m_color_switcher{false};
   bool m_bite_closed{false};
   bool m_goal_rush_active{false};
   bool m_goal_rush_clamp_active{false};

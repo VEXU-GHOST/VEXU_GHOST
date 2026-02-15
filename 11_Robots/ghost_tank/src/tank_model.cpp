@@ -175,15 +175,15 @@ void TankModel::driveCommandTank(double left_pct, double right_pct)
   }
 }
 
-void TankModel::driveCommandJoystick(double fwd, double ang, double deadzone)
+void TankModel::driveCommandJoystick(double left, double right, double deadzone)
 {
-  double forward_vel = fwd / 127.0;
-  double angular_vel = ang / 127.0;
+  double left_vel = left / 127.0;
+  double right_vel = right / 127.0;
 
-  forward_vel = (std::fabs(forward_vel) < deadzone) ? 0.0 : forward_vel;
-  angular_vel = (std::fabs(angular_vel) < deadzone) ? 0.0 : angular_vel;
+  left_vel = (std::fabs(left_vel) < deadzone) ? 0.0 : left_vel;
+  right_vel = (std::fabs(right_vel) < deadzone) ? 0.0 : right_vel;
 
-  driveCommandArcade(forward_vel, angular_vel);
+  driveCommandTank(left_vel, right_vel);
 }
 
 } // namespace ghost_tank

@@ -59,7 +59,7 @@ TankRobotPlugin::TankRobotPlugin()
 void TankRobotPlugin::populateMotorNames()
 {
   m_right_drive_motor_names = {
-    // "drive_r1",
+    "drive_r1",
     "drive_r2",
     "drive_r3",
     "drive_r4",
@@ -73,7 +73,7 @@ void TankRobotPlugin::populateMotorNames()
     "drive_l2",
     "drive_l3",
     "drive_l4",
-    // "drive_l5",
+    "drive_l5",
     "drive_l6",
     "drive_l7",
     "drive_l8",
@@ -92,11 +92,11 @@ void TankRobotPlugin::populateMotorNames()
 
 void TankRobotPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["goal_rush_l"] = 0;
-  digital_io_port_map["climb"] = 1;
-  digital_io_port_map["goal_rush_r"] = 2;
-  digital_io_port_map["bite"] = 3;
-  digital_io_port_map["clamp"] = 4;
+  digital_io_port_map["score_pos"] = 0;
+  digital_io_port_map["color_switcher"] = 1;
+  digital_io_port_map["descore"] = 2;
+  digital_io_port_map["match_loading"] = 3;
+
 }
 
 //////////////////////
@@ -254,18 +254,8 @@ void TankRobotPlugin::initIntake()
 {
   std::cout << "[TankRobotPlugin::initIntake]" << std::endl;
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_links", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_sprocket_teeth", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_hooks", 0.0);
+  
   double conveyor_num_links = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_links").as_double();
-  double conveyor_sprocket_teeth = node_ptr_->get_parameter("tank_robot_plugin.conveyor_sprocket_teeth").as_double();
-  double conveyor_num_hooks = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_hooks").as_double();
-  m_conveyor_ticks_per_loop = 360.0 * conveyor_num_links / conveyor_sprocket_teeth;
-  m_conveyor_ticks_per_hook = m_conveyor_ticks_per_loop / conveyor_num_hooks;
-
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_threshold", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_power", 0.0);
-  m_conveyor_hook_align_threshold = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_threshold").as_double();
-  m_conveyor_hook_align_power = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_power").as_double();
 
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_fraction", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_duration", 0.0);
@@ -377,7 +367,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("distance_approach_controller_ptr", m_distance_approach_controller_ptr);
   bt_->set_variable("distance_settling_controller_ptr", m_steering_approach_controller_ptr);
   bt_->set_variable("steering_approach_controller_ptr", m_distance_settling_controller_ptr);
-  bt_->set_variable("steering_settling_controller_ptr", m_steering_settling_controller_ptr);
+  bt_->set_variable("steering_settling_initcontroller_ptr", m_steering_settling_controller_ptr);
   bt_->set_variable("arc_turn_controller_ptr", m_arc_turn_controller_ptr);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
@@ -404,14 +394,6 @@ void TankRobotPlugin::onNewSensorData()
   publishIMUData();
   updateAndPublishOdometry();
   // publishTrajectoryVisualization();
-}
-
-void TankRobotPlugin::updateConveyorPositionSensing()
-{
-  m_conveyor_position_abs = rhi_ptr_->getMotorPosition("conveyor_motor_bottom");
-  m_conveyor_position_rel = std::fmod(m_conveyor_position_abs, m_conveyor_ticks_per_loop);
-  m_conveyor_position_rel += (m_conveyor_position_rel < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
-  m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
 }
 
 
@@ -538,8 +520,8 @@ void TankRobotPlugin::resetBT()
 void TankRobotPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
-  bool shift1 = joy_data->btn_b;
-  bool shift2 = joy_data->btn_d;
+
+  bool r2_held = joy_data->btn_r2;
 
   // Shutdown Request
   if (joy_data->btn_a && joy_data->btn_b && joy_data->btn_x && joy_data->btn_y &&
@@ -559,10 +541,12 @@ void TankRobotPlugin::teleop(double current_time)
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
   toggleBagRecorder(joy_data);
 
-  updateClamp(joy_data->btn_l2, joy_data->btn_r2, shift2);
-  updateGoalRush(joy_data->btn_l1, joy_data->btn_r1, shift2);
+  updateDescore((!r2_held)&&(joy_data->btn_l1));
   updateIntakeFromJoystick(joy_data, shift2, shift1, current_time);
   updateDrivetrain(joy_data);
+  updateScorePos((!r2_held)&&(joy_data->btn_l2)); 
+  updateMatchLoading(joy_data->btn_b);
+  updateColorSwitcher(joy_data->btn_d); 
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
@@ -757,161 +741,102 @@ void TankRobotPlugin::toggleBagRecorder(JoyPtr joy_data)
   }
 }
 
-void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double current_time)
+void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool L2)
 {
-  static bool first_r2 = false;
-  static bool first_r2_started = false;
-  // Manual Ground Pickup control
-  double ground_pickup_power = 0;
-  int32_t ground_pickup_current = 0;
-  if (R2) {
-    ground_pickup_power = 1.0;
-    ground_pickup_current = 2500;
-    if (first_r2) {
-      first_r2_started = true;
+    double intake_power = 0.0;
+    double scorer_power = 0.0;
+
+    // R2 logic: Intake mode
+    if (R2) {
+        intake_power = 1.0; // Intake motor always runs with R2
+        
+        // Chord logic: R2 is held, check for L1/L2 
+        if (L1) {
+            m_score_pos_up = true;  // Force scoring piston UP
+            scorer_power = 1.0;     // Activate scorer motor
+        } 
+        else if (L2) {
+            m_score_pos_up = false; // Force scoring piston DOWN
+            scorer_power = 1.0;     // Activate scorer motor
+        } 
+        else {
+            // R2 alone: only the intake motor runs
+            scorer_power = 0.0;     
+        }
+        
+        // Hardware Update: Write the forced state to the piston immediately
+        rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
+    } 
+    // R1 logic: Outtake mode (Reverses both motors)
+    else if (R1) {
+        intake_power = -1.0;
+        scorer_power = -1.0;
     }
-  } else if (R) {
-    ground_pickup_power = -1.0;
-    ground_pickup_current = 2500;
-  } else {
-    ground_pickup_power = 0.0;
-    ground_pickup_current = 0;
-    if (first_r2_started) {
-      first_r2 = false;
-    }
-  }
-  // Conveyor control
-  // We assume any manual conveyor control misaligns the hooks
-  double conveyor_power = 0;
-  int32_t conveyor_current = 0;
-  if (R1) {
-    conveyor_power = 1.0;
-    conveyor_current = 2500;
-    m_conveyor_hook_is_aligned = false;
-  } else if (L1 && !R2) {
-    conveyor_power = -1.0;
-    conveyor_current = 2500;
-    m_conveyor_hook_is_aligned = false;
-  } else {
-    conveyor_power = 0.0;
-    conveyor_current = 0;
-  }
 
-  // Align Conveyor when Ground Pickup is active and there are no commands going to manual Conveyor control
-  if (R2 && !R1 && !m_conveyor_hook_is_ejecting) {
-    m_conveyor_hook_is_aligned = !(m_hook_fraction < m_conveyor_hook_align_threshold);
-    if (m_conveyor_hook_is_aligned || first_r2) {
-      m_conveyor_last_aligned_position = m_conveyor_position_abs;
-      conveyor_power = 0;
-      conveyor_current = 0;
-    } else {
-      conveyor_power = m_conveyor_hook_align_power;
-      conveyor_current = 1000;
-    }
-  }
+    // Set motor voltages
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_power);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", scorer_power);
 
-  // Transition to ejection mode
-  static double ejecting_start_time = 0.0;
-  if (R2 && L1 && m_conveyor_hook_is_aligned && !m_conveyor_hook_is_ejecting) {
-    ejecting_start_time = current_time;
-    m_conveyor_hook_is_ejecting = true;
-    m_conveyor_hook_is_aligned = false;
-  }
-
-  // Max timeout on ejection
-  if (m_conveyor_hook_is_ejecting && current_time > ejecting_start_time + 1.5) {
-    m_conveyor_hook_is_ejecting = false;
-  }
-
-  // During ejection, run until we reach throw position, then transition to throw
-  if (m_conveyor_hook_is_ejecting) {
-    double throw_dist_rel = m_conveyor_hook_throw_fraction * m_conveyor_ticks_per_hook;
-    if ((m_conveyor_position_abs - m_conveyor_last_aligned_position) > throw_dist_rel && !m_conveyor_is_throwing) {
-      m_conveyor_is_throwing = true;
-      m_conveyor_hook_is_ejecting = false;
-      m_conveyor_throw_start_time = current_time;
-    }
-    conveyor_power = 1.0;
-    conveyor_current = 2500;
-  }
-
-  // Throw reverses for set duration and then zeros conveyor and returns to manual control
-  if (m_conveyor_is_throwing) {
-    conveyor_power = -0.1;
-    conveyor_current = 500;
-    if (current_time > m_conveyor_throw_start_time + m_conveyor_hook_throw_duration) {
-      m_conveyor_is_throwing = false;
-      conveyor_power = 0.0;
-      conveyor_current = 0;
-    }
-  }
-
-  rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
-
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
-
-  m_loop_current_limits.push_back(ground_pickup_current);
-  m_loop_current_limits.push_back(conveyor_current * 2.0);
+    // Safety current limits to prevent burnouts during jams
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
 }
 
-void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time)
+void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
 {
-  if (shift_r || shift_l) {
-    updateIntake(false, false, false, false, current_time); // Default mode
-  } else {
-    if (joy_data->btn_x) {
-      toggleBite(true);
-    } else {
-      toggleBite(false);
-    }
-    updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2, current_time); // Default mode
+    // Pass R2 for intake, R1 for outtake
+    updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->l1, joy_data->l2);
+}
+
+
+void TankRobotPlugin::updateMatchLoading(bool input)
+{
+  static bool last_btn_b_state = false;
+  if(input && !last_btn_b_state){
+    m_match_loading_up = !(m_match_loading_up)
+  }
+    last_btn_b_state = input;
+
+    rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], m_match_loading_up);
   }
 }
 
-void TankRobotPlugin::updateConveyorOnly(bool active)
+
+void TankRobotPlugin::updateColorSwitcher(bool input)
 {
-  double conveyor_power = 1.0;
-  double conveyor_current = 2500;
+  static bool last_btn_d_state = false;
+  if(input && !last_btn_d_state){
+    m_color_switcher = !(m_color_switcher)
+  }
+    last_btn_d_state = input;
 
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
-
-  m_loop_current_limits.push_back(conveyor_current * 2.0);
+    rhi_ptr_->setDigitalOut(digital_io_port_map["color_switcher"], m_color_switcher);
+  
 }
 
-void TankRobotPlugin::toggleBite(bool signal)
+void TankRobotPlugin::updateScorePos(bool input)
 {
-  static bool bite_btn_pressed = false;
-  if (signal && !bite_btn_pressed) {
-    bite_btn_pressed = true;
-    m_bite_closed = !m_bite_closed;
-  } else if (!signal) {
-    bite_btn_pressed = false;
+  static bool last_l2_state = false;
+  if(input && !last_l2_state){
+    m_score_pos_up = !(m_score_pos_up)
   }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
+    last_l2_state = input;
+
+    rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
+  
 }
 
-void TankRobotPlugin::updateClamp(bool close, bool open, bool shift_l)
+
+void TankRobotPlugin::updateDescore(bool input)
 {
-  if (shift_l) {
-    // Close on L2 rising edge
-    if (close) {
-      m_clamp_closed = true;
-    }
-
-    // Open on R2 rising edge
-    if (open) {
-      m_clamp_closed = false;
-    }
-
-    rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], m_clamp_closed);
+  static bool last_l1_state = false;
+  if(input && !last_l1_state){
+    m_descore_up = !(m_descore_up)
   }
+    last_l1_state = input;
+
+    rhi_ptr_->setDigitalOut(digital_io_port_map["descore"], m_decore_up);
+  
 }
 
 // pressing u takes over all right buttons
@@ -948,31 +873,16 @@ void TankRobotPlugin::updateMusic(double current_time, JoyPtr joy_data)
   }
 }
 
-void TankRobotPlugin::updateGoalRush(bool left_rush, bool right_rush, bool enabled)
-{
-  if (enabled) {
-    if (left_rush && right_rush && !m_rush_button_pressed) {
-      m_rush_button_pressed = true;
-      m_rush_held = !m_rush_held;
-    } else {m_rush_button_pressed = false;}
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], m_rush_held || left_rush);
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], m_rush_held || right_rush);
-  } else {
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], false);
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], false);
-  }
-  if (m_rush_held) {
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], true);
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], true);
-  }
-}
+
 
 void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data)
 {
-  m_tank_model_ptr->driveCommandJoystick(joy_data->left_y, -joy_data->right_x, 0.05);
+  double left_pct = joy_data->left_y / 127.0;
+  double right_pct = joy_data->right_y / 127.0;
+  m_tank_model_ptr->driveCommandTank(left_pct, right_pct);
 
   int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
-  if (std::fabs(joy_data->left_y / 127.0) < 0.05 && std::fabs(-joy_data->right_x / 127.0) < 0.05) {
+  if (std::fabs(left_pct) < 0.05 && std::fabs(right_pct) < 0.05) {
     drive_curr_lim = 0;
   }
 
