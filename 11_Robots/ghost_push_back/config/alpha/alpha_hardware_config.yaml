@@ -26,11 +26,6 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: scissor_motor_config
-        ground_pickup_motor:
-            port: 16
-            type: MOTOR
-            reversed: false
-            config: intake_motor_config
         drive_l1:
             port: 10
             type: MOTOR

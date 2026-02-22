@@ -15,17 +15,17 @@ port_configuration:
         scorer_motor:
             port: 6
             type: MOTOR
-            reversed: true
+            reversed: false
             config: intake_motor_config
         intake_motor:
             port: 4
             type: MOTOR
-            reversed: false
+            reversed: true
             config: intake_motor_config
         ejector_motor:
             port: 5
             type: MOTOR
-            reversed: false
+            reversed: true
             config: scissor_motor_config
         drive_l1:
             port: 10
