@@ -8,41 +8,32 @@ port_configuration:
         F: OUT
     devices:
         imu:
-            port: 4
+            port: 21
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
-        conveyor_motor_bottom:
-            port: 5
-            type: MOTOR
-            reversed: false
-            config: intake_motor_config
-        conveyor_motor_top:
+
+        scorer_motor:
             port: 6
             type: MOTOR
             reversed: true
             config: intake_motor_config
-        ground_pickup_motor:
-            port: 16
+        intake_motor:
+            port: 4
             type: MOTOR
             reversed: false
             config: intake_motor_config
-        neutral_stake_1:
-            port: 15
+        ejector_motor:
+            port: 5
             type: MOTOR
             reversed: false
-            config: neutral_stake_motor_config
-        neutral_stake_2:
-            port: 14
-            type: MOTOR
-            reversed: true
-            config: neutral_stake_motor_config
+            config: scissor_motor_config
         drive_l1:
-            port: 7
+            port: 10
             type: MOTOR
             reversed: true
             config: drive_motor_config
         drive_l2:
-            port: 8
+            port: 11
             type: MOTOR
             reversed: false
             config: drive_motor_config
@@ -52,37 +43,37 @@ port_configuration:
             reversed: true
             config: drive_motor_config
         drive_l4:
-            port: 10
+            port: 12
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_l5:
+            port: 8
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        # drive_l5:
-        #     port: 14
-        #     type: MOTOR
-        #     reversed: true
-        #     config: drive_motor_config
         drive_l6:
             port: 13
             type: MOTOR
             reversed: false
             config: drive_motor_config
         drive_l7:
-            port: 12
+            port: 7
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_l8:
-            port: 11
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
-        # drive_r1:
-        #     port: 4
+        # drive_l8:
+        #     port: 14
         #     type: MOTOR
-        #     reversed: false
+        #     reversed: true
         #     config: drive_motor_config
+        drive_r1:
+            port: 1
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
         drive_r2:
-            port: 3
+            port: 20
             type: MOTOR
             reversed: true
             config: drive_motor_config
@@ -92,14 +83,14 @@ port_configuration:
             reversed: false
             config: drive_motor_config
         drive_r4:
-            port: 1
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
-        drive_r5:
-            port: 17
+            port: 19
             type: MOTOR
             reversed: false
+            config: drive_motor_config
+        drive_r5:
+            port: 3
+            type: MOTOR
+            reversed: true
             config: drive_motor_config
         drive_r6:
             port: 18
@@ -107,15 +98,15 @@ port_configuration:
             reversed: true
             config: drive_motor_config
         drive_r7:
-            port: 19
+            port: 17
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_r8:
-            port: 20
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
+        # drive_r8:
+        #     port: 20
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
     device_configurations:
         inertial_sensor_config:
             serial:
@@ -140,7 +131,7 @@ port_configuration:
                 gear_ratio: 6.0
             serial:
                 send_position_command: false
-                send_velocity_command: true
+                send_velocity_command: false
                 send_voltage_command: true
                 send_torque_command: false
                 send_torque_data: false
