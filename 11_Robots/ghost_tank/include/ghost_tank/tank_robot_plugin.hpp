@@ -105,11 +105,15 @@ protected:
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
 
-  void updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time);
+  void updateIntakeFromJoystick(JoyPtr joy_data);
   void updateConveyorOnly(bool active);
   void toggleBite(bool signal);
 
-  void updateDescore(bool close, bool open, bool shift2);
+  void updateDescore(bool open);
+  void updateMatchLoading(bool input); 
+  void updateScorePos(bool input); 
+  void updateColorSwitcher(bool input); 
+  
   void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
 
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);

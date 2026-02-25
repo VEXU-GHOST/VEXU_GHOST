@@ -542,7 +542,7 @@ void TankRobotPlugin::teleop(double current_time)
   toggleBagRecorder(joy_data);
 
   updateDescore((!r2_held)&&(joy_data->btn_l1));
-  updateIntakeFromJoystick(joy_data, shift2, shift1, current_time);
+  updateIntakeFromJoystick(joy_data);
   updateDrivetrain(joy_data);
   updateScorePos((!r2_held)&&(joy_data->btn_l2)); 
   updateMatchLoading(joy_data->btn_b);
