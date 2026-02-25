@@ -103,7 +103,7 @@ protected:
    * @param R
    * @param current_time
    */
-  void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
+  void updateIntake(bool R2, bool R1, bool L1, bool R);
 
   void updateIntakeFromJoystick(JoyPtr joy_data);
   void updateConveyorOnly(bool active);
@@ -113,7 +113,7 @@ protected:
   void updateMatchLoading(bool input); 
   void updateScorePos(bool input); 
   void updateColorSwitcher(bool input); 
-  
+
   void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
 
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);

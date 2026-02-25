@@ -478,7 +478,7 @@ void TankRobotPlugin::autonomous(double current_time)
   } else if (ring_detector_active) {
     ringDetector(ring_detector_active, current_time, want_red, store_ring);
   } else {
-    updateIntake(ground_intake_active, false, false, false, current_time);
+    updateIntake(ground_intake_active, false, false, false);
   }
 
   // Update Pneumatics
@@ -694,7 +694,7 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   last_color = m_ring_color;
   // std::cout << "queue.back: " << ring_queue.back() << std::endl;
   // Call motor control with determined states
-  updateIntake(ground_intake, hook, ejecting, !hook && retry_mode, current_time);
+  updateIntake(ground_intake, hook, ejecting, !hook && retry_mode);
 }
 
 bool TankRobotPlugin::runAutonFromDriver(JoyPtr joy_data, double current_time)
@@ -785,7 +785,7 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool L2)
 void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
 {
     // Pass R2 for intake, R1 for outtake
-    updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->l1, joy_data->l2);
+    updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2);
 }
 
 
@@ -793,7 +793,7 @@ void TankRobotPlugin::updateMatchLoading(bool input)
 {
   static bool last_btn_b_state = false;
   if(input && !last_btn_b_state){
-    m_match_loading_up = !(m_match_loading_up)
+    m_match_loading_up = !(m_match_loading_up); 
   }
     last_btn_b_state = input;
 
