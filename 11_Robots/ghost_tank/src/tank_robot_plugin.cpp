@@ -92,10 +92,10 @@ void TankRobotPlugin::populateMotorNames()
 
 void TankRobotPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["score_pos"] = 0;
-  digital_io_port_map["color_switcher"] = 1;
-  digital_io_port_map["descore"] = 2;
-  digital_io_port_map["match_loading"] = 3;
+  digital_io_port_map["score_pos"] = 2;
+  digital_io_port_map["color_sorter"] = 0;
+  digital_io_port_map["descorer"] = 1;
+  digital_io_port_map["match_loading"] = 8;
 
 }
 
@@ -254,7 +254,7 @@ void TankRobotPlugin::initIntake()
 {
   std::cout << "[TankRobotPlugin::initIntake]" << std::endl;
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_links", 0.0);
-  
+
   double conveyor_num_links = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_links").as_double();
 
   node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_throw_fraction", 0.0);
@@ -355,7 +355,7 @@ void TankRobotPlugin::initAutonomy()
 
   node_ptr_->declare_parameter<double>("tank_robot_plugin.ring_score_timeout");
   m_ring_score_timeout = node_ptr_->get_parameter("tank_robot_plugin.ring_score_timeout").as_double();
-  
+
   node_ptr_->declare_parameter<double>("tank_robot_plugin.ring_prewait_time");
   m_ring_prewait_time = node_ptr_->get_parameter("tank_robot_plugin.ring_prewait_time").as_double();
 
@@ -434,12 +434,12 @@ void TankRobotPlugin::autonomous(double current_time)
     playTTS("starting autonomous");
     // m_odom_ptr->resetPose();
     // resetWorldPose();
-    if (m_interaction){
+    if (m_interaction) {
       bt_->set_path(m_bt_path_interaction);
       resetBT();
       m_tank_model_ptr->driveCommandTank(0.0, 0.0);
     }
-    
+
     bt_->set_variable<bool>("clamp_closed", false);
     bt_->set_variable<bool>("bite_closed", false);
     bt_->set_variable<bool>("goal_rush_down", false);
@@ -449,7 +449,7 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("store_ring", false);
     bt_->set_variable<bool>("ring_detector_active", false);
   }
-  
+
   bt_->set_variable("auton_time_elapsed", current_time);
   // bt_->set_variable<bool>("mirrored", m_mirrored);
 
@@ -541,17 +541,17 @@ void TankRobotPlugin::teleop(double current_time)
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
   toggleBagRecorder(joy_data);
 
-  updateDescore((!r2_held)&&(joy_data->btn_l1));
+  updateDescore((!r2_held) && (joy_data->btn_l1));
   updateIntakeFromJoystick(joy_data);
   updateDrivetrain(joy_data);
-  updateScorePos((!r2_held)&&(joy_data->btn_l2)); 
+  updateScorePos((!r2_held) && (joy_data->btn_l2));
   updateMatchLoading(joy_data->btn_b);
-  updateColorSwitcher(joy_data->btn_d); 
+  updateColorSwitcher(joy_data->btn_d);
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
 {
-  
+
   static double last_input_time = 0.0;
   static double ring_found_time = 0.0;
   static double stuck_detection_time = 0.0;
@@ -559,14 +559,14 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   static bool retry_mode = false;
   static double retry_start_time = 0.0;
   static int last_color = 0;
-  
+
   static std::queue<int> ring_queue;
   static std::queue<double> ring_time_queue;
-  
+
   static double last_time = 0.0;
   static double time_sum = 0.0;
   // if (!store_ring && ring_queue.size() < 2){
-    time_sum += std::clamp(current_time - last_time, 0.0, 0.05);
+  time_sum += std::clamp(current_time - last_time, 0.0, 0.05);
   // }
   last_time = current_time;
   current_time = time_sum;
@@ -743,100 +743,97 @@ void TankRobotPlugin::toggleBagRecorder(JoyPtr joy_data)
 
 void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool L2)
 {
-    double intake_power = 0.0;
-    double scorer_power = 0.0;
+  double intake_power = 0.0;
+  double scorer_power = 0.0;
 
-    // R2 logic: Intake mode
-    if (R2) {
-        intake_power = 1.0; // Intake motor always runs with R2
-        
-        // Chord logic: R2 is held, check for L1/L2 
-        if (L1) {
-            m_score_pos_up = true;  // Force scoring piston UP
-            scorer_power = 1.0;     // Activate scorer motor
-        } 
-        else if (L2) {
-            m_score_pos_up = false; // Force scoring piston DOWN
-            scorer_power = 1.0;     // Activate scorer motor
-        } 
-        else {
-            // R2 alone: only the intake motor runs
-            scorer_power = 0.0;     
-        }
-        
-        // Hardware Update: Write the forced state to the piston immediately
-        rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
-    } 
-    // R1 logic: Outtake mode (Reverses both motors)
-    else if (R1) {
-        intake_power = -1.0;
-        scorer_power = -1.0;
+  // R2 logic: Intake mode
+  if (R2) {
+    intake_power = 1.0;     // Intake motor always runs with R2
+
+    // Chord logic: R2 is held, check for L1/L2
+    if (L1) {
+      m_score_pos_up = true;        // Force scoring piston UP
+      scorer_power = 1.0;           // Activate scorer motor
+    } else if (L2) {
+      m_score_pos_up = false;       // Force scoring piston DOWN
+      scorer_power = 1.0;           // Activate scorer motor
+    } else {
+      // R2 alone: only the intake motor runs
+      scorer_power = 0.0;
     }
 
-    // Set motor voltages
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_power);
-    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", scorer_power);
+    // Hardware Update: Write the forced state to the piston immediately
+    rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
+  }
+  // R1 logic: Outtake mode (Reverses both motors)
+  else if (R1) {
+    intake_power = -1.0;
+    scorer_power = -1.0;
+  }
 
-    // Safety current limits to prevent burnouts during jams
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  // Set motor voltages
+  rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_power);
+  rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", scorer_power);
+
+  // Safety current limits to prevent burnouts during jams
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
 }
 
 void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
 {
-    // Pass R2 for intake, R1 for outtake
-    updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2);
+  // Pass R2 for intake, R1 for outtake
+  updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2);
 }
 
 
 void TankRobotPlugin::updateMatchLoading(bool input)
 {
   static bool last_btn_b_state = false;
-  if(input && !last_btn_b_state){
-    m_match_loading_up = !(m_match_loading_up); 
+  if (input && !last_btn_b_state) {
+    m_match_loading_up = !(m_match_loading_up);
   }
-    last_btn_b_state = input;
+  last_btn_b_state = input;
 
-    rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], m_match_loading_up);
-  }
+  rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], m_match_loading_up);
 }
 
 
 void TankRobotPlugin::updateColorSwitcher(bool input)
 {
   static bool last_btn_d_state = false;
-  if(input && !last_btn_d_state){
-    m_color_switcher = !(m_color_switcher)
+  if (input && !last_btn_d_state) {
+    m_color_switcher = !(m_color_switcher);
   }
-    last_btn_d_state = input;
+  last_btn_d_state = input;
 
-    rhi_ptr_->setDigitalOut(digital_io_port_map["color_switcher"], m_color_switcher);
-  
+  rhi_ptr_->setDigitalOut(digital_io_pororter["color_sorter"], m_color_switcher);
+
 }
 
 void TankRobotPlugin::updateScorePos(bool input)
 {
   static bool last_l2_state = false;
-  if(input && !last_l2_state){
-    m_score_pos_up = !(m_score_pos_up)
+  if (input && !last_l2_state) {
+    m_score_pos_up = !(m_score_pos_up);
   }
-    last_l2_state = input;
+  last_l2_state = input;
 
-    rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
-  
+  rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
+
 }
 
 
 void TankRobotPlugin::updateDescore(bool input)
 {
   static bool last_l1_state = false;
-  if(input && !last_l1_state){
-    m_descore_up = !(m_descore_up)
+  if (input && !last_l1_state) {
+    m_descore_up = !(m_descore_up);
   }
-    last_l1_state = input;
+  last_l1_state = input;
 
-    rhi_ptr_->setDigitalOut(digital_io_port_map["descore"], m_decore_up);
-  
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descore"], m_descore_up);
+
 }
 
 // pressing u takes over all right buttons
@@ -872,7 +869,6 @@ void TankRobotPlugin::updateMusic(double current_time, JoyPtr joy_data)
     }
   }
 }
-
 
 
 void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data)
