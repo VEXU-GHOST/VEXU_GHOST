@@ -10,10 +10,10 @@ source "$VEXU_HOME/scripts/setup_env.sh"
 if [ -z ${ROBOT_NAME+x} ]; 
 then 
     echo "ROBOT_NAME is unset... exiting"; 
-    # ros2 launch ghost_high_stakes hardware.launch.py 2>&1 | tee /dev/tty |& logger;
+    # ros2 launch ghost_push_back hardware.launch.py 2>&1 | tee /dev/tty |& logger;
 else echo "ROBOT_NAME is set to '$ROBOT_NAME'";
-    ros2 launch ghost_high_stakes hardware.launch.py robot_name:=$ROBOT_NAME 2>&1 | tee /dev/tty |& logger;
+    ros2 launch ghost_push_back hardware.launch.py robot_name:=$ROBOT_NAME 2>&1 | tee /dev/tty |& logger;
 fi
 
-logger "RUNNING ros2 launch ghost_high_stakes DONE"
+logger "RUNNING ros2 launch ghost_push_back DONE"
 logger ${PIPESTATUS}

@@ -9,10 +9,10 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 
 def generate_launch_description():
-    ghost_high_stakes_base_dir = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back")
+    ghost_push_back_base_dir = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back")
 
     # This contains parameters shared between both robots
-    base_ros_config_file = os.path.join(ghost_high_stakes_base_dir, "config/base_ros_config.yaml")
+    base_ros_config_file = os.path.join(ghost_push_back_base_dir, "config/base_ros_config.yaml")
     
     #############################
     ### Base Node Definitions ###
@@ -88,7 +88,7 @@ def generate_launch_description():
             print("Launching robot_name:", robot_name)
             robot_launch = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(ghost_high_stakes_base_dir, "launch", robot_name, robot_name + ".launch.py")
+                    os.path.join(ghost_push_back_base_dir, "launch", robot_name, robot_name + ".launch.py")
                 ),
                 launch_arguments={'base_params_file': base_ros_config_file}.items()
             )
