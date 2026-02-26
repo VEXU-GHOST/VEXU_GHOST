@@ -8,7 +8,7 @@ port_configuration:
         F: OUT
     devices:
         imu:
-            port: 21
+            port: 4
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
 
@@ -18,7 +18,7 @@ port_configuration:
             reversed: false
             config: intake_motor_config
         intake_motor:
-            port: 4
+            port: 15
             type: MOTOR
             reversed: true
             config: intake_motor_config
