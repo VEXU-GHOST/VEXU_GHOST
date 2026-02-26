@@ -95,7 +95,8 @@ void TankRobotPlugin::populateDigitalIONames()
   digital_io_port_map["score_pos"] = 2;
   digital_io_port_map["color_sorter"] = 0;
   digital_io_port_map["descorer"] = 1;
-  digital_io_port_map["match_loading"] = 8;
+  digital_io_port_map["match_loading"] = 7;
+  // TODO: what port is it actually
 
 }
 
@@ -389,8 +390,8 @@ void TankRobotPlugin::onNewSensorData()
 
   // Clear current limits at start of loop
   m_loop_current_limits.clear();
-
-  updateConveyorPositionSensing();
+// 
+  // updateConveyorPositionSensing();
   publishIMUData();
   updateAndPublishOdometry();
   // publishTrajectoryVisualization();
@@ -541,12 +542,12 @@ void TankRobotPlugin::teleop(double current_time)
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
   toggleBagRecorder(joy_data);
 
-  updateDescore((!r2_held) && (joy_data->btn_l1));
+  updateDescore(joy_data->btn_d);
   updateIntakeFromJoystick(joy_data);
   updateDrivetrain(joy_data);
   updateScorePos((!r2_held) && (joy_data->btn_l2));
   updateMatchLoading(joy_data->btn_b);
-  updateColorSwitcher(joy_data->btn_d);
+  updateColorSwitcher(joy_data->btn_u);
 }
 
 void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_red, bool store_ring)
@@ -747,28 +748,37 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool L2)
   double scorer_power = 0.0;
 
   // R2 logic: Intake mode
-  if (R2) {
+  if (R1) {
     intake_power = 1.0;     // Intake motor always runs with R2
 
     // Chord logic: R2 is held, check for L1/L2
-    if (L1) {
-      m_score_pos_up = true;        // Force scoring piston UP
-      scorer_power = 1.0;           // Activate scorer motor
-    } else if (L2) {
-      m_score_pos_up = false;       // Force scoring piston DOWN
-      scorer_power = 1.0;           // Activate scorer motor
-    } else {
-      // R2 alone: only the intake motor runs
-      scorer_power = 0.0;
-    }
+    
 
     // Hardware Update: Write the forced state to the piston immediately
     rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
   }
   // R1 logic: Outtake mode (Reverses both motors)
-  else if (R1) {
+  else if (R2) {
     intake_power = -1.0;
-    scorer_power = -1.0;
+  } 
+  else if (L2) {
+      m_score_pos_up = true;        // Force scoring piston UP
+      scorer_power = 1.0;           // Activate scorer motor
+      intake_power = 1.0;
+          rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
+
+  } 
+  else if (L1) {
+      m_score_pos_up = false;       // Force scoring piston DOWN
+      scorer_power = 1.0;       
+      intake_power = 1.0;
+      rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], m_score_pos_up);
+
+  } 
+  else {
+      // R2 alone: only the intake motor runs
+      intake_power = 0.0;
+      scorer_power = 0.0;
   }
 
   // Set motor voltages
@@ -832,7 +842,7 @@ void TankRobotPlugin::updateDescore(bool input)
   }
   last_l1_state = input;
 
-  rhi_ptr_->setDigitalOut(digital_io_port_map["descore"], m_descore_up);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer"], m_descore_up);
 
 }
 

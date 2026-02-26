@@ -6,6 +6,8 @@ port_configuration:
         D: OUT
         E: OUT
         F: OUT
+        G: OUT
+        H: OUT
     devices:
         imu:
             port: 4
@@ -30,7 +32,7 @@ port_configuration:
         drive_l1:
             port: 10
             type: MOTOR
-            reversed: true
+            reversed: false
             config: drive_motor_config
         drive_l2:
             port: 11

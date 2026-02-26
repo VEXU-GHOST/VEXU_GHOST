@@ -27,7 +27,7 @@ def generate_launch_description():
 
     # Get BT Path for autons
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
-    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation.xml")
+    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_tune_movement.xml")
     bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
 
     ########################
@@ -167,11 +167,11 @@ def generate_launch_description():
         odom_ekf_node,
         ekf_pf_node,
         map_ekf_node,
-        color_sensor_intake,
-        color_classifier_intake,
+        # color_sensor_intake,
+        # color_classifier_intake,
         # color_sensor_goal_rush_l,
         # color_sensor_goal_rush_r,
-        color_sensor_goal_clamp,
+        # color_sensor_goal_clamp,
 
         competition_state_machine_node,
         # gpio_expander,
