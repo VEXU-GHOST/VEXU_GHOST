@@ -101,8 +101,13 @@ protected:
    */
   void updateIntake(bool R2, bool R1, bool L1, bool R, double current_time);
   void updateIntakeController(bool shift1, bool shift2, bool R2, bool R1, bool L1, bool R, double current_time, std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateIntakeFromJoystick(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data, double current_time);
   void updateClamp(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateClampController(bool shift1, bool shift2 ,std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
+  void updateScorePos(bool input);
+  void updateDescore(bool input);
+  void updateColorSwitcher(bool input);
+  void updateMatchLoading(bool input);
  
   void updateDrivetrain(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
   void updateBite(std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData> joy_data);
@@ -269,6 +274,11 @@ protected:
   bool m_recording_btn_pressed = false;
   bool m_recording = false;
 
+  // Pneumatic Pistons
+  bool m_score_pos_up = false;
+  bool m_descore_up = false;
+  bool m_color_switcher = false;
+  bool m_match_loading_up = false;
 
   // Field vs Robot Oriented Control
   bool m_toggle_tank_field_control_btn_pressed = false;
