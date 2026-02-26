@@ -807,7 +807,7 @@ void TankRobotPlugin::updateColorSwitcher(bool input)
   }
   last_btn_d_state = input;
 
-  rhi_ptr_->setDigitalOut(digital_io_pororter["color_sorter"], m_color_switcher);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["color_sorter"], m_color_switcher);
 
 }
 

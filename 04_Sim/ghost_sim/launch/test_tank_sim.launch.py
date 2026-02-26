@@ -67,7 +67,7 @@ def generate_launch_description():
     ghost_ros_share_dir = get_package_share_directory("ghost_ros_interfaces")
     ghost_sim_share_dir = get_package_share_directory("ghost_sim")
     ghost_localization_share_dir = get_package_share_directory("ghost_localization")
-    ghost_high_stakes_share_dir = get_package_share_directory("ghost_high_stakes")
+    ghost_high_stakes_share_dir = get_package_share_directory("ghost_push_back")
 
     home_dir = os.path.expanduser("~")
     ghost_ros_base_dir = os.path.join(

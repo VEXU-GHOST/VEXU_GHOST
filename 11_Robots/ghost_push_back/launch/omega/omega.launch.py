@@ -12,7 +12,7 @@ from launch.substitutions import Command, LaunchConfiguration
 def generate_launch_description():
     # Get base params from parent launch file and config path
     base_params_file = LaunchConfiguration("base_params_file")
-    config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_high_stakes", "config")
+    config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back", "config")
     tank_config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_tank", "config")
 
     # This contains all the parameters for our ROS nodes
@@ -174,6 +174,6 @@ def generate_launch_description():
         color_sensor_goal_clamp,
 
         competition_state_machine_node,
-        gpio_expander,
+        # gpio_expander,
     ])
 

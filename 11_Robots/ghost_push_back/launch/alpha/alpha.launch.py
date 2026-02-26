@@ -12,7 +12,7 @@ from launch.substitutions import Command, LaunchConfiguration
 def generate_launch_description():
     # Get base params from parent launch file and config path
     base_params_file = LaunchConfiguration("base_params_file")
-    config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_high_stakes", "config")
+    config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back", "config")
 
     # This contains all the parameters for our ROS nodes
     ros_config_file = os.path.join(config_path, "alpha/alpha_ros_config.yaml")
