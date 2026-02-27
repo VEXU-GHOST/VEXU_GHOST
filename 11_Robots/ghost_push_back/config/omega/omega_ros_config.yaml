@@ -43,7 +43,7 @@ imu_filter_node:
 
 competition_state_machine_node:
   ros__parameters:
-    # tank_robot_plugin:
+    tank_robot_plugin:
     #   neutral_stake_arm_kp: 0.05
     #   neutral_stake_arm_gear_ratio: 9.0 #3.0
     #   neutral_stake_arm_rest_pos_deg: 0.0
@@ -82,9 +82,9 @@ competition_state_machine_node:
         integral_activation_bound: 10.0
 
       arc_turn:
-        kp: 2.0
-        ki: 10.0
-        kd: 0.2
+        kp: 0.75
+        ki: 0.0
+        kd: 1.0
         integral_limit: 0.75
         integral_activation_bound: 0.2
       #normal auton init

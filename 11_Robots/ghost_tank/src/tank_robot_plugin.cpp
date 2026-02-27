@@ -983,6 +983,8 @@ void TankRobotPlugin::updateAndPublishOdometry()
   auto odom_diff_theta =
     std::fabs(ghost_util::SmallestAngleDistRad(m_curr_odom_pose.z(), m_last_odom_pose.z()));
 
+    // printf("delta_theta: %.4f  yaw: %.4f\n", odom_diff_theta, m_curr_odom_pose.z());
+
   // Holonomic Motion Model
   Eigen::Vector3d diff_std = Eigen::Vector3d(
     m_k1 * odom_diff_x + m_k2 * odom_diff_y + m_k3 * odom_diff_theta,
