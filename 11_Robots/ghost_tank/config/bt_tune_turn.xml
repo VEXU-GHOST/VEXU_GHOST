@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="tune_turn">
+    <Sequence>
+      <TurnToPoint posX_tiles="8.0"
+        posY_tiles="0.0"
+        timeout_ms="2000"
+        backwards="false"
+        angle_exit_threshold_deg="1.0"/>
+      <WaitCmd seconds="200.0"
+        shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
