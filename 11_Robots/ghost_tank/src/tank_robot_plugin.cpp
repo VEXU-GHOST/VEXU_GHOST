@@ -449,6 +449,11 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("conveyor_active", false);
     bt_->set_variable<bool>("store_ring", false);
     bt_->set_variable<bool>("ring_detector_active", false);
+    bt_->set_variable<bool>("score_pos_up", false);
+    bt_->set_variable<bool>("match_loading_up", false);
+    bt_->set_variable<bool>("descorer_up", false);
+    bt_->set_variable<bool>("switcher_long_goal", false);
+    bt_->set_variable<bool>("outtake_active", false);
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
@@ -469,12 +474,26 @@ void TankRobotPlugin::autonomous(double current_time)
   bool store_ring = false;
   bool conveyor_active = false;
   bool ground_intake_active = false;
+  bool score_pos_up = false;
+  bool outtake_active = false;
   bt_->get_variable<bool>("ring_detector_active", ring_detector_active);
   bt_->get_variable<bool>("store_ring", store_ring);
   bt_->get_variable<bool>("conveyor_active", conveyor_active);
   bt_->get_variable<bool>("ground_intake_active", ground_intake_active);
+  bt_->get_variable<bool>("score_pos_up", score_pos_up);
+  bt_->get_variable<bool>("outtake_active", outtake_active);
 
-  if (conveyor_active) {
+  if (score_pos_up) {
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 1.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  } else if (outtake_active) {
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  } else if (conveyor_active) {
     updateConveyorOnly(true);
   } else if (ring_detector_active) {
     ringDetector(ring_detector_active, current_time, want_red, store_ring);
@@ -492,6 +511,10 @@ void TankRobotPlugin::autonomous(double current_time)
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], bt_->get_variable<int>("score_pos_up"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], bt_->get_variable<int>("match_loading_up"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer"], bt_->get_variable<int>("descorer_up"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["color_sorter"], bt_->get_variable<int>("switcher_long_goal"));
 
   // Publish Twist Command
   geometry_msgs::msg::Twist msg{};

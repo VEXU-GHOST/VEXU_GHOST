@@ -50,6 +50,11 @@
 #include "ghost_tank/bt_nodes/follow_path_pure_pursuit.hpp"
 #include "ghost_tank/bt_nodes/arcturnToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
+#include "ghost_tank/bt_nodes/adjustSwitcher.hpp"
+#include "ghost_tank/bt_nodes/score_pos.hpp"
+#include "ghost_tank/bt_nodes/outtakeBalls.hpp"
+#include "ghost_tank/bt_nodes/match_loading.hpp"
+#include "ghost_tank/bt_nodes/descorer.hpp"
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 
@@ -69,7 +74,7 @@ public:
   void init_tree();
   void set_path(std::string path);
 
-  template<typename T>
+  template<typename T>  
   void set_variable(std::string name, T value)
   {
     if (global_blackboard_) {
