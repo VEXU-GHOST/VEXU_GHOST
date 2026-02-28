@@ -53,6 +53,8 @@ void TankTree::init_tree()
   factory.registerNodeType<DescorerCmd>("DescorerCmd");
   factory.registerNodeType<AdjustSwitcherCmd>("AdjustSwitcherCmd");
   factory.registerNodeType<MatchLoadingCmd>("MatchLoadingCmd");
+  factory.registerNodeType<ScoreBallCmd>("ScoreBallCmd");
+  factory.registerNodeType<ScorePosCmd>("ScorePosCmd");
   factory.registerNodeType<OuttakeBallsCmd>("OuttakeBallsCmd");
   factory.registerNodeType<ShutoffNode>("ShutoffNode");
   factory.registerNodeType<IntakeCmd>("IntakeCmd");

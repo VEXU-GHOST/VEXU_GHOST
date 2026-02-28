@@ -2,8 +2,10 @@
  *   Copyright (c) 2024 Jake Wendling
  *   All rights reserved.
  *
- *   OuttakeBallsCmd - Spit out balls through the intake.
+ *   OuttakeBallsCmd - Control intake/outtake motor direction.
  */
+
+#include <algorithm>
 
 #include "ghost_tank/bt_nodes/outtakeBalls.hpp"
 
@@ -23,15 +25,19 @@ OuttakeBallsCmd::OuttakeBallsCmd(
 BT::PortsList OuttakeBallsCmd::providedPorts()
 {
   return {
-    BT::InputPort<bool>("active", false, "true = outtake through intake"),
+    BT::InputPort<int>("direction", 0,
+      "-1=outtake (spit out), 0=stop, 1=intake (pull in)"),
   };
 }
 
 BT::NodeStatus OuttakeBallsCmd::tick()
 {
-  bool active = BT_Util::get_input<bool>(this, "active");
+  int direction = BT_Util::get_input<int>(this, "direction");
 
-  BT_Util::put_in_blackboard(blackboard_, "outtake_active", active);
+  // Clamp to valid range
+  direction = std::clamp(direction, -1, 1);
+
+  BT_Util::put_in_blackboard(blackboard_, "outtake_direction", direction);
 
   return BT::NodeStatus::SUCCESS;
 }

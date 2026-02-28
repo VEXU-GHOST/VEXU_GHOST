@@ -33,12 +33,12 @@
 namespace ghost_tank {
 
 /**
- * OuttakeBallsCmd - Control intake/outtake motor direction.
- * direction: -1 = outtake (spit out), 0 = stop, 1 = intake (pull in)
+ * ScoreBallCmd - Control scorer (top) motor for scoring balls into the goal.
+ * direction: -1 = reverse, 0 = stop, 1 = score (runs intake + scorer forward)
  */
-class OuttakeBallsCmd : public BT::SyncActionNode {
+class ScoreBallCmd : public BT::SyncActionNode {
 public:
-  OuttakeBallsCmd(const std::string& name, const BT::NodeConfig& config);
+  ScoreBallCmd(const std::string& name, const BT::NodeConfig& config);
 
   static BT::PortsList providedPorts();
 

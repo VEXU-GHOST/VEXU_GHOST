@@ -426,6 +426,9 @@ void TankRobotPlugin::publishIMUData()
 
 void TankRobotPlugin::disabled()
 {
+  if (rhi_ptr_) {
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
+  }
 }
 
 void TankRobotPlugin::autonomous(double current_time)
@@ -452,8 +455,9 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("score_pos_up", false);
     bt_->set_variable<bool>("match_loading_up", false);
     bt_->set_variable<bool>("descorer_up", false);
-    bt_->set_variable<bool>("switcher_long_goal", false);
-    bt_->set_variable<bool>("outtake_active", false);
+    bt_->set_variable<int>("switcher_direction", 0);
+    bt_->set_variable<int>("outtake_direction", 0);
+    bt_->set_variable<int>("score_ball_direction", 0);
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
@@ -475,21 +479,31 @@ void TankRobotPlugin::autonomous(double current_time)
   bool conveyor_active = false;
   bool ground_intake_active = false;
   bool score_pos_up = false;
-  bool outtake_active = false;
+  int outtake_direction = 0;
+  int score_ball_direction = 0;
   bt_->get_variable<bool>("ring_detector_active", ring_detector_active);
   bt_->get_variable<bool>("store_ring", store_ring);
   bt_->get_variable<bool>("conveyor_active", conveyor_active);
   bt_->get_variable<bool>("ground_intake_active", ground_intake_active);
   bt_->get_variable<bool>("score_pos_up", score_pos_up);
-  bt_->get_variable<bool>("outtake_active", outtake_active);
+  bt_->get_variable<int>("outtake_direction", outtake_direction);
+  bt_->get_variable<int>("score_ball_direction", score_ball_direction);
 
   if (score_pos_up) {
     rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
     rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 1.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
-  } else if (outtake_active) {
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", -1.0);
+  } else if (score_ball_direction != 0) {
+    // ScoreBall uses scorer_motor only (top); intake stays off
+    double motor_pct = static_cast<double>(score_ball_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", motor_pct);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  } else if (outtake_direction != 0) {
+    double intake_pct = static_cast<double>(outtake_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_pct);
     rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
@@ -514,7 +528,17 @@ void TankRobotPlugin::autonomous(double current_time)
   rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], bt_->get_variable<int>("score_pos_up"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], bt_->get_variable<int>("match_loading_up"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["descorer"], bt_->get_variable<int>("descorer_up"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["color_sorter"], !bt_->get_variable<int>("switcher_long_goal"));
+  // Switcher motor control (auton): direction -1=down, 0=stop, 1=up
+  int switcher_direction = 0;
+  bt_->get_variable<int>("switcher_direction", switcher_direction);
+  if (switcher_direction != 0) {
+    double motor_pct = static_cast<double>(switcher_direction);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", motor_pct);
+  } else {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
+  }
 
   // Publish Twist Command
   geometry_msgs::msg::Twist msg{};

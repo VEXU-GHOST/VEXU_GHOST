@@ -167,4 +167,3 @@ port_configuration:
                 send_position_command: true
                 send_velocity_command: false
                 send_voltage_command: true
-        

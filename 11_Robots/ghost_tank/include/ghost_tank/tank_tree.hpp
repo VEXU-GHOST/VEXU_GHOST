@@ -52,6 +52,7 @@
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
 #include "ghost_tank/bt_nodes/adjustSwitcher.hpp"
 #include "ghost_tank/bt_nodes/score_pos.hpp"
+#include "ghost_tank/bt_nodes/scoreBall.hpp"
 #include "ghost_tank/bt_nodes/outtakeBalls.hpp"
 #include "ghost_tank/bt_nodes/match_loading.hpp"
 #include "ghost_tank/bt_nodes/descorer.hpp"

@@ -196,6 +196,7 @@ set(NODES
   load_path_from_csv
   adjustSwitcher
   score_pos
+  scoreBall
   outtakeBalls
   match_loading
   descorer

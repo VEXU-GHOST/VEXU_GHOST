@@ -34,6 +34,7 @@ namespace ghost_tank {
 
 /**
  * AdjustSwitcher - Moves the upper portion between scoring on long goal vs center goal.
+ * Uses switcher_motor: direction -1=down (center), 0=stop, 1=up (long goal).
  */
 class AdjustSwitcherCmd : public BT::SyncActionNode {
 public:
