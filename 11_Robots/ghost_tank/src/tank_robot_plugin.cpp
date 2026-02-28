@@ -94,7 +94,8 @@ void TankRobotPlugin::populateDigitalIONames()
 {
   digital_io_port_map["score_pos"] = 2;
   digital_io_port_map["color_sorter"] = 0;
-  digital_io_port_map["descorer"] = 1;
+  digital_io_port_map["descorer_l"] = 1;
+  digital_io_port_map["descorer_r"] = 3;
   digital_io_port_map["match_loading"] = 7;
   // TODO: what port is it actually
 
@@ -443,17 +444,21 @@ void TankRobotPlugin::autonomous(double current_time)
       resetBT();
       m_tank_model_ptr->driveCommandTank(0.0, 0.0);
     }
-
-    bt_->set_variable<bool>("clamp_closed", false);
+    bt_->set_variable<int>("switcher_direction", 0);
+    bt_->set_variable<int>("outtake_direction", 0);
+    bt_->set_variable<int>("score_ball_direction", 0);
     bt_->set_variable<bool>("bite_closed", false);
-    bt_->set_variable<bool>("goal_rush_down", false);
-    bt_->set_variable<bool>("goal_rush_l_down", false);
+    bt_->set_variable<int>("switcher_direction", 0);
+    bt_->set_variable<int>("outtake_direction", 0);
+    bt_->set_variable<int>("score_ball_direction", 0);
     bt_->set_variable<bool>("goal_rush_r_down", false);
-    bt_->set_variable<bool>("conveyor_active", false);
-    bt_->set_variable<bool>("store_ring", false);
+    bt_->set_variable<int>("switcher_direction", 0);
+    bt_->set_variable<int>("outtake_direction", 0);
+    bt_->set_variable<int>("score_ball_direction", 0);
     bt_->set_variable<bool>("ring_detector_active", false);
-    bt_->set_variable<bool>("score_pos_up", false);
-    bt_->set_variable<bool>("match_loading_up", false);
+    bt_->set_variable<int>("switcher_direction", 0);
+    bt_->set_variable<int>("outtake_direction", 0);
+    bt_->set_variable<int>("score_ball_direction", 0);
     bt_->set_variable<bool>("descorer_up", false);
     bt_->set_variable<int>("switcher_direction", 0);
     bt_->set_variable<int>("outtake_direction", 0);
@@ -463,37 +468,21 @@ void TankRobotPlugin::autonomous(double current_time)
   bt_->set_variable("auton_time_elapsed", current_time);
   // bt_->set_variable<bool>("mirrored", m_mirrored);
 
-  try {
+  int outtake_direction = 0;
+  int score_ball_direction = 0;
     bt_->tick_tree();
   } catch (std::exception & e) {
     std::cout << "Error tick_tree: " << e.what() << std::endl;
-  }
-
-  // Get best state estimate
-  // auto curr_pose = m_tank_model_ptr->getWorldPose();
-  auto curr_twist = m_tank_model_ptr->getWorldTwist();
-
-  bool ring_detector_active = false;
-  bool want_red = m_color_target_red;
-  bool store_ring = false;
-  bool conveyor_active = false;
-  bool ground_intake_active = false;
-  bool score_pos_up = false;
   int outtake_direction = 0;
   int score_ball_direction = 0;
-  bt_->get_variable<bool>("ring_detector_active", ring_detector_active);
-  bt_->get_variable<bool>("store_ring", store_ring);
-  bt_->get_variable<bool>("conveyor_active", conveyor_active);
-  bt_->get_variable<bool>("ground_intake_active", ground_intake_active);
-  bt_->get_variable<bool>("score_pos_up", score_pos_up);
   bt_->get_variable<int>("outtake_direction", outtake_direction);
   bt_->get_variable<int>("score_ball_direction", score_ball_direction);
-
-  if (score_pos_up) {
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 1.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  // Get best state estimate
+  // auto curr_pose = m_tank_model_ptr->getWorldPose();
+  int outtake_direction = 0;
+  int score_ball_direction = 0;
+  bt_->get_variable<int>("outtake_direction", outtake_direction);
+  bt_->get_variable<int>("score_ball_direction", score_ball_direction);
   } else if (score_ball_direction != 0) {
     // ScoreBall uses scorer_motor only (top); intake stays off
     double motor_pct = static_cast<double>(score_ball_direction);
@@ -504,7 +493,101 @@ void TankRobotPlugin::autonomous(double current_time)
   } else if (outtake_direction != 0) {
     double intake_pct = static_cast<double>(outtake_direction);
     rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_pct);
+  int outtake_direction = 0;
+  int score_ball_direction = 0;
+  bt_->get_variable<int>("outtake_direction", outtake_direction);
+  bt_->get_variable<int>("score_ball_direction", score_ball_direction);
+  } else if (score_ball_direction != 0) {
+    // ScoreBall uses scorer_motor only (top); intake stays off
+    double motor_pct = static_cast<double>(score_ball_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", motor_pct);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  } else if (outtake_direction != 0) {
+    double intake_pct = static_cast<double>(outtake_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_pct);
+  int outtake_direction = 0;
+  int score_ball_direction = 0;
+  bt_->get_variable<int>("outtake_direction", outtake_direction);
+  bt_->get_variable<int>("score_ball_direction", score_ball_direction);
+  } else if (score_ball_direction != 0) {
+    // ScoreBall uses scorer_motor only (top); intake stays off
+    double motor_pct = static_cast<double>(score_ball_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", motor_pct);
+  // Descorer - both sides
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer_l"], bt_->get_variable<int>("descorer_up"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer_r"], bt_->get_variable<int>("descorer_up"));
+  // AdjustSwitcher - uses color_sorter pneumatic (direction 1=up, -1=down)
+  int switcher_direction = 0;
+  bt_->get_variable<int>("switcher_direction", switcher_direction);
+  if (switcher_direction != 0) {
+    double motor_pct = static_cast<double>(switcher_direction);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", motor_pct);
+  } else {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  } else if (outtake_direction != 0) {
+    double intake_pct = static_cast<double>(outtake_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_pct);
+  bt_->get_variable<bool>("ground_intake_active", ground_intake_active);
+  bt_->get_variable<bool>("score_pos_up", score_pos_up);
+  bt_->get_variable<int>("outtake_direction", outtake_direction);
+  bt_->get_variable<int>("score_ball_direction", score_ball_direction);
+  } else if (score_ball_direction != 0) {
+    // ScoreBall uses scorer_motor only (top); intake stays off
+    double motor_pct = static_cast<double>(score_ball_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", motor_pct);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  // Switcher motor control (auton): direction -1=down, 0=stop, 1=up
+  int switcher_direction = 0;
+  bt_->get_variable<int>("switcher_direction", switcher_direction);
+  if (switcher_direction != 0) {
+    double motor_pct = static_cast<double>(switcher_direction);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", motor_pct);
+  } else {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
+  }
+  } else if (outtake_direction != 0) {
+    double intake_pct = static_cast<double>(outtake_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_pct);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 1.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  } else if (score_ball_direction != 0) {
+    // ScoreBall uses scorer_motor only (top); intake stays off
+    double motor_pct = static_cast<double>(score_ball_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", motor_pct);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  // Switcher motor control (auton): direction -1=down, 0=stop, 1=up
+  int switcher_direction = 0;
+  bt_->get_variable<int>("switcher_direction", switcher_direction);
+  if (switcher_direction != 0) {
+    double motor_pct = static_cast<double>(switcher_direction);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", motor_pct);
+  } else {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
+  }
+  } else if (outtake_direction != 0) {
+    double intake_pct = static_cast<double>(outtake_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_pct);
     rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  } else if (score_pos_up) {
+    // ScorePos: piston up + both motors (scorer reversed for correct dump direction)
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", -1.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
   } else if (conveyor_active) {
@@ -514,7 +597,17 @@ void TankRobotPlugin::autonomous(double current_time)
   } else {
     updateIntake(ground_intake_active, false, false, false);
   }
-
+  // Switcher motor control (auton): direction -1=down, 0=stop, 1=up
+  int switcher_direction = 0;
+  bt_->get_variable<int>("switcher_direction", switcher_direction);
+  if (switcher_direction != 0) {
+    double motor_pct = static_cast<double>(switcher_direction);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", motor_pct);
+  } else {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
+  }
   // Update Pneumatics
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<int>("clamp_closed"));
   if (m_mirrored) {
@@ -527,7 +620,8 @@ void TankRobotPlugin::autonomous(double current_time)
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], bt_->get_variable<int>("score_pos_up"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], bt_->get_variable<int>("match_loading_up"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer"], bt_->get_variable<int>("descorer_up"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer_l"], bt_->get_variable<int>("descorer_up"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer_r"], bt_->get_variable<int>("descorer_up"));
   // Switcher motor control (auton): direction -1=down, 0=stop, 1=up
   int switcher_direction = 0;
   bt_->get_variable<int>("switcher_direction", switcher_direction);
@@ -793,7 +887,8 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool L2)
 {
   double intake_power = 0.0;
   double scorer_power = 0.0;
-
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer_l"], m_descore_up);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer_r"], m_descore_up);
   // R2 logic: Intake mode
   if (R1) {
     intake_power = 1.0;     // Intake motor always runs with R2
