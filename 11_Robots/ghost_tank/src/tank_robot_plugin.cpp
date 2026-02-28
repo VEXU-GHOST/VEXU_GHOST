@@ -584,12 +584,6 @@ void TankRobotPlugin::autonomous(double current_time)
     rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
-  } else if (score_pos_up) {
-    // ScorePos: piston up + both motors (scorer reversed for correct dump direction)
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", -1.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
   } else if (conveyor_active) {
     updateConveyorOnly(true);
   } else if (ring_detector_active) {
@@ -984,7 +978,8 @@ void TankRobotPlugin::updateDescore(bool input)
   }
   last_l1_state = input;
 
-  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer"], m_descore_up);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer_l"], m_descore_up);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer_r"], m_descore_up);
 
 }
 
