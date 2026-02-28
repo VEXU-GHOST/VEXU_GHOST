@@ -368,7 +368,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("distance_approach_controller_ptr", m_distance_approach_controller_ptr);
   bt_->set_variable("distance_settling_controller_ptr", m_steering_approach_controller_ptr);
   bt_->set_variable("steering_approach_controller_ptr", m_distance_settling_controller_ptr);
-  bt_->set_variable("steering_settling_initcontroller_ptr", m_steering_settling_controller_ptr);
+  bt_->set_variable("steering_settling_controller_ptr", m_steering_settling_controller_ptr);
   bt_->set_variable("arc_turn_controller_ptr", m_arc_turn_controller_ptr);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
