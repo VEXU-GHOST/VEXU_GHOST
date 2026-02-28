@@ -88,9 +88,9 @@ competition_state_machine_node:
         integral_limit: 0.75
         integral_activation_bound: 0.2
       #normal auton init
-      init_x_tiles: 0.0
-      init_y_tiles: 0.0
-      init_theta_degrees: 0.0
+      init_x_tiles: 5.0
+      init_y_tiles: 3.0
+      init_theta_degrees: 90.0
       # prog init
       # init_theta_degrees: 160.0
       # init_x_tiles: 0.5
