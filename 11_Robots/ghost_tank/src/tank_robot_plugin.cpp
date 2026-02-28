@@ -514,7 +514,7 @@ void TankRobotPlugin::autonomous(double current_time)
   rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], bt_->get_variable<int>("score_pos_up"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], bt_->get_variable<int>("match_loading_up"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["descorer"], bt_->get_variable<int>("descorer_up"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["color_sorter"], bt_->get_variable<int>("switcher_long_goal"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["color_sorter"], !bt_->get_variable<int>("switcher_long_goal"));
 
   // Publish Twist Command
   geometry_msgs::msg::Twist msg{};
@@ -840,7 +840,7 @@ void TankRobotPlugin::updateColorSwitcher(bool input)
   }
   last_btn_d_state = input;
 
-  rhi_ptr_->setDigitalOut(digital_io_port_map["color_sorter"], m_color_switcher);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["color_sorter"], !m_color_switcher);
 
 }
 

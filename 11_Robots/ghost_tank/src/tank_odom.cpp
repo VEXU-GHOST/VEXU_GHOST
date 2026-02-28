@@ -34,14 +34,14 @@ Eigen::Vector3d TankOdometry::update(
   // now we have absolute distances travelled by each wheel
   double dtheta = (dr - dl) / m_wheelbase;
 
-  // DEBUG: Print odom inputs for verification (throttled to every 50 updates)
-  static int dbg_count = 0;
-  if (++dbg_count % 50 == 0) {
-    printf("[Odom inputs] diff_l_ticks=%ld diff_r_ticks=%ld | dl=%.6f dr=%.6f m | "
-           "m_per_tick=%.6e wheelbase=%.4f m | dtheta=%.6f rad | yaw_before=%.4f rad\n",
-           diff_l_wheel_pos, diff_r_wheel_pos, dl, dr,
-           m_meters_per_tick, m_wheelbase, dtheta, m_cur_pos.z());
-  }
+  // // DEBUG: Print odom inputs for verification (throttled to every 50 updates)
+  // static int dbg_count = 0;
+  // if (++dbg_count % 50 == 0) {
+  //   printf("[Odom inputs] diff_l_ticks=%ld diff_r_ticks=%ld | dl=%.6f dr=%.6f m | "
+  //          "m_per_tick=%.6e wheelbase=%.4f m | dtheta=%.6f rad | yaw_before=%.4f rad\n",
+  //          diff_l_wheel_pos, diff_r_wheel_pos, dl, dr,
+  //          m_meters_per_tick, m_wheelbase, dtheta, m_cur_pos.z());
+  // }
 
   // we know the angle of the chassis
 

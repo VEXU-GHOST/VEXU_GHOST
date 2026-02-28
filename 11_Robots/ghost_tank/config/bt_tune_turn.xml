@@ -5,11 +5,13 @@
       <!-- <MoveToPoint kp="1.2" kd="0.0" max_effort_percent="0.5" timeout_ms="3000" backwards="false" distance_tiles="1"/> -->
       <!-- <WaitCmd seconds="200.0" shutoff_motors="true"/> -->
       <Logging message="Starting turn"/>
-      <TurnToPoint posX_tiles="1.0"
-        posY_tiles="0.0"
-        timeout_ms="2000"
-        backwards="false"
-        angle_exit_threshold_deg="1.0"/>
+      <AdjustSwitcherCmd long_goal="true"/>
+      <WaitCmd seconds="2.0" />
+      <AdjustSwitcherCmd long_goal="false"/>
+  <WaitCmd seconds="2.0" />
+      <AdjustSwitcherCmd long_goal="true"/>
+        <WaitCmd seconds="2.0" />
+      <AdjustSwitcherCmd long_goal="false"/>
       <Logging message="done"/>
       <WaitCmd seconds="200.0"
         shutoff_motors="true"/>
