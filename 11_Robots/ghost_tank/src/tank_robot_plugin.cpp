@@ -59,24 +59,24 @@ TankRobotPlugin::TankRobotPlugin()
 void TankRobotPlugin::populateMotorNames()
 {
   m_right_drive_motor_names = {
-    // "drive_r1",
+    "drive_r1",
     "drive_r2",
     "drive_r3",
     "drive_r4",
     "drive_r5",
     "drive_r6",
     "drive_r7",
-    "drive_r8",
+    // "drive_r8",
   };
   m_left_drive_motor_names = {
     "drive_l1",
     "drive_l2",
     "drive_l3",
     "drive_l4",
-    // "drive_l5",
+    "drive_l5",
     "drive_l6",
     "drive_l7",
-    "drive_l8",
+    // "drive_l8",
   };
 
   m_all_drive_motor_names.insert(
@@ -92,11 +92,11 @@ void TankRobotPlugin::populateMotorNames()
 
 void TankRobotPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["goal_rush_l"] = 0;
-  digital_io_port_map["climb"] = 1;
-  digital_io_port_map["goal_rush_r"] = 2;
-  digital_io_port_map["bite"] = 3;
-  digital_io_port_map["clamp"] = 4;
+   digital_io_port_map["score_pos"] = 2;
+  digital_io_port_map["color_sorter"] = 0;
+  digital_io_port_map["descorer"] = 1;
+  digital_io_port_map["match_loading"] = 7;
+    // TODO: what port is it actually
 }
 
 //////////////////////
@@ -253,17 +253,6 @@ void TankRobotPlugin::initEstimation()
 void TankRobotPlugin::initIntake()
 {
   std::cout << "[TankRobotPlugin::initIntake]" << std::endl;
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_links", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_sprocket_teeth", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_num_hooks", 0.0);
-  double conveyor_num_links = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_links").as_double();
-  double conveyor_sprocket_teeth = node_ptr_->get_parameter("tank_robot_plugin.conveyor_sprocket_teeth").as_double();
-  double conveyor_num_hooks = node_ptr_->get_parameter("tank_robot_plugin.conveyor_num_hooks").as_double();
-  m_conveyor_ticks_per_loop = 360.0 * conveyor_num_links / conveyor_sprocket_teeth;
-  m_conveyor_ticks_per_hook = m_conveyor_ticks_per_loop / conveyor_num_hooks;
-
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_threshold", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin.conveyor_hook_align_power", 0.0);
   m_conveyor_hook_align_threshold = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_threshold").as_double();
   m_conveyor_hook_align_power = node_ptr_->get_parameter("tank_robot_plugin.conveyor_hook_align_power").as_double();
 
@@ -408,7 +397,7 @@ void TankRobotPlugin::onNewSensorData()
 
 void TankRobotPlugin::updateConveyorPositionSensing()
 {
-  m_conveyor_position_abs = rhi_ptr_->getMotorPosition("conveyor_motor_bottom");
+  m_conveyor_position_abs = 0; // rhi_ptr_->getMotorPosition("conveyor_motor_bottom");
   m_conveyor_position_rel = std::fmod(m_conveyor_position_abs, m_conveyor_ticks_per_loop);
   m_conveyor_position_rel += (m_conveyor_position_rel < 0.0) ? m_conveyor_ticks_per_loop : 0.0;
   m_hook_fraction = std::fmod(m_conveyor_position_rel, m_conveyor_ticks_per_hook) / m_conveyor_ticks_per_hook;
@@ -846,16 +835,16 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool R, double cur
     }
   }
 
-  rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
+  // rhi_ptr_->setMotorVoltageCommandPercent("ground_pickup_motor", ground_pickup_power);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("ground_pickup_motor", ground_pickup_current);
 
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
+  // rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
+  // rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
 
-  m_loop_current_limits.push_back(ground_pickup_current);
-  m_loop_current_limits.push_back(conveyor_current * 2.0);
+  // m_loop_current_limits.push_back(ground_pickup_current);
+  // m_loop_current_limits.push_back(conveyor_current * 2.0);
 }
 
 void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data, bool shift_l, bool shift_r, double current_time)
@@ -877,10 +866,10 @@ void TankRobotPlugin::updateConveyorOnly(bool active)
   double conveyor_power = 1.0;
   double conveyor_current = 2500;
 
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
-  rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
+  // rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_top", conveyor_power);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_top", conveyor_current);
+  // rhi_ptr_->setMotorVoltageCommandPercent("conveyor_motor_bottom", conveyor_power);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("conveyor_motor_bottom", conveyor_current);
 
   m_loop_current_limits.push_back(conveyor_current * 2.0);
 }

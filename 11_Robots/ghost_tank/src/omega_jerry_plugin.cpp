@@ -62,7 +62,7 @@ void OmegaJerryPlugin::populateMotorNames()
     "drive_r5",
     "drive_r6",
     "drive_r7",
-    "drive_r8",
+    // "drive_r8",
   };
   m_left_drive_motor_names = {
     "drive_l1",
@@ -72,7 +72,7 @@ void OmegaJerryPlugin::populateMotorNames()
     // "drive_l5",
     "drive_l6",
     "drive_l7",
-    "drive_l8",
+    // "drive_l8",
   };
 
   m_all_drive_motor_names.insert(
@@ -212,7 +212,7 @@ bool OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
     m_neutral_stake_arm_down_pos_deg
   };
 
-  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_1") / m_neutral_stake_arm_gear_ratio;
+  double curr_pos = 0 / m_neutral_stake_arm_gear_ratio; // rhi_ptr_->getMotorPosition("neutral_stake_1") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
 
   // Ensure arm_mode is within valid bounds
@@ -240,19 +240,19 @@ bool OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
     power = ghost_util::clamp(power, 0.0, 1.0);
   }
 
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", current_ma);
-  m_loop_current_limits.push_back(2 * current_ma);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);
+  // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", current_ma);
+  // m_loop_current_limits.push_back(2 * current_ma);
 
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", power);
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", power);
+  // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", power);
+  // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", power);
 
   return std::fabs(position_error) < m_neutral_stake_arm_settled_threshold_deg;
 }
 
 void OmegaJerryPlugin::updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active)
 {
-  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_1") / m_neutral_stake_arm_gear_ratio;
+  double curr_pos = 0; // rhi_ptr_->getMotorPosition("neutral_stake_1") / m_neutral_stake_arm_gear_ratio;
   double power = 0.0;
   int32_t current_ma = 0;
 
@@ -284,18 +284,18 @@ void OmegaJerryPlugin::updateNeutralStakeArmController(bool up_btn, bool down_bt
   }
   // ---- Send Command ----
   if (command_given) {
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", current_ma);
-    m_loop_current_limits.push_back(2 * current_ma);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", power);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", power);
+    // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);
+    // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", current_ma);
+    // m_loop_current_limits.push_back(2 * current_ma);
+    // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", power);
+    // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", power);
   } else {
     // Stop motor if no command needed
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", 0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", 0);
-    m_loop_current_limits.push_back(0);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", 0.0);
+    // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", 0);
+    // rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", 0);
+    // m_loop_current_limits.push_back(0);
+    // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", 0.0);
+    // rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", 0.0);
   }
 }
 

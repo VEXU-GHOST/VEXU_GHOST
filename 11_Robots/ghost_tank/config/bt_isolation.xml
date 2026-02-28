@@ -16,7 +16,14 @@
     <Sequence>
       <Sequence>
         <Logging message="Starting main tree" />
-        <SubTree ID="win_point"
+      <Logging message="Starting turn"/>
+      <TurnToPoint posX_tiles="0.0"
+        posY_tiles="0.0"
+        timeout_ms="2000"
+        backwards="false"
+        angle_exit_threshold_deg="1.0"/>
+      <Logging message="done"/>
+        <!-- <SubTree ID="win_point"
           _autoremap="true"/>
         <SubTree ID="grab_middle_goal"
           _autoremap="true"/>
@@ -24,7 +31,7 @@
         <BiteCmd bite_closed="true"/>
         <SubTree ID="clear_negative_corner"
           _autoremap="true"/>
-        <!-- <SubTree ID="intake_middle_ring" _autoremap="true"/> -->
+        <!- <SubTree ID="intake_middle_ring" _autoremap="true"/> ->
 
         <SubTree ID="skip_middle_ring"
           _autoremap="true"/>
@@ -37,7 +44,7 @@
           _autoremap="true"/>
         <SubTree ID="get_far_goal"
           _autoremap="true"/>
-        <SetMirrored mirrored="false"/>
+        <SetMirrored mirrored="false"/> -->
         
       </Sequence>
       <WaitCmd seconds="500.0"
