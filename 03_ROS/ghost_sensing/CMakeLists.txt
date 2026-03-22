@@ -25,7 +25,7 @@ set(DEPENDENCIES
 
 # Iterates through the list and finds the packages
 foreach(pkg ${DEPENDENCIES})
-find_package(${pkg} REQUIRED)
+  find_package(${pkg} REQUIRED)
 endforeach()
 
 ament_export_dependencies(${DEPENDENCIES})
@@ -45,9 +45,8 @@ ament_export_include_directories(${INCLUDE})
 ####################
 add_library(ghost_sensing SHARED
   src/I2C_interfacing.cpp
-  src/TCA9536.cpp
-  src/VL53L4CD.cpp
   src/ISL29125.cpp
+  src/VL53L4CD.cpp
 )
 target_include_directories(ghost_sensing
   PUBLIC
@@ -70,11 +69,21 @@ install(
 # --- Node executable(s) ---
 add_executable(gpio_expander src/gpio_expander_node.cpp)
 ament_target_dependencies(gpio_expander rclcpp)
+add_executable(Sensor_Node src/Sensor_Node.cpp)
+ament_target_dependencies(Sensor_Node rclcpp)
+add_executable(Sensor_Node2 src/Sensor_Node2.cpp)
+ament_target_dependencies(Sensor_Node2 rclcpp)
+
+
 
 # Link to ghost_sensing library target
 target_link_libraries(gpio_expander ghost_sensing)
+target_link_libraries(Sensor_Node ghost_sensing)
+target_link_libraries(Sensor_Node2 ghost_sensing)
 
 install(TARGETS gpio_expander DESTINATION lib/${PROJECT_NAME})
+install(TARGETS Sensor_Node DESTINATION lib/${PROJECT_NAME})
+install(TARGETS Sensor_Node2 DESTINATION lib/${PROJECT_NAME})
 
 #################
 ##### Install ####

@@ -9,8 +9,6 @@ namespace ghost_sensing {
 
 class ISL29125 {
 public:
-    struct sensor_data_t;
-
     // Register definitions
     // static const uint8_t ADDRESS   = 0x39; // for reference
     static const uint8_t STATUS_REG                     = 0x08;
@@ -31,7 +29,7 @@ public:
     static const uint8_t RED_HIGH          = 0x0C;
     static const uint8_t BLUE_LOW          = 0x0D;
     static const uint8_t BLUE_HIGH         = 0x0E;
-    uint8_t CONFIG_REG_VALUE = 0b101; // Default value for all colors and large 
+    uint8_t CONFIG_REG_VALUE = 0B101; // Default value for all colors and large 
     static const uint8_t INTERUPT_REG      = 0x03;
     // Constructor / destructor
     ISL29125(std::shared_ptr<I2C_interfacing> iface, uint8_t address);
@@ -40,25 +38,15 @@ public:
     // Initialization and deinitialization
     bool init();
     bool deinit();
-    bool setSensingRange(uint8_t range); //0 =  low; 1 = high
-    bool setResolution(uint8_t range); //0 =  16 bits; 1 = 12 bits
-    bool setConversionTime(uint8_t time); //0 =  100ms; 1 = 200ms; 2 = 400ms; 3 = 800ms
-    bool setIRCompensationRange(uint8_t comp); //ranges: 0-63 and 106-169
+
     // Power control
     bool enablePower();
     bool disablePower();
 
-    bool SetInterupts(uint8_t interupts); //0 = disable; 1 = 1 interupt; 2 = 2 interupts; 3 = 4 interupts; 4 = 8 interupts
-    bool SetLowThreshold(uint16_t threshold);
-    bool SetHighThreshold(uint16_t threshold);
-    bool CheckInterrupt(); // 1 = interupt occurred
-    bool CheckConversion(); // 1 = completed
-    bool checkErrors(); //combination of check no interupt, no brownout, and done conversion
     // Light sensor functions
-    // bool enableLightSensor(bool interrupts = false);
-    // bool disableLightSensor();
-    // bool readAmbientLight(uint16_t &clear);
-    bool readAllSensors(sensor_data_t &data);
+    bool enableLightSensor(bool interrupts = false);
+    bool disableLightSensor();
+    bool readAmbientLight(uint16_t &clear);
     bool readRedLight(uint16_t &red);
     bool readGreenLight(uint16_t &green);
     bool readBlueLight(uint16_t &blue);
@@ -69,16 +57,32 @@ public:
     bool readProximity(uint8_t &prox);
 
     // Gesture sensor functions
-    bool enableGestureSensor(bool interrupts = true);
-    bool disableGestureSensor();
-    bool isGestureAvailable();
-    int  readGesture();
+    // bool enableGestureSensor(bool interrupts = true);
+    // bool disableGestureSensor();
+    // bool isGestureAvailable();
+    // int  readGesture();
 
+    bool checkErrors();
+    bool CheckConversion();
+    bool CheckInterrupt();
+    bool setIRCompensationRange(uint8_t comp);
+    bool setConversionTime(uint8_t range);
+    bool setSensingRange(uint8_t range);
+
+    bool setResolution(uint8_t range);
+
+    bool SetInterupts(uint8_t interupts);
+
+    bool SetHighThreshold(uint16_t threshold);
+    bool SetLowThreshold(uint16_t threshold);
     struct sensor_data_t {
         uint16_t red, green, blue, clear;
         uint8_t proximity;
         bool valid;  // Add valid field
-    };
+    } sensor_data_;
+
+    // Add readAllSensors declaration
+    bool readAllSensors(sensor_data_t& data);
 
 private:
     std::shared_ptr<I2C_interfacing> m_i2c_communication;
@@ -99,8 +103,8 @@ private:
         uint8_t index;
     } gesture_data_;
 
+};
 
+} // namespace ghost_sensing
 
-}; // namespace ghost_sensing
-}
 #endif

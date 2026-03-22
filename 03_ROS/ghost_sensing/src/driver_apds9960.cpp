@@ -243,4 +243,21 @@ int color_sensor_apds9960::readGesture() {
     return direction;
 }
 
+bool TCA9536::writeRegister(uint8_t reg, uint8_t data) {
+    return (m_i2c_communication->write(reg, &data, 1) == 0);
+}
+
+bool TCA9536::readRegister(uint8_t reg, uint8_t &data) {
+    return (m_i2c_communication->read(reg, &data, 1) == 0);
+}
+
+bool TCA9536::readRegisters(uint8_t reg, uint8_t *buf, uint16_t len) {
+    return (m_i2c_communication->read(reg, buf, len) == 0);
+}
+bool TCA9536::writeWord(uint8_t reg, uint8_t data) {
+    return (m_i2c_communication->write(reg, &data, 4) == 0);
+}
+bool TCA9536::readWord(uint8_t reg, uint8_t &data) {
+    return (m_i2c_communication->read(reg, &data, 4) == 0);
+}
 } // namespace ghost_sensing

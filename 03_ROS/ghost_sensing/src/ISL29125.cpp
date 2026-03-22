@@ -11,7 +11,9 @@ ISL29125::ISL29125(std::shared_ptr<I2C_interfacing> iface, uint8_t address)
 {m_i2c_communication->init();
 }
 
-
+ISL29125::~ISL29125()
+{
+}
 
 bool ISL29125::init() {
      uint8_t id = 0;
@@ -29,12 +31,9 @@ bool ISL29125::init() {
      uint8_t sensor_range = LARGE_SENSOR_RANGE;
      uint8_t total = colors + sensor_range; // Default configuration value
 
-     if (!writeRegister(CONFIG_REG, total) ||          //set colors and range
-         !writeRegister(OFFSET_REG, DEFAULT_OFFSET))  // Set integration time
-      
-         return false;
-     
- return true;
+     if (!writeRegister(CONFIG_REG, total)){return false;}          //set colors and range
+     if (!writeRegister(OFFSET_REG, DEFAULT_OFFSET)){ return false;}  //set integration time
+    return true;
 }
 
 bool ISL29125::deinit() {
@@ -59,7 +58,7 @@ bool ISL29125::setResolution(uint8_t range) { //0 =  16 bits; 1 = 12 bits
      return writeRegister(CONFIG_REG, CONFIG_REG_VALUE); // Enable with default config
 }
 
-bool ISL29125::setConversionTime(uint8_t range) { //0 = start at i2c write 0x01; 1 = start at rising edge of INT
+bool ISL29125::setConversionTime(uint8_t range) { //changes number of bits of resolution, higher resolution = longer conversion time. 0 = 4ms; 1 = 16ms
     int mask = 1<<5;
     int val = CONFIG_REG_VALUE & (mask); val = val >>5;
     if(val!=range){
@@ -135,4 +134,137 @@ bool ISL29125::SetHighThreshold(uint16_t threshold) {
     }
     return true;
 }
+
+bool ISL29125::CheckInterrupt() {
+    uint8_t status;
+    if (!readRegister(STATUS_REG, status)) {
+        //rip idk what to do
+        //console.log("Failed to read STATUS register");
+        return false;
+    }
+    // For example, assume AINT is bit 4
+    return (status & 0x01);
 }
+
+bool ISL29125::CheckConversion() {
+    uint8_t status;
+    if (!readRegister(STATUS_REG, status)) {
+        //rip idk what to do
+        //console.log("Failed to read STATUS register");
+        return false;
+    }
+    // For example, assume AINT is bit 4
+    return (status & 0x02)>>1;
+}
+
+bool ISL29125::checkErrors() { //if error true
+    uint8_t status;
+    if (!readRegister(STATUS_REG, status)) {
+        //rip idk what to do
+        //console.log("Failed to read STATUS register");
+    }
+    status ^= 0x02;
+    status &= 0x07;
+    return status!=0;
+}
+// bool ISL29125::enableLightSensor(bool interrupts) {
+//     uint8_t regVal;
+//     if (!readRegister(ENABLE, regVal)) {
+//         return false;
+//     }
+//     regVal |= ALS_ENABLE;
+//     return writeRegister(ENABLE, regVal);
+// }
+
+// bool ISL29125::disableLightSensor() {
+//     uint8_t regVal;
+//     if (!readRegister(ENABLE, regVal)) {
+//         return false;
+//     }
+//     regVal &= ~ALS_ENABLE; // clear AEN bit
+//     return writeRegister(ENABLE, regVal);
+// }
+
+ bool ISL29125::readAllSensors(sensor_data_t& data) {
+     uint8_t buf[6];  //RDATAL/H, GDATAL/H, BDATAL/H, 
+
+     if (!readRegisters(0x09, buf, sizeof(buf))) {
+         return false;
+     }
+    
+     // Verify device ID
+    //  if ((buf[0] != 0xAB) && (buf[0] != 0x9C)) {
+    //      return false;
+    //  }
+    
+     // Check if data is valid (STATUS register)
+    //  data.valid = (buf[1] & STATUS_AVALID) != 0;
+    //  if (!data.valid) {
+    //      return false;
+    //  }
+    
+     // Parse the data
+     //data.clear = ((uint16_t)buf[3] << 8) | buf[2];
+     data.green = ((uint16_t)buf[1] << 8) | buf[0];
+     data.red = ((uint16_t)buf[3] << 8) | buf[2];
+     data.blue = ((uint16_t)buf[5] << 8) | buf[4];
+     //data.proximity = buf[10];
+  
+     return true;
+ }
+
+// bool ISL29125::readAmbientLight(uint16_t &clear) {
+//     sensor_data_t data;
+//     if (!readAllSensors(data)) {
+//         return false;
+//     }
+//     clear = data.clear;
+//     return true;
+// }
+
+ bool ISL29125::readRedLight(uint16_t &red) {
+     sensor_data_t data;
+     if (!readAllSensors(data)) {
+        return false;
+     }
+     red = data.red;
+     return true;
+ }
+
+bool ISL29125::readGreenLight(uint16_t &green) {
+     sensor_data_t data;
+     if (!readAllSensors(data)) {
+         return false;
+     }
+     green = data.green;
+     return true;
+}
+
+bool ISL29125::readBlueLight(uint16_t &blue) {
+     sensor_data_t data;
+     if (!readAllSensors(data)) {
+         return false;
+     }
+     blue = data.blue;
+     return true;
+}
+
+
+bool ISL29125::writeRegister(uint8_t reg, uint8_t data) {
+    return (m_i2c_communication->write(reg, &data, 1) == 0);
+}
+
+bool ISL29125::readRegister(uint8_t reg, uint8_t &data) {
+    return (m_i2c_communication->read(reg, &data, 1) == 0);
+}
+
+bool ISL29125::readRegisters(uint8_t reg, uint8_t *buf, uint16_t len) {
+    return (m_i2c_communication->read(reg, buf, len) == 0);
+}
+// bool ISL29125::writeWord(uint8_t reg, uint8_t data) {
+//     return (m_i2c_communication->write(reg, &data, 4) == 0);
+// }
+// bool ISL29125::readWord(uint8_t reg, uint8_t &data) {
+//     return (m_i2c_communication->read(reg, &data, 4) == 0);
+// }
+} // namespace ghost_sensing

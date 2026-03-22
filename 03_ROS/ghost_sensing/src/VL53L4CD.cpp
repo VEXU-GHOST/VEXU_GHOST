@@ -381,7 +381,7 @@ namespace ghost_sensing {
     }
 
 
-            uint8_t VL53L4CD::VL53L4CD_GetSWVersion(
+    uint8_t VL53L4CD::VL53L4CD_GetSWVersion(
                 VL53L4CD_Version_t *p_Version)
         {
             uint8_t Status = VL53L4CD_ERROR_NONE;
