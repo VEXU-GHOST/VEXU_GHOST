@@ -1,0 +1,8 @@
+# Keep build context small when extending the image with COPY
+**/build/
+**/install/
+**/log/
+**/.cache/
+**/__pycache__/
+**/*.pyc
+.git/FETCH_HEAD

@@ -18,7 +18,7 @@
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
-  <depend>Eigen3</depend>
+  <depend>eigen3_cmake_module</depend>
   <depend>yaml-cpp</depend>
 
   <exec_depend>realsense2_camera</exec_depend>

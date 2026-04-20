@@ -1,0 +1,47 @@
+# VEXU_GHOST — cross-platform dev environment (ROS 2 Humble).
+#
+# Typical flow (after cloning + git submodule update --recursive on the host):
+#   docker compose build
+#   docker compose run --rm vexu vexu-init-workspace.sh   # once: rosdep + Ghost .debs
+#   docker compose run --rm vexu bash -lc 'VEXU_IN_DOCKER=1 ./scripts/build.sh'
+#
+# Linux + RViz on host display:
+#   xhost +local:docker
+#   docker compose run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix vexu bash
+#
+# NVIDIA (Linux): docker compose run --rm --gpus all vexu bash
+# (requires nvidia-container-toolkit on the host)
+
+services:
+  vexu:
+    build:
+      context: .
+      dockerfile: 12_Docker/Dockerfile
+    image: vexu-ghost:humble
+    # Many hosts give containers broken DNS; rosdep needs raw.githubusercontent.com.
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+    volumes:
+      - .:/vexu
+      - vexu-ccache:/root/.ccache
+    working_dir: /vexu
+    stdin_open: true
+    tty: true
+    environment:
+      VEXU_HOME: /vexu
+      VEXU_IN_DOCKER: "1"
+      # Separate from native Linux colcon dirs (/vexu vs host path in CMake cache).
+      VEXU_COLCON_BUILD_BASE: build-docker
+      VEXU_COLCON_INSTALL_BASE: install-docker
+      VEXU_COLCON_LOG_BASE: log-docker
+      ROS_LOCALHOST_ONLY: "${ROS_LOCALHOST_ONLY:-1}"
+      DISPLAY: "${DISPLAY:-}"
+      QT_X11_NO_MITSHM: "1"
+    # Host networking works on Linux only; omit for macOS/Windows Docker Desktop.
+    # Uncomment on Linux if you need full ROS 2 LAN discovery:
+    # network_mode: host
+
+volumes:
+  vexu-ccache:

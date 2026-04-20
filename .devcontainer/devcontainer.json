@@ -1,0 +1,24 @@
+{
+  "name": "VEXU Ghost (ROS 2 Humble)",
+  "build": {
+    "dockerfile": "../12_Docker/Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/vexu",
+  "workspaceMountConsistency": "cached",
+  "remoteEnv": {
+    "VEXU_HOME": "/vexu",
+    "VEXU_IN_DOCKER": "1",
+    "ROS_LOCALHOST_ONLY": "1"
+  },
+  "runArgs": ["--cap-add=SYS_PTRACE"],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "ms-iot.vscode-ros"
+      ]
+    }
+  }
+}

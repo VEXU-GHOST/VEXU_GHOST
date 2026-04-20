@@ -6,6 +6,10 @@ Ubuntu 22.04.
 
 **For new team members doing Software Onboarding I, please start with** [Setting Up My Environment](https://github.com/VEXU-GHOST/VEXU_GHOST/blob/develop/SetupMyEnvironment.md).
 
+## Docker (macOS / Windows / optional Linux)
+
+For a full ROS 2 Humble environment without a native Ubuntu install, see [12_Docker/README.md](12_Docker/README.md). Native `./scripts/build.sh` on Ubuntu still uses `build/`, `install/`, and `log/` by default (see that README).
+
 ## Installation
 ### Install ROS2 Humble
 
