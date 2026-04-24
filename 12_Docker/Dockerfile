@@ -61,6 +61,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-xacro \
     sox \
     libsox-fmt-mp3 \
+    qtwayland5 \
+    libxkbcommon0 \
  && pip3 install --no-cache-dir --upgrade pip \
  && pip3 install --no-cache-dir \
     colcon-lint \
