@@ -40,8 +40,8 @@ services:
       # WAYLAND_DISPLAY is unset (macOS/Windows); Docker creates an unused placeholder.
       - ${XDG_RUNTIME_DIR:-/tmp}/${WAYLAND_DISPLAY:-no-wayland.sock}:/tmp/${WAYLAND_DISPLAY:-no-wayland.sock}
     working_dir: /vexu
-    stdin_open: true
-    tty: true
+    # Long-lived container: idle until you `docker compose exec vexu bash`.
+    command: ["sleep", "infinity"]
     # Needed for gdb/lldb inside the container.
     cap_add:
       - SYS_PTRACE
