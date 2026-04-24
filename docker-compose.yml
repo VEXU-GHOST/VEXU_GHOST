@@ -65,9 +65,9 @@ services:
       ROS_LOCALHOST_ONLY: "${ROS_LOCALHOST_ONLY:-1}"
       # Wayland: forward the host socket name. Container runs as root, so /tmp is fine
       # as XDG_RUNTIME_DIR (no 0700/user-owned check applies to root).
-      WAYLAND_DISPLAY: "${WAYLAND_DISPLAY:-}"
+      # WAYLAND_DISPLAY: "${WAYLAND_DISPLAY:-}"
       XDG_RUNTIME_DIR: /tmp
-      QT_QPA_PLATFORM: "wayland;xcb"
+      QT_QPA_PLATFORM: "xcb"
       # X11 display: forwards the host DISPLAY (usually :0 on Linux = XWayland). Falls
       # back to the bundled noVNC service on macOS/Windows where there's no host DISPLAY.
       DISPLAY: "novnc:0.0"
