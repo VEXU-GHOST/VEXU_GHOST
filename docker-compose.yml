@@ -35,6 +35,9 @@ services:
     volumes:
       - .:/vexu
       - vexu-ccache:/root/.ccache
+      # Bash history persists across `docker compose down`. HISTFILE is set in
+      # /etc/profile.d/vexu-ros.sh to point at this volume.
+      - vexu-bashhistory:/commandhistory
       # Reuse host git identity/keys inside the container (read-only).
       - ~/.ssh:/root/.ssh:ro
       - ~/.gitconfig:/root/.gitconfig:ro
@@ -89,6 +92,7 @@ services:
 
 volumes:
   vexu-ccache:
+  vexu-bashhistory:
 
 networks:
   x11:

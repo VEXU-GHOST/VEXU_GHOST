@@ -107,9 +107,18 @@ RUN printf '%s\n' \
     '# Source ROS 2 + workspace overlay for every shell.' \
     '[ -f /opt/ros/humble/setup.bash ] && source /opt/ros/humble/setup.bash' \
     '[ -f "${VEXU_HOME:-/vexu}/install/setup.bash" ] && source "${VEXU_HOME:-/vexu}/install/setup.bash"' \
+    '# Bash history persisted to a named volume so it survives `docker compose down`.' \
+    '# `history -a` after each command writes immediately instead of only at shell exit.' \
+    'if [ -d /commandhistory ]; then' \
+    '  export HISTFILE=/commandhistory/.bash_history' \
+    '  export HISTSIZE=100000' \
+    '  export HISTFILESIZE=100000' \
+    '  PROMPT_COMMAND="history -a; ${PROMPT_COMMAND:-}"' \
+    'fi' \
     > /etc/profile.d/vexu-ros.sh && \
     chmod +x /etc/profile.d/vexu-ros.sh && \
-    echo '[ -f /etc/profile.d/vexu-ros.sh ] && . /etc/profile.d/vexu-ros.sh' >> /etc/bash.bashrc
+    echo '[ -f /etc/profile.d/vexu-ros.sh ] && . /etc/profile.d/vexu-ros.sh' >> /etc/bash.bashrc && \
+    mkdir -p /commandhistory && touch /commandhistory/.bash_history
 
 ENTRYPOINT ["/usr/local/bin/vexu-entrypoint.sh"]
 CMD ["bash"]
