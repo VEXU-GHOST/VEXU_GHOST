@@ -100,24 +100,9 @@ RUN printf '%s\n' \
     chmod +x /usr/local/bin/vexu-entrypoint.sh /usr/local/bin/vexu-install-ghost-debs.sh
 
 # `docker compose exec` bypasses the ENTRYPOINT, so exec'd shells never see the ROS env
-# sourced by vexu-entrypoint.sh. Source it from /etc/bash.bashrc (interactive shells) and
-# /etc/profile.d (login shells) so `docker compose exec vexu bash` gets `ros2`, `colcon`,
-# and the workspace overlay out of the box.
-RUN printf '%s\n' \
-    '# Source ROS 2 + workspace overlay for every shell.' \
-    '[ -f /opt/ros/humble/setup.bash ] && source /opt/ros/humble/setup.bash' \
-    '[ -f "${VEXU_HOME:-/vexu}/install/setup.bash" ] && source "${VEXU_HOME:-/vexu}/install/setup.bash"' \
-    '# Bash history persisted to a named volume so it survives `docker compose down`.' \
-    '# `history -a` after each command writes immediately instead of only at shell exit.' \
-    'if [ -d /commandhistory ]; then' \
-    '  export HISTFILE=/commandhistory/.bash_history' \
-    '  export HISTSIZE=100000' \
-    '  export HISTFILESIZE=100000' \
-    '  PROMPT_COMMAND="history -a; ${PROMPT_COMMAND:-}"' \
-    'fi' \
-    > /etc/profile.d/vexu-ros.sh && \
-    chmod +x /etc/profile.d/vexu-ros.sh && \
-    echo '[ -f /etc/profile.d/vexu-ros.sh ] && . /etc/profile.d/vexu-ros.sh' >> /etc/bash.bashrc && \
+# sourced by vexu-entrypoint.sh. Source 12_Docker/bashrc from /etc/bash.bashrc instead —
+# that file is bind-mounted at runtime, so edits apply to new shells without a rebuild.
+RUN echo '[ -f /vexu/12_Docker/bashrc ] && . /vexu/12_Docker/bashrc' >> /etc/bash.bashrc && \
     mkdir -p /commandhistory && touch /commandhistory/.bash_history
 
 ENTRYPOINT ["/usr/local/bin/vexu-entrypoint.sh"]

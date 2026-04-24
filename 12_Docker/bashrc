@@ -1,0 +1,14 @@
+# Sourced by /etc/bash.bashrc inside the container. Edit and open a new shell —
+# no rebuild needed. Put personal/non-shareable tweaks in 12_Docker/bashrc.local
+# (gitignored, sourced after this file).
+
+# ROS 2 + workspace overlay.
+[ -f /opt/ros/humble/setup.bash ] && source /opt/ros/humble/setup.bash
+[ -f "${VEXU_HOME:-/vexu}/install/setup.bash" ] && source "${VEXU_HOME:-/vexu}/install/setup.bash"
+
+# Persist history on the vexu-bashhistory named volume.
+[ -d /commandhistory ] && export HISTFILE=/commandhistory/.bash_history
+
+# Optional per-user overrides (gitignored).
+[ -f "${VEXU_HOME:-/vexu}/12_Docker/bashrc.local" ] && \
+  source "${VEXU_HOME:-/vexu}/12_Docker/bashrc.local"
