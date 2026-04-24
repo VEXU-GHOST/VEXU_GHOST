@@ -2,9 +2,9 @@
 
 This folder holds the **ROS 2 Humble** image and in-container scripts. Numbered folders in this repo rise in abstraction (`01_` … `11_`); deployment and cross-platform dev tooling live here as the top layer.
 
-**Native Linux is unchanged:** on the host, `./scripts/build.sh` still targets `build/`, `install/`, and `log/` (defaults when `VEXU_COLCON_*` is unset). Only `docker-compose.yml` injects `build-docker` / `install-docker` / `log-docker` for containers.
+**Native Linux is unchanged:** on the host, `./scripts/build.sh` writes to `build/`, `install/`, and `log/` in the checkout. Inside the container `docker-compose.yml` sets `VEXU_COLCON_BUILD_BASE=build-docker` (and matching `install-docker` / `log-docker`), so container colcon artifacts land in `build-docker/`, `install-docker/`, `log-docker/` in the same bind-mounted checkout — separate from the host's native trees because CMake caches absolute paths and the two environments use different toolchains.
 
-The image bakes in Ghost `.deb` libraries (CasADi, BT.CPP, …) and a `rosdep install` pass so each `docker compose run --rm …` can compile without re-running init. Rebuild the image (`docker compose build`) after pulling major dependency or `12_Docker/Dockerfile` changes.
+The image bakes in Ghost `.deb` libraries (CasADi, BT.CPP, …) and a `rosdep install` pass so each `docker compose run --rm …` can compile immediately — there is no in-container init step. Rebuild the image (`docker compose build`) after pulling major dependency changes, bumping Ghost .debs, or editing `12_Docker/Dockerfile`.
 
 ## Prerequisites
 
@@ -17,76 +17,85 @@ cd VEXU_GHOST
 git submodule update --init --recursive
 ```
 
-## One-time image build
+All commands below assume you are at the repository root (where [docker-compose.yml](../docker-compose.yml) lives).
 
-From the repository root:
+**Linux users with a native X server:** `docker compose up -d` starts the bundled noVNC container by default (for macOS/Windows). You can skip it and use your host X11 instead — see [GUI (RViz / Gazebo)](#gui-rviz--gazebo).
+
+## One-time image build
 
 ```bash
 docker compose build
-# or: ./scripts/docker/build_image.sh
 ```
 
-`vexu-init-workspace.sh` and `vexu-install-ghost-debs.sh` in the image are thin wrappers that **run `/vexu/12_Docker/*.sh` from your bind-mounted repo**, so you can edit those scripts without rebuilding the image. You still need `docker compose build` after changing `12_Docker/Dockerfile` or `12_Docker/entrypoint.sh`.
+`vexu-install-ghost-debs.sh` in the image runs `/vexu/12_Docker/install_ghost_debs.sh` from your bind-mounted repo — invoke it manually if Ghost publishes new `.deb` versions and you don't want to rebuild the image. Changes to `12_Docker/Dockerfile` or `12_Docker/entrypoint.sh` still require `docker compose build`.
+
+## Daily workflow
+
+```bash
+docker compose up -d              # start the long-lived dev container
+docker compose exec vexu bash     # open a shell (repeat for more terminals)
+docker compose down               # stop + remove the container when done
+```
+
+`exec` attaches to the *same* running container, so `gz sim` (or any background process) you started in shell #1 is still alive in shell #2. In-container state (running processes, shell history) is lost on `docker compose down`, but the bind-mounted repo at `/vexu` — including `build-docker/`, `install-docker/`, `log-docker/` — and the `vexu-ccache` volume survive.
 
 ## Troubleshooting: `rosdep update` / “Name or service not known”
 
-If `vexu-init-workspace.sh` fails when fetching `raw.githubusercontent.com`, Docker’s DNS is often the cause. This repo’s `docker-compose.yml` sets public DNS servers (`8.8.8.8`, etc.) on the `vexu` service to avoid that.
+If `docker compose build` fails when fetching `raw.githubusercontent.com`, Docker’s DNS is often the cause. This repo’s `docker-compose.yml` sets public DNS servers (`8.8.8.8`, etc.) on the `vexu` service; the build also benefits if your Docker daemon respects those.
 
 If it still fails, try on the host: `docker compose run --rm vexu getent hosts raw.githubusercontent.com`. No address means fix host/VPN/firewall or add DNS in Docker Desktop → Settings → Docker Engine.
 
-Init installs **Ghost .deb packages first** (CasADi, IPOPT, …), then runs `rosdep`. While `rosdep install` runs, host **`build/` and `install/`** are moved aside briefly so broken native colcon trees do not confuse `rospack` (Docker outputs stay in `build-docker` / `install-docker`). If a run is interrupted, remove stray `.vexu-docker-stashed-*` dirs or move them back by hand. If `rosdep` fails for other reasons, retry using the command printed in the error message.
-
-## One-time dependency install inside the container
-
-Mounts your working tree at `/vexu` and installs `rosdep` keys plus Ghost prebuilt `.deb` packages (CasADi, IPOPT, BehaviorTree, etc.):
-
-```bash
-docker compose run --rm vexu vexu-init-workspace.sh
-# or: ./scripts/docker/init_workspace.sh
-```
-
 ## Build the workspace
 
-`docker-compose.yml` sets `VEXU_COLCON_*` so colcon outputs go to `build-docker/`, `install-docker/`, and `log-docker/` (separate CMake paths from native `build/` on the same checkout).
+Inside an `exec`'d shell:
 
 ```bash
-docker compose run --rm vexu bash -lc './scripts/build.sh'
+./scripts/build.sh
 ```
 
-### Quick check that `install-docker` is on the overlay
+Colcon writes to `build-docker/`, `install-docker/`, `log-docker/` in your repo (bind-mounted), so host and container builds don't fight each other. To wipe: `rm -rf build-docker install-docker log-docker` from the host.
+
+### Quick check that the overlay is sourced
 
 Do **not** pipe `ros2 pkg list` into `head`: when `head` closes the pipe early, `ros2` can exit with `BrokenPipeError` even though sourcing worked.
 
 ```bash
-docker compose run --rm vexu bash -lc 'source install-docker/setup.bash && ros2 pkg prefix ghost_msgs && echo OK'
+docker compose exec vexu bash -lc 'ros2 pkg prefix ghost_msgs && echo OK'
 ```
 
-`VEXU_IN_DOCKER` is set by the image entrypoint and skips `systemctl`/`pkill` hooks meant for the physical robot PC.
+The entrypoint already sources `install-docker/setup.bash` if it exists. `VEXU_IN_DOCKER` is set in the image and skips `systemctl`/`pkill` hooks meant for the physical robot PC.
 
 `./scripts/build.sh` stops after **colcon** in Docker (no PROS upload). Native Ubuntu still runs PROS when `pros` is installed. To force PROS inside Docker, install `gcc-arm-none-eabi` (and friends) in the image and set `VEXU_BUILD_PROS=1`, or run `./scripts/build.sh -r` on the host when you only want ROS.
 
 If **`ghost_sim` fails with `Killed signal terminated program cc1plus`**, raise Docker Desktop **memory limit** (RAM) and retry; that is the compiler being OOM-killed.
 
-## Interactive shell (debugging)
+## One-off / ephemeral container
+
+If you don't want a long-lived container (e.g. for CI or a single command), use `run --rm` instead — it spins up a fresh container, runs the command, and deletes it on exit:
 
 ```bash
-docker compose run --rm vexu bash
-# or: ./scripts/docker/shell.sh
+docker compose run --rm vexu bash -lc './scripts/build.sh'
 ```
-
-Use `gdb`, `colcon build`, `ros2 launch`, etc., as on a native 22.04 machine.
 
 ## GUI (RViz / Gazebo)
 
-RViz and Gazebo need X11 or another display server. Examples:
+**Default (macOS / Windows, and any Linux user who just wants it to work):** `docker compose up -d` starts the `novnc` service alongside `vexu`. `DISPLAY` in the dev container defaults to `novnc:0.0`, so Qt / OpenGL apps render into Xvfb and stream over WebSockets.
 
-- **Linux host:** `xhost +local:docker` then:
+```bash
+docker compose up -d
+docker compose exec vexu bash
+# open http://localhost:8080/vnc.html in a browser, then run rviz2 / gz sim from the shell
+```
 
-  ```bash
-  docker compose run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix vexu bash
-  ```
+**Native Linux X server (faster, shared-memory rendering — opt out of noVNC):**
 
-- **macOS:** install [XQuartz](https://www.xquartz.org/), allow network connections, then set `DISPLAY` to your host IP (see also `SetupMyEnvironment.md` for WSL/X11 patterns).
+```bash
+xhost +local:docker
+docker compose up -d vexu        # vexu only, no novnc
+docker compose run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix vexu bash
+```
+
+On macOS you can also use [XQuartz](https://www.xquartz.org/) directly instead of noVNC; see `SetupMyEnvironment.md` for WSL/X11 patterns.
 
 Apple Silicon containers report `aarch64`; the stock `build.sh` skips the simulator packages on that architecture (same as Jetson). Use an x86_64 Linux machine or VM for full Gazebo-in-Docker if you need it.
 
@@ -96,7 +105,7 @@ The image includes `pros-cli`. USB passthrough to containers is limited on macOS
 
 ## VS Code / Cursor Dev Containers
 
-Open the repo and choose “Reopen in Container”. The `.devcontainer` configuration uses `12_Docker/Dockerfile`.
+Open the repo and choose “Reopen in Container”. The `.devcontainer` configuration reuses the `vexu` service from `docker-compose.yml`, so it inherits the same env vars, DNS, bind-mounted `build-docker/install-docker/log-docker` paths, and ccache volume as CLI usage — no config drift.
 
 ## NVIDIA (optional)
 

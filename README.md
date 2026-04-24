@@ -8,7 +8,21 @@ Ubuntu 22.04.
 
 ## Docker (macOS / Windows / optional Linux)
 
-For a full ROS 2 Humble environment without a native Ubuntu install, see [12_Docker/README.md](12_Docker/README.md). Native `./scripts/build.sh` on Ubuntu still uses `build/`, `install/`, and `log/` by default (see that README).
+For a full ROS 2 Humble environment without a native Ubuntu install, see [12_Docker/README.md](12_Docker/README.md). The image bakes in rosdep + Ghost `.deb` packages, so there is no in-container init step. Native `./scripts/build.sh` on Ubuntu still uses `build/`, `install/`, `log/`; the container writes to sibling `build-docker/`, `install-docker/`, `log-docker/` in the same checkout (bind-mounted).
+
+Quick reference (run from the repo root):
+
+```bash
+docker compose build              # one-time: build the image
+docker compose up -d              # start the long-lived dev container
+docker compose exec vexu bash     # open a shell (repeat for more terminals)
+# inside the shell:
+./scripts/build.sh
+# when done:
+docker compose down               # stop + remove the container
+```
+
+`docker compose exec` reuses the same container, so background processes (e.g. `gz sim`) started in one shell stay alive for others. `up -d` also brings up a noVNC service for browser-based RViz/Gazebo (open `http://localhost:8080/vnc.html`); Linux users with a native X server can `docker compose up -d vexu` to skip it. See [12_Docker/README.md](12_Docker/README.md) for GUI, NVIDIA, PROS, and dev container details.
 
 ## Installation
 ### Install ROS2 Humble

@@ -32,6 +32,9 @@ install_submodule_deb() {
     exit_unsupported_arch "$arch"
   fi
 
+  # TODO: publish ghost_dependencies as a real apt repo (signed Release + GPG key)
+  # so this becomes `apt-get install ghost-<pkg>` — drops the wget/dpkg dance and
+  # gives us versioning, signature verification, and automatic dependency resolution.
   local deb="ghost-${pkg}-${arch}.deb"
   wget -q "https://github.com/VEXU-GHOST/ghost_dependencies/raw/main/deb/${deb}" -O "$deb"
   dpkg -i "$deb" || apt-get install -f -y
@@ -40,8 +43,12 @@ install_submodule_deb() {
 
 cd "${VEXU_HOME:?VEXU_HOME must be set}"
 
-apt-get update
-apt-get install -y gfortran-10 liblapack-dev pkg-config swig wget ca-certificates
+# Dockerfile build sets VEXU_SKIP_APT=1: the base image already installed these and the lists are fresh.
+# Manual re-runs via vexu-install-ghost-debs.sh still need this.
+if [ -z "${VEXU_SKIP_APT:-}" ]; then
+  apt-get update
+  apt-get install -y gfortran-10 liblapack-dev pkg-config swig wget ca-certificates
+fi
 
 export FC
 FC=$(command -v gfortran-10)

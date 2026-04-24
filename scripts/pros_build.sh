@@ -7,9 +7,8 @@ if [[ $(pros --version) ]] 2> /dev/null; then
 	echo -------------------------------------------------------
     bash scripts/update_symlinks.sh || exit -1
     
-    echo 
-    COLCON_BUILD="${VEXU_COLCON_BUILD_BASE:-build}"
-    "${COLCON_BUILD}/ghost_v5_interfaces/generate_pros_header" robots.yaml || exit -1
+    echo
+    build/ghost_v5_interfaces/generate_pros_header robots.yaml || exit -1
 
     cd 02_V5/ghost_pros
 

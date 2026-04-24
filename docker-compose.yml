@@ -1,13 +1,19 @@
 # VEXU_GHOST — cross-platform dev environment (ROS 2 Humble).
 #
-# Typical flow (after cloning + git submodule update --recursive on the host):
-#   docker compose build
-#   docker compose run --rm vexu vexu-init-workspace.sh   # once: rosdep + Ghost .debs
-#   docker compose run --rm vexu bash -lc 'VEXU_IN_DOCKER=1 ./scripts/build.sh'
+# Typical flow (after cloning + git submodule update --recursive on the host, from repo root):
+#   docker compose build              # one-time: bakes in rosdep + Ghost .debs
+#   docker compose up -d              # start the long-lived dev container
+#   docker compose exec vexu bash     # open a shell (repeat for more terminals)
+#   docker compose down               # stop + remove the container when done
+# Build the workspace from inside an exec'd shell: ./scripts/build.sh
 #
-# Linux + RViz on host display:
-#   xhost +local:docker
-#   docker compose run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix vexu bash
+# The `novnc` service starts alongside `vexu` by default so RViz/Gazebo work in a
+# browser on hosts without an X server (macOS/Windows). Open http://localhost:8080/vnc.html.
+#
+# Linux hosts (Ubuntu 22.04+ / Wayland): the vexu service bind-mounts the host Wayland
+# socket and forwards WAYLAND_DISPLAY. Skip noVNC with:
+#   docker compose up -d vexu           # starts only vexu, no novnc
+#   docker compose exec vexu bash       # WAYLAND_DISPLAY already forwarded
 #
 # NVIDIA (Linux): docker compose run --rm --gpus all vexu bash
 # (requires nvidia-container-toolkit on the host)
@@ -17,7 +23,8 @@ services:
     build:
       context: .
       dockerfile: 12_Docker/Dockerfile
-    image: vexu-ghost:humble
+    # image: vexu-ghost:humble
+    container_name: vexu-ghost
     # Many hosts give containers broken DNS; rosdep needs raw.githubusercontent.com.
     dns:
       - 8.8.8.8
@@ -26,22 +33,60 @@ services:
     volumes:
       - .:/vexu
       - vexu-ccache:/root/.ccache
+      # Reuse host git identity/keys inside the container (read-only).
+      - ~/.ssh:/root/.ssh:ro
+      - ~/.gitconfig:/root/.gitconfig:ro
+      # Wayland socket (Ubuntu 22.04+ hosts). Sentinel default keeps /tmp intact when
+      # WAYLAND_DISPLAY is unset (macOS/Windows); Docker creates an unused placeholder.
+      - ${XDG_RUNTIME_DIR:-/tmp}/${WAYLAND_DISPLAY:-no-wayland.sock}:/tmp/${WAYLAND_DISPLAY:-no-wayland.sock}
     working_dir: /vexu
     stdin_open: true
     tty: true
+    # Needed for gdb/lldb inside the container.
+    cap_add:
+      - SYS_PTRACE
+    # DDS transport and Gazebo both want >64 MB of /dev/shm.
+    shm_size: "2g"
     environment:
       VEXU_HOME: /vexu
       VEXU_IN_DOCKER: "1"
-      # Separate from native Linux colcon dirs (/vexu vs host path in CMake cache).
+      ROS_LOCALHOST_ONLY: "${ROS_LOCALHOST_ONLY:-1}"
+      # Bind-mounted into /vexu, so colcon writes to <repo>/build-docker etc. on the
+      # host. Keeps container artifacts out of the host's native build/install/log
+      # (CMake caches absolute paths and the toolchains differ).
       VEXU_COLCON_BUILD_BASE: build-docker
       VEXU_COLCON_INSTALL_BASE: install-docker
       VEXU_COLCON_LOG_BASE: log-docker
-      ROS_LOCALHOST_ONLY: "${ROS_LOCALHOST_ONLY:-1}"
-      DISPLAY: "${DISPLAY:-}"
-      QT_X11_NO_MITSHM: "1"
+      # Wayland: forward the host socket name; XDG_RUNTIME_DIR=/tmp matches the mount
+      # target above so WAYLAND_DISPLAY resolves to /tmp/<socket> inside the container.
+      WAYLAND_DISPLAY: "${WAYLAND_DISPLAY:-}"
+      XDG_RUNTIME_DIR: /tmp
+      QT_QPA_PLATFORM: "wayland;xcb"
+      # When Wayland is unavailable (macOS/Windows), Qt's xcb fallback connects over
+      # TCP to the bundled noVNC service.
+      DISPLAY: "${DISPLAY:-novnc:0.0}"
+    networks:
+      - x11
     # Host networking works on Linux only; omit for macOS/Windows Docker Desktop.
     # Uncomment on Linux if you need full ROS 2 LAN discovery:
     # network_mode: host
 
+  # Browser-based X server for RViz/Gazebo. Starts by default; Linux users with a native
+  # X server can skip it by running `docker compose up -d vexu` instead of `up -d`.
+  novnc:
+    image: theasp/novnc:latest
+    container_name: vexu-novnc
+    environment:
+      - DISPLAY_WIDTH=1600
+      - DISPLAY_HEIGHT=968
+      - RUN_XTERM=no
+    ports:
+      - "8080:8080"
+    networks:
+      - x11
+
 volumes:
   vexu-ccache:
+
+networks:
+  x11:
