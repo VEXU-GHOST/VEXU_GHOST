@@ -63,6 +63,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsox-fmt-mp3 \
     qtwayland5 \
     libxkbcommon0 \
+    sudo \
  && pip3 install --no-cache-dir --upgrade pip \
  && pip3 install --no-cache-dir \
     colcon-lint \
@@ -113,7 +114,9 @@ RUN userdel -r ubuntu 2>/dev/null || true && \
     (id -u ${HOST_UID} >/dev/null 2>&1 || \
        useradd -m -u ${HOST_UID} -g ${HOST_GID} -d /home/vexu -s /bin/bash vexu) && \
     mkdir -p /home/vexu/.ccache && \
-    chown -R ${HOST_UID}:${HOST_GID} /home/vexu
+    chown -R ${HOST_UID}:${HOST_GID} /home/vexu && \
+    echo "vexu ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vexu && \
+    chmod 0440 /etc/sudoers.d/vexu
 
 # `docker compose exec` bypasses the ENTRYPOINT, so exec'd shells never see the ROS env
 # sourced by vexu-entrypoint.sh. Source it from /etc/bash.bashrc (interactive shells) and
