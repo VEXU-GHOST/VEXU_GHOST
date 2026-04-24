@@ -46,10 +46,11 @@ services:
       # Wayland socket (Ubuntu 22.04+ hosts). Sentinel default keeps /tmp intact when
       # WAYLAND_DISPLAY is unset (macOS/Windows); Docker creates an unused placeholder.
       - ${XDG_RUNTIME_DIR:-/tmp}/${WAYLAND_DISPLAY:-no-wayland.sock}:/tmp/${WAYLAND_DISPLAY:-no-wayland.sock}
-    # GPU passthrough for hardware-accelerated rendering (Mesa/Intel/AMD). Linux-only —
-    # macOS/Windows hosts don't have /dev/dri; comment out if compose errors on `up`.
-    devices:
-      - /dev/dri:/dev/dri
+    # For GPU-accelerated rendering on Linux hosts, uncomment below (macOS/Windows don't
+    # have /dev/dri — this line errors on Docker Desktop). Mostly a non-issue because the
+    # default software-rendering path via LIBGL_ALWAYS_SOFTWARE works everywhere.
+    # devices:
+    #   - /dev/dri:/dev/dri
     working_dir: /vexu
     # Long-lived container: idle until you `docker compose exec vexu bash`.
     command: ["sleep", "infinity"]
