@@ -8,7 +8,7 @@ Ubuntu 22.04.
 
 ## Docker (macOS / Windows / optional Linux)
 
-For a full ROS 2 Humble environment without a native Ubuntu install, see [12_Docker/README.md](12_Docker/README.md). The image bakes in rosdep + Ghost `.deb` packages, so there is no in-container init step. Native `./scripts/build.sh` on Ubuntu still uses `build/`, `install/`, `log/`; the container writes to sibling `build-docker/`, `install-docker/`, `log-docker/` in the same checkout (bind-mounted).
+For a full ROS 2 Humble environment without a native Ubuntu install, see [12_Docker/README.md](12_Docker/README.md). The image bakes in rosdep + Ghost `.deb` packages, so there is no in-container init step. Colcon writes to the usual `build/`, `install/`, `log/` in the bind-mounted checkout; the container runs as your host UID so those stay writable from the host.
 
 Quick reference (run from the repo root):
 

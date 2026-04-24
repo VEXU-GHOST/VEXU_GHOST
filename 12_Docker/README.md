@@ -2,7 +2,7 @@
 
 This folder holds the **ROS 2 Humble** image and in-container scripts. Numbered folders in this repo rise in abstraction (`01_` … `11_`); deployment and cross-platform dev tooling live here as the top layer.
 
-**Native Linux is unchanged:** on the host, `./scripts/build.sh` writes to `build/`, `install/`, and `log/` in the checkout. Inside the container `docker-compose.yml` sets `VEXU_COLCON_BUILD_BASE=build-docker` (and matching `install-docker` / `log-docker`), so container colcon artifacts land in `build-docker/`, `install-docker/`, `log-docker/` in the same bind-mounted checkout — separate from the host's native trees because CMake caches absolute paths and the two environments use different toolchains.
+**Colcon outputs land in the usual `build/`, `install/`, `log/` dirs** in your bind-mounted checkout. The container runs as your host UID (via `HOST_UID`/`HOST_GID` build args), so everything is writable from the host too. Don't run `./scripts/build.sh` natively *and* in the container on the same checkout — CMake caches absolute paths and the two environments will corrupt each other.
 
 The image bakes in Ghost `.deb` libraries (CasADi, BT.CPP, …) and a `rosdep install` pass so each `docker compose run --rm …` can compile immediately — there is no in-container init step. Rebuild the image (`docker compose build`) after pulling major dependency changes, bumping Ghost .debs, or editing `12_Docker/Dockerfile`.
 
@@ -37,7 +37,7 @@ docker compose exec vexu bash     # open a shell (repeat for more terminals)
 docker compose down               # stop + remove the container when done
 ```
 
-`exec` attaches to the *same* running container, so `gz sim` (or any background process) you started in shell #1 is still alive in shell #2. In-container state (running processes, shell history) is lost on `docker compose down`, but the bind-mounted repo at `/vexu` — including `build-docker/`, `install-docker/`, `log-docker/` — and the `vexu-ccache` volume survive.
+`exec` attaches to the *same* running container, so `gz sim` (or any background process) you started in shell #1 is still alive in shell #2. In-container state (running processes, shell history) is lost on `docker compose down`, but the bind-mounted repo at `/vexu` — including `build/`, `install/`, `log/` — and the `vexu-ccache` volume survive.
 
 ## Troubleshooting: `rosdep update` / “Name or service not known”
 
@@ -53,7 +53,7 @@ Inside an `exec`'d shell:
 ./scripts/build.sh
 ```
 
-Colcon writes to `build-docker/`, `install-docker/`, `log-docker/` in your repo (bind-mounted), so host and container builds don't fight each other. To wipe: `rm -rf build-docker install-docker log-docker` from the host.
+Colcon writes to `build/`, `install/`, `log/` in your repo (bind-mounted). The container user matches your host UID so these stay writable from the host too — wipe with `rm -rf build install log` (no sudo needed).
 
 ### Quick check that the overlay is sourced
 
@@ -63,7 +63,7 @@ Do **not** pipe `ros2 pkg list` into `head`: when `head` closes the pipe early, 
 docker compose exec vexu bash -lc 'ros2 pkg prefix ghost_msgs && echo OK'
 ```
 
-The entrypoint already sources `install-docker/setup.bash` if it exists. `VEXU_IN_DOCKER` is set in the image and skips `systemctl`/`pkill` hooks meant for the physical robot PC.
+The entrypoint already sources `install/setup.bash` if it exists. `VEXU_IN_DOCKER` is set in the image and skips `systemctl`/`pkill` hooks meant for the physical robot PC.
 
 `./scripts/build.sh` stops after **colcon** in Docker (no PROS upload). Native Ubuntu still runs PROS when `pros` is installed. To force PROS inside Docker, install `gcc-arm-none-eabi` (and friends) in the image and set `VEXU_BUILD_PROS=1`, or run `./scripts/build.sh -r` on the host when you only want ROS.
 
@@ -105,7 +105,7 @@ The image includes `pros-cli`. USB passthrough to containers is limited on macOS
 
 ## VS Code / Cursor Dev Containers
 
-Open the repo and choose “Reopen in Container”. The `.devcontainer` configuration reuses the `vexu` service from `docker-compose.yml`, so it inherits the same env vars, DNS, bind-mounted `build-docker/install-docker/log-docker` paths, and ccache volume as CLI usage — no config drift.
+Open the repo and choose “Reopen in Container”. The `.devcontainer` configuration reuses the `vexu` service from `docker-compose.yml`, so it inherits the same env vars, DNS, bind-mounted build paths, and ccache volume as CLI usage — no config drift.
 
 ## NVIDIA (optional)
 

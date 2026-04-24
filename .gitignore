@@ -1,14 +1,7 @@
 install
 build
 log
-# Colcon / rosdep artifacts when using Docker (see docker-compose.yml VEXU_COLCON_*)
-install-docker
-build-docker
-log-docker
-# init_workspace.sh temporarily renames native install/ build/ during rosdep
-.vexu-docker-stashed-install
-.vexu-docker-stashed-build
-# Local-only Compose overrides and env (secrets, DISPLAY, paths)
+# Local-only Compose overrides and env (secrets, HOST_UID/GID, DISPLAY, …)
 docker-compose.override.yml
 .env
 .vscode

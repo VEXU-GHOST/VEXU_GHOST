@@ -8,9 +8,10 @@ set -eo pipefail
 # shellcheck source=/dev/null
 source /opt/ros/humble/setup.bash
 
-if [[ -f "$VEXU_HOME/install-docker/setup.bash" ]]; then
+INSTALL_BASE="${VEXU_COLCON_INSTALL_BASE:-install}"
+if [[ -f "$VEXU_HOME/$INSTALL_BASE/setup.bash" ]]; then
   # shellcheck source=/dev/null
-  source "$VEXU_HOME/install-docker/setup.bash"
+  source "$VEXU_HOME/$INSTALL_BASE/setup.bash"
 fi
 
 exec "$@"
