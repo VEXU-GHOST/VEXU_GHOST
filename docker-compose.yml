@@ -69,7 +69,13 @@ services:
       QT_QPA_PLATFORM: "wayland;xcb"
       # X11 display: forwards the host DISPLAY (usually :0 on Linux = XWayland). Falls
       # back to the bundled noVNC service on macOS/Windows where there's no host DISPLAY.
-      DISPLAY: "${DISPLAY:-novnc:0.0}"
+      DISPLAY: "novnc:0.0"
+      # DISPLAY: "${DISPLAY:-novnc:0.0}"
+      # noVNC's Xvfb has no GLX extension, so Ogre (RViz's renderer) can't do server-side
+      # OpenGL. Forcing Mesa to render in software via llvmpipe makes RViz / Gazebo work
+      # over noVNC at the cost of ~10x slower rendering. Unset (or set to 0) on Linux
+      # when DISPLAY points at a host X server that does provide GLX.
+      LIBGL_ALWAYS_SOFTWARE: "${LIBGL_ALWAYS_SOFTWARE:-1}"
     networks:
       - x11
     # Host networking works on Linux only; omit for macOS/Windows Docker Desktop.
