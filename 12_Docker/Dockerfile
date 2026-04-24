@@ -5,15 +5,12 @@
 # `docker compose run --rm` is self-contained — no in-container init step required.
 # Rebuild the image (`docker compose build`) after changing dependency declarations or
 # bumping Ghost .debs.
+#
+# The container runs as root. Files created through the /vexu bind mount are root-owned
+# on the host; `sudo rm -rf build install log` or `docker compose exec vexu rm ...` to
+# clean. Traded for a much simpler image (no user/sudoers/UID-matching plumbing).
 
 FROM osrf/ros:humble-desktop-jammy
-
-# Match the container user to the host so bind-mounted build outputs (build/, install/,
-# log/, …) don't end up root-owned on the host. Override via compose/.env when your host
-# UID/GID aren't 1000:1000:
-#   echo -e "HOST_UID=$(id -u)\nHOST_GID=$(id -g)" >> .env && docker compose build
-ARG HOST_UID=1000
-ARG HOST_GID=1000
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
@@ -21,7 +18,6 @@ ENV VEXU_HOME=/vexu
 ENV VEXU_IN_DOCKER=1
 ENV ROS_DISTRO=humble
 ENV PROS_CLI_VERSION=3.5.6
-ENV HOME=/home/vexu
 # Single-container DDS isolation (avoids multicast issues on Docker Desktop / macOS).
 # Compose may override.
 ENV ROS_LOCALHOST_ONLY=1
@@ -63,7 +59,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsox-fmt-mp3 \
     qtwayland5 \
     libxkbcommon0 \
-    sudo \
  && pip3 install --no-cache-dir --upgrade pip \
  && pip3 install --no-cache-dir \
     colcon-lint \
@@ -103,20 +98,6 @@ RUN printf '%s\n' \
     'exec bash /vexu/12_Docker/install_ghost_debs.sh "$@"' \
     > /usr/local/bin/vexu-install-ghost-debs.sh && \
     chmod +x /usr/local/bin/vexu-entrypoint.sh /usr/local/bin/vexu-install-ghost-debs.sh
-
-# Create a user whose UID/GID match the host so files written through the /vexu bind mount
-# (build outputs, generated files) stay owned by the host user. The default `ubuntu` user
-# in the base image squats on UID 1000, so remove it first; then add our own only if the
-# requested UID/GID aren't already present (covers the unusual case where they are).
-RUN userdel -r ubuntu 2>/dev/null || true && \
-    groupdel ubuntu 2>/dev/null || true && \
-    (getent group ${HOST_GID} >/dev/null || groupadd -g ${HOST_GID} vexu) && \
-    (id -u ${HOST_UID} >/dev/null 2>&1 || \
-       useradd -m -u ${HOST_UID} -g ${HOST_GID} -d /home/vexu -s /bin/bash vexu) && \
-    mkdir -p /home/vexu/.ccache && \
-    chown -R ${HOST_UID}:${HOST_GID} /home/vexu && \
-    echo "vexu ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vexu && \
-    chmod 0440 /etc/sudoers.d/vexu
 
 # `docker compose exec` bypasses the ENTRYPOINT, so exec'd shells never see the ROS env
 # sourced by vexu-entrypoint.sh. Source it from /etc/bash.bashrc (interactive shells) and

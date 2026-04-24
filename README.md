@@ -22,16 +22,7 @@ git submodule update --init --recursive
 
 SSH keys and `~/.gitconfig` on your host are bind-mounted read-only into the container, so git inside the container uses the same identity.
 
-## 3. (Optional) Per-machine config
-
-If `id -u` / `id -g` on your machine aren't 1000:1000, set `HOST_UID` / `HOST_GID` so the container user matches yours and bind-mounted build outputs stay host-writable:
-
-```bash
-cp .env.example .env
-echo -e "HOST_UID=$(id -u)\nHOST_GID=$(id -g)" >> .env
-```
-
-## 4. Build the image and start the dev container
+## 3. Build the image and start the dev container
 
 ```bash
 docker compose build              # one-time; ~10–15 min on first build
