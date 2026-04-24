@@ -113,5 +113,17 @@ RUN userdel -r ubuntu 2>/dev/null || true && \
     mkdir -p /home/vexu/.ccache && \
     chown -R ${HOST_UID}:${HOST_GID} /home/vexu
 
+# `docker compose exec` bypasses the ENTRYPOINT, so exec'd shells never see the ROS env
+# sourced by vexu-entrypoint.sh. Source it from /etc/bash.bashrc (interactive shells) and
+# /etc/profile.d (login shells) so `docker compose exec vexu bash` gets `ros2`, `colcon`,
+# and the workspace overlay out of the box.
+RUN printf '%s\n' \
+    '# Source ROS 2 + workspace overlay for every shell.' \
+    '[ -f /opt/ros/humble/setup.bash ] && source /opt/ros/humble/setup.bash' \
+    '[ -f "${VEXU_HOME:-/vexu}/install/setup.bash" ] && source "${VEXU_HOME:-/vexu}/install/setup.bash"' \
+    > /etc/profile.d/vexu-ros.sh && \
+    chmod +x /etc/profile.d/vexu-ros.sh && \
+    echo '[ -f /etc/profile.d/vexu-ros.sh ] && . /etc/profile.d/vexu-ros.sh' >> /etc/bash.bashrc
+
 ENTRYPOINT ["/usr/local/bin/vexu-entrypoint.sh"]
 CMD ["bash"]

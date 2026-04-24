@@ -114,3 +114,36 @@ On Linux with the NVIDIA Container Toolkit:
 ```bash
 docker compose run --rm --gpus all vexu bash
 ```
+
+## Under the hood
+
+A short tour of what `docker compose build` and `docker compose up -d` actually do, for when things break and you need to dig in.
+
+### Image build ([Dockerfile](Dockerfile))
+
+1. **Base:** `osrf/ros:humble-desktop-jammy` — Ubuntu 22.04 with ROS 2 Humble desktop pre-installed.
+2. **System packages + Python (one RUN layer):** apt installs toolchain (gcc, cmake, gdb), ROS/colcon tooling, and the deps that later stages need (gfortran-10, liblapack-dev, swig, …); pip installs `pros-cli==3.5.6`, `piper-tts`, `colcon-lint`; `rosdep init` runs once. Apt lists are kept through to the final rosdep install so `apt-get update` runs exactly once per build.
+3. **Ghost `.deb` packages** ([install_ghost_debs.sh](install_ghost_debs.sh)): downloads prebuilt CasADi, IPOPT, MUMPS, BT.CPP, rplidar, etc. from the `ghost_dependencies` GitHub repo and `dpkg -i`s them. Run with `VEXU_SKIP_APT=1` to skip the script's own apt refresh (the one from step 2 is still fresh).
+4. **`rosdep install` on a snapshot of the workspace:** the full repo is `COPY`'d to `/vexu` just so rosdep can read every `package.xml`. Bind-mount at runtime replaces `/vexu` anyway, so the snapshot is throwaway. Code edits re-run this step; it's fast because apt packages are already installed.
+5. **User creation:** removes the default `ubuntu` user squatting on UID 1000, then adds a `vexu` user with the UID/GID from `HOST_UID`/`HOST_GID` build args (default 1000:1000). `/home/vexu/.ccache` is pre-created and chowned so the named ccache volume inherits the right owner.
+6. **Entrypoint** ([entrypoint.sh](entrypoint.sh)): sources `/opt/ros/humble/setup.bash`, then sources `$VEXU_HOME/install/setup.bash` if it exists, then `exec "$@"`.
+
+### Runtime ([../docker-compose.yml](../docker-compose.yml))
+
+1. **`user: ${HOST_UID}:${HOST_GID}`** so container processes write files that belong to you on the host.
+2. **`command: ["sleep", "infinity"]`** — the container idles until you `docker compose exec` into it. `up -d` brings it up in the background; `down` tears it down.
+3. **Bind mounts:**
+   - `.:/vexu` — the repo. Colcon writes `build/`, `install/`, `log/` directly to your checkout.
+   - `~/.ssh:/home/vexu/.ssh:ro`, `~/.gitconfig:/home/vexu/.gitconfig:ro` — git from inside the container uses your host identity.
+   - `${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:/tmp/${WAYLAND_DISPLAY}` — Wayland socket passthrough on Linux hosts. Sentinel default (`no-wayland.sock`) keeps the mount harmless on macOS/Windows.
+4. **Named volumes:** `vexu-ccache` at `/home/vexu/.ccache` persists the compile cache across `down`/`up`.
+5. **Knobs:** `shm_size: 2g` for DDS + Gazebo; `cap_add: SYS_PTRACE` for gdb; public DNS (8.8.8.8 / 1.1.1.1) so `rosdep` can reach GitHub from hosts with broken default resolvers.
+6. **`novnc` service** (separate container on the shared `x11` network) runs Xvfb + noVNC on port 8080. `DISPLAY` in `vexu` defaults to `novnc:0.0`, so Qt/OpenGL apps render into Xvfb and stream to your browser. Linux users with a local X/Wayland server skip it via `docker compose up -d vexu`.
+
+### Per-machine config ([../.env.example](../.env.example))
+
+`.env` sits next to `docker-compose.yml` and is gitignored. Compose auto-loads it. Useful knobs:
+
+- `HOST_UID` / `HOST_GID` — if `id -u` / `id -g` aren't 1000 on your machine. Requires rebuild.
+- `ROS_LOCALHOST_ONLY=0` — multi-host ROS 2 discovery on the LAN (default is localhost-only).
+- `VEXU_COLCON_BUILD_BASE=build-docker` (plus `INSTALL`/`LOG`) — redirect container colcon outputs to separate dirs if you also do native builds on the same checkout.
