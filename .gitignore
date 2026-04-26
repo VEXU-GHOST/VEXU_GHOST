@@ -1,6 +1,11 @@
 install
 build
 log
+# Local-only Compose overrides and env (secrets, HOST_UID/GID, DISPLAY, …)
+docker-compose.override.yml
+.env
+# Personal bash customizations inside the container; sourced by 12_Docker/bashrc.
+12_Docker/bashrc.local
 .vscode
 *.pyc
 .cache/*

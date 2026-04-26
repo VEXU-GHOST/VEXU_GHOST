@@ -1,0 +1,110 @@
+# VEXU_GHOST — cross-platform dev environment (ROS 2 Humble).
+#
+# Typical flow (after cloning + git submodule update --recursive on the host, from repo root):
+#   docker compose build              # one-time: bakes in rosdep + Ghost .debs
+#   docker compose up -d              # start the long-lived dev container
+#   docker compose exec vexu bash     # open a shell (repeat for more terminals)
+#   docker compose stop               # pause when done; keep writable container state
+#   docker compose down               # reset: removes containers (writable layer is discarded)
+# Build the workspace from inside an exec'd shell: ./scripts/build.sh
+#
+# The `novnc` service starts alongside `vexu` by default so RViz/Gazebo work in a
+# browser on hosts without a local display (macOS/Windows). Open http://localhost:8080/vnc.html.
+#
+# Linux hosts (native GUI): RViz uses Ogre3D, which is X11-only — the compose file
+# bind-mounts both /tmp/.X11-unix and the host Wayland socket so Qt tries Wayland
+# first and Ogre falls back to XWayland. Before your first exec, run:
+#   xhost +local:root
+# (The container runs as root; this grants it access to your X server.) Then:
+#   docker compose up -d vexu           # starts only vexu, no novnc
+#   docker compose exec vexu bash
+#
+# NVIDIA (Linux): docker compose run --rm --gpus all vexu bash
+# (requires nvidia-container-toolkit on the host)
+
+services:
+  vexu:
+    build:
+      context: .
+      dockerfile: 12_Docker/Dockerfile
+    container_name: vexu-ghost
+    # Many hosts give containers broken DNS; rosdep needs raw.githubusercontent.com.
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+    volumes:
+      - .:/vexu
+      - vexu-ccache:/root/.ccache
+      # Keep shell history at the normal location across restarts/resets.
+      - vexu-bashhistory:/root/.bash_history
+      # Persist Claude Code settings/secrets in the conventional home path.
+      - vexu-claude:/home/vscode/.claude
+      # Reuse host git identity/keys inside the container (read-only).
+      - ~/.ssh:/root/.ssh:ro
+      - ~/.gitconfig:/root/.gitconfig:ro
+      # X11 socket for XWayland / native X11. Harmless no-op on macOS/Windows.
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      # Wayland socket (Ubuntu 22.04+ hosts). Sentinel default keeps /tmp intact when
+      # WAYLAND_DISPLAY is unset (macOS/Windows); Docker creates an unused placeholder.
+      - ${XDG_RUNTIME_DIR:-/tmp}/${WAYLAND_DISPLAY:-no-wayland.sock}:/tmp/${WAYLAND_DISPLAY:-no-wayland.sock}
+    # For GPU-accelerated rendering on Linux hosts, uncomment below (macOS/Windows don't
+    # have /dev/dri — this line errors on Docker Desktop). Mostly a non-issue because the
+    # default software-rendering path via LIBGL_ALWAYS_SOFTWARE works everywhere.
+    # devices:
+    #   - /dev/dri:/dev/dri
+    working_dir: /vexu
+    # Long-lived container: idle until you `docker compose exec vexu bash`.
+    command: ["sleep", "infinity"]
+    # Needed for gdb/lldb inside the container.
+    cap_add:
+      - SYS_PTRACE
+    # DDS transport and Gazebo both want >64 MB of /dev/shm.
+    shm_size: "2g"
+    environment:
+      VEXU_HOME: /vexu
+      VEXU_IN_DOCKER: "1"
+      ROS_LOCALHOST_ONLY: "${ROS_LOCALHOST_ONLY:-1}"
+      # Wayland: forward the host socket name. Container runs as root, so /tmp is fine
+      # as XDG_RUNTIME_DIR (no 0700/user-owned check applies to root).
+      # WAYLAND_DISPLAY: "${WAYLAND_DISPLAY:-}"
+      XDG_RUNTIME_DIR: /tmp
+      QT_QPA_PLATFORM: "xcb"
+      # X11 display: forwards the host DISPLAY (usually :0 on Linux = XWayland). Falls
+      # back to the bundled noVNC service on macOS/Windows where there's no host DISPLAY.
+      DISPLAY: "novnc:0.0"
+      # DISPLAY: ":0"
+      # DISPLAY: "${DISPLAY:-novnc:0.0}"
+      # noVNC's Xvfb has no GLX extension, so Ogre (RViz's renderer) can't do server-side
+      # OpenGL. Forcing Mesa to render in software via llvmpipe makes RViz / Gazebo work
+      # over noVNC at the cost of ~10x slower rendering. Unset (or set to 0) on Linux
+      # when DISPLAY points at a host X server that does provide GLX.
+      LIBGL_ALWAYS_SOFTWARE: "${LIBGL_ALWAYS_SOFTWARE:-1}"
+      IS_SANDBOX: 1 # For claude code
+    networks:
+      - x11
+    # Host networking works on Linux only; omit for macOS/Windows Docker Desktop.
+    # Uncomment on Linux if you need full ROS 2 LAN discovery:
+    # network_mode: host
+
+  # Browser-based X server for RViz/Gazebo. Starts by default; Linux users with a native
+  # X server can skip it by running `docker compose up -d vexu` instead of `up -d`.
+  novnc:
+    image: theasp/novnc:latest
+    container_name: vexu-novnc
+    environment:
+      - DISPLAY_WIDTH=1600
+      - DISPLAY_HEIGHT=968
+      - RUN_XTERM=no
+    ports:
+      - "8080:8080"
+    networks:
+      - x11
+
+volumes:
+  vexu-ccache:
+  vexu-bashhistory:
+  vexu-claude:
+
+networks:
+  x11:

@@ -1,0 +1,35 @@
+{
+  "name": "VEXU Ghost (ROS 2 Humble)",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "vexu",
+  "workspaceFolder": "/vexu",
+  "shutdownAction": "stopCompose",
+  "postStartCommand": "bash -lc '[ -n \"$BROWSER\" ] && \"$BROWSER\" http://localhost:8080/vnc.html || true'",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000
+      },
+      "extensions": [
+        "ms-vscode.cpptools-extension-pack",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ranch-hand-robotics.rde-pack",
+        "redhat.vscode-yaml",
+        "smilerobotics.urdf",
+        "zachflower.uncrustify",
+        "ms-vsliveshare.vsliveshare"
+      ]
+    },
+    "claudeCode": {
+      "environmentVariables": [
+        {
+          "name": "IS_SANDBOX",
+          "value": "1"
+        }
+      ]
+    }
+  }
+}

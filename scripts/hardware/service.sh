@@ -4,34 +4,43 @@ set -x
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Run systemctl --user only when a systemd user session is actually reachable
+# (skipped in Docker and other non-systemd environments).
+sctl() {
+    if [ -d /run/systemd/system ] && command -v systemctl >/dev/null 2>&1 \
+        && systemctl --user show-environment >/dev/null 2>&1; then
+        systemctl --user "$@"
+    fi
+}
+
 case "$1" in
     "restart")
-        systemctl --user kill 'ghost*service'
-        systemctl --user start --all 'ghost*.service'
+        sctl kill 'ghost*service'
+        sctl start --all 'ghost*.service'
         ;;
     "stop")
-        systemctl --user stop 'ghost*service'
+        sctl stop 'ghost*service'
         pkill -f -e /ros
         pkill -f -e ros2
         pkill -f -e gz
         ;;
     "kill")
-        systemctl --user kill 'ghost*service'
+        sctl kill 'ghost*service'
         pkill -f -9 -e ros
         pkill -f -9 -e ros2
         pkill -f -9 -e gz
         ;;
     "shutdown")
         sudo -v
-        systemctl --user stop 'ghost*service'
+        sctl stop 'ghost*service'
         pkill -f -e ros2
         echo "shutting down in 3 seconds!!!!"
         sleep 6
         sudo poweroff
         ;;
     "install")
-        systemctl --user link $DIR/*service
-        systemctl --user enable --now $DIR/*service
+        sctl link $DIR/*service
+        sctl enable --now $DIR/*service
         ;;
     "autologin")
 	sudo mkdir -p /etc/systemd/system/serial-getty@ttyTCU0.service.d
