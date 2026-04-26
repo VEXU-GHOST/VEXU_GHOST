@@ -7,7 +7,9 @@
   "customizations": {
     "vscode": {
       "settings": {
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000
       },
       "extensions": [
         "ms-vscode.cpptools",
