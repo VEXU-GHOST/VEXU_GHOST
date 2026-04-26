@@ -10,6 +10,17 @@
 # on the host; `sudo rm -rf build install log` or `docker compose exec vexu rm ...` to
 # clean. Traded for a much simpler image (no user/sudoers/UID-matching plumbing).
 
+# First stage: extract just the package.xml manifests. The final stage's rosdep layer
+# is keyed on this stage's output, so edits to non-manifest files (source, READMEs,
+# configs) don't bust the rosdep cache on rebuild.
+FROM busybox:stable AS manifests
+COPY . /src
+RUN set -e; mkdir -p /manifests; cd /src; \
+    find . -name package.xml | while IFS= read -r f; do \
+      mkdir -p "/manifests/$(dirname "$f")"; \
+      cp "$f" "/manifests/$f"; \
+    done
+
 FROM osrf/ros:humble-desktop-jammy
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -74,9 +85,9 @@ RUN chmod +x /usr/local/share/vexu/install_ghost_debs.sh && \
     mkdir -p /vexu && \
     VEXU_HOME=/vexu VEXU_SKIP_APT=1 bash /usr/local/share/vexu/install_ghost_debs.sh
 
-# Snapshot workspace for rosdep only; bind-mount replaces /vexu at runtime.
-# Code changes will re-run rosdep install, but it's fast once apt packages are already installed.
-COPY . /vexu
+# Snapshot package.xml manifests for rosdep only; bind-mount replaces /vexu at runtime.
+# This layer's cache is keyed on package.xml content, so source-only edits skip rosdep.
+COPY --from=manifests /manifests /vexu
 RUN rosdep update && \
     rosdep install --from-paths . --ignore-src -r -y \
       --skip-keys behaviortree_cpp \
@@ -103,7 +114,7 @@ RUN printf '%s\n' \
 # sourced by vexu-entrypoint.sh. Source 12_Docker/bashrc from /etc/bash.bashrc instead —
 # that file is bind-mounted at runtime, so edits apply to new shells without a rebuild.
 RUN echo '[ -f /vexu/12_Docker/bashrc ] && . /vexu/12_Docker/bashrc' >> /etc/bash.bashrc && \
-    mkdir -p /commandhistory && touch /commandhistory/.bash_history
+    touch /root/.bash_history
 
 ENTRYPOINT ["/usr/local/bin/vexu-entrypoint.sh"]
 CMD ["bash"]
