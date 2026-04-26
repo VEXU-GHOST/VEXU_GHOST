@@ -114,7 +114,7 @@ RUN printf '%s\n' \
 # sourced by vexu-entrypoint.sh. Source 12_Docker/bashrc from /etc/bash.bashrc instead —
 # that file is bind-mounted at runtime, so edits apply to new shells without a rebuild.
 RUN echo '[ -f /vexu/12_Docker/bashrc ] && . /vexu/12_Docker/bashrc' >> /etc/bash.bashrc && \
-    touch /root/.bash_history
+    mkdir -p /commandhistory && touch /commandhistory/.bash_history
 
 ENTRYPOINT ["/usr/local/bin/vexu-entrypoint.sh"]
 CMD ["bash"]
