@@ -6,8 +6,7 @@ Longer-term, if you want to do robotics software on a regular basis, a native Ub
 
 ## 1) Install Docker Desktop
 
-- **Windows:** <https://docs.docker.com/desktop/install/windows-install/>
-  Docker Desktop on Windows uses WSL2 under the hood — it will install/enable WSL2 for you during setup. You do **not** need to install a separate Ubuntu distro or configure X11 forwarding.
+- **Windows:** In powershell, run `winget install -e --id Docker.DockerDesktop`
 - **macOS:** <https://docs.docker.com/desktop/install/mac-install/>
   Works on Intel and Apple Silicon. On Apple Silicon the container reports `aarch64`; the stock build skips the Gazebo sim packages on that architecture.
 
