@@ -36,8 +36,9 @@ services:
     volumes:
       - .:/vexu
       - vexu-ccache:/root/.ccache
-      # Keep shell history at the normal location across restarts/resets.
-      - vexu-bashhistory:/root/.bash_history
+      # Persist shell history across `compose down`. Named volumes mount as
+      # directories, so use a dedicated path; bashrc points HISTFILE here.
+      - vexu-bashhistory:/commandhistory
       # Persist Claude Code settings/secrets in the conventional home path.
       - vexu-claude:/home/vscode/.claude
       # Reuse host git identity/keys inside the container (read-only).

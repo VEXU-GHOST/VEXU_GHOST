@@ -114,7 +114,12 @@ RUN printf '%s\n' \
 # sourced by vexu-entrypoint.sh. Source 12_Docker/bashrc from /etc/bash.bashrc instead —
 # that file is bind-mounted at runtime, so edits apply to new shells without a rebuild.
 RUN echo '[ -f /vexu/12_Docker/bashrc ] && . /vexu/12_Docker/bashrc' >> /etc/bash.bashrc && \
-    touch /root/.bash_history
+    mkdir -p /commandhistory && touch /commandhistory/.bash_history && \
+    git config --system --add safe.directory /vexu
+
+# Bind-mounted host ~/.gitconfig is read-only, so any in-container `git config
+# --global` fails with "Device or resource busy". Mark /vexu safe at the system
+# level (host UID != container root → git refuses to operate without this).
 
 ENTRYPOINT ["/usr/local/bin/vexu-entrypoint.sh"]
 CMD ["bash"]
