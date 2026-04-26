@@ -4,9 +4,11 @@
   "service": "vexu",
   "workspaceFolder": "/vexu",
   "shutdownAction": "stopCompose",
-  "postAttachCommand": "echo 'noVNC ready at http://localhost:8080/vnc.html'",
   "customizations": {
     "vscode": {
+      "settings": {
+        "editor.formatOnSave": true
+      },
       "extensions": [
         "ms-vscode.cpptools",
         "ms-python.python",
