@@ -21,12 +21,12 @@ docker compose version
 
 You need Git on the host — the container bind-mounts your host `~/.ssh` and `~/.gitconfig` read-only, so commits/pushes from inside the container use your host identity.
 
-- **Windows:** install [Git for Windows](https://git-scm.com/download/win) and use **Git Bash** (not PowerShell) for the SSH + clone steps below.
+- **Windows:** install [Git for Windows](https://git-scm.com/download/win). Use **PowerShell** for the SSH + clone steps below.
 - **macOS:** Git comes with Xcode Command Line Tools (`xcode-select --install`) or via Homebrew (`brew install git`).
 
 ### 2.1) Generate an SSH key
 
-In Git Bash (Windows) or Terminal (macOS):
+In PowerShell (Windows) or Terminal (macOS):
 
 ```bash
 ssh-keygen -t ed25519 -C "your_email@example.com"
@@ -63,12 +63,13 @@ git config --global user.email "your_email@example.com"
 
 ## 3) Clone the repo and launch the dev container
 
-From Git Bash (Windows) or Terminal (macOS):
+From PowerShell (Windows) or Terminal (macOS):
 
 ```bash
 git clone git@github.com:VEXU-GHOST/VEXU_GHOST.git
 cd VEXU_GHOST
 git submodule update --init --recursive
+git checkout develop # change develop to the branch you are working on
 
 docker compose build              # first time only, ~10–15 min
 docker compose up -d              # start the dev container + noVNC
@@ -86,7 +87,8 @@ Inside the shell:
 
 Open [http://localhost:8080/vnc.html](http://localhost:8080/vnc.html) in any browser on your host. That's it — no XLaunch, no XQuartz. Apps launched inside the container render into a virtual display that streams to your browser.
 
-Stop the container when done: `docker compose down`. State in `build/`, `install/`, `log/`, and the ccache volume persists.
+Stop the container when done: `docker compose stop`.
+Use `docker compose down` only when you want to reset the container because it removes containers and drops writable in-container filesystem changes (for example, tools/extensions installed inside the container). State in `build/`, `install/`, `log/`, and the ccache volume persists.
 
 ## Hardware caveats
 

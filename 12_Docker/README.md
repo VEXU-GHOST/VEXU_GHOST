@@ -34,10 +34,10 @@ docker compose build
 ```bash
 docker compose up -d              # start the long-lived dev container
 docker compose exec vexu bash     # open a shell (repeat for more terminals)
-docker compose down               # stop + remove the container when done
+docker compose stop               # pause when done; keep writable container state
 ```
 
-`exec` attaches to the *same* running container, so `gz sim` (or any background process) you started in shell #1 is still alive in shell #2. In-container state (running processes, shell history) is lost on `docker compose down`, but the bind-mounted repo at `/vexu` — including `build/`, `install/`, `log/` — and the `vexu-ccache` volume survive.
+`exec` attaches to the *same* running container, so `gz sim` (or any background process) you started in shell #1 is still alive in shell #2. `docker compose stop` keeps writable in-container filesystem state (including tools/extensions installed inside the container), while `docker compose down` removes containers and drops that writable layer. The bind-mounted repo at `/vexu` — including `build/`, `install/`, `log/` — and the `vexu-ccache` volume survive unless you explicitly remove volumes.
 
 ## Troubleshooting: `rosdep update` / “Name or service not known”
 
@@ -140,7 +140,7 @@ A short tour of what `docker compose build` and `docker compose up -d` actually 
    - `/tmp/.X11-unix:/tmp/.X11-unix` — XWayland/X11 socket for RViz (Ogre3D isn't Wayland-capable). Harmless no-op on macOS/Windows.
    - `${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}` → `/tmp/${WAYLAND_DISPLAY}` — Wayland socket passthrough. Sentinel default (`no-wayland.sock`) keeps the mount harmless on macOS/Windows.
 4. **Rendering:** `LIBGL_ALWAYS_SOFTWARE=1` by default — Mesa renders via llvmpipe client-side instead of calling the server's GLX (which noVNC's Xvfb doesn't provide). Works everywhere, ~10x slower than GPU. For hardware rendering on Linux, uncomment the `devices: /dev/dri:/dev/dri` block and set `LIBGL_ALWAYS_SOFTWARE=0` in `.env`.
-5. **Named volumes:** `vexu-ccache` at `/root/.ccache` persists the compile cache across `down`/`up`. `vexu-bashhistory` at `/commandhistory` preserves shell history.
+5. **Persistent state:** Named volume `vexu-ccache` at `/root/.ccache` persists compile cache across `down`/`up`. Named volume `vexu-bashhistory` at `/root/.bash_history` keeps shell history at the normal path, and named volume `vexu-claude` at `/home/vscode/.claude` persists Claude Code settings/secrets.
 6. **Knobs:** `shm_size: 2g` for DDS + Gazebo; `cap_add: SYS_PTRACE` for gdb; public DNS (8.8.8.8 / 1.1.1.1) so `rosdep` can reach GitHub from hosts with broken default resolvers.
 7. **`novnc` service** (separate container on the shared `x11` network) runs Xvfb + noVNC on port 8080. `DISPLAY` in `vexu` falls back to `novnc:0.0` when the host has none, so Qt/OpenGL apps render into Xvfb and stream to your browser. Linux users with a local display skip it via `docker compose up -d vexu`.
 
