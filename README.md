@@ -7,8 +7,6 @@ The recommended flow is Docker — works the same on macOS, Windows, and Linux, 
 
 **Windows / macOS users:** start at [SetupMyEnvironment.md](SetupMyEnvironment.md) for Docker Desktop + SSH/Git setup, then come back here.
 
-> [!NOTE]
-> Recommended for most users: open this repo in VS Code and use **Dev Containers: Reopen in Container**. VS Code will manage container start/attach for you and auto-install the recommended extensions from [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json). Use the CLI `docker compose ...` flow below if you prefer terminal-only control.
 
 ## 2. Clone the repo (on your host, not inside a container)
 
@@ -21,6 +19,10 @@ git submodule update --init --recursive
 SSH keys and `~/.gitconfig` on your host are bind-mounted read-only into the container, so git inside the container uses the same identity.
 
 ## 3. Build the image and start the dev container
+
+> [!NOTE]
+> Recommended for most users: open this repo in VS Code and use **Dev Containers: Reopen in Container**. VS Code will manage container start/attach for you and auto-install the recommended extensions from [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json). Use the CLI `docker compose ...` flow below if you prefer terminal-only control.
+
 
 ```bash
 docker compose build              # one-time; ~10–15 min on first build
