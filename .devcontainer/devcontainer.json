@@ -11,8 +11,15 @@
       },
       "extensions": [
         "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "twxs.cmake",
         "ms-python.python",
-        "ms-iot.vscode-ros"
+        "ms-python.vscode-pylance",
+        "ms-iot.vscode-ros",
+        "redhat.vscode-yaml",
+        "smilerobotics.urdf",
+        "zachflower.uncrustify",
+        "ms-vsliveshare.vsliveshare"
       ]
     }
   }
