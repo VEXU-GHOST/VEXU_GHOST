@@ -4,7 +4,8 @@
 #   docker compose build              # one-time: bakes in rosdep + Ghost .debs
 #   docker compose up -d              # start the long-lived dev container
 #   docker compose exec vexu bash     # open a shell (repeat for more terminals)
-#   docker compose down               # stop + remove the container when done
+#   docker compose stop               # pause when done; keep writable container state
+#   docker compose down               # reset: removes containers (writable layer is discarded)
 # Build the workspace from inside an exec'd shell: ./scripts/build.sh
 #
 # The `novnc` service starts alongside `vexu` by default so RViz/Gazebo work in a
@@ -35,9 +36,10 @@ services:
     volumes:
       - .:/vexu
       - vexu-ccache:/root/.ccache
-      # Bash history persists across `docker compose down`. HISTFILE is set in
-      # /etc/profile.d/vexu-ros.sh to point at this volume.
-      - vexu-bashhistory:/commandhistory
+      # Keep shell history at the normal location across restarts/resets.
+      - vexu-bashhistory:/root/.bash_history
+      # Persist Claude Code settings/secrets in the conventional home path.
+      - vexu-claude:/home/vscode/.claude
       # Reuse host git identity/keys inside the container (read-only).
       - ~/.ssh:/root/.ssh:ro
       - ~/.gitconfig:/root/.gitconfig:ro
@@ -78,6 +80,7 @@ services:
       # over noVNC at the cost of ~10x slower rendering. Unset (or set to 0) on Linux
       # when DISPLAY points at a host X server that does provide GLX.
       LIBGL_ALWAYS_SOFTWARE: "${LIBGL_ALWAYS_SOFTWARE:-1}"
+      IS_SANDBOX: 1 # For claude code
     networks:
       - x11
     # Host networking works on Linux only; omit for macOS/Windows Docker Desktop.
@@ -101,6 +104,7 @@ services:
 volumes:
   vexu-ccache:
   vexu-bashhistory:
+  vexu-claude:
 
 networks:
   x11:

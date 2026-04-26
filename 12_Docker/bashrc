@@ -6,8 +6,8 @@
 [ -f /opt/ros/humble/setup.bash ] && source /opt/ros/humble/setup.bash
 [ -f "${VEXU_HOME:-/vexu}/install/setup.bash" ] && source "${VEXU_HOME:-/vexu}/install/setup.bash"
 
-# Persist history on the vexu-bashhistory named volume.
-[ -d /commandhistory ] && export HISTFILE=/commandhistory/.bash_history
+# Keep history at the standard path for the current user.
+export HISTFILE="${HOME}/.bash_history"
 
 # Optional per-user overrides (gitignored).
 [ -f "${VEXU_HOME:-/vexu}/12_Docker/bashrc.local" ] && \
