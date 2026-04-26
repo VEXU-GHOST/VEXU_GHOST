@@ -4,13 +4,6 @@
   "service": "vexu",
   "workspaceFolder": "/vexu",
   "shutdownAction": "stopCompose",
-  "forwardPorts": [8080],
-  "portsAttributes": {
-    "8080": {
-      "label": "noVNC (RViz/Gazebo)",
-      "onAutoForward": "openBrowser"
-    }
-  },
   "postAttachCommand": "echo 'noVNC ready at http://localhost:8080/vnc.html'",
   "customizations": {
     "vscode": {
