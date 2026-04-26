@@ -4,6 +4,7 @@
   "service": "vexu",
   "workspaceFolder": "/vexu",
   "shutdownAction": "stopCompose",
+  "postStartCommand": "bash -lc '[ -n \"$BROWSER\" ] && \"$BROWSER\" http://localhost:8080/vnc.html || true'",
   "customizations": {
     "vscode": {
       "settings": {
@@ -12,16 +13,22 @@
         "files.autoSaveDelay": 1000
       },
       "extensions": [
-        "ms-vscode.cpptools",
         "ms-vscode.cpptools-extension-pack",
-        "twxs.cmake",
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "ms-iot.vscode-ros",
+        "ranch-hand-robotics.rde-pack",
         "redhat.vscode-yaml",
         "smilerobotics.urdf",
         "zachflower.uncrustify",
         "ms-vsliveshare.vsliveshare"
+      ]
+    },
+    "claudeCode": {
+      "environmentVariables": [
+        {
+          "name": "IS_SANDBOX",
+          "value": "1"
+        }
       ]
     }
   }
