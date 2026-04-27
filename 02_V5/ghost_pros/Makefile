@@ -43,3 +43,5 @@ TEMPLATE_FILES=$(INCDIR)/**/*.h $(INCDIR)/**/*.hpp
 ################################################################################
 ########## Nothing below this line should be edited by typical users ###########
 -include ./common.mk
+
+SRC += src/ghost_v5/comms/robot_link_communicator.cpp
