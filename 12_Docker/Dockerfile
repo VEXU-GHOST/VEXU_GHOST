@@ -21,7 +21,7 @@ RUN set -e; mkdir -p /manifests; cd /src; \
       cp "$f" "/manifests/$f"; \
     done
 
-FROM osrf/ros:humble-desktop-jammy
+FROM ros:humble-ros-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=C.UTF-8
@@ -89,14 +89,30 @@ RUN chmod +x /usr/local/share/vexu/install_ghost_debs.sh && \
 # This layer's cache is keyed on package.xml content, so source-only edits skip rosdep.
 COPY --from=manifests /manifests /vexu
 RUN rosdep update && \
-    rosdep install --from-paths . --ignore-src -r -y \
-      --skip-keys behaviortree_cpp \
-      --skip-keys behaviortree_ros2 \
-      --skip-keys btcpp_ros2_interfaces \
-      --skip-keys btcpp_ros2_samples \
-      --skip-keys rplidar_ros \
-      --skip-keys librealsense2 \
-      --skip-keys realsense2_camera && \
+        if [ "$(dpkg --print-architecture)" = "arm64" ]; then \
+            rosdep install --from-paths . --ignore-src -r -y \
+                --skip-keys behaviortree_cpp \
+                --skip-keys behaviortree_ros2 \
+                --skip-keys btcpp_ros2_interfaces \
+                --skip-keys btcpp_ros2_samples \
+                --skip-keys gazebo \
+                --skip-keys gazebo_dev \
+                --skip-keys gazebo_msgs \
+                --skip-keys gazebo_plugins \
+                --skip-keys gazebo_ros \
+                --skip-keys rplidar_ros \
+                --skip-keys librealsense2 \
+                --skip-keys realsense2_camera; \
+        else \
+            rosdep install --from-paths . --ignore-src -r -y \
+                --skip-keys behaviortree_cpp \
+                --skip-keys behaviortree_ros2 \
+                --skip-keys btcpp_ros2_interfaces \
+                --skip-keys btcpp_ros2_samples \
+                --skip-keys rplidar_ros \
+                --skip-keys librealsense2 \
+                --skip-keys realsense2_camera; \
+        fi && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
