@@ -1,0 +1,18 @@
+name: Learn Hello
+
+on:
+  workflow_dispatch:   # Only runs when you click "Run workflow" in the UI
+  push:
+    paths:
+      - '.github/workflows/learn-hello.yml'   # Optional: only when this file changes
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show repo and branch
+        run: |
+          echo "Repo: $GITHUB_REPOSITORY"
+          echo "Ref: $GITHUB_REF"
+          ls -la
