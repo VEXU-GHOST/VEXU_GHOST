@@ -8,9 +8,9 @@ on:
 
 jobs:
   hello:
+    runs-on: ubuntu-latest
     env:
       VEXU_HOME: ${{github.workspace}}
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,4 +23,4 @@ jobs:
           ls -la
           ls 09_External/plotjuggler
       - name: Script Test
-        run: test -x "VEXU_HOME/scripts/build.sh"
+        run: test -x "$VEXU_HOME/scripts/build.sh"
