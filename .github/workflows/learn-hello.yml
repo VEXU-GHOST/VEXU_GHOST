@@ -11,8 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - name: Show repo and branch
         run: |
           echo "Repo: $GITHUB_REPOSITORY"
           echo "Ref: $GITHUB_REF"
           ls -la
+          ls 09_External/plotjuggler
