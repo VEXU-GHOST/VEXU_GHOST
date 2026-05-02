@@ -35,15 +35,13 @@ services:
       - 1.1.1.1
     volumes:
       - .:/vexu
-      - vexu-ccache:/root/.ccache
+      # Persist root home files (for example /root/.gitignore) across `compose down`.
+      - vexu-root-home:/root
       # Persist shell history across `compose down`. Named volumes mount as
       # directories, so use a dedicated path; bashrc points HISTFILE here.
       - vexu-bashhistory:/commandhistory
       # Persist Claude Code settings/secrets in the conventional home path.
       - vexu-claude:/home/vscode/.claude
-      # Reuse host git identity/keys inside the container (read-only).
-      - ~/.ssh:/root/.ssh:ro
-      - ~/.gitconfig:/root/.gitconfig:ro
       # X11 socket for XWayland / native X11. Harmless no-op on macOS/Windows.
       - /tmp/.X11-unix:/tmp/.X11-unix
       # Wayland socket (Ubuntu 22.04+ hosts). Sentinel default keeps /tmp intact when
@@ -103,7 +101,7 @@ services:
       - x11
 
 volumes:
-  vexu-ccache:
+  vexu-root-home:
   vexu-bashhistory:
   vexu-claude:
 
