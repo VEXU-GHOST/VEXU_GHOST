@@ -12,6 +12,8 @@ jobs:
     env:
       VEXU_HOME: ${{github.workspace}}
     steps:
+      - name: Use HTTPS for GitHub submodule URLs
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -24,3 +26,5 @@ jobs:
           ls 09_External/plotjuggler
       - name: Script Test
         run: test -x "$VEXU_HOME/scripts/build.sh"
+      - name: Syntax-check build script
+        run: bash -n "$VEXU_HOME/scripts/build.sh"
