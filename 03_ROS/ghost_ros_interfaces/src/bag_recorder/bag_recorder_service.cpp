@@ -27,6 +27,10 @@
 #include "std_msgs/msg/int64.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "unistd.h"
+#include "ghost_msgs/msg/v5_competition_status.hpp"
+
+
+
 
 using ghost_msgs::srv::StartRecorder;
 using ghost_msgs::srv::StopRecorder;
@@ -62,6 +66,12 @@ public:
       std::bind(&BagRecorderNode::ButtonCallback, this, _1));
     led_publisher_ = this->create_publisher<std_msgs::msg::Int64>("/io/leds/bag", 10);
 
+      competition_subscriber_ = this->create_subscription<ghost_msgs::msg::V5CompetitionStatus>(
+        "v5_competition", 10,
+          std::bind(&BagRecorderNode::CompetitionCallback, this, _1));
+      
+
+
     std::string startup_string;
     startup_string += "Service Created.\n";
     startup_string += "\tDisk Space Required (KB):    " + std::to_string(disk_space_required_) +
@@ -79,12 +89,17 @@ public:
   void EnforceFreeDiskSpace();
   void ButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void PublishLedStatus(int64_t status);
+  void CompetitionCallback(const ghost_msgs::msg::V5CompetitionStatus::SharedPtr msg);
 
 private:
   rclcpp::Service<StartRecorder>::SharedPtr start_service_;
   rclcpp::Service<StopRecorder>::SharedPtr stop_service_;
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr button_subscriber_;
   rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr led_publisher_;
+  rclcpp::Subscription<ghost_msgs::msg::V5CompetitionStatus>::SharedPtr competition_subscriber_;
+  rclcpp::TimerBase::SharedPtr connection_check_timer_;
+  bool disconnect_timer_started_ = false;
+  rclcpp::Time disconnected_time_; 
 
 
   bool recording_ = false;
@@ -200,6 +215,35 @@ void BagRecorderNode::PublishLedStatus(int64_t status)
   led_msg.data = status;
   led_publisher_->publish(led_msg);
   RCLCPP_INFO(this->get_logger(), "Published LED status: %ld", led_msg.data);
+}
+
+
+void BagRecorderNode::CompetitionCallback(const ghost_msgs::msg::V5CompetitionStatus::SharedPtr msg)
+{
+    bool connected = msg->is_connected;
+    //print status of connected and recording_ 
+
+    if (connected && !recording_) {
+        SpawnRecorderProcess(); //start recording
+        disconnect_timer_started_ = false; // reset
+    }
+
+    if (!connected && recording_) {
+        if (!disconnect_timer_started_) { 
+            disconnected_time_ = this->now();
+            disconnect_timer_started_ = true;
+        } else {
+            auto elapsed = this->now() - disconnected_time_;
+            if (elapsed.seconds() >= 5.0) {       
+                KillRecorderProcess(); // stop recording after 5 seconds disconnected
+                disconnect_timer_started_ = false;
+            }
+        }
+    }
+
+    if (connected && disconnect_timer_started_) {
+        disconnect_timer_started_ = false; // reset timer if robot reconnects before 5 seconds
+    }
 }
 
 int main(int argc, char ** argv)
