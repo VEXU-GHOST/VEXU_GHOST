@@ -1,0 +1,76 @@
+********************************************************************************
+*
+* STMicroelectronics - VL53L4CD - Ultra Lite Driver
+*
+********************************************************************************
+
+# Driver version history 
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 1.0.0.0
+Date : 09/23/2021
+Comments : Initial driver release. 
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 1.1.0.0
+Date : 11/03/2021
+Comments : Removed macro 'VL53L4CD_I2C_FAST_MODE_PLUS' defined in api.h file
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 1.2.0.0
+Date : 11/17/2021
+Comments : Corrected wrong error raised when the detection thresholds were applied with HW interrupt.
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 2.0.0.0
+Date : 05/31/2022
+Comments : MAJOR RELEASE
+- Changed uint16_t dev by Dev_t dev instance. Warning, this release is not 100% compatible with previous release. See
+  driver examples for more information.
+- Fixed bug in Xtalk calibration function. When Xtalk value was too high, the value was wrapped.
+- Renamed structure 'VL53L4CD_Result_t' by 'VL53L4CD_ResultsData_t'
+- Added typedef 'VL53L4CD_Error'
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 2.1.0.0
+Date : 11/09/2022
+Comments : Reduced minimum distance from 50mm to 10mm for offset and Xtalk calibration.
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 2.1.1.0
+Date : 02/27/2023
+Comments : Fixed Linux compliation issues
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 2.2.0.0
+Date : 05/10/2024
+-Comments : Changed license for SLA0103(ST open source)
+-Renamed function WaitMS() to VL53L4CD_WaitMS()
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 2.2.1.0
+Date : 08/01/2024
+-Comments : Update VL53L4CD_StopRanging() to fix issue of interrupt after stop ranging. 
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 2.2.2.0
+Date : 01/21/2025
+-Comments : Update VL53L4CD_StartTemperatureUpdate() to support both Autonomous and Continuous mode. 
+
+---------------------------------------------------------------------------------------------------------------
+
+Version : 2.2.3.0
+Date : 08/05/2025
+-Comments : Changed signal_rate_kcps from uint16_t to uint32_t to avoid signal saturation when facing mirror at short distance
+ 	    Optimized signal_per_spad_kcps calculation method to improve the accuracy. 
+
+---------------------------------------------------------------------------------------------------------------
