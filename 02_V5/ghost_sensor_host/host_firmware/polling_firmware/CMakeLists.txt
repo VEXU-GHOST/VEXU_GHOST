@@ -33,29 +33,34 @@ project(polling_firmware C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+# FreeRTOS-Kernel (RP2040 single-core port)
+set(FREERTOS_KERNEL_PATH ${CMAKE_CURRENT_LIST_DIR}/lib/FreeRTOS-Kernel)
+include(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
+
 # Add executable. Default name is the project name, version 0.1
 
 add_executable(polling_firmware
     polling_firmware.cpp
-    src/isl29124.c
-    src/open_source_drivers/icm20602/src/icm20602.c
-    src/icm20602_pico.c
-    src/VL53L4CD/platform.c
-    src/VL53L4CD/VL53L4CD_api.c
-    src/VL53L4CD/VL53L4CD_calibration.c
-    src/open_source_drivers/Library-Sensors/src/bus_i2c.cpp
-    src/open_source_drivers/Library-Sensors/src/imu_base.cpp
-    src/open_source_drivers/Library-Sensors/src/imu_icm20602.cpp
-    src/open_source_drivers/Library-Sensors/src/imu_null.cpp
-    src/open_source_drivers/arduino-tca9536/TCA9536.cpp
+    src/comms.cpp
+    src/Device.cpp
+    src/isl29124.cpp
+    src/VL53L4CD/platform.cpp
+    src/VL53L4CD/VL53L4CD_api.cpp
+    src/VL53L4CD/VL53L4CD_calibration.cpp
+    src/ICM20602/bus_i2c.cpp
+    src/ICM20602/imu_base.cpp
+    src/ICM20602/imu_icm20602.cpp
+    src/ICM20602/imu_null.cpp
+    src/TCA9536.cpp
+    src/I2CBus/HardwareI2CBus.cpp
+    src/I2CBus/SoftwareI2CBus.cpp
 )
+
+# PIO I2C program — uncomment once src/i2c.pio is present
+pico_generate_pio_header(polling_firmware ${CMAKE_CURRENT_LIST_DIR}/src/I2CBus/i2c.pio)
 
 pico_set_program_name(polling_firmware "polling_firmware")
 pico_set_program_version(polling_firmware "0.1")
-
-# Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(polling_firmware 1)
-pico_enable_stdio_usb(polling_firmware 0)
 
 # Add the standard library to the build
 target_link_libraries(polling_firmware
@@ -65,18 +70,25 @@ target_link_libraries(polling_firmware
 target_include_directories(polling_firmware PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/inc
         ${CMAKE_CURRENT_LIST_DIR}/src/VL53L4CD
         ${CMAKE_CURRENT_LIST_DIR}/inc/VL53L4CD
-        ${CMAKE_CURRENT_LIST_DIR}/src/open_source_drivers/Library-Sensors/src
-        ${CMAKE_CURRENT_LIST_DIR}/src/open_source_drivers/Library-Sensors/Library-VectorQuaternionsMatrix/src
-        ${CMAKE_CURRENT_LIST_DIR}/src/open_source_drivers/arduino-tca9536
+        ${CMAKE_CURRENT_LIST_DIR}/src/ICM20602
+        ${CMAKE_CURRENT_LIST_DIR}/inc/ICM20602
+        ${CMAKE_CURRENT_LIST_DIR}/src/I2CBus
+        ${CMAKE_CURRENT_LIST_DIR}/inc/I2CBus
+        ${CMAKE_CURRENT_LIST_DIR}/lib/Library-VectorQuaternionsMatrix/src
 )
 
 
 # Add any user requested libraries
-target_link_libraries(polling_firmware 
+target_link_libraries(polling_firmware
         pico_stdlib
         hardware_i2c
+        hardware_pio
+        hardware_clocks
+        FreeRTOS-Kernel
+        FreeRTOS-Kernel-Heap4
         )
 
 # Enable USB serial output, disable UART serial
