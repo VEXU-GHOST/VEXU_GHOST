@@ -38,7 +38,6 @@ typedef struct i2c_inst i2c_inst_t;
 #define IRAM_ATTR
 #endif
 
-
 class BusI2c  : public BusBase {
 public:
     struct i2c_pins_t {

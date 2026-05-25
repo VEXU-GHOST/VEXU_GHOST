@@ -71,7 +71,6 @@ TCA9536_error_t TCA9536::write(uint8_t pin, uint8_t value)
     return TCA9536_ERROR_UNDEFINED;
 
   err = readI2CRegister(&outputRegister, TCA9536_REGISTER_OUTPUT_PORT);
-  printf("Current output register state: %02X\n", outputRegister);
   if (err != TCA9536_ERROR_SUCCESS)
   {
     return err;
@@ -82,7 +81,6 @@ TCA9536_error_t TCA9536::write(uint8_t pin, uint8_t value)
   {
     outputRegister |= (1 << pin);
   }
-  printf("New output register state: %02X\n", outputRegister);
   return writeI2CRegister(outputRegister, TCA9536_REGISTER_OUTPUT_PORT);
 }
 

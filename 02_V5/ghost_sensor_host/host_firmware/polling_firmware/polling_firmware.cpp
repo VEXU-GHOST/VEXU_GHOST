@@ -198,50 +198,51 @@ static void polling_task(void *) {
 
         for (uint8_t i = 0; i < cfg.color_sensor_cnt; i++) {
             devices[device_index] = std::make_unique<ISL29124Device>(
-                ISL29124_I2C_ADDR + i, i2c_buses[cfg.color_sensor_bus_sel[i]].i2c);
+                color_sensor_address[i], i2c_buses[cfg.color_sensor_bus_sel[i]].i2c);
             if (!devices[device_index]->init()) {
                 printf("Color sensor #%d init failed!\n", i + 1);
-                while (1) tight_loop_contents();
+                // while (1) tight_loop_contents();
             }
             device_index++;
         }
 
         for (uint8_t i = 0; i < cfg.imu_cnt; i++) {
             devices[device_index] = ICM20602Device::create(
-                ICM_20602_I2C_ADDR + i,
+                imu_address[i],
                 i2c_buses[cfg.imu_bus_sel[i]].i2c,
                 i2c_buses[cfg.imu_bus_sel[i]].sda,
                 i2c_buses[cfg.imu_bus_sel[i]].scl);
             if (!devices[device_index]->init()) {
                 printf("IMU #%d init failed!\n", i + 1);
-                while (1) tight_loop_contents();
+                // while (1) tight_loop_contents();
             }
             device_index++;
         }
 
         for (uint8_t i = 0; i < cfg.distance_sensor_cnt; i++) {
             devices[device_index] = std::make_unique<VL53L4CDDevice>(
-                VL53L4CD_I2C_ADDR + i, i2c_buses[cfg.distance_sensor_bus_sel[i]].i2c);
+                distance_sensor_address[i], i2c_buses[cfg.distance_sensor_bus_sel[i]].i2c);
             if (!devices[device_index]->init()) {
                 printf("Distance sensor #%d init failed!\n", i + 1);
-                while (1) tight_loop_contents();
+                // while (1) tight_loop_contents();
             }
             device_index++;
         }
 
         for (uint8_t i = 0; i < cfg.io_expander_cnt; i++) {
             devices[device_index] = std::make_unique<TCA9536Device>(
-                TCA9536_ADDRESS + i, i2c_buses[cfg.io_expander_bus_sel[i]].i2c);
+                io_expander_address[i], i2c_buses[cfg.io_expander_bus_sel[i]].i2c);
             if (!devices[device_index]->init()) {
                 printf("IO expander #%d init failed!\n", i + 1);
-                while (1) tight_loop_contents();
+                // while (1) tight_loop_contents();
             }
             for (uint8_t pin = 0; pin < 4; pin++) {
                 if (cfg.io_expander_pin_mode[i][pin] != 255) {
-                    if (!static_cast<TCA9536Device *>(devices[device_index].get())
-                             ->pin_mode(pin, cfg.io_expander_pin_mode[i][pin])) {
+                    auto ioexpander = static_cast<TCA9536Device *>(devices[device_index].get());
+                    if (!ioexpander->pin_mode(pin, cfg.io_expander_pin_mode[i][pin])) {
                         printf("IO expander #%d pin %d mode failed!\n", i + 1, pin);
-                        while (1) tight_loop_contents();
+                        // while (1) tight_loop_contents();
+                        ioexpander->destroy();
                     }
                 }
             }
@@ -261,80 +262,111 @@ static void polling_task(void *) {
 
             for (uint8_t i = 0; i < total_devices; i++) {
                 switch (devices[i]->get_type()) {
-
                     case DeviceType::ISL29124: {
-                        auto data = static_cast<ISL29124Device *>(devices[i].get())->get_data();
-                        if (data.valid && color_idx < cfg.color_sensor_cnt) {
-                            g_r[poll_count][color_idx]   = data.r;
-                            g_g[poll_count][color_idx]   = data.g;
-                            g_b[poll_count][color_idx]   = data.b;
-                            g_lux[poll_count][color_idx] = data.lux;
-                            g_cct[poll_count][color_idx] = data.cct;
-                        } else {
-                            g_r[poll_count][color_idx]   = poll_count > 0 ? g_r[poll_count - 1][color_idx]   : 0;
-                            g_g[poll_count][color_idx]   = poll_count > 0 ? g_g[poll_count - 1][color_idx]   : 0;
-                            g_b[poll_count][color_idx]   = poll_count > 0 ? g_b[poll_count - 1][color_idx]   : 0;
-                            g_lux[poll_count][color_idx] = poll_count > 0 ? g_lux[poll_count - 1][color_idx] : 0;
-                            g_cct[poll_count][color_idx] = poll_count > 0 ? g_cct[poll_count - 1][color_idx] : 0;
-                            printf("Color sensor #%d data invalid at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                        auto color_sensor = static_cast<ISL29124Device *>(devices[i].get());
+                        auto data = color_sensor->get_data();
+                        if (color_idx < cfg.color_sensor_cnt) {
+                            // if data is not valid and there are data from previous timestamp, use data from
+                            // previous timestampe as buffer, otherwise if the data is not valid and its the
+                            // first timestamp or if device is not properly intialized data is defaulted to 0
+                            // from get_data()
+                            if (!data.valid && poll_count > 0) {
+                                g_r[poll_count][color_idx]   = g_r[poll_count - 1][color_idx];
+                                g_g[poll_count][color_idx]   = g_g[poll_count - 1][color_idx];
+                                g_b[poll_count][color_idx]   = g_b[poll_count - 1][color_idx];
+                                g_lux[poll_count][color_idx] = g_lux[poll_count - 1][color_idx];
+                                g_cct[poll_count][color_idx] = g_cct[poll_count - 1][color_idx];
+                                printf("Color sensor #%d data invalid and buffered at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                            }
+                            else {
+                                if (!color_sensor->is_initialized()) {
+                                    printf("Color sensor #%d not initialized and tried to get data at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                                }
+                                g_r[poll_count][color_idx]   = data.r;
+                                g_g[poll_count][color_idx]   = data.g;
+                                g_b[poll_count][color_idx]   = data.b;
+                                g_lux[poll_count][color_idx] = data.lux;
+                                g_cct[poll_count][color_idx] = data.cct;
+                            }
+                            color_idx++;
                         }
-                        color_idx++;
                         break;
                     }
 
                     case DeviceType::ICM20602: {
-                        auto data = static_cast<ICM20602Device *>(devices[i].get())->get_data();
-                        if (data.valid && imu_idx < cfg.imu_cnt) {
-                            g_acc_x[poll_count][imu_idx]       = data.acc.x;
-                            g_acc_y[poll_count][imu_idx]       = data.acc.y;
-                            g_acc_z[poll_count][imu_idx]       = data.acc.z;
-                            g_gyro_x[poll_count][imu_idx]      = data.gyro_rps.x;
-                            g_gyro_y[poll_count][imu_idx]      = data.gyro_rps.y;
-                            g_gyro_z[poll_count][imu_idx]      = data.gyro_rps.z;
-                            g_temperature[poll_count][imu_idx] = data.temperature;
-                        } else {
-                            g_acc_x[poll_count][imu_idx]       = poll_count > 0 ? g_acc_x[poll_count - 1][imu_idx]       : 0;
-                            g_acc_y[poll_count][imu_idx]       = poll_count > 0 ? g_acc_y[poll_count - 1][imu_idx]       : 0;
-                            g_acc_z[poll_count][imu_idx]       = poll_count > 0 ? g_acc_z[poll_count - 1][imu_idx]       : 0;
-                            g_gyro_x[poll_count][imu_idx]      = poll_count > 0 ? g_gyro_x[poll_count - 1][imu_idx]      : 0;
-                            g_gyro_y[poll_count][imu_idx]      = poll_count > 0 ? g_gyro_y[poll_count - 1][imu_idx]      : 0;
-                            g_gyro_z[poll_count][imu_idx]      = poll_count > 0 ? g_gyro_z[poll_count - 1][imu_idx]      : 0;
-                            g_temperature[poll_count][imu_idx] = poll_count > 0 ? g_temperature[poll_count - 1][imu_idx] : 0;
-                            printf("IMU #%d data invalid at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                        auto imu = static_cast<ICM20602Device *>(devices[i].get());
+                        auto data = imu->get_data();
+                        if (imu_idx < cfg.imu_cnt) {
+                            if (!data.valid && poll_count > 0) {
+                                g_acc_x[poll_count][imu_idx]       = g_acc_x[poll_count - 1][imu_idx];
+                                g_acc_y[poll_count][imu_idx]       = g_acc_y[poll_count - 1][imu_idx];
+                                g_acc_z[poll_count][imu_idx]       = g_acc_z[poll_count - 1][imu_idx];
+                                g_gyro_x[poll_count][imu_idx]      = g_gyro_x[poll_count - 1][imu_idx];
+                                g_gyro_y[poll_count][imu_idx]      = g_gyro_y[poll_count - 1][imu_idx];
+                                g_gyro_z[poll_count][imu_idx]      = g_gyro_z[poll_count - 1][imu_idx];
+                                g_temperature[poll_count][imu_idx] = g_temperature[poll_count - 1][imu_idx];
+                                printf("IMU #%d data invalid and buffered at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                            }
+                            else {
+                                if (!imu->is_initialized()) {
+                                    printf("IMU #%d not initialized and tried to get data at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                                }
+                                g_acc_x[poll_count][imu_idx]       = data.acc.x;
+                                g_acc_y[poll_count][imu_idx]       = data.acc.y;
+                                g_acc_z[poll_count][imu_idx]       = data.acc.z;
+                                g_gyro_x[poll_count][imu_idx]      = data.gyro_rps.x;
+                                g_gyro_y[poll_count][imu_idx]      = data.gyro_rps.y;
+                                g_gyro_z[poll_count][imu_idx]      = data.gyro_rps.z;
+                                g_temperature[poll_count][imu_idx] = data.temperature;
+                            }
+                            imu_idx++;
                         }
-                        imu_idx++;
                         break;
                     }
 
                     case DeviceType::VL53L4CD: {
-                        auto data = static_cast<VL53L4CDDevice *>(devices[i].get())->get_data();
-                        if (data.valid && dist_idx < cfg.distance_sensor_cnt) {
-                            g_distance_mm[poll_count][dist_idx]        = data.distance_mm;
-                            g_range_status[poll_count][dist_idx]       = data.range_status;
-                            g_sigma_mm[poll_count][dist_idx]           = data.sigma_mm;
-                            g_signal_rate_kcps[poll_count][dist_idx]   = data.signal_rate_kcps;
-                            g_ambient_rate_kcps[poll_count][dist_idx]  = data.ambient_rate_kcps;
-                        } else {
-                            g_distance_mm[poll_count][dist_idx]       = poll_count > 0 ? g_distance_mm[poll_count - 1][dist_idx]       : 0;
-                            g_range_status[poll_count][dist_idx]      = poll_count > 0 ? g_range_status[poll_count - 1][dist_idx]      : 0;
-                            g_sigma_mm[poll_count][dist_idx]          = poll_count > 0 ? g_sigma_mm[poll_count - 1][dist_idx]          : 0;
-                            g_signal_rate_kcps[poll_count][dist_idx]  = poll_count > 0 ? g_signal_rate_kcps[poll_count - 1][dist_idx]  : 0;
-                            g_ambient_rate_kcps[poll_count][dist_idx] = poll_count > 0 ? g_ambient_rate_kcps[poll_count - 1][dist_idx] : 0;
-                            printf("Distance sensor #%d data invalid at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                        auto distance_sensor = static_cast<VL53L4CDDevice *>(devices[i].get());
+                        auto data = distance_sensor->get_data();
+                        if (dist_idx < cfg.distance_sensor_cnt) {
+                            if (!data.valid && poll_count > 0) {
+                                g_distance_mm[poll_count][dist_idx]       = g_distance_mm[poll_count - 1][dist_idx];
+                                g_range_status[poll_count][dist_idx]      = g_range_status[poll_count - 1][dist_idx];
+                                g_sigma_mm[poll_count][dist_idx]          = g_sigma_mm[poll_count - 1][dist_idx];
+                                g_signal_rate_kcps[poll_count][dist_idx]  = g_signal_rate_kcps[poll_count - 1][dist_idx];
+                                g_ambient_rate_kcps[poll_count][dist_idx] = g_ambient_rate_kcps[poll_count - 1][dist_idx];
+                                printf("Distance sensor #%d data invalid and buffered at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                            }
+                            else {
+                                if (!distance_sensor->is_initialized()) {
+                                    printf("Distance sensor #%d not initialized and tried to get data at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                                }
+                                g_distance_mm[poll_count][dist_idx]        = data.distance_mm;
+                                g_range_status[poll_count][dist_idx]       = data.range_status;
+                                g_sigma_mm[poll_count][dist_idx]           = data.sigma_mm;
+                                g_signal_rate_kcps[poll_count][dist_idx]   = data.signal_rate_kcps;
+                                g_ambient_rate_kcps[poll_count][dist_idx]  = data.ambient_rate_kcps;
+                            }
+                            dist_idx++;
                         }
-                        dist_idx++;
                         break;
                     }
 
                     case DeviceType::TCA9536: {
-                        auto data = static_cast<TCA9536Device *>(devices[i].get())->get_data();
-                        if (data.valid && gpio_idx < cfg.io_expander_cnt) {
-                            g_gpio_state[poll_count][gpio_idx] = data.gpio_state;
-                        } else {
-                            g_gpio_state[poll_count][gpio_idx] = poll_count > 0 ? g_gpio_state[poll_count - 1][gpio_idx] : 0;
-                            printf("IO expander #%d data invalid at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                        auto io_expander = static_cast<TCA9536Device *>(devices[i].get());
+                        auto data = io_expander->get_data();
+                        if (gpio_idx < cfg.io_expander_cnt) {
+                            if (!data.valid && poll_count > 0) {
+                                g_gpio_state[poll_count][gpio_idx] = g_gpio_state[poll_count - 1][gpio_idx];
+                                printf("IO expander #%d data invalid and buffered at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                            }
+                            else {
+                                if (!io_expander->is_initialized()) {
+                                    printf("IO expander #%d not initialized and tried to get data at %lu ms\n", i + 1, (unsigned long)(poll_count * cfg.polling_interval_ms));
+                                }
+                                g_gpio_state[poll_count][gpio_idx] = data.gpio_state;
+                            }
+                            gpio_idx++;
                         }
-                        gpio_idx++;
                         break;
                     }
                 }

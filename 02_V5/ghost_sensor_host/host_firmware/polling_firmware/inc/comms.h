@@ -5,10 +5,14 @@
 #include <cstring>
 
 // ---------------------------------------------------------------------------
-// Wire frame format (little-endian):
-//   [0x55][0xAA][cmd:1][len_lo:1][len_hi:1][payload:N][checksum:1]
+// Wire frame format for read (little-endian):
+//   ("hostin")
+//   [0x68][0x6F][0x73][0x74][0x69][0x6E][cmd:1][len_lo:1][len_hi:1][payload:N][checksum:1]
+// Wire frame format for write (little-endian):
+//   ("orinin")
+//   [0x6F][0x72][0x69][0x6E][0x69][0x6E][cmd:1][len_lo:1][len_hi:1][payload:N][checksum:1]
 //
-// checksum = XOR of bytes [cmd, len_lo, len_hi, payload...]
+// checksum = sum of bytes [cmd, len_lo, len_hi, payload...]
 // Max payload: COMMS_MAX_PAYLOAD bytes (enforced to bound SRAM use).
 //
 // Command direction:
@@ -18,13 +22,24 @@
 //   CMD_DATA       Pico → Jetson  packed poll results batch
 // ---------------------------------------------------------------------------
 
-#define COMMS_MAGIC_0       0x55u
-#define COMMS_MAGIC_1       0xAAu
-#define CMD_CONFIGURE       0x01u
-#define CMD_POLL_NOW        0x02u
-#define CMD_ACK             0x03u
-#define CMD_DATA            0x04u
-#define COMMS_MAX_PAYLOAD   4096u
+#define COMMS_MAGIC_IN_0       0x68u
+#define COMMS_MAGIC_IN_1       0x6Fu
+#define COMMS_MAGIC_IN_2       0x73u
+#define COMMS_MAGIC_IN_3       0x74u
+#define COMMS_MAGIC_IN_4       0x69u
+#define COMMS_MAGIC_IN_5       0x6Eu
+#define COMMS_MAGIC_OUT_0      0x6Fu
+#define COMMS_MAGIC_OUT_1      0x72u
+#define COMMS_MAGIC_OUT_2      0x69u
+#define COMMS_MAGIC_OUT_3      0x6Eu
+#define COMMS_MAGIC_OUT_4      0x69u
+#define COMMS_MAGIC_OUT_5      0x6Eu
+#define CMD_CONFIGURE          0x01u
+#define CMD_POLL_NOW           0x02u
+#define CMD_ACK                0x03u
+#define CMD_DATA               0x04u
+#define COMMS_MAX_PAYLOAD      4096u
+#define COMMS_MAX_MSG_LEN      5007u    // 4096 + 11
 
 // ---------------------------------------------------------------------------
 // SensorConfig — in-memory representation of a configuration YAML.
@@ -115,3 +130,21 @@ void comms_send(uint8_t cmd, const uint8_t *payload, uint16_t len);
 static inline void comms_send_ack(uint8_t status) {
     comms_send(CMD_ACK, &status, 1);
 }
+
+/** COBS encode data to buffer
+        @param data Pointer to input data to encode
+        @param length Number of bytes to encode
+        @param buffer Pointer to encoded output buffer
+        @return Encoded buffer length in bytes
+        @note Does not output delimiter byte
+ */
+static size_t cobsEncode(const void * data, size_t length, uint8_t * buffer);
+
+/** COBS decode data from buffer
+        @param buffer Pointer to encoded input bytes
+        @param length Number of bytes to decode
+        @param data Pointer to decoded output data
+        @return Number of bytes successfully decoded
+        @note Stops decoding if delimiter byte is found
+ */
+static size_t cobsDecode(const uint8_t * buffer, size_t length, void * data);

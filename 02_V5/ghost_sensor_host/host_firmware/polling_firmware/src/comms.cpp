@@ -13,6 +13,10 @@ namespace {
 enum class ParseState : uint8_t {
     WAIT_MAGIC0,
     WAIT_MAGIC1,
+    WAIT_MAGIC2,
+    WAIT_MAGIC3,
+    WAIT_MAGIC4,
+    WAIT_MAGIC5,
     WAIT_CMD,
     WAIT_LEN_LO,
     WAIT_LEN_HI,
@@ -35,11 +39,31 @@ bool comms_feed_byte(uint8_t b) {
 
     switch (s_state) {
         case ParseState::WAIT_MAGIC0:
-            if (b == COMMS_MAGIC_0) s_state = ParseState::WAIT_MAGIC1;
+            if (b == COMMS_MAGIC_IN_0) s_state = ParseState::WAIT_MAGIC1;
             break;
 
         case ParseState::WAIT_MAGIC1:
-            s_state = (b == COMMS_MAGIC_1) ? ParseState::WAIT_CMD
+            s_state = (b == COMMS_MAGIC_IN_1) ? ParseState::WAIT_MAGIC2
+                                            : ParseState::WAIT_MAGIC0;
+            break;
+
+        case ParseState::WAIT_MAGIC2:
+            s_state = (b == COMMS_MAGIC_IN_2) ? ParseState::WAIT_MAGIC3
+                                            : ParseState::WAIT_MAGIC0;
+            break;
+
+        case ParseState::WAIT_MAGIC3:
+            s_state = (b == COMMS_MAGIC_IN_3) ? ParseState::WAIT_MAGIC4
+                                            : ParseState::WAIT_MAGIC0;
+            break;
+
+        case ParseState::WAIT_MAGIC4:
+            s_state = (b == COMMS_MAGIC_IN_4) ? ParseState::WAIT_MAGIC5
+                                            : ParseState::WAIT_MAGIC0;
+            break;
+
+        case ParseState::WAIT_MAGIC5:
+            s_state = (b == COMMS_MAGIC_IN_5) ? ParseState::WAIT_CMD
                                             : ParseState::WAIT_MAGIC0;
             break;
 
@@ -51,13 +75,13 @@ bool comms_feed_byte(uint8_t b) {
 
         case ParseState::WAIT_LEN_LO:
             s_len      = b;
-            s_checksum ^= b;
+            s_checksum += b;
             s_state    = ParseState::WAIT_LEN_HI;
             break;
 
         case ParseState::WAIT_LEN_HI:
             s_len      |= (static_cast<uint16_t>(b) << 8);
-            s_checksum ^= b;
+            s_checksum += b;
             if (s_len > COMMS_MAX_PAYLOAD) {
                 s_state = ParseState::WAIT_MAGIC0;  // reject oversized packet
             } else if (s_len == 0) {
@@ -70,7 +94,7 @@ bool comms_feed_byte(uint8_t b) {
 
         case ParseState::WAIT_PAYLOAD:
             s_payload[s_rx_count++] = b;
-            s_checksum ^= b;
+            s_checksum += b;
             if (s_rx_count == s_len) {
                 s_state = ParseState::WAIT_CHECKSUM;
             }
@@ -96,16 +120,28 @@ uint16_t comms_get_payload_len()       { return s_len; }
 // ---------------------------------------------------------------------------
 
 void comms_send(uint8_t cmd, const uint8_t *payload, uint16_t len) {
-    uint8_t cs = cmd ^ (uint8_t)(len & 0xFF) ^ (uint8_t)(len >> 8);
-    for (uint16_t i = 0; i < len; i++) cs ^= payload[i];
-
-    putchar_raw(COMMS_MAGIC_0);
-    putchar_raw(COMMS_MAGIC_1);
-    putchar_raw(cmd);
-    putchar_raw((uint8_t)(len & 0xFF));
-    putchar_raw((uint8_t)(len >> 8));
-    for (uint16_t i = 0; i < len; i++) putchar_raw(payload[i]);
-    putchar_raw(cs);
+    uint32_t raw_message_length = len + 10; // 2 bytes for payloadl length, 1 byte for cmd, 1 byte for checksum, and 6 bytes for start sequence
+    uint8_t message[raw_message_length];
+    uint8_t cs = cmd + (uint8_t)(len & 0xFF) + (uint8_t)(len >> 8);
+    for (uint16_t i = 0; i < len; i++) cs += payload[i];
+    message[0] = COMMS_MAGIC_OUT_0;
+    message[1] = COMMS_MAGIC_OUT_1;
+    message[2] = COMMS_MAGIC_OUT_2;
+    message[3] = COMMS_MAGIC_OUT_3;
+    message[4] = COMMS_MAGIC_OUT_4;
+    message[5] = COMMS_MAGIC_OUT_5;
+    message[6] = cmd;
+    message[7] = (uint8_t)(len & 0xFF);
+    message[8] = (uint8_t)(len >> 8);
+    for (uint16_t i = 0; i < len; i++) {
+        message[i + 9] = payload[i];
+    }
+    message[raw_message_length - 1] = cs;
+    uint8_t encoded_message[raw_message_length + 2] = {0, };
+    uint32_t encoded_len = cobsEncode(message, raw_message_length, encoded_message);
+    for (uint32_t i = 0; i < encoded_len; i++) {
+        putchar_raw(encoded_message[i]);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -196,4 +232,56 @@ bool comms_parse_yaml_config(const uint8_t *buf, uint16_t len, SensorConfig &cfg
     if (cfg.polling_times > 100) cfg.polling_times = 100;
 
     return true;
+}
+
+static size_t cobsEncode(const void * data, size_t length, uint8_t * buffer)
+{
+  uint8_t * encode = buffer;      // Encoded byte pointer
+  uint8_t * codep = encode++;      // Output code pointer
+  uint8_t code = 1;       // Code value
+
+  for (const uint8_t * byte = (const uint8_t *)data; length--; ++byte) {
+    if (*byte) {           // Byte not zero, write it
+      *encode++ = *byte, ++code;
+    }
+
+    if (!*byte || (code == 0xff)) {           // Input is zero or block completed, restart
+      *codep = code, code = 1, codep = encode;
+      if (!*byte || length) {
+        ++encode;
+      }
+    }
+  }
+  *codep = code;       // Write final code value
+
+  return (size_t)(encode - buffer);
+}
+
+/** COBS decode data from buffer
+        @param buffer Pointer to encoded input bytes
+        @param length Number of bytes to decode
+        @param data Pointer to decoded output data
+        @return Number of bytes successfully decoded
+        @note Stops decoding if delimiter byte is found
+ */
+static size_t cobsDecode(const uint8_t * buffer, size_t length, void * data)
+{
+  const uint8_t * byte = buffer;      // Encoded input byte pointer
+  uint8_t * decode = (uint8_t *)data;      // Decoded output byte pointer
+
+  for (uint8_t code = 0xff, block = 0; byte < buffer + length; --block) {
+    if (block) {           // Decode block byte
+      *decode++ = *byte++;
+    } else {
+      if (code != 0xff) {                 // Encoded zero, write it
+        *decode++ = 0;
+      }
+      block = code = *byte++;                   // Next block length
+      if (!code) {                 // Delimiter code found
+        break;
+      }
+    }
+  }
+
+  return (size_t)(decode - (uint8_t *)data);
 }
