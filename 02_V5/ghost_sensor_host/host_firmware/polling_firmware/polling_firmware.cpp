@@ -23,8 +23,6 @@
 #define MAX_DEVICES         20
 #define MAX_UNIQUES_DEVICES 5
 #define MAX_POLLS           100
-#define VL53L4CD_I2C_ADDR   0x26
-#define ICM_20602_I2C_ADDR  0x67
 
 // Task stack sizes in words
 #define STACK_COMMS         1024
@@ -78,6 +76,8 @@ static uint8_t  g_gpio_state[MAX_POLLS][MAX_UNIQUES_DEVICES];
 
 static SemaphoreHandle_t g_polling_sem;   // counting: given by comms_task, taken by polling_task
 static SemaphoreHandle_t g_config_mutex;
+
+// initialize with values for testing as needed
 
 static SensorConfig g_config = {
     .polling_interval_ms      = 500,
