@@ -16,3 +16,7 @@
 [submodule "02_V5/ghost_sensor_host/host_firmware/polling_firmware/lib/FreeRTOS-Kernel"]
 	path = 02_V5/ghost_sensor_host/host_firmware/polling_firmware/lib/FreeRTOS-Kernel
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+
+[submodule "02_V5/ghost_sensor_host/host_firmware/polling_firmware/lib/Library-VectorQuaternionMatrix"]
+	path = 02_V5/ghost_sensor_host/host_firmware/polling_firmware/lib/Library-VectorQuaternionMatrix
+	url = https://github.com/martinbudden/Library-VectorQuaternionMatrix.git

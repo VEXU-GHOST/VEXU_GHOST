@@ -50,8 +50,11 @@
 // Co-routines — not used
 #define configUSE_CO_ROUTINES                   0
 
-// Software timers — not used
-#define configUSE_TIMERS                        0
+// Software timers — required by RP2040 port (xEventGroupSetBitsFromISR uses timer daemon)
+#define configUSE_TIMERS                        1
+#define configTIMER_TASK_PRIORITY               ( configMAX_PRIORITIES - 1 )
+#define configTIMER_QUEUE_LENGTH                10
+#define configTIMER_TASK_STACK_DEPTH            configMINIMAL_STACK_SIZE
 
 // Interrupt priority (RP2040 uses 2-bit priority)
 #define configKERNEL_INTERRUPT_PRIORITY         ( 3 << (8 - 2) )
@@ -67,4 +70,5 @@
 #define INCLUDE_vTaskDelete                     0
 #define INCLUDE_xTaskGetSchedulerState          1
 #define INCLUDE_xSemaphoreGetMutexHolder        1
+#define INCLUDE_xTimerPendFunctionCall          1
 #define INCLUDE_uxTaskGetStackHighWaterMark     0

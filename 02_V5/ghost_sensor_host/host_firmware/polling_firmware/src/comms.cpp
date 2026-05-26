@@ -10,102 +10,58 @@
 
 namespace {
 
-enum class ParseState : uint8_t {
-    WAIT_MAGIC0,
-    WAIT_MAGIC1,
-    WAIT_MAGIC2,
-    WAIT_MAGIC3,
-    WAIT_MAGIC4,
-    WAIT_MAGIC5,
-    WAIT_CMD,
-    WAIT_LEN_LO,
-    WAIT_LEN_HI,
-    WAIT_PAYLOAD,
-    WAIT_CHECKSUM,
-};
-
-static ParseState  s_state        = ParseState::WAIT_MAGIC0;
-static uint8_t     s_cmd          = 0;
-static uint16_t    s_len          = 0;
-static uint16_t    s_rx_count     = 0;
-static uint8_t     s_checksum     = 0;
-static uint8_t     s_payload[COMMS_MAX_PAYLOAD];
-static bool        s_packet_ready = false;
+static uint8_t  s_cobs_buf[COMMS_MAX_MSG_LEN + 2];
+static uint16_t s_cobs_len     = 0;
+static bool     s_packet_ready = false;
+static uint8_t  s_cmd          = 0;
+static uint16_t s_len          = 0;
+static uint8_t  s_payload[COMMS_MAX_PAYLOAD];
 
 } // namespace
 
 bool comms_feed_byte(uint8_t b) {
     s_packet_ready = false;
 
-    switch (s_state) {
-        case ParseState::WAIT_MAGIC0:
-            if (b == COMMS_MAGIC_IN_0) s_state = ParseState::WAIT_MAGIC1;
-            break;
+    if (b == 0x00) {
+        // COBS frame complete — decode then validate
+        if (s_cobs_len > 0) {
+            uint8_t decoded[COMMS_MAX_MSG_LEN];
+            size_t decoded_len = cobsDecode(s_cobs_buf, s_cobs_len, decoded);
 
-        case ParseState::WAIT_MAGIC1:
-            s_state = (b == COMMS_MAGIC_IN_1) ? ParseState::WAIT_MAGIC2
-                                            : ParseState::WAIT_MAGIC0;
-            break;
+            // Decoded layout: [magic x6][cmd:1][len_lo:1][len_hi:1][payload:N][checksum:1]
+            const uint16_t HEADER_LEN = 9; // 6 magic + cmd + len_lo + len_hi
+            if (decoded_len >= HEADER_LEN + 1 &&
+                decoded[0] == COMMS_MAGIC_IN_0 &&
+                decoded[1] == COMMS_MAGIC_IN_1 &&
+                decoded[2] == COMMS_MAGIC_IN_2 &&
+                decoded[3] == COMMS_MAGIC_IN_3 &&
+                decoded[4] == COMMS_MAGIC_IN_4 &&
+                decoded[5] == COMMS_MAGIC_IN_5)
+            {
+                uint16_t payload_len = decoded[7] | (static_cast<uint16_t>(decoded[8]) << 8);
 
-        case ParseState::WAIT_MAGIC2:
-            s_state = (b == COMMS_MAGIC_IN_2) ? ParseState::WAIT_MAGIC3
-                                            : ParseState::WAIT_MAGIC0;
-            break;
+                if (payload_len <= COMMS_MAX_PAYLOAD &&
+                    decoded_len == HEADER_LEN + payload_len + 1)
+                {
+                    uint8_t cs = decoded[6] + decoded[7] + decoded[8];
+                    for (uint16_t i = 0; i < payload_len; i++) cs += decoded[9 + i];
 
-        case ParseState::WAIT_MAGIC3:
-            s_state = (b == COMMS_MAGIC_IN_3) ? ParseState::WAIT_MAGIC4
-                                            : ParseState::WAIT_MAGIC0;
-            break;
-
-        case ParseState::WAIT_MAGIC4:
-            s_state = (b == COMMS_MAGIC_IN_4) ? ParseState::WAIT_MAGIC5
-                                            : ParseState::WAIT_MAGIC0;
-            break;
-
-        case ParseState::WAIT_MAGIC5:
-            s_state = (b == COMMS_MAGIC_IN_5) ? ParseState::WAIT_CMD
-                                            : ParseState::WAIT_MAGIC0;
-            break;
-
-        case ParseState::WAIT_CMD:
-            s_cmd      = b;
-            s_checksum = b;
-            s_state    = ParseState::WAIT_LEN_LO;
-            break;
-
-        case ParseState::WAIT_LEN_LO:
-            s_len      = b;
-            s_checksum += b;
-            s_state    = ParseState::WAIT_LEN_HI;
-            break;
-
-        case ParseState::WAIT_LEN_HI:
-            s_len      |= (static_cast<uint16_t>(b) << 8);
-            s_checksum += b;
-            if (s_len > COMMS_MAX_PAYLOAD) {
-                s_state = ParseState::WAIT_MAGIC0;  // reject oversized packet
-            } else if (s_len == 0) {
-                s_state = ParseState::WAIT_CHECKSUM;
-            } else {
-                s_rx_count = 0;
-                s_state    = ParseState::WAIT_PAYLOAD;
+                    if (cs == decoded[HEADER_LEN + payload_len]) {
+                        s_cmd = decoded[6];
+                        s_len = payload_len;
+                        memcpy(s_payload, decoded + HEADER_LEN, payload_len);
+                        s_packet_ready = true;
+                    }
+                }
             }
-            break;
-
-        case ParseState::WAIT_PAYLOAD:
-            s_payload[s_rx_count++] = b;
-            s_checksum += b;
-            if (s_rx_count == s_len) {
-                s_state = ParseState::WAIT_CHECKSUM;
-            }
-            break;
-
-        case ParseState::WAIT_CHECKSUM:
-            s_state = ParseState::WAIT_MAGIC0;
-            if (b == s_checksum) {
-                s_packet_ready = true;
-            }
-            break;
+        }
+        s_cobs_len = 0;
+    } else {
+        if (s_cobs_len < sizeof(s_cobs_buf)) {
+            s_cobs_buf[s_cobs_len++] = b;
+        } else {
+            s_cobs_len = 0;  // overflow, reset
+        }
     }
 
     return s_packet_ready;
