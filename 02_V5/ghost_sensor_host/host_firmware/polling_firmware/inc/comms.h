@@ -40,6 +40,9 @@
 #define CMD_DATA               0x04u
 #define COMMS_MAX_PAYLOAD      4096u
 #define COMMS_MAX_MSG_LEN      5007u    // 4096 + 11
+#define COMMS_MAX_OUT_PAYLOAD  28200u   // DataHeader + 100*5*(Color+IMU+Dist+GPIO) frames
+#define COMMS_MAX_OUT_MSG_LEN  (COMMS_MAX_OUT_PAYLOAD + 10u)
+
 
 // ---------------------------------------------------------------------------
 // SensorConfig — in-memory representation of a configuration YAML.
@@ -134,20 +137,3 @@ static inline void comms_send_ack(uint8_t status) {
     comms_send(CMD_ACK, &status, 1);
 }
 
-/** COBS encode data to buffer
-        @param data Pointer to input data to encode
-        @param length Number of bytes to encode
-        @param buffer Pointer to encoded output buffer
-        @return Encoded buffer length in bytes
-        @note Does not output delimiter byte
- */
-static size_t cobsEncode(const void * data, size_t length, uint8_t * buffer);
-
-/** COBS decode data from buffer
-        @param buffer Pointer to encoded input bytes
-        @param length Number of bytes to decode
-        @param data Pointer to decoded output data
-        @return Number of bytes successfully decoded
-        @note Stops decoding if delimiter byte is found
- */
-static size_t cobsDecode(const uint8_t * buffer, size_t length, void * data);

@@ -69,8 +69,8 @@ SensorData<DeviceType::ICM20602> ICM20602Device::get_data() {
     return data;
 }
 
-void ICM20602Device::calibrate(uint8_t calibrate_type, uint8_t calibrate_cnt) {
-    sensor_->calibrate(calibrate_type, calibrate_cnt);
+void ICM20602Device::calibrate(uint8_t calibration_type, uint8_t calibration_cnt) {
+    sensor_->calibrate(calibration_type, calibration_cnt);
 }
 
 std::unique_ptr<ICM20602Device> ICM20602Device::create(uint8_t i2c_addr, I2CBus *i2c_bus,

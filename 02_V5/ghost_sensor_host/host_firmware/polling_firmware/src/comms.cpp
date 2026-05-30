@@ -4,6 +4,9 @@
 #include <cstdlib>
 #include <cstring>
 
+static size_t cobsEncode(const void *data, size_t length, uint8_t *buffer);
+static size_t cobsDecode(const uint8_t *buffer, size_t length, void *data);
+
 // ---------------------------------------------------------------------------
 // Packet parser
 // ---------------------------------------------------------------------------
@@ -25,7 +28,7 @@ bool comms_feed_byte(uint8_t b) {
     if (b == 0x00) {
         // COBS frame complete — decode then validate
         if (s_cobs_len > 0) {
-            uint8_t decoded[COMMS_MAX_MSG_LEN];
+            static uint8_t decoded[COMMS_MAX_MSG_LEN];
             size_t decoded_len = cobsDecode(s_cobs_buf, s_cobs_len, decoded);
 
             // Decoded layout: [magic x6][cmd:1][len_lo:1][len_hi:1][payload:N][checksum:1]
@@ -76,8 +79,8 @@ uint16_t comms_get_payload_len()       { return s_len; }
 // ---------------------------------------------------------------------------
 
 void comms_send(uint8_t cmd, const uint8_t *payload, uint16_t len) {
-    uint32_t raw_message_length = len + 10; // 2 bytes for payloadl length, 1 byte for cmd, 1 byte for checksum, and 6 bytes for start sequence
-    uint8_t message[raw_message_length];
+    uint32_t raw_message_length = len + 10; // 2 bytes for payload length, 1 byte for cmd, 1 byte for checksum, and 6 bytes for start sequence
+    static uint8_t message[COMMS_MAX_OUT_MSG_LEN];
     uint8_t cs = cmd + (uint8_t)(len & 0xFF) + (uint8_t)(len >> 8);
     for (uint16_t i = 0; i < len; i++) cs += payload[i];
     message[0] = COMMS_MAGIC_OUT_0;
@@ -93,7 +96,8 @@ void comms_send(uint8_t cmd, const uint8_t *payload, uint16_t len) {
         message[i + 9] = payload[i];
     }
     message[raw_message_length - 1] = cs;
-    uint8_t encoded_message[raw_message_length + 2] = {0, };
+    static uint8_t encoded_message[COMMS_MAX_OUT_MSG_LEN + 2];
+    memset(encoded_message, 0, sizeof(encoded_message));
     uint32_t encoded_len = cobsEncode(message, raw_message_length, encoded_message);
     for (uint32_t i = 0; i < encoded_len; i++) {
         putchar_raw(encoded_message[i]);
@@ -119,6 +123,20 @@ static uint8_t parse_u8_array(char *src, uint8_t *dst, uint8_t n) {
         char *comma = (char *)memchr(tok, ',', (size_t)(end - tok));
         if (comma) *comma = '\0';
         dst[count++] = (uint8_t)strtoul(tok, nullptr, 10);
+        if (!comma) break;
+        tok = comma + 1;
+    }
+    return count;
+}
+
+static uint8_t parse_u16_array(char *src, uint16_t *dst, uint8_t n) {
+    uint8_t count = 0;
+    char *tok = src;
+    char *end = src + strlen(src);
+    while (tok < end && count < n) {
+        char *comma = (char *)memchr(tok, ',', (size_t)(end - tok));
+        if (comma) *comma = '\0';
+        dst[count++] = (uint16_t)strtoul(tok, nullptr, 10);
         if (!comma) break;
         tok = comma + 1;
     }

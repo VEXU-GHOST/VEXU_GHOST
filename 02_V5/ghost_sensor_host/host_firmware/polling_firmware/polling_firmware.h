@@ -120,4 +120,3 @@ const uint8_t io_expander_address[16] = {0x4E, 0x44, 0x4B, 0x41, 0x3E, 0x34, 0x3
 
 #endif
 
-static void reset_device_array();

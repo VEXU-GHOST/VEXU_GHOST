@@ -134,7 +134,7 @@ public:
     bool                             init()     override;
     bool                             destroy()  override;
     SensorData<DeviceType::ICM20602> get_data() override;
-    void                             calibrate(uint8_t calibrate_type, uint8_t calibration_cnt); // IMU calibration not part of the common polling API, calibration_type = 0 (both acc and gyro), = 1 (gyro only)
+    void                             calibrate(uint8_t calibration_type, uint8_t calibration_cnt); // IMU calibration not part of the common polling API, calibration_type = 0 (both acc and gyro), = 1 (gyro only)
 
     static std::unique_ptr<ICM20602Device> create(uint8_t i2c_addr, I2CBus *i2c_bus,
                                                    uint8_t sda_pin, uint8_t scl_pin);
@@ -166,3 +166,7 @@ public:
     bool    digital_write(uint8_t pin, uint8_t value);
     uint8_t digital_read(uint8_t pin);
 };
+
+inline bool is_valid_sensor_i2c(uint8_t addr, uint8_t bus) {
+    return (addr >= 0x07) && (addr <= 0x78) && (bus >= 1) && (bus <= 8);
+}
