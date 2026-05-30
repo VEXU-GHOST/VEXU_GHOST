@@ -80,17 +80,20 @@ static SemaphoreHandle_t g_config_mutex;
 // initialize with values for testing as needed
 
 static SensorConfig g_config = {
-    .polling_interval_ms      = 500,
-    .polling_times             = 10,
-    .color_sensor_cnt          = 1,
-    .color_sensor_bus_sel      = {2, 2, 3, 4, 5},
-    .imu_cnt                   = 0,
-    .imu_bus_sel               = {2, 2, 3, 4, 5},
-    .distance_sensor_cnt       = 0,
-    .distance_sensor_bus_sel   = {2, 2, 3, 4, 5},
-    .io_expander_cnt           = 0,
-    .io_expander_bus_sel       = {2, 2, 3, 4, 5},
-    .io_expander_pin_mode      = {
+    .polling_interval_ms              = 500,
+    .polling_times                    = 10,
+    .color_sensor_cnt                 = 1,
+    .color_sensor_bus_sel             = {2, 2, 3, 4, 5},
+    .imu_cnt                          = 0,
+    .imu_bus_sel                      = {2, 2, 3, 4, 5},
+    .imu_calibration_cnt              = 10,
+    .distance_sensor_cnt              = 0,
+    .distance_sensor_bus_sel          = {2, 2, 3, 4, 5},
+    .distance_sensor_targeted_dist_mm = {20, 20, 20, 20, 20},
+    .distance_sensor_calibration_cnt  = 10,
+    .io_expander_cnt                  = 0,
+    .io_expander_bus_sel              = {2, 2, 3, 4, 5},
+    .io_expander_pin_mode             = {
         {1, 0, 0, 1},
         {255, 255, 255, 255},
         {255, 255, 255, 255},
@@ -197,7 +200,7 @@ static void polling_task(void *) {
         uint8_t device_index = 0;
 
         for (uint8_t i = 0; i < cfg.color_sensor_cnt; i++) {
-            devices[device_index] = std::make_unique<ISL29124Device>(
+            devices[device_index] = std::make_unique<ISL29125Device>(
                 color_sensor_address[i], i2c_buses[cfg.color_sensor_bus_sel[i]].i2c);
             if (!devices[device_index]->init()) {
                 printf("Color sensor #%d init failed!\n", i + 1);
@@ -216,6 +219,10 @@ static void polling_task(void *) {
                 printf("IMU #%d init failed!\n", i + 1);
                 // while (1) tight_loop_contents();
             }
+            else {
+                auto imu = static_cast<ICM20602Device *>(devices[device_index].get());
+                imu->calibrate(0, cfg.imu_calibration_cnt); // calibrates both acc and gyro
+            }
             device_index++;
         }
 
@@ -225,6 +232,11 @@ static void polling_task(void *) {
             if (!devices[device_index]->init()) {
                 printf("Distance sensor #%d init failed!\n", i + 1);
                 // while (1) tight_loop_contents();
+            } else {
+                auto distance = static_cast<VL53L4CDDevice *>(devices[device_index].get());
+                if (distance->calibrate(cfg.distance_sensor_targeted_dist_mm[i], cfg.distance_sensor_calibration_cnt)) {
+                    printf("Distance sensor #%d calibration error!\n", i + 1);
+                }
             }
             device_index++;
         }
@@ -236,13 +248,15 @@ static void polling_task(void *) {
                 printf("IO expander #%d init failed!\n", i + 1);
                 // while (1) tight_loop_contents();
             }
-            for (uint8_t pin = 0; pin < 4; pin++) {
-                if (cfg.io_expander_pin_mode[i][pin] != 255) {
-                    auto ioexpander = static_cast<TCA9536Device *>(devices[device_index].get());
-                    if (!ioexpander->pin_mode(pin, cfg.io_expander_pin_mode[i][pin])) {
-                        printf("IO expander #%d pin %d mode failed!\n", i + 1, pin);
-                        // while (1) tight_loop_contents();
-                        ioexpander->destroy();
+            else {
+                auto ioexpander = static_cast<TCA9536Device *>(devices[device_index].get());
+                for (uint8_t pin = 0; pin < 4; pin++) {
+                    if (cfg.io_expander_pin_mode[i][pin] != 255) {
+                        if (!ioexpander->pin_mode(pin, cfg.io_expander_pin_mode[i][pin])) {
+                            printf("IO expander #%d pin %d mode failed!\n", i + 1, pin);
+                            // while (1) tight_loop_contents();
+                            ioexpander->destroy();
+                        }
                     }
                 }
             }
@@ -262,8 +276,8 @@ static void polling_task(void *) {
 
             for (uint8_t i = 0; i < total_devices; i++) {
                 switch (devices[i]->get_type()) {
-                    case DeviceType::ISL29124: {
-                        auto color_sensor = static_cast<ISL29124Device *>(devices[i].get());
+                    case DeviceType::ISL29125: {
+                        auto color_sensor = static_cast<ISL29125Device *>(devices[i].get());
                         auto data = color_sensor->get_data();
                         if (color_idx < cfg.color_sensor_cnt) {
                             // if data is not valid and there are data from previous timestamp, use data from

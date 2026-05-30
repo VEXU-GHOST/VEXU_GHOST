@@ -55,8 +55,11 @@ struct SensorConfig {
     uint8_t  color_sensor_bus_sel[COMMS_MAX_SENSORS];
     uint8_t  imu_cnt;
     uint8_t  imu_bus_sel[COMMS_MAX_SENSORS];
+    uint8_t  imu_calibration_cnt;
     uint8_t  distance_sensor_cnt;
     uint8_t  distance_sensor_bus_sel[COMMS_MAX_SENSORS];
+    uint16_t distance_sensor_targeted_dist_mm[COMMS_MAX_SENSORS];
+    uint8_t  distance_sensor_calibration_cnt;
     uint8_t  io_expander_cnt;
     uint8_t  io_expander_bus_sel[COMMS_MAX_SENSORS];
     uint8_t  io_expander_pin_mode[COMMS_MAX_SENSORS][4]; // 255 = unset

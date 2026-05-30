@@ -43,7 +43,7 @@ add_executable(polling_firmware
     polling_firmware.cpp
     src/comms.cpp
     src/Device.cpp
-    src/isl29124.cpp
+    src/isl29125.cpp
     src/VL53L4CD/platform.cpp
     src/VL53L4CD/VL53L4CD_api.cpp
     src/VL53L4CD/VL53L4CD_calibration.cpp

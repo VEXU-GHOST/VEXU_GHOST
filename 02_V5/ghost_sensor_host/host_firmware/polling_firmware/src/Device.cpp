@@ -5,7 +5,7 @@
 
 std::unique_ptr<Device> Device::create(DeviceType type, uint8_t i2c_addr, I2CBus *i2c_bus) {
     switch (type) {
-        case DeviceType::ISL29124: return std::make_unique<ISL29124Device>(i2c_addr, i2c_bus);
+        case DeviceType::ISL29125: return std::make_unique<ISL29125Device>(i2c_addr, i2c_bus);
         case DeviceType::VL53L4CD: return std::make_unique<VL53L4CDDevice>(i2c_addr, i2c_bus);
         case DeviceType::TCA9536:  return std::make_unique<TCA9536Device>(i2c_addr, i2c_bus);
         case DeviceType::ICM20602: return nullptr;  // use ICM20602Device::create() instead
@@ -13,21 +13,21 @@ std::unique_ptr<Device> Device::create(DeviceType type, uint8_t i2c_addr, I2CBus
     }
 }
 
-// ---- ISL29124Device ---------------------------------------------------------
+// ---- ISL29125Device ---------------------------------------------------------
 
-bool ISL29124Device::init() {
+bool ISL29125Device::init() {
     initialized = sensor_.init(i2c_bus, i2c_addr);
     return initialized;
 }
 
-bool ISL29124Device::destroy() {
+bool ISL29125Device::destroy() {
     sensor_.set_mode(RGB_OP_PWDN_MODE_SET);
     initialized = false;
     return true;
 }
 
-SensorData<DeviceType::ISL29124> ISL29124Device::get_data() {
-    SensorData<DeviceType::ISL29124> data{};
+SensorData<DeviceType::ISL29125> ISL29125Device::get_data() {
+    SensorData<DeviceType::ISL29125> data{};
     if (!initialized) return data;
     if (sensor_.read_rgb(data.r, data.g, data.b) < 0) return data;
     sensor_.autorange(data.g);
@@ -63,10 +63,14 @@ SensorData<DeviceType::ICM20602> ICM20602Device::get_data() {
     if (!initialized || !sensor_) return data;
     const acc_gyro_rps_t raw = sensor_->read_acc_gyro_rps();
     data.acc         = raw.acc;
-    data.gyro_rps    = raw.gyro_rps * ImuBase::RADIANS_TO_DEGREES;
+    data.gyro_rps    = raw.gyro_rps;
     data.temperature = sensor_->read_temperature();
     data.valid       = true;
     return data;
+}
+
+void ICM20602Device::calibrate(uint8_t calibrate_type, uint8_t calibrate_cnt) {
+    sensor_->calibrate(calibrate_type, calibrate_cnt);
 }
 
 std::unique_ptr<ICM20602Device> ICM20602Device::create(uint8_t i2c_addr, I2CBus *i2c_bus,
@@ -106,6 +110,12 @@ SensorData<DeviceType::VL53L4CD> VL53L4CDDevice::get_data() {
     data.ambient_rate_kcps = result.ambient_rate_kcps;
     data.valid             = true;
     return data;
+}
+
+bool VL53L4CDDevice::calibrate(uint16_t target_dist_mm, uint8_t calibration_cnt) {
+    uint8_t offset = sensor_.CalibrateOffset(target_dist_mm, nullptr, calibration_cnt);
+    uint8_t xtalk = sensor_.CalibrateXtalk(target_dist_mm, nullptr, calibration_cnt);
+    return offset || xtalk;
 }
 
 // ---- TCA9536Device ----------------------------------------------------------

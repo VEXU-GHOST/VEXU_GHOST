@@ -1,11 +1,11 @@
 /*******************************************************************************
- * isl29124.cpp - ISL29124 RGB light sensor driver for Raspberry Pi Pico SDK
+ * isl29125.cpp - ISL29125 RGB light sensor driver for Raspberry Pi Pico SDK
  *
  * Ported from the original Linux kernel driver (Intersil Corporation, GPLv2).
  * Replaces linux/i2c.h smbus calls with Pico SDK hardware/i2c.h calls.
  ******************************************************************************/
 
-#include "isl29124.h"
+#include "isl29125.h"
 #include <stdio.h>
 
 // ─── CCM tables (preserved exactly from original driver) ─────────────────────
@@ -34,62 +34,62 @@ static int32_t CCM_RangeHi[3][3] = {
 
 // ─── Low-level I2C helpers ────────────────────────────────────────────────────
 
-int ISL29124::write_byte(uint8_t reg, uint8_t val)
+int ISL29125::write_byte(uint8_t reg, uint8_t val)
 {
     uint8_t buf[2] = { reg, val };
     if (i2c_ == nullptr) {
-        printf("[ISL29124] write_byte failed: uninitialized I2C bus\n");
+        printf("[ISL29125] write_byte failed: uninitialized I2C bus\n");
         return -1;
     }
     int ret = i2c_->write(addr_, buf, 2, false);
     if (ret != 2) {
-        printf("[ISL29124] write_byte failed: reg=0x%02X val=0x%02X\n", reg, val);
+        printf("[ISL29125] write_byte failed: reg=0x%02X val=0x%02X\n", reg, val);
         return -1;
     }
     return 0;
 }
 
-int ISL29124::read_byte(uint8_t reg, uint8_t &val)
+int ISL29125::read_byte(uint8_t reg, uint8_t &val)
 {
     if (i2c_ == nullptr) {
-        printf("[ISL29124] write_byte failed: uninitialized I2C bus\n");
+        printf("[ISL29125] write_byte failed: uninitialized I2C bus\n");
         return -1;
     }
     int ret = i2c_->write(addr_, &reg, 1, true);
     if (ret != 1) {
-        printf("[ISL29124] read_byte write phase failed: reg=0x%02X\n", reg);
+        printf("[ISL29125] read_byte write phase failed: reg=0x%02X\n", reg);
         return -1;
     }
     ret = i2c_->read(addr_, &val, 1, false);
     if (ret != 1) {
-        printf("[ISL29124] read_byte read phase failed: reg=0x%02X\n", reg);
+        printf("[ISL29125] read_byte read phase failed: reg=0x%02X\n", reg);
         return -1;
     }
     return 0;
 }
 
-int ISL29124::read_word16(uint8_t reg, uint16_t &val)
+int ISL29125::read_word16(uint8_t reg, uint16_t &val)
 {
     if (i2c_ == nullptr) {
-        printf("[ISL29124] write_byte failed: uninitialized I2C bus\n");
+        printf("[ISL29125] write_byte failed: uninitialized I2C bus\n");
         return -1;
     }
     uint8_t dat[2];
     int ret = i2c_->write(addr_, &reg, 1, true);
     if (ret != 1) {
-        printf("[ISL29124] read_word16 write phase failed: reg=0x%02X\n", reg);
+        printf("[ISL29125] read_word16 write phase failed: reg=0x%02X\n", reg);
         return -1;
     }
     ret = i2c_->read(addr_, dat, 2, false);
     if (ret != 2) {
-        printf("[ISL29124] read_word16 read phase failed: reg=0x%02X\n", reg);
+        printf("[ISL29125] read_word16 read phase failed: reg=0x%02X\n", reg);
         return -1;
     }
     val = ((uint16_t)dat[1] << 8) | (uint16_t)dat[0];
     return 0;
 }
 
-int ISL29124::write_word16(uint8_t reg, uint16_t val)
+int ISL29125::write_word16(uint8_t reg, uint16_t val)
 {
     if (write_byte(reg,     val & 0xFF)        < 0) return -1;
     if (write_byte(reg + 1, (val >> 8) & 0xFF) < 0) return -1;
@@ -98,7 +98,7 @@ int ISL29124::write_word16(uint8_t reg, uint16_t val)
 
 // ─── Configuration helpers ────────────────────────────────────────────────────
 
-int ISL29124::set_mode(uint8_t mode)
+int ISL29125::set_mode(uint8_t mode)
 {
     uint8_t reg;
     if (read_byte(CONFIG1_REG, reg) < 0) return -1;
@@ -107,7 +107,7 @@ int ISL29124::set_mode(uint8_t mode)
     return write_byte(CONFIG1_REG, reg);
 }
 
-int ISL29124::set_range(int range_lux)
+int ISL29125::set_range(int range_lux)
 {
     uint8_t reg;
     if (read_byte(CONFIG1_REG, reg) < 0) return -1;
@@ -117,7 +117,7 @@ int ISL29124::set_range(int range_lux)
     else if (range_lux == 330)
         reg &= RGB_SENSE_RANGE_330_SET;
     else {
-        printf("[ISL29124] set_range: invalid range %d (use 330 or 4000)\n", range_lux);
+        printf("[ISL29125] set_range: invalid range %d (use 330 or 4000)\n", range_lux);
         return -1;
     }
 
@@ -126,7 +126,7 @@ int ISL29124::set_range(int range_lux)
     return 0;
 }
 
-int ISL29124::get_range(int &range_lux)
+int ISL29125::get_range(int &range_lux)
 {
     uint8_t reg;
     if (read_byte(CONFIG1_REG, reg) < 0) return -1;
@@ -134,7 +134,7 @@ int ISL29124::get_range(int &range_lux)
     return 0;
 }
 
-int ISL29124::set_resolution(int bits)
+int ISL29125::set_resolution(int bits)
 {
     uint8_t reg;
     if (read_byte(CONFIG1_REG, reg) < 0) return -1;
@@ -144,7 +144,7 @@ int ISL29124::set_resolution(int bits)
     else if (bits == 16)
         reg &= ~(1 << ADC_RESOLUTION_BITS_POS);
     else {
-        printf("[ISL29124] set_resolution: invalid bits %d (use 12 or 16)\n", bits);
+        printf("[ISL29125] set_resolution: invalid bits %d (use 12 or 16)\n", bits);
         return -1;
     }
 
@@ -153,7 +153,7 @@ int ISL29124::set_resolution(int bits)
     return 0;
 }
 
-int ISL29124::get_resolution(int &bits)
+int ISL29125::get_resolution(int &bits)
 {
     uint8_t reg;
     if (read_byte(CONFIG1_REG, reg) < 0) return -1;
@@ -163,7 +163,7 @@ int ISL29124::get_resolution(int &bits)
 
 // ─── Autorange ────────────────────────────────────────────────────────────────
 
-void ISL29124::autorange(uint16_t green)
+void ISL29125::autorange(uint16_t green)
 {
     int range, res;
 
@@ -181,7 +181,7 @@ void ISL29124::autorange(uint16_t green)
 
 // ─── RGB read ─────────────────────────────────────────────────────────────────
 
-int ISL29124::read_rgb(uint16_t &r, uint16_t &g, uint16_t &b)
+int ISL29125::read_rgb(uint16_t &r, uint16_t &g, uint16_t &b)
 {
     if (read_word16(RED_DATA_LBYTE_REG,   r) < 0) return -1;
     if (read_word16(GREEN_DATA_LBYTE_REG, g) < 0) return -1;
@@ -202,7 +202,7 @@ static inline int64_t div64(int64_t a, int64_t b)
 
 #ifdef NEW_CCM
 
-uint32_t ISL29124::cal_cct()
+uint32_t ISL29125::cal_cct()
 {
     int32_t cct;
     int64_t X0, Y0, Z0, sum0;
@@ -226,7 +226,7 @@ uint32_t ISL29124::cal_cct()
 
     sum0 = X0 + Y0 + Z0;
     if (sum0 == 0) {
-        // printf("[ISL29124] cal_cct: sum0 is 0\n");
+        // printf("[ISL29125] cal_cct: sum0 is 0\n");
         return 0;
     }
 
@@ -236,7 +236,7 @@ uint32_t ISL29124::cal_cct()
     ye = 1858;
 
     if (y == ye) {
-        printf("[ISL29124] cal_cct: y-ye is 0\n");
+        printf("[ISL29125] cal_cct: y-ye is 0\n");
         return 0;
     }
 
@@ -257,7 +257,7 @@ uint32_t ISL29124::cal_cct()
     return (uint32_t)cct;
 }
 
-uint32_t ISL29124::cal_lux(int &cct)
+uint32_t ISL29125::cal_lux(int &cct)
 {
     uint32_t lux;
     uint8_t  bits  = 0;
@@ -292,7 +292,7 @@ uint32_t ISL29124::cal_lux(int &cct)
 
 // ─── Initialisation ───────────────────────────────────────────────────────────
 
-bool ISL29124::init(I2CBus *i2c, uint8_t addr)
+bool ISL29125::init(I2CBus *i2c, uint8_t addr)
 {
     i2c_  = i2c;
     addr_ = addr;
@@ -300,15 +300,15 @@ bool ISL29124::init(I2CBus *i2c, uint8_t addr)
     uint8_t id = 0;
     sleep_ms(10);
     if (read_byte(DEVICE_ID_REG, id) < 0) {
-        printf("[ISL29124] init: failed to read device ID\n");
+        printf("[ISL29125] init: failed to read device ID\n");
         return false;
     }
-    if (id != ISL29124_DEV_ID) {
-        printf("[ISL29124] init: unexpected device ID 0x%02X (expected 0x%02X)\n",
-               id, ISL29124_DEV_ID);
+    if (id != ISL29125_DEV_ID) {
+        printf("[ISL29125] init: unexpected device ID 0x%02X (expected 0x%02X)\n",
+               id, ISL29125_DEV_ID);
         return false;
     }
-    // printf("[ISL29124] init: device ID OK (0x%02X)\n", id);
+    // printf("[ISL29125] init: device ID OK (0x%02X)\n", id);
 
     if (write_byte(CONFIG1_REG, 0x05) < 0) return false;
     if (write_byte(CONFIG2_REG, 0x00) < 0) return false;

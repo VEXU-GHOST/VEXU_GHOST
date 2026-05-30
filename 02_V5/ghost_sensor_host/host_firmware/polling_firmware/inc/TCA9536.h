@@ -7,7 +7,7 @@ Original IO expander driver code by leafony: https://github.com/leafony/arduino-
 #include "hardware/i2c.h"
 #include "I2CBus.h"
 
-#define TCA9536_ADDRESS 0x4E
+#define TCA9536_ADDRESS 0x41
 #define TCA9536A_ADDRESS 0x40
 #define TCA9536B_ADDRESS 0x43
 #define TCA9536C_ADDRESS 0x42

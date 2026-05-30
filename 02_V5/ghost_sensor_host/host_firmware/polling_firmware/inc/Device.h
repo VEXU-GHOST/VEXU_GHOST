@@ -4,7 +4,7 @@
 #include <memory>
 #include <optional>
 #include "hardware/i2c.h"
-#include "isl29124.h"
+#include "isl29125.h"
 #include "TCA9536.h"
 #include "platform.h"      // VL53L4CD (from inc/VL53L4CD/)
 #include "imu_icm20602.h"  // ImuIcm20602, ImuBase, xyz_t, acc_gyro_rps_t
@@ -14,7 +14,7 @@
 // ---- Device type identifier -------------------------------------------------
 
 enum class DeviceType : uint8_t {
-    ISL29124 = 0,   // RGB light sensor
+    ISL29125 = 0,   // RGB light sensor
     ICM20602 = 1,   // 6-axis IMU
     VL53L4CD = 2,   // ToF distance sensor
     TCA9536  = 3    // 4-bit GPIO expander
@@ -27,7 +27,7 @@ template<DeviceType T>
 struct SensorData;
 
 template<>
-struct SensorData<DeviceType::ISL29124> {
+struct SensorData<DeviceType::ISL29125> {
     uint16_t r;
     uint16_t g;
     uint16_t b;
@@ -112,15 +112,15 @@ public:
 
 // ---- Concrete device classes ------------------------------------------------
 
-class ISL29124Device : public TypedDevice<DeviceType::ISL29124> {
-    ISL29124 sensor_;
+class ISL29125Device : public TypedDevice<DeviceType::ISL29125> {
+    ISL29125 sensor_;
 public:
-    ISL29124Device(uint8_t i2c_addr, I2CBus *i2c_bus)
+    ISL29125Device(uint8_t i2c_addr, I2CBus *i2c_bus)
         : TypedDevice(i2c_addr, i2c_bus) {}
 
     bool                             init()     override;
     bool                             destroy()  override;
-    SensorData<DeviceType::ISL29124> get_data() override;
+    SensorData<DeviceType::ISL29125> get_data() override;
 };
 
 class ICM20602Device : public TypedDevice<DeviceType::ICM20602> {
@@ -134,6 +134,7 @@ public:
     bool                             init()     override;
     bool                             destroy()  override;
     SensorData<DeviceType::ICM20602> get_data() override;
+    void                             calibrate(uint8_t calibrate_type, uint8_t calibration_cnt); // IMU calibration not part of the common polling API, calibration_type = 0 (both acc and gyro), = 1 (gyro only)
 
     static std::unique_ptr<ICM20602Device> create(uint8_t i2c_addr, I2CBus *i2c_bus,
                                                    uint8_t sda_pin, uint8_t scl_pin);
@@ -148,6 +149,7 @@ public:
     bool                             init()     override;
     bool                             destroy()  override;
     SensorData<DeviceType::VL53L4CD> get_data() override;
+    bool                             calibrate(uint16_t targeted_dist_mm, uint8_t calibration_cnt);
 };
 
 class TCA9536Device : public TypedDevice<DeviceType::TCA9536> {

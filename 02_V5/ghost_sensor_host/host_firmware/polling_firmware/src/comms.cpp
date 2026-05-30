@@ -159,17 +159,20 @@ bool comms_parse_yaml_config(const uint8_t *buf, uint16_t len, SensorConfig &cfg
             char *key = strip(line);
             char *val = strip(colon + 1);
 
-            if      (strcmp(key, "polling_interval_ms")    == 0) cfg.polling_interval_ms    = (uint32_t)strtoul(val, nullptr, 10);
-            else if (strcmp(key, "polling_times")          == 0) cfg.polling_times          = (uint32_t)strtoul(val, nullptr, 10);
-            else if (strcmp(key, "color_sensor_cnt")       == 0) cfg.color_sensor_cnt       = (uint8_t) strtoul(val, nullptr, 10);
-            else if (strcmp(key, "color_sensor_bus_sel")   == 0) parse_u8_array(val, cfg.color_sensor_bus_sel,    COMMS_MAX_SENSORS);
-            else if (strcmp(key, "imu_cnt")                == 0) cfg.imu_cnt                = (uint8_t) strtoul(val, nullptr, 10);
-            else if (strcmp(key, "imu_bus_sel")            == 0) parse_u8_array(val, cfg.imu_bus_sel,             COMMS_MAX_SENSORS);
-            else if (strcmp(key, "distance_sensor_cnt")    == 0) cfg.distance_sensor_cnt    = (uint8_t) strtoul(val, nullptr, 10);
-            else if (strcmp(key, "distance_sensor_bus_sel")== 0) parse_u8_array(val, cfg.distance_sensor_bus_sel, COMMS_MAX_SENSORS);
-            else if (strcmp(key, "io_expander_cnt")        == 0) cfg.io_expander_cnt        = (uint8_t) strtoul(val, nullptr, 10);
-            else if (strcmp(key, "io_expander_bus_sel")    == 0) parse_u8_array(val, cfg.io_expander_bus_sel,     COMMS_MAX_SENSORS);
-            else if (strcmp(key, "io_expander_pin_modes")  == 0) {
+            if      (strcmp(key, "polling_interval_ms")              == 0) cfg.polling_interval_ms                 = (uint32_t)strtoul(val, nullptr, 10);
+            else if (strcmp(key, "polling_times")                    == 0) cfg.polling_times                       = (uint32_t)strtoul(val, nullptr, 10);
+            else if (strcmp(key, "color_sensor_cnt")                 == 0) cfg.color_sensor_cnt                    = (uint8_t) strtoul(val, nullptr, 10);
+            else if (strcmp(key, "color_sensor_bus_sel")             == 0) parse_u8_array(val, cfg.color_sensor_bus_sel,              COMMS_MAX_SENSORS);
+            else if (strcmp(key, "imu_cnt")                          == 0) cfg.imu_cnt                             = (uint8_t) strtoul(val, nullptr, 10);
+            else if (strcmp(key, "imu_bus_sel")                      == 0) parse_u8_array(val, cfg.imu_bus_sel,                       COMMS_MAX_SENSORS);
+            else if (strcmp(key, "imu_calibration_cnt")              == 0) cfg.imu_calibration_cnt                 = (uint8_t) strtoul(val, nullptr, 10);
+            else if (strcmp(key, "distance_sensor_cnt")              == 0) cfg.distance_sensor_cnt                 = (uint8_t) strtoul(val, nullptr, 10);
+            else if (strcmp(key, "distance_sensor_bus_sel")          == 0) parse_u8_array(val, cfg.distance_sensor_bus_sel,           COMMS_MAX_SENSORS);
+            else if (strcmp(key, "distance_sensor_targeted_dist_mm") == 0) parse_u16_array(val, cfg.distance_sensor_targeted_dist_mm, COMMS_MAX_SENSORS);
+            else if (strcmp(key, "distance_sensor_calibration_cnt")  == 0) cfg.distance_sensor_calibration_cnt     = (uint8_t) strtoul(val, nullptr, 10);
+            else if (strcmp(key, "io_expander_cnt")                  == 0) cfg.io_expander_cnt                     = (uint8_t) strtoul(val, nullptr, 10);
+            else if (strcmp(key, "io_expander_bus_sel")              == 0) parse_u8_array(val, cfg.io_expander_bus_sel,               COMMS_MAX_SENSORS);
+            else if (strcmp(key, "io_expander_pin_modes")            == 0) {
                 // Flat array of 20 values: [dev0_pin0, dev0_pin1, dev0_pin2, dev0_pin3, dev1_pin0, ...]
                 uint8_t flat[COMMS_MAX_SENSORS * 4];
                 memset(flat, 255, sizeof(flat));

@@ -9,11 +9,8 @@ Ported from the original Linux kernel driver (Intersil Corporation, GPLv2).
 #include "I2CBus.h"
 #include <stdint.h>
 
-// I2C address
-#define ISL29124_I2C_ADDR           0x4B
-
 // Device ID
-#define ISL29124_DEV_ID             0x7D
+#define ISL29125_DEV_ID             0x7D
 
 // Register map
 #define DEVICE_ID_REG               0x00
@@ -67,9 +64,9 @@ typedef enum { RangeLo = 0, RangeHi, RangeMax } range_t;
 typedef enum { Bit16 = 0, Bit12, BitMax } resolution_t;
 #endif
 
-class ISL29124 {
+class ISL29125 {
 public:
-    ISL29124() = default;
+    ISL29125() = default;
 
     bool init(I2CBus *i2c, uint8_t addr);
 
