@@ -24,6 +24,18 @@ def generate_launch_description():
         parameters=[base_ros_config_file],
     )
 
+    # Publish the robot transform tree (base_link -> sensor frames) from the URDF
+    # so rviz, costmaps, and the particle filter share one source of truth for
+    # sensor poses.
+    urdf_path = os.path.join(ghost_push_back_base_dir, "urdf", "ghost_push_back.urdf.xacro")
+    robot_state_publisher = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        name="robot_state_publisher",
+        output="screen",
+        parameters=[{"robot_description": xacro.process_file(urdf_path).toxml()}],
+    )
+
     rplidar_node = Node(
         package="rplidar_ros",
         executable="rplidar_node",
@@ -96,6 +108,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument("robot_name", default_value="None"),
+        robot_state_publisher,
         rplidar_node,
         # realsense_node,
         bag_recorder_service,

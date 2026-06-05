@@ -44,6 +44,8 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "tf2_msgs/msg/tf_message.hpp"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 
@@ -61,6 +63,11 @@ public:
 
 private:
   void LoadROSParams();
+
+  // Reads the lidar pose (base_link -> lidar_link) from TF and writes it into
+  // config_params.laser_offset_*. The URDF/robot_state_publisher is the single
+  // source of truth for that offset.
+  void LoadLidarTransform();
 
   // Subscribers
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ekf_odom_sub_;
@@ -86,6 +93,10 @@ private:
   void DrawPredictedScan(visualization_msgs::msg::MarkerArray & viz_msg);
   void PublishMapViz();
   void PublishRobotPose();
+
+  // TF (reads base_link -> lidar_link for the laser offset)
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   // Particle Filter
   particle_filter::ParticleFilter particle_filter_;
