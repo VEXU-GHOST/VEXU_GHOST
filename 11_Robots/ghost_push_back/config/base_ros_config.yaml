@@ -112,9 +112,9 @@ ekf_pf_node:
       # You can tune this up and down based on performance, but I recommend starting from some initial guess based on robot config or data
 
       # Robot Constants
-      laser_offset_x: -0.1143
-      laser_offset_y: 0.1525
-      laser_angle_offset: 0.0
+      # NOTE: the lidar offset (laser_offset_x/y, laser_angle_offset) now comes
+      # from TF (base_link -> lidar_link, published by robot_state_publisher from
+      # the URDF). See 11_Robots/ghost_push_back/urdf/ghost_push_back.urdf.xacro.
 
       # RPLidar A1 datasheet
       range_min: 0.15

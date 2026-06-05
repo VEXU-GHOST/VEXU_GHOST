@@ -18,6 +18,7 @@ find_package(ghost_estimation REQUIRED)
 find_package(ghost_util REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(ghost_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 include_directories(include)
 
@@ -45,6 +46,7 @@ add_executable(ekf_pf_node
 ament_target_dependencies(ekf_pf_node
   rclcpp
   tf2_msgs
+  tf2_ros
   sensor_msgs
   visualization_msgs
   nav_msgs
