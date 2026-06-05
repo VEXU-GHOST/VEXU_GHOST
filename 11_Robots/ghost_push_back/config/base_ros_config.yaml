@@ -105,7 +105,7 @@ ekf_pf_node:
   ros__parameters:
     particle_filter:
       world_frame: "map"
-      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldZeroLH.txt"
       
       # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
       # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
