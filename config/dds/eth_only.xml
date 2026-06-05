@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Confine Fast DDS to the wired ROS network only.
+
+  In Fast DDS 2.6 the interface whitelist lives on a UDP transport descriptor,
+  not on the participant. We define a UDPv4 transport limited to THIS host's own
+  NIC addresses (the robot's fixed wired IP 192.168.50.1, set by the 'ghost-eth'
+  shared connection in configure-os.sh, plus loopback), add an SHM transport for
+  fast intra-host comms, and disable the builtin transports so DDS can't fall
+  back onto WiFi or docker0. All DDS traffic - multicast discovery and data -
+  then stays on the wired ROS network. Remotes on 192.168.50.0/24 are discovered
+  automatically via multicast on the wired segment and need no config.
+
+  Applied on the robot only, via FASTRTPS_DEFAULT_PROFILES_FILE in
+  scripts/setup_env.sh (guarded on /etc/ghost/robot_name). If the wired IP
+  changes, update it here and in configure-os.sh (ETH_IP).
+-->
+<dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <profiles>
+    <transport_descriptors>
+      <transport_descriptor>
+        <transport_id>eth_only_udp</transport_id>
+        <type>UDPv4</type>
+        <interfaceWhiteList>
+          <address>192.168.50.1</address>
+          <address>127.0.0.1</address>
+        </interfaceWhiteList>
+      </transport_descriptor>
+      <transport_descriptor>
+        <transport_id>shm</transport_id>
+        <type>SHM</type>
+      </transport_descriptor>
+    </transport_descriptors>
+
+    <participant profile_name="ghost_eth_only" is_default_profile="true">
+      <rtps>
+        <userTransports>
+          <transport_id>eth_only_udp</transport_id>
+          <transport_id>shm</transport_id>
+        </userTransports>
+        <useBuiltinTransports>false</useBuiltinTransports>
+      </rtps>
+    </participant>
+  </profiles>
+</dds>

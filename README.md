@@ -105,9 +105,8 @@ sudo nmcli dev wifi connect "Velocity Wi-Fi" password "<wifi-password>"
 
 ## Wired ROS network (plug-in-and-go)
 
-`ghost configure-os` sets up the robot's ethernet port (`enP8p1s0`) as a shared connection: the robot is pinned to `192.168.50.1` and runs a DHCP server on that subnet. So to connect a laptop for visualization, just **plug an ethernet cable from the laptop into the robot** — the laptop auto-gets an address (no laptop-side network config). Then run rviz on the same ROS domain:
+`ghost configure-os` sets up the robot's ethernet port (`enP8p1s0`) as a shared connection: the robot is pinned to `192.168.50.1` and runs a DHCP server on that subnet. So to connect a laptop for visualization, just **plug an ethernet cable from the laptop into the robot** — the laptop auto-gets an address (no laptop-side network config). Then run rviz:
 
 ```sh
-export ROS_DOMAIN_ID=0
 rviz2
 ```
