@@ -4,6 +4,7 @@
 if [ "$1" == "-h" ];
 then
     echo "Builds ROS and PROS Workspace."
+    echo "Pass package names to build only those (and their dependencies)."
     echo "Specify -r to skip PROS build"
     exit 0
 fi
@@ -15,13 +16,24 @@ then
     exit -1
 fi
 
-$VEXU_HOME/scripts/hardware/service.sh stop
+$VEXU_HOME/scripts/ghost.sh stop
+
+# Assumes repository is in base directory
+cd $VEXU_HOME
+
+# If package names are given, build only those (and their dependencies) and exit.
+if [ "$#" -gt 0 ];
+then
+    echo "Building $* packages..."
+    colcon build --symlink-install --packages-up-to "$@" --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
+    exit 0
+fi
+
+echo "Building all packages... give package names to build specific ones."
 
 # Get processor architecture to determine if we should build simulator or not (not on robot hardware)
 arch=$(uname -p)
 
-# Assumes repository is in base directory
-cd $VEXU_HOME
 echo "---Building Ghost ROS Packages---"
 
 skip=(
@@ -54,4 +66,4 @@ fi
 
 cd $VEXU_HOME
 echo
-bash scripts/pros_upload.sh
+bash scripts/build/pros_upload.sh

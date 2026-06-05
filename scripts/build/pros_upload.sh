@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bash $VEXU_HOME/scripts/pros_build.sh
+bash $VEXU_HOME/scripts/build/pros_build.sh
 cd $VEXU_HOME/02_V5/ghost_pros
 
 echo
