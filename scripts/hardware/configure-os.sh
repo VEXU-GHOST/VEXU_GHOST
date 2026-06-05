@@ -36,6 +36,38 @@ sudo systemctl restart systemd-timesyncd.service
 # Expose this script as the 'ghost' command system-wide.
 sudo ln -sf "$GHOST" /usr/local/bin/ghost
 
+# --- Dedicated wired ROS network: the robot is the DHCP server + gateway ---
+# (Inspired by innate-os.) 'ipv4.method shared' pins the interface to a fixed IP
+# AND runs a dnsmasq DHCP server + NAT on the subnet, so a laptop just plugs in
+# the cable and auto-gets an address (zero config on the remote).
+#
+# 'ipv4.never-default yes' keeps WiFi as the robot's default route, so the robot
+# resolves DNS via WiFi's upstream; shared-mode dnsmasq forwards client DNS to
+# that same upstream. This matters for captive portals: once the robot logs in
+# over WiFi, the NAT'd clients ride its authenticated session and resolve through
+# the portal's DNS too.
+ETH_CONNECTION="ghost-eth"
+ETH_INTERFACE="enP8p1s0"
+ETH_IP="192.168.50.1/24"
+if ip link show "$ETH_INTERFACE" >/dev/null 2>&1; then
+	sudo nmcli dev set "$ETH_INTERFACE" managed yes 2>/dev/null || true
+	if nmcli con show "$ETH_CONNECTION" >/dev/null 2>&1; then
+		sudo nmcli con modify "$ETH_CONNECTION" \
+			connection.interface-name "$ETH_INTERFACE" \
+			connection.autoconnect yes connection.autoconnect-priority 10 \
+			ipv4.method shared ipv4.addresses "$ETH_IP" \
+			ipv4.never-default yes
+	else
+		sudo nmcli con add type ethernet ifname "$ETH_INTERFACE" con-name "$ETH_CONNECTION" \
+			connection.autoconnect yes connection.autoconnect-priority 10 \
+			ipv4.method shared ipv4.addresses "$ETH_IP" \
+			ipv4.never-default yes
+	fi
+	sudo nmcli con up "$ETH_CONNECTION" || echo "ghost-eth: cable not plugged in yet; profile will auto-activate later"
+else
+	echo "ghost-eth: interface $ETH_INTERFACE not found; skipping wired ROS network"
+fi
+
 #cd /tmp
 
 ## Download the zip archive of the repo

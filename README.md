@@ -94,3 +94,20 @@ After `configure-os`, the `ghost` command is available system-wide (symlinked in
 - `ghost install` — links and enables the `ghost` systemd services.
 - `ghost configure-os` — runs the one-time Jetson OS setup (autologin, time sync, sudoers, `ghost` symlink) and `install`.
 - `ghost set-robot-name <name>` — provisions this machine as a robot by writing its name to `/etc/ghost/robot_name`.
+
+# Networking
+
+## Connect the robot to WiFi (uplink)
+
+```sh
+sudo nmcli dev wifi connect "Velocity Wi-Fi" password "<wifi-password>"
+```
+
+## Wired ROS network (plug-in-and-go)
+
+`ghost configure-os` sets up the robot's ethernet port (`enP8p1s0`) as a shared connection: the robot is pinned to `192.168.50.1` and runs a DHCP server on that subnet. So to connect a laptop for visualization, just **plug an ethernet cable from the laptop into the robot** — the laptop auto-gets an address (no laptop-side network config). Then run rviz on the same ROS domain:
+
+```sh
+export ROS_DOMAIN_ID=0
+rviz2
+```
