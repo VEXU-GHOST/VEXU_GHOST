@@ -33,6 +33,7 @@
 #include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/srv/start_recorder.hpp>
 #include <ghost_msgs/srv/stop_recorder.hpp>
+#include <chrono>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
@@ -81,6 +82,7 @@ protected:
   void updateConveyorPositionSensing();
   void publishIMUData();
   void updateAndPublishOdometry();
+  void odomWatchdogLoop();
   void publishBaseTwist();
   void publishTrajectoryVisualization();
 
@@ -134,6 +136,11 @@ protected:
   void resetWorldPose();
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
+
+  // Wheel-odom watchdog: holds the last odom when V5 sensor updates go stale.
+  rclcpp::TimerBase::SharedPtr m_odom_watchdog_timer;
+  nav_msgs::msg::Odometry m_last_odom_msg;
+  std::chrono::steady_clock::time_point m_last_sensor_time;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr m_joint_state_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_tank_viz_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr m_trajectory_viz_pub;

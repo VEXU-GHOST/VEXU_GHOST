@@ -142,7 +142,21 @@ void TankRobotPlugin::initROSComms()
 
   node_ptr_->declare_parameter("odom_topic", "/sensors/wheel_odom");
   std::string odom_topic = node_ptr_->get_parameter("odom_topic").as_string();
-  m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(odom_topic, rclcpp::SensorDataQoS());
+  m_odom_pub = node_ptr_->create_publisher<nav_msgs::msg::Odometry>(
+    odom_topic, rclcpp::SensorDataQoS());
+
+  // Wheel-odom watchdog: odom_ekf only initializes once it receives a wheel-odom
+  // message, and the V5 brain stops sending them when it's off. A 1 Hz timer
+  // republishes the last odom whenever nothing has gone out in the last second,
+  // so the EKF still gets a measurement (identity until the first real one) and
+  // the odom->base_link tree comes up. The normal sensor path resets the timer.
+  m_last_odom_msg.header.frame_id = "odom";
+  m_last_odom_msg.child_frame_id = "base_link";
+  m_last_odom_msg.pose.pose.orientation.w = 1.0;
+  m_last_sensor_time = std::chrono::steady_clock::now();
+  m_odom_watchdog_timer = node_ptr_->create_wall_timer(
+    std::chrono::seconds(1),
+    std::bind(&TankRobotPlugin::odomWatchdogLoop, this));
 
   // Subscriptions
   node_ptr_->declare_parameter("pose_topic", "/odometry/filtered");
@@ -1090,7 +1104,25 @@ void TankRobotPlugin::updateAndPublishOdometry()
 
   m_odom_pub->publish(msg);
 
+  // Cache for the watchdog so it can hold this value if the brain drops out.
+  m_last_odom_msg = msg;
+  m_last_sensor_time = std::chrono::steady_clock::now();
+
   m_last_odom_pose = m_curr_odom_pose;
+}
+
+void TankRobotPlugin::odomWatchdogLoop()
+{
+  // Something was published in the last second; nothing to do.
+  if (std::chrono::steady_clock::now() - m_last_sensor_time <
+    std::chrono::seconds(1))
+  {
+    return;
+  }
+  // Stale: republish the last odom so odom_ekf keeps getting a measurement
+  // (identity until the first real reading).
+  m_last_odom_msg.header.stamp = node_ptr_->get_clock()->now();
+  m_odom_pub->publish(m_last_odom_msg);
 }
 
 void TankRobotPlugin::resetWorldPose()
