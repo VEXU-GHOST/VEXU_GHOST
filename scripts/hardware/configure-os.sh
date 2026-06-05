@@ -36,6 +36,19 @@ sudo systemctl restart systemd-timesyncd.service
 # Expose this script as the 'ghost' command system-wide.
 sudo ln -sf "$GHOST" /usr/local/bin/ghost
 
+# --- NetworkManager firewall backend ---
+# NM 1.36 defaults to the nftables backend, but this Jetson L4T kernel has no
+# nftables NAT support, so the shared connection's masquerade/forward rules
+# silently fail to install (DHCP works, internet forwarding doesn't). Force the
+# iptables backend -- which the kernel does support -- then restart NM so the
+# shared connection below comes up with working NAT. (No Docker daemon.json
+# change is needed: NM's own forward chain accepts the subnet before Docker's
+# FORWARD policy is consulted.)
+sudo mkdir -p /etc/NetworkManager/conf.d
+printf '[main]\nfirewall-backend=iptables\n' | sudo tee /etc/NetworkManager/conf.d/10-firewall-backend.conf > /dev/null
+sudo systemctl restart NetworkManager
+sleep 5
+
 # --- Dedicated wired ROS network: the robot is the DHCP server + gateway ---
 # (Inspired by innate-os.) 'ipv4.method shared' pins the interface to a fixed IP
 # AND runs a dnsmasq DHCP server + NAT on the subnet, so a laptop just plugs in
