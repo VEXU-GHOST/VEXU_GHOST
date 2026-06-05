@@ -1,6 +1,8 @@
 install
 build
 log
+# but keep the build helper scripts (the bare 'build' rule above matches this dir)
+!scripts/build/
 .vscode
 *.pyc
 .cache/*

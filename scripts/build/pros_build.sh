@@ -5,7 +5,7 @@ if [[ $(pros --version) ]] 2> /dev/null; then
     echo -------------------------------------------------------
 	echo ----------- Updating Project Symbolic Links -----------
 	echo -------------------------------------------------------
-    bash scripts/update_symlinks.sh || exit -1
+    bash scripts/build/update_symlinks.sh || exit -1
     
     echo 
     ./build/ghost_v5_interfaces/generate_pros_header robots.yaml || exit -1
