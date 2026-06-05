@@ -42,7 +42,6 @@ skip=(
     btcpp_ros2_interfaces
     btcpp_ros2_samples
     rplidar_ros
-    ghost_swerve
     plotjuggler
     plotjuggler_ros
     librealsense2
