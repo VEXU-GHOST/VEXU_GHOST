@@ -6,18 +6,21 @@ port_configuration:
         D: OUT
         E: OUT
         F: OUT
+        G: OUT
+        H: OUT
     devices:
         imu:
-            port: 21
+            port: 4
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
+
         scorer_motor:
             port: 6
             type: MOTOR
             reversed: false
             config: intake_motor_config
         intake_motor:
-            port: 4
+            port: 15
             type: MOTOR
             reversed: true
             config: intake_motor_config
@@ -29,7 +32,7 @@ port_configuration:
         drive_l1:
             port: 10
             type: MOTOR
-            reversed: true
+            reversed: false
             config: drive_motor_config
         drive_l2:
             port: 11
@@ -164,3 +167,4 @@ port_configuration:
                 send_position_command: true
                 send_velocity_command: false
                 send_voltage_command: true
+

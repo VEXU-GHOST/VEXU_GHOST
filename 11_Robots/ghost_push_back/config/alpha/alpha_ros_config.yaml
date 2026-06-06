@@ -6,11 +6,11 @@ ghost_serial_node:
 
 imu_filter_node:
   ros__parameters:
-    input_imu_topic: /camera/camera/gyro/sample
+    input_imu_topic: /sensors/imu
     output_imu_topic: /estimation/imu/filtered
     calculate_bias: false
     calculate_covariance: false
-    calibration_time: 60.0
+    calibration_time: 5.0
     sensor_frequency: 100.0
     heading_covariance: 0.001
 
@@ -18,9 +18,9 @@ imu_filter_node:
     accel_bias_y: 0.991383
     accel_bias_z: 0.032677
 
-    gyro_bias_x: -0.00469872
-    gyro_bias_y:  0.00181398
-    gyro_bias_z: -0.00054047
+    gyro_bias_x: 0.0
+    gyro_bias_y: 0.0
+    gyro_bias_z: 0.0
 
     accel_covariance:
       [
@@ -36,7 +36,7 @@ imu_filter_node:
         0.0, 0.0, 1.0e-5
       ]
 
-    # This is an Intrinsic ZYX rotation from base link to imu!
+    # This is a Intrinsic ZYX rotation from base link to imu!
     sensor_roll: 0.0
     sensor_pitch: 0.0
     sensor_yaw: 0.0
@@ -72,7 +72,7 @@ competition_state_machine_node:
         integral_limit: 0.35
         integral_activation_bound: 0.5
 
-      init_x_tiles: 1.45
-      init_y_tiles: 1.361
-      init_theta_degrees: 113.0
+      init_x_tiles: 2.5 
+      init_y_tiles: 1.5 
+      init_theta_degrees: 0.0
 
