@@ -42,4 +42,16 @@
     <origin xyz="-0.1143 0.1525 0.2" rpy="0 0 0"/>
   </joint>
 
+  <!-- IMU. -->
+  <link name="imu_link"/>
+
+  <!-- TODO: update with the exact mounting offset/orientation. The EKF only
+       fuses IMU yaw, so the precise translation doesn't really matter; zeros
+       are fine for now. -->
+  <joint name="base_link_to_imu_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
 </robot>
