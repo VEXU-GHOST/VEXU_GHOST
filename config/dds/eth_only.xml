@@ -23,6 +23,7 @@
         <type>UDPv4</type>
         <interfaceWhiteList>
           <address>192.168.50.1</address>
+          <address>100.73.147.1</address>
           <address>127.0.0.1</address>
         </interfaceWhiteList>
       </transport_descriptor>
