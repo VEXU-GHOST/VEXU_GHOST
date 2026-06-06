@@ -54,6 +54,12 @@ case "$1" in
         sudo poweroff
         ;;
     "run")
+        # 'ghost run --v5' first runs the V5 brain program via PROS, then
+        # continues on to launch the hardware stack in this terminal.
+        if [ "$2" = "--v5" ]; then
+            echo "Running V5 program via PROS"
+            pros v5 run
+        fi
         echo "Running ghost hardware in this terminal"
         # Stop anything already running, then launch hardware in this terminal.
         "$0" stop
@@ -88,7 +94,7 @@ case "$1" in
         echo "$2" | sudo tee /etc/ghost/robot_name > /dev/null
         ;;
     *)
-        echo "Usage: ghost [run/build/clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>]"
+        echo "Usage: ghost [run [--v5]/build/clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>]"
         ;;
 esac
 
