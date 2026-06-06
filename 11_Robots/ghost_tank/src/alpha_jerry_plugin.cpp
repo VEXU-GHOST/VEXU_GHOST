@@ -64,7 +64,7 @@ void AlphaJerryPlugin::populateMotorNames()
     "drive_r5",
     "drive_r6",
     "drive_r7",
-    "drive_r8",
+    // "drive_r8",
   };
   m_left_drive_motor_names = {
     "drive_l1",
@@ -74,7 +74,7 @@ void AlphaJerryPlugin::populateMotorNames()
     "drive_l5",
     "drive_l6",
     "drive_l7",
-    "drive_l8",
+    // "drive_l8",
   };
 
   m_all_drive_motor_names.insert(
@@ -168,6 +168,7 @@ void AlphaJerryPlugin::teleop(double current_time)
 
 void AlphaJerryPlugin::updateT1Climb(bool up, bool down, bool enabled)
 {
+  return;
   if (enabled) {
     if (up) {
       rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], true);
@@ -180,6 +181,7 @@ void AlphaJerryPlugin::updateT1Climb(bool up, bool down, bool enabled)
 
 void AlphaJerryPlugin::updateScissor(bool up, bool down, bool enabled)
 {
+  return;
   rhi_ptr_->setDigitalOut(digital_io_port_map["shooter"], false);
   if (enabled) {
     if (up && down) {
