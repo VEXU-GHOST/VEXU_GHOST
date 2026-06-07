@@ -126,6 +126,10 @@ void EkfPfNode::LoadROSParams()
   config_params.init_y_sigma = get_parameter("particle_filter.init_y_sigma").as_double();
   config_params.init_r_sigma = get_parameter("particle_filter.init_r_sigma").as_double();
 
+  declare_parameter("particle_filter.initial_update_cycles", 0);
+  config_params.initial_update_cycles =
+    get_parameter("particle_filter.initial_update_cycles").as_int();
+
   declare_parameter("particle_filter.k1", 0.0);
   declare_parameter("particle_filter.k2", 0.0);
   declare_parameter("particle_filter.k3", 0.0);

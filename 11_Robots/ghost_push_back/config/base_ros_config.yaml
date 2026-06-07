@@ -56,9 +56,14 @@ competition_state_machine_node:
 
     particle_filter:
       # Initial cloud distribution
-      init_x_sigma: 0.04 #
-      init_y_sigma: 0.04 #
+      init_x_sigma: 1.00 #
+      init_y_sigma: 1.00 #
       init_r_sigma: 0.15 #
+
+      # Number of LIDAR update cycles to force right after a pose reset
+      # (/set_pf_pose), skipping the min_update_dist/angle gate so the cloud
+      # converges immediately without driving. 0 disables.
+      initial_update_cycles: 5
 
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
