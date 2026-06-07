@@ -23,14 +23,14 @@
 
   <link name="map">
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="1.828 1.828 0" rpy="0 0 1.57"/>
       <geometry>
         <!-- STL is in inches; scale to meters (1 in = 0.0254 m). -->
-        <mesh filename="package://ghost_localization/maps/pushBackField.stl"
+              <mesh filename="package://ghost_localization/maps/pushBackField.stl"
               scale="0.0254 0.0254 0.0254"/>
       </geometry>
       <material name="field_grey">
-        <color rgba="0.6 0.6 0.6 1.0"/>
+        <color rgba="0.6 0.6 0.6 0.6"/>
       </material>
     </visual>
   </link>
