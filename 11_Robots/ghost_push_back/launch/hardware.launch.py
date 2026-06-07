@@ -13,7 +13,7 @@ def generate_launch_description():
 
     # This contains parameters shared between both robots
     base_ros_config_file = os.path.join(ghost_push_back_base_dir, "config/base_ros_config.yaml")
-    
+
     #############################
     ### Base Node Definitions ###
     #############################
@@ -34,6 +34,19 @@ def generate_launch_description():
         name="robot_state_publisher",
         output="screen",
         parameters=[{"robot_description": xacro.process_file(urdf_path).toxml()}],
+    )
+
+    # nav2 map server (+ lifecycle manager) that serves the push back field on
+    # /map. Defined in ghost_localization alongside the map files.
+    map_server_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("ghost_localization"),
+                "launch",
+                "map_server.launch.py",
+            )
+        ),
+        launch_arguments={"base_params_file": base_ros_config_file}.items(),
     )
 
     rplidar_node = Node(
@@ -109,6 +122,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("robot_name", default_value="None"),
         robot_state_publisher,
+        map_server_launch,
         rplidar_node,
         # realsense_node,
         bag_recorder_service,

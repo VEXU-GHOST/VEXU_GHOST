@@ -101,6 +101,12 @@ competition_state_machine_node:
 
     system_i2c_bus_path: "/dev/i2c-7"
 
+map_server:
+  ros__parameters:
+    # Occupancy grid served on /map by the nav2 map server (see
+    # ghost_localization/launch/map_server.launch.py).
+    yaml_filename: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/pushBackMapConfig.yaml"
+
 ekf_pf_node:
   ros__parameters:
     particle_filter:
