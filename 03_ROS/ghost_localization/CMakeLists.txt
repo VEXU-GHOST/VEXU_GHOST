@@ -112,6 +112,7 @@ install(DIRECTORY
   launch
   config
   rviz
+  maps
   DESTINATION share/${PROJECT_NAME})
 
 ament_export_include_directories(include)
