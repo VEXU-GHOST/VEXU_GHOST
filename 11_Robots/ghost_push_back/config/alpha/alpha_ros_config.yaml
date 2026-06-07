@@ -72,7 +72,7 @@ competition_state_machine_node:
         integral_limit: 0.35
         integral_activation_bound: 0.5
 
-      init_x_tiles: 2.5 
-      init_y_tiles: 1.5 
-      init_theta_degrees: 0.0
+      init_x_tiles: 3.0 
+      init_y_tiles: 3.0 
+      init_theta_degrees: 90.0
 

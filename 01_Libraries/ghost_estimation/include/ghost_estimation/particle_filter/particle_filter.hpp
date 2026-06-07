@@ -66,6 +66,10 @@ struct ParticleFilterConfig
   float init_x_sigma;
   float init_y_sigma;
   float init_r_sigma;
+  // Number of LIDAR update cycles to force immediately after a pose reset,
+  // regardless of how far the robot has moved (skips the min_update_dist/angle
+  // gate) so the freshly seeded cloud converges right away.
+  int initial_update_cycles;
   float k1;
   float k2;
   float k3;
@@ -214,6 +218,11 @@ private:
 
   Eigen::Vector2f last_update_loc_;
   float last_update_angle_;
+  // Remaining number of LIDAR updates to force regardless of how far the robot
+  // has moved. Set to config.initial_update_cycles by Initialize() so a
+  // /set_pf_pose reset corrects against the map immediately instead of waiting
+  // for min_update_dist/angle, and decremented as each forced update fires.
+  int forced_updates_remaining_ = 0;
   int resample_loop_counter_ = 0;
   double end_time = 0;
 };

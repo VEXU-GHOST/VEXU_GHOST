@@ -290,11 +290,15 @@ void ParticleFilter::ObserveLaser(
   // Call the Update and Resample steps as necessary.
   double delta_translation = (last_update_loc_ - prev_odom_loc_).norm();
   double delta_angle = math_util::AngleDiff(last_update_angle_, prev_odom_angle_);
-  if (((delta_translation > config_params_.min_update_dist) ||
+  if (((forced_updates_remaining_ > 0) ||
+    (delta_translation > config_params_.min_update_dist) ||
     (std::abs(delta_angle) > config_params_.min_update_angle)) &&
     (std::abs(yaw_angular_velocity_curr_) < config_params_.max_update_yaw_velocity) &&
     (std::abs(tilt_angular_velocity_max_) < config_params_.max_update_tilt_velocity))
   {
+    if (forced_updates_remaining_ > 0) {
+      forced_updates_remaining_--;
+    }
     static int i = 0;
     double start_time = GetMonotonicTime();
     max_weight_log_ = -1e10;             // Should be smaller than any
@@ -418,6 +422,9 @@ void ParticleFilter::Initialize(
   max_weight_log_ = 0;
   last_update_loc_ = prev_odom_loc_;
   last_update_angle_ = prev_odom_angle_;
+  // Force the first N update cycles so the freshly seeded cloud converges
+  // without needing the robot to drive min_update_dist first.
+  forced_updates_remaining_ = config_params_.initial_update_cycles;
   map_.Load(map_file);
   SortMap();
 }
