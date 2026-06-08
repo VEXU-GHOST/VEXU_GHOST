@@ -64,6 +64,7 @@ class CvDetectorArray(Node):
         self.color_image = image_msg_to_bgr8(msg)
         self.color_frame_id = msg.header.frame_id
         self._process_frame()
+
     def _make_marker(self, idx: int, stamp, position, class_name: str) -> Marker:
         marker = Marker()
         marker.header.frame_id = self.marker_frame

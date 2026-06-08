@@ -48,10 +48,10 @@ private:
             gs.blue_count = 0;
 
             for (const auto & block : msg->blocks) {
-            if (!inPrism(block, region)) {
-                continue;
-            }
-            block.is_red ? gs.red_count++ : gs.blue_count++;
+                if (!inPrism(block, region)) {
+                    continue;
+                }
+                block.is_red ? gs.red_count++ : gs.blue_count++;
             }
             out.goals.push_back(gs);
         }
@@ -77,8 +77,8 @@ public:
         declare_parameter<std::string>("goal_regions_file", "");
         std::string path = get_parameter("goal_regions_file").as_string();
         if (path.empty()) {
-        path = ament_index_cpp::get_package_share_directory("push_back_cv")
-            + "/config/goal_regions.yaml";
+            path = ament_index_cpp::get_package_share_directory("push_back_cv")
+                + "/config/goal_regions.yaml";
         }
         loadGoals(path);
 
