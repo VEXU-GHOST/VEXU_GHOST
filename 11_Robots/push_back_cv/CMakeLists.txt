@@ -25,11 +25,12 @@ ament_export_dependencies(rosidl_default_runtime)
 find_package(ament_cmake_python REQUIRED)
 ament_python_install_package(cv_perception)
 
+find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 add_executable(goal_reader_node src/goal_reader_node.cpp)
-ament_target_dependencies(goal_reader_node rclcpp)
+ament_target_dependencies(goal_reader_node ament_index_cpp rclcpp)
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 target_link_libraries(goal_reader_node "${cpp_typesupport_target}" yaml-cpp)
 install(TARGETS goal_reader_node DESTINATION lib/${PROJECT_NAME})
