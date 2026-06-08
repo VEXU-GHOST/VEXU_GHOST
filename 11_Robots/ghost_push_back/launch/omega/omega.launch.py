@@ -21,6 +21,9 @@ def generate_launch_description():
     # This contains all the port and device info that gets compiled on to the V5 Brain
     robot_config_yaml_path = os.path.join(config_path, "omega/omega_hardware_config.yaml")
 
+    # This contains the auton init pose (kept separate so it's easy to tweak per match)
+    init_pose_config_file = os.path.join(config_path, "omega/omega_init_pose_config.yaml")
+
     # This specifies robot control plugin yo load
     plugin_type = "ghost_tank::OmegaJerryPlugin"
     robot_name = "OMEGA_JERRY"
@@ -53,6 +56,7 @@ def generate_launch_description():
         parameters=[
             base_params_file,
             ros_config_file,
+            init_pose_config_file,
             {
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,

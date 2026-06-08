@@ -94,11 +94,5 @@ competition_state_machine_node:
         kd: 0.01
         integral_limit: 0.75
         integral_activation_bound: 0.2
-      #normal auton init
-      init_x_tiles: 1.0
-      init_y_tiles: 1.0
-      init_theta_degrees: 0.0
-      # prog init
-      # init_theta_degrees: 160.0
-      # init_x_tiles: 0.5
-      # init_y_tiles: 0.5
+
+      # init pose lives in omega/omega_init_pose_config.yaml

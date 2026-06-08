@@ -79,7 +79,4 @@ competition_state_machine_node:
         integral_limit: 0.35
         integral_activation_bound: 0.5
 
-      init_x_tiles: 3.0 
-      init_y_tiles: 3.0 
-      init_theta_degrees: 90.0
-
+      # init pose lives in alpha/alpha_init_pose_config.yaml
