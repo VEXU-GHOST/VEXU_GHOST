@@ -1,0 +1,17 @@
+# All bounds in map frame (meters). Tune when URDF / field measurements available.
+goals:
+  - id: goal_a
+    x_min: 0.0
+    x_max: 0.5
+    y_min: -0.5
+    y_max: 0.5
+    z_min: -0.1    # ground band example
+    z_max: 0.15
+
+  - id: goal_b_elevated
+    x_min: 1.0
+    x_max: 1.5
+    y_min: 0.0
+    y_max: 0.5
+    z_min: 0.25    # elevated platform height band
+    z_max: 0.45
