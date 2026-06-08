@@ -70,6 +70,23 @@ struct ParticleFilterConfig
   // regardless of how far the robot has moved (skips the min_update_dist/angle
   // gate) so the freshly seeded cloud converges right away.
   int initial_update_cycles;
+  // Global (uniform) initialization. When init_mode == 1, Initialize() seeds a
+  // uniform x,y grid spanning the field (init_uniform_center +/- size/2 in the
+  // map frame) with init_angles_per_position gaussian angle hypotheses per cell
+  // (mean = reset heading, sigma = init_r_sigma), instead of a gaussian cloud
+  // around the reset xy. Grid spacing = init_spatial_tolerance_m /
+  // init_particles_per_tolerance, so the particle count is derived from the
+  // observation tolerance, not configured directly. The fat cloud collapses
+  // back to num_particles once the initial_update_cycles forced updates finish.
+  // Relies on a known heading to break the field's square symmetry.
+  int init_mode;
+  float init_spatial_tolerance_m;
+  int init_particles_per_tolerance;
+  int init_angles_per_position;
+  float init_uniform_center_x;
+  float init_uniform_center_y;
+  float init_uniform_width;
+  float init_uniform_height;
   float k1;
   float k2;
   float k3;
@@ -145,7 +162,7 @@ public:
   // Resample particles.
   void Resample();
 
-  void LowVarianceResample();
+  void LowVarianceResample(std::size_t target_size);
 
   void SortMap();
   static bool horizontal_line_compare(const geometry::Line2f l1, const geometry::Line2f l2);

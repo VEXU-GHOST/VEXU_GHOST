@@ -130,6 +130,32 @@ void EkfPfNode::LoadROSParams()
   config_params.initial_update_cycles =
     get_parameter("particle_filter.initial_update_cycles").as_int();
 
+  // Global (uniform) initialization params. init_mode 0 = gaussian (default),
+  // 1 = uniform field grid; see ParticleFilterConfig for the seeding math.
+  declare_parameter("particle_filter.init_mode", 0);
+  declare_parameter("particle_filter.init_spatial_tolerance_m", 0.2);
+  declare_parameter("particle_filter.init_particles_per_tolerance", 1);
+  declare_parameter("particle_filter.init_angles_per_position", 10);
+  declare_parameter("particle_filter.init_uniform_center_x", 0.0);
+  declare_parameter("particle_filter.init_uniform_center_y", 0.0);
+  declare_parameter("particle_filter.init_uniform_width", 0.0);
+  declare_parameter("particle_filter.init_uniform_height", 0.0);
+  config_params.init_mode = get_parameter("particle_filter.init_mode").as_int();
+  config_params.init_spatial_tolerance_m =
+    get_parameter("particle_filter.init_spatial_tolerance_m").as_double();
+  config_params.init_particles_per_tolerance =
+    get_parameter("particle_filter.init_particles_per_tolerance").as_int();
+  config_params.init_angles_per_position =
+    get_parameter("particle_filter.init_angles_per_position").as_int();
+  config_params.init_uniform_center_x =
+    get_parameter("particle_filter.init_uniform_center_x").as_double();
+  config_params.init_uniform_center_y =
+    get_parameter("particle_filter.init_uniform_center_y").as_double();
+  config_params.init_uniform_width =
+    get_parameter("particle_filter.init_uniform_width").as_double();
+  config_params.init_uniform_height =
+    get_parameter("particle_filter.init_uniform_height").as_double();
+
   declare_parameter("particle_filter.k1", 0.0);
   declare_parameter("particle_filter.k2", 0.0);
   declare_parameter("particle_filter.k3", 0.0);

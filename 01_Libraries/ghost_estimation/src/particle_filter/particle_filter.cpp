@@ -253,19 +253,23 @@ void ParticleFilter::Resample()
   particles_ = new_particles;
 }
 
-void ParticleFilter::LowVarianceResample()
+void ParticleFilter::LowVarianceResample(std::size_t target_size)
 {
-  vector<Particle> new_particles(particles_.size());
+  // Draws target_size systematic samples from the current weighted cloud
+  // (described by weight_bins_). target_size may differ from particles_.size()
+  // so a fat global-init cloud can be collapsed back to num_particles in a
+  // single resample once the forced convergence cycles finish.
+  vector<Particle> new_particles(target_size);
   double select_weight = rng_.UniformRandom(0, weight_sum_);
 
-  for (std::size_t i = 0; i < particles_.size(); i++) {
+  for (std::size_t i = 0; i < target_size; i++) {
     int new_particle_index = std::lower_bound(
       weight_bins_.begin(),
       weight_bins_.end(), select_weight) - weight_bins_.begin();
     select_weight = std::fmod(
-      select_weight + weight_sum_ / ((double) particles_.size()), weight_sum_);
+      select_weight + weight_sum_ / ((double) target_size), weight_sum_);
     new_particles[i] = particles_[new_particle_index];
-    new_particles[i].weight = 1 / ((double) particles_.size());             // rng_.UniformRandom(); good for testing
+    new_particles[i].weight = 1 / ((double) target_size);             // rng_.UniformRandom(); good for testing
   }
 
   weight_sum_ = 1.0;
@@ -329,8 +333,17 @@ void ParticleFilter::ObserveLaser(
       weight_bins_[i] = weight_sum_;
     }
 
-    if (!(resample_loop_counter_ % config_params_.resample_frequency)) {
-      LowVarianceResample();
+    // While forced updates remain (global-init convergence), keep the fat
+    // cloud; once they finish, collapse back to num_particles. The size-change
+    // forces a resample even on a non-resample cycle so the collapse can't be
+    // skipped by the resample_frequency gate.
+    const std::size_t target_size = (forced_updates_remaining_ > 0)
+      ? particles_.size()
+      : (std::size_t) config_params_.num_particles;
+    if (target_size != particles_.size() ||
+      !(resample_loop_counter_ % config_params_.resample_frequency))
+    {
+      LowVarianceResample(target_size);
     }
     last_update_loc_ = prev_odom_loc_;
     last_update_angle_ = prev_odom_angle_;
@@ -407,16 +420,51 @@ void ParticleFilter::Initialize(
   // The "set_pose" button on the GUI was clicked, or an initialization message
   // was received from the log.
 
-  particles_.resize(config_params_.num_particles);
-  std::cout << "Num Particles: " << config_params_.num_particles << std::endl;
+  if (config_params_.init_mode == 1) {
+    // Global init: uniform x,y grid over the field with a gaussian angle fan per
+    // cell. Grid spacing is derived from the observation tolerance so density
+    // tracks how finely the LIDAR likelihood can resolve position. The reset xy
+    // (loc) is ignored here; only the reset heading (angle) is used, as the mean
+    // of each cell's angle fan (heading is known well enough to break the square
+    // field's rotational symmetry, leaving x,y recoverable).
+    const float spacing = config_params_.init_spatial_tolerance_m /
+      std::max(1, config_params_.init_particles_per_tolerance);
+    const float x_min = config_params_.init_uniform_center_x - config_params_.init_uniform_width / 2.0f;
+    const float y_min = config_params_.init_uniform_center_y - config_params_.init_uniform_height / 2.0f;
+    const int nx = std::max(1, (int) std::ceil(config_params_.init_uniform_width / spacing));
+    const int ny = std::max(1, (int) std::ceil(config_params_.init_uniform_height / spacing));
+    const int angles = std::max(1, config_params_.init_angles_per_position);
+    const float dx = config_params_.init_uniform_width / nx;
+    const float dy = config_params_.init_uniform_height / ny;
 
-  for (Particle & particle : particles_) {
-    particle.loc = Eigen::Vector2f(
-      loc[0] + rng_.Gaussian(0, config_params_.init_x_sigma),
-      loc[1] + rng_.Gaussian(0, config_params_.init_y_sigma)
-    );
-    particle.angle = angle + rng_.Gaussian(0, config_params_.init_r_sigma);
-    particle.weight = 1 / ((double)particles_.size());
+    particles_.resize((std::size_t) nx * ny * angles);
+    std::cout << "Global init: " << nx << "x" << ny << " grid @ " << spacing
+      << "m x " << angles << " angles = " << particles_.size() << " particles" << std::endl;
+
+    std::size_t idx = 0;
+    for (int i = 0; i < nx; i++) {
+      for (int j = 0; j < ny; j++) {
+        const float px = x_min + (i + 0.5f) * dx;
+        const float py = y_min + (j + 0.5f) * dy;
+        for (int a = 0; a < angles; a++, idx++) {
+          particles_[idx].loc = Eigen::Vector2f(px, py);
+          particles_[idx].angle = angle + rng_.Gaussian(0, config_params_.init_r_sigma);
+          particles_[idx].weight = 1 / ((double) particles_.size());
+        }
+      }
+    }
+  } else {
+    particles_.resize(config_params_.num_particles);
+    std::cout << "Num Particles: " << config_params_.num_particles << std::endl;
+
+    for (Particle & particle : particles_) {
+      particle.loc = Eigen::Vector2f(
+        loc[0] + rng_.Gaussian(0, config_params_.init_x_sigma),
+        loc[1] + rng_.Gaussian(0, config_params_.init_y_sigma)
+      );
+      particle.angle = angle + rng_.Gaussian(0, config_params_.init_r_sigma);
+      particle.weight = 1 / ((double)particles_.size());
+    }
   }
   weight_sum_ = 1;
   max_weight_log_ = 0;

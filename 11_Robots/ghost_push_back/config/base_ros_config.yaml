@@ -58,12 +58,36 @@ competition_state_machine_node:
       # Initial cloud distribution
       init_x_sigma: 1.30 #
       init_y_sigma: 1.30 #
-      init_r_sigma: 0.15 #
+      init_r_sigma: 0.10 #
 
       # Number of LIDAR update cycles to force right after a pose reset
       # (/set_pf_pose), skipping the min_update_dist/angle gate so the cloud
       # converges immediately without driving. 0 disables.
-      initial_update_cycles: 5
+      # Bumped for global init: the field-wide cloud needs more forced cycles to
+      # collapse onto the true pose than a tight gaussian does.
+      initial_update_cycles: 10
+
+      # Global (uniform) initialization. init_mode 0 = gaussian cloud around the
+      # reset pose (init_*_sigma above); 1 = uniform x,y grid over the whole
+      # field with a gaussian heading fan per cell, which converges onto the true
+      # x,y during the forced cycles above, then collapses back to num_particles.
+      # Heading must be known (it breaks the square field's rotational symmetry).
+      init_mode: 1
+      # Grid spacing = init_spatial_tolerance_m / init_particles_per_tolerance.
+      # Tolerance ~ sigma_observation (the LIDAR likelihood std). The particle
+      # count is DERIVED from these; watch the "Global init: ... particles" log.
+      # Defaults: 0.2 / 1 = 0.20 m spacing over 3.6576 m -> 19x19 cells x 10
+      # angles ~= 3610 particles (transient, only during the forced cycles).
+      init_spatial_tolerance_m: 0.2
+      init_particles_per_tolerance: 1
+      init_angles_per_position: 7
+      # Field box in the MAP frame (corner-origin map): the Push Back field is
+      # 144 in = 3.6576 m square with its center at (1.828, 1.828), matching the
+      # field mesh anchor in maps/pushBackField.urdf.
+      init_uniform_center_x: 1.828
+      init_uniform_center_y: 1.828
+      init_uniform_width: 3.6576
+      init_uniform_height: 3.6576
 
       # Motion Model Params
       # These calculate odometry standard deviations. X is forward, Y is left on robot.
