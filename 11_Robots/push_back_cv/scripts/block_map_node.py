@@ -7,6 +7,7 @@ from rclpy.duration import Duration
 from tf2_ros import Buffer, TransformException, TransformListener
 
 MERGE_DIST_M = 0.15
+# FOV wedge uses camera mount frame; detections are already in map via optical-frame TF.
 CAMERA_FRAME = "camera_link"
 HFOV_RAD = math.radians(69)       # 69 degree HFOV from intel realsense
 MAX_RANGE_M = 2.5    # max distance to repaint tracks
