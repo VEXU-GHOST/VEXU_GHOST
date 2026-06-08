@@ -1,85 +1,92 @@
-/*
- * VEXLink Demo — Robot B (Partner / Receiver)
- *
- * Hardware:  V5 Brain + V5 Smart Radio in any Smart Port
- * Framework: PROS 3.x
- *
- * This robot joins the link as the "partner" and prints every
- * string it receives from the manager robot.
- *
- * Shared link ID: both robots MUST use the same id string.
- * Change "my_vexlink" to whatever you chose when pairing
- * the radios in the VEX Device Info screen.
- */
-
-#include "main.h"
-#include <cstring>   // memcpy
-#include <cstdio>    // printf
+#include "main.h"              // PROS framework entry points and core headers
+#include "vexlink_protocol.hpp" // shared packet definitions (MsgType, RobotStateMsg, encode/decode)
+#include <cstdio>               // printf
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
-static constexpr uint8_t RADIO_PORT = 10;
-static const char * LINK_ID = "my_vexlink";           // must match Robot A
+static constexpr uint8_t  RADIO_PORT    = 10;           // Smart Port the radio is plugged into
+static const char*        LINK_ID       = "my_vexlink"; // must exactly match the manager's LINK_ID
+static constexpr uint32_t POLL_INTERVAL = 50;           // how often to check for new packets (ms)
 
-// How often to poll for incoming data (milliseconds)
-static constexpr uint32_t POLL_INTERVAL_MS = 50;
+// ── receive_state ──────────────────────────────────────────────────────────
+// Checks the radio receive buffer for a complete ROBOT_STATE packet.
+// Returns true and writes the decoded state into `out` if a valid packet was found.
+// Returns false if there is no data, not enough data, or the packet type doesn't match.
 
-// ── Helper: receive a string (non-blocking) ────────────────────────────────
-
-static constexpr size_t MAX_STR_LEN = 63;
-
-bool receive_string(pros::Link& link, char * out_buf, size_t out_size)
+bool receive_state(pros::Link& link, vexlink::RobotStateMsg& out)
 {
-  uint8_t raw[64] = {};
-  int32_t got = link.receive(raw, sizeof(raw));
+    uint32_t avail = link.raw_receivable_size(); // number of raw bytes waiting in the receive buffer
 
-  uint32_t raw_avail = link.raw_receivable_size();
-  char dbg[48];
-  snprintf(dbg, sizeof(dbg), "got=%d raw=%u", (int)got, raw_avail);
-  pros::lcd::set_text(3, dbg);
+    // Need at least a full header plus one payload byte before bothering to read
+    if (avail < vexlink::HEADER_SIZE + 1) return false;
 
-  if (got == PROS_ERR || got < 2) return false;
+    uint8_t  buf[vexlink::MAX_PACKET];                                                    // scratch buffer large enough for any valid packet
+    uint16_t to_read = static_cast<uint16_t>(avail < sizeof(buf) ? avail : sizeof(buf)); // read all available bytes, capped to buffer size
+    int32_t  got     = static_cast<int32_t>(link.receive_raw(buf, to_read));             // pull bytes out of the radio FIFO
 
-  size_t len = raw[0];
-  if (len >= out_size) len = out_size - 1;
-  memcpy(out_buf, raw + 1, len);
-  out_buf[len] = '\0';
-  return true;
+    // receive_raw returns PROS_ERR on failure, or the number of bytes actually read
+    if (got == PROS_ERR || static_cast<size_t>(got) < vexlink::HEADER_SIZE) return false;
+
+    vexlink::MsgType type;       // will hold the message type byte from the header
+    uint8_t          payload_len; // will hold the declared payload length from the header
+    // decode_header validates the buffer is long enough and extracts type + length
+    if (!vexlink::decode_header(buf, static_cast<size_t>(got), type, payload_len)) return false;
+
+    // Ignore packets that aren't the type we're expecting
+    if (type != vexlink::MsgType::ROBOT_STATE) return false;
+
+    // Copy the payload bytes into the output struct and return success
+    return vexlink::decode_payload(buf, payload_len, out);
 }
 
 // ── PROS entry points ──────────────────────────────────────────────────────
 
+// initialize() runs once at power-on before any competition mode starts
 void initialize()
 {
-  pros::lcd::initialize();
-  pros::lcd::set_text(0, "Robot B  |  Partner");
-  pros::lcd::set_text(1, "Waiting for link...");
+    pros::lcd::initialize();                    // turn on the brain's LCD display
+    pros::lcd::set_text(0, "Robot B  |  Partner"); // line 0: static label
+    pros::lcd::set_text(1, "Waiting...");           // line 1: placeholder until link is established
 }
 
-void disabled() {}
-void competition_initialize() {}
-void autonomous() {}
+void disabled() {}             // called when robot is disabled by field controller (nothing to do)
+void competition_initialize() {} // called before autonomous while still disabled (nothing to do)
+void autonomous() {}           // autonomous period (not used on this robot)
 
+// opcontrol() is the main driver-control loop; runs until the match ends
 void opcontrol()
 {
-  static pros::Link rx_link(RADIO_PORT, LINK_ID, pros::E_LINK_RX);
-  char last_msg[64] = "(none yet)";
+    // Declared static so the Link object is constructed once and persists across calls.
+    // Constructing pros::Link at global scope would block LCD init, so we use static here.
+    static pros::Link rx_link(RADIO_PORT, LINK_ID, pros::E_LINK_RX);
 
-  while (true) {
-    char incoming[64];
+    vexlink::RobotStateMsg last_state{}; // most recently received state, zero-initialized
+    bool has_state = false;              // tracks whether we have received at least one valid packet
 
-    bool linked = pros::c::link_connected(RADIO_PORT);
-    if (receive_string(rx_link, incoming, sizeof(incoming))) {
-      strncpy(last_msg, incoming, sizeof(last_msg) - 1);
-      last_msg[sizeof(last_msg) - 1] = '\0';
-      pros::lcd::set_text(1, "RX OK");
-      pros::lcd::set_text(2, last_msg);
-      printf("[Partner] received: \"%s\"\n", last_msg);
-    } else {
-      pros::lcd::set_text(1, linked ? "Linked, no data" : "NOT LINKED");
-      pros::lcd::set_text(2, last_msg);
+    while (true) {
+        vexlink::RobotStateMsg state{}; // temporary storage for the incoming packet
+
+        if (receive_state(rx_link, state)) {
+            last_state = state;  // update the persistent copy with the fresh data
+            has_state  = true;   // mark that we now have at least one good reading
+            printf("[Partner] x=%d y=%d hdg=%.1f flags=%02x\n",
+                   state.x_mm, state.y_mm, state.heading_cd / 100.0f, state.flags); // log to PROS terminal
+        }
+
+        if (has_state) {
+            // At least one packet received — display the most recent state on the brain screen
+            char pos[64], hdg[64];
+            snprintf(pos, sizeof(pos), "X:%d Y:%d mm", last_state.x_mm, last_state.y_mm); // format position string
+            snprintf(hdg, sizeof(hdg), "Hdg:%.1f  %s",
+                     last_state.heading_cd / 100.0f,                                           // convert centidegrees → degrees
+                     (last_state.flags & vexlink::StateFlags::IS_AUTONOMOUS) ? "[AUTO]" : "[DRIVER]"); // decode the autonomous flag bit
+            pros::lcd::set_text(1, pos); // show position on line 1
+            pros::lcd::set_text(2, hdg); // show heading + mode on line 2
+        } else {
+            // No packet yet — show radio link status so we know the connection state
+            pros::lcd::set_text(1, pros::c::link_connected(RADIO_PORT) ? "Linked" : "NOT LINKED");
+        }
+
+        pros::delay(POLL_INTERVAL); // yield for POLL_INTERVAL ms before checking again
     }
-
-    pros::delay(POLL_INTERVAL_MS);
-  }
 }
