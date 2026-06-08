@@ -54,6 +54,9 @@ INFO_TOPIC = "/camera/camera/color/camera_info"
 
 # Topic we publish to (other nodes / rviz can subscribe later)
 OUTPUT_TOPIC = "/ball/position"
+MAP_FRAME = "map"
+OUTPUT_TOPIC_MAP = "/ball/position_map"
+GROUND_Z_MAX = 0.15
 
 
 def median_depth_m(depth_image: np.ndarray, cx: int, cy: int) -> float | None:
@@ -119,7 +122,7 @@ class BallXYZNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.pub_link = self.create_publisher(PointStamped, "/ball/position_camera_link", 10)
-
+        self.pub_map = self.create_publisher(PointStamped, OUTPUT_TOPIC_MAP, 10)
         # Load YOLO (same library as real.py, but .pt for laptop)
         if not os.path.isfile(MODEL_PATH):
             self.get_logger().error(f"Model not found: {MODEL_PATH}")
@@ -206,15 +209,16 @@ class BallXYZNode(Node):
             self.marker_pub.publish(MarkerArray(markers=[clear]))
             return
 
-
         closest_idx = min(range(len(detections)), key=lambda i: detections[i][0])
 
         stamp = self.get_clock().now().to_msg()
         try:
             transform = self.tf_buffer.lookup_transform("camera_link", self.color_frame_id, rclpy.time.Time(), Duration(seconds=1.0))
+            map_transform = self.tf_buffer.lookup_transform(MAP_FRAME, self.color_frame_id, rclpy.time.Time(), timeout=Duration(seconds=0.05))
             marker_array = MarkerArray()
             closest_optical = None
             closest_link = None
+            closest_map = None
             log_parts = []
             for idx, (depth_m, cx, cy, class_name, conf) in enumerate(detections):
                 msg = PointStamped()
@@ -247,10 +251,13 @@ class BallXYZNode(Node):
                 if idx == closest_idx:
                     closest_optical = msg
                     closest_link = points_in_link
+                    closest_map = do_transform_point(msg, map_transform)
+                    closest_map.header.stamp = stamp
                 log_parts.append(f"{class_name}({conf:.2f})@({x:.2f},{y:.2f},{z:.2f})")
             if closest_optical is not None and closest_link is not None:
                 self.pub.publish(closest_optical)
                 self.pub_link.publish(closest_link)
+                self.pub_map.publish(closest_map)
             self.marker_pub.publish(marker_array)
             self.get_logger().info(
                 f"{len(detections)} object(s): " + ", ".join(log_parts),
