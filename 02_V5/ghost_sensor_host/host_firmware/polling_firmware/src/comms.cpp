@@ -102,6 +102,8 @@ void comms_send(uint8_t cmd, const uint8_t *payload, uint16_t len) {
     for (uint32_t i = 0; i < encoded_len; i++) {
         putchar_raw(encoded_message[i]);
     }
+    putchar_raw(0x00);  // COBS frame delimiter — receivers frame on this null byte
+    fflush(stdout);
 }
 
 // ---------------------------------------------------------------------------
