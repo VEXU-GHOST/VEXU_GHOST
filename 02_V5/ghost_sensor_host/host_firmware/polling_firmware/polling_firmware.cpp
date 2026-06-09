@@ -25,6 +25,7 @@
 #define NUM_PORTS         8
 #define MAX_ACTIVE_READS  16
 #define MAX_WRITE_BYTES   32
+#define MAX_POST_BYTES    16
 #define MAX_READ_BYTES    64
 
 // ---------------------------------------------------------------------------
@@ -82,6 +83,8 @@ struct ActiveRead {
   uint8_t  read_len;
   uint8_t  write_len;
   uint8_t  write_bytes[MAX_WRITE_BYTES];
+  uint8_t  post_len;
+  uint8_t  post_bytes[MAX_POST_BYTES];
   uint16_t seq;
   uint16_t remaining;
   uint32_t next_fire_ms;
@@ -112,6 +115,7 @@ static void handle_i2c_write(const uint8_t *p, uint16_t len)
 }
 
 // payload: [id:2][port][addr][interval:2][count:2][read_len][write_len][write_bytes]
+//          [post_len][post_bytes]
 static void handle_read_request(const uint8_t *p, uint16_t len)
 {
   if (len < 10) { send_ack(CMD_READ_REQUEST, ST_BAD_PARAMS); return; }
@@ -123,8 +127,13 @@ static void handle_read_request(const uint8_t *p, uint16_t len)
   uint8_t  read_len = p[8];
   uint8_t  write_len = p[9];
 
+  // post-write follows the write_bytes: [post_len][post_bytes]
+  if (len < uint16_t(11 + write_len)) { send_ack(CMD_READ_REQUEST, ST_BAD_PARAMS); return; }
+  uint8_t  post_len = p[10 + write_len];
+
   if (port >= NUM_PORTS || read_len > MAX_READ_BYTES ||
-      write_len > MAX_WRITE_BYTES || len != uint16_t(10 + write_len)) {
+      write_len > MAX_WRITE_BYTES || post_len > MAX_POST_BYTES ||
+      len != uint16_t(11 + write_len + post_len)) {
     send_ack(CMD_READ_REQUEST, ST_BAD_PARAMS);
     return;
   }
@@ -154,6 +163,8 @@ static void handle_read_request(const uint8_t *p, uint16_t len)
   r.read_len = read_len;
   r.write_len = write_len;
   memcpy(r.write_bytes, p + 10, write_len);
+  r.post_len = post_len;
+  memcpy(r.post_bytes, p + 11 + write_len, post_len);
   r.seq = 0;
   r.remaining = count;
   r.next_fire_ms = now_ms();
@@ -188,6 +199,11 @@ static void service_reads()
     if (status == ST_OK) {
       int rd = g_bus[r.port]->read(r.addr, data, r.read_len);
       if (rd < 0) status = ST_READ_FAIL;
+    }
+    // Post-write (e.g. clear a data-ready interrupt) so the device advances to
+    // its next sample before we read again. Sent regardless of read status.
+    if (r.post_len > 0) {
+      g_bus[r.port]->write(r.addr, r.post_bytes, r.post_len);
     }
 
     // READ_RESULT: [id:2][seq:2][status:1][data_len:1][data]

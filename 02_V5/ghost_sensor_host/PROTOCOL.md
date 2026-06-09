@@ -86,6 +86,7 @@ Host performs `bus[port].write(addr, data, N)` and replies `ACK(0x10, status)`.
 ```
 [ id : 2 ][ port : 1 ][ addr : 1 ][ interval_ms : 2 ][ count : 2 ]
 [ read_len : 1 ][ write_len : 1 ][ write_bytes : write_len ]
+[ post_len : 1 ][ post_bytes : post_len ]
 ```
 
 - `id` — random 2-byte code chosen by ROS, unique among active reads.
@@ -100,17 +101,23 @@ Host performs `bus[port].write(addr, data, N)` and replies `ACK(0x10, status)`.
 - `read_len` — bytes to read each time.
 - `write_len` / `write_bytes` — bytes written **before** each read (e.g. a
   register pointer). `write_len = 0` means read with no preceding write.
+- `post_len` / `post_bytes` — bytes written **after** each read, as a separate
+  transaction (e.g. acknowledging a sensor / clearing a data-ready interrupt so
+  it produces the next sample). `post_len = 0` means no post-write.
 
-For each iteration the host performs a register-style transaction:
+For each iteration the host performs:
 
 ```
 if write_len > 0: bus[port].write(addr, write_bytes, write_len, nostop=true)
 bus[port].read(addr, buf, read_len)
+if post_len > 0:  bus[port].write(addr, post_bytes, post_len)
 ```
 
-then emits one `READ_RESULT`. Host replies `ACK(0x11, status)` immediately to
-confirm the request was accepted (status non-zero if the table is full or
-params are invalid). Up to `MAX_ACTIVE_READS` = 16 reads may run concurrently.
+then emits one `READ_RESULT`. The pre/post writes let a single recurring read
+drive a multi-step sensor handshake entirely on the host — no per-sample
+round-trips to ROS. Host replies `ACK(0x11, status)` immediately to confirm the
+request was accepted (status non-zero if the table is full or params are
+invalid). Up to `MAX_ACTIVE_READS` = 16 reads may run concurrently.
 
 ### 3.4 `READ_RESULT` (0x12) — host → ROS
 
@@ -141,8 +148,10 @@ Protocol **port 0–7** maps to the host's physical inputs:
 `port = input − 1`, so the color sensor on **input 7** is **port 6**.
 
 **I2C address** is set by the device's rotary DAC switch (see
-`polling_firmware.h`). For a color sensor (default address `0x44`) the switch
-XORs an offset: position **8** → `0x44 ^ 0x4F = 0x0B`.
+`polling_firmware.h`), which XORs a position-dependent offset onto the device's
+default address. On the current build the sensors use switch **0**: the color
+sensor (default `0x44`) lands at **`0x3b`** and the distance sensor (default
+`0x29`) at **`0x56`**.
 
 ## 5. Status codes
 
@@ -156,17 +165,17 @@ XORs an offset: position **8** → `0x44 ^ 0x4F = 0x0B`.
 
 ## 6. Worked example — ISL29125 color sensor
 
-Color sensor on **input 7 (port 6)**, rotary switch **8** → address **`0x0B`**.
-Device logic (all on the ROS side):
+Color sensor on **input 7 (port 6)**, rotary switch **0** → address **`0x3b`**.
+A simple register device: no per-read handshake, so `post_len = 0`.
 
 **Initialize** (three one-shot writes; optionally first read reg `0x00`,
 expect `0x7D`):
 
 | step | command     | payload bytes                  | effect                |
 |------|-------------|--------------------------------|-----------------------|
-| 1    | `I2C_WRITE` | `06 0B 01 05`                  | CONFIG1 = 0x05 (RGB)  |
-| 2    | `I2C_WRITE` | `06 0B 02 00`                  | CONFIG2 = 0x00        |
-| 3    | `I2C_WRITE` | `06 0B 03 00`                  | CONFIG3 = 0x00        |
+| 1    | `I2C_WRITE` | `06 3B 01 05`                  | CONFIG1 = 0x05 (RGB)  |
+| 2    | `I2C_WRITE` | `06 3B 02 00`                  | CONFIG2 = 0x00        |
+| 3    | `I2C_WRITE` | `06 3B 03 00`                  | CONFIG3 = 0x00        |
 
 **Recurring read** of the 6 colour-data bytes (`0x09`..`0x0E`), 20 times at
 100 ms:
@@ -175,28 +184,60 @@ expect `0x7D`):
 READ_REQUEST:
   id          = <random, e.g. 0xA13F>
   port        = 6
-  addr        = 0x0B
+  addr        = 0x3B
   interval_ms = 100
   count       = 20
   read_len    = 6
-  write_len   = 1
-  write_bytes = 09          # pointer to GREEN_DATA_LBYTE
+  write_len   = 1 ; write_bytes = 09     # pointer to GREEN_DATA_LBYTE
+  post_len    = 0                        # no post-write needed
 ```
 
-Each `READ_RESULT.data` is 6 bytes: `G_L G_H R_L R_H B_L B_H`. ROS decodes:
+Each `READ_RESULT.data` is 6 bytes: `G_L G_H R_L R_H B_L B_H`. ROS decodes
+`green = G_H<<8 | G_L`, etc., and publishes a `ghost_msgs/ColorSensorState`
+on `sensor_host/color_sensor_update`.
+
+## 7. Worked example — VL53L4CD distance sensor
+
+Distance sensor on **input 7 (port 6)**, rotary switch **0** → address **`0x56`**.
+A ToF sensor with **16-bit registers** (so register pointers are 2 big-endian
+bytes) and a per-sample handshake — the perfect case for `post_bytes`.
+
+**Initialize** — a one-time handshake, driven from ROS (the host stays device
+agnostic). Mirrors ST's `VL53L4CD_SensorInit` → `SetRangeTiming(50ms)` →
+`StartRanging`: verify model id `0xEBAA` (read reg `0x010F`), wait for boot
+(reg `0x00E5 == 0x03`), block-write the 91-byte default config to reg `0x002D`,
+run VHV, set the timing budget, then start continuous ranging (`0x0087 = 0x21`).
+Reads during init use a one-shot `READ_REQUEST` (`count = 1`).
+
+**Recurring read** of the 15-byte result block at `RESULT__RANGE_STATUS`
+(`0x0089`), 20 times at 100 ms, **clearing the data-ready interrupt after each
+read** so the sensor advances to the next measurement — entirely on the host:
 
 ```
-green = G_H << 8 | G_L
-red   = R_H << 8 | R_L
-blue  = B_H << 8 | B_L
+READ_REQUEST:
+  id          = <random, e.g. 0xD157>
+  port        = 6
+  addr        = 0x56
+  interval_ms = 100
+  count       = 20
+  read_len    = 15
+  write_len   = 2  ; write_bytes = 00 89    # pointer to RESULT__RANGE_STATUS
+  post_len    = 3  ; post_bytes  = 00 86 01 # SYSTEM__INTERRUPT_CLEAR = 0x01
 ```
 
-and publishes a `ghost_msgs/ColorSensorState` (name, r, g, b, lux, cct — with
-lux/cct left 0) on `sensor_host/color_sensor_update`.
+Each iteration the host runs `write(00 89) → read(15) → write(00 86 01)`. Each
+`READ_RESULT.data` is the 15 result bytes (`0x0089`..`0x0097`); ROS decodes
+`range_status = data[0]` (ST remap), `distance_mm = data[13]<<8 | data[14]`,
+plus sigma / signal / ambient, and publishes a `ghost_msgs/DistanceSensorState`
+on `sensor_host/distance_sensor_update`.
 
-## 7. Out of scope (for now)
+> Because `interval_ms` (100) comfortably exceeds the 50 ms timing budget, the
+> measurement triggered by one iteration's post-write is always complete by the
+> next read — no data-ready polling needed.
 
-- Other sensor types (IMU, distance, IO expander) — same primitives, ROS-side
-  logic added later.
+## 8. Out of scope (for now)
+
+- Other sensor types (IMU, IO expander) — same primitives, ROS-side logic
+  added later.
 - Bus scanning / device discovery.
 - Host-side configuration persistence.
