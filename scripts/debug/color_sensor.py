@@ -31,6 +31,25 @@ from ghost_msgs.msg import ColorSensorState
 DEFAULT_TOPIC = "/sensor_host/color_sensor_update"
 BAR_W = 48
 
+# Red/blue ball classification from the raw R/B ratio (green is ignored — it
+# only carries the sensor's gain imbalance). Tune by holding up each ball and
+# watching the printed R/B value. A red ball gives R/B well above 1, blue well
+# below 1. MIN_LEVEL gates out "nothing/too dark in front of the sensor".
+RED_RB = 1.4
+BLUE_RB = 0.7
+MIN_LEVEL = 1500
+
+
+def classify(r16, g16, b16):
+    if max(r16, g16, b16) < MIN_LEVEL:
+        return "none", "\x1b[90m none  (dark / no object)\x1b[0m"
+    rb = r16 / max(1, b16)
+    if rb >= RED_RB:
+        return "red", f"\x1b[1;97;41m RED  \x1b[0m  R/B={rb:4.2f}"
+    if rb <= BLUE_RB:
+        return "blue", f"\x1b[1;97;44m BLUE \x1b[0m  R/B={rb:4.2f}"
+    return "unsure", f"\x1b[1;30;43m  ?   \x1b[0m  R/B={rb:4.2f}"
+
 
 def hsv_px(h, s, v):
     r, g, b = colorsys.hsv_to_rgb(h % 1.0, s, v)
@@ -66,6 +85,7 @@ def render(name, r16, g16, b16, white):
         out.append(sw + " " * BAR_W + "\x1b[0m\x1b[K\n")
     out.append(f"\x1b[K {name}\n")
     out.append(f"\x1b[K RGB  R:{r16:5d}  G:{g16:5d}  B:{b16:5d}   ->  {r:3d},{g:3d},{b:3d}\n")
+    out.append(f"\x1b[K ball: {classify(r16, g16, b16)[1]}\x1b[K\n")
     out.append(f"\x1b[K H {bar(lambda t: hsv_px(t, s, v), h)} {h * 360:5.1f}deg\n")
     out.append(f"\x1b[K S {bar(lambda t: hsv_px(h, t, v), s)} {s * 100:5.1f}%\n")
     out.append(f"\x1b[K V {bar(lambda t: hsv_px(h, s, t), v)} {v * 100:5.1f}%\n")
