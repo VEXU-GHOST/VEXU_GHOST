@@ -43,6 +43,10 @@ cmake -S "$PICOTOOL_DIR" -B "$PICOTOOL_DIR/build" -DPICO_SDK_PATH="$PICO_SDK_DIR
 cmake --build "$PICOTOOL_DIR/build" -j"$(nproc)" || exit -1
 sudo cmake --install "$PICOTOOL_DIR/build" || exit -1
 
+# udev rules so picotool can reach the board in BOOTSEL mode without sudo.
+sudo cp "$PICOTOOL_DIR/udev/60-picotool.rules" /etc/udev/rules.d/60-picotool.rules || exit -1
+sudo udevadm control --reload-rules && sudo udevadm trigger
+
 echo
 echo "--------------- ROSDEP Init ---------------"
 sudo rosdep init
