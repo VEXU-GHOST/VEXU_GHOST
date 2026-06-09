@@ -27,10 +27,10 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <ghost_msgs/msg/sensor_host_device_msgs/color_sensor_state.hpp>
-#include <ghost_msgs/msg/sensor_host_device_msgs/distance_sensor_state.hpp>
-#include <ghost_msgs/msg/sensor_host_device_msgs/imu_state.hpp>
-#include <ghost_msgs/msg/sensor_host_device_msgs/io_expander_state.hpp>
+#include <ghost_msgs/msg/color_sensor_state.hpp>
+#include <ghost_msgs/msg/distance_sensor_state.hpp>
+#include <ghost_msgs/msg/imu_state.hpp>
+#include <ghost_msgs/msg/io_expander_state.hpp>
 #include <ghost_serial/base_interfaces/jetson_serial_base.hpp>
 
 #include <ghost_v5_interfaces/devices/device_config_map.hpp>

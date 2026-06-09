@@ -31,6 +31,8 @@ if [ ! -d "$PICO_SDK_DIR/.git" ]; then
 fi
 # Only tinyusb is needed (USB stdio); skip the Pico W wifi/bluetooth submodules.
 git -C "$PICO_SDK_DIR" submodule update --init lib/tinyusb || exit -1
+# Keep colcon from treating the SDK as a ROS package.
+touch "$PICO_SDK_DIR/COLCON_IGNORE"
 
 # picotool — not packaged on Ubuntu 22.04, so build it from source against the
 # SDK. `cmake --install` also drops in udev rules so sensor_host.sh can flash
@@ -39,6 +41,8 @@ PICOTOOL_DIR="$VEXU_HOME/09_External/picotool"
 if [ ! -d "$PICOTOOL_DIR/.git" ]; then
     git clone --branch 2.2.0 --depth 1 https://github.com/raspberrypi/picotool.git "$PICOTOOL_DIR" || exit -1
 fi
+# Keep colcon from treating picotool as a ROS package.
+touch "$PICOTOOL_DIR/COLCON_IGNORE"
 cmake -S "$PICOTOOL_DIR" -B "$PICOTOOL_DIR/build" -DPICO_SDK_PATH="$PICO_SDK_DIR" || exit -1
 cmake --build "$PICOTOOL_DIR/build" -j"$(nproc)" || exit -1
 sudo cmake --install "$PICOTOOL_DIR/build" || exit -1
