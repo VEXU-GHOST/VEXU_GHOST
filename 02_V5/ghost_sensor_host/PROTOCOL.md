@@ -235,9 +235,68 @@ on `sensor_host/distance_sensor_update`.
 > measurement triggered by one iteration's post-write is always complete by the
 > next read — no data-ready polling needed.
 
-## 8. Out of scope (for now)
+## 8. Device configuration (ROS host driver)
 
-- Other sensor types (IMU, IO expander) — same primitives, ROS-side logic
-  added later.
+The ROS-side driver is configured with an **array of devices**, so any mix of
+sensors on any ports can be declared without code changes. Each entry names a
+device, says where it is and what it is, and the driver creates a publisher and
+an autonomous recurring read for it.
+
+```yaml
+devices:
+  - name: "abc"          # topic + log identifier
+    port: 6              # host input 7 (port = input - 1)
+    type: COLOR          # COLOR | DISTANCE | IMU | IO_EXPANDER
+    remap_switch: 1      # rotary DAC position 0-15 -> I2C address (see below)
+    # ...type-specific fields, e.g. for COLOR:
+    config1: 0x0D        # ISL29125 CONFIG1 (range/resolution)
+    config2: 0xBF        # ISL29125 CONFIG2 (IR compensation)
+```
+
+> **Implementation note:** ROS 2 parameters cannot hold an array of maps, so
+> this device array is loaded from a dedicated YAML file (parsed with yaml-cpp),
+> whose path is given by a `device_config` ROS parameter — the same pattern the
+> V5 serial node uses for `robot_config_yaml_path`.
+
+Each device is published on **`/{namespace}/{type}/{name}`** (type lower-cased).
+The example above publishes `ghost_msgs/ColorSensorState` on `/sensors/color/abc`.
+
+### 8.1 Address from the rotary switch
+
+The I2C address is the device type's default address XOR a per-position offset
+set by the rotary DAC:
+
+```
+address = DEFAULT_ADDR[type] ^ DAC_OFFSET[remap_switch]
+```
+
+| type          | device   | default addr |
+|---------------|----------|--------------|
+| `COLOR`       | ISL29125 | `0x44`       |
+| `DISTANCE`    | VL53L4CD | `0x29`       |
+| `IMU`         | ICM20602 | `0x68`       |
+| `IO_EXPANDER` | TCA9536  | `0x41`       |
+
+DAC offset by switch position:
+
+| sw  | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | A  | B  | C  | D  | E  | F  |
+|-----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|
+| off |7F  |75  |7A  |70  |2F  |25  |2A  |20  |4F  |45  |4A  |40  |0F  |05  |0A  |00  |
+
+Examples: `COLOR` at switch 0 → `0x44 ^ 0x7F = 0x3b`; `DISTANCE` at switch 0 →
+`0x29 ^ 0x7F = 0x56`; `COLOR` at switch 1 → `0x44 ^ 0x75 = 0x31`. Results outside
+the valid I2C range (`0x08`–`0x77`) are rejected.
+
+### 8.2 Per-type behaviour
+
+| type          | type-specific config | host read (write → read → post)                       | message / topic                          |
+|---------------|----------------------|-------------------------------------------------------|------------------------------------------|
+| `COLOR`       | `config1`, `config2` | `write[09] read 6` (no post)                          | `ColorSensorState` → `…/color/<name>`    |
+| `DISTANCE`    | `timing_budget_ms`   | one-time init, then `write[00 89] read 15 post[00 86 01]` | `DistanceSensorState` → `…/distance/<name>` |
+| `IMU`         | _(future)_           | _(future)_                                            | `ImuState` → `…/imu/<name>`              |
+| `IO_EXPANDER` | _(future)_           | _(future)_                                            | `IOExpanderState` → `…/io_expander/<name>` |
+
+## 9. Out of scope (for now)
+
 - Bus scanning / device discovery.
 - Host-side configuration persistence.
