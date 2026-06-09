@@ -61,7 +61,7 @@ install(
 #####################
 #### Executables ####
 #####################
-# Jetson Serial Node
+# Jetson Serial Node for V5
 add_executable(jetson_v5_serial_node
   src/serial/jetson_v5_serial_node.cpp
 )
@@ -80,6 +80,27 @@ target_include_directories(jetson_v5_serial_node
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
   jetson_v5_serial_node
+  DESTINATION lib/${PROJECT_NAME})
+
+# Jetson Serial Node for Sensor Host
+add_executable(jetson_sensor_host_serial_node
+  src/serial/jetson_sensor_host_serial_node.cpp
+)
+ament_target_dependencies(jetson_sensor_host_serial_node
+  ${DEPENDENCIES}
+)
+target_link_libraries(jetson_sensor_host_serial_node
+  ghost_serial::jetson_serial_base
+  ghost_serial::cobs
+  msg_helpers
+  yaml-cpp
+)
+target_include_directories(jetson_sensor_host_serial_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  jetson_sensor_host_serial_node
   DESTINATION lib/${PROJECT_NAME})
 
 # V5 Robot Base Library
