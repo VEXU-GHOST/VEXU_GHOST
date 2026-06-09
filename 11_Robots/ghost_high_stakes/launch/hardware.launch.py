@@ -92,7 +92,20 @@ def generate_launch_description():
                 ),
                 launch_arguments={'base_params_file': base_ros_config_file}.items()
             )
-            return [robot_launch]
+
+            # RP2040 sensor host (colour + distance over USB serial). Uses the
+            # per-robot ghost_sensor_host_serial_node params.
+            ros_config_file = os.path.join(
+                ghost_high_stakes_base_dir, "config", robot_name, robot_name + "_ros_config.yaml")
+            sensor_host_node = Node(
+                package="ghost_ros_interfaces",
+                executable="jetson_sensor_host_serial_node",
+                name="ghost_sensor_host_serial_node",
+                output="screen",
+                parameters=[base_ros_config_file, ros_config_file],
+            )
+
+            return [robot_launch, sensor_host_node]
 
     return LaunchDescription([
         DeclareLaunchArgument("robot_name", default_value="None"),
