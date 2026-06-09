@@ -237,29 +237,35 @@ on `sensor_host/distance_sensor_update`.
 
 ## 8. Device configuration (ROS host driver)
 
-The ROS-side driver is configured with an **array of devices**, so any mix of
-sensors on any ports can be declared without code changes. Each entry names a
-device, says where it is and what it is, and the driver creates a publisher and
-an autonomous recurring read for it.
+The ROS-side driver is configured by a **device map** — modelled on the
+`devices:` block of `alpha_hardware_config.yaml`, but with each device's
+settings inline (no separate config blocks). Any mix of sensors on any ports can
+be declared without code changes; the driver creates a publisher and an
+autonomous recurring read per device.
 
 ```yaml
 devices:
-  - name: "abc"          # topic + log identifier
-    port: 6              # host input 7 (port = input - 1)
-    type: COLOR          # COLOR | DISTANCE | IMU | IO_EXPANDER
-    remap_switch: 1      # rotary DAC position 0-15 -> I2C address (see below)
-    # ...type-specific fields, e.g. for COLOR:
-    config1: 0x0D        # ISL29125 CONFIG1 (range/resolution)
-    config2: 0xBF        # ISL29125 CONFIG2 (IR compensation)
+    intake_color:            # device name = topic id + log id
+        port: 6              # host input 7 (port = input - 1)
+        type: COLOR          # COLOR | DISTANCE | IMU | IO_EXPANDER
+        remap_switch: 0      # rotary DAC position 0-15 -> I2C address (see 8.1)
+        config1: 0x0D        # ISL29125 CONFIG1 (range/resolution)
+        config2: 0xBF        # ISL29125 CONFIG2 (IR compensation)
+    wall_distance:
+        port: 5
+        type: DISTANCE
+        remap_switch: 0
+        timing_budget_ms: 50
 ```
 
-> **Implementation note:** ROS 2 parameters cannot hold an array of maps, so
-> this device array is loaded from a dedicated YAML file (parsed with yaml-cpp),
-> whose path is given by a `device_config` ROS parameter — the same pattern the
-> V5 serial node uses for `robot_config_yaml_path`.
+> **Implementation note:** ROS 2 parameters cannot hold nested maps, so the
+> device map is loaded from a dedicated YAML file (parsed with yaml-cpp) whose
+> path is given by a `device_config` ROS parameter — the same pattern the V5
+> serial node uses for `robot_config_yaml_path`.
 
 Each device is published on **`/{namespace}/{type}/{name}`** (type lower-cased).
-The example above publishes `ghost_msgs/ColorSensorState` on `/sensors/color/abc`.
+`intake_color` above publishes `ghost_msgs/ColorSensorState` on
+`/sensors/color/intake_color`.
 
 ### 8.1 Address from the rotary switch
 
