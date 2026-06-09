@@ -80,56 +80,15 @@ def generate_launch_description():
         parameters=[ros_config_file, base_params_file],
     )
 
-    color_sensor_intake = Node(
+    # Ball colour classifier on the RP2040 sensor host colour topic
+    # (omega_sensor_host_config.yaml: intake). Thresholds from base_ros_config;
+    # publishes on <input_topic>/class.
+    intake_classifier = Node(
         package="ghost_sensing",
-        executable="tcs_color_sensor",
-        name="tcs_color_sensor_intake",
+        executable="ball_color_classifier",
+        name="intake_color_classifier",
         output="screen",
-        namespace="/sensors/color_sensors/intake",
-        parameters=[
-            ros_config_file, base_params_file
-            # address 0x29, not configurable on tcs
-       ],
-    )
-
-    color_classifier_intake = Node(
-        package="ghost_sensing",
-        executable="color_classifier",
-        name="color_classifier_0",
-        output="screen",
-        namespace="/sensors/color_sensors/intake",
-        parameters=[ros_config_file, base_params_file],
-    )
-
-    color_sensor_goal_rush_l = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush_l",
-        output="screen",
-        namespace="/sensors/color_sensors/goal_rush_l",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x69, # both address translator switches off so ^ 0x70
-        }],
-    )
-    color_sensor_goal_rush_r = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush_r",
-        output="screen",
-        namespace="/sensors/color_sensors/goal_rush_r",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x99, # one switch on idk which trial and error so ^ 0x40
-        }],
-    )
-    color_sensor_goal_clamp = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_clamp",
-        output="screen",
-        namespace="/sensors/color_sensors/goal_clamp",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x39, # one switch on idk which trial and error so ^ 0x40
-        }],
+        parameters=[base_params_file, {"input_topic": "/sensors/color/intake"}],
     )
 
 
@@ -166,12 +125,7 @@ def generate_launch_description():
         odom_ekf_node,
         ekf_pf_node,
         map_ekf_node,
-        color_sensor_intake,
-        color_classifier_intake,
-        # color_sensor_goal_rush_l,
-        # color_sensor_goal_rush_r,
-        color_sensor_goal_clamp,
-
+        intake_classifier,
         competition_state_machine_node,
         gpio_expander,
     ])

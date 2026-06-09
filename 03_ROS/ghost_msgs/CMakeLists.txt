@@ -33,6 +33,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/sensor_host_device_msgs/DistanceSensorState.msg"
   "msg/sensor_host_device_msgs/ImuState.msg"
   "msg/sensor_host_device_msgs/IOExpanderState.msg"
+  "msg/sensor_host_device_msgs/BallColor.msg"
   "srv/BroadcastJacobian.srv"
   "srv/StartRecorder.srv"
   "srv/StopRecorder.srv"

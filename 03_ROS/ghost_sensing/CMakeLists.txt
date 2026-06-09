@@ -15,6 +15,7 @@ set(DEPENDENCIES
   rclcpp
   visualization_msgs
   ghost_util
+  ghost_msgs
   std_msgs
   sensor_msgs
   geometry_msgs
@@ -54,58 +55,20 @@ install(TARGETS
   imu_filter_node
   DESTINATION lib/${PROJECT_NAME})
 
-# TCS Color Sensor
-add_executable(tcs_color_sensor
-  src/driver_tcs34725_interface.cpp
-  src/driver_tcs34725.cpp
-  src/tcs_color_sensor.cpp
+# Ball Colour Classifier — consumes ghost_msgs/ColorSensorState from the sensor
+# host and republishes a ghost_msgs/BallColor on <input_topic>/class.
+add_executable(ball_color_classifier
+  src/ball_color_classifier.cpp
 )
-ament_target_dependencies(tcs_color_sensor
+ament_target_dependencies(ball_color_classifier
   ${DEPENDENCIES}
 )
-target_link_libraries(tcs_color_sensor i2c)
-target_include_directories(tcs_color_sensor
+target_include_directories(ball_color_classifier
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  tcs_color_sensor
-  DESTINATION lib/${PROJECT_NAME})
-
-
-# Avago Color Sensor
-add_executable(avago_color_sensor
-  src/driver_tcs34725_interface.cpp
-  src/driver_apds9960.cpp
-  src/avago_color_sensor.cpp
-)
-ament_target_dependencies(avago_color_sensor
-  ${DEPENDENCIES}
-)
-target_link_libraries(avago_color_sensor i2c)
-target_include_directories(avago_color_sensor
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  avago_color_sensor
-  DESTINATION lib/${PROJECT_NAME})
-
-
-
-# Color Classifier
-add_executable(color_classifier
-  src/color_classifier.cpp
-)
-ament_target_dependencies(color_classifier
-  ${DEPENDENCIES}
-)
-target_include_directories(color_classifier
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  color_classifier
+  ball_color_classifier
   DESTINATION lib/${PROJECT_NAME})
 
 #################

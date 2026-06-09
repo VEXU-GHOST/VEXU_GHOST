@@ -79,40 +79,23 @@ def generate_launch_description():
         parameters=[ros_config_file, base_params_file],
     )
 
-    color_classifier_intake = Node(
+    # Ball colour classifiers on the RP2040 sensor host colour topics
+    # (one per colour device in alpha_sensor_host_config.yaml). Thresholds come
+    # from base_ros_config.yaml; each publishes on <input_topic>/class.
+    mid_conveyor_classifier = Node(
         package="ghost_sensing",
-        executable="color_classifier",
-        name="color_classifier_0",
+        executable="ball_color_classifier",
+        name="mid_conveyor_color_classifier",
         output="screen",
-        namespace="/sensors/color_sensors/intake",
-        parameters=[ros_config_file, base_params_file],
+        parameters=[base_params_file, {"input_topic": "/sensors/color/mid_conveyor"}],
     )
-
-    color_sensor_goal_rush_l = Node(
+    sorter_hood_classifier = Node(
         package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush_l",
+        executable="ball_color_classifier",
+        name="sorter_hood_color_classifier",
         output="screen",
-        namespace="/sensors/color_sensors/goal_rush_l",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x49, # both address translator switches on so ^ 1<<6
-        }],
+        parameters=[base_params_file, {"input_topic": "/sensors/color/sorter_hood"}],
     )
-    color_sensor_intake = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_intake",
-        output="screen",
-        namespace="/sensors/color_sensors/intake",
-        parameters=[
-            ros_config_file, 
-            base_params_file,
-            {
-                "address": 0x39 , # both address translator switches on so ^ 1<<6
-            }
-        ],
-    )
-    # no need for color classifier, since we only use proximity for goal rush
 
 
     odom_ekf_node = Node(
@@ -148,10 +131,8 @@ def generate_launch_description():
         odom_ekf_node,
         ekf_pf_node,
         map_ekf_node,
-        color_sensor_intake,
-        color_classifier_intake,
-        color_sensor_goal_rush_l,
-                #color_sensor_goal_rush_r,
+        mid_conveyor_classifier,
+        sorter_hood_classifier,
         competition_state_machine_node,
         gpio_expander,
     ])
