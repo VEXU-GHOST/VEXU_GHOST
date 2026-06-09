@@ -80,9 +80,9 @@ echo -------------------------------------------------------
 echo ---------- Flashing Sensor Host Firmware ---------------
 echo -------------------------------------------------------
 
-# Preferred: picotool reboots the running board into BOOTSEL and loads it.
+# Preferred: picotool reboots the running board into BOOTSEL (-f) and loads it.
 if command -v picotool >/dev/null 2>&1; then
-    picotool load -x "$UF2" && { echo "Flashed via picotool."; exit 0; }
+    picotool load -x -f "$UF2" && { echo "Flashed via picotool."; exit 0; }
     echo "picotool could not reach the board; trying BOOTSEL mass-storage copy..."
 fi
 
