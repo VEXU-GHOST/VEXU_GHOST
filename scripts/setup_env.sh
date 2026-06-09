@@ -1,4 +1,4 @@
-: "${VEXU_HOME:=~/VEXU_GHOST}"
+: "${VEXU_HOME:=$HOME/VEXU_GHOST}"
 
 export ISAAC_ROS_WS=/home/ghost/workspaces/isaac_ros-dev/
 
