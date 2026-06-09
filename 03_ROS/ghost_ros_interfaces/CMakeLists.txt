@@ -58,6 +58,27 @@ install(
   INCLUDES DESTINATION include
 )
 
+###################################
+#### Sensor Host protocol codec ####
+###################################
+# Pure, I/O-free wire-format codec — shared by the node and the unit tests.
+add_library(sensor_host_protocol SHARED
+  src/sensor_host/protocol.cpp
+)
+target_include_directories(sensor_host_protocol
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(sensor_host_protocol HAS_LIBRARY_TARGET)
+install(
+  TARGETS sensor_host_protocol
+  EXPORT sensor_host_protocol
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 #####################
 #### Executables ####
 #####################
@@ -90,10 +111,7 @@ ament_target_dependencies(jetson_sensor_host_serial_node
   ${DEPENDENCIES}
 )
 target_link_libraries(jetson_sensor_host_serial_node
-  ghost_serial::jetson_serial_base
-  ghost_serial::cobs
-  msg_helpers
-  yaml-cpp
+  sensor_host_protocol
 )
 target_include_directories(jetson_sensor_host_serial_node
   PUBLIC
@@ -255,5 +273,13 @@ foreach(TEST ${TESTS})
     msg_helpers
   )
 endforeach()
+
+# Sensor host protocol: hardware-free unit tests, and a hardware-gated
+# integration test that auto-skips when no sensor host is connected.
+ament_add_gtest(test_sensor_host_protocol test/test_sensor_host_protocol.cpp)
+target_link_libraries(test_sensor_host_protocol gtest_main sensor_host_protocol)
+
+ament_add_gtest(test_sensor_host_hardware test/test_sensor_host_hardware.cpp)
+target_link_libraries(test_sensor_host_hardware gtest_main sensor_host_protocol)
 
 ament_package()
