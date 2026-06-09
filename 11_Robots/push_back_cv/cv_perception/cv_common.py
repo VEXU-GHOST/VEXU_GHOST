@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 def default_model_path() -> str:
     vexu_home = os.environ.get("VEXU_HOME", os.path.expanduser("~/VEXU_GHOST"))
-    return os.path.join(vexu_home, "best.pt")
+    return os.path.join(vexu_home, "11_Robots", "push_back_cv", "models", "best.pt")
 
 def _enable_ultralytics_imports() -> None:
     """Ultralytics pulls matplotlib at import time; inference does not need it."""
