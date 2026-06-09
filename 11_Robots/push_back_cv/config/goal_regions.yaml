@@ -1,17 +1,38 @@
-# All bounds in map frame (meters). Tune when URDF / field measurements available.
-goals:
-  - id: goal_a
-    x_min: 0.0
-    x_max: 0.5
-    y_min: -0.5
-    y_max: 0.5
-    z_min: -0.1    # ground band example
-    z_max: 0.15
+# Goal prism bounds in map frame (meters).
+# Derived from pushBackField.urdf — keep in sync when URDF boxes change.
+#
+# Long goals: yaw 90° (1.57 rad) → 1.3 m along Y, 0.15 m along X/Z.
+# Center goals: yaw ±45° (0.785 rad) → axis-aligned bbox of 0.56 × 0.125 × 0.125 m box.
 
-  - id: goal_b_elevated
-    x_min: 1.0
-    x_max: 1.5
-    y_min: 0.0
-    y_max: 0.5
-    z_min: 0.25    # elevated platform height band
-    z_max: 0.45
+goals:
+  - id: long_goal_1
+    x_min: 2.95
+    x_max: 3.10
+    y_min: 1.178
+    y_max: 2.478
+    z_min: 0.325
+    z_max: 0.475
+
+  - id: long_goal_2
+    x_min: 0.565
+    x_max: 0.715
+    y_min: 1.178
+    y_max: 2.478
+    z_min: 0.325
+    z_max: 0.475
+
+  - id: center_goal_high
+    x_min: 1.586
+    x_max: 2.070
+    y_min: 1.586
+    y_max: 2.070
+    z_min: 0.1875
+    z_max: 0.3125
+
+  - id: center_goal_low
+    x_min: 1.586
+    x_max: 2.070
+    y_min: 1.586
+    y_max: 2.070
+    z_min: 0.0125
+    z_max: 0.1375
