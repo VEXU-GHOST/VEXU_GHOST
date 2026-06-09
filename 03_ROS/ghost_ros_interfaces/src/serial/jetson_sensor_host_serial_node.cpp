@@ -4,7 +4,11 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
+
+#include <yaml-cpp/yaml.h>
 
 using namespace std::chrono_literals;
 using ghost_ros_interfaces::sensor_host::DistanceResult;
@@ -17,6 +21,38 @@ namespace ghost_ros_interfaces
 namespace
 {
 constexpr uint16_t SYNC_READ_ID = 0x0001;   // id for one-time init reads
+constexpr uint16_t FIRST_DEVICE_ID = 0x0100;
+
+// Rotary DAC offset XOR'd onto a device's default address per switch position.
+const uint8_t DAC_OFFSET[16] = {
+  0x7F, 0x75, 0x7A, 0x70, 0x2F, 0x25, 0x2A, 0x20,
+  0x4F, 0x45, 0x4A, 0x40, 0x0F, 0x05, 0x0A, 0x00};
+
+int default_addr_for_type(const std::string & t)
+{
+  if (t == "COLOR") return 0x44;        // ISL29125
+  if (t == "DISTANCE") return 0x29;     // VL53L4CD
+  if (t == "IMU") return 0x68;          // ICM20602
+  if (t == "IO_EXPANDER") return 0x41;  // TCA9536
+  return -1;
+}
+
+std::string lower(std::string s)
+{
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+  return s;
+}
+
+// Read a YAML scalar as int, tolerating hex ("0x0D") and decimal.
+int yint(const YAML::Node & n, int dflt)
+{
+  if (!n) return dflt;
+  try {
+    return static_cast<int>(std::stol(n.as<std::string>(), nullptr, 0));
+  } catch (...) {
+    return dflt;
+  }
+}
 }  // namespace
 
 // ISL29125 colour sensor (8-bit registers).
@@ -25,8 +61,7 @@ namespace isl29125
 constexpr uint8_t CONFIG1 = 0x01;
 constexpr uint8_t CONFIG2 = 0x02;
 constexpr uint8_t CONFIG3 = 0x03;
-constexpr uint8_t GREEN_DATA_L = 0x09;     // first of 6 colour data registers
-constexpr uint8_t CONFIG1_RGB_MODE = 0x05;
+constexpr uint8_t GREEN_DATA_L = 0x09;
 constexpr uint8_t COLOR_DATA_LEN = 6;
 }  // namespace isl29125
 
@@ -44,12 +79,10 @@ constexpr uint16_t INTERMEASUREMENT_MS = 0x006C;
 constexpr uint16_t RANGE_CONFIG_A = 0x005E;
 constexpr uint16_t RANGE_CONFIG_B = 0x0061;
 constexpr uint16_t OSC_FREQUENCY = 0x0006;
-constexpr uint16_t CONFIG_START = 0x002D;              // default config blob start
-constexpr uint16_t RESULT_RANGE_STATUS = 0x0089;       // 15-byte result block
+constexpr uint16_t CONFIG_START = 0x002D;
+constexpr uint16_t RESULT_RANGE_STATUS = 0x0089;
 constexpr uint8_t RESULT_BLOCK_LEN = 15;
 
-// Default configuration written to 0x2D..0x87 (91 bytes), I2C fast mode.
-// Verbatim from ST's VL53L4CD_DEFAULT_CONFIGURATION.
 const std::vector<uint8_t> DEFAULT_CONFIG = {
   0x00,
   0x00, 0x00, 0x11, 0x02, 0x00, 0x02, 0x08, 0x00, 0x08, 0x10,
@@ -69,63 +102,60 @@ JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
   fd_(-1),
   running_(false)
 {
-  serial_port_      = declare_parameter("serial_port", "/dev/ttyACM0");
-  color_enabled_    = declare_parameter("color_enabled", true);
-  color_port_       = declare_parameter("color_port", 6);          // input 7
-  color_addr_       = declare_parameter("color_addr", 0x3b);       // rotary switch 0
-  // CONFIG1 0x0D = RGB mode (0x05) + 10,000-lux range (bit 3) + 16-bit.
-  // Use 0x05 for the low 375-lux range, or set bit 4 for 12-bit.
-  color_config1_    = declare_parameter("color_config1", 0x0D);
-  color_config2_    = declare_parameter("color_config2", 0xBF);    // max IR compensation
-  distance_enabled_ = declare_parameter("distance_enabled", true);
-  distance_port_    = declare_parameter("distance_port", 6);       // input 7
-  distance_addr_    = declare_parameter("distance_addr", 0x56);    // rotary switch 0
-  read_count_       = declare_parameter("read_count", 20);
-  interval_ms_      = declare_parameter("interval_ms", 100);
-  color_read_id_    = static_cast<uint16_t>(declare_parameter("color_read_id", 0xC0DE));
-  distance_read_id_ = static_cast<uint16_t>(declare_parameter("distance_read_id", 0xD157));
+  serial_port_     = declare_parameter("serial_port", "/dev/ttyACM0");
+  topic_namespace_ = declare_parameter("topic_namespace", "/sensors");
+  std::string device_config = declare_parameter("device_config", "");
 
-  color_pub_ = create_publisher<ghost_msgs::msg::ColorSensorState>(
-    "sensor_host/color_sensor_update", rclcpp::SensorDataQoS());
-  distance_pub_ = create_publisher<ghost_msgs::msg::DistanceSensorState>(
-    "sensor_host/distance_sensor_update", rclcpp::SensorDataQoS());
+  if (device_config.empty() || !loadDevices(device_config)) {
+    RCLCPP_ERROR(get_logger(), "No devices configured (device_config='%s')", device_config.c_str());
+    return;
+  }
 
   if (!openSerial()) {
     RCLCPP_ERROR(get_logger(), "Failed to open serial port %s", serial_port_.c_str());
     return;
   }
-  RCLCPP_INFO(get_logger(), "Opened %s", serial_port_.c_str());
+  RCLCPP_INFO(get_logger(), "Opened %s; %zu device(s)", serial_port_.c_str(), devices_.size());
 
   // Let the USB CDC connection settle; the first bytes after open can be dropped.
   std::this_thread::sleep_for(300ms);
   tcflush(fd_, TCIOFLUSH);
 
-  // ---- One-time synchronous device init (async read thread not yet running) --
-  if (color_enabled_) {
-    RCLCPP_INFO(get_logger(), "ISL29125 init %s (port=%d addr=0x%02x)",
-      initColor() ? "OK" : "FAILED", color_port_, color_addr_);
+  // ---- One-time synchronous init + publisher per device --------------------
+  for (std::size_t i = 0; i < devices_.size(); i++) {
+    SensorDevice & dev = devices_[i];
+    std::string topic = topic_namespace_ + "/" + lower(dev.type) + "/" + dev.name;
+    if (dev.type == "COLOR") {
+      dev.color_pub = create_publisher<ghost_msgs::msg::ColorSensorState>(
+        topic, rclcpp::SensorDataQoS());
+    } else if (dev.type == "DISTANCE") {
+      dev.distance_pub = create_publisher<ghost_msgs::msg::DistanceSensorState>(
+        topic, rclcpp::SensorDataQoS());
+    }
+    bool ok = initDevice(dev);
+    RCLCPP_INFO(get_logger(), "%s '%s' port=%d addr=0x%02x -> %s : init %s",
+      dev.type.c_str(), dev.name.c_str(), dev.port, dev.addr, topic.c_str(),
+      ok ? "OK" : "FAILED");
+    id_to_device_[dev.read_id] = i;
   }
-  if (distance_enabled_) {
-    RCLCPP_INFO(get_logger(), "VL53L4CD init %s (port=%d addr=0x%02x)",
-      vl53l4cdInit() ? "OK" : "FAILED", distance_port_, distance_addr_);
-  }
-  tcflush(fd_, TCIOFLUSH);   // drop init ACKs / results
+  tcflush(fd_, TCIOFLUSH);
 
   // ---- Start autonomous recurring reads, stream results --------------------
   running_ = true;
   read_thread_ = std::thread(&JetsonSensorHostSerialNode::readLoop, this);
-  if (color_enabled_) {
-    sendColorReadRequest();
+  for (const auto & dev : devices_) {
+    sendReadRequest(dev);
   }
-  if (distance_enabled_) {
-    sendDistanceReadRequest();
+  // Re-arm the finite recurring reads before the shortest-lived one expires.
+  uint32_t rearm_ms = 2000;
+  for (const auto & dev : devices_) {
+    rearm_ms = std::min<uint32_t>(rearm_ms, uint32_t(dev.read_count) * dev.interval_ms);
   }
-  // Re-arm the finite recurring reads before they expire so streaming continues.
+  if (rearm_ms == 0) rearm_ms = 2000;
   rearm_timer_ = create_wall_timer(
-    std::chrono::milliseconds(read_count_ * interval_ms_),
+    std::chrono::milliseconds(rearm_ms),
     [this]() {
-      if (color_enabled_) sendColorReadRequest();
-      if (distance_enabled_) sendDistanceReadRequest();
+      for (const auto & dev : devices_) sendReadRequest(dev);
     });
 }
 
@@ -137,6 +167,104 @@ JetsonSensorHostSerialNode::~JetsonSensorHostSerialNode()
   }
   if (fd_ >= 0) {
     close(fd_);
+  }
+}
+
+bool JetsonSensorHostSerialNode::loadDevices(const std::string & path)
+{
+  YAML::Node root;
+  try {
+    root = YAML::LoadFile(path);
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(get_logger(), "Cannot load device_config '%s': %s", path.c_str(), e.what());
+    return false;
+  }
+  YAML::Node devs = root["devices"];
+  if (!devs || !devs.IsMap()) {
+    RCLCPP_ERROR(get_logger(), "device_config '%s' has no 'devices' map", path.c_str());
+    return false;
+  }
+
+  uint16_t next_id = FIRST_DEVICE_ID;
+  for (const auto & it : devs) {
+    SensorDevice dev;
+    dev.name = it.first.as<std::string>();
+    YAML::Node d = it.second;
+
+    dev.type = d["type"] ? d["type"].as<std::string>() : "";
+    std::transform(dev.type.begin(), dev.type.end(), dev.type.begin(),
+      [](unsigned char c) { return std::toupper(c); });
+
+    int def = default_addr_for_type(dev.type);
+    if (def < 0) {
+      RCLCPP_WARN(get_logger(), "device '%s': unknown type '%s', skipping",
+        dev.name.c_str(), dev.type.c_str());
+      continue;
+    }
+    int port = yint(d["port"], -1);
+    int sw = yint(d["remap_switch"], 0);
+    if (port < 0 || port > 7 || sw < 0 || sw > 15) {
+      RCLCPP_WARN(get_logger(), "device '%s': bad port/remap_switch, skipping", dev.name.c_str());
+      continue;
+    }
+    int addr = def ^ DAC_OFFSET[sw];
+    if (addr < 0x08 || addr > 0x77) {
+      RCLCPP_WARN(get_logger(), "device '%s': remap_switch %d gives reserved addr 0x%02x, skipping",
+        dev.name.c_str(), sw, addr);
+      continue;
+    }
+    dev.port = static_cast<uint8_t>(port);
+    dev.addr = static_cast<uint8_t>(addr);
+    dev.interval_ms = static_cast<uint16_t>(yint(d["interval_ms"], 100));
+    dev.read_count = static_cast<uint16_t>(yint(d["read_count"], 20));
+    dev.config1 = yint(d["config1"], 0x0D);
+    dev.config2 = yint(d["config2"], 0xBF);
+    dev.timing_budget_ms = yint(d["timing_budget_ms"], 50);
+    dev.read_id = next_id++;
+    devices_.push_back(std::move(dev));
+  }
+  if (devices_.empty()) {
+    RCLCPP_ERROR(get_logger(), "device_config '%s' produced no usable devices", path.c_str());
+    return false;
+  }
+  return true;
+}
+
+bool JetsonSensorHostSerialNode::initDevice(SensorDevice & dev)
+{
+  if (dev.type == "COLOR") return initColor(dev);
+  if (dev.type == "DISTANCE") return vl53l4cdInit(dev);
+  RCLCPP_WARN(get_logger(), "type '%s' not implemented yet (no streaming)", dev.type.c_str());
+  return false;
+}
+
+void JetsonSensorHostSerialNode::sendReadRequest(const SensorDevice & dev)
+{
+  if (dev.type == "COLOR") {
+    writeFrame(sensor_host::buildReadRequest(
+      dev.read_id, dev.port, dev.addr, dev.interval_ms, dev.read_count,
+      isl29125::COLOR_DATA_LEN, {isl29125::GREEN_DATA_L}));
+  } else if (dev.type == "DISTANCE") {
+    writeFrame(sensor_host::buildReadRequest(
+      dev.read_id, dev.port, dev.addr, dev.interval_ms, dev.read_count,
+      vl53::RESULT_BLOCK_LEN,
+      {uint8_t(vl53::RESULT_RANGE_STATUS >> 8), uint8_t(vl53::RESULT_RANGE_STATUS & 0xFF)},
+      {uint8_t(vl53::SYSTEM_INTERRUPT_CLEAR >> 8), uint8_t(vl53::SYSTEM_INTERRUPT_CLEAR & 0xFF), 0x01}));
+  }
+}
+
+void JetsonSensorHostSerialNode::handleResult(
+  const SensorDevice & dev, const ReadResult & result)
+{
+  if (result.status != sensor_host::ST_OK) {
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+      "%s '%s' read error status=%d", dev.type.c_str(), dev.name.c_str(), result.status);
+    return;
+  }
+  if (dev.type == "COLOR") {
+    publishColor(dev, result);
+  } else if (dev.type == "DISTANCE") {
+    publishDistance(dev, result);
   }
 }
 
@@ -156,7 +284,7 @@ bool JetsonSensorHostSerialNode::openSerial()
   cfsetispeed(&tty, B115200);
   cfsetospeed(&tty, B115200);
   tty.c_cc[VMIN] = 0;
-  tty.c_cc[VTIME] = 1;   // 0.1 s read timeout
+  tty.c_cc[VTIME] = 1;
   if (tcsetattr(fd_, TCSANOW, &tty) != 0) {
     close(fd_);
     fd_ = -1;
@@ -242,49 +370,30 @@ bool JetsonSensorHostSerialNode::syncReadReg16(
 
 // ---- Colour sensor (ISL29125) ---------------------------------------------
 
-bool JetsonSensorHostSerialNode::initColor()
+bool JetsonSensorHostSerialNode::initColor(const SensorDevice & dev)
 {
-  const uint8_t port = static_cast<uint8_t>(color_port_);
-  const uint8_t addr = static_cast<uint8_t>(color_addr_);
   bool ok = true;
-  ok &= syncWrite(port, addr, {isl29125::CONFIG1, static_cast<uint8_t>(color_config1_)});
-  ok &= syncWrite(port, addr, {isl29125::CONFIG2, static_cast<uint8_t>(color_config2_)});
-  ok &= syncWrite(port, addr, {isl29125::CONFIG3, 0x00});
+  ok &= syncWrite(dev.port, dev.addr, {isl29125::CONFIG1, static_cast<uint8_t>(dev.config1)});
+  ok &= syncWrite(dev.port, dev.addr, {isl29125::CONFIG2, static_cast<uint8_t>(dev.config2)});
+  ok &= syncWrite(dev.port, dev.addr, {isl29125::CONFIG3, 0x00});
   return ok;
 }
 
-void JetsonSensorHostSerialNode::sendColorReadRequest()
+void JetsonSensorHostSerialNode::publishColor(
+  const SensorDevice & dev, const ReadResult & result)
 {
-  // Simple register device: no post-write needed.
-  writeFrame(sensor_host::buildReadRequest(
-    color_read_id_,
-    static_cast<uint8_t>(color_port_),
-    static_cast<uint8_t>(color_addr_),
-    static_cast<uint16_t>(interval_ms_),
-    static_cast<uint16_t>(read_count_),
-    isl29125::COLOR_DATA_LEN,
-    {isl29125::GREEN_DATA_L}));
-}
-
-void JetsonSensorHostSerialNode::handleColorResult(const ReadResult & result)
-{
-  if (result.status != sensor_host::ST_OK) {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-      "Color read error status=%d", result.status);
-    return;
-  }
   Rgb rgb;
   if (!sensor_host::decodeIsl29125Rgb(result.data, rgb)) {
     return;
   }
   ghost_msgs::msg::ColorSensorState msg;
-  msg.name = "color_sensor";
+  msg.name = dev.name;
   msg.r = rgb.r;
   msg.g = rgb.g;
   msg.b = rgb.b;
   msg.lux = 0;
   msg.cct = 0;
-  color_pub_->publish(msg);
+  dev.color_pub->publish(msg);
 }
 
 // ---- Distance sensor (VL53L4CD) -------------------------------------------
@@ -349,19 +458,19 @@ bool JetsonSensorHostSerialNode::vl53l4cdSetRangeTiming(
     {static_cast<uint8_t>(cfg_b >> 8), static_cast<uint8_t>(cfg_b & 0xFF)});
 }
 
-bool JetsonSensorHostSerialNode::vl53l4cdInit()
+bool JetsonSensorHostSerialNode::vl53l4cdInit(const SensorDevice & dev)
 {
-  const uint8_t port = static_cast<uint8_t>(distance_port_);
-  const uint8_t addr = static_cast<uint8_t>(distance_addr_);
+  const uint8_t port = dev.port;
+  const uint8_t addr = dev.addr;
   std::vector<uint8_t> buf;
 
   if (!syncReadReg16(port, addr, vl53::IDENTIFICATION_MODEL_ID, 2, buf)) {
-    RCLCPP_ERROR(get_logger(), "VL53L4CD: no response reading model id");
+    RCLCPP_ERROR(get_logger(), "VL53L4CD '%s': no response reading model id", dev.name.c_str());
     return false;
   }
   uint16_t model_id = static_cast<uint16_t>((buf[0] << 8) | buf[1]);
   if (model_id != 0xEBAA) {
-    RCLCPP_ERROR(get_logger(), "VL53L4CD: unexpected model id 0x%04x", model_id);
+    RCLCPP_ERROR(get_logger(), "VL53L4CD '%s': unexpected model id 0x%04x", dev.name.c_str(), model_id);
     return false;
   }
 
@@ -374,72 +483,51 @@ bool JetsonSensorHostSerialNode::vl53l4cdInit()
     }
   }
   if (!booted) {
-    RCLCPP_ERROR(get_logger(), "VL53L4CD: firmware boot timeout");
+    RCLCPP_ERROR(get_logger(), "VL53L4CD '%s': firmware boot timeout", dev.name.c_str());
     return false;
   }
 
   if (!syncWriteReg16(port, addr, vl53::CONFIG_START, vl53::DEFAULT_CONFIG)) {
-    RCLCPP_ERROR(get_logger(), "VL53L4CD: config blob write failed");
+    RCLCPP_ERROR(get_logger(), "VL53L4CD '%s': config blob write failed", dev.name.c_str());
     return false;
   }
 
-  syncWriteReg16(port, addr, vl53::SYSTEM_START, {0x40});            // start VHV
+  syncWriteReg16(port, addr, vl53::SYSTEM_START, {0x40});
   if (!vl53l4cdWaitDataReady(port, addr)) {
-    RCLCPP_ERROR(get_logger(), "VL53L4CD: VHV data-ready timeout");
+    RCLCPP_ERROR(get_logger(), "VL53L4CD '%s': VHV data-ready timeout", dev.name.c_str());
     return false;
   }
   syncWriteReg16(port, addr, vl53::SYSTEM_INTERRUPT_CLEAR, {0x01});
-  syncWriteReg16(port, addr, vl53::SYSTEM_START, {0x80});            // stop ranging
+  syncWriteReg16(port, addr, vl53::SYSTEM_START, {0x80});
   syncWriteReg16(port, addr, vl53::VHV_CONFIG_TIMEOUT_MACROP_LOOP_BOUND, {0x09});
   syncWriteReg16(port, addr, 0x000B, {0x00});
   syncWriteReg16(port, addr, 0x0024, {0x05, 0x00});
 
-  if (!vl53l4cdSetRangeTiming(port, addr, 50)) {
-    RCLCPP_ERROR(get_logger(), "VL53L4CD: SetRangeTiming failed");
+  if (!vl53l4cdSetRangeTiming(port, addr, static_cast<uint32_t>(dev.timing_budget_ms))) {
+    RCLCPP_ERROR(get_logger(), "VL53L4CD '%s': SetRangeTiming failed", dev.name.c_str());
     return false;
   }
 
-  syncWriteReg16(port, addr, vl53::SYSTEM_START, {0x21});            // continuous
+  syncWriteReg16(port, addr, vl53::SYSTEM_START, {0x21});
   syncWriteReg16(port, addr, vl53::SYSTEM_INTERRUPT_CLEAR, {0x01});
   return true;
 }
 
-void JetsonSensorHostSerialNode::sendDistanceReadRequest()
+void JetsonSensorHostSerialNode::publishDistance(
+  const SensorDevice & dev, const ReadResult & result)
 {
-  // Each iteration: write pointer -> read 15 result bytes -> write interrupt
-  // clear (post). The host advances the measurement on its own.
-  writeFrame(sensor_host::buildReadRequest(
-    distance_read_id_,
-    static_cast<uint8_t>(distance_port_),
-    static_cast<uint8_t>(distance_addr_),
-    static_cast<uint16_t>(interval_ms_),
-    static_cast<uint16_t>(read_count_),
-    vl53::RESULT_BLOCK_LEN,
-    {static_cast<uint8_t>(vl53::RESULT_RANGE_STATUS >> 8),
-      static_cast<uint8_t>(vl53::RESULT_RANGE_STATUS & 0xFF)},
-    {static_cast<uint8_t>(vl53::SYSTEM_INTERRUPT_CLEAR >> 8),
-      static_cast<uint8_t>(vl53::SYSTEM_INTERRUPT_CLEAR & 0xFF), 0x01}));
-}
-
-void JetsonSensorHostSerialNode::handleDistanceResult(const ReadResult & result)
-{
-  if (result.status != sensor_host::ST_OK) {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-      "Distance read error status=%d", result.status);
-    return;
-  }
   DistanceResult d;
   if (!sensor_host::decodeVl53l4cdResult(result.data, d)) {
     return;
   }
   ghost_msgs::msg::DistanceSensorState msg;
-  msg.name = "distance_sensor";
+  msg.name = dev.name;
   msg.distance_mm = d.distance_mm;
   msg.range_status = d.range_status;
   msg.sigma_mm = d.sigma_mm;
   msg.signal_rate_kcps = d.signal_rate_kcps;
   msg.ambient_rate_kcps = d.ambient_rate_kcps;
-  distance_pub_->publish(msg);
+  dev.distance_pub->publish(msg);
 }
 
 // ---- Streaming read loop --------------------------------------------------
@@ -460,10 +548,9 @@ void JetsonSensorHostSerialNode::readLoop()
       if (!sensor_host::parseReadResult(frame.payload, result)) {
         continue;
       }
-      if (result.id == color_read_id_) {
-        handleColorResult(result);
-      } else if (result.id == distance_read_id_) {
-        handleDistanceResult(result);
+      auto it = id_to_device_.find(result.id);
+      if (it != id_to_device_.end()) {
+        handleResult(devices_[it->second], result);
       }
     }
   }

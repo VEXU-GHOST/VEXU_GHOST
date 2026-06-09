@@ -28,7 +28,7 @@ from rclpy.qos import qos_profile_sensor_data
 
 from ghost_msgs.msg import ColorSensorState
 
-DEFAULT_TOPIC = "/sensor_host/color_sensor_update"
+DEFAULT_TOPIC = "/sensors/color/intake"
 BAR_W = 48
 
 # Red/blue ball classification from the raw R/B ratio (green is ignored — it

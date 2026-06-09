@@ -112,6 +112,7 @@ ament_target_dependencies(jetson_sensor_host_serial_node
 )
 target_link_libraries(jetson_sensor_host_serial_node
   sensor_host_protocol
+  yaml-cpp
 )
 target_include_directories(jetson_sensor_host_serial_node
   PUBLIC
