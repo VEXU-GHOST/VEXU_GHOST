@@ -9,6 +9,7 @@ Usage:
 `topic` defaults to /sensor_host/color_sensor_update.
 Ctrl-C to quit. Requires a truecolor-capable terminal.
 """
+import colorsys
 import sys
 
 import rclpy
@@ -28,8 +29,11 @@ def render(name, r16, g16, b16):
     out = ["\x1b[H"]  # cursor home
     for _ in range(8):
         out.append(bg + " " * 44 + "\x1b[0m\x1b[K\n")
+    # HSV from the full 16-bit channels (hue is ratio-based; V shows saturation).
+    h, s, v = colorsys.rgb_to_hsv(r16 / 65535.0, g16 / 65535.0, b16 / 65535.0)
     out.append(f"\x1b[K {name}\n")
-    out.append(f"\x1b[K R:{r16:5d}  G:{g16:5d}  B:{b16:5d}   (8-bit {r:3d},{g:3d},{b:3d})\n")
+    out.append(f"\x1b[K RGB  R:{r16:5d}  G:{g16:5d}  B:{b16:5d}   (8-bit {r:3d},{g:3d},{b:3d})\n")
+    out.append(f"\x1b[K HSV  H:{h * 360:5.1f}deg  S:{s * 100:5.1f}%  V:{v * 100:5.1f}%\n")
     out.append("\x1b[K Ctrl-C to quit\n")
     sys.stdout.write("".join(out))
     sys.stdout.flush()
