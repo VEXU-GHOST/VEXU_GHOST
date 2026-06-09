@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 """Live colour swatch for the sensor host colour sensor, in the terminal.
 
-Renders the published RGB as a 24-bit truecolor block (works over SSH, no GUI).
+Renders the published RGB as a 24-bit truecolor block plus H/S/V gradient bars
+(works over SSH, no GUI).
+
+The ISL29125's raw channels are unbalanced (green is far more sensitive), so a
+neutral white reads greenish. Point the sensor at something white/grey and press
+'w' to white-balance: each channel is then divided by that reference so white
+reads white and objects show their true hue. The published topic stays raw.
 
 Usage:
     python3 color_sensor.py [topic]
 
 `topic` defaults to /sensor_host/color_sensor_update.
-Ctrl-C to quit. Requires a truecolor-capable terminal.
+Keys: w = capture white, r = reset balance, q = quit. Truecolor terminal needed.
 """
 import colorsys
+import select
 import sys
+import termios
+import tty
 
 import rclpy
 from rclpy.executors import ExternalShutdownException
@@ -29,10 +38,7 @@ def hsv_px(h, s, v):
 
 
 def bar(color_fn, pos_frac):
-    """A BAR_W-wide truecolor gradient with a marker at pos_frac (0..1).
-
-    color_fn(t) -> (r, g, b) for t in [0, 1].
-    """
+    """A BAR_W-wide truecolor gradient with a marker at pos_frac (0..1)."""
     marker = max(0, min(BAR_W - 1, round(pos_frac * (BAR_W - 1))))
     cells = []
     for i in range(BAR_W):
@@ -45,36 +51,61 @@ def bar(color_fn, pos_frac):
     return "".join(cells)
 
 
-def render(name, r16, g16, b16):
-    # 16-bit sensor channels -> 8-bit display.
-    r, g, b = r16 >> 8, g16 >> 8, b16 >> 8
-    # HSV from the full 16-bit channels (hue is ratio-based; V shows saturation).
-    h, s, v = colorsys.rgb_to_hsv(r16 / 65535.0, g16 / 65535.0, b16 / 65535.0)
+def render(name, r16, g16, b16, white):
+    # Per-channel divisor: the white reference if balanced, else full scale.
+    dr, dg, db = white if white else (65535, 65535, 65535)
+    nr = min(1.0, r16 / max(1, dr))
+    ng = min(1.0, g16 / max(1, dg))
+    nb = min(1.0, b16 / max(1, db))
+    r, g, b = int(nr * 255), int(ng * 255), int(nb * 255)
+    h, s, v = colorsys.rgb_to_hsv(nr, ng, nb)
 
     out = ["\x1b[H"]  # cursor home
     sw = f"\x1b[48;2;{r};{g};{b}m"
     for _ in range(6):
         out.append(sw + " " * BAR_W + "\x1b[0m\x1b[K\n")
     out.append(f"\x1b[K {name}\n")
-    out.append(f"\x1b[K RGB  R:{r16:5d}  G:{g16:5d}  B:{b16:5d}   (8-bit {r:3d},{g:3d},{b:3d})\n")
-    # Each bar sweeps one HSV component, holding the other two at current.
+    out.append(f"\x1b[K RGB  R:{r16:5d}  G:{g16:5d}  B:{b16:5d}   ->  {r:3d},{g:3d},{b:3d}\n")
     out.append(f"\x1b[K H {bar(lambda t: hsv_px(t, s, v), h)} {h * 360:5.1f}deg\n")
     out.append(f"\x1b[K S {bar(lambda t: hsv_px(h, t, v), s)} {s * 100:5.1f}%\n")
     out.append(f"\x1b[K V {bar(lambda t: hsv_px(h, s, t), v)} {v * 100:5.1f}%\n")
-    out.append("\x1b[K Ctrl-C to quit\n")
+    wb = f"{white[0]},{white[1]},{white[2]}" if white else "OFF"
+    out.append(f"\x1b[K white-balance: {wb}\x1b[K\n")
+    out.append("\x1b[K [w] capture white   [r] reset   [q] quit\n")
     sys.stdout.write("".join(out))
     sys.stdout.flush()
 
 
 def main():
     topic = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_TOPIC
+    state = {"latest": (0, 0, 0), "white": None, "name": ""}
 
     rclpy.init()
     node = Node("color_sensor_debug")
-    node.create_subscription(
-        ColorSensorState, topic,
-        lambda m: render(m.name, m.r, m.g, m.b),
-        qos_profile_sensor_data)
+
+    def on_msg(msg):
+        state["latest"] = (msg.r, msg.g, msg.b)
+        state["name"] = msg.name
+        render(msg.name, msg.r, msg.g, msg.b, state["white"])
+
+    node.create_subscription(ColorSensorState, topic, on_msg, qos_profile_sensor_data)
+
+    interactive = sys.stdin.isatty()
+    old_termios = None
+    if interactive:
+        old_termios = termios.tcgetattr(sys.stdin)
+        tty.setcbreak(sys.stdin.fileno())
+
+        def poll_keys():
+            if select.select([sys.stdin], [], [], 0)[0]:
+                ch = sys.stdin.read(1)
+                if ch == "w":
+                    state["white"] = state["latest"]
+                elif ch == "r":
+                    state["white"] = None
+                elif ch in ("q", "\x03"):
+                    rclpy.shutdown()
+        node.create_timer(0.05, poll_keys)
 
     sys.stdout.write("\x1b[2J\x1b[?25l")  # clear screen, hide cursor
     sys.stdout.flush()
@@ -84,6 +115,8 @@ def main():
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
+        if interactive and old_termios is not None:
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_termios)
         sys.stdout.write("\x1b[?25h\n")  # restore cursor
         sys.stdout.flush()
         node.destroy_node()
