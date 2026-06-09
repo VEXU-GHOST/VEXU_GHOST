@@ -44,10 +44,13 @@ bool decodeFrame(const std::vector<uint8_t> & cobs_chunk, uint8_t & cmd,
 std::vector<uint8_t> buildI2CWrite(uint8_t port, uint8_t addr,
                                    const std::vector<uint8_t> & data);
 
+// `write_bytes` are written before each read (register pointer); `post_bytes`
+// are written after each read (e.g. clearing a data-ready interrupt).
 std::vector<uint8_t> buildReadRequest(uint16_t id, uint8_t port, uint8_t addr,
                                       uint16_t interval_ms, uint16_t count,
                                       uint8_t read_len,
-                                      const std::vector<uint8_t> & write_bytes);
+                                      const std::vector<uint8_t> & write_bytes,
+                                      const std::vector<uint8_t> & post_bytes = {});
 
 // ---- Response parsing ----------------------------------------------------
 struct ReadResult
@@ -75,6 +78,20 @@ struct Rgb
 };
 // Decodes a 6-byte read of registers 0x09..0x0E: [G_L G_H R_L R_H B_L B_H].
 bool decodeIsl29125Rgb(const std::vector<uint8_t> & data, Rgb & out);
+
+// ---- Device decode (VL53L4CD distance sensor) ----------------------------
+struct DistanceResult
+{
+  uint16_t distance_mm;
+  uint8_t range_status;       // 0 = valid measurement
+  uint16_t sigma_mm;
+  uint32_t signal_rate_kcps;
+  uint32_t ambient_rate_kcps;
+};
+// Decodes a 15-byte block read starting at RESULT__RANGE_STATUS (0x0089), the
+// big-endian result registers 0x0089..0x0097 (range_status, spad, signal,
+// ambient, sigma, distance). Mirrors the ST driver's GetResult().
+bool decodeVl53l4cdResult(const std::vector<uint8_t> & data, DistanceResult & out);
 
 // ---- Streaming frame accumulator -----------------------------------------
 struct Frame

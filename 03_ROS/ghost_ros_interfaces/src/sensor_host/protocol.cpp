@@ -113,10 +113,11 @@ std::vector<uint8_t> buildI2CWrite(uint8_t port, uint8_t addr,
 std::vector<uint8_t> buildReadRequest(uint16_t id, uint8_t port, uint8_t addr,
                                       uint16_t interval_ms, uint16_t count,
                                       uint8_t read_len,
-                                      const std::vector<uint8_t> & write_bytes)
+                                      const std::vector<uint8_t> & write_bytes,
+                                      const std::vector<uint8_t> & post_bytes)
 {
   std::vector<uint8_t> payload;
-  payload.reserve(10 + write_bytes.size());
+  payload.reserve(11 + write_bytes.size() + post_bytes.size());
   payload.push_back(id & 0xff);
   payload.push_back(id >> 8);
   payload.push_back(port);
@@ -128,6 +129,8 @@ std::vector<uint8_t> buildReadRequest(uint16_t id, uint8_t port, uint8_t addr,
   payload.push_back(read_len);
   payload.push_back(static_cast<uint8_t>(write_bytes.size()));
   payload.insert(payload.end(), write_bytes.begin(), write_bytes.end());
+  payload.push_back(static_cast<uint8_t>(post_bytes.size()));
+  payload.insert(payload.end(), post_bytes.begin(), post_bytes.end());
   return encodeFrame(CMD_READ_REQUEST, payload);
 }
 
@@ -165,6 +168,32 @@ bool decodeIsl29125Rgb(const std::vector<uint8_t> & data, Rgb & out)
   out.g = static_cast<uint16_t>(data[0] | (data[1] << 8));
   out.r = static_cast<uint16_t>(data[2] | (data[3] << 8));
   out.b = static_cast<uint16_t>(data[4] | (data[5] << 8));
+  return true;
+}
+
+bool decodeVl53l4cdResult(const std::vector<uint8_t> & data, DistanceResult & out)
+{
+  if (data.size() < 15) {
+    return false;
+  }
+  // ST GetResult() range-status remap (0x1F-masked raw -> human status).
+  static const uint8_t status_rtn[24] = {
+    255, 255, 255, 5, 2, 4, 1, 7, 3, 0,
+    255, 255, 9, 13, 255, 255, 255, 255, 10, 6,
+    255, 255, 11, 12};
+  uint8_t raw = data[0] & 0x1F;
+  out.range_status = (raw < 24) ? status_rtn[raw] : 255;
+
+  auto be16 = [&](std::size_t i) {
+    return static_cast<uint16_t>((data[i] << 8) | data[i + 1]);
+  };
+  uint16_t signal = be16(5);    // RESULT__SIGNAL_RATE   (0x008E)
+  uint16_t ambient = be16(7);   // RESULT__AMBIENT_RATE  (0x0090)
+  uint16_t sigma = be16(9);     // RESULT__SIGMA         (0x0092)
+  out.signal_rate_kcps = static_cast<uint32_t>(signal) * 8;
+  out.ambient_rate_kcps = static_cast<uint32_t>(ambient) * 8;
+  out.sigma_mm = sigma / 4;
+  out.distance_mm = be16(13);   // RESULT__DISTANCE      (0x0096)
   return true;
 }
 

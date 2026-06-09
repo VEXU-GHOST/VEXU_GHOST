@@ -72,9 +72,25 @@ TEST(Build, ReadRequestLayout)
   std::vector<uint8_t> p;
   ASSERT_TRUE(sh::decodeFrame(chunk, cmd, p));
   EXPECT_EQ(cmd, sh::CMD_READ_REQUEST);
-  // id(2) port addr interval(2) count(2) read_len write_len write_bytes
+  // id(2) port addr interval(2) count(2) read_len write_len write_bytes post_len
   EXPECT_EQ(p, (std::vector<uint8_t>{
-    0x3F, 0xA1, 6, 0x3b, 100, 0, 20, 0, 6, 1, 0x09}));
+    0x3F, 0xA1, 6, 0x3b, 100, 0, 20, 0, 6, 1, 0x09, 0}));
+}
+
+TEST(Build, ReadRequestWithPostWrite)
+{
+  // VL53L4CD-style: 16-bit pointer + post-write interrupt clear.
+  auto wire = sh::buildReadRequest(0xD157, 6, 0x56, 100, 20, 15,
+    {0x00, 0x89}, {0x00, 0x86, 0x01});
+  std::vector<uint8_t> chunk(wire.begin(), wire.end() - 1);
+  uint8_t cmd;
+  std::vector<uint8_t> p;
+  ASSERT_TRUE(sh::decodeFrame(chunk, cmd, p));
+  EXPECT_EQ(cmd, sh::CMD_READ_REQUEST);
+  EXPECT_EQ(p, (std::vector<uint8_t>{
+    0x57, 0xD1, 6, 0x56, 100, 0, 20, 0, 15,
+    2, 0x00, 0x89,           // write_len + pointer
+    3, 0x00, 0x86, 0x01}));  // post_len + clear
 }
 
 TEST(Parse, ReadResult)
@@ -106,6 +122,44 @@ TEST(Decode, Isl29125Rgb)
   EXPECT_EQ(rgb.g, 0x1234);
   EXPECT_EQ(rgb.r, 0x5678);
   EXPECT_EQ(rgb.b, 0x9ABC);
+}
+
+TEST(Decode, Vl53l4cdResult)
+{
+  // 15-byte block from RESULT__RANGE_STATUS (0x0089), big-endian words.
+  std::vector<uint8_t> data = {
+    0x09,        // range_status raw (status_rtn[9] = 0 valid)
+    0x00, 0x00,  // 0x008A,0x008B
+    0x00, 0x00,  // spad (0x008C)
+    0x00, 0x64,  // signal 100 -> *8 = 800
+    0x00, 0x0A,  // ambient 10 -> *8 = 80
+    0x00, 0x10,  // sigma 16 -> /4 = 4
+    0x00, 0x00,  // 0x0094,0x0095
+    0x01, 0xF4,  // distance 500 mm
+  };
+  sh::DistanceResult d;
+  ASSERT_TRUE(sh::decodeVl53l4cdResult(data, d));
+  EXPECT_EQ(d.range_status, 0);
+  EXPECT_EQ(d.distance_mm, 500);
+  EXPECT_EQ(d.sigma_mm, 4);
+  EXPECT_EQ(d.signal_rate_kcps, 800u);
+  EXPECT_EQ(d.ambient_rate_kcps, 80u);
+}
+
+TEST(Decode, Vl53l4cdRangeStatusRemap)
+{
+  std::vector<uint8_t> data(15, 0);
+  data[0] = 0x06;   // status_rtn[6] = 1
+  sh::DistanceResult d;
+  ASSERT_TRUE(sh::decodeVl53l4cdResult(data, d));
+  EXPECT_EQ(d.range_status, 1);
+}
+
+TEST(Decode, Vl53l4cdTooShort)
+{
+  std::vector<uint8_t> data(10, 0);
+  sh::DistanceResult d;
+  EXPECT_FALSE(sh::decodeVl53l4cdResult(data, d));
 }
 
 TEST(Accumulator, SplitsStreamAndDropsGarbage)
