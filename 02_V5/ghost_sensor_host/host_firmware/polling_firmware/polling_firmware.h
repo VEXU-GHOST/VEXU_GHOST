@@ -69,6 +69,10 @@ USING MORE THAN 4 IO EXPANDERS AND COLOR SENSORS
 #define DISTANCE_SENSOR_DEFAULT_ADDR 0x29  // VL53L4CD
 #define IO_EXPANDER_DEFAULT_ADDR     0x41  // TCA9536
 
+// IO expanders share an address range with color sensors, so their rotary DACs
+// start at position 0xC to avoid conflicts (see note above).
+#define IO_EXPANDER_DAC_START        0x0C
+
 // XOR offset applied by the rotary DAC for each switch position 0x0-0xF.
 const uint8_t dac_address_offset[16] = {
     0x7F, 0x75, 0x7A, 0x70, 0x2F, 0x25, 0x2A, 0x20,
