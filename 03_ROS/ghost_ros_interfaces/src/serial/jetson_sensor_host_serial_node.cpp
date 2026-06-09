@@ -21,16 +21,47 @@
  *   SOFTWARE.
  */
 
-#include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
+#include <cstring>
+
 #include <ghost_ros_interfaces/serial/jetson_sensor_host_serial_node.hpp>
 
-using ghost_ros_interfaces::msg_helpers::fromROSMsg;
-using ghost_ros_interfaces::msg_helpers::toROSMsg;
-using std::placeholders::_1;
-
 using namespace std::literals::chrono_literals;
+
 namespace ghost_ros_interfaces
 {
+
+namespace
+{
+
+// Wire protocol constants — mirror of ghost_sensor_host/.../inc/comms.h.
+// The Pico writes one COBS-framed packet per poll batch:
+//   COBS( [magic "orinin"][cmd:1][len_lo:1][len_hi:1][payload:N][checksum:1] )
+// ghost_serial strips the magic start sequence and COBS, leaving the decoded
+// body [cmd][len_lo][len_hi][payload][checksum] in the read buffer.
+constexpr uint8_t CMD_DATA = 0x04u;
+
+// Generous upper bound on a decoded packet body (matches COMMS_MAX_OUT_MSG_LEN).
+constexpr int READ_BUFFER_LEN = 28210;
+
+// Packed frames as laid out in the CMD_DATA payload (see comms.h).
+#pragma pack(push, 1)
+struct DataHeader
+{
+  uint32_t poll_count;
+  uint8_t color_cnt;
+  uint8_t imu_cnt;
+  uint8_t distance_cnt;
+  uint8_t gpio_cnt;
+};
+
+struct ColorFrame
+{
+  uint16_t r, g, b;
+  uint32_t lux, cct;
+};
+#pragma pack(pop)
+
+}  // namespace
 
 JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
 : Node("ghost_sensor_host_serial_node"),
@@ -38,16 +69,17 @@ JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
   using_backup_port_(false)
 {
   // Load ROS Params
-  declare_parameter("use_checksum", true);
+  declare_parameter("use_checksum", false);
   use_checksum_ = get_parameter("use_checksum").as_bool();
 
   declare_parameter("verbose", false);
   verbose_ = get_parameter("verbose").as_bool();
 
-  declare_parameter("read_msg_start_seq", "sout");
+  // Pico write magic ("orinin") / Jetson write magic ("hostin") from comms.h.
+  declare_parameter("read_msg_start_seq", "orinin");
   read_msg_start_seq_ = get_parameter("read_msg_start_seq").as_string();
 
-  declare_parameter("write_msg_start_seq", "msg");
+  declare_parameter("write_msg_start_seq", "hostin");
   write_msg_start_seq_ = get_parameter("write_msg_start_seq").as_string();
 
   declare_parameter("port_name", "/dev/ttyACM1");
@@ -56,42 +88,34 @@ JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
   declare_parameter("backup_port_name", "/dev/ttyACM2");
   backup_port_name_ = get_parameter("backup_port_name").as_string();
 
-  declare_parameter("robot_config_yaml_path", "");
-  std::string robot_config_yaml_path = get_parameter("robot_config_yaml_path").as_string();
-
-  // Load Robot Configuration
-  auto device_config_map = loadRobotConfigFromYAMLFile(robot_config_yaml_path);
-
-  color_sensor_update_msg_len_ = rhi_ptr_->getSensorUpdateMsgLength();
-  sensor_update_msg_ = std::vector<unsigned char>(sensor_update_msg_len_, 0);
+  read_buffer_len_ = READ_BUFFER_LEN;
+  read_buffer_ = std::vector<unsigned char>(read_buffer_len_, 0);
 
   // Debug Info
   RCLCPP_INFO(get_logger(), "Port Name: %s", port_name_.c_str());
   RCLCPP_INFO(get_logger(), "Backup Port Name: %s", backup_port_name_.c_str());
 
-  int incoming_packet_len = sensor_update_msg_len_ +
-    use_checksum_ +
-    read_msg_start_seq_.size() +
-    2;                               // Cobs Encoding adds two bytes
-
-  RCLCPP_INFO(get_logger(), "Actuator Command Msg Length: %d", actuator_command_msg_len_);
-  RCLCPP_INFO(get_logger(), "State Update Msg Length: %d", sensor_update_msg_len_);
-  RCLCPP_INFO(get_logger(), "Incoming Packet Length: %d", incoming_packet_len);
-
   // Serial Interface
   serial_base_interface_ = std::make_shared<ghost_serial::JetsonSerialBase>(
     write_msg_start_seq_,
     read_msg_start_seq_,
-    sensor_update_msg_len_,
+    read_buffer_len_,
     use_checksum_,
     verbose_);
 
-  // Sensor Update Msg Publisher
-  sensor_update_pub_ = create_publisher<ghost_msgs::msg::V5SensorUpdate>("v5/sensor_update", rclcpp::SensorDataQoS());
+  // Sensor state publishers
+  color_sensor_update_pub_ = create_publisher<ghost_msgs::msg::ColorSensorState>(
+    "sensor_host/color_sensor_update", rclcpp::SensorDataQoS());
+  distance_sensor_update_pub_ = create_publisher<ghost_msgs::msg::DistanceSensorState>(
+    "sensor_host/distance_sensor_update", rclcpp::SensorDataQoS());
+  imu_update_pub_ = create_publisher<ghost_msgs::msg::ImuState>(
+    "sensor_host/imu_update", rclcpp::SensorDataQoS());
+  io_expander_update_pub_ = create_publisher<ghost_msgs::msg::IOExpanderState>(
+    "sensor_host/io_expander_update", rclcpp::SensorDataQoS());
 
-  // Start Serial Thread
-  serial_thread_ = std::thread(&JetsonV5SerialNode::serialLoop, this);
-  serial_timeout_thread_ = std::thread(&JetsonV5SerialNode::serialTimeoutLoop, this);
+  // Start Serial Threads
+  serial_thread_ = std::thread(&JetsonSensorHostSerialNode::serialLoop, this);
+  serial_timeout_thread_ = std::thread(&JetsonSensorHostSerialNode::serialTimeoutLoop, this);
 }
 
 JetsonSensorHostSerialNode::~JetsonSensorHostSerialNode()
@@ -142,7 +166,7 @@ void JetsonSensorHostSerialNode::serialTimeoutLoop()
       serial_base_interface_ = std::make_shared<ghost_serial::JetsonSerialBase>(
         write_msg_start_seq_,
         read_msg_start_seq_,
-        sensor_update_msg_len_,
+        read_buffer_len_,
         use_checksum_,
         verbose_);
 
@@ -160,12 +184,32 @@ void JetsonSensorHostSerialNode::serialLoop()
       RCLCPP_DEBUG(get_logger(), "Serial Loop is Running");
       try {
         int msg_len;
-        bool msg_found = serial_base_interface_->readMsgFromSerial(sensor_update_msg_, msg_len);
+        bool msg_found = serial_base_interface_->readMsgFromSerial(read_buffer_, msg_len);
 
         if (msg_found) {
-          RCLCPP_DEBUG(get_logger(), "Received new message over serial");
           last_msg_time_ = std::chrono::system_clock::now();
-          publishV5SensorUpdate(sensor_update_msg_);
+
+          // Decoded body: [cmd][len_lo][len_hi][payload...][checksum]
+          if (msg_len < 3) {
+            RCLCPP_WARN(get_logger(), "Serial msg too short (%d bytes)", msg_len);
+          } else {
+            uint8_t cmd = read_buffer_[0];
+            uint16_t payload_len =
+              static_cast<uint16_t>(read_buffer_[1]) |
+              (static_cast<uint16_t>(read_buffer_[2]) << 8);
+
+            if (cmd != CMD_DATA) {
+              RCLCPP_DEBUG(get_logger(), "Ignoring non-DATA cmd 0x%02x", cmd);
+            } else if (3 + static_cast<int>(payload_len) > msg_len) {
+              RCLCPP_WARN(
+                get_logger(), "Payload len %u exceeds msg len %d", payload_len, msg_len);
+            } else {
+              std::vector<unsigned char> payload(
+                read_buffer_.begin() + 3, read_buffer_.begin() + 3 + payload_len);
+              publishColorSensorUpdate(payload);
+              // TODO: dispatch distance/imu/io_expander once implemented.
+            }
+          }
         }
       } catch (std::exception & e) {
         RCLCPP_ERROR(get_logger(), e.what());
@@ -179,83 +223,64 @@ void JetsonSensorHostSerialNode::serialLoop()
   }
 }
 
-void JetsonSensorHostSerialNode::publishColorSensorUpdate(const std::vector<unsigned char> & buffer)
+void JetsonSensorHostSerialNode::publishColorSensorUpdate(const std::vector<unsigned char> & payload)
 {
-  RCLCPP_DEBUG(get_logger(), "Publishing Sensor Update");
+  if (payload.size() < sizeof(DataHeader)) {
+    RCLCPP_WARN(get_logger(), "DATA payload smaller than header");
+    return;
+  }
 
-  // Update hardware interface
-  rhi_ptr_->deserialize(buffer);
+  DataHeader header;
+  std::memcpy(&header, payload.data(), sizeof(DataHeader));
 
-  // Initialize msg and set time
-  ghost_msgs::msg::V5SensorUpdate sensor_update_msg{};
-  auto curr_ros_time = get_clock()->now();
-  sensor_update_msg.header.stamp = curr_ros_time;
+  if (header.color_cnt == 0 || header.poll_count == 0) {
+    return;
+  }
 
-  // Convert updated RHI to msg
-  toROSMsg(*rhi_ptr_, sensor_update_msg);
+  // Publish the most recent poll round for each color sensor. Frames are laid
+  // out as ColorFrame[poll_count][color_cnt] immediately after the header.
+  const uint32_t latest_round = header.poll_count - 1;
+  for (uint8_t sensor = 0; sensor < header.color_cnt; sensor++) {
+    const size_t offset = sizeof(DataHeader) +
+      (static_cast<size_t>(latest_round) * header.color_cnt + sensor) * sizeof(ColorFrame);
+    if (offset + sizeof(ColorFrame) > payload.size()) {
+      RCLCPP_WARN(get_logger(), "Color frame %u out of bounds", sensor);
+      break;
+    }
 
-  // Publish update
-  sensor_update_pub_->publish(sensor_update_msg);
+    ColorFrame frame;
+    std::memcpy(&frame, payload.data() + offset, sizeof(ColorFrame));
+
+    ghost_msgs::msg::ColorSensorState msg;
+    msg.name = "color_sensor_" + std::to_string(sensor + 1);
+    msg.r = frame.r;
+    msg.g = frame.g;
+    msg.b = frame.b;
+    msg.lux = frame.lux;
+    msg.cct = frame.cct;
+    color_sensor_update_pub_->publish(msg);
+  }
 }
 
-void JetsonSensorHostSerialNode::publishDistanceSensorUpdate(const std::vector<unsigned char> & buffer)
+void JetsonSensorHostSerialNode::publishDistanceSensorUpdate(const std::vector<unsigned char> & payload)
 {
-  RCLCPP_DEBUG(get_logger(), "Publishing Sensor Update");
-
-  // Update hardware interface
-  rhi_ptr_->deserialize(buffer);
-
-  // Initialize msg and set time
-  ghost_msgs::msg::V5SensorUpdate sensor_update_msg{};
-  auto curr_ros_time = get_clock()->now();
-  sensor_update_msg.header.stamp = curr_ros_time;
-
-  // Convert updated RHI to msg
-  toROSMsg(*rhi_ptr_, sensor_update_msg);
-
-  // Publish update
-  sensor_update_pub_->publish(sensor_update_msg);
+  // TODO: parse DistanceFrame[poll_count][distance_cnt] and publish.
+  (void) payload;
 }
 
-void JetsonSensorHostSerialNode::publishImuUpdate(const std::vector<unsigned char> & buffer)
+void JetsonSensorHostSerialNode::publishImuUpdate(const std::vector<unsigned char> & payload)
 {
-  RCLCPP_DEBUG(get_logger(), "Publishing Sensor Update");
-
-  // Update hardware interface
-  rhi_ptr_->deserialize(buffer);
-
-  // Initialize msg and set time
-  ghost_msgs::msg::V5SensorUpdate sensor_update_msg{};
-  auto curr_ros_time = get_clock()->now();
-  sensor_update_msg.header.stamp = curr_ros_time;
-
-  // Convert updated RHI to msg
-  toROSMsg(*rhi_ptr_, sensor_update_msg);
-
-  // Publish update
-  sensor_update_pub_->publish(sensor_update_msg);
+  // TODO: parse ImuFrame[poll_count][imu_cnt] and publish.
+  (void) payload;
 }
 
-void JetsonSensorHostSerialNode::publishIOExpanderUpdate(const std::vector<unsigned char> & buffer)
+void JetsonSensorHostSerialNode::publishIOExpanderUpdate(const std::vector<unsigned char> & payload)
 {
-  RCLCPP_DEBUG(get_logger(), "Publishing Sensor Update");
-
-  // Update hardware interface
-  rhi_ptr_->deserialize(buffer);
-
-  // Initialize msg and set time
-  ghost_msgs::msg::V5SensorUpdate sensor_update_msg{};
-  auto curr_ros_time = get_clock()->now();
-  sensor_update_msg.header.stamp = curr_ros_time;
-
-  // Convert updated RHI to msg
-  toROSMsg(*rhi_ptr_, sensor_update_msg);
-
-  // Publish update
-  sensor_update_pub_->publish(sensor_update_msg);
+  // TODO: parse GpioFrame[poll_count][gpio_cnt] and publish.
+  (void) payload;
 }
 
-} // namespace ghost_ros_interfaces
+}  // namespace ghost_ros_interfaces
 
 int main(int argc, char * argv[])
 {
