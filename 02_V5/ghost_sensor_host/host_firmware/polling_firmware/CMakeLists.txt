@@ -33,25 +33,13 @@ project(polling_firmware C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# FreeRTOS-Kernel (RP2040 single-core port)
-set(FREERTOS_KERNEL_PATH ${CMAKE_CURRENT_LIST_DIR}/lib/FreeRTOS-Kernel)
-include(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
-
 # Add executable. Default name is the project name, version 0.1
+# Generic I2C bridge: just the protocol layer + the I2C bus backends. Device
+# drivers live on the ROS side now (see ghost_sensor_host/PROTOCOL.md).
 
 add_executable(polling_firmware
     polling_firmware.cpp
     src/comms.cpp
-    src/Device.cpp
-    src/isl29125.cpp
-    src/VL53L4CD/platform.cpp
-    src/VL53L4CD/VL53L4CD_api.cpp
-    src/VL53L4CD/VL53L4CD_calibration.cpp
-    src/ICM20602/bus_i2c.cpp
-    src/ICM20602/imu_base.cpp
-    src/ICM20602/imu_icm20602.cpp
-    src/ICM20602/imu_null.cpp
-    src/TCA9536.cpp
     src/I2CBus/HardwareI2CBus.cpp
     src/I2CBus/SoftwareI2CBus.cpp
 )
@@ -71,13 +59,8 @@ target_include_directories(polling_firmware PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/src
         ${CMAKE_CURRENT_LIST_DIR}/inc
-        ${CMAKE_CURRENT_LIST_DIR}/src/VL53L4CD
-        ${CMAKE_CURRENT_LIST_DIR}/inc/VL53L4CD
-        ${CMAKE_CURRENT_LIST_DIR}/src/ICM20602
-        ${CMAKE_CURRENT_LIST_DIR}/inc/ICM20602
         ${CMAKE_CURRENT_LIST_DIR}/src/I2CBus
         ${CMAKE_CURRENT_LIST_DIR}/inc/I2CBus
-        ${CMAKE_CURRENT_LIST_DIR}/lib/Library-VectorQuaternionsMatrix/src
 )
 
 
@@ -87,8 +70,6 @@ target_link_libraries(polling_firmware
         hardware_i2c
         hardware_pio
         hardware_clocks
-        FreeRTOS-Kernel
-        FreeRTOS-Kernel-Heap4
         )
 
 # Enable USB serial output, disable UART serial
