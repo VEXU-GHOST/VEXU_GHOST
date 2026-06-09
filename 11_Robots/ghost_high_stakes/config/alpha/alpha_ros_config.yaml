@@ -10,7 +10,9 @@ ghost_sensor_host_serial_node:
     color_enabled: true
     color_port: 6                 # host input 7 (port = input - 1)
     color_addr: 59                # 0x3b  ISL29125, rotary switch 0
-    distance_enabled: true
+    color_config1: 13             # 0x0D: RGB + 10,000-lux range + 16-bit (0x05 = 375-lux)
+    color_config2: 191            # 0xBF: max IR compensation
+    distance_enabled: false
     distance_port: 6              # host input 7
     distance_addr: 86             # 0x56  VL53L4CD, rotary switch 0
     read_count: 20

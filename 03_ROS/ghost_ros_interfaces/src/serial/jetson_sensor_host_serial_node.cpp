@@ -73,6 +73,10 @@ JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
   color_enabled_    = declare_parameter("color_enabled", true);
   color_port_       = declare_parameter("color_port", 6);          // input 7
   color_addr_       = declare_parameter("color_addr", 0x3b);       // rotary switch 0
+  // CONFIG1 0x0D = RGB mode (0x05) + 10,000-lux range (bit 3) + 16-bit.
+  // Use 0x05 for the low 375-lux range, or set bit 4 for 12-bit.
+  color_config1_    = declare_parameter("color_config1", 0x0D);
+  color_config2_    = declare_parameter("color_config2", 0xBF);    // max IR compensation
   distance_enabled_ = declare_parameter("distance_enabled", true);
   distance_port_    = declare_parameter("distance_port", 6);       // input 7
   distance_addr_    = declare_parameter("distance_addr", 0x56);    // rotary switch 0
@@ -243,8 +247,8 @@ bool JetsonSensorHostSerialNode::initColor()
   const uint8_t port = static_cast<uint8_t>(color_port_);
   const uint8_t addr = static_cast<uint8_t>(color_addr_);
   bool ok = true;
-  ok &= syncWrite(port, addr, {isl29125::CONFIG1, isl29125::CONFIG1_RGB_MODE});
-  ok &= syncWrite(port, addr, {isl29125::CONFIG2, 0x00});
+  ok &= syncWrite(port, addr, {isl29125::CONFIG1, static_cast<uint8_t>(color_config1_)});
+  ok &= syncWrite(port, addr, {isl29125::CONFIG2, static_cast<uint8_t>(color_config2_)});
   ok &= syncWrite(port, addr, {isl29125::CONFIG3, 0x00});
   return ok;
 }

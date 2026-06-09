@@ -61,6 +61,8 @@ private:
   bool color_enabled_;
   int color_port_;
   int color_addr_;
+  int color_config1_;   // ISL29125 CONFIG1 (mode/range/resolution)
+  int color_config2_;   // ISL29125 CONFIG2 (IR compensation)
   bool distance_enabled_;
   int distance_port_;
   int distance_addr_;
