@@ -230,6 +230,13 @@ bool JetsonSensorHostSerialNode::loadDevices(const std::string & path)
   return true;
 }
 
+// COLOR and DISTANCE are implemented. To add IMU or IO_EXPANDER, port the
+// device's I2C init/read sequence here (the way initColor / vl53l4cdInit do).
+// The original on-host firmware drivers were deleted from polling_firmware but
+// remain in git history as a register/sequence reference:
+//   IMU         -> 02_V5/.../polling_firmware/src/ICM20602/*  (ICM20602)
+//   IO_EXPANDER -> 02_V5/.../polling_firmware/src/TCA9536.cpp  (TCA9536)
+// (git log --follow / git show <rev>:<path> on those paths.)
 bool JetsonSensorHostSerialNode::initDevice(SensorDevice & dev)
 {
   if (dev.type == "COLOR") return initColor(dev);
