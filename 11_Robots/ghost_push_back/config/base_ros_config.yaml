@@ -77,12 +77,13 @@ competition_state_machine_node:
     # Ball colour classifier thresholds (ghost_sensing/ball_color_classifier).
     # Classified from the raw R/B ratio (green ignored). These are the DEFAULTS
     # applied to every classifier via this /** section; an individual sensor can
-    # override them by setting red_rb / blue_rb / min_level on its device entry
-    # in the per-robot *_sensor_host_config.yaml (hardware.launch.py forwards
-    # those per-sensor values to that classifier).
-    red_rb: 1.4        # R/B >= this -> RED
-    blue_rb: 0.7       # R/B <= this -> BLUE
-    min_level: 1500    # max(r,g,b) below this -> NONE
+    # override them by setting red_rb / blue_rb / red_min_level / blue_min_level
+    # on its device entry in the per-robot *_sensor_host_config.yaml
+    # (hardware.launch.py forwards those per-sensor values to that classifier).
+    red_rb: 1.4           # R/B >= this -> RED
+    blue_rb: 0.7          # R/B <= this -> BLUE
+    red_min_level: 1500   # red-ratio reading with max(r,g,b) below this -> NONE
+    blue_min_level: 1500  # blue-ratio reading with max(r,g,b) below this -> NONE
 
 
 tts_music_node:

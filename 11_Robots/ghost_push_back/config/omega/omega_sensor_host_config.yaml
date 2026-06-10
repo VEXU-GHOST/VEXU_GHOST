@@ -3,9 +3,9 @@
 # from the device type's default XOR the rotary-switch DAC offset.
 #
 # COLOR devices may set per-sensor ball-classifier thresholds (red_rb, blue_rb,
-# min_level); hardware.launch.py passes them to that device's classifier,
-# overriding the shared defaults in base_ros_config.yaml (/** section). Omit
-# them to use the shared defaults.
+# red_min_level, blue_min_level); hardware.launch.py passes them to that device's
+# classifier, overriding the shared defaults in base_ros_config.yaml (/**
+# section). Omit them to use the shared defaults.
 devices:
     intake:
         port: 6              # host input 7 (port = input - 1)
@@ -13,9 +13,10 @@ devices:
         remap_switch: 1      # -> ISL29125 @ 0x31
         config1: 0x0D        # 10,000-lux range, 16-bit RGB
         config2: 0xBF        # max IR compensation
-        red_rb: 1.4          # R/B >= this -> RED
-        blue_rb: 0.7         # R/B <= this -> BLUE
-        min_level: 1500      # max(r,g,b) below this -> NONE
+        red_rb: 1.4            # R/B >= this -> RED
+        blue_rb: 0.7           # R/B <= this -> BLUE
+        red_min_level: 1500    # red-ratio reading with max(r,g,b) below this -> NONE
+        blue_min_level: 1500   # blue-ratio reading with max(r,g,b) below this -> NONE
     front:
         port: 6              # host input 7
         type: DISTANCE

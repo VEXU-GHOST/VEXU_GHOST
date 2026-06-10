@@ -3,9 +3,9 @@
 # from the device type's default XOR the rotary-switch DAC offset.
 #
 # COLOR devices may set per-sensor ball-classifier thresholds (red_rb, blue_rb,
-# min_level); hardware.launch.py passes them to that device's classifier,
-# overriding the shared defaults in base_ros_config.yaml (/** section). Omit
-# them to use the shared defaults.
+# red_min_level, blue_min_level); hardware.launch.py passes them to that device's
+# classifier, overriding the shared defaults in base_ros_config.yaml (/**
+# section). Omit them to use the shared defaults.
 devices:
     mid_conveyor:
         port: 5              # host input 6 (port = input - 1)
@@ -13,9 +13,10 @@ devices:
         remap_switch: 0      # -> ISL29125 @ 0x3b
         config1: 0x0D        # 10,000-lux range, 16-bit RGB
         config2: 0xBF        # max IR compensation
-        red_rb: 0.31         # R/B >= this -> RED
-        blue_rb: 0.27        # R/B <= this -> BLUE
-        min_level: 6300      # max(r,g,b) below this -> NONE
+        red_rb: 0.31           # R/B >= this -> RED
+        blue_rb: 0.27          # R/B <= this -> BLUE
+        red_min_level: 6200    # red-ratio reading with max(r,g,b) below this -> NONE
+        blue_min_level: 6600   # blue-ratio reading with max(r,g,b) below this -> NONE
         # tune by using the debug tool python scripts/debug/color_sensor.py  /sensors/color/mid_conveyor
     sorter_hood:
         port: 6              # host input 7 (port = input - 1)
@@ -23,6 +24,7 @@ devices:
         remap_switch: 0      # -> ISL29125 @ 0x3b
         config1: 0x0D        # 10,000-lux range, 16-bit RGB
         config2: 0xBF        # max IR compensation
-        red_rb: 0.50          # R/B >= this -> RED
-        blue_rb: 0.32         # R/B <= this -> BLUE
-        min_level: 4000      # max(r,g,b) below this -> NONE
+        red_rb: 0.50           # R/B >= this -> RED
+        blue_rb: 0.32          # R/B <= this -> BLUE
+        red_min_level: 3600    # red-ratio reading with max(r,g,b) below this -> NONE
+        blue_min_level: 4000   # blue-ratio reading with max(r,g,b) below this -> NONE

@@ -205,7 +205,8 @@ def generate_launch_description():
             # config, grouped together. Each publishes on
             # /sensors/color/<name>/class. Thresholds default to the shared
             # values in base_ros_config (/** section); a COLOR device may set its
-            # own red_rb / blue_rb / min_level inline to override them per sensor.
+            # own red_rb / blue_rb / red_min_level / blue_min_level inline to
+            # override them per sensor.
             classifier_nodes = []
             try:
                 with open(sensor_host_config) as f:
@@ -213,7 +214,7 @@ def generate_launch_description():
                 for dev_name, dev in devices.items():
                     if str(dev.get("type", "")).upper() == "COLOR":
                         overrides = {"input_topic": f"/sensors/color/{dev_name}"}
-                        for key in ("red_rb", "blue_rb", "min_level"):
+                        for key in ("red_rb", "blue_rb", "red_min_level", "blue_min_level"):
                             if key in dev:
                                 overrides[key] = dev[key]
                         classifier_nodes.append(Node(

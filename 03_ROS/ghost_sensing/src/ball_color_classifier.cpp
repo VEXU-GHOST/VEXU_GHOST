@@ -15,7 +15,8 @@ BallColorClassifier::BallColorClassifier()
   std::string input_topic = declare_parameter<std::string>("input_topic", "color");
   red_rb_ = declare_parameter<double>("red_rb", 1.4);
   blue_rb_ = declare_parameter<double>("blue_rb", 0.7);
-  min_level_ = declare_parameter<int>("min_level", 1500);
+  red_min_level_ = declare_parameter<int>("red_min_level", 1500);
+  blue_min_level_ = declare_parameter<int>("blue_min_level", 1500);
 
   std::string output_topic = input_topic + "/class";
 
@@ -26,8 +27,8 @@ BallColorClassifier::BallColorClassifier()
   pub_ = create_publisher<BallColor>(output_topic, 10);
 
   RCLCPP_INFO(get_logger(),
-    "ball_color_classifier: %s -> %s (red R/B>=%.2f, blue R/B<=%.2f, min_level=%d)",
-    input_topic.c_str(), output_topic.c_str(), red_rb_, blue_rb_, min_level_);
+    "ball_color_classifier: %s -> %s (red R/B>=%.2f min_level=%d, blue R/B<=%.2f min_level=%d)",
+    input_topic.c_str(), output_topic.c_str(), red_rb_, red_min_level_, blue_rb_, blue_min_level_);
 }
 
 void BallColorClassifier::callback(const ColorSensorState::SharedPtr msg)
@@ -37,18 +38,16 @@ void BallColorClassifier::callback(const ColorSensorState::SharedPtr msg)
 
   int level = std::max({static_cast<int>(msg->r), static_cast<int>(msg->g),
       static_cast<int>(msg->b)});
-  if (level < min_level_) {
-    out.color = BallColor::NONE;
+  // Green is ignored; red vs blue separates cleanly on the R/B ratio. The
+  // brightness gate (max(r,g,b)) uses a per-class minimum, since a red ball and
+  // a blue ball reflect different amounts of light.
+  double rb = static_cast<double>(msg->r) / std::max(1, static_cast<int>(msg->b));
+  if (rb >= red_rb_) {
+    out.color = (level >= red_min_level_) ? BallColor::RED : BallColor::NONE;
+  } else if (rb <= blue_rb_) {
+    out.color = (level >= blue_min_level_) ? BallColor::BLUE : BallColor::NONE;
   } else {
-    // Green is ignored; red vs blue separates cleanly on the R/B ratio.
-    double rb = static_cast<double>(msg->r) / std::max(1, static_cast<int>(msg->b));
-    if (rb >= red_rb_) {
-      out.color = BallColor::RED;
-    } else if (rb <= blue_rb_) {
-      out.color = BallColor::BLUE;
-    } else {
-      out.color = BallColor::UNSURE;
-    }
+    out.color = BallColor::UNSURE;
   }
   pub_->publish(out);
 }

@@ -23,9 +23,10 @@ private:
   rclcpp::Subscription<ghost_msgs::msg::ColorSensorState>::SharedPtr sub_;
   rclcpp::Publisher<ghost_msgs::msg::BallColor>::SharedPtr pub_;
 
-  double red_rb_;     // R/B >= this -> RED
-  double blue_rb_;    // R/B <= this -> BLUE
-  int min_level_;     // max(r,g,b) below this -> NONE
+  double red_rb_;          // R/B >= this -> RED
+  double blue_rb_;         // R/B <= this -> BLUE
+  int red_min_level_;      // a red-ratio reading with max(r,g,b) below this -> NONE
+  int blue_min_level_;     // a blue-ratio reading with max(r,g,b) below this -> NONE
 };
 
 }  // namespace ghost_sensing
