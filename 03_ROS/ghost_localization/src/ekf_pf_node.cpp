@@ -21,6 +21,7 @@
 #include "eigen3/Eigen/Geometry"
 #include "ghost_localization/ekf_pf_node.hpp"
 #include "ghost_util/angle_util.hpp"
+#include "tf2/time.h"
 #include "math/line2d.h"
 #include "math/math_util.h"
 #include "util/timer.h"
@@ -71,6 +72,7 @@ EkfPfNode::EkfPfNode()
   this->set_parameter(use_sim_time_param);
 
   LoadROSParams();
+  LoadLidarTransform();
 
   rclcpp::QoS qos_profile(1);
   qos_profile.transient_local();
@@ -124,6 +126,10 @@ void EkfPfNode::LoadROSParams()
   config_params.init_y_sigma = get_parameter("particle_filter.init_y_sigma").as_double();
   config_params.init_r_sigma = get_parameter("particle_filter.init_r_sigma").as_double();
 
+  declare_parameter("particle_filter.initial_update_cycles", 0);
+  config_params.initial_update_cycles =
+    get_parameter("particle_filter.initial_update_cycles").as_int();
+
   declare_parameter("particle_filter.k1", 0.0);
   declare_parameter("particle_filter.k2", 0.0);
   declare_parameter("particle_filter.k3", 0.0);
@@ -143,17 +149,12 @@ void EkfPfNode::LoadROSParams()
   config_params.k8 = get_parameter("particle_filter.k8").as_double();
   config_params.k9 = get_parameter("particle_filter.k9").as_double();
 
-  declare_parameter("particle_filter.laser_offset_x", 0.0);
-  declare_parameter("particle_filter.laser_offset_y", 0.0);
-  declare_parameter("particle_filter.laser_angle_offset", 0.0);
+  // laser_offset_x / laser_offset_y / laser_angle_offset come from TF
+  // (base_link -> lidar_link), set in LoadLidarTransform().
   declare_parameter("particle_filter.min_update_dist", 0.0);
   declare_parameter("particle_filter.min_update_angle", 0.0);
   declare_parameter("particle_filter.max_update_yaw_velocity", 0.0);
   declare_parameter("particle_filter.max_update_tilt_velocity", 0.0);
-  config_params.laser_offset_x = get_parameter("particle_filter.laser_offset_x").as_double();
-  config_params.laser_offset_y = get_parameter("particle_filter.laser_offset_y").as_double();
-  config_params.laser_angle_offset =
-    get_parameter("particle_filter.laser_angle_offset").as_double();
   config_params.min_update_dist = get_parameter("particle_filter.min_update_dist").as_double();
   config_params.min_update_angle = get_parameter("particle_filter.min_update_angle").as_double();
   config_params.max_update_yaw_velocity = get_parameter(
@@ -187,6 +188,43 @@ void EkfPfNode::LoadROSParams()
   config_params.skip_index_min = get_parameter("particle_filter.skip_index_min").as_int();
   config_params.skip_index_max = get_parameter("particle_filter.skip_index_max").as_int();
   publish_tf_ = get_parameter("particle_filter.publish_tf").as_bool();
+}
+
+void EkfPfNode::LoadLidarTransform()
+{
+  declare_parameter("base_frame", "base_link");
+  declare_parameter("lidar_frame", "lidar_link");
+  const std::string base_frame = get_parameter("base_frame").as_string();
+  const std::string lidar_frame = get_parameter("lidar_frame").as_string();
+
+  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+  // The base_link -> lidar_link transform is published by robot_state_publisher
+  // from the URDF (the single source of truth for the lidar pose). Block briefly
+  // for it; the TransformListener fills the buffer on its own thread.
+  try {
+    const auto tf = tf_buffer_->lookupTransform(
+      base_frame, lidar_frame, tf2::TimePointZero, tf2::durationFromSec(10.0));
+    config_params.laser_offset_x = tf.transform.translation.x;
+    config_params.laser_offset_y = tf.transform.translation.y;
+    config_params.laser_angle_offset =
+      2.0 * std::atan2(tf.transform.rotation.z, tf.transform.rotation.w);
+    RCLCPP_INFO(
+      this->get_logger(),
+      "Lidar offset from TF %s->%s: x=%.4f y=%.4f yaw=%.4f",
+      base_frame.c_str(), lidar_frame.c_str(),
+      config_params.laser_offset_x, config_params.laser_offset_y,
+      config_params.laser_angle_offset);
+  } catch (const tf2::TransformException & ex) {
+    config_params.laser_offset_x = 0.0;
+    config_params.laser_offset_y = 0.0;
+    config_params.laser_angle_offset = 0.0;
+    RCLCPP_ERROR(
+      this->get_logger(),
+      "No %s->%s transform (%s); using zero lidar offset. Is robot_state_publisher running?",
+      base_frame.c_str(), lidar_frame.c_str(), ex.what());
+  }
 }
 
 void EkfPfNode::LaserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)

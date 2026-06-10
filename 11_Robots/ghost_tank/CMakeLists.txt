@@ -194,6 +194,12 @@ set(NODES
   moveScissor
   generate_bezier_path
   load_path_from_csv
+  adjustSwitcher
+  score_pos
+  scoreBall
+  outtakeBalls
+  match_loading
+  descorer
 )
 
 foreach(NODE ${NODES})

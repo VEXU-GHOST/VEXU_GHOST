@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot name="ghost_push_back" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Transform-tree description for the push-back robot.
+
+    base_link is the robot body frame (REP-105); sensor frames hang off it via
+    fixed joints. robot_state_publisher broadcasts the tree so rviz, costmaps,
+    and the particle filter share one source of truth for sensor poses. Add a
+    sensor by copying the lidar link+joint block.
+  -->
+
+  <!-- base_link: the robot body frame. -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.35 0.35 0.1"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- RPLidar A1. Offset matches the ekf_pf_node laser_offset_* params; z is
+       cosmetic for the 2D particle filter, set it to the real mounting height
+       for 3D viz. -->
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.038" length="0.04"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.05 0.05 0.05 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="base_link_to_lidar_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="-0.1143 0.1525 0.2" rpy="0 0 0"/>
+  </joint>
+
+  <!-- IMU. -->
+  <link name="imu_link"/>
+
+  <!-- TODO: update with the exact mounting offset/orientation. The EKF only
+       fuses IMU yaw, so the precise translation doesn't really matter; zeros
+       are fine for now. -->
+  <joint name="base_link_to_imu_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>

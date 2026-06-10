@@ -1,0 +1,6 @@
+image: pushBackMap.png
+resolution: 0.0253
+origin: [0.0, 0.0, 0.0]
+occupied_thresh: 0.99
+free_thresh: 0.01
+negate: 0

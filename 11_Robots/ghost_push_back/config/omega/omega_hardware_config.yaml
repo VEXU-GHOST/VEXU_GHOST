@@ -1,0 +1,169 @@
+port_configuration:
+    digital_io:
+        A: OUT
+        B: OUT
+        C: OUT
+        D: OUT
+        E: OUT
+        F: OUT
+        G: OUT
+        H: OUT
+    devices:
+        imu:
+            port: 4
+            type: INERTIAL_SENSOR
+            config: inertial_sensor_config
+
+        scorer_motor:
+            port: 6
+            type: MOTOR
+            reversed: false
+            config: intake_motor_config
+        intake_motor:
+            port: 15
+            type: MOTOR
+            reversed: true
+            config: intake_motor_config
+        ejector_motor:
+            port: 5
+            type: MOTOR
+            reversed: true
+            config: intake_motor_config
+        drive_l1:
+            port: 10
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_l2:
+            port: 11
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_l3:
+            port: 9
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_l4:
+            port: 12
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_l5:
+            port: 8
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_l6:
+            port: 13
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_l7:
+            port: 7
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        # drive_l8:
+        #     port: 14
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
+        drive_r1:
+            port: 1
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_r2:
+            port: 20
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_r3:
+            port: 2
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_r4:
+            port: 19
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        drive_r5:
+            port: 3
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_r6:
+            port: 18
+            type: MOTOR
+            reversed: true
+            config: drive_motor_config
+        drive_r7:
+            port: 17
+            type: MOTOR
+            reversed: false
+            config: drive_motor_config
+        # drive_r8:
+        #     port: 20
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
+    device_configurations:
+        inertial_sensor_config:
+            serial:
+                send_accel_data: false
+                send_gyro_data: true
+                send_heading_data: true
+        drive_motor_config:
+            gearset: 600
+            brake_mode: COAST
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 15.0
+                ff_vel_gain: 1.0
+                ff_torque_gain: 0.0
+            model:
+                free_speed: 120.0
+                stall_torque: 3.6
+                free_current: 0.14
+                stall_current: 4.25
+                nominal_voltage: 12.0
+                gear_ratio: 6.0
+            serial:
+                send_position_command: false
+                send_velocity_command: false
+                send_voltage_command: true
+                send_torque_command: false
+                send_torque_data: false
+                send_voltage_data: false
+                send_current_data: false
+                send_power_data: false
+                send_temperature_data: false
+        intake_motor_config:
+            gearset: 600
+            brake_mode: BRAKE
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 0.0
+                vel_gain: 0.0
+                ff_vel_gain: 0.0
+                ff_torque_gain: 0.0
+            serial:
+                send_position_command: false
+                send_velocity_command: false
+                send_voltage_command: true
+        scissor_motor_config:
+            gearset: 600
+            brake_mode: BRAKE
+            encoder_units: DEGREES
+            controller:
+                pos_gain: 50.0
+                vel_gain: 0.0
+                ff_vel_gain: 0.0
+                ff_torque_gain: 0.0
+            serial:
+                send_position_command: true
+                send_velocity_command: false
+                send_voltage_command: true

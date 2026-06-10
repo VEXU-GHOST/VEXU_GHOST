@@ -1,10 +1,8 @@
 install
 build
 log
-
-# build/ above is meant for generated build dirs; keep the checked-in scripts
+# but keep the build helper scripts (the bare 'build' rule above matches this dir)
 !scripts/build/
-!scripts/build/**
 .vscode
 *.pyc
 .cache/*

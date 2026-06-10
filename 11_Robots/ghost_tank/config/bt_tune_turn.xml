@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="tune_turn">
+    <Sequence>
+      <Logging message="bt_tune_turn: Section 1 active. Comment it and uncomment another to test"/>
+
+      <!-- ============================================ -->
+      <!-- SECTION 1: AdjustSwitcher (switcher_motor)   -->
+      <!-- Move up/down for long vs center goal        -->
+      <!-- ============================================ -->
+      <AdjustSwitcherCmd direction="1"/>
+      <WaitCmd seconds="2.0"/>
+      <AdjustSwitcherCmd direction="-1"/>
+      <WaitCmd seconds="2.0"/>
+      <AdjustSwitcherCmd direction="0"/>
+      <WaitCmd seconds="1.0"/>
+
+      <!-- ============================================ -->
+      <!-- SECTION 2: OuttakeBalls (intake_motor only) -->
+      <!-- -1=outtake, 0=stop, 1=intake                -->
+      <!-- ============================================ -->
+      <!--
+      <OuttakeBallsCmd direction="1"/>
+      <WaitCmd seconds="2.0"/>
+      <OuttakeBallsCmd direction="0"/>
+      <WaitCmd seconds="1.0"/>
+      <OuttakeBallsCmd direction="-1"/>
+      <WaitCmd seconds="2.0"/>
+      <OuttakeBallsCmd direction="0"/>
+      <WaitCmd seconds="1.0"/>
+      -->
+
+      <!-- ============================================ -->
+      <!-- SECTION 3: ScoreBall (scorer_motor only)    -->
+      <!-- -1=reverse, 0=stop, 1=score                -->
+      <!-- ============================================ -->
+      <!--
+      <ScoreBallCmd direction="1"/>
+      <WaitCmd seconds="2.0"/>
+      <ScoreBallCmd direction="0"/>
+      <WaitCmd seconds="1.0"/>
+      <ScoreBallCmd direction="-1"/>
+      <WaitCmd seconds="2.0"/>
+      <ScoreBallCmd direction="0"/>
+      <WaitCmd seconds="1.0"/>
+      -->
+
+      <!-- ============================================ -->
+      <!-- SECTION 4: Descorer (pneumatic)              -->
+      <!-- up=true raises, up=false lowers              -->
+      <!-- ============================================ -->
+      <!--
+      <DescorerCmd up="true"/>
+      <WaitCmd seconds="2.0"/>
+      <DescorerCmd up="false"/>
+      <WaitCmd seconds="2.0"/>
+      -->
+
+      <!-- ============================================ -->
+      <!-- SECTION 5: ScorePos (pneumatic + both motors)-->
+      <!-- active=true = score position up, full dump   -->
+      <!-- ============================================ -->
+      <!--
+      <ScorePosCmd active="true"/>
+      <WaitCmd seconds="3.0"/>
+      <ScorePosCmd active="false"/>
+      <WaitCmd seconds="1.0"/>
+      -->
+
+      <Logging message="Test done"/>
+      <WaitCmd seconds="200.0" shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

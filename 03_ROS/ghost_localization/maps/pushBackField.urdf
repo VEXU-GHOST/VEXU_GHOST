@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot name="push_back_field">
+
+  <!--
+    Static visual of the Push Back field, anchored to the map frame.
+
+    This is a standalone description: its single root link IS "map", so RViz
+    draws the mesh wherever the map frame lives in TF. It is intentionally NOT
+    part of ghost_push_back.urdf.xacro (that tree is rooted at base_link, and a
+    URDF may only have one root link).
+
+    No robot_state_publisher is run for this. Load it directly in RViz:
+      RobotModel display -> "Description Source: File" -> point at this file
+      (or the installed copy under
+       share/ghost_localization/maps/pushBackField.urdf).
+
+    The mesh is referenced with a package:// URI so it resolves against each
+    machine's own ROS package path. The STL file is NOT sent over the network
+    by RViz - the remote machine must have ghost_localization built/installed
+    locally so package://ghost_localization/maps/pushBackField.stl resolves to
+    a real file on that machine. (See note at the bottom of this file.)
+  -->
+
+  <link name="map">
+    <visual>
+      <origin xyz="1.828 1.828 0" rpy="0 0 1.57"/>
+      <geometry>
+        <!-- STL is in inches; scale to meters (1 in = 0.0254 m). -->
+              <mesh filename="package://ghost_localization/maps/pushBackField.stl"
+              scale="0.0254 0.0254 0.0254"/>
+      </geometry>
+      <material name="field_grey">
+        <color rgba="0.6 0.6 0.6 0.6"/>
+      </material>
+    </visual>
+  </link>
+
+</robot>
