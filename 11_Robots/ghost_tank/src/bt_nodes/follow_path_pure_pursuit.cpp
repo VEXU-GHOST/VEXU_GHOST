@@ -36,6 +36,7 @@ FollowPathPurePursuit::FollowPathPurePursuit(const std::string & name, const BT:
 : FollowPath(name, config)
 {
   std::cout << "[FollowPathPurePursuit::FollowPathPurePursuit]" << std::endl;
+  path_plan_pub_ptr_ = node_ptr_->create_publisher<visualization_msgs::msg::MarkerArray>("/plan/purepursuit", 10);
 }
 
 BT::PortsList FollowPathPurePursuit::providedPorts()
@@ -68,7 +69,77 @@ BT::NodeStatus FollowPathPurePursuit::onStart()
 
   // closest_point_index_ is updated in calculateControllerCommand, no need to initialize here.
 
+  // Publish the trajectory we're about to follow so it can be inspected in RViz.
+  publishPlannedPath();
+
   return BT::NodeStatus::RUNNING;
+}
+
+void FollowPathPurePursuit::publishPlannedPath()
+{
+  if (!path_plan_pub_ptr_ || trajectory_.size() == 0) {
+    return;
+  }
+
+  visualization_msgs::msg::MarkerArray plan_msg;
+
+  // Clear any markers from a previous (possibly longer) plan so stale waypoints
+  // don't linger across replans.
+  visualization_msgs::msg::Marker clear_marker;
+  clear_marker.action = visualization_msgs::msg::Marker::DELETEALL;
+  plan_msg.markers.push_back(clear_marker);
+
+  // Builds an orientation arrow at a single pose.
+  const auto append_pose_arrow =
+    [&plan_msg](const Eigen::Vector2d & pos, double theta,
+      const std_msgs::msg::ColorRGBA & color, const std::string & ns) {
+      visualization_msgs::msg::Marker arrow;
+      arrow.header.frame_id = "map";
+      arrow.header.stamp = rclcpp::Clock().now();
+      arrow.ns = ns;
+      arrow.id = static_cast<int>(plan_msg.markers.size());
+      arrow.type = visualization_msgs::msg::Marker::ARROW;
+      arrow.action = visualization_msgs::msg::Marker::ADD;
+      arrow.pose.position.x = pos.x();
+      arrow.pose.position.y = pos.y();
+      arrow.pose.position.z = visualization::MARKER_Z_OFFSET;
+      ghost_util::yawToQuaternionRad(
+        theta,
+        arrow.pose.orientation.w, arrow.pose.orientation.x,
+        arrow.pose.orientation.y, arrow.pose.orientation.z);
+      arrow.scale.x = 0.20;   // shaft length
+      arrow.scale.y = 0.03;   // shaft diameter
+      arrow.scale.z = 0.06;   // head diameter
+      arrow.color = color;
+      plan_msg.markers.push_back(arrow);
+    };
+
+  const int n = trajectory_.size();
+
+  // Middle waypoints as plain points (cyan).
+  for (int i = 1; i < n - 1; ++i) {
+    visualization::getPointMarker(
+      plan_msg,
+      Eigen::Vector2d(trajectory_.x[i], trajectory_.y[i]),
+      visualization::getColorRGBA(0.0, 0.8, 1.0, 0.8),
+      visualization::MARKER_SPHERE_DIAM,
+      visualization::MARKER_Z_OFFSET,
+      "purepursuit_plan_points");
+  }
+
+  // Start pose arrow (green) and end/goal pose arrow (red).
+  append_pose_arrow(
+    Eigen::Vector2d(trajectory_.x.front(), trajectory_.y.front()),
+    trajectory_.theta.front(),
+    visualization::getColorRGBA(0.0, 1.0, 0.0, 1.0),
+    "purepursuit_plan_start");
+  append_pose_arrow(
+    Eigen::Vector2d(trajectory_.x.back(), trajectory_.y.back()),
+    trajectory_.theta.back(),
+    visualization::getColorRGBA(1.0, 0.0, 0.0, 1.0),
+    "purepursuit_plan_end");
+
+  path_plan_pub_ptr_->publish(plan_msg);
 }
 
 Eigen::Vector2d FollowPathPurePursuit::calculateCarrotPoint() const

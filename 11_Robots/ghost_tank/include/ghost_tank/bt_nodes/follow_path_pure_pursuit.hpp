@@ -57,6 +57,10 @@ protected:
   void visualizeSettlingError();
   void visualizeDeccelerationZone();
 
+  // Publishes the trajectory pure pursuit is about to follow on /plan/purepursuit:
+  // a pose arrow at the start and end, plain points for the middle waypoints.
+  void publishPlannedPath();
+
 private:
   /**
    * @brief Calculates the maximum kinematically feasible linear and angular velocities
@@ -91,6 +95,9 @@ private:
   double deceleration_start_distance_m_;
   double deceleration_exponent_;
   double min_approach_velocity_mps_;
+
+  // Visualizes the followed trajectory for debugging ("what is pure pursuit thinking").
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr path_plan_pub_ptr_;
 };
 
 } // namespace ghost_tank
