@@ -75,8 +75,11 @@ competition_state_machine_node:
     should_record: false
     system_i2c_bus_path: "/dev/i2c-7"
     # Ball colour classifier thresholds (ghost_sensing/ball_color_classifier).
-    # Classified from the raw R/B ratio (green ignored). Shared by every
-    # classifier instance via this /** section.
+    # Classified from the raw R/B ratio (green ignored). These are the DEFAULTS
+    # applied to every classifier via this /** section; an individual sensor can
+    # override them by setting red_rb / blue_rb / min_level on its device entry
+    # in the per-robot *_sensor_host_config.yaml (hardware.launch.py forwards
+    # those per-sensor values to that classifier).
     red_rb: 1.4        # R/B >= this -> RED
     blue_rb: 0.7       # R/B <= this -> BLUE
     min_level: 1500    # max(r,g,b) below this -> NONE

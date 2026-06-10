@@ -203,20 +203,25 @@ def generate_launch_description():
 
             # One ball colour classifier per COLOR device in the sensor host
             # config, grouped together. Each publishes on
-            # /sensors/color/<name>/class; thresholds come from base_ros_config.
+            # /sensors/color/<name>/class. Thresholds default to the shared
+            # values in base_ros_config (/** section); a COLOR device may set its
+            # own red_rb / blue_rb / min_level inline to override them per sensor.
             classifier_nodes = []
             try:
                 with open(sensor_host_config) as f:
                     devices = (yaml.safe_load(f) or {}).get("devices") or {}
                 for dev_name, dev in devices.items():
                     if str(dev.get("type", "")).upper() == "COLOR":
+                        overrides = {"input_topic": f"/sensors/color/{dev_name}"}
+                        for key in ("red_rb", "blue_rb", "min_level"):
+                            if key in dev:
+                                overrides[key] = dev[key]
                         classifier_nodes.append(Node(
                             package="ghost_sensing",
                             executable="ball_color_classifier",
                             name=f"{dev_name}_color_classifier",
                             output="screen",
-                            parameters=[base_ros_config_file,
-                                        {"input_topic": f"/sensors/color/{dev_name}"}],
+                            parameters=[base_ros_config_file, overrides],
                         ))
             except FileNotFoundError:
                 print("sensor host config not found:", sensor_host_config)
