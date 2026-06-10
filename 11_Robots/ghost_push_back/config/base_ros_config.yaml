@@ -88,21 +88,12 @@ competition_state_machine_node:
       k8: 0.05 # theta error from y motion     # After 2ft of travel, 99% are within by 5°
       k9: 0.015 # theta error from rotation    # % error in primary direction. IMU is very good and main source of heading, so this is small.
 
-    color_classification:
-      blue:
-        hue_center: 190
-        hue_range: 30
-        sat_min: 0.2
-        sat_max: 1.0
-        val_min: 0.002
-        val_max: 1.0
-      red:
-        hue_center: 0
-        hue_range: 20
-        sat_min: 0.33
-        sat_max: 1.0
-        val_min: 0.002
-        val_max: 1.0
+    # Ball colour classifier thresholds (ghost_sensing/ball_color_classifier).
+    # Classified from the raw R/B ratio (green ignored). Shared by every
+    # classifier instance via this /** section.
+    red_rb: 1.4        # R/B >= this -> RED
+    blue_rb: 0.7       # R/B <= this -> BLUE
+    min_level: 1500    # max(r,g,b) below this -> NONE
 
     system_i2c_bus_path: "/dev/i2c-7"
 

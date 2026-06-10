@@ -4,6 +4,13 @@ ghost_serial_node:
     backup_port_name: "/dev/ttyACM2"
     verbose: false
 
+ghost_sensor_host_serial_node:
+  ros__parameters:
+    serial_port: "/dev/ttyACM0"   # RP2040 sensor host (separate from the V5 brain on ttyACM1/2)
+    topic_namespace: "/sensors"
+    # Devices are declared in alpha_sensor_host_config.yaml (device_config,
+    # set by the launch file). See ghost_sensor_host/PROTOCOL.md §8.
+
 imu_filter_node:
   ros__parameters:
     input_imu_topic: /sensors/imu

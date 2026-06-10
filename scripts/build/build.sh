@@ -3,9 +3,7 @@
 # Help printout
 if [ "$1" == "-h" ];
 then
-    echo "Builds ROS and PROS Workspace."
-    echo "Pass package names to build only those (and their dependencies)."
-    echo "Specify -r to skip PROS build"
+    echo "Builds the ROS workspace, then the V5 PROS project and the RP2040 sensor host firmware."
     exit 0
 fi
 
@@ -58,11 +56,29 @@ then
     colcon build --symlink-install --packages-skip ${skip[@]} ghost_sim ghost_sim_examples ghost_viz plotjuggler plotjuggler_ros --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
 fi
 
-if ! command -v pros 2>&1 >/dev/null
+cd $VEXU_HOME
+
+# ---- Embedded targets (built/flashed after the ROS workspace) -------------
+
+# V5 PROS project — requires the pros CLI and a connected V5 brain.
+if command -v pros >/dev/null 2>&1
 then
-    exit;
+    echo
+    bash scripts/pros_upload.sh
+else
+    echo
+    echo "pros CLI not found; skipping V5 PROS build/upload."
 fi
 
-cd $VEXU_HOME
-echo
-bash scripts/build/pros_upload.sh
+# RP2040 sensor host firmware — requires the Pico toolchain/SDK
+# (scripts/update_dependencies.sh). Flashing is skipped if no board is attached.
+if command -v arm-none-eabi-gcc >/dev/null 2>&1 && \
+   { [ -n "$PICO_SDK_PATH" ] || [ -d "$VEXU_HOME/09_External/pico-sdk" ] || [ -d "$HOME/.pico-sdk/sdk" ]; }
+then
+    echo
+    bash scripts/build/sensor_host.sh
+else
+    echo
+    echo "Pico toolchain/SDK not found; skipping sensor host build."
+    echo "Install it with scripts/update_dependencies.sh, then run scripts/build/sensor_host.sh"
+fi

@@ -59,8 +59,8 @@ then
 fi
 
 cd $VEXU_HOME
-git submodule init
-git submodule update --recursive
+# Initialise and fetch all submodules.
+git submodule update --init --recursive
 
 # Get processor architecture to determine proper .deb source
 arch=$(dpkg --print-architecture)

@@ -58,10 +58,31 @@ install(
   INCLUDES DESTINATION include
 )
 
+###################################
+#### Sensor Host protocol codec ####
+###################################
+# Pure, I/O-free wire-format codec — shared by the node and the unit tests.
+add_library(sensor_host_protocol SHARED
+  src/sensor_host/protocol.cpp
+)
+target_include_directories(sensor_host_protocol
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_export_targets(sensor_host_protocol HAS_LIBRARY_TARGET)
+install(
+  TARGETS sensor_host_protocol
+  EXPORT sensor_host_protocol
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 #####################
 #### Executables ####
 #####################
-# Jetson Serial Node
+# Jetson Serial Node for V5
 add_executable(jetson_v5_serial_node
   src/serial/jetson_v5_serial_node.cpp
 )
@@ -80,6 +101,25 @@ target_include_directories(jetson_v5_serial_node
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
   jetson_v5_serial_node
+  DESTINATION lib/${PROJECT_NAME})
+
+# Jetson Serial Node for Sensor Host
+add_executable(jetson_sensor_host_serial_node
+  src/serial/jetson_sensor_host_serial_node.cpp
+)
+ament_target_dependencies(jetson_sensor_host_serial_node
+  ${DEPENDENCIES}
+)
+target_link_libraries(jetson_sensor_host_serial_node
+  sensor_host_protocol
+  yaml-cpp
+)
+target_include_directories(jetson_sensor_host_serial_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  jetson_sensor_host_serial_node
   DESTINATION lib/${PROJECT_NAME})
 
 # V5 Robot Base Library
@@ -234,5 +274,13 @@ foreach(TEST ${TESTS})
     msg_helpers
   )
 endforeach()
+
+# Sensor host protocol: hardware-free unit tests, and a hardware-gated
+# integration test that auto-skips when no sensor host is connected.
+ament_add_gtest(test_sensor_host_protocol test/test_sensor_host_protocol.cpp)
+target_link_libraries(test_sensor_host_protocol gtest_main sensor_host_protocol)
+
+ament_add_gtest(test_sensor_host_hardware test/test_sensor_host_hardware.cpp)
+target_link_libraries(test_sensor_host_hardware gtest_main sensor_host_protocol)
 
 ament_package()

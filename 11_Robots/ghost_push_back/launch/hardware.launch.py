@@ -1,5 +1,6 @@
 import os
 import xacro
+import yaml
 from launch import LaunchDescription
 
 from ament_index_python import get_package_share_directory
@@ -117,7 +118,44 @@ def generate_launch_description():
                 ),
                 launch_arguments={'base_params_file': base_ros_config_file}.items()
             )
-            return [robot_launch]
+
+            # RP2040 sensor host. ros_config has serial_port/namespace; the
+            # device map (what sensors, where) is the per-robot sensor host yaml.
+            ros_config_file = os.path.join(
+                ghost_high_stakes_base_dir, "config", robot_name, robot_name + "_ros_config.yaml")
+            sensor_host_config = os.path.join(
+                ghost_high_stakes_base_dir, "config", robot_name, robot_name + "_sensor_host_config.yaml")
+            sensor_host_node = Node(
+                package="ghost_ros_interfaces",
+                executable="jetson_sensor_host_serial_node",
+                name="ghost_sensor_host_serial_node",
+                output="screen",
+                parameters=[base_ros_config_file, ros_config_file,
+                            {"device_config": sensor_host_config}],
+            )
+
+            # One ball colour classifier per COLOR device in the sensor host
+            # config, grouped together. Each publishes on
+            # /sensors/color/<name>/class; thresholds come from base_ros_config.
+            classifier_nodes = []
+            try:
+                with open(sensor_host_config) as f:
+                    devices = (yaml.safe_load(f) or {}).get("devices") or {}
+                for dev_name, dev in devices.items():
+                    if str(dev.get("type", "")).upper() == "COLOR":
+                        classifier_nodes.append(Node(
+                            package="ghost_sensing",
+                            executable="ball_color_classifier",
+                            name=f"{dev_name}_color_classifier",
+                            output="screen",
+                            parameters=[base_ros_config_file,
+                                        {"input_topic": f"/sensors/color/{dev_name}"}],
+                        ))
+            except FileNotFoundError:
+                print("sensor host config not found:", sensor_host_config)
+            color_classifiers = GroupAction(classifier_nodes)
+
+            return [robot_launch, sensor_host_node, color_classifiers]
 
     return LaunchDescription([
         DeclareLaunchArgument("robot_name", default_value="None"),

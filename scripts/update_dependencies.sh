@@ -18,6 +18,40 @@ python3 -m pip install --upgrade pip
 pip install setuptools==61 piper-tts==1.2.0
 
 echo
+echo "--------------- Sensor Host (RP2040) Firmware Toolchain ---------------"
+# ARM cross toolchain + build tools for the Pico firmware. libusb/pkg-config
+# are for building picotool below.
+sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential cmake libusb-1.0-0-dev pkg-config || exit -1
+
+# Raspberry Pi Pico SDK (located by sensor_host.sh via PICO_SDK_PATH).
+# Version pinned to match polling_firmware/CMakeLists.txt (sdkVersion 2.2.0).
+PICO_SDK_DIR="$VEXU_HOME/09_External/pico-sdk"
+if [ ! -d "$PICO_SDK_DIR/.git" ]; then
+    git clone --branch 2.2.0 --depth 1 https://github.com/raspberrypi/pico-sdk.git "$PICO_SDK_DIR" || exit -1
+fi
+# Only tinyusb is needed (USB stdio); skip the Pico W wifi/bluetooth submodules.
+git -C "$PICO_SDK_DIR" submodule update --init lib/tinyusb || exit -1
+# Keep colcon from treating the SDK as a ROS package.
+touch "$PICO_SDK_DIR/COLCON_IGNORE"
+
+# picotool — not packaged on Ubuntu 22.04, so build it from source against the
+# SDK. `cmake --install` also drops in udev rules so sensor_host.sh can flash
+# without sudo / manual BOOTSEL.
+PICOTOOL_DIR="$VEXU_HOME/09_External/picotool"
+if [ ! -d "$PICOTOOL_DIR/.git" ]; then
+    git clone --branch 2.2.0 --depth 1 https://github.com/raspberrypi/picotool.git "$PICOTOOL_DIR" || exit -1
+fi
+# Keep colcon from treating picotool as a ROS package.
+touch "$PICOTOOL_DIR/COLCON_IGNORE"
+cmake -S "$PICOTOOL_DIR" -B "$PICOTOOL_DIR/build" -DPICO_SDK_PATH="$PICO_SDK_DIR" || exit -1
+cmake --build "$PICOTOOL_DIR/build" -j"$(nproc)" || exit -1
+sudo cmake --install "$PICOTOOL_DIR/build" || exit -1
+
+# udev rules so picotool can reach the board in BOOTSEL mode without sudo.
+sudo cp "$PICOTOOL_DIR/udev/60-picotool.rules" /etc/udev/rules.d/60-picotool.rules || exit -1
+sudo udevadm control --reload-rules && sudo udevadm trigger
+
+echo
 echo "--------------- ROSDEP Init ---------------"
 sudo rosdep init
 
