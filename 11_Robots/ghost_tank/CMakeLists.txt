@@ -16,6 +16,8 @@ set(DEPENDENCIES
   geometry_msgs
   sensor_msgs
   nav_msgs
+  nav2_msgs
+  rclcpp_action
   ghost_msgs
   visualization_msgs
   matplotlib_cpp
@@ -193,6 +195,9 @@ set(NODES
   moveToPoint
   moveScissor
   generate_bezier_path
+  generate_planner_path
+  follow_path_controller_server
+  goal_pose_listener
   load_path_from_csv
   adjustSwitcher
   score_pos

@@ -3,27 +3,53 @@
 
   <!-- Includes -->
   <include path="worlds/bt_worlds_goal_rush.xml" />
+  <!-- DISABLED: these world subtrees use MoveToPoseBezier, removed in the worlds
+       refactor (commit 5df03240). Re-include once they are ported to
+       GenerateBezierPath + FollowPath.
   <include path="worlds/bt_center_rush_after_side_rush.xml"/>
   <include path="worlds/bt_grab_goal_after_rush.xml"/>
-  <include path="bt_skills.xml" />
+  -->
+  <!-- <include path="bt_skills.xml" />
   <include path="bt_neutral_stake.xml" />
   <include path="bt_aj_rings.xml" />
-  <include path="bt_scissor.xml" />
+  <include path="bt_scissor.xml" /> -->
 
   <BehaviorTree ID="main_tree">
     <Sequence>
-      <Sequence>
-        <Logging message="Starting main tree" />
-        <SetMirrored mirrored="false" />
-        <!-- <SubTree ID="worlds_goal_rush" _autoremap="true" />
-        <SubTree ID="center_rush_after_side_rush" _autoremap="true" /> -->
-        <SubTree ID="deploy_scissor" _autoremap="true" />
-        <!-- <SubTree ID="grab_goal_after_rush" _autoremap="true" /> -->
+      <Logging message="Starting main tree" />
+      <!-- <SetMirrored mirrored="false" /> -->
+      <!-- <SubTree ID="deploy_scissor" _autoremap="true" /> -->
 
-        <!-- <MoveScissor scissor_position_in="5" offset="1" timeout_ms="5000"/> -->
-
-      </Sequence>
-      <WaitCmd seconds="500.0" shutoff_motors="true" />
+      <!-- Listen for nav goals on /goal_pose forever. GoalPoseListener idles
+           (RUNNING) until a new pose arrives, then passes the coordinates to
+           GeneratePlannerPath, which plans a path and writes it to the shared
+           tank_trajectory blackboard. FollowPathPurePursuit then drives that
+           trajectory exactly as it would a GenerateBezierPath output.
+           AlwaysSuccess keeps the loop alive even if a plan is rejected, so the
+           tree never exits. -->
+      <KeepRunningUntilFailure>
+        <Fallback>
+          <Sequence>
+            <GoalPoseListener goal_x_tiles="{nav_goal_x_tiles}"
+              goal_y_tiles="{nav_goal_y_tiles}"
+              goal_theta_deg="{nav_goal_theta_deg}" />
+            <GeneratePlannerPath end_x_tiles="{nav_goal_x_tiles}"
+              end_y_tiles="{nav_goal_y_tiles}"
+              end_theta_deg="{nav_goal_theta_deg}"
+              backwards="false" planner_id="GridBased" timeout_ms="2000" />
+            <!-- Drive the planned path with the nav2 controller_server (RPP).
+                 Tuning lives in the controller_server block of base_ros_config.yaml;
+                 this node just ships the path and relays /nav2/cmd_vel to the drive. -->
+            <FollowPathControllerServer cmd_vel_topic="/nav2/cmd_vel"
+              controller_id="FollowPath"
+              goal_checker_id="goal_checker"
+              timeout_ms="10000"
+              kff_linear="0.05"
+              kff_angular="0.12" />
+          </Sequence>
+          <AlwaysSuccess />
+        </Fallback>
+      </KeepRunningUntilFailure>
     </Sequence>
   </BehaviorTree>
 
@@ -132,6 +158,10 @@
     </Sequence>
   </BehaviorTree>
 
+  <!-- DISABLED: mtp_testing and test_boundary use MoveToPoseBezier, removed in
+       the worlds refactor (commit 5df03240). Port to GenerateBezierPath +
+       FollowPath to restore. Inner comment markers were converted to (parens)
+       so this outer comment stays valid.
   <BehaviorTree ID="mtp_testing">
     <Sequence>
       <MoveToPoseBezier posX_tiles="2.0"
@@ -183,7 +213,7 @@
   </BehaviorTree>
 
   <BehaviorTree ID="test_boundary">
-    <!-- <Sequence> -->
+    (Sequence)
     <Fallback>
       <BoundaryCheck y_threshold_tiles="1.0">
         <Sequence>
@@ -222,8 +252,9 @@
         <WaitCmd seconds="0.5" shutoff_motors="true" />
       </Sequence>
     </Fallback>
-    <!-- </Sequence> -->
+    (/Sequence)
   </BehaviorTree>
+  -->
 
   <BehaviorTree ID="test_color_sensor">
     <Sequence>
@@ -237,10 +268,14 @@
         shutoff_motors="true" />
     </Sequence>
   </BehaviorTree>
+  <!-- DISABLED: test_integral and test_mirrored use MoveToPoseBezier, removed in
+       the worlds refactor (commit 5df03240). Port to GenerateBezierPath +
+       FollowPath to restore. Inner comment markers were converted to (parens)
+       so this outer comment stays valid.
   <BehaviorTree ID="test_integral">
     <Sequence>
       <SetMirrored mirrored="false" />
-      <!-- <Logging message="test"/> -->
+      (Logging message="test")
       <ParallelAll>
         <Fallback>
           <Timeout msec="600">
@@ -289,7 +324,7 @@
       </ParallelAll>
       <WaitCmd seconds="2.0"
         shutoff_motors="true" />
-      <!-- <SubTree ID="goal_rush" _autoremap="true"/> -->
+      (SubTree ID="goal_rush" _autoremap="true")
 
     </Sequence>
   </BehaviorTree>
@@ -297,7 +332,7 @@
   <BehaviorTree ID="test_mirrored">
     <Sequence>
       <SetMirrored mirrored="true" />
-      <!-- <Logging message="test"/> -->
+      (Logging message="test")
       <IntakeCmd auto="true"
         ground_intake="false" />
       <MoveToPoseBezier posX_tiles="4.0"
@@ -330,6 +365,7 @@
         shutoff_motors="true" />
     </Sequence>
   </BehaviorTree>
+  -->
 
   <BehaviorTree ID="test_rush">
     <Sequence>
@@ -359,6 +395,9 @@
   </BehaviorTree>
 
 
+  <!-- DISABLED: jerryiotest uses MoveToPosePurepursuit, removed in the worlds
+       refactor (commit 5df03240). Port to the current path-follow nodes to
+       restore.
   <BehaviorTree ID="jerryiotest">
     <Sequence>
       <Logging message="test" />
@@ -371,6 +410,7 @@
       <ShutoffNode />
     </Sequence>
   </BehaviorTree>
+  -->
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
@@ -433,6 +473,19 @@
     <Action ID="MoveVoltage" editable="true">
       <input_port name="forward_effort" />
       <input_port name="angular_effort" />
+      <input_port name="timeout_ms" />
+    </Action>
+    <Action ID="GoalPoseListener" editable="true">
+      <output_port name="goal_x_tiles" />
+      <output_port name="goal_y_tiles" />
+      <output_port name="goal_theta_deg" />
+    </Action>
+    <Action ID="GeneratePlannerPath" editable="true">
+      <input_port name="end_x_tiles" />
+      <input_port name="end_y_tiles" />
+      <input_port name="end_theta_deg" />
+      <input_port name="backwards" />
+      <input_port name="planner_id" />
       <input_port name="timeout_ms" />
     </Action>
     <Action ID="ShutoffNode"

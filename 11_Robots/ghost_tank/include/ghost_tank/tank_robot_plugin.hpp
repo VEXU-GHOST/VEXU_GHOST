@@ -35,6 +35,7 @@
 #include <ghost_msgs/srv/stop_recorder.hpp>
 #include <chrono>
 #include <nav_msgs/msg/odometry.hpp>
+#include <nav_msgs/msg/path.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/string.hpp>
@@ -193,6 +194,8 @@ protected:
   // Tank Model
   std::shared_ptr<TankModel> m_tank_model_ptr;
   std::shared_ptr<motion_planning::Trajectory> tank_trajectory_ptr_;
+  // Raw planner output shared with the nav2 controller branch (no conversion).
+  std::shared_ptr<nav_msgs::msg::Path> planned_path_ptr_;
   std::shared_ptr<ghost_control::PIDController> m_distance_approach_controller_ptr;
   std::shared_ptr<ghost_control::PIDController> m_steering_approach_controller_ptr;
   std::shared_ptr<ghost_control::PIDController> m_distance_settling_controller_ptr;

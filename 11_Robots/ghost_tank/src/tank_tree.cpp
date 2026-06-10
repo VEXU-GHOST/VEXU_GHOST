@@ -71,7 +71,10 @@ void TankTree::init_tree()
   factory.registerNodeType<MoveVoltage>("MoveVoltage");
   factory.registerNodeType<TurnToPoint>("TurnToPoint");
   factory.registerNodeType<GenerateBezierPath>("GenerateBezierPath");
+  factory.registerNodeType<GeneratePlannerPath>("GeneratePlannerPath");
+  factory.registerNodeType<GoalPoseListener>("GoalPoseListener");
   factory.registerNodeType<FollowPathPurePursuit>("FollowPathPurePursuit");
+  factory.registerNodeType<FollowPathControllerServer>("FollowPathControllerServer");
   factory.registerNodeType<ArcturnToPoint>("ArcturnToPoint");
   factory.registerNodeType<MoveToPoint>("MoveToPoint");
   factory.registerNodeType<MoveScissor>("MoveScissor");

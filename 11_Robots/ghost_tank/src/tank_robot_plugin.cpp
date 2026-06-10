@@ -329,6 +329,7 @@ void TankRobotPlugin::initTankModel()
 
   m_tank_model_ptr = std::make_shared<TankModel>(node_ptr_, rhi_ptr_, tank_model_config);
   tank_trajectory_ptr_ = std::make_shared<motion_planning::Trajectory>();
+  planned_path_ptr_ = std::make_shared<nav_msgs::msg::Path>();
   m_odom_ptr = std::make_shared<TankOdometry>(motor_ticks_per_rotation * drive_gear_ratio, wheel_rad_in * INCHES_TO_METERS, wheel_base_inches * INCHES_TO_METERS);
   m_odom_ptr->resetPose();
 
@@ -379,6 +380,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("tank_model_ptr", m_tank_model_ptr);
   bt_->set_variable("node_ptr", node_ptr_);
   bt_->set_variable("tank_trajectory_ptr", tank_trajectory_ptr_);
+  bt_->set_variable("planned_path_ptr", planned_path_ptr_);
   bt_->set_variable("distance_approach_controller_ptr", m_distance_approach_controller_ptr);
   bt_->set_variable("distance_settling_controller_ptr", m_steering_approach_controller_ptr);
   bt_->set_variable("steering_approach_controller_ptr", m_distance_settling_controller_ptr);
@@ -441,7 +443,7 @@ void TankRobotPlugin::publishIMUData()
 void TankRobotPlugin::disabled()
 {
   if (rhi_ptr_) {
-    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
+    // rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
   }
 }
 
@@ -487,72 +489,72 @@ void TankRobotPlugin::autonomous(double current_time)
   // auto curr_pose = m_tank_model_ptr->getWorldPose();
   auto curr_twist = m_tank_model_ptr->getWorldTwist();
 
-  bool ring_detector_active = false;
-  bool want_red = m_color_target_red;
-  bool store_ring = false;
-  bool conveyor_active = false;
-  bool ground_intake_active = false;
-  bool score_pos_up = false;
-  int outtake_direction = 0;
-  int score_ball_direction = 0;
-  bt_->get_variable<bool>("ring_detector_active", ring_detector_active);
-  bt_->get_variable<bool>("store_ring", store_ring);
-  bt_->get_variable<bool>("conveyor_active", conveyor_active);
-  bt_->get_variable<bool>("ground_intake_active", ground_intake_active);
-  bt_->get_variable<bool>("score_pos_up", score_pos_up);
-  bt_->get_variable<int>("outtake_direction", outtake_direction);
-  bt_->get_variable<int>("score_ball_direction", score_ball_direction);
+  // bool ring_detector_active = false;
+  // bool want_red = m_color_target_red;
+  // bool store_ring = false;
+  // bool conveyor_active = false;
+  // bool ground_intake_active = false;
+  // bool score_pos_up = false;
+  // int outtake_direction = 0;
+  // int score_ball_direction = 0;
+  // bt_->get_variable<bool>("ring_detector_active", ring_detector_active);
+  // bt_->get_variable<bool>("store_ring", store_ring);
+  // bt_->get_variable<bool>("conveyor_active", conveyor_active);
+  // bt_->get_variable<bool>("ground_intake_active", ground_intake_active);
+  // bt_->get_variable<bool>("score_pos_up", score_pos_up);
+  // bt_->get_variable<int>("outtake_direction", outtake_direction);
+  // bt_->get_variable<int>("score_ball_direction", score_ball_direction);
 
-  if (score_pos_up) {
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 1.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
-  } else if (score_ball_direction != 0) {
-    // ScoreBall uses scorer_motor only (top); intake stays off
-    double motor_pct = static_cast<double>(score_ball_direction);
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", motor_pct);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
-  } else if (outtake_direction != 0) {
-    double intake_pct = static_cast<double>(outtake_direction);
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_pct);
-    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
-  } else if (conveyor_active) {
-    updateConveyorOnly(true);
-  } else if (ring_detector_active) {
-    ringDetector(ring_detector_active, current_time, want_red, store_ring);
-  } else {
-    updateIntake(ground_intake_active, false, false, false);
-  }
+  // if (score_pos_up) {
+  //   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 1.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  // } else if (score_ball_direction != 0) {
+  //   // ScoreBall uses scorer_motor only (top); intake stays off
+  //   double motor_pct = static_cast<double>(score_ball_direction);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", motor_pct);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  // } else if (outtake_direction != 0) {
+  //   double intake_pct = static_cast<double>(outtake_direction);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_pct);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  // } else if (conveyor_active) {
+  //   updateConveyorOnly(true);
+  // } else if (ring_detector_active) {
+  //   ringDetector(ring_detector_active, current_time, want_red, store_ring);
+  // } else {
+  //   updateIntake(ground_intake_active, false, false, false);
+  // }
 
-  // Update Pneumatics
-  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<int>("clamp_closed"));
-  if (m_mirrored) {
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_l_down"));
-  } else {
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_l_down"));
-    rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
-  }
-  rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], bt_->get_variable<int>("score_pos_up"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], bt_->get_variable<int>("match_loading_up"));
-  rhi_ptr_->setDigitalOut(digital_io_port_map["descorer"], bt_->get_variable<int>("descorer_up"));
-  // Switcher motor control (auton): direction -1=down, 0=stop, 1=up
-  int switcher_direction = 0;
-  bt_->get_variable<int>("switcher_direction", switcher_direction);
-  if (switcher_direction != 0) {
-    double motor_pct = static_cast<double>(switcher_direction);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", motor_pct);
-  } else {
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
-  }
+  // // Update Pneumatics
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<int>("clamp_closed"));
+  // if (m_mirrored) {
+  //   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
+  //   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_l_down"));
+  // } else {
+  //   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_l_down"));
+  //   rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
+  // }
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["score_pos"], bt_->get_variable<int>("score_pos_up"));
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["match_loading"], bt_->get_variable<int>("match_loading_up"));
+  // rhi_ptr_->setDigitalOut(digital_io_port_map["descorer"], bt_->get_variable<int>("descorer_up"));
+  // // Switcher motor control (auton): direction -1=down, 0=stop, 1=up
+  // // int switcher_direction = 0;
+  // // bt_->get_variable<int>("switcher_direction", switcher_direction);
+  // // if (switcher_direction != 0) {
+  // //   double motor_pct = static_cast<double>(switcher_direction);
+  // //   rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+  // //   rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", motor_pct);
+  // // } else {
+  // //   rhi_ptr_->setMotorCurrentLimitMilliAmps("switcher_motor", 2500);
+  // //   rhi_ptr_->setMotorVoltageCommandPercent("switcher_motor", 0.0);
+  // // }
 
   // Publish Twist Command
   geometry_msgs::msg::Twist msg{};
@@ -770,7 +772,7 @@ bool TankRobotPlugin::runAutonFromDriver(JoyPtr joy_data, double current_time)
       resetBT();
 
       m_odom_ptr->resetPose();
-      resetWorldPose();
+      // resetWorldPose(); // TODO is this intentional
 
       std::this_thread::sleep_for(500ms);
     }

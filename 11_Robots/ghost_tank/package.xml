@@ -18,6 +18,8 @@
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>nav_msgs</depend>
+  <depend>nav2_msgs</depend>
+  <depend>rclcpp_action</depend>
   <depend>pluginlib</depend>
   <depend>ghost_motion_planner_core</depend>
   <depend>ghost_planners</depend>
