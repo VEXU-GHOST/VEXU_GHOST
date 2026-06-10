@@ -4,27 +4,61 @@
   <!--
     Transform-tree description for the push-back robot.
 
-    base_link is the robot body frame (REP-105); sensor frames hang off it via
-    fixed joints. robot_state_publisher broadcasts the tree so rviz, costmaps,
-    and the particle filter share one source of truth for sensor poses. Add a
-    sensor by copying the lidar link+joint block.
+    base_link is the robot body frame (REP-105), placed at the turning center
+    projected onto the floor (z = 0 at the ground). Sensor frames hang off it via
+    fixed joints. robot_state_publisher broadcasts the tree so rviz, costmaps, and
+    the particle filter share one source of truth for sensor poses.
+
+    Geometry from physical measurements (converted in = m * 0.0254):
+      Robot base: 15 x 15 in footprint. Turning center is 6 in from the back
+      edge, 9 in from the front edge, and 7.5 in from each side (laterally
+      centered). +x = forward, +y = left, +z = up.
+        back edge  : x = -6 in  (-0.1524 m)
+        front edge : x = +9 in  (+0.2286 m)
+        left edge  : y = +7.5 in (+0.1905 m)
+        right edge : y = -7.5 in (-0.1905 m)
   -->
 
-  <!-- base_link: the robot body frame. -->
+  <!-- base_link: robot body frame at the turning center (floor level).
+       Both boxes are 15x15 in in footprint and shifted +1.5 in ahead of the
+       turning center (box center = midpoint of back/front edges) so they span
+       -6..+9 in, resting on the floor (origin z = half height).
+         - solid base: 3 in tall (0.0762 m), z origin = 0.0381 m.
+         - bounding cube: full 15 in cube (0.381 m), transparent, z origin =
+           0.1905 m: a "ghost" outline of the robot's 15x15x15 in volume. -->
   <link name="base_link">
-    <visual>
+    <visual name="base">
+      <origin xyz="0.0381 0 0.0381" rpy="0 0 0"/>
       <geometry>
-        <box size="0.35 0.35 0.1"/>
+        <box size="0.381 0.381 0.0762"/>
       </geometry>
       <material name="grey">
         <color rgba="0.4 0.4 0.4 1.0"/>
       </material>
     </visual>
+    <visual name="bounding_cube">
+      <origin xyz="0.0381 0 0.1905" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.381 0.381 0.381"/>
+      </geometry>
+      <material name="ghost_cube">
+        <color rgba="0.2 0.6 1.0 0.12"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0381 0 0.0381" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.381 0.381 0.0762"/>
+      </geometry>
+    </collision>
   </link>
 
-  <!-- RPLidar A1. Offset matches the ekf_pf_node laser_offset_* params; z is
-       cosmetic for the 2D particle filter, set it to the real mounting height
-       for 3D viz. -->
+  <!-- RPLidar A1.
+       Laser center: 2 in forward of the back edge, 1.75 in in from the left
+       edge, laser plane 10.125 in off the ground.
+         x = -6 + 2   = -4 in    -> -0.1016 m
+         y = +7.5 - 1.75 = +5.75 in -> +0.14605 m
+         z = 10.125 in            -> +0.257175 m -->
   <link name="lidar_link">
     <visual>
       <geometry>
@@ -34,12 +68,50 @@
         <color rgba="0.05 0.05 0.05 1.0"/>
       </material>
     </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.038" length="0.04"/>
+      </geometry>
+    </collision>
   </link>
 
   <joint name="base_link_to_lidar_link" type="fixed">
     <parent link="base_link"/>
     <child link="lidar_link"/>
-    <origin xyz="-0.1143 0.1525 0.2" rpy="0 0 0"/>
+    <origin xyz="-0.1016 0.14605 0.257175" rpy="0 0 0"/>
+  </joint>
+
+  <!-- RealSense camera (D435-sized collision/visual box: 90 mm wide x 25 mm tall
+       x 25 mm deep; +x = lens direction, so depth=x, width=y, height=z).
+       Mount, measured from the back-center point on the floor:
+         13.625 in forward     -> x = -6 + 13.625 = +7.625 in -> +0.193675 m
+         5.613 in in from the right face -> y = -7.5 + 5.613 = -1.887 in -> -0.0479298 m
+         13.481 in up           -> z = +0.342417 m
+       Aim: 20 deg down (pitch about +y), then 15 deg inward (yaw about +z,
+       toward +y / robot center since the camera sits right of center).
+         rpy = (0, 0.349066, 0.261799)
+       NOTE: if it points the wrong way in rviz, flip the sign of the yaw
+       (0.261799 to -0.261799); the "inward" sign is easy to get backwards. -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.025 0.090 0.025"/>
+      </geometry>
+      <material name="realsense_blue">
+        <color rgba="0.1 0.3 0.8 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.025 0.090 0.025"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="base_link_to_camera_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.193675 -0.0479298 0.342417" rpy="0 0.349066 0.261799"/>
   </joint>
 
   <!-- IMU. -->
