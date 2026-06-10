@@ -79,23 +79,8 @@ def generate_launch_description():
         parameters=[ros_config_file, base_params_file],
     )
 
-    # Ball colour classifiers on the RP2040 sensor host colour topics
-    # (one per colour device in alpha_sensor_host_config.yaml). Thresholds come
-    # from base_ros_config.yaml; each publishes on <input_topic>/class.
-    mid_conveyor_classifier = Node(
-        package="ghost_sensing",
-        executable="ball_color_classifier",
-        name="mid_conveyor_color_classifier",
-        output="screen",
-        parameters=[base_params_file, {"input_topic": "/sensors/color/mid_conveyor"}],
-    )
-    sorter_hood_classifier = Node(
-        package="ghost_sensing",
-        executable="ball_color_classifier",
-        name="sorter_hood_color_classifier",
-        output="screen",
-        parameters=[base_params_file, {"input_topic": "/sensors/color/sorter_hood"}],
-    )
+    # Ball colour classifiers are launched by hardware.launch.py (grouped,
+    # one per COLOR device in the sensor host config).
 
 
     odom_ekf_node = Node(
@@ -131,8 +116,6 @@ def generate_launch_description():
         odom_ekf_node,
         ekf_pf_node,
         map_ekf_node,
-        mid_conveyor_classifier,
-        sorter_hood_classifier,
         competition_state_machine_node,
         gpio_expander,
     ])

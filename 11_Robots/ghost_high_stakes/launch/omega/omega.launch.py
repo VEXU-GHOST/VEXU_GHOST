@@ -80,16 +80,8 @@ def generate_launch_description():
         parameters=[ros_config_file, base_params_file],
     )
 
-    # Ball colour classifier on the RP2040 sensor host colour topic
-    # (omega_sensor_host_config.yaml: intake). Thresholds from base_ros_config;
-    # publishes on <input_topic>/class.
-    intake_classifier = Node(
-        package="ghost_sensing",
-        executable="ball_color_classifier",
-        name="intake_color_classifier",
-        output="screen",
-        parameters=[base_params_file, {"input_topic": "/sensors/color/intake"}],
-    )
+    # Ball colour classifiers are launched by hardware.launch.py (grouped,
+    # one per COLOR device in the sensor host config).
 
 
     odom_ekf_node = Node(
@@ -125,7 +117,6 @@ def generate_launch_description():
         odom_ekf_node,
         ekf_pf_node,
         map_ekf_node,
-        intake_classifier,
         competition_state_machine_node,
         gpio_expander,
     ])
