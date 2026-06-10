@@ -2,9 +2,16 @@
 # Each device publishes on /sensors/<type>/<name>; the I2C address is derived
 # from the device type's default XOR the rotary-switch DAC offset.
 devices:
-    intake:
+    mid_conveyor:
+        port: 6              # host input 7 (port = input - 1)
+        type: COLOR
+        remap_switch: 0      # -> ISL29125 @ 0x31
+        config1: 0x0D        # 10,000-lux range, 16-bit RGB
+        config2: 0xBF        # max IR compensation
+    sorter_hood:
         port: 6              # host input 7 (port = input - 1)
         type: COLOR
         remap_switch: 1      # -> ISL29125 @ 0x31
         config1: 0x0D        # 10,000-lux range, 16-bit RGB
         config2: 0xBF        # max IR compensation
+
