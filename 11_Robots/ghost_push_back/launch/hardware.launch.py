@@ -1,4 +1,5 @@
 import os
+import glob
 import xacro
 import yaml
 from launch import LaunchDescription
@@ -8,6 +9,20 @@ from launch_ros.actions import Node, SetRemap
 from launch.actions import IncludeLaunchDescription, GroupAction, DeclareLaunchArgument, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
+
+
+def resolve_serial(pattern, fallback):
+    """Resolve a USB serial device by its stable /dev/serial/by-id name.
+
+    by-id symlinks are created by standard udev on any Linux (no custom rules),
+    and the name encodes vendor/product/interface, so a glob matches a device by
+    TYPE regardless of which /dev/ttyACMx it landed on or its per-board serial.
+    Returns the by-id path (stable; safe to open directly) or `fallback` if no
+    device matches (e.g. unplugged, or /dev/serial/by-id absent).
+    """
+    hits = sorted(glob.glob("/dev/serial/by-id/" + pattern))
+    return hits[0] if hits else fallback
+
 
 def generate_launch_description():
     ghost_push_back_base_dir = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back")
@@ -153,26 +168,37 @@ def generate_launch_description():
             return []
         else:
             print("Launching robot_name:", robot_name)
+
+            # Resolve serial devices by USB type via /dev/serial/by-id (standard
+            # udev, no custom rules). The V5 brain exposes two interfaces; if02 is
+            # the comms "User Port". Fallbacks apply only if by-id is unavailable.
+            v5_serial_port = resolve_serial("*V5_Brain*-if02", "/dev/ttyACM1")
+            sensor_host_serial_port = resolve_serial(
+                "usb-Raspberry_Pi_Pico*-if00", "/dev/ttyACM0")
+
             robot_launch = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
                     os.path.join(ghost_push_back_base_dir, "launch", robot_name, robot_name + ".launch.py")
                 ),
-                launch_arguments={'base_params_file': base_ros_config_file}.items()
+                launch_arguments={'base_params_file': base_ros_config_file,
+                                  'v5_serial_port': v5_serial_port}.items()
             )
 
-            # RP2040 sensor host. ros_config has serial_port/namespace; the
-            # device map (what sensors, where) is the per-robot sensor host yaml.
+            # RP2040 sensor host. ros_config has namespace; serial_port is the
+            # auto-detected Pico path (overrides the base fallback). The device
+            # map (what sensors, where) is the per-robot sensor host yaml.
             ros_config_file = os.path.join(
-                ghost_high_stakes_base_dir, "config", robot_name, robot_name + "_ros_config.yaml")
+                ghost_push_back_base_dir, "config", robot_name, robot_name + "_ros_config.yaml")
             sensor_host_config = os.path.join(
-                ghost_high_stakes_base_dir, "config", robot_name, robot_name + "_sensor_host_config.yaml")
+                ghost_push_back_base_dir, "config", robot_name, robot_name + "_sensor_host_config.yaml")
             sensor_host_node = Node(
                 package="ghost_ros_interfaces",
                 executable="jetson_sensor_host_serial_node",
                 name="ghost_sensor_host_serial_node",
                 output="screen",
                 parameters=[base_ros_config_file, ros_config_file,
-                            {"device_config": sensor_host_config}],
+                            {"device_config": sensor_host_config,
+                             "serial_port": sensor_host_serial_port}],
             )
 
             # One ball colour classifier per COLOR device in the sensor host

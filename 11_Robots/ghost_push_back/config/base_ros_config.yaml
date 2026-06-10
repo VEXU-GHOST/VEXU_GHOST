@@ -1,3 +1,23 @@
+# Serial ports below are FALLBACKS only. hardware.launch.py auto-detects the
+# real device path at startup by USB vendor:product -- the V5 brain (2888:0501,
+# interface 2 = the "User Port") and the RP2040 sensor host (2e8a:000a) -- and
+# overrides these. That needs no udev rules, so it works on any machine. The
+# /dev/ttyACMx values here are only used if detection fails (e.g. pyserial
+# missing); never trust them otherwise -- those numbers reshuffle on replug and
+# the V5 brain claims two of them.
+ghost_serial_node:
+  ros__parameters:
+    port_name: "/dev/ttyACM1"
+    backup_port_name: "/dev/ttyACM1"
+    verbose: false
+
+ghost_sensor_host_serial_node:
+  ros__parameters:
+    serial_port: "/dev/ttyACM0"
+    topic_namespace: "/sensors"
+    # Device map (what sensors, where) is the per-robot *_sensor_host_config.yaml
+    # (device_config, set by hardware.launch.py). See ghost_sensor_host/PROTOCOL.md §8.
+
 bag_recorder_service:
   ros__parameters:
     disk_space_required_kb: 256000

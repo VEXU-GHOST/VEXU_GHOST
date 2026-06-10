@@ -40,6 +40,11 @@ def generate_launch_description():
     ########################
     ### Node Definitions ###
     ########################
+    # V5 brain serial port: auto-detected by hardware.launch.py (USB id, via
+    # /dev/serial/by-id) and passed in here, overriding the base_ros_config
+    # fallback. Defaults to the fallback when this launch is run standalone.
+    v5_serial_port = LaunchConfiguration("v5_serial_port")
+
     serial_node = Node(
         package="ghost_ros_interfaces",
         executable="jetson_v5_serial_node",
@@ -49,6 +54,7 @@ def generate_launch_description():
             base_params_file,
             ros_config_file,
             {"robot_config_yaml_path": robot_config_yaml_path},
+            {"port_name": v5_serial_port, "backup_port_name": v5_serial_port},
         ],
         # arguments=["--ros-args", "--log-level", "debug"]
     )
@@ -120,6 +126,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('base_params_file'),
+        DeclareLaunchArgument('v5_serial_port', default_value='/dev/ttyACM1'),
         serial_node,
         imu_filter_node,
         odom_ekf_node,
