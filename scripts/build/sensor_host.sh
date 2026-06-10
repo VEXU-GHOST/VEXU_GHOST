@@ -46,14 +46,6 @@ if [ -z "$PICO_SDK_PATH" ] || [ ! -d "$PICO_SDK_PATH" ]; then
     exit -1
 fi
 
-# ---- Verify firmware submodules are checked out ---------------------------
-for sub in lib/FreeRTOS-Kernel lib/Library-VectorQuaternionMatrix; do
-    if [ ! -e "$FW_DIR/$sub/CMakeLists.txt" ] && [ -z "$(ls -A "$FW_DIR/$sub" 2>/dev/null)" ]; then
-        echo "ERROR: submodule $sub is missing. Run scripts/setup_submodules.sh"
-        exit -1
-    fi
-done
-
 # ---- Build ----------------------------------------------------------------
 echo
 echo -------------------------------------------------------
