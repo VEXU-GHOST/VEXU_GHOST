@@ -15,6 +15,10 @@ def generate_launch_description():
     # This contains parameters shared between both robots
     base_ros_config_file = os.path.join(ghost_push_back_base_dir, "config/base_ros_config.yaml")
 
+    # nav2 stack config (map_server, planner_server + global_costmap,
+    # controller_server + local_costmap), split out of base_ros_config.yaml.
+    nav2_config_file = os.path.join(ghost_push_back_base_dir, "config/nav2_config.yaml")
+
     #############################
     ### Base Node Definitions ###
     #############################
@@ -47,7 +51,44 @@ def generate_launch_description():
                 "map_server.launch.py",
             )
         ),
-        launch_arguments={"base_params_file": base_ros_config_file}.items(),
+        launch_arguments={"base_params_file": nav2_config_file}.items(),
+    )
+
+    # nav2 planner server + its lifecycle manager. SmacPlanner2D settings and
+    # the global_costmap it plans over live in the planner_server/global_costmap
+    # blocks of nav2_config.yaml. planner_server is a lifecycle node, so the
+    # manager configures and activates it on startup.
+    planner_server = Node(
+        package="nav2_planner",
+        executable="planner_server",
+        name="planner_server",
+        output="screen",
+        parameters=[nav2_config_file],
+    )
+
+    # nav2 controller server (Regulated Pure Pursuit). controller_server +
+    # local_costmap settings live in nav2_config.yaml. cmd_vel is remapped to
+    # /nav2/cmd_vel so it does not collide with the existing /cmd_vel; ghost_tank's
+    # FollowPathControllerServer BT node subscribes there and relays to the drive.
+    # Requires ros-humble-nav2-controller and
+    # ros-humble-nav2-regulated-pure-pursuit-controller.
+    controller_server = Node(
+        package="nav2_controller",
+        executable="controller_server",
+        name="controller_server",
+        output="screen",
+        parameters=[nav2_config_file],
+        remappings=[("cmd_vel", "/nav2/cmd_vel")],
+    )
+
+    # Single lifecycle manager that configures + activates both nav2 servers on
+    # startup, in order (planner before controller).
+    planner_lifecycle_manager = Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name="lifecycle_manager_navigation",
+        output="screen",
+        parameters=[{"autostart": True, "node_names": ["planner_server", "controller_server"]}],
     )
 
     rplidar_node = Node(
@@ -161,6 +202,9 @@ def generate_launch_description():
         DeclareLaunchArgument("robot_name", default_value="None"),
         robot_state_publisher,
         map_server_launch,
+        planner_server,
+        controller_server,
+        planner_lifecycle_manager,
         rplidar_node,
         # realsense_node,
         bag_recorder_service,

@@ -24,6 +24,10 @@ def generate_launch_description():
     # This contains the auton init pose (kept separate so it's easy to tweak per match)
     init_pose_config_file = os.path.join(config_path, "omega/omega_init_pose_config.yaml")
 
+    # Shared localization config (particle filter + robot_localization EKFs),
+    # split out of base_ros_config.yaml.
+    localization_config_file = os.path.join(config_path, "localization_config.yaml")
+
     # This specifies robot control plugin yo load
     plugin_type = "ghost_tank::OmegaJerryPlugin"
     robot_name = "OMEGA_JERRY"
@@ -93,7 +97,7 @@ def generate_launch_description():
         executable="ekf_node",
         name="odom_ekf_node",
         output="screen",
-        parameters=[ros_config_file, base_params_file],
+        parameters=[ros_config_file, base_params_file, localization_config_file],
         remappings=[("odometry/filtered", "/odom_ekf/odometry")],
     )
 
@@ -102,7 +106,7 @@ def generate_launch_description():
         executable="ekf_node",
         name="map_ekf_node",
         output="screen",
-        parameters=[ros_config_file, base_params_file],
+        parameters=[ros_config_file, base_params_file, localization_config_file],
         remappings=[("odometry/filtered", "/map_ekf/odometry")],
     )
 
@@ -111,7 +115,7 @@ def generate_launch_description():
         executable="ekf_pf_node",
         name="ekf_pf_node",
         output="screen",
-        parameters=[ros_config_file, base_params_file],
+        parameters=[ros_config_file, base_params_file, localization_config_file],
     )
 
     return LaunchDescription([

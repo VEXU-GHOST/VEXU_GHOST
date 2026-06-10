@@ -18,6 +18,12 @@
   <exec_depend>ghost_sensing</exec_depend>
   <exec_depend>realsense2_camera</exec_depend>
   <exec_depend>rviz2</exec_depend>
+  <exec_depend>nav2_planner</exec_depend>
+  <exec_depend>nav2_smac_planner</exec_depend>
+  <exec_depend>nav2_controller</exec_depend>
+  <exec_depend>nav2_regulated_pure_pursuit_controller</exec_depend>
+  <exec_depend>nav2_costmap_2d</exec_depend>
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
