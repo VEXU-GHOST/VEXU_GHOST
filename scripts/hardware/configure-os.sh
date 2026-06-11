@@ -2,9 +2,9 @@
 
 set -x
 
-# Resolve through symlinks so paths point at the repo. ghost.sh lives one dir up.
+# Resolve through symlinks so paths point at the repo. ghost lives one dir up.
 DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-GHOST="$(cd "$DIR/.." && pwd)/ghost.sh"
+GHOST="$(cd "$DIR/.." && pwd)/ghost"
 
 # Install/enable the systemd services as part of OS setup.
 "$GHOST" install

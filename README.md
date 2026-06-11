@@ -52,7 +52,7 @@ cd ~/VEXU_GHOST
 
 #### Build Repository
 ```sh
-./scripts/ghost.sh build
+./scripts/ghost build
 ```
 
 #### Start Simulator
@@ -68,18 +68,18 @@ sudo usermod -a -G dialout $USER
 
 # The `ghost` command
 
-`scripts/ghost.sh` is the single entry point for building the code and operating the robot. Most subcommands only work once the machine has been provisioned as a robot (a name written to `/etc/ghost/robot_name`); off-robot only `run`, `build`, `clean`, and `set-robot-name` are available.
+`scripts/ghost` is the single entry point for building the code and operating the robot. Most subcommands only work once the machine has been provisioned as a robot (a name written to `/etc/ghost/robot_name`); off-robot only `run`, `build`, `clean`, and `set-robot-name` are available.
 
 ## Initial Jetson setup (before the `ghost` symlink exists)
 
 On a fresh Jetson the `ghost` shortcut isn't installed yet, so call the script by its path. From `~/VEXU_GHOST`:
 
 ```sh
-./scripts/ghost.sh set-robot-name alpha   # name this robot (writes /etc/ghost/robot_name)
-./scripts/ghost.sh configure-os           # one-time OS setup; also runs install and creates the `ghost` symlink
+./scripts/ghost set-robot-name alpha   # name this robot (writes /etc/ghost/robot_name)
+./scripts/ghost configure-os           # one-time OS setup; also runs install and creates the `ghost` symlink
 ```
 
-After `configure-os`, the `ghost` command is available system-wide (symlinked into `/usr/local/bin`), so you can drop the `./scripts/ghost.sh` prefix and just run `ghost <command>`.
+After `configure-os`, the `ghost` command is available system-wide (symlinked into `/usr/local/bin`), so you can drop the `./scripts/ghost` prefix and just run `ghost <command>`.
 
 ## Key usage
 
