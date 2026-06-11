@@ -16,6 +16,7 @@
   <exec_depend>ghost_tank</exec_depend>
   <exec_depend>ghost_localization</exec_depend>
   <exec_depend>ghost_sensing</exec_depend>
+  <exec_depend>push_back_cv</exec_depend>
   <exec_depend>realsense2_camera</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>nav2_planner</exec_depend>

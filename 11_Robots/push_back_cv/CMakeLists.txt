@@ -35,10 +35,10 @@ rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typ
 target_link_libraries(goal_reader_node "${cpp_typesupport_target}" yaml-cpp)
 install(TARGETS goal_reader_node DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 install(
   PROGRAMS
-    scripts/cv_detector.py
     scripts/cv_detector_array.py
     scripts/block_map_node.py
   DESTINATION lib/${PROJECT_NAME}
