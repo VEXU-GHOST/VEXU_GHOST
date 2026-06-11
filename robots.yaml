@@ -1,5 +1,5 @@
 ### Points to selected robot configuration for PROS compile ###
-selected_robot: OMEGA_JERRY
+selected_robot: INKY
 
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:
@@ -17,8 +17,8 @@ GHOST_24:
 GHOST_TANK:
   config_file: 11_Robots/ghost_push_back/config/robot_hardware_config_tank.yaml
 
-ALPHA_JERRY:
-  config_file: 11_Robots/ghost_push_back/config/alpha/alpha_hardware_config.yaml
+PINKY:
+  config_file: 11_Robots/ghost_push_back/config/pinky/pinky_hardware_config.yaml
 
-OMEGA_JERRY:
-  config_file: 11_Robots/ghost_push_back/config/omega/omega_hardware_config.yaml
+INKY:
+  config_file: 11_Robots/ghost_push_back/config/inky/inky_hardware_config.yaml

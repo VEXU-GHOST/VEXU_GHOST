@@ -25,7 +25,7 @@
 #include <cmath>
 #include <bits/stdc++.h>
 #include <ghost_tank/tank_model.hpp>
-#include <ghost_tank/omega_jerry_plugin.hpp>
+#include <ghost_tank/inky_plugin.hpp>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/math_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
@@ -46,13 +46,13 @@ using JoyPtr = std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData>
 namespace ghost_tank
 {
 
-OmegaJerryPlugin::OmegaJerryPlugin()
+InkyPlugin::InkyPlugin()
 {
   populateMotorNames();
   populateDigitalIONames();
 }
 
-void OmegaJerryPlugin::populateMotorNames()
+void InkyPlugin::populateMotorNames()
 {
   m_right_drive_motor_names = {
     // "drive_r1",
@@ -84,7 +84,7 @@ void OmegaJerryPlugin::populateMotorNames()
     m_right_drive_motor_names.end());
 }
 
-void OmegaJerryPlugin::populateDigitalIONames()
+void InkyPlugin::populateDigitalIONames()
 {
   // digital_io_port_map["goal_rush_sensor"] = 4;
   digital_io_port_map["goal_rush_l"] = 0;
@@ -99,7 +99,7 @@ void OmegaJerryPlugin::populateDigitalIONames()
 /// Initialization ///
 //////////////////////
 
-void OmegaJerryPlugin::initialize()
+void InkyPlugin::initialize()
 {
   TankRobotPlugin::initROSComms();
   TankRobotPlugin::initEstimation();
@@ -110,9 +110,9 @@ void OmegaJerryPlugin::initialize()
   TankRobotPlugin::resetWorldPose();
 }
 
-void OmegaJerryPlugin::initNeutralStakeArm()
+void InkyPlugin::initNeutralStakeArm()
 {
-  std::cout << "[OmegaJerryPlugin::initNeutralStakeArm]" << std::endl;
+  std::cout << "[InkyPlugin::initNeutralStakeArm]" << std::endl;
 
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_kp", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin.neutral_stake_arm_gear_ratio", 0.0);
@@ -137,11 +137,11 @@ void OmegaJerryPlugin::initNeutralStakeArm()
   m_neutral_stake_arm_des_pos = m_neutral_stake_arm_rest_pos_deg;
 }
 
-void OmegaJerryPlugin::disabled()
+void InkyPlugin::disabled()
 {
 }
 
-void OmegaJerryPlugin::autonomous(double current_time)
+void InkyPlugin::autonomous(double current_time)
 {
   if (m_is_first_auton_loop) {
     // m_is_first_auton_loop = false;
@@ -180,7 +180,7 @@ void OmegaJerryPlugin::autonomous(double current_time)
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
 }
 
-void OmegaJerryPlugin::teleop(double current_time)
+void InkyPlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
   bool shift1 = joy_data->btn_b;
@@ -200,14 +200,14 @@ void OmegaJerryPlugin::teleop(double current_time)
   rhi_ptr_->setDigitalOut(digital_io_port_map["buddy"], m_buddy_extended);
 }
 
-bool OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
+bool InkyPlugin::updateNeutralStakeArmPosition(int arm_mode)
 {
   // Neutral stake arm motors not present on this robot
   (void)arm_mode;
   return true;
 }
 
-void OmegaJerryPlugin::updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active)
+void InkyPlugin::updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active)
 {
   // Neutral stake arm motors not present on this robot
   (void)up_btn;
@@ -217,4 +217,4 @@ void OmegaJerryPlugin::updateNeutralStakeArmController(bool up_btn, bool down_bt
 
 } // namespace ghost_tank
 
-PLUGINLIB_EXPORT_CLASS(ghost_tank::OmegaJerryPlugin, ghost_ros_interfaces::V5RobotBase)
+PLUGINLIB_EXPORT_CLASS(ghost_tank::InkyPlugin, ghost_ros_interfaces::V5RobotBase)

@@ -13,24 +13,23 @@ def generate_launch_description():
     # Get base params from parent launch file and config path
     base_params_file = LaunchConfiguration("base_params_file")
     config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back", "config")
-    tank_config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_tank", "config")
 
     # This contains all the parameters for our ROS nodes
-    ros_config_file = os.path.join(config_path, "omega/omega_ros_config.yaml")
+    ros_config_file = os.path.join(config_path, "pinky/pinky_ros_config.yaml")
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
-    robot_config_yaml_path = os.path.join(config_path, "omega/omega_hardware_config.yaml")
+    robot_config_yaml_path = os.path.join(config_path, "pinky/pinky_hardware_config.yaml")
 
     # This contains the auton init pose (kept separate so it's easy to tweak per match)
-    init_pose_config_file = os.path.join(config_path, "omega/omega_init_pose_config.yaml")
+    init_pose_config_file = os.path.join(config_path, "pinky/pinky_init_pose_config.yaml")
 
     # Shared localization config (particle filter + robot_localization EKFs),
     # split out of base_ros_config.yaml.
     localization_config_file = os.path.join(config_path, "localization_config.yaml")
 
     # This specifies robot control plugin yo load
-    plugin_type = "ghost_tank::OmegaJerryPlugin"
-    robot_name = "OMEGA_JERRY"
+    plugin_type = "ghost_tank::PinkyPlugin"
+    robot_name = "PINKY"
 
     # Get BT Path for autons
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
@@ -71,7 +70,7 @@ def generate_launch_description():
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
                 "bt_path_interaction": bt_path_interaction,
-                "config_path": tank_config_path,
+                "config_path": config_path,
             },
         ],
         arguments=[plugin_type, robot_name],

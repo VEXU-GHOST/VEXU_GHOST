@@ -49,12 +49,12 @@
 namespace ghost_tank
 {
 
-class OmegaJerryPlugin : public ghost_tank::TankRobotPlugin
+class PinkyPlugin : public ghost_tank::TankRobotPlugin
 {
 public:
   using JoyPtr = std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData>;
 
-  OmegaJerryPlugin();
+  PinkyPlugin();
 
   void initialize() override;
   void disabled() override;
@@ -66,29 +66,15 @@ protected:
   void populateMotorNames();
   void populateDigitalIONames();
 
-  // Initialization
+  // // Initialization
   // void initROSComms();
   // void initEstimation();
   // void initIntake();
-  void initNeutralStakeArm();
   // void initTankModel();
   // void initAutonomy();
-  
-  bool updateNeutralStakeArmPosition(int arm_mode);
-  void updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active);
 
-  // Neutral Stake Arm
-  double m_neutral_stake_arm_kp{0.0};
-  double m_neutral_stake_arm_gear_ratio{0.0};
-  double m_neutral_stake_arm_rest_pos_deg{0.0};
-  double m_neutral_stake_arm_loading_pos_deg{0.0};
-  double m_neutral_stake_arm_loaded_pos_deg{0.0};
-  double m_neutral_stake_arm_score_neutral_pos_deg{0.0};
-  double m_neutral_stake_arm_score_alliance_pos_deg{0.0};
-  double m_neutral_stake_arm_down_pos_deg{0.0};
-  double m_neutral_stake_arm_settled_threshold_deg{0.0};
-  double m_neutral_stake_arm_des_pos{0.0};
-  int m_arm_mode{0};
+  void updateScissor(bool up, bool down, bool enabled);
+  void updateT1Climb(bool up, bool down, bool enabled);
 
 };
 

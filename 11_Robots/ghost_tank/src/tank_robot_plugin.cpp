@@ -170,7 +170,7 @@ void TankRobotPlugin::initROSComms()
   m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensors/intake/color", rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::colorCallback, this, _1));
 
   // Auto-sort colour source: a ball_color_classifier publishing BallColor. The
-  // sensor name differs per robot (alpha: sorter_hood, omega: intake), so the
+  // sensor name differs per robot (pinky: sorter_hood, inky: intake), so the
   // topic is a parameter set in each robot's config.
   node_ptr_->declare_parameter("tank_robot_plugin.sort_color_topic", "/sensors/color/intake/class");
   std::string sort_color_topic = node_ptr_->get_parameter("tank_robot_plugin.sort_color_topic").as_string();

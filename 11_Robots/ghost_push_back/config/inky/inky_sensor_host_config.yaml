@@ -1,4 +1,4 @@
-# RP2040 sensor host devices for OMEGA. See ghost_sensor_host/PROTOCOL.md §8.
+# RP2040 sensor host devices for INKY. See ghost_sensor_host/PROTOCOL.md §8.
 # Each device publishes on /sensors/<type>/<name>; the I2C address is derived
 # from the device type's default XOR the rotary-switch DAC offset.
 #
