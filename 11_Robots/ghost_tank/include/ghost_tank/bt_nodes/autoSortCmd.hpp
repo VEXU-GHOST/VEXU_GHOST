@@ -32,10 +32,16 @@
 
 namespace ghost_tank {
 
-class SorterCmd : public BT::SyncActionNode {
+/**
+ * AutoSortCmd - Enable/disable the constant-intake auto-sort behavior. Sets the
+ * "auto_sort_active" blackboard flag; the robot plugin's autonomous() loop runs
+ * TankRobotPlugin::autoSort() each tick while it is true (constantly intaking,
+ * firing the sorter pneumatic on a wrong-colour ball).
+ */
+class AutoSortCmd : public BT::SyncActionNode {
 public:
   // If your Node has ports, you must use this constructor signature
-  SorterCmd(const std::string& name, const BT::NodeConfig& config);
+  AutoSortCmd(const std::string& name, const BT::NodeConfig& config);
 
   // It is mandatory to define this STATIC method.
   static BT::PortsList providedPorts();
@@ -44,7 +50,7 @@ public:
 
 private:
   std::shared_ptr<rclcpp::Node> node_ptr_;
-	std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<TankModel> tank_model_ptr_;
   std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
   BT::Blackboard::Ptr blackboard_;
 };

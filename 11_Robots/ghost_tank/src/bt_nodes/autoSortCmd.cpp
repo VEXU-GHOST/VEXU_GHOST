@@ -21,32 +21,35 @@
  *   SOFTWARE.
  */
 
-#pragma once
+#include "ghost_tank/bt_nodes/autoSortCmd.hpp"
 
-#include <string>
-#include "behaviortree_cpp/behavior_tree.h"
-#include "rclcpp/rclcpp.hpp"
-#include "ghost_tank/tank_tree.hpp"
-#include "ghost_tank/bt_nodes/bt_util.hpp"
-#include "ghost_v5_interfaces/robot_hardware_interface.hpp"
+namespace ghost_tank
+{
 
-namespace ghost_tank {
+AutoSortCmd::AutoSortCmd(
+  const std::string & name, const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+  blackboard_ = config.blackboard;
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "rhi_ptr", rhi_ptr_);
+}
 
-class SorterCmd : public BT::SyncActionNode {
-public:
-  // If your Node has ports, you must use this constructor signature
-  SorterCmd(const std::string& name, const BT::NodeConfig& config);
+BT::PortsList AutoSortCmd::providedPorts()
+{
+  return {
+    BT::InputPort<bool>("active"),
+  };
+}
 
-  // It is mandatory to define this STATIC method.
-  static BT::PortsList providedPorts();
+BT::NodeStatus AutoSortCmd::tick()
+{
+  bool active = BT_Util::get_input<bool>(this, "active");
 
-  BT::NodeStatus tick();
+  BT_Util::put_in_blackboard(blackboard_, "auto_sort_active", active);
 
-private:
-  std::shared_ptr<rclcpp::Node> node_ptr_;
-	std::shared_ptr<TankModel> tank_model_ptr_;
-  std::shared_ptr<ghost_v5_interfaces::RobotHardwareInterface> rhi_ptr_;
-  BT::Blackboard::Ptr blackboard_;
-};
+  return BT::NodeStatus::SUCCESS;
+}
 
 } // ghost_tank
