@@ -27,6 +27,7 @@
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/digital_io_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/vexlink_channel_device_interface.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 
@@ -41,6 +42,8 @@
 #include <ghost_msgs/msg/v5_motor_state.hpp>
 #include <ghost_msgs/msg/v5_rotation_sensor_state.hpp>
 #include <ghost_msgs/msg/v5_sensor_update.hpp>
+#include <ghost_msgs/msg/v5_vexlink_channel_command.hpp>
+#include <ghost_msgs/msg/v5_vexlink_channel_state.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -181,6 +184,24 @@ void toROSMsg(
 void fromROSMsg(
   ghost_v5_interfaces::devices::InertialSensorDeviceData & inertial_sensor_data,
   const ghost_msgs::msg::V5InertialSensorState & inertial_sensor_msg);
+
+// VEXLink Channel
+
+void toROSMsg(
+  const ghost_v5_interfaces::devices::VexlinkChannelDeviceData & channel_data,
+  ghost_msgs::msg::V5VexlinkChannelState & channel_msg);
+
+void fromROSMsg(
+  ghost_v5_interfaces::devices::VexlinkChannelDeviceData & channel_data,
+  const ghost_msgs::msg::V5VexlinkChannelState & channel_msg);
+
+void toROSMsg(
+  const ghost_v5_interfaces::devices::VexlinkChannelDeviceData & channel_data,
+  ghost_msgs::msg::V5VexlinkChannelCommand & channel_msg);
+
+void fromROSMsg(
+  ghost_v5_interfaces::devices::VexlinkChannelDeviceData & channel_data,
+  const ghost_msgs::msg::V5VexlinkChannelCommand & channel_msg);
 
 // Aggregate Actuator Command
 

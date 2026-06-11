@@ -214,6 +214,48 @@ void fromROSMsg(
 
 
 void toROSMsg(
+  const VexlinkChannelDeviceData & channel_data,
+  ghost_msgs::msg::V5VexlinkChannelState & channel_msg)
+{
+  toROSMsg(channel_data, channel_msg.device_header);
+  channel_msg.rx_x = channel_data.rx_x;
+  channel_msg.rx_y = channel_data.rx_y;
+  channel_msg.rx_theta = channel_data.rx_theta;
+  channel_msg.rx_valid = channel_data.rx_valid;
+}
+
+void fromROSMsg(
+  VexlinkChannelDeviceData & channel_data,
+  const ghost_msgs::msg::V5VexlinkChannelState & channel_msg)
+{
+  fromROSMsg(channel_data, channel_msg.device_header);
+  channel_data.rx_x = channel_msg.rx_x;
+  channel_data.rx_y = channel_msg.rx_y;
+  channel_data.rx_theta = channel_msg.rx_theta;
+  channel_data.rx_valid = channel_msg.rx_valid;
+}
+
+void toROSMsg(
+  const VexlinkChannelDeviceData & channel_data,
+  ghost_msgs::msg::V5VexlinkChannelCommand & channel_msg)
+{
+  toROSMsg(channel_data, channel_msg.device_header);
+  channel_msg.tx_x = channel_data.tx_x;
+  channel_msg.tx_y = channel_data.tx_y;
+  channel_msg.tx_theta = channel_data.tx_theta;
+}
+
+void fromROSMsg(
+  VexlinkChannelDeviceData & channel_data,
+  const ghost_msgs::msg::V5VexlinkChannelCommand & channel_msg)
+{
+  fromROSMsg(channel_data, channel_msg.device_header);
+  channel_data.tx_x = channel_msg.tx_x;
+  channel_data.tx_y = channel_msg.tx_y;
+  channel_data.tx_theta = channel_msg.tx_theta;
+}
+
+void toROSMsg(
   const RobotHardwareInterface & hardware_interface,
   V5ActuatorCommand & actuator_cmd_msg)
 {
@@ -236,6 +278,11 @@ void toROSMsg(
     } else if (device_data_ptr->type == device_type_e::DIGITAL_IO) {
       auto digital_io_data_ptr = device_data_ptr->as<DigitalIODeviceData>();
       actuator_cmd_msg.digital_io = unpackByte(digital_io_data_ptr->data);
+    } else if (device_data_ptr->type == device_type_e::VEXLINK_CHANNEL) {
+      ghost_msgs::msg::V5VexlinkChannelCommand msg{};
+      auto channel_data_ptr = device_data_ptr->as<VexlinkChannelDeviceData>();
+      toROSMsg(*channel_data_ptr, msg);
+      actuator_cmd_msg.vexlink_channels.push_back(msg);
     } else {
       std::string dev_type_str;
       if (DEVICE_TYPE_TO_STRING_MAP.count(device_data_ptr->type) == 1) {
@@ -275,6 +322,14 @@ void fromROSMsg(
       hardware_interface.setDigitalIn(i, actuator_cmd_msg.digital_io[i]);
     }
   }
+
+  // VEXLink Channels
+  for (const auto & channel_msg : actuator_cmd_msg.vexlink_channels) {
+    auto channel_data_ptr = hardware_interface.getDeviceData<VexlinkChannelDeviceData>(
+      channel_msg.device_header.name);
+    fromROSMsg(*channel_data_ptr, channel_msg);
+    hardware_interface.setDeviceData(channel_data_ptr);
+  }
 }
 
 void toROSMsg(const RobotHardwareInterface & hardware_interface, V5SensorUpdate & sensor_update_msg)
@@ -312,6 +367,11 @@ void toROSMsg(const RobotHardwareInterface & hardware_interface, V5SensorUpdate 
     } else if (device_data_ptr->type == device_type_e::DIGITAL_IO) {
       auto digital_io_data_ptr = device_data_ptr->as<DigitalIODeviceData>();
       sensor_update_msg.digital_io = unpackByte(digital_io_data_ptr->data);
+    } else if (device_data_ptr->type == device_type_e::VEXLINK_CHANNEL) {
+      ghost_msgs::msg::V5VexlinkChannelState msg{};
+      auto channel_data_ptr = device_data_ptr->as<VexlinkChannelDeviceData>();
+      toROSMsg(*channel_data_ptr, msg);
+      sensor_update_msg.vexlink_channels.push_back(msg);
     } else {
       std::string dev_type_str;
       if (DEVICE_TYPE_TO_STRING_MAP.count(device_data_ptr->type) == 1) {
@@ -370,7 +430,6 @@ void fromROSMsg(
   }
 
   // Digital IO
-  // Digital IO
   auto output_mask = unpackByte(hardware_interface.getDeviceConfig<DigitalIODeviceConfig>("digital_io")->output_mask);
   auto input_mask = unpackByte(hardware_interface.getDeviceConfig<DigitalIODeviceConfig>("digital_io")->input_mask);
   for (int i = 0; i < 8; i++) {
@@ -380,6 +439,14 @@ void fromROSMsg(
     if (input_mask[i]) {
       hardware_interface.setDigitalIn(i, sensor_update_msg.digital_io[i]);
     }
+  }
+
+  // VEXLink Channels
+  for (const auto & channel_msg : sensor_update_msg.vexlink_channels) {
+    auto channel_data_ptr = hardware_interface.getDeviceData<VexlinkChannelDeviceData>(
+      channel_msg.device_header.name);
+    fromROSMsg(*channel_data_ptr, channel_msg);
+    hardware_interface.setDeviceData(channel_data_ptr);
   }
 }
 

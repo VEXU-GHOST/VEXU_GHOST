@@ -116,6 +116,9 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
+        vexlink_channel:
+            port: 0
+            type: VEXLINK_CHANNEL
     device_configurations:
         inertial_sensor_config:
             serial:

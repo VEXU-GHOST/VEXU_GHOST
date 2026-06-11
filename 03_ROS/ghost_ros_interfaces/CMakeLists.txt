@@ -19,6 +19,9 @@ set(DEPENDENCIES
   ghost_planners
   pluginlib
   rclcpp
+  geometry_msgs
+  tf2
+  tf2_geometry_msgs
   yaml-cpp
   )
 
@@ -147,6 +150,21 @@ install(TARGETS
   check_timer_client
   DESTINATION lib/${PROJECT_NAME})
 
+
+# Partner Pose Publisher Node (publishes partner robot pose from VEXLink RX to /partner/pose)
+add_executable(partner_pose_publisher_node
+  src/vexlink/partner_pose_publisher_node.cpp
+)
+ament_target_dependencies(partner_pose_publisher_node
+  ${DEPENDENCIES}
+)
+target_include_directories(partner_pose_publisher_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  partner_pose_publisher_node
+  DESTINATION lib/${PROJECT_NAME})
 
 # Competition State Machine Node
 add_executable(competition_state_machine_node

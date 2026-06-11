@@ -47,6 +47,7 @@ enum device_type_e
   GPS_SENSOR,            // Unsupported
   RADIO,                 // Unsupported
   JOYSTICK,
+  VEXLINK_CHANNEL,
   INVALID
 };
 

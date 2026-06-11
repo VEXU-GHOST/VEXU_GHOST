@@ -20,3 +20,6 @@ ghost_msgs/V5MotorState[] motors
 # Digital Inputs
 bool[] digital_io
 
+# VEXLink inter-robot received pose (V5 receives from partner radio; Jetson reads this)
+ghost_msgs/V5VexlinkChannelState[] vexlink_channels
+

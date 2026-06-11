@@ -159,6 +159,14 @@ def generate_launch_description():
         parameters=[ros_config_file, base_params_file],
     )
 
+    partner_pose_publisher_node = Node(
+        package="ghost_ros_interfaces",
+        executable="partner_pose_publisher_node",
+        name="partner_pose_publisher_node",
+        output="screen",
+        parameters=[ros_config_file, base_params_file],
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument('base_params_file'),
         serial_node,
@@ -174,5 +182,6 @@ def generate_launch_description():
 
         competition_state_machine_node,
         gpio_expander,
+        partner_pose_publisher_node,
     ])
 

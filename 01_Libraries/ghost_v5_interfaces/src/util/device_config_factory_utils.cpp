@@ -27,6 +27,7 @@
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/digital_io_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/devices/vexlink_channel_device_interface.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
 #include <ghost_v5_interfaces/util/load_inertial_sensor_device_config_yaml.hpp>
 #include <ghost_v5_interfaces/util/load_motor_device_config_yaml.hpp>
@@ -132,6 +133,12 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
         }
         break;
 
+      case device_type_e::VEXLINK_CHANNEL:
+        {
+          device_config_base_ptr = std::make_shared<VexlinkChannelDeviceConfig>();
+        }
+        break;
+
       case device_type_e::INVALID:
         {
           throw std::runtime_error(
@@ -231,6 +238,7 @@ void generateCodeFromRobotConfig(
   output_file << "#include \"ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp\"\n";
   output_file << "#include \"ghost_v5_interfaces/devices/joystick_device_interface.hpp\"\n";
   output_file << "#include \"ghost_v5_interfaces/devices/digital_io_device_interface.hpp\"\n";
+  output_file << "#include \"ghost_v5_interfaces/devices/vexlink_channel_device_interface.hpp\"\n";
   output_file << "\n";
   output_file << "// This is externed as raw C code so we can resolve the symbols in the shared object easily for unit testing.\n";
   output_file << "// It returns a raw pointer to a dynamically allocated object, so if you are poking around, please wrap in a smart pointer!\n";
@@ -326,6 +334,16 @@ void generateCodeFromRobotConfig(
       output_file << "\t" + name + "->" + "input_mask = " << std::to_string(static_cast<int>(config_ptr->input_mask)) << ";\n";
       output_file << "\t" + name + "->" + "output_mask = " << std::to_string(static_cast<int>(config_ptr->output_mask)) << ";\n";
       output_file << "\trobot_config->addDeviceConfig(" + name + ");\n";
+    } else if (val->type == device_type_e::VEXLINK_CHANNEL) {
+      auto config_ptr = val->as<const VexlinkChannelDeviceConfig>();
+      std::string channel_name = config_ptr->name;
+
+      output_file << "\tstd::shared_ptr<ghost_v5_interfaces::devices::VexlinkChannelDeviceConfig> " + channel_name + " = std::make_shared<ghost_v5_interfaces::devices::VexlinkChannelDeviceConfig>();\n";
+      output_file << "\t" + channel_name + "->" + "port = " + std::to_string(config_ptr->port) + ";\n";
+      output_file << "\t" + channel_name + "->" + "name = \"" + channel_name + "\";\n";
+      output_file << "\t" + channel_name + "->" + "type = ghost_v5_interfaces::devices::device_type_e::VEXLINK_CHANNEL;\n";
+      output_file << "\trobot_config->addDeviceConfig(" + channel_name + ");\n";
+      output_file << "\n";
     } else if (val->type == device_type_e::INVALID) {
       std::cout <<
         "[WARNING] Device " + val->name + " has invalid device type. Skipping this entry.";

@@ -43,6 +43,7 @@ const std::unordered_map<std::string, devices::device_type_e> STRING_TO_DEVICE_T
   {"VISION_SENSOR", devices::device_type_e::VISION_SENSOR},
   {"GPS_SENSOR", devices::device_type_e::GPS_SENSOR},
   {"RADIO", devices::device_type_e::RADIO},
+  {"VEXLINK_CHANNEL", devices::device_type_e::VEXLINK_CHANNEL},
   {"INVALID", devices::device_type_e::INVALID},
 };
 const std::unordered_map<devices::device_type_e, std::string> DEVICE_TYPE_TO_STRING_MAP{
@@ -56,6 +57,7 @@ const std::unordered_map<devices::device_type_e, std::string> DEVICE_TYPE_TO_STR
   {devices::device_type_e::VISION_SENSOR, "VISION_SENSOR"},
   {devices::device_type_e::GPS_SENSOR, "GPS_SENSOR"},
   {devices::device_type_e::RADIO, "RADIO"},
+  {devices::device_type_e::VEXLINK_CHANNEL, "VEXLINK_CHANNEL"},
   {devices::device_type_e::INVALID, "INVALID"}
 };
 
