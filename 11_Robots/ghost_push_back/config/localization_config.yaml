@@ -2,7 +2,7 @@
 # (ekf_pf_node + its particle_filter params) and the two robot_localization EKF
 # nodes (odom_ekf_node, map_ekf_node). Split out of base_ros_config.yaml. Loaded
 # alongside base_ros_config.yaml by the localization nodes in the per-robot
-# launch files (alpha/alpha.launch.py, omega/omega.launch.py).
+# launch files (pinky/pinky.launch.py, inky/inky.launch.py).
 
 /**:
   ros__parameters:

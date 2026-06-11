@@ -115,54 +115,54 @@ install(
   INCLUDES DESTINATION include
 )
 
-add_library(alpha_jerry_plugin SHARED src/alpha_jerry_plugin.cpp)
-target_include_directories(alpha_jerry_plugin
+add_library(pinky_plugin SHARED src/pinky_plugin.cpp)
+target_include_directories(pinky_plugin
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-  target_link_libraries(alpha_jerry_plugin
+  target_link_libraries(pinky_plugin
     tank_model
     tank_odom
     tank_tree
     tank_robot_plugin
   )
-ament_target_dependencies(alpha_jerry_plugin
+ament_target_dependencies(pinky_plugin
   ${DEPENDENCIES}
 )
 ament_export_libraries(
-  alpha_jerry_plugin
+  pinky_plugin
 )
-ament_export_targets(alpha_jerry_plugin HAS_LIBRARY_TARGET)
+ament_export_targets(pinky_plugin HAS_LIBRARY_TARGET)
 install(
-TARGETS alpha_jerry_plugin
-EXPORT alpha_jerry_plugin
+TARGETS pinky_plugin
+EXPORT pinky_plugin
 LIBRARY DESTINATION lib
 ARCHIVE DESTINATION lib
 RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
-add_library(omega_jerry_plugin SHARED src/omega_jerry_plugin.cpp)
-target_include_directories(omega_jerry_plugin
+add_library(inky_plugin SHARED src/inky_plugin.cpp)
+target_include_directories(inky_plugin
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-  target_link_libraries(omega_jerry_plugin
+  target_link_libraries(inky_plugin
     tank_model
     tank_odom
     tank_tree
     tank_robot_plugin
   )
-ament_target_dependencies(omega_jerry_plugin
+ament_target_dependencies(inky_plugin
   ${DEPENDENCIES}
 )
 ament_export_libraries(
-  omega_jerry_plugin
+  inky_plugin
 )
-ament_export_targets(omega_jerry_plugin HAS_LIBRARY_TARGET)
+ament_export_targets(inky_plugin HAS_LIBRARY_TARGET)
 install(
-TARGETS omega_jerry_plugin
-EXPORT omega_jerry_plugin
+TARGETS inky_plugin
+EXPORT inky_plugin
 LIBRARY DESTINATION lib
 ARCHIVE DESTINATION lib
 RUNTIME DESTINATION bin

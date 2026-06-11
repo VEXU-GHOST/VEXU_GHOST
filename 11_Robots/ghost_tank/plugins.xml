@@ -1,10 +1,10 @@
-<library path="omega_jerry_plugin">
-  <class type="ghost_tank::OmegaJerryPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
-    <description>Omega Jerry</description>
+<library path="inky_plugin">
+  <class type="ghost_tank::InkyPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
+    <description>Inky</description>
   </class>
 </library>
-<library path="alpha_jerry_plugin">
-  <class type="ghost_tank::AlphaJerryPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
-    <description>Alpha Jerry</description>
+<library path="pinky_plugin">
+  <class type="ghost_tank::PinkyPlugin" base_class_type="ghost_ros_interfaces::V5RobotBase">
+    <description>Pinky</description>
   </class>
 </library>

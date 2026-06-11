@@ -75,7 +75,7 @@ sudo usermod -a -G dialout $USER
 On a fresh Jetson the `ghost` shortcut isn't installed yet, so call the script by its path. From `~/VEXU_GHOST`:
 
 ```sh
-./scripts/ghost set-robot-name alpha   # name this robot (writes /etc/ghost/robot_name)
+./scripts/ghost set-robot-name pinky   # name this robot (writes /etc/ghost/robot_name)
 ./scripts/ghost configure-os           # one-time OS setup; also runs install and creates the `ghost` symlink
 ```
 
