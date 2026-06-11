@@ -177,6 +177,10 @@ set(NODES
   biteCmd
   clampCmd
   climbCmd
+  sorterCmd
+  autoSortCmd
+  switcherCmd
+  littleWillCmd
   shutoffNode
   intakeCmd
   isHanging

@@ -2,12 +2,31 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="tune_movement">
     <Sequence>
-      <MoveToPoint kp="1.2"
-          kd="0.0"
-          max_effort_percent="0.5"
-          timeout_ms="3000"
-          backwards="false"
-          distance_tiles="1"/>
+      <!-- ===== Sorter (digital port 0) ===== -->
+      <SorterCmd sorter_active="true"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+      <SorterCmd sorter_active="false"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+
+      <!-- ===== Switcher (digital port 2) ===== -->
+      <SwitcherCmd switcher_active="true"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+      <SwitcherCmd switcher_active="false"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+
+      <!-- ===== Little Will (digital port 7) ===== -->
+      <LittleWillCmd little_will_active="true"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+      <LittleWillCmd little_will_active="false"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+
+      <!-- Hold here so the tree doesn't loop/restart while observing -->
       <WaitCmd seconds="200.0"
         shutoff_motors="true"/>
     </Sequence>

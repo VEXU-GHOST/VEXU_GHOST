@@ -2,18 +2,32 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="tune_turn">
     <Sequence>
-      <Logging message="bt_tune_turn: Section 1 active. Comment it and uncomment another to test"/>
+      <Logging message="bt_tune_turn: Section 6 (AutoSort) active. Comment it and uncomment another to test"/>
+
+      <!-- ============================================ -->
+      <!-- SECTION 6: AutoSort (constant intake + sorter)-->
+      <!-- Feed balls; the wrong-colour ones get kicked -->
+      <!-- out by the sorter pneumatic after sort_delay. -->
+      <!-- Wrong colour = opposite of color_target_red.  -->
+      <!-- Tune sort_delay / sort_fire_duration params.  -->
+      <!-- ============================================ -->
+      <AutoSortCmd active="true"/>
+      <WaitCmd seconds="15.0"/>
+      <AutoSortCmd active="false"/>
+      <WaitCmd seconds="1.0"/>
 
       <!-- ============================================ -->
       <!-- SECTION 1: AdjustSwitcher (switcher_motor)   -->
       <!-- Move up/down for long vs center goal        -->
       <!-- ============================================ -->
+      <!--
       <AdjustSwitcherCmd direction="1"/>
       <WaitCmd seconds="2.0"/>
       <AdjustSwitcherCmd direction="-1"/>
       <WaitCmd seconds="2.0"/>
       <AdjustSwitcherCmd direction="0"/>
       <WaitCmd seconds="1.0"/>
+      -->
 
       <!-- ============================================ -->
       <!-- SECTION 2: OuttakeBalls (intake_motor only) -->

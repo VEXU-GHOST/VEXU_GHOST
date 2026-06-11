@@ -29,6 +29,7 @@
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <ghost_msgs/msg/ball_color.hpp>
 #include <ghost_msgs/msg/drivetrain_command.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/srv/start_recorder.hpp>
@@ -120,6 +121,24 @@ protected:
   void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
 
   void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
+
+  /**
+   * @brief Constantly intakes and auto-sorts out the wrong-colour ball.
+   *
+   * Runs the intake forward every tick. When the classified ball colour
+   * (latest BallColor on the sort topic) is the colour we do NOT want, it waits
+   * m_sort_delay seconds (time for the ball to travel from the sensor to the
+   * sorter), then extends the sorter pneumatic. The sorter then STAYS extended,
+   * diverting every wrong ball (including several in a row, so it never toggles
+   * back and forth wasting air), until a correct-colour ball is detected; it
+   * holds another m_sort_delay so that ball reaches the sorter, then retracts.
+   * The "wrong" colour is the opposite of our team colour (m_color_target_red):
+   * target red -> eject blue.
+   *
+   * @param current_time loop time in seconds (same clock teleop/auton receives)
+   */
+  void autoSort(double current_time);
+
   void updateMusic(double current_time, JoyPtr joy_data);
 
   void updateDrivetrain(JoyPtr joy_data);
@@ -180,6 +199,25 @@ protected:
   }
   std::string m_color;
   double m_first_color_detect_inches = INFINITY;
+
+  // Auto-sort: latest classified ball colour (ghost_msgs::msg::BallColor enum:
+  // NONE=0, RED=1, BLUE=2, UNSURE=3) from the sorter's colour sensor.
+  rclcpp::Subscription<ghost_msgs::msg::BallColor>::SharedPtr m_sort_color_sub;
+  void sortColorCallback(const ghost_msgs::msg::BallColor::SharedPtr msg)
+  {
+    m_sort_color = msg->color;
+  }
+  uint8_t m_sort_color = ghost_msgs::msg::BallColor::NONE;
+
+  // Auto-sort state machine (see autoSort()).
+  enum class SortState { INTAKING, DELAY, FIRING, RETRACT_DELAY };
+  SortState m_sort_state = SortState::INTAKING;
+  double m_sort_trigger_time = 0.0;     // when the triggering ball was seen
+                                        // (wrong -> extend, correct -> retract)
+  double m_sort_delay = 0.15;           // s for a ball to travel sensor -> sorter
+  int m_sorter_io_port = 0;             // digital-out bit the sorter solenoid is on
+  bool m_auto_sort_enabled = false;     // driver toggle (off = manual intake)
+  bool m_auto_sort_btn_pressed = false; // edge-detect for the toggle button
 
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_color_target_sub;
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr m_button_mirrored_sub;

@@ -169,6 +169,13 @@ void TankRobotPlugin::initROSComms()
 
   m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensors/intake/color", rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::colorCallback, this, _1));
 
+  // Auto-sort colour source: a ball_color_classifier publishing BallColor. The
+  // sensor name differs per robot (alpha: sorter_hood, omega: intake), so the
+  // topic is a parameter set in each robot's config.
+  node_ptr_->declare_parameter("tank_robot_plugin.sort_color_topic", "/sensors/color/intake/class");
+  std::string sort_color_topic = node_ptr_->get_parameter("tank_robot_plugin.sort_color_topic").as_string();
+  m_sort_color_sub = node_ptr_->create_subscription<ghost_msgs::msg::BallColor>(sort_color_topic, rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::sortColorCallback, this, _1));
+
   // Tank-Specific Publishers
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
   std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
@@ -283,6 +290,12 @@ void TankRobotPlugin::initIntake()
     {"blue", 2},
     {"unknown", 0}
   };
+
+  // Auto-sort timing (see autoSort()).
+  node_ptr_->declare_parameter("tank_robot_plugin.sort_delay", m_sort_delay);
+  node_ptr_->declare_parameter("tank_robot_plugin.sorter_io_port", m_sorter_io_port);
+  m_sort_delay = node_ptr_->get_parameter("tank_robot_plugin.sort_delay").as_double();
+  m_sorter_io_port = node_ptr_->get_parameter("tank_robot_plugin.sorter_io_port").as_int();
 
   m_ring_found = false;
   m_ring_color = m_color_map["unknown"];
@@ -474,6 +487,8 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<int>("switcher_direction", 0);
     bt_->set_variable<int>("outtake_direction", 0);
     bt_->set_variable<int>("score_ball_direction", 0);
+    bt_->set_variable<bool>("auto_sort_active", false);
+    m_sort_state = SortState::INTAKING;
   }
 
   bt_->set_variable("auton_time_elapsed", current_time);
@@ -488,6 +503,31 @@ void TankRobotPlugin::autonomous(double current_time)
   // Get best state estimate
   // auto curr_pose = m_tank_model_ptr->getWorldPose();
   auto curr_twist = m_tank_model_ptr->getWorldTwist();
+
+  // Apply intake/outtake command set by OuttakeBallsCmd BT node.
+  // direction: -1 = outtake, 0 = stop, 1 = intake
+  int outtake_direction = 0;
+  bt_->get_variable<int>("outtake_direction", outtake_direction);
+  if (outtake_direction != 0) {
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor",
+      static_cast<double>(outtake_direction));
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  } else {
+    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
+  }
+
+  // Auto-sort (AutoSortCmd BT node). While active, take over the intake + sorter:
+  // constantly intake and fire the sorter on a wrong-colour ball. Runs after the
+  // outtake block so its intake command wins; sets "sorter_active" for the robot
+  // plugin's pneumatics pass.
+  bool auto_sort_active = false;
+  bt_->get_variable<bool>("auto_sort_active", auto_sort_active);
+  if (auto_sort_active) {
+    autoSort(current_time);
+  }
 
   // bool ring_detector_active = false;
   // bool want_red = m_color_target_red;
@@ -606,7 +646,24 @@ void TankRobotPlugin::teleop(double current_time)
   toggleBagRecorder(joy_data);
 
   updateDescore(joy_data->btn_d);
-  updateIntakeFromJoystick(joy_data);
+
+  // Auto-sort toggle (d-pad right, edge-triggered). While enabled, autoSort()
+  // takes over the intake + sorter; otherwise the driver controls the intake.
+  if (joy_data->btn_r && !m_auto_sort_btn_pressed) {
+    m_auto_sort_enabled = !m_auto_sort_enabled;
+    if (!m_auto_sort_enabled) {
+      // Leave the sorter retracted when switching back to manual control.
+      m_sort_state = SortState::INTAKING;
+      rhi_ptr_->setDigitalOut(m_sorter_io_port, false);
+    }
+  }
+  m_auto_sort_btn_pressed = joy_data->btn_r;
+
+  if (m_auto_sort_enabled) {
+    autoSort(current_time);
+  } else {
+    updateIntakeFromJoystick(joy_data);
+  }
   updateDrivetrain(joy_data);
   updateScorePos((!r2_held) && (joy_data->btn_l2));
   updateMatchLoading(joy_data->btn_b);
@@ -761,6 +818,86 @@ void TankRobotPlugin::ringDetector(bool active, double current_time, bool want_r
   updateIntake(ground_intake, hook, ejecting, !hook && retry_mode);
 }
 
+void TankRobotPlugin::autoSort(double current_time)
+{
+  using BallColor = ghost_msgs::msg::BallColor;
+
+  // Constantly intake: drive the intake forward every tick regardless of state.
+  rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 1.0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", 1.0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
+
+  // Eject the ball that is NOT our team colour. m_color_target_red is set by the
+  // color_target button (true -> we keep red, kick out blue).
+  const uint8_t wrong_color = m_color_target_red ? BallColor::BLUE : BallColor::RED;
+  const uint8_t right_color = m_color_target_red ? BallColor::RED : BallColor::BLUE;
+
+  // Heartbeat: what the sensor reports and what we're waiting for (2 Hz).
+  RCLCPP_INFO_THROTTLE(
+    node_ptr_->get_logger(), *node_ptr_->get_clock(), 500,
+    "[autoSort] detected_color=%d wrong_color=%d state=%d",
+    static_cast<int>(m_sort_color), static_cast<int>(wrong_color),
+    static_cast<int>(m_sort_state));
+
+  bool sorter_active = false;
+
+  switch (m_sort_state) {
+    case SortState::INTAKING:
+      // Retracted: correct balls pass through. Wait for a wrong-colour ball.
+      if (m_sort_color == wrong_color) {
+        m_sort_trigger_time = current_time;
+        m_sort_state = SortState::DELAY;
+        RCLCPP_INFO(node_ptr_->get_logger(),
+          "[autoSort] wrong colour (%d) detected -> DELAY %.2fs",
+          static_cast<int>(m_sort_color), m_sort_delay);
+      }
+      break;
+
+    case SortState::DELAY:
+      // Let the wrong ball travel from the sensor to the sorter, then extend.
+      if (current_time - m_sort_trigger_time >= m_sort_delay) {
+        m_sort_state = SortState::FIRING;
+        sorter_active = true;
+        RCLCPP_INFO(node_ptr_->get_logger(),
+          "[autoSort] EXTENDING sorter (holds until a correct ball)");
+      }
+      break;
+
+    case SortState::FIRING:
+      // Stay extended -- diverting every wrong ball, including several in a row,
+      // with no air wasted toggling -- until a correct-colour ball appears.
+      sorter_active = true;
+      if (m_sort_color == right_color) {
+        m_sort_trigger_time = current_time;
+        m_sort_state = SortState::RETRACT_DELAY;
+        RCLCPP_INFO(node_ptr_->get_logger(),
+          "[autoSort] correct colour (%d) detected -> RETRACT in %.2fs",
+          static_cast<int>(m_sort_color), m_sort_delay);
+      }
+      break;
+
+    case SortState::RETRACT_DELAY:
+      // Stay extended until the correct ball reaches the sorter, then retract so
+      // it passes through.
+      if (current_time - m_sort_trigger_time >= m_sort_delay) {
+        m_sort_state = SortState::INTAKING;
+        RCLCPP_INFO(node_ptr_->get_logger(), "[autoSort] retracted -> INTAKING");
+      } else {
+        sorter_active = true;
+      }
+      break;
+  }
+
+  rhi_ptr_->setDigitalOut(m_sorter_io_port, sorter_active);
+  // Also publish to the blackboard so a robot plugin's autonomous() pneumatics
+  // pass (which runs after this and applies "sorter_active") doesn't clobber the
+  // direct write above. Harmless in teleop, where nothing reads it.
+  bt_->set_variable<bool>("sorter_active", sorter_active);
+}
+
 bool TankRobotPlugin::runAutonFromDriver(JoyPtr joy_data, double current_time)
 {
   static bool auton_button_pressed = false;
@@ -844,13 +981,15 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool L2)
       scorer_power = 0.0;
   }
 
-  // Set motor voltages
+  // Set motor voltages ejector_motor
   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", intake_power);
   rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", scorer_power);
+  rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", scorer_power);
 
   // Safety current limits to prevent burnouts during jams
   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
 }
 
 void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
