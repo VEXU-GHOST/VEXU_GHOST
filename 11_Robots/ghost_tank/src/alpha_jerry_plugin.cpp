@@ -90,12 +90,22 @@ void AlphaJerryPlugin::populateMotorNames()
 
 void AlphaJerryPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["goal_rush_l"] = 0;
-  digital_io_port_map["climb"] = 1;
-  digital_io_port_map["goal_rush_r"] = 2;
+  digital_io_port_map["sorter"] = 0;
+  digital_io_port_map["descorer"] = 1;
+  digital_io_port_map["switcher"] = 2;
   digital_io_port_map["bite"] = 3;
   digital_io_port_map["clamp"] = 4;
+  digital_io_port_map["little_will"] = 7;
+
+  // climb / shooter / goal_rush solenoids do not physically exist on alpha_jerry,
+  // but the autonomous() pneumatics block still references them. Without explicit
+  // entries, operator[] would default-insert them at port 0 and clobber the sorter
+  // every loop. Park them on bit 5 (F), an output with no mechanism assigned, so
+  // their (always-false) writes are a harmless no-op and port 0 stays the sorter's.
+  digital_io_port_map["climb"] = 5;
   digital_io_port_map["shooter"] = 5;
+  digital_io_port_map["goal_rush_l"] = 5;
+  digital_io_port_map["goal_rush_r"] = 5;
 }
 
 //////////////////////
@@ -136,6 +146,9 @@ void AlphaJerryPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("store_ring", false);
     bt_->set_variable<bool>("ring_detector_active", false);
     bt_->set_variable<bool>("shoot", false);
+    bt_->set_variable<bool>("sorter_active", false);
+    bt_->set_variable<bool>("switcher_active", false);
+    bt_->set_variable<bool>("little_will_active", false);
   }
 
   TankRobotPlugin::autonomous(current_time);
@@ -152,6 +165,9 @@ void AlphaJerryPlugin::autonomous(double current_time)
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], (bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down")));
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["sorter"], bt_->get_variable<bool>("sorter_active"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["switcher"], bt_->get_variable<bool>("switcher_active"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["little_will"], bt_->get_variable<bool>("little_will_active"));
 }
 
 void AlphaJerryPlugin::teleop(double current_time)
