@@ -7,7 +7,7 @@ export VEXU_HOME="/home/ghost/VEXU_GHOST"
 source "$VEXU_HOME/scripts/setup_env.sh"
 
 echo "Killing existing"
-"$VEXU_HOME/scripts/ghost.sh" kill
+"$VEXU_HOME/scripts/ghost" kill
 
 ROBOT_NAME="$(cat /etc/ghost/robot_name 2>/dev/null)"
 

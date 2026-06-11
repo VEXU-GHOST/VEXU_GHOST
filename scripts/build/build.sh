@@ -14,7 +14,7 @@ then
     exit -1
 fi
 
-$VEXU_HOME/scripts/ghost.sh stop
+$VEXU_HOME/scripts/ghost stop
 
 # Assumes repository is in base directory
 cd $VEXU_HOME

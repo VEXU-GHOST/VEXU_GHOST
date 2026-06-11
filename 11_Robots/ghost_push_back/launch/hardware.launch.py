@@ -141,15 +141,31 @@ def generate_launch_description():
                     )
                 ),
                 launch_arguments={
-                    "enable_depth": "false",
-                    "enable_color": "false",
-                    "enable_gyro": "true",
+                    "enable_depth": "true",
+                    "enable_color": "true",
+                    # CV subscribes to /camera/.../aligned_depth_to_color/image_raw,
+                    # so the depth stream must be registered into the color frame.
+                    "align_depth.enable": "true",
+                    "enable_gyro": "false",
+                    "enable_accel": "false",
                     "initial_reset": "false",
-                    "gyro_qos": "SENSOR_DATA",
-                    "gyro_fps": "200",  # 200 or 400
                 }.items(),
             )
         ]
+    )
+
+    # Push-back CV perception pipeline (cv_detector_array -> block_map ->
+    # goal_reader), publishing /field/goals for the behavior tree. Consumes the
+    # RealSense color/aligned-depth/camera_info topics, so enable realsense_node
+    # (with depth + color) below for this to receive data.
+    push_back_cv_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("push_back_cv"),
+                "launch",
+                "push_back_cv.launch.py",
+            )
+        ),
     )
 
     #######################
@@ -238,7 +254,8 @@ def generate_launch_description():
         controller_server,
         planner_lifecycle_manager,
         rplidar_node,
-        # realsense_node,
+        realsense_node,
+        push_back_cv_launch,
         bag_recorder_service,
         # tts_music_node,
         OpaqueFunction(function = launch_setup),
