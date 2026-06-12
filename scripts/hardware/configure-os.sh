@@ -60,9 +60,15 @@ sleep 5
 # over WiFi, the NAT'd clients ride its authenticated session and resolve through
 # the portal's DNS too.
 ETH_CONNECTION="ghost-eth"
-ETH_INTERFACE="enP8p1s0"
 ETH_IP="192.168.50.1/24"
-if ip link show "$ETH_INTERFACE" >/dev/null 2>&1; then
+ETH_INTERFACE=""
+for iface in enP8p1s0 eno1; do
+	if ip link show "$iface" >/dev/null 2>&1; then
+		ETH_INTERFACE="$iface"
+		break
+	fi
+done
+if [ -n "$ETH_INTERFACE" ]; then
 	sudo nmcli dev set "$ETH_INTERFACE" managed yes 2>/dev/null || true
 	if nmcli con show "$ETH_CONNECTION" >/dev/null 2>&1; then
 		sudo nmcli con modify "$ETH_CONNECTION" \
@@ -78,7 +84,7 @@ if ip link show "$ETH_INTERFACE" >/dev/null 2>&1; then
 	fi
 	sudo nmcli con up "$ETH_CONNECTION" || echo "ghost-eth: cable not plugged in yet; profile will auto-activate later"
 else
-	echo "ghost-eth: interface $ETH_INTERFACE not found; skipping wired ROS network"
+	echo "ghost-eth: no wired interface found (tried enP8p1s0, eno1); skipping wired ROS network"
 fi
 
 #cd /tmp
