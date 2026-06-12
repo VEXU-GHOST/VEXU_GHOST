@@ -44,23 +44,13 @@ def generate_launch_description():
         parameters=[base_ros_config_file],
     )
 
-    # Inter-robot comms producer: publishes this robot's quantized map->base_link pose and status on
-    # /comms/self. The V5 serial node relays it to the peer robot over VEXlink, and republishes the
-    # peer's state on /comms/other_robot.
-    inter_robot_publisher_node = Node(
+    # Inter-robot comms: publishes this robot's quantized map->base_link pose + status on /comms/self
+    # (the V5 serial node relays it to the peer over VEXlink), and de-quantizes the peer's relayed
+    # state from /comms/other_robot into a map -> other_robot/base_link TF for rviz / costmaps / tf.
+    inter_robot_comms_node = Node(
         package="ghost_ros_interfaces",
-        executable="inter_robot_publisher_node",
-        name="inter_robot_publisher_node",
-        output="screen",
-        parameters=[base_ros_config_file],
-    )
-
-    # Inter-robot comms consumer: de-quantizes /comms/other_robot (the peer's relayed state) into a
-    # map -> other_robot/base_link TF so rviz, costmaps, and tf lookups see the peer's position.
-    inter_robot_receiver_node = Node(
-        package="ghost_ros_interfaces",
-        executable="inter_robot_receiver_node",
-        name="inter_robot_receiver_node",
+        executable="inter_robot_comms_node",
+        name="inter_robot_comms_node",
         output="screen",
         parameters=[base_ros_config_file],
     )
@@ -278,8 +268,7 @@ def generate_launch_description():
         realsense_node,
         push_back_cv_launch,
         bag_recorder_service,
-        inter_robot_publisher_node,
-        inter_robot_receiver_node,
+        inter_robot_comms_node,
         # tts_music_node,
         OpaqueFunction(function = launch_setup),
     ])

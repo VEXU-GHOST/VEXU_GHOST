@@ -37,9 +37,9 @@
 #include <tf2_ros/transform_listener.h>
 
 #include <ghost_msgs/msg/other_robot.hpp>
-#include "ghost_ros_interfaces/comms/inter_robot_receiver_node.hpp"
+#include "ghost_ros_interfaces/comms/inter_robot_comms_node.hpp"
 
-using ghost_ros_interfaces::InterRobotReceiverNode;
+using ghost_ros_interfaces::InterRobotCommsNode;
 using namespace std::chrono_literals;
 
 class InterRobotReceiverTestFixture : public ::testing::Test
@@ -67,7 +67,7 @@ public:
   // Spins the receiver + test node, re-publishing the peer packet each cycle, until the peer TF is
   // available or timeout. Returns the looked-up transform.
   bool waitForPeerTransform(
-    const std::shared_ptr<InterRobotReceiverNode> & node,
+    const std::shared_ptr<InterRobotCommsNode> & node,
     const ghost_msgs::msg::OtherRobot & peer,
     geometry_msgs::msg::TransformStamped & out,
     const std::string & map_frame = "map",
@@ -99,7 +99,7 @@ public:
 
 // A normal peer packet is de-quantized into the map->other_robot/base_link transform.
 TEST_F(InterRobotReceiverTestFixture, broadcastsPeerPose) {
-  auto node = std::make_shared<InterRobotReceiverNode>();
+  auto node = std::make_shared<InterRobotCommsNode>();
 
   ghost_msgs::msg::OtherRobot peer{};
   peer.x = 20;       // 20 * 0.05 = 1.0 m
@@ -119,7 +119,7 @@ TEST_F(InterRobotReceiverTestFixture, broadcastsPeerPose) {
 // The all-zero packet (signature of an RHI slot that never received peer data) must NOT produce a
 // bogus (0, 0) transform.
 TEST_F(InterRobotReceiverTestFixture, ignoresStaleSlot) {
-  auto node = std::make_shared<InterRobotReceiverNode>();
+  auto node = std::make_shared<InterRobotCommsNode>();
 
   ghost_msgs::msg::OtherRobot peer{};  // every field zero
 
@@ -130,7 +130,7 @@ TEST_F(InterRobotReceiverTestFixture, ignoresStaleSlot) {
 // A real pose with status still STATUS_UNKNOWN (producer running before any behavior sets status)
 // must still broadcast: status drives game logic, not whether the pose is valid.
 TEST_F(InterRobotReceiverTestFixture, broadcastsUnknownStatusPose) {
-  auto node = std::make_shared<InterRobotReceiverNode>();
+  auto node = std::make_shared<InterRobotCommsNode>();
 
   ghost_msgs::msg::OtherRobot peer{};
   peer.x = 10;  // 10 * 0.05 = 0.5 m -> non-zero, so not the stale slot
@@ -146,7 +146,7 @@ TEST_F(InterRobotReceiverTestFixture, broadcastsUnknownStatusPose) {
 TEST_F(InterRobotReceiverTestFixture, ignoresIncompatiblePeer) {
   rclcpp::NodeOptions options;
   options.parameter_overrides({{"protocol_version", 1}});
-  auto node = std::make_shared<InterRobotReceiverNode>(options);
+  auto node = std::make_shared<InterRobotCommsNode>(options);
 
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node);

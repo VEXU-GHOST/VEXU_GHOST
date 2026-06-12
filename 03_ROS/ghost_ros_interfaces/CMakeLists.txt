@@ -106,34 +106,20 @@ install(TARGETS
   jetson_v5_serial_node
   DESTINATION lib/${PROJECT_NAME})
 
-# Inter-Robot Comms Publisher Node
-add_executable(inter_robot_publisher_node
-  src/comms/inter_robot_publisher_node.cpp
+# Inter-Robot Comms Node: produces /comms/self (quantized own pose) and consumes /comms/other_robot
+# (the peer's relayed state) -> map->other_robot/base_link TF.
+add_executable(inter_robot_comms_node
+  src/comms/inter_robot_comms_node.cpp
 )
-ament_target_dependencies(inter_robot_publisher_node
+ament_target_dependencies(inter_robot_comms_node
   ${DEPENDENCIES}
 )
-target_include_directories(inter_robot_publisher_node
+target_include_directories(inter_robot_comms_node
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
-  inter_robot_publisher_node
-  DESTINATION lib/${PROJECT_NAME})
-
-# Inter-Robot Comms Receiver Node (de-quantizes the peer state into a TF)
-add_executable(inter_robot_receiver_node
-  src/comms/inter_robot_receiver_node.cpp
-)
-ament_target_dependencies(inter_robot_receiver_node
-  ${DEPENDENCIES}
-)
-target_include_directories(inter_robot_receiver_node
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-install(TARGETS
-  inter_robot_receiver_node
+  inter_robot_comms_node
   DESTINATION lib/${PROJECT_NAME})
 
 # Jetson Serial Node for Sensor Host

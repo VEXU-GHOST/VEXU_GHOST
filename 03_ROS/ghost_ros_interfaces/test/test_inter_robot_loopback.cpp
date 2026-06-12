@@ -44,11 +44,9 @@
 #include <tf2_ros/transform_listener.h>
 
 #include <ghost_msgs/msg/other_robot.hpp>
-#include "ghost_ros_interfaces/comms/inter_robot_publisher_node.hpp"
-#include "ghost_ros_interfaces/comms/inter_robot_receiver_node.hpp"
+#include "ghost_ros_interfaces/comms/inter_robot_comms_node.hpp"
 
-using ghost_ros_interfaces::InterRobotPublisherNode;
-using ghost_ros_interfaces::InterRobotReceiverNode;
+using ghost_ros_interfaces::InterRobotCommsNode;
 using namespace std::chrono_literals;
 
 class InterRobotLoopbackTestFixture : public ::testing::Test
@@ -108,18 +106,19 @@ TEST_F(InterRobotLoopbackTestFixture, poseSurvivesFullRoundTrip) {
   const double in_x = 1.25, in_y = 3.40, in_yaw = M_PI;  // 25 / 68 / 128 units
   broadcastSelfPose(in_x, in_y, in_yaw);
 
-  rclcpp::NodeOptions pub_options;
-  pub_options.parameter_overrides(
+  // One comms node does both halves: it publishes /comms/self and consumes /comms/other_robot. The
+  // loopback feeds its own /comms/self back in as the "peer", so the node ends up broadcasting its own
+  // pose as the peer TF -- exercising the full encode -> transport -> decode path.
+  rclcpp::NodeOptions options;
+  options.parameter_overrides(
   {
     {"version_rate_hz", 0.0},  // pose packets only, so every relayed packet carries a pose
     {"publish_rate_hz", 50.0},
   });
-  auto publisher = std::make_shared<InterRobotPublisherNode>(pub_options);
-  auto receiver = std::make_shared<InterRobotReceiverNode>();
+  auto comms = std::make_shared<InterRobotCommsNode>(options);
 
   rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(publisher);
-  executor.add_node(receiver);
+  executor.add_node(comms);
   executor.add_node(test_node_);
 
   geometry_msgs::msg::TransformStamped tf;

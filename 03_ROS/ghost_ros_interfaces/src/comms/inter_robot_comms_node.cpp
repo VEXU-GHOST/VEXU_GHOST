@@ -21,12 +21,12 @@
  *   SOFTWARE.
  */
 
-#include "ghost_ros_interfaces/comms/inter_robot_receiver_node.hpp"
+#include "ghost_ros_interfaces/comms/inter_robot_comms_node.hpp"
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<ghost_ros_interfaces::InterRobotReceiverNode>());
+  rclcpp::spin(std::make_shared<ghost_ros_interfaces::InterRobotCommsNode>());
   rclcpp::shutdown();
   return 0;
 }

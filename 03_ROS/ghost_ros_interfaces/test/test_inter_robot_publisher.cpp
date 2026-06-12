@@ -35,9 +35,9 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 
 #include <ghost_msgs/msg/other_robot.hpp>
-#include "ghost_ros_interfaces/comms/inter_robot_publisher_node.hpp"
+#include "ghost_ros_interfaces/comms/inter_robot_comms_node.hpp"
 
-using ghost_ros_interfaces::InterRobotPublisherNode;
+using ghost_ros_interfaces::InterRobotCommsNode;
 using namespace std::chrono_literals;
 
 class InterRobotPublisherTestFixture : public ::testing::Test
@@ -79,7 +79,7 @@ public:
 
   // Spins the producer node + test node until a packet matching the predicate arrives or timeout.
   bool spinUntilMsg(
-    const std::shared_ptr<InterRobotPublisherNode> & node,
+    const std::shared_ptr<InterRobotCommsNode> & node,
     std::function<bool(const ghost_msgs::msg::OtherRobot &)> predicate,
     std::chrono::seconds timeout = 10s)
   {
@@ -115,7 +115,7 @@ TEST_F(InterRobotPublisherTestFixture, publishesQuantizedPose) {
     {"publish_rate_hz", 50.0},
     {"position_resolution_m", 0.05},
   });
-  auto node = std::make_shared<InterRobotPublisherNode>(options);
+  auto node = std::make_shared<InterRobotCommsNode>(options);
 
   // Wait for a normal (non-version) packet.
   ASSERT_TRUE(
@@ -143,7 +143,7 @@ TEST_F(InterRobotPublisherTestFixture, publishesOriginPose) {
     {"version_rate_hz", 0.0},
     {"publish_rate_hz", 50.0},
   });
-  auto node = std::make_shared<InterRobotPublisherNode>(options);
+  auto node = std::make_shared<InterRobotCommsNode>(options);
 
   ASSERT_TRUE(
     spinUntilMsg(
@@ -165,7 +165,7 @@ TEST_F(InterRobotPublisherTestFixture, publishesVersionPacket) {
     {"publish_rate_hz", 50.0},
     {"protocol_version", 7},
   });
-  auto node = std::make_shared<InterRobotPublisherNode>(options);
+  auto node = std::make_shared<InterRobotCommsNode>(options);
 
   ASSERT_TRUE(
     spinUntilMsg(

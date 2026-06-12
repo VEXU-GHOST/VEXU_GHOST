@@ -23,15 +23,19 @@
 
 #pragma once
 
-// Producer side of inter-robot comms: builds this robot's OtherRobot packet and publishes it on
-// /comms/self. JetsonV5SerialNode relays it to the V5 brain, which transmits it to the peer over
-// VEXlink. The pose comes from the map->base_link transform, quantized to the OtherRobot wire format.
+// The ROS end of inter-robot comms, both halves in one node:
 //
-// V1 scope: position only. target_x/target_y are left at 0 (intent is a follow-up), and status is
-// taken from an optional /comms/self_status topic (default STATUS_UNKNOWN) so the behavior layer can
-// drive it without this node depending on the strategy stack. A STATUS_VERSION packet carrying the
-// protocol version in target_x is interleaved at a low rate so a peer on a mismatched build can be
-// detected.
+//   produce: quantize this robot's map->base_link pose + status -> /comms/self  (the V5 serial node
+//            relays it to the peer over VEXlink)
+//   consume: /comms/other_robot (the peer's relayed state) -> de-quantize -> broadcast a
+//            map -> other_robot/base_link TF for rviz / costmaps / tf lookups
+//
+// V1 scope: position only. target_x/target_y are left at 0 (intent is a follow-up), and status comes
+// from an optional /comms/self_status topic (default STATUS_UNKNOWN) so the behavior layer can drive
+// it without this node depending on the strategy stack. A STATUS_VERSION packet carrying the protocol
+// version in target_x is interleaved at a low rate; on the consume side a mismatched version marks the
+// peer incompatible and its pose is ignored. A fully-zero packet (the never-written RHI slot) is also
+// ignored so we never broadcast a bogus (0, 0) pose.
 
 #include <algorithm>
 #include <chrono>
@@ -39,10 +43,12 @@
 #include <memory>
 #include <string>
 
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/u_int8.hpp>
 #include <tf2/time.h>
 #include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
 
 #include <ghost_msgs/msg/other_robot.hpp>
@@ -50,14 +56,15 @@
 namespace ghost_ros_interfaces
 {
 
-class InterRobotPublisherNode : public rclcpp::Node
+class InterRobotCommsNode : public rclcpp::Node
 {
 public:
-  explicit InterRobotPublisherNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
-  : Node("inter_robot_publisher_node", options)
+  explicit InterRobotCommsNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+  : Node("inter_robot_comms_node", options)
   {
     map_frame_ = declare_parameter("map_frame", "map");
     base_frame_ = declare_parameter("base_frame", "base_link");
+    peer_base_frame_ = declare_parameter("peer_base_frame", "other_robot/base_link");
     position_resolution_m_ = declare_parameter("position_resolution_m", 0.05);
     protocol_version_ = declare_parameter("protocol_version", 1);
     double publish_rate_hz = declare_parameter("publish_rate_hz", 10.0);
@@ -66,26 +73,34 @@ public:
 
     tf_buffer_ = std::make_unique<tf2_ros::Buffer>(get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
+    // Produce
     self_pub_ = create_publisher<ghost_msgs::msg::OtherRobot>(
       "comms/self", rclcpp::SensorDataQoS());
-
-    // Optional: behaviors set this robot's reported status. Defaults to STATUS_UNKNOWN.
     status_sub_ = create_subscription<std_msgs::msg::UInt8>(
       "comms/self_status", rclcpp::SensorDataQoS(),
       [this](const std_msgs::msg::UInt8::SharedPtr msg) {status_ = msg->data;});
-
     last_version_time_ = now();
     timer_ = create_wall_timer(
       std::chrono::duration<double>(1.0 / publish_rate_hz),
-      std::bind(&InterRobotPublisherNode::publishSelf, this));
+      std::bind(&InterRobotCommsNode::publishSelf, this));
+
+    // Consume
+    peer_sub_ = create_subscription<ghost_msgs::msg::OtherRobot>(
+      "comms/other_robot", rclcpp::SensorDataQoS(),
+      std::bind(&InterRobotCommsNode::onOtherRobot, this, std::placeholders::_1));
 
     RCLCPP_INFO(
-      get_logger(), "Inter-robot publisher: %s->%s at %.1f Hz (version every %.1f s)",
-      map_frame_.c_str(), base_frame_.c_str(), publish_rate_hz, version_period_s_);
+      get_logger(),
+      "Inter-robot comms: %s->%s -> /comms/self at %.1f Hz; /comms/other_robot -> TF %s->%s",
+      map_frame_.c_str(), base_frame_.c_str(), publish_rate_hz,
+      map_frame_.c_str(), peer_base_frame_.c_str());
   }
 
 private:
+  ////////////////////////// Produce //////////////////////////
+
   // Sets the heartbeat counter and publishes. seq only advances on a real publish so the receiver can
   // use seq gaps to estimate link loss (skipped cycles must not look like dropped packets).
   void publish(ghost_msgs::msg::OtherRobot & msg)
@@ -122,7 +137,6 @@ private:
       return;
     }
 
-    // Planar yaw straight from the quaternion (robot is on the ground plane).
     double yaw = 2.0 * std::atan2(tf.transform.rotation.z, tf.transform.rotation.w);
 
     ghost_msgs::msg::OtherRobot msg{};
@@ -133,6 +147,53 @@ private:
     // target_x / target_y intentionally left 0 (intent is a follow-up).
     publish(msg);
   }
+
+  ////////////////////////// Consume //////////////////////////
+
+  void onOtherRobot(const ghost_msgs::msg::OtherRobot::SharedPtr msg)
+  {
+    // Version announcement: no pose, just a compatibility check against our own protocol version.
+    if (msg->status == ghost_msgs::msg::OtherRobot::STATUS_VERSION) {
+      peer_compatible_ = (static_cast<int>(msg->target_x) == protocol_version_);
+      if (!peer_compatible_) {
+        RCLCPP_WARN_THROTTLE(
+          get_logger(), *get_clock(), 2000,
+          "Peer protocol version %d != ours %d; ignoring peer state.",
+          static_cast<int>(msg->target_x), protocol_version_);
+      }
+      return;
+    }
+
+    // Don't trust a peer we know is on a mismatched build.
+    if (!peer_compatible_) {
+      return;
+    }
+
+    // Ignore the zero-initialized "no peer data yet" slot (every field zero). A real packet advances
+    // seq, so this only suppresses a slot that has never been written by the peer.
+    const bool stale_slot = (msg->status == ghost_msgs::msg::OtherRobot::STATUS_UNKNOWN) &&
+      (msg->x == 0) && (msg->y == 0) && (msg->theta == 0) &&
+      (msg->target_x == 0) && (msg->target_y == 0) && (msg->seq == 0);
+    if (stale_slot) {
+      return;
+    }
+
+    const double x = msg->x * position_resolution_m_;
+    const double y = msg->y * position_resolution_m_;
+    const double yaw = static_cast<double>(msg->theta) / 256.0 * 2.0 * M_PI;
+
+    geometry_msgs::msg::TransformStamped tf;
+    tf.header.stamp = now();
+    tf.header.frame_id = map_frame_;
+    tf.child_frame_id = peer_base_frame_;
+    tf.transform.translation.x = x;
+    tf.transform.translation.y = y;
+    tf.transform.rotation.z = std::sin(yaw / 2.0);
+    tf.transform.rotation.w = std::cos(yaw / 2.0);
+    tf_broadcaster_->sendTransform(tf);
+  }
+
+  ////////////////////////// Quantization //////////////////////////
 
   // Meters -> 5 cm units, clamped to the uint8 range. Assumes a non-negative map frame (corner origin).
   uint8_t quantizePosition(double meters) const
@@ -155,6 +216,7 @@ private:
 
   std::string map_frame_;
   std::string base_frame_;
+  std::string peer_base_frame_;
   double position_resolution_m_;
   int protocol_version_;
   double version_period_s_;
@@ -162,11 +224,14 @@ private:
   uint8_t status_{ghost_msgs::msg::OtherRobot::STATUS_UNKNOWN};
   uint8_t seq_{0};
   rclcpp::Time last_version_time_;
+  bool peer_compatible_{true};
 
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+  std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   rclcpp::Publisher<ghost_msgs::msg::OtherRobot>::SharedPtr self_pub_;
   rclcpp::Subscription<std_msgs::msg::UInt8>::SharedPtr status_sub_;
+  rclcpp::Subscription<ghost_msgs::msg::OtherRobot>::SharedPtr peer_sub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
 
