@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="bt_pinky">
+    <Sequence>
+      <!-- ===== Sorter (digital port 0) ===== -->
+      <SorterCmd sorter_active="true"/>
+        <MoveToPoint kp="2.5"
+        kd="1.0"
+        max_effort_percent="0.3"
+        timeout_ms="1000"
+        backwards="false"
+        distance_tiles="0.5" />
+        <TurnToPoint posX_tiles="2"
+        posY_tiles="2"
+        timeout_ms="3000"
+        backwards="false"
+        angle_exit_threshold_deg=".5"/>
+      <MoveToPoint kp="2.5"
+        kd="1.0"
+        max_effort_percent="0.3"
+        timeout_ms="1000"
+        backwards="false"
+        distance_tiles="1.0" />
+        <MoveToPoint kp="2.5"
+        kd="1.0"
+        max_effort_percent="0.3"
+        timeout_ms="1000"
+        backwards="false"
+        distance_tiles="0.5" />
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+      <SorterCmd sorter_active="false"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+
+      <!-- ===== Switcher (digital port 2) ===== -->
+      <!-- <SwitcherCmd switcher_active="true"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+      <SwitcherCmd switcher_active="false"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/> -->
+
+      <!-- ===== Little Will (digital port 7) ===== -->
+      <!-- <LittleWillCmd little_will_active="true"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+      <LittleWillCmd little_will_active="false"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/> -->
+
+      <!-- Hold here so the tree doesn't loop/restart while observing -->
+      <!-- <WaitCmd seconds="200.0"
+        shutoff_motors="true"/> -->
+    </Sequence>
+  </BehaviorTree>
+</root>
