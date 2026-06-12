@@ -93,8 +93,8 @@ void PinkyPlugin::populateDigitalIONames()
   digital_io_port_map["sorter"] = 0;
   digital_io_port_map["descorer"] = 1;
   digital_io_port_map["switcher"] = 2;
-  digital_io_port_map["bite"] = 3;
-  digital_io_port_map["clamp"] = 4;
+  digital_io_port_map["left_blocker"] = 3;
+  digital_io_port_map["right_blocker"] = 4;
   digital_io_port_map["little_will"] = 7;
 
   // climb / shooter / goal_rush solenoids do not physically exist on pinky,
@@ -102,6 +102,8 @@ void PinkyPlugin::populateDigitalIONames()
   // entries, operator[] would default-insert them at port 0 and clobber the sorter
   // every loop. Park them on bit 5 (F), an output with no mechanism assigned, so
   // their (always-false) writes are a harmless no-op and port 0 stays the sorter's.
+  digital_io_port_map["bite"] = 5;
+  digital_io_port_map["clamp"] = 5;
   digital_io_port_map["climb"] = 5;
   digital_io_port_map["shooter"] = 5;
   digital_io_port_map["goal_rush_l"] = 5;

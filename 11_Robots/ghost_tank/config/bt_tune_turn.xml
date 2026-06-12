@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4">
+<root BTCPP_format="4"
+  main_tree_to_execute="tune_turn">
+  <include path="bt_scoring.xml"/>
+
   <BehaviorTree ID="tune_turn">
     <Sequence>
-      <Logging message="bt_tune_turn: Section 6 (AutoSort) active. Comment it and uncomment another to test"/>
+      <!-- <SubTree ID="score"
+        _autoremap="true"/>
+
+      <Logging message="bt_tune_turn: Section 6 (AutoSort) active. Comment it and uncomment another to test"/> -->
 
       <!-- ============================================ -->
       <!-- SECTION 6: AutoSort (constant intake + sorter)-->
@@ -12,7 +18,7 @@
       <!-- Tune sort_delay / sort_fire_duration params.  -->
       <!-- ============================================ -->
       <AutoSortCmd active="true"/>
-      <WaitCmd seconds="15.0"/>
+      <WaitCmd seconds="40.0"/>
       <AutoSortCmd active="false"/>
       <WaitCmd seconds="1.0"/>
 

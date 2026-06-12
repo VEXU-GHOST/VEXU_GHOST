@@ -34,7 +34,7 @@ port_configuration:
         ejector_motor:
             port: 5
             type: MOTOR
-            reversed: true
+            reversed: false
             config: intake_motor_config
         drive_l1:
             port: 10

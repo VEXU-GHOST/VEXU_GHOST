@@ -1,5 +1,5 @@
 ### Points to selected robot configuration for PROS compile ###
-selected_robot: INKY
+selected_robot: PINKY
 
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:

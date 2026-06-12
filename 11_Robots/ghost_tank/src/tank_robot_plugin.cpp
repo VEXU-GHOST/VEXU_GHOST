@@ -519,6 +519,23 @@ void TankRobotPlugin::autonomous(double current_time)
     rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
   }
 
+  // Apply scorer command set by ScoreBallCmd BT node.
+  // direction: -1 = reverse, 0 = stop, 1 = score (scorer/top motor forward).
+  // Drives the ejector too, mirroring teleop scoring (updateIntake), so the ball
+  // travels all the way up the scoring path.
+  int score_ball_direction = 0;
+  bt_->get_variable<int>("score_ball_direction", score_ball_direction);
+  if (score_ball_direction != 0) {
+    double scorer_pct = static_cast<double>(score_ball_direction);
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", scorer_pct);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+    rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", scorer_pct);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
+  } else {
+    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  }
+
   // Auto-sort (AutoSortCmd BT node). While active, take over the intake + sorter:
   // constantly intake and fire the sorter on a wrong-colour ball. Runs after the
   // outtake block so its intake command wins; sets "sorter_active" for the robot
@@ -616,7 +633,9 @@ void TankRobotPlugin::resetBT()
     std::cout << "Initializing Behavior Tree" << std::endl;
     bt_->init_tree();
   } catch (std::exception & e) {
-    std::cout << "Error init_tree: " << e.what() << std::endl;
+    std::cerr << "\033[1;31m==============================================================================\033[0m" << std::endl;
+    std::cerr << "\033[1;31mError init_tree: " << e.what() << "\033[0m" << std::endl;
+    std::cerr << "\033[1;31m==============================================================================\033[0m" << std::endl;
   }
   std::cout << "ResetBT Complete!" << std::endl;
 }
@@ -823,9 +842,9 @@ void TankRobotPlugin::autoSort(double current_time)
   using BallColor = ghost_msgs::msg::BallColor;
 
   // Constantly intake: drive the intake forward every tick regardless of state.
-  rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 1.0);
+  rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.8);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-  rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 1.0);
+  rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.8);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
   rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", 1.0);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);

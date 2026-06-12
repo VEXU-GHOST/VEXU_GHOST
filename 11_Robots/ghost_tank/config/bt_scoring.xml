@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <!--
+    Scoring subtree.
+    Assumes the robot is already lined up at the goal. It nudges forward half an
+    inch, raises the switcher to the higher position, then runs the scorer motor
+    alongside the intake motor to score.
+
+    Half inch = 0.0127 m / 0.6096 m-per-tile = ~0.0208 tiles.
+
+    NOTE: in autonomous, tank_robot_plugin.cpp currently only consumes
+    "outtake_direction" (-> intake_motor). The "score_ball_direction" / "score_pos_up"
+    consumption block is commented out, so ScoreBallCmd will NOT spin the scorer
+    motor in auton until that block is wired back up. SwitcherCmd's "switcher_active"
+    is consumed by alpha_jerry_plugin.cpp (pneumatic switcher).
+  -->
+  <BehaviorTree ID="score">
+    <Sequence>
+      <Logging message="Starting scoring subtree" />
+
+      <!-- Raise the switcher to the higher position first so the pneumatic has
+           time to actuate while we creep forward. -->
+      <SwitcherCmd switcher_active="true"/>
+
+      <!-- Creep forward half an inch (~0.0208 tiles). Low effort / short timeout
+           since it is a tiny alignment nudge. -->
+      <MoveToPoint kp="2.5"
+        kd="1.0"
+        max_effort_percent="0.3"
+        timeout_ms="1000"
+        backwards="false"
+        distance_tiles="1.0" />
+
+      <!-- Run the scorer motor and the intake motor together. -->
+      <ScoreBallCmd direction="1" />
+      <OuttakeBallsCmd direction="1" />
+
+      <!-- Dwell so the rollers actually move the ball(s) through. shutoff_motors
+           only zeros the drivetrain, leaving the scorer + intake running. Tune
+           the dwell time to your scoring speed. -->
+      <WaitCmd seconds="5.0"
+        shutoff_motors="true" />
+
+      <!-- Stop the rollers. Remove these two lines if a downstream action should
+           keep scoring. -->
+      <ScoreBallCmd direction="0" />
+      <OuttakeBallsCmd direction="0" />
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Standalone wrapper for testing the scoring subtree on its own. -->
+  <BehaviorTree ID="test_score">
+    <Sequence>
+      <SubTree ID="score"
+        _autoremap="true" />
+      <WaitCmd seconds="200.0"
+        shutoff_motors="true" />
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="Logging"
+      editable="true">
+      <input_port name="message"/>
+    </Action>
+    <Action ID="SwitcherCmd"
+      editable="true">
+      <input_port name="switcher_active"/>
+    </Action>
+    <Action ID="MoveToPoint"
+      editable="true">
+      <input_port name="kp"/>
+      <input_port name="kd"/>
+      <input_port name="max_effort_percent"/>
+      <input_port name="timeout_ms"/>
+      <input_port name="backwards"/>
+      <input_port name="distance_tiles"/>
+    </Action>
+    <Action ID="ScoreBallCmd"
+      editable="true">
+      <input_port name="direction"/>
+    </Action>
+    <Action ID="OuttakeBallsCmd"
+      editable="true">
+      <input_port name="direction"/>
+    </Action>
+    <Action ID="WaitCmd"
+      editable="true">
+      <input_port name="seconds"/>
+      <input_port name="shutoff_motors"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

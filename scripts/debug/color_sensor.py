@@ -85,6 +85,7 @@ def render(name, r16, g16, b16, white):
         out.append(sw + " " * BAR_W + "\x1b[0m\x1b[K\n")
     out.append(f"\x1b[K {name}\n")
     out.append(f"\x1b[K RGB  R:{r16:5d}  G:{g16:5d}  B:{b16:5d}   ->  {r:3d},{g:3d},{b:3d}\n")
+    out.append(f"\x1b[K R/B  {r16 / max(1, b16):5.2f}\x1b[K\n")
     out.append(f"\x1b[K ball: {classify(r16, g16, b16)[1]}\x1b[K\n")
     out.append(f"\x1b[K H {bar(lambda t: hsv_px(t, s, v), h)} {h * 360:5.1f}deg\n")
     out.append(f"\x1b[K S {bar(lambda t: hsv_px(h, t, v), s)} {s * 100:5.1f}%\n")

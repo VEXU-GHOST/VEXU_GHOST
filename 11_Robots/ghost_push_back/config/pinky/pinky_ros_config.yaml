@@ -77,7 +77,7 @@ competition_state_machine_node:
       # sorter stays extended until a correct ball is seen. Solenoid on
       # digital-out port 0.
       sort_color_topic: "/sensors/color/mid_conveyor/class"
-      sort_delay: 0.15           # s for a ball to travel sensor -> sorter
+      sort_delay: 0.05           # s for a ball to travel sensor -> sorter
       sorter_io_port: 0
 
       # init pose lives in pinky/pinky_init_pose_config.yaml
