@@ -180,6 +180,8 @@ set(NODES
   sorterCmd
   autoSortCmd
   switcherCmd
+  leftBlockerCmd
+  rightBlockerCmd
   littleWillCmd
   shutoffNode
   intakeCmd
@@ -192,6 +194,7 @@ set(NODES
   setColorTarget
   goalRushDetected
   goalDetected
+  distanceThreshold
   boundaryCheck
   moveVoltage
   turnToPoint

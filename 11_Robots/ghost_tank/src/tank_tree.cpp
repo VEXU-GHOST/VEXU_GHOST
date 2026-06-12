@@ -55,6 +55,8 @@ void TankTree::init_tree()
   factory.registerNodeType<SorterCmd>("SorterCmd");
   factory.registerNodeType<AutoSortCmd>("AutoSortCmd");
   factory.registerNodeType<SwitcherCmd>("SwitcherCmd");
+  factory.registerNodeType<LeftBlockerCmd>("LeftBlockerCmd");
+  factory.registerNodeType<RightBlockerCmd>("RightBlockerCmd");
   factory.registerNodeType<LittleWillCmd>("LittleWillCmd");
   factory.registerNodeType<MatchLoadingCmd>("MatchLoadingCmd");
   factory.registerNodeType<ScoreBallCmd>("ScoreBallCmd");
@@ -71,6 +73,7 @@ void TankTree::init_tree()
   factory.registerNodeType<NeutralStakeCmd>("NeutralStakeCmd");
   factory.registerNodeType<GoalRushDetected>("GoalRushDetected");
   factory.registerNodeType<GoalDetected>("GoalDetected");
+  factory.registerNodeType<DistanceThreshold>("DistanceThreshold");
   factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
   factory.registerNodeType<MoveVoltage>("MoveVoltage");
   factory.registerNodeType<TurnToPoint>("TurnToPoint");

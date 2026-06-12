@@ -150,6 +150,8 @@ void PinkyPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("shoot", false);
     bt_->set_variable<bool>("sorter_active", false);
     bt_->set_variable<bool>("switcher_active", false);
+    bt_->set_variable<bool>("left_blocker_active", false);
+    bt_->set_variable<bool>("right_blocker_active", false);
     bt_->set_variable<bool>("little_will_active", false);
   }
 
@@ -169,6 +171,8 @@ void PinkyPlugin::autonomous(double current_time)
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], m_bite_closed);
   rhi_ptr_->setDigitalOut(digital_io_port_map["sorter"], bt_->get_variable<bool>("sorter_active"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["switcher"], bt_->get_variable<bool>("switcher_active"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["left_blocker"], bt_->get_variable<bool>("left_blocker_active"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["right_blocker"], bt_->get_variable<bool>("right_blocker_active"));
   rhi_ptr_->setDigitalOut(digital_io_port_map["little_will"], bt_->get_variable<bool>("little_will_active"));
 }
 

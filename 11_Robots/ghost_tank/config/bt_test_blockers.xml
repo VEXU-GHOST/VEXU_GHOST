@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <!--
+    Distance-sensor -> blocker test tree.
+
+    Each side is fully independent: if its distance sensor reads inside the
+    "short range" window, that blocker extends; otherwise it retracts. The two
+    sides live under a Parallel so neither can block the other, and because the
+    tree is made of synchronous nodes that return SUCCESS, tickExactlyOnce()
+    re-evaluates both sensors every control loop (continuous / reactive).
+
+    Distances are in millimeters (DistanceSensorState.distance_mm). Tune the
+    min_mm / max_mm window to whatever counts as "object present" for your setup.
+    Sensor names ("left" / "right") map to /sensors/distance/<name> and must
+    match the DISTANCE devices in the robot's *_sensor_host_config.yaml.
+  -->
+  <BehaviorTree ID="test_blockers">
+    <Parallel success_count="2"
+      failure_count="2">
+
+      <!-- ===== LEFT: distance in [0, 100] mm -> extend left blocker ===== -->
+      <Fallback>
+        <Sequence>
+          <DistanceThreshold sensor_name="left"
+            min_mm="0"
+            max_mm="100"/>
+          <LeftBlockerCmd left_blocker_active="true"/>
+        </Sequence>
+        <LeftBlockerCmd left_blocker_active="false"/>
+      </Fallback>
+
+      <!-- ===== RIGHT: distance in [0, 100] mm -> extend right blocker ===== -->
+      <Fallback>
+        <Sequence>
+          <DistanceThreshold sensor_name="right"
+            min_mm="0"
+            max_mm="100"/>
+          <RightBlockerCmd right_blocker_active="true"/>
+        </Sequence>
+        <RightBlockerCmd right_blocker_active="false"/>
+      </Fallback>
+
+    </Parallel>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="DistanceThreshold"
+      editable="true">
+      <input_port name="sensor_name"/>
+      <input_port name="min_mm"/>
+      <input_port name="max_mm"/>
+    </Action>
+    <Action ID="LeftBlockerCmd"
+      editable="true">
+      <input_port name="left_blocker_active"/>
+    </Action>
+    <Action ID="RightBlockerCmd"
+      editable="true">
+      <input_port name="right_blocker_active"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

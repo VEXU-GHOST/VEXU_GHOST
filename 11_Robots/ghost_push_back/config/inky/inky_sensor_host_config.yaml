@@ -32,8 +32,13 @@ devices:
         blue_rb: 0.32          # R/B <= this -> BLUE
         red_min_level: 3600    # red-ratio reading with max(r,g,b) below this -> NONE
         blue_min_level: 4000   # blue-ratio reading with max(r,g,b) below this -> NONE
-    front:
-        port: 6              # host input 7
+    left:
+        port: 7              # host input 8
+        type: DISTANCE
+        remap_switch: 0      # -> VL53L4CD @ 0x56
+        timing_budget_ms: 50
+    right:
+        port: 3              # host input 4
         type: DISTANCE
         remap_switch: 0      # -> VL53L4CD @ 0x56
         timing_budget_ms: 50

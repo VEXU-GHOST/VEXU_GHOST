@@ -86,13 +86,24 @@ void InkyPlugin::populateMotorNames()
 
 void InkyPlugin::populateDigitalIONames()
 {
-  // digital_io_port_map["goal_rush_sensor"] = 4;
-  digital_io_port_map["goal_rush_l"] = 0;
-  digital_io_port_map["climb"] = 1;
-  digital_io_port_map["goal_rush_r"] = 2;
-  digital_io_port_map["bite"] = 3;
-  digital_io_port_map["clamp"] = 4;
-  digital_io_port_map["buddy"] = 5;
+  digital_io_port_map["sorter"] = 0;
+  digital_io_port_map["descorer"] = 1;
+  digital_io_port_map["switcher"] = 2;
+  digital_io_port_map["left_blocker"] = 3;
+  digital_io_port_map["right_blocker"] = 4;
+  digital_io_port_map["little_will"] = 7;
+
+  // climb / shooter / goal_rush solenoids do not physically exist on pinky,
+  // but the autonomous() pneumatics block still references them. Without explicit
+  // entries, operator[] would default-insert them at port 0 and clobber the sorter
+  // every loop. Park them on bit 5 (F), an output with no mechanism assigned, so
+  // their (always-false) writes are a harmless no-op and port 0 stays the sorter's.
+  digital_io_port_map["bite"] = 5;
+  digital_io_port_map["clamp"] = 5;
+  digital_io_port_map["climb"] = 5;
+  digital_io_port_map["shooter"] = 5;
+  digital_io_port_map["goal_rush_l"] = 5;
+  digital_io_port_map["goal_rush_r"] = 5;
 }
 
 //////////////////////
@@ -158,6 +169,11 @@ void InkyPlugin::autonomous(double current_time)
     bt_->set_variable<bool>("store_ring", false);
     bt_->set_variable<bool>("ring_detector_active", false);
     bt_->set_variable<bool>("neutral_stake_settled", false);
+    bt_->set_variable<bool>("sorter_active", false);
+    bt_->set_variable<bool>("switcher_active", false);
+    bt_->set_variable<bool>("left_blocker_active", false);
+    bt_->set_variable<bool>("right_blocker_active", false);
+    bt_->set_variable<bool>("little_will_active", false);
   }
 
   TankRobotPlugin::autonomous(current_time);
@@ -178,6 +194,11 @@ void InkyPlugin::autonomous(double current_time)
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
   }
   rhi_ptr_->setDigitalOut(digital_io_port_map["bite"], bt_->get_variable<int>("bite_closed"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["sorter"], bt_->get_variable<bool>("sorter_active"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["switcher"], bt_->get_variable<bool>("switcher_active"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["left_blocker"], bt_->get_variable<bool>("left_blocker_active"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["right_blocker"], bt_->get_variable<bool>("right_blocker_active"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["little_will"], bt_->get_variable<bool>("little_will_active"));
 }
 
 void InkyPlugin::teleop(double current_time)
