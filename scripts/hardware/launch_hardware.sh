@@ -6,8 +6,14 @@ cd
 export VEXU_HOME="/home/ghost/VEXU_GHOST"
 source "$VEXU_HOME/scripts/setup_env.sh"
 
-echo "Killing existing"
-"$VEXU_HOME/scripts/ghost" kill
+# Skip when launched by systemd (systemd sets INVOCATION_ID); killing here
+# would tear down the very service that started us.
+if [ -z "$INVOCATION_ID" ]; then
+    echo "Killing existing"
+    "$VEXU_HOME/scripts/ghost" kill
+else
+    echo "Running under systemd ($INVOCATION_ID), skipping kill"
+fi
 
 ROBOT_NAME="$(cat /etc/ghost/robot_name 2>/dev/null)"
 
