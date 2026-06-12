@@ -24,9 +24,6 @@ def generate_launch_description():
     # This contains all the port and device info that gets compiled on to the V5 Brain
     robot_config_yaml_path = os.path.join(config_path, "pinky/pinky_hardware_config.yaml")
 
-    # This contains the auton init pose (kept separate so it's easy to tweak per match)
-    init_pose_config_file = os.path.join(config_path, "pinky/pinky_init_pose_config.yaml")
-
     # Shared localization config (particle filter + robot_localization EKFs),
     # split out of base_ros_config.yaml.
     localization_config_file = os.path.join(config_path, "localization_config.yaml")
@@ -35,11 +32,11 @@ def generate_launch_description():
     plugin_type = "ghost_tank::PinkyPlugin"
     robot_name = "PINKY"
 
-    # Get BT Path for autons. The BT filenames live in init_config.yaml so they
-    # can be swapped per match without touching this launch file; we resolve them
-    # to absolute paths under the ghost_tank package's share config dir here.
+    # Get BT Path for autons. The BT filenames live in this robot's init config
+    # so they can be swapped per match without touching this launch file; we
+    # resolve them to absolute paths under the ghost_tank share config dir here.
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
-    init_config_path = os.path.join(config_path, "init_config.yaml")
+    init_config_path = os.path.join(config_path, "pinky/pinky_init_config.yaml")
     with open(init_config_path, "r") as f:
         init_config = yaml.safe_load(f)
     csm_params = init_config["competition_state_machine_node"]["ros__parameters"]
@@ -76,7 +73,6 @@ def generate_launch_description():
         parameters=[
             base_params_file,
             ros_config_file,
-            init_pose_config_file,
             init_config_file,
             {
                 "robot_config_yaml_path": robot_config_yaml_path,

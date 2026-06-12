@@ -80,4 +80,4 @@ competition_state_machine_node:
       sort_delay: 0.05           # s for a ball to travel sensor -> sorter
       sorter_io_port: 0
 
-      # init pose lives in pinky/pinky_init_pose_config.yaml
+      # init pose / alliance / auton BT live in pinky/pinky_init_config.yaml

@@ -86,4 +86,4 @@ competition_state_machine_node:
         integral_limit: 0.75
         integral_activation_bound: 0.2
 
-      # init pose lives in inky/inky_init_pose_config.yaml
+      # init pose / alliance / auton BT live in inky/inky_init_config.yaml

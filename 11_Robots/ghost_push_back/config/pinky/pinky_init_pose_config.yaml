@@ -1,6 +1,0 @@
-competition_state_machine_node:
-  ros__parameters:
-    tank_robot_plugin:
-      init_x_tiles: 3.0 # ignore
-      init_y_tiles: 3.0 # ignore
-      init_theta_degrees: 90.0
