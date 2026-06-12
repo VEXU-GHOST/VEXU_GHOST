@@ -1,5 +1,6 @@
 import os
 import xacro
+import yaml
 from launch import LaunchDescription
 
 from ament_index_python import get_package_share_directory
@@ -34,10 +35,17 @@ def generate_launch_description():
     plugin_type = "ghost_tank::PinkyPlugin"
     robot_name = "PINKY"
 
-    # Get BT Path for autons
+    # Get BT Path for autons. The BT filenames live in init_config.yaml so they
+    # can be swapped per match without touching this launch file; we resolve them
+    # to absolute paths under the ghost_tank package's share config dir here.
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
-    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_tune_turn.xml")
-    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_tune_turn.xml")
+    init_config_path = os.path.join(config_path, "init_config.yaml")
+    with open(init_config_path, "r") as f:
+        init_config = yaml.safe_load(f)
+    csm_params = init_config["competition_state_machine_node"]["ros__parameters"]
+    bt_path = os.path.join(ghost_tank_share_dir, "config", csm_params["bt_filename"])
+    bt_path_interaction = os.path.join(
+        ghost_tank_share_dir, "config", csm_params["bt_filename_interaction"])
 
     ########################
     ### Node Definitions ###

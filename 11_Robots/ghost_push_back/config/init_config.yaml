@@ -2,3 +2,8 @@ competition_state_machine_node:
   ros__parameters:
     tank_robot_plugin:
       is_red_alliance: true
+    # Behavior tree XML to load for autons, relative to the ghost_tank
+    # package's share config dir. Resolved to an absolute bt_path in the
+    # per-robot launch file. Easy to swap per match without editing python.
+    bt_filename: "bt_tune_turn.xml"
+    bt_filename_interaction: "bt_tune_turn.xml"
