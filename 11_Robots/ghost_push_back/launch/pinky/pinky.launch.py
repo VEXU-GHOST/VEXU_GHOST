@@ -15,6 +15,7 @@ def generate_launch_description():
     # Per-match init settings (alliance colour, etc.) from hardware.launch.py.
     init_config_file = LaunchConfiguration("init_config_file")
     config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back", "config")
+    tank_config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_tank", "config")
 
     # This contains all the parameters for our ROS nodes
     ros_config_file = os.path.join(config_path, "pinky/pinky_ros_config.yaml")
@@ -73,7 +74,7 @@ def generate_launch_description():
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
                 "bt_path_interaction": bt_path_interaction,
-                "config_path": config_path,
+                "config_path": tank_config_path,
             },
         ],
         arguments=[plugin_type, robot_name],
