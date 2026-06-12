@@ -19,6 +19,9 @@ set(DEPENDENCIES
   ghost_planners
   pluginlib
   rclcpp
+  std_msgs
+  tf2
+  tf2_ros
   yaml-cpp
   )
 
@@ -101,6 +104,21 @@ target_include_directories(jetson_v5_serial_node
   $<INSTALL_INTERFACE:include>)
 install(TARGETS
   jetson_v5_serial_node
+  DESTINATION lib/${PROJECT_NAME})
+
+# Inter-Robot Comms Publisher Node
+add_executable(inter_robot_publisher_node
+  src/comms/inter_robot_publisher_node.cpp
+)
+ament_target_dependencies(inter_robot_publisher_node
+  ${DEPENDENCIES}
+)
+target_include_directories(inter_robot_publisher_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  inter_robot_publisher_node
   DESTINATION lib/${PROJECT_NAME})
 
 # Jetson Serial Node for Sensor Host
@@ -280,6 +298,12 @@ endforeach()
 # integration test that auto-skips when no sensor host is connected.
 ament_add_gtest(test_sensor_host_protocol test/test_sensor_host_protocol.cpp)
 target_link_libraries(test_sensor_host_protocol gtest_main sensor_host_protocol)
+
+# Inter-robot producer node: spins the node with a faked map->base_link TF and checks the published
+# quantization. Uses ROS middleware, so it is an integration test rather than a pure unit test.
+ament_add_gtest(test_inter_robot_publisher test/test_inter_robot_publisher.cpp)
+ament_target_dependencies(test_inter_robot_publisher ${DEPENDENCIES})
+target_link_libraries(test_inter_robot_publisher gtest_main)
 
 ament_add_gtest(test_sensor_host_hardware test/test_sensor_host_hardware.cpp)
 target_link_libraries(test_sensor_host_hardware gtest_main sensor_host_protocol)

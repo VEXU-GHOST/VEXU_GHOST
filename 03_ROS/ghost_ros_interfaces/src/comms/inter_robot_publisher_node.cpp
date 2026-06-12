@@ -21,34 +21,12 @@
  *   SOFTWARE.
  */
 
-#pragma once
+#include "ghost_ros_interfaces/comms/inter_robot_publisher_node.hpp"
 
-#include <array>
-#include <cstddef>
-#include <cstdint>
-
-namespace ghost_v5_interfaces
+int main(int argc, char * argv[])
 {
-
-namespace inter_robot
-{
-
-// Wire size, in bytes, of the OtherRobot inter-robot comms packet relayed over VEXlink.
-//
-// This constant is the ONLY piece of the inter-robot packet definition that crosses the
-// ROS / no-ROS (V5 brain) boundary. The field layout itself lives solely in
-// ghost_msgs/msg/OtherRobot.msg and is interpreted only on the ROS side (see
-// ghost_ros_interfaces::msg_helpers::packOtherRobot / unpackOtherRobot). The V5 brain relays
-// these bytes opaquely and never inspects them, so it needs nothing but the size to size its
-// RobotHardwareInterface slot and its VEXlink transmit/receive calls.
-//
-// MUST equal the number of bytes written by packOtherRobot() — guarded by a static_assert there,
-// so a change to OtherRobot.msg that is not mirrored here fails the build/unit tests.
-constexpr std::size_t OTHER_ROBOT_PACKET_SIZE = 7;
-
-// Fixed-size byte buffer holding exactly one serialized OtherRobot packet.
-using OtherRobotBytes = std::array<std::uint8_t, OTHER_ROBOT_PACKET_SIZE>;
-
-}  // namespace inter_robot
-
-}  // namespace ghost_v5_interfaces
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<ghost_ros_interfaces::InterRobotPublisherNode>());
+  rclcpp::shutdown();
+  return 0;
+}
