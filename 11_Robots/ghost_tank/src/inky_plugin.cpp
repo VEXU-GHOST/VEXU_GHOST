@@ -55,22 +55,24 @@ InkyPlugin::InkyPlugin()
 void InkyPlugin::populateMotorNames()
 {
   m_right_drive_motor_names = {
-    // "drive_r1",
+    "drive_r1",
     "drive_r2",
     "drive_r3",
     "drive_r4",
     "drive_r5",
     "drive_r6",
     "drive_r7",
+    // "drive_r8",
   };
   m_left_drive_motor_names = {
     "drive_l1",
     "drive_l2",
     "drive_l3",
     "drive_l4",
-    // "drive_l5",
+    "drive_l5",
     "drive_l6",
     "drive_l7",
+    // "drive_l8",
   };
 
   m_all_drive_motor_names.insert(
@@ -112,13 +114,15 @@ void InkyPlugin::populateDigitalIONames()
 
 void InkyPlugin::initialize()
 {
-  TankRobotPlugin::initROSComms();
-  TankRobotPlugin::initEstimation();
-  TankRobotPlugin::initIntake();
-  initNeutralStakeArm();
-  TankRobotPlugin::initTankModel();
-  TankRobotPlugin::initAutonomy();
-  TankRobotPlugin::resetWorldPose();
+  std::cout << "InkyPlugin::initialize" << std::endl;
+  TankRobotPlugin::initialize();
+  // TankRobotPlugin::initROSComms();
+  // TankRobotPlugin::initEstimation();
+  // TankRobotPlugin::initIntake();
+  // initNeutralStakeArm();
+  // TankRobotPlugin::initTankModel();
+  // TankRobotPlugin::initAutonomy();
+  // TankRobotPlugin::resetWorldPose();
 }
 
 void InkyPlugin::initNeutralStakeArm()
@@ -157,7 +161,7 @@ void InkyPlugin::autonomous(double current_time)
   if (m_is_first_auton_loop) {
     // m_is_first_auton_loop = false;
     playTTS("starting autonomous");
-    m_odom_ptr->resetPose();
+    // m_odom_ptr->resetPose();
     // resetWorldPose();
 
     bt_->set_variable<bool>("clamp_closed", false);
@@ -213,12 +217,6 @@ void InkyPlugin::teleop(double current_time)
   }
 
   updateNeutralStakeArmController(joy_data->btn_l1, joy_data->btn_l2, shift1); // Y-held mode
-
-  if (joy_data->btn_r && joy_data->btn_y && !m_buddy_pressed) {
-    m_buddy_pressed = true;
-    m_buddy_extended = !m_buddy_extended;
-  } else if (!joy_data->btn_r && !joy_data->btn_y) {m_buddy_pressed = false;}
-  rhi_ptr_->setDigitalOut(digital_io_port_map["buddy"], m_buddy_extended);
 }
 
 bool InkyPlugin::updateNeutralStakeArmPosition(int arm_mode)
