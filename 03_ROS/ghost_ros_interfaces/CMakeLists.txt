@@ -121,6 +121,21 @@ install(TARGETS
   inter_robot_publisher_node
   DESTINATION lib/${PROJECT_NAME})
 
+# Inter-Robot Comms Receiver Node (de-quantizes the peer state into a TF)
+add_executable(inter_robot_receiver_node
+  src/comms/inter_robot_receiver_node.cpp
+)
+ament_target_dependencies(inter_robot_receiver_node
+  ${DEPENDENCIES}
+)
+target_include_directories(inter_robot_receiver_node
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  inter_robot_receiver_node
+  DESTINATION lib/${PROJECT_NAME})
+
 # Jetson Serial Node for Sensor Host
 add_executable(jetson_sensor_host_serial_node
   src/serial/jetson_sensor_host_serial_node.cpp
@@ -299,11 +314,18 @@ endforeach()
 ament_add_gtest(test_sensor_host_protocol test/test_sensor_host_protocol.cpp)
 target_link_libraries(test_sensor_host_protocol gtest_main sensor_host_protocol)
 
-# Inter-robot producer node: spins the node with a faked map->base_link TF and checks the published
-# quantization. Uses ROS middleware, so it is an integration test rather than a pure unit test.
-ament_add_gtest(test_inter_robot_publisher test/test_inter_robot_publisher.cpp)
-ament_target_dependencies(test_inter_robot_publisher ${DEPENDENCIES})
-target_link_libraries(test_inter_robot_publisher gtest_main)
+# Inter-robot comms integration tests (ROS-middleware-backed, not pure unit tests):
+#   publisher  - fake map->base_link TF in, /comms/self quantization out
+#   receiver   - /comms/other_robot in, map->other_robot/base_link TF out
+#   loopback   - full producer -> loopback -> receiver chain; pose fidelity end to end
+foreach(COMMS_TEST
+    test_inter_robot_publisher
+    test_inter_robot_receiver
+    test_inter_robot_loopback)
+  ament_add_gtest(${COMMS_TEST} test/${COMMS_TEST}.cpp)
+  ament_target_dependencies(${COMMS_TEST} ${DEPENDENCIES})
+  target_link_libraries(${COMMS_TEST} gtest_main)
+endforeach()
 
 ament_add_gtest(test_sensor_host_hardware test/test_sensor_host_hardware.cpp)
 target_link_libraries(test_sensor_host_hardware gtest_main sensor_host_protocol)

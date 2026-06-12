@@ -55,6 +55,16 @@ def generate_launch_description():
         parameters=[base_ros_config_file],
     )
 
+    # Inter-robot comms consumer: de-quantizes /comms/other_robot (the peer's relayed state) into a
+    # map -> other_robot/base_link TF so rviz, costmaps, and tf lookups see the peer's position.
+    inter_robot_receiver_node = Node(
+        package="ghost_ros_interfaces",
+        executable="inter_robot_receiver_node",
+        name="inter_robot_receiver_node",
+        output="screen",
+        parameters=[base_ros_config_file],
+    )
+
     # Publish the robot transform tree (base_link -> sensor frames) from the URDF
     # so rviz, costmaps, and the particle filter share one source of truth for
     # sensor poses.
@@ -269,6 +279,7 @@ def generate_launch_description():
         push_back_cv_launch,
         bag_recorder_service,
         inter_robot_publisher_node,
+        inter_robot_receiver_node,
         # tts_music_node,
         OpaqueFunction(function = launch_setup),
     ])
