@@ -105,6 +105,8 @@ JetsonV5SerialNode::JetsonV5SerialNode()
   // Inter-Robot Comms: republish the peer's state, and accept this robot's own state to relay.
   inter_robot_peer_pub_ = create_publisher<ghost_msgs::msg::OtherRobot>(
     "comms/other_robot", rclcpp::SensorDataQoS());
+  inter_robot_link_connected_pub_ = create_publisher<std_msgs::msg::Bool>(
+    "comms/link_connected", rclcpp::SensorDataQoS());
   inter_robot_self_sub_ = create_subscription<ghost_msgs::msg::OtherRobot>(
     "comms/self",
     rclcpp::SensorDataQoS(),
@@ -249,6 +251,11 @@ void JetsonV5SerialNode::publishV5SensorUpdate(const std::vector<unsigned char> 
   ghost_msgs::msg::OtherRobot other_robot_msg{};
   ghost_ros_interfaces::msg_helpers::unpackOtherRobot(rhi_ptr_->getInterRobotRx(), other_robot_msg);
   inter_robot_peer_pub_->publish(other_robot_msg);
+
+  // Publish this robot's VEXlink radio status (reported by the V5 brain) alongside the peer state.
+  std_msgs::msg::Bool link_connected_msg{};
+  link_connected_msg.data = rhi_ptr_->isInterRobotLinkConnected();
+  inter_robot_link_connected_pub_->publish(link_connected_msg);
 }
 
 } // namespace ghost_ros_interfaces

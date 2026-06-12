@@ -143,11 +143,15 @@ void reader_loop()
 void relay_inter_robot_link()
 {
   auto & link = v5_globals::inter_robot_link;
-  if (!link || !link->connected()) {
+  auto & rhi = v5_globals::robot_hardware_interface_ptr;
+
+  // Report the VEXlink radio status up to the coprocessor (published in V5SensorUpdate). Set it even
+  // when the link is down so a dropped link reads as link_connected == false on the ROS side.
+  const bool link_connected = link && link->connected();
+  rhi->setInterRobotLinkConnected(link_connected);
+  if (!link_connected) {
     return;
   }
-
-  auto & rhi = v5_globals::robot_hardware_interface_ptr;
 
   // Receive: pull the peer's most recent packet (if a full one is buffered) into the inbound slot.
   // The next writeV5StateUpdate() serializes it out to the coprocessor.

@@ -130,6 +130,26 @@ public:
     is_connected_ = is_connected;
   }
 
+  /**
+   * @brief Returns whether this robot's inter-robot VEXlink radio is currently connected to the peer.
+   */
+  bool isInterRobotLinkConnected() const
+  {
+    return inter_robot_link_connected_;
+  }
+
+  /**
+   * @brief Set inter-robot VEXlink connection status from the V5 Brain.
+   * This is only used to report current status from the V5 Brain to the coprocessor,
+   * it won't change anything on the V5 Brain.
+   *
+   * @param link_connected
+   */
+  void setInterRobotLinkConnected(bool link_connected)
+  {
+    inter_robot_link_connected_ = link_connected;
+  }
+
   //////////////////////////////////////////////////////////////
   ////////////////////// Motor Interfaces //////////////////////
   //////////////////////////////////////////////////////////////
@@ -470,6 +490,8 @@ private:
   // Inter-Robot Comms (opaque payload relayed to/from the peer robot over VEXlink)
   inter_robot::OtherRobotBytes inter_robot_tx_{};
   inter_robot::OtherRobotBytes inter_robot_rx_{};
+  // VEXlink radio connection status, reported V5 Brain -> coprocessor alongside competition state.
+  bool inter_robot_link_connected_ = false;
 
   // Serialization
   int msg_id_ = 0;

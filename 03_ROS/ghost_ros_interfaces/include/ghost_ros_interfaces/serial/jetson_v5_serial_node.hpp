@@ -27,6 +27,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <std_msgs/msg/bool.hpp>
+
 #include <ghost_msgs/msg/other_robot.hpp>
 #include <ghost_msgs/msg/v5_actuator_command.hpp>
 #include <ghost_msgs/msg/v5_sensor_update.hpp>
@@ -77,6 +79,7 @@ private:
   // VEXlink), and republishes the peer's most recent state on /comms/other_robot.
   rclcpp::Subscription<ghost_msgs::msg::OtherRobot>::SharedPtr inter_robot_self_sub_;
   rclcpp::Publisher<ghost_msgs::msg::OtherRobot>::SharedPtr inter_robot_peer_pub_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr inter_robot_link_connected_pub_;
 
   // Serial Interface
   std::shared_ptr<ghost_serial::JetsonSerialBase> serial_base_interface_;

@@ -98,7 +98,7 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
     serial_data.push_back(
       packByte(
         std::vector<bool>{
-        is_disabled_, is_autonomous_, is_connected_, 0, 0, 0, 0, 0
+        is_disabled_, is_autonomous_, is_connected_, inter_robot_link_connected_, 0, 0, 0, 0
       }));
   }
 
@@ -160,6 +160,7 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
     is_disabled_ = packet_start_byte[0];
     is_autonomous_ = packet_start_byte[1];
     is_connected_ = packet_start_byte[2];
+    inter_robot_link_connected_ = packet_start_byte[3];
     byte_offset++;
   }
 
@@ -203,6 +204,7 @@ bool RobotHardwareInterface::isDataEqual(const RobotHardwareInterface & rhs) con
   bool eq = (is_disabled_ == rhs.is_disabled_);
   eq &= (is_autonomous_ == rhs.is_autonomous_);
   eq &= (is_connected_ == rhs.is_connected_);
+  eq &= (inter_robot_link_connected_ == rhs.inter_robot_link_connected_);
 
   // Inter-Robot Comms
   eq &= (inter_robot_tx_ == rhs.inter_robot_tx_);
