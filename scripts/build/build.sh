@@ -64,7 +64,7 @@ cd $VEXU_HOME
 if command -v pros >/dev/null 2>&1
 then
     echo
-    bash scripts/pros_upload.sh
+    bash scripts/build/pros_upload.sh
 else
     echo
     echo "pros CLI not found; skipping V5 PROS build/upload."

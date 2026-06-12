@@ -93,8 +93,12 @@ case "$1" in
         sudo mkdir -p /etc/ghost
         echo "$2" | sudo tee /etc/ghost/robot_name > /dev/null
         ;;
+    "log")
+        echo "Showing ghost hardware logs"
+        exec journalctl -xe --user-unit ghost-hardware
+        ;;
     *)
-        echo "Usage: ghost [run [--v5]/build/clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>]"
+        echo "Usage: ghost [run [--v5]/build/clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>/log]"
         ;;
 esac
 
