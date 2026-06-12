@@ -21,8 +21,11 @@
  *   SOFTWARE.
  */
 
+#include <array>
+
 #include <ghost_planners/robot_trajectory.hpp>
 #include <ghost_v5_interfaces/devices/inertial_sensor_device_interface.hpp>
+#include <ghost_v5_interfaces/inter_robot/other_robot_packet.hpp>
 #include <ghost_v5_interfaces/devices/joystick_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/motor_device_interface.hpp>
 #include <ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp>
@@ -39,6 +42,7 @@
 #include <ghost_msgs/msg/v5_joystick_state.hpp>
 #include <ghost_msgs/msg/v5_motor_command.hpp>
 #include <ghost_msgs/msg/v5_motor_state.hpp>
+#include <ghost_msgs/msg/other_robot.hpp>
 #include <ghost_msgs/msg/v5_rotation_sensor_state.hpp>
 #include <ghost_msgs/msg/v5_sensor_update.hpp>
 
@@ -261,6 +265,32 @@ void fromROSMsg(
 void toROSMsg(
   const std::unordered_map<std::string, std::vector<double>> & labeled_vector_map,
   ghost_msgs::msg::LabeledVectorMap & msg);
+
+// Inter-Robot Comms (OtherRobot)
+
+/**
+ * @brief Serializes an OtherRobot msg into its fixed-size on-link byte buffer.
+ *
+ * The byte layout is the single source of truth for the inter-robot wire format and must stay in
+ * lockstep with ghost_v5_interfaces::inter_robot::OTHER_ROBOT_PACKET_SIZE (guarded by a static_assert
+ * in the implementation). These bytes are relayed opaquely by the V5 brain over VEXlink.
+ *
+ * @param msg
+ * @param bytes
+ */
+void packOtherRobot(
+  const ghost_msgs::msg::OtherRobot & msg,
+  ghost_v5_interfaces::inter_robot::OtherRobotBytes & bytes);
+
+/**
+ * @brief Deserializes a fixed-size on-link byte buffer back into an OtherRobot msg.
+ *
+ * @param bytes
+ * @param msg
+ */
+void unpackOtherRobot(
+  const ghost_v5_interfaces::inter_robot::OtherRobotBytes & bytes,
+  ghost_msgs::msg::OtherRobot & msg);
 
 } // namespace msg_helpers
 

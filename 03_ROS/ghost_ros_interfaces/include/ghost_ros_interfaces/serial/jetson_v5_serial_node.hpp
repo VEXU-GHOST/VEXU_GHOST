@@ -27,6 +27,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <ghost_msgs/msg/other_robot.hpp>
 #include <ghost_msgs/msg/v5_actuator_command.hpp>
 #include <ghost_msgs/msg/v5_sensor_update.hpp>
 #include <ghost_serial/base_interfaces/jetson_serial_base.hpp>
@@ -50,6 +51,10 @@ private:
   void actuatorCommandCallback(const ghost_msgs::msg::V5ActuatorCommand::SharedPtr msg);
   void publishV5SensorUpdate(const std::vector<unsigned char> & buffer);
 
+  // Caches this robot's latest outbound inter-robot payload into the hardware interface so the next
+  // actuator-command serialization carries it to the V5 brain (which relays it over VEXlink).
+  void interRobotSelfCallback(const ghost_msgs::msg::OtherRobot::SharedPtr msg);
+
   // Background thread for processing serial data and maintaining serial connection
   void serialLoop();
 
@@ -67,6 +72,11 @@ private:
   // ROS Topics
   rclcpp::Subscription<ghost_msgs::msg::V5ActuatorCommand>::SharedPtr actuator_command_sub_;
   rclcpp::Publisher<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_pub_;
+
+  // Inter-Robot Comms: this robot publishes its own state on /comms/self (relayed to the peer over
+  // VEXlink), and republishes the peer's most recent state on /comms/other_robot.
+  rclcpp::Subscription<ghost_msgs::msg::OtherRobot>::SharedPtr inter_robot_self_sub_;
+  rclcpp::Publisher<ghost_msgs::msg::OtherRobot>::SharedPtr inter_robot_peer_pub_;
 
   // Serial Interface
   std::shared_ptr<ghost_serial::JetsonSerialBase> serial_base_interface_;

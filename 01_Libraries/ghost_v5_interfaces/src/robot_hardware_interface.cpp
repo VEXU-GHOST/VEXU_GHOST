@@ -21,6 +21,8 @@
  *   SOFTWARE.
  */
 
+#include <algorithm>
+
 #include "ghost_util/math_util.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
@@ -79,6 +81,11 @@ RobotHardwareInterface::RobotHardwareInterface(
 
   // Add Competition State to sensor update msg
   sensor_update_msg_length_ += 1;
+
+  // Add Inter-Robot Comms slot to both streams: the outbound payload (tx) rides the actuator command
+  // (coprocessor -> V5), the inbound payload (rx) rides the sensor update (V5 -> coprocessor).
+  sensor_update_msg_length_ += inter_robot::OTHER_ROBOT_PACKET_SIZE;
+  actuator_command_msg_length_ += inter_robot::OTHER_ROBOT_PACKET_SIZE;
 }
 
 std::vector<unsigned char> RobotHardwareInterface::serialize() const
@@ -99,6 +106,13 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
     auto device_serial_msg = val.data_ptr->serialize(hardware_type_);
     serial_data.insert(serial_data.end(), device_serial_msg.begin(), device_serial_msg.end());
   }
+
+  // Inter-Robot Comms slot (opaque bytes relayed over VEXlink). The V5 brain emits the payload it
+  // received from the peer (rx) on the sensor-update stream; the coprocessor emits the payload to
+  // transmit (tx) on the actuator-command stream.
+  const auto & inter_robot_slot =
+    (hardware_type_ == hardware_type_e::V5_BRAIN) ? inter_robot_rx_ : inter_robot_tx_;
+  serial_data.insert(serial_data.end(), inter_robot_slot.begin(), inter_robot_slot.end());
 
   // Error Checking
   int expected_size = 0;
@@ -168,6 +182,18 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
         start_itr + msg_len), hardware_type_);
     byte_offset += msg_len;
   }
+
+  // Inter-Robot Comms slot (opaque bytes relayed over VEXlink). The V5 brain receives the payload to
+  // transmit (tx) on the actuator-command stream; the coprocessor receives the peer's payload (rx)
+  // on the sensor-update stream.
+  auto & inter_robot_slot =
+    (hardware_type_ == hardware_type_e::V5_BRAIN) ? inter_robot_tx_ : inter_robot_rx_;
+  std::copy(
+    msg.begin() + byte_offset,
+    msg.begin() + byte_offset + inter_robot::OTHER_ROBOT_PACKET_SIZE,
+    inter_robot_slot.begin());
+  byte_offset += inter_robot::OTHER_ROBOT_PACKET_SIZE;
+
   return byte_offset;
 }
 
@@ -177,6 +203,10 @@ bool RobotHardwareInterface::isDataEqual(const RobotHardwareInterface & rhs) con
   bool eq = (is_disabled_ == rhs.is_disabled_);
   eq &= (is_autonomous_ == rhs.is_autonomous_);
   eq &= (is_connected_ == rhs.is_connected_);
+
+  // Inter-Robot Comms
+  eq &= (inter_robot_tx_ == rhs.inter_robot_tx_);
+  eq &= (inter_robot_rx_ == rhs.inter_robot_rx_);
 
   // Serialization
   eq &= (msg_id_ == rhs.msg_id_);

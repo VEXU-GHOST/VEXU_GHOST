@@ -23,6 +23,8 @@
 
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 
+#include <cassert>
+
 using namespace ghost_msgs::msg;
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::util;
@@ -463,6 +465,44 @@ void toROSMsg(
     entry.data_array = vector;
     msg.entries.push_back(entry);
   }
+}
+
+void packOtherRobot(
+  const OtherRobot & msg,
+  inter_robot::OtherRobotBytes & bytes)
+{
+  // The byte count below is the single source of truth for the inter-robot wire format. If a field
+  // is added/removed, OTHER_ROBOT_PACKET_SIZE must change to match, which trips this static_assert
+  // and forces this function (and unpackOtherRobot) to be updated in lockstep.
+  static_assert(
+    inter_robot::OTHER_ROBOT_PACKET_SIZE == 7,
+    "OtherRobot wire layout changed: update packOtherRobot/unpackOtherRobot and "
+    "OTHER_ROBOT_PACKET_SIZE together.");
+
+  std::size_t i = 0;
+  bytes[i++] = msg.x;
+  bytes[i++] = msg.y;
+  bytes[i++] = msg.theta;
+  bytes[i++] = msg.status;
+  bytes[i++] = msg.target_x;
+  bytes[i++] = msg.target_y;
+  bytes[i++] = msg.seq;
+  assert(i == inter_robot::OTHER_ROBOT_PACKET_SIZE);
+}
+
+void unpackOtherRobot(
+  const inter_robot::OtherRobotBytes & bytes,
+  OtherRobot & msg)
+{
+  std::size_t i = 0;
+  msg.x = bytes[i++];
+  msg.y = bytes[i++];
+  msg.theta = bytes[i++];
+  msg.status = bytes[i++];
+  msg.target_x = bytes[i++];
+  msg.target_y = bytes[i++];
+  msg.seq = bytes[i++];
+  assert(i == inter_robot::OTHER_ROBOT_PACKET_SIZE);
 }
 
 } // namespace msg_helpers

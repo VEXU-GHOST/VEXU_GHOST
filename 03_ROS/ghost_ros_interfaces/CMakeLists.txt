@@ -265,6 +265,7 @@ set(TESTS
   test_robot_hardware_interface_ros
   test_device_interfaces_ros
   test_msg_helpers
+  test_other_robot_codec
 )
 foreach(TEST ${TESTS})
   ament_add_gtest(${TEST} test/${TEST}.cpp)

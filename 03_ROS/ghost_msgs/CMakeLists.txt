@@ -26,6 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/device_msgs/states/V5InertialSensorState.msg"
   "msg/V5ActuatorCommand.msg"
   "msg/V5SensorUpdate.msg"
+  "msg/OtherRobot.msg"
   "msg/DrivetrainCommand.msg"
   "msg/Trajectory.msg"
   "msg/RobotTrajectory.msg"
