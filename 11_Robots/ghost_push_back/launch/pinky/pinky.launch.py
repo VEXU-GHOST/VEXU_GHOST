@@ -12,6 +12,8 @@ from launch.substitutions import Command, LaunchConfiguration
 def generate_launch_description():
     # Get base params from parent launch file and config path
     base_params_file = LaunchConfiguration("base_params_file")
+    # Per-match init settings (alliance colour, etc.) from hardware.launch.py.
+    init_config_file = LaunchConfiguration("init_config_file")
     config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back", "config")
 
     # This contains all the parameters for our ROS nodes
@@ -66,6 +68,7 @@ def generate_launch_description():
             base_params_file,
             ros_config_file,
             init_pose_config_file,
+            init_config_file,
             {
                 "robot_config_yaml_path": robot_config_yaml_path,
                 "bt_path": bt_path,
@@ -125,6 +128,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('base_params_file'),
+        DeclareLaunchArgument('init_config_file'),
         DeclareLaunchArgument('v5_serial_port', default_value='/dev/ttyACM1'),
         serial_node,
         imu_filter_node,

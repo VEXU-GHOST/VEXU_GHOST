@@ -65,7 +65,6 @@ competition_state_machine_node:
       err_pos_topic: "/err_pos"
       use_backup_estimator: false
       sim_mode: false
-      is_red: true
 
 /**:
   ros__parameters:

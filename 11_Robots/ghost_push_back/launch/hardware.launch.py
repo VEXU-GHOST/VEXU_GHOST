@@ -34,6 +34,10 @@ def generate_launch_description():
     # controller_server + local_costmap), split out of base_ros_config.yaml.
     nav2_config_file = os.path.join(ghost_push_back_base_dir, "config/nav2_config.yaml")
 
+    # Per-match init settings (alliance colour, etc.) for the competition state
+    # machine. Threaded down to the per-robot launch -> competition_state_machine_node.
+    init_config_file = os.path.join(ghost_push_back_base_dir, "config/init_config.yaml")
+
     #############################
     ### Base Node Definitions ###
     #############################
@@ -214,6 +218,7 @@ def generate_launch_description():
                     os.path.join(ghost_push_back_base_dir, "launch", robot_name, robot_name + ".launch.py")
                 ),
                 launch_arguments={'base_params_file': base_ros_config_file,
+                                  'init_config_file': init_config_file,
                                   'v5_serial_port': v5_serial_port}.items()
             )
 

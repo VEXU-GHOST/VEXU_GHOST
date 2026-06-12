@@ -297,6 +297,16 @@ void TankRobotPlugin::initIntake()
   m_sort_delay = node_ptr_->get_parameter("tank_robot_plugin.sort_delay").as_double();
   m_sorter_io_port = node_ptr_->get_parameter("tank_robot_plugin.sorter_io_port").as_int();
 
+  // Initial team colour for auto-sort: keep our colour, eject the other. true ->
+  // red. The color_target button still overrides this at runtime (see
+  // colorTargetButtonCallback).
+  node_ptr_->declare_parameter("tank_robot_plugin.is_red_alliance", m_color_target_red);
+  m_color_target_red = node_ptr_->get_parameter("tank_robot_plugin.is_red_alliance").as_bool();
+  // Reflect the configured team colour on the indicator LED right away.
+  auto color_led_msg = std_msgs::msg::Int64();
+  color_led_msg.data = m_color_target_red;
+  m_led_color_red_pub->publish(color_led_msg);
+
   m_ring_found = false;
   m_ring_color = m_color_map["unknown"];
 }
