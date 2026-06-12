@@ -154,6 +154,12 @@ def generate_launch_description():
                 launch_arguments={
                     "enable_depth": "true",
                     "enable_color": "true",
+                    # Shrink streams to their smallest 15 FPS profiles to fit
+                    # USB bandwidth. Depth and color expose different resolution
+                    # ladders (depth floor 480x270, color floor 424x240);
+                    # align reprojects depth into the color frame regardless.
+                    "depth_module.depth_profile": "480x270x15",
+                    "rgb_camera.color_profile": "424x240x15",
                     # CV subscribes to /camera/.../aligned_depth_to_color/image_raw,
                     # so the depth stream must be registered into the color frame.
                     "align_depth.enable": "true",
