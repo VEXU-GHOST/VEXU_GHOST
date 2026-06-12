@@ -44,6 +44,17 @@ def generate_launch_description():
         parameters=[base_ros_config_file],
     )
 
+    # Inter-robot comms: publishes this robot's quantized map->base_link pose + status on /comms/self
+    # (the V5 serial node relays it to the peer over VEXlink), and de-quantizes the peer's relayed
+    # state from /comms/other_robot into a map -> other_robot/base_link TF for rviz / costmaps / tf.
+    inter_robot_comms_node = Node(
+        package="ghost_ros_interfaces",
+        executable="inter_robot_comms_node",
+        name="inter_robot_comms_node",
+        output="screen",
+        parameters=[base_ros_config_file],
+    )
+
     # Publish the robot transform tree (base_link -> sensor frames) from the URDF
     # so rviz, costmaps, and the particle filter share one source of truth for
     # sensor poses.
@@ -257,6 +268,7 @@ def generate_launch_description():
         realsense_node,
         push_back_cv_launch,
         bag_recorder_service,
+        inter_robot_comms_node,
         # tts_music_node,
         OpaqueFunction(function = launch_setup),
     ])

@@ -65,6 +65,7 @@ ln -s ../../../../../01_Libraries/ghost_serial/include/ghost_serial/base_interfa
 ### Symlink ghost_v5_interfaces ###
 cd $V5_DIR/include/ghost_v5_interfaces
 ln -s ../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/devices
+ln -s ../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/inter_robot
 ln -s ../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/robot_hardware_interface.hpp
 mkdir util && cd util
 ln -s ../../../../../01_Libraries/ghost_v5_interfaces/include/ghost_v5_interfaces/util/device_type_helpers.hpp

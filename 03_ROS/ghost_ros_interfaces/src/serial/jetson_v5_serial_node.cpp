@@ -102,6 +102,14 @@ JetsonV5SerialNode::JetsonV5SerialNode()
     rclcpp::SensorDataQoS(),
     std::bind(&JetsonV5SerialNode::actuatorCommandCallback, this, _1));
 
+  // Inter-Robot Comms: republish the peer's state, and accept this robot's own state to relay.
+  inter_robot_peer_pub_ = create_publisher<ghost_msgs::msg::OtherRobot>(
+    "comms/other_robot", rclcpp::SensorDataQoS());
+  inter_robot_self_sub_ = create_subscription<ghost_msgs::msg::OtherRobot>(
+    "comms/self",
+    rclcpp::SensorDataQoS(),
+    std::bind(&JetsonV5SerialNode::interRobotSelfCallback, this, _1));
+
   // Start Serial Thread
   serial_thread_ = std::thread(&JetsonV5SerialNode::serialLoop, this);
   serial_timeout_thread_ = std::thread(&JetsonV5SerialNode::serialTimeoutLoop, this);
@@ -209,6 +217,16 @@ void JetsonV5SerialNode::actuatorCommandCallback(
   serial_base_interface_->writeMsgToSerial(msg_buffer.data(), actuator_command_msg_len_);
 }
 
+void JetsonV5SerialNode::interRobotSelfCallback(
+  const ghost_msgs::msg::OtherRobot::SharedPtr msg)
+{
+  // Cache the outbound payload into the hardware interface. The next actuator-command serialization
+  // carries it to the V5 brain, which relays it to the peer over VEXlink.
+  ghost_v5_interfaces::inter_robot::OtherRobotBytes bytes{};
+  ghost_ros_interfaces::msg_helpers::packOtherRobot(*msg, bytes);
+  rhi_ptr_->setInterRobotTx(bytes);
+}
+
 void JetsonV5SerialNode::publishV5SensorUpdate(const std::vector<unsigned char> & buffer)
 {
   RCLCPP_DEBUG(get_logger(), "Publishing Sensor Update");
@@ -226,6 +244,11 @@ void JetsonV5SerialNode::publishV5SensorUpdate(const std::vector<unsigned char> 
 
   // Publish update
   sensor_update_pub_->publish(sensor_update_msg);
+
+  // Republish the peer robot's most recent state (received over VEXlink and relayed by the V5 brain).
+  ghost_msgs::msg::OtherRobot other_robot_msg{};
+  ghost_ros_interfaces::msg_helpers::unpackOtherRobot(rhi_ptr_->getInterRobotRx(), other_robot_msg);
+  inter_robot_peer_pub_->publish(other_robot_msg);
 }
 
 } // namespace ghost_ros_interfaces

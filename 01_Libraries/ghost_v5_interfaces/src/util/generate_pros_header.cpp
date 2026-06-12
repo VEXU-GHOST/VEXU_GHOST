@@ -22,6 +22,7 @@
  */
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -75,8 +76,9 @@ int main(int argc, char * argv[])
   }
 
   std::shared_ptr<DeviceConfigMap> robot_config_ptr;
+  YAML::Node input_yaml;
   try {
-    auto input_yaml = YAML::LoadFile(input_filepath);
+    input_yaml = YAML::LoadFile(input_filepath);
     robot_config_ptr = loadRobotConfigFromYAML(input_yaml);
   } catch (std::runtime_error & e) {
     std::cout << "[GenerateProsHeader] Error: Failed to load Robot Config from Input YAML." <<
@@ -90,6 +92,34 @@ int main(int argc, char * argv[])
     std::cout << "[GenerateProsHeader] Error: Failed to generate code from Robot Config." <<
       std::endl;
     throw e;
+  }
+
+  // Append the inter-robot VEXlink configuration. The radio link is infrastructure, not a port
+  // device, so rather than routing it through the DeviceConfigMap it is read straight from the YAML
+  // here and emitted as plain constants. A missing "inter_robot_link" block (or port 0) leaves the
+  // relay disabled.
+  try {
+    int link_port = 0;
+    std::string link_id = "";
+    bool link_is_transmitter = true;
+    if (input_yaml["inter_robot_link"]) {
+      auto link_yaml = input_yaml["inter_robot_link"];
+      loadYAMLParam(link_yaml, "port", link_port, false);
+      loadYAMLParam(link_yaml, "link_id", link_id, false);
+      loadYAMLParam(link_yaml, "is_transmitter", link_is_transmitter, false);
+    }
+
+    std::ofstream out(output_filepath, std::ios::app);
+    out << "\n// Inter-Robot Comms (VEXlink) configuration. Port 0 disables the relay.\n";
+    out << "constexpr int INTER_ROBOT_LINK_PORT = " << link_port << ";\n";
+    out << "constexpr char INTER_ROBOT_LINK_ID[] = \"" << link_id << "\";\n";
+    out << "constexpr bool INTER_ROBOT_LINK_IS_TRANSMITTER = " <<
+      (link_is_transmitter ? "true" : "false") << ";\n";
+    std::cout << "INTER_ROBOT_LINK_PORT: " << link_port << std::endl;
+  } catch (std::exception & e) {
+    std::cout << "[GenerateProsHeader] Error: Failed to append inter-robot link config." <<
+      std::endl;
+    throw;
   }
 
   std::cout << "Code successfully generated at " << output_filepath << std::endl;

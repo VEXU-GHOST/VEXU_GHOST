@@ -89,6 +89,13 @@ const pros::controller_digital_e_t joy_btns[12] = {
 // Serial Port
 std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;
 
+// Inter-Robot Comms (VEXlink relay). Null when no link is configured (INTER_ROBOT_LINK_PORT == 0).
+// Transmits are throttled to inter_robot_link_tx_period_ms to stay under VEXlink's ~520 bytes/s
+// receive cap (the radio is serviced far slower than the 10 ms ghost loop).
+std::shared_ptr<pros::Link> inter_robot_link;
+uint32_t inter_robot_link_tx_period_ms = 250;
+uint32_t last_inter_robot_link_tx = 0;
+
 // Screen Interface
 std::shared_ptr<ghost_v5::ScreenInterface> screen_interface_ptr;
 

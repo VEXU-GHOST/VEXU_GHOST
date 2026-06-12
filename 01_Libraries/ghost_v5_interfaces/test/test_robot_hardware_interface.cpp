@@ -390,6 +390,50 @@ TEST_F(RobotHardwareInterfaceTestFixture, testSerializationPipelineV5ToCoprocess
   EXPECT_TRUE(hw_interface.isDataEqual(hw_interface_copy));
 }
 
+TEST_F(RobotHardwareInterfaceTestFixture, testInterRobotSlotEnlargesBothStreams) {
+  // The slot adds OTHER_ROBOT_PACKET_SIZE bytes to BOTH the actuator command and sensor update.
+  RobotHardwareInterface no_slot_reference(device_config_map_ptr_single_joy_,
+    hardware_type_e::COPROCESSOR);
+  EXPECT_GE(
+    no_slot_reference.getActuatorCommandMsgLength(),
+    static_cast<int>(inter_robot::OTHER_ROBOT_PACKET_SIZE));
+  EXPECT_GE(
+    no_slot_reference.getSensorUpdateMsgLength(),
+    static_cast<int>(inter_robot::OTHER_ROBOT_PACKET_SIZE));
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testInterRobotTxSerializesCoprocessorToV5) {
+  // The outbound payload (tx) rides the actuator-command stream: coprocessor serializes -> V5 reads.
+  RobotHardwareInterface coprocessor(device_config_map_ptr_single_joy_,
+    hardware_type_e::COPROCESSOR);
+  RobotHardwareInterface v5_brain(device_config_map_ptr_single_joy_,
+    hardware_type_e::V5_BRAIN);
+
+  inter_robot::OtherRobotBytes tx{11, 22, 33, 44, 55, 66, 77};
+  coprocessor.setInterRobotTx(tx);
+
+  std::vector<unsigned char> serial_data = coprocessor.serialize();
+  v5_brain.deserialize(serial_data);
+
+  EXPECT_EQ(v5_brain.getInterRobotTx(), tx);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testInterRobotRxSerializesV5ToCoprocessor) {
+  // The inbound payload (rx) rides the sensor-update stream: V5 serializes -> coprocessor reads.
+  RobotHardwareInterface v5_brain(device_config_map_ptr_single_joy_,
+    hardware_type_e::V5_BRAIN);
+  RobotHardwareInterface coprocessor(device_config_map_ptr_single_joy_,
+    hardware_type_e::COPROCESSOR);
+
+  inter_robot::OtherRobotBytes rx{1, 2, 3, 4, 5, 6, 7};
+  v5_brain.setInterRobotRx(rx);
+
+  std::vector<unsigned char> serial_data = v5_brain.serialize();
+  coprocessor.deserialize(serial_data);
+
+  EXPECT_EQ(coprocessor.getInterRobotRx(), rx);
+}
+
 TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateGetters) {
   RobotHardwareInterface hw_interface(device_config_map_ptr_dual_joy_,
     hardware_type_e::COPROCESSOR);

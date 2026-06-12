@@ -10,6 +10,7 @@
 #include "pros/apix.h"
 #include "pros/rtos.h"
 
+#include "ghost_v5_interfaces/inter_robot/other_robot_packet.hpp"
 #include "ghost_v5_interfaces/util/device_type_helpers.hpp"
 
 #include "ghost_v5/motor/v5_motor_interface.hpp"
@@ -135,10 +136,48 @@ void reader_loop()
   }
 }
 
+// Relays the inter-robot comms payload between the hardware interface and the VEXlink radio. The V5
+// brain is a transparent byte pipe: it never interprets the payload (the field layout lives in ROS).
+// Uses the packeted transmit/receive API so VEXlink handles framing + checksum for us (no COBS, no
+// disallowed bytes on the radio hop).
+void relay_inter_robot_link()
+{
+  auto & link = v5_globals::inter_robot_link;
+  if (!link || !link->connected()) {
+    return;
+  }
+
+  auto & rhi = v5_globals::robot_hardware_interface_ptr;
+
+  // Receive: pull the peer's most recent packet (if a full one is buffered) into the inbound slot.
+  // The next writeV5StateUpdate() serializes it out to the coprocessor.
+  if (link->raw_receivable_size() >= ghost_v5_interfaces::inter_robot::OTHER_ROBOT_PACKET_SIZE) {
+    ghost_v5_interfaces::inter_robot::OtherRobotBytes rx{};
+    uint32_t received = link->receive(rx.data(), rx.size());
+    if (received == rx.size()) {
+      rhi->setInterRobotRx(rx);
+    }
+  }
+
+  // Transmit: relay this robot's outbound payload, throttled to the VEXlink data rate. EBUSY/PROS_ERR
+  // (no FIFO room) simply skips this cycle and retries next — never blocks the 10 ms loop.
+  uint32_t now = pros::millis();
+  if (now - v5_globals::last_inter_robot_link_tx >= v5_globals::inter_robot_link_tx_period_ms) {
+    auto tx = rhi->getInterRobotTx();
+    uint32_t result = link->transmit(tx.data(), tx.size());
+    if (result == tx.size()) {
+      v5_globals::last_inter_robot_link_tx = now;
+    }
+  }
+}
+
 void ghost_main_loop()
 {
   static int count = 0;
   try {
+    // Relay inter-robot comms over VEXlink (receive into the inbound slot before serializing it out).
+    relay_inter_robot_link();
+
     // Send robot state over serial to coprocessor
     v5_globals::serial_node_ptr->writeV5StateUpdate();
 
@@ -250,6 +289,16 @@ void initialize()
           }
           break;
       }
+    }
+
+    // Construct the inter-robot VEXlink relay if one is configured (port 0 disables it).
+    if (INTER_ROBOT_LINK_PORT != 0) {
+      v5_globals::inter_robot_link = std::make_shared<pros::Link>(
+        INTER_ROBOT_LINK_PORT,
+        INTER_ROBOT_LINK_ID,
+        INTER_ROBOT_LINK_IS_TRANSMITTER ? pros::E_LINK_TRANSMITTER : pros::E_LINK_RECIEVER);
+      v5_globals::screen_interface_ptr->addToPrintQueue(
+        "Inter-robot VEXlink on port ", std::to_string(INTER_ROBOT_LINK_PORT));
     }
 
     zero_actuators();
