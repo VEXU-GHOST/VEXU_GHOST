@@ -73,7 +73,9 @@ case "$1" in
         ;;
     "clean")
         echo "Cleaning ghost build artifacts"
-        exec "$DIR/build/clean.sh"
+        # Pass any remaining args (package names) through to the clean script.
+        shift
+        exec "$DIR/build/clean.sh" "$@"
         ;;
     "install")
         echo "Installing ghost services"
@@ -98,7 +100,7 @@ case "$1" in
         exec journalctl -xe --user-unit ghost-hardware
         ;;
     *)
-        echo "Usage: ghost [run [--v5]/build/clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>/log]"
+        echo "Usage: ghost [run [--v5]/build [pkg...]/clean [pkg...]/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>/log]"
         ;;
 esac
 
