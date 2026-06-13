@@ -198,12 +198,14 @@ set(NODES
   boundaryCheck
   moveVoltage
   turnToPoint
+  turnToHeading
   arcturnToPoint
   moveToPoint
   moveScissor
   generate_bezier_path
   generate_planner_path
   follow_path_controller_server
+  follow_path_controller_server_pdff
   goal_pose_listener
   load_path_from_csv
   adjustSwitcher
