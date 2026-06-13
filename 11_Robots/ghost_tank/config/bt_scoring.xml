@@ -32,6 +32,7 @@
         distance_tiles="1.0" />
 
       <!-- Run the scorer motor and the intake motor together. -->
+                     <LittleWillCmd little_will_active="true"/>
       <ScoreBallCmd direction="1" />
       <OuttakeBallsCmd direction="1" />
 

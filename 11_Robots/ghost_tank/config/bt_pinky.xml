@@ -38,6 +38,7 @@
       NOTE: this drives the same port-0 solenoid as SorterCmd, so don't
       run a manual SorterCmd active="true" while auto-sort is on. -->
       <LittleWillCmd little_will_active="false"/>
+        <SwitcherCmd switcher_active="true"/>
       <MoveToPoint kp="2.5"
       kd="1.0"
       max_effort_percent="0.3"
@@ -48,7 +49,7 @@
       shutoff_motors="true"/>
       <TurnToPoint posX_tiles="4"
       posY_tiles="2"
-      timeout_ms="3000"
+      timeout_ms="2000"
       backwards="false"
       angle_exit_threshold_deg=".5"/>
       <WaitCmd seconds="0.5"
@@ -57,24 +58,16 @@
 
       <MoveToPoint kp="2.5"
         kd="1.0"
-        max_effort_percent="0.3"
-        timeout_ms="1000"
+        max_effort_percent="0.2"
+        timeout_ms="3000"
         backwards="false"
-        distance_tiles="1" />
-        <WaitCmd seconds="3.0"
+        distance_tiles="1.5" />
+        <AutoSortCmd active="false"/>
+      <WaitCmd seconds="0.2"
         shutoff_motors="true"/>
-        <MoveToPoint kp="2.5"
-        kd="1.0"
-        max_effort_percent="0.3"
-        timeout_ms="1000"
-        backwards="false"
-        distance_tiles="0.5" />
-      <WaitCmd seconds="2.0"
-        shutoff_motors="true"/>
-              <AutoSortCmd active="false"/>
         <TurnToPoint posX_tiles="5"
         posY_tiles="1"
-        timeout_ms="3000"
+        timeout_ms="2000"
         backwards="false"
         angle_exit_threshold_deg=".5"/>
               <AutoSortCmd active="true"/>
@@ -82,21 +75,17 @@
         <MoveToPoint kp="2.5"
         kd="1.0"
         max_effort_percent="0.3"
-        timeout_ms="1000"
+        timeout_ms="2000"
         backwards="false"
-        distance_tiles="5.0" />
-        <WaitCmd seconds="2.0"
-        shutoff_motors="true"/>
+        distance_tiles="1.4" />
         <AutoSortCmd active="false"/>
+        <WaitCmd seconds="0.2"
+        shutoff_motors="true"/>
         <TurnToPoint posX_tiles="5"
         posY_tiles="2"
-      timeout_ms="3000"
+      timeout_ms="2000"
       backwards="false"
       angle_exit_threshold_deg=".5"/>
-      
-      <WaitCmd seconds="2.0"
-        shutoff_motors="true"/>
-              <LittleWillCmd little_will_active="true"/>
 
         
         <!-- ===== Scoring subtree (defined in bt_scoring.xml) =====
