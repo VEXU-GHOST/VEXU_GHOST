@@ -9,6 +9,8 @@ GHOST="$(cd "$DIR/.." && pwd)/ghost"
 # Install/enable the systemd services as part of OS setup.
 "$GHOST" install
 
+sudo systemctl disable cron.service anacron.service
+
 sudo mkdir -p /etc/systemd/system/serial-getty@ttyTCU0.service.d
 sudo tee /etc/systemd/system/serial-getty@ttyTCU0.service.d/override.conf <<EOF > /dev/null
 [Service]

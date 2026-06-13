@@ -25,6 +25,8 @@
           <address>192.168.50.1</address>
           <address>100.73.147.1</address>
           <address>127.0.0.1</address>
+          <address>10.42.0.1</address>
+          <address>10.42.0.62</address>
         </interfaceWhiteList>
       </transport_descriptor>
       <transport_descriptor>
