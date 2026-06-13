@@ -7,11 +7,11 @@ competition_state_machine_node:
       is_red_alliance: true
 
       init_x_tiles: 3.0 # ignore
-      init_y_tiles: 1.083 # ignore
+      init_y_tiles: 1.183 # ignore
       init_theta_degrees: 270.0
 
     # Behavior tree XML to load for autons, relative to the ghost_tank
     # package's share config dir. Resolved to an absolute bt_path in
     # pinky.launch.py. Easy to swap per match without editing python.
     bt_filename: "bt_pinky.xml"
-    bt_filename_interaction: "bt_pinky.xml"
+    bt_filename_interaction: "bt_pinky_iso.xml"

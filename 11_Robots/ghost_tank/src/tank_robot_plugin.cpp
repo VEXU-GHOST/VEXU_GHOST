@@ -854,7 +854,7 @@ void TankRobotPlugin::autoSort(double current_time)
   // Constantly intake: drive the intake forward every tick regardless of state.
   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.75);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-  rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.68);
+  rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.75);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
   rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", 1.0);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);

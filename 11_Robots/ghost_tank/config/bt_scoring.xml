@@ -20,19 +20,24 @@
 
       <!-- Raise the switcher to the higher position first so the pneumatic has
            time to actuate while we creep forward. -->
+           <ScoreBallCmd direction="-1" />
+            <WaitCmd seconds="0.1"
+        shutoff_motors="true" />
+                 <ScoreBallCmd direction="0" />
       <SwitcherCmd switcher_active="true"/>
+
 
       <!-- Creep forward half an inch (~0.0208 tiles). Low effort / short timeout
            since it is a tiny alignment nudge. -->
+           <LittleWillCmd little_will_active="true"/>
       <MoveToPoint kp="2.5"
         kd="1.0"
-        max_effort_percent="0.3"
+        max_effort_percent="0.28"
         timeout_ms="1000"
         backwards="false"
         distance_tiles="1.0" />
 
       <!-- Run the scorer motor and the intake motor together. -->
-                     <LittleWillCmd little_will_active="true"/>
       <ScoreBallCmd direction="1" />
       <OuttakeBallsCmd direction="1" />
 
