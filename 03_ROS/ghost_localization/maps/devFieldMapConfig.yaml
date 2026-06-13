@@ -1,0 +1,6 @@
+image: devFieldMap.png
+resolution: 0.0254   # 1 pixel = 1 inch
+origin: [0.0, 0.0, 0.0]
+occupied_thresh: 0.99
+free_thresh: 0.01
+negate: 0

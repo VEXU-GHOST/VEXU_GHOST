@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<robot name="dev_field">
+
+  <!--
+    Static visual of the 8 ft x 12 ft dev enclosure (center goal only).
+    Anchored to the map frame — same convention as pushBackField.urdf.
+
+    Load in RViz: RobotModel display -> "Description Source: File" -> this file
+    Fixed Frame: map
+  -->
+
+  <link name="map">
+
+    <!-- Bottom wall: x=[0, 3.6576], y=[0, 0.0508] -->
+    <visual>
+      <origin xyz="1.8288 0.0254 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="3.6576 0.0508 0.1"/>
+      </geometry>
+      <material name="wall_grey">
+        <color rgba="0.5 0.5 0.5 0.8"/>
+      </material>
+    </visual>
+
+    <!-- Top wall: x=[0, 3.6576], y=[2.3876, 2.4384] -->
+    <visual>
+      <origin xyz="1.8288 2.4130 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="3.6576 0.0508 0.1"/>
+      </geometry>
+      <material name="wall_grey2">
+        <color rgba="0.5 0.5 0.5 0.8"/>
+      </material>
+    </visual>
+
+    <!-- Left wall: x=[0, 0.0508], y=[0, 2.4384] -->
+    <visual>
+      <origin xyz="0.0254 1.2192 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.0508 2.4384 0.1"/>
+      </geometry>
+      <material name="wall_grey3">
+        <color rgba="0.5 0.5 0.5 0.8"/>
+      </material>
+    </visual>
+
+    <!-- Right wall: x=[3.6068, 3.6576], y=[0, 2.4384] -->
+    <visual>
+      <origin xyz="3.6322 1.2192 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.0508 2.4384 0.1"/>
+      </geometry>
+      <material name="wall_grey4">
+        <color rgba="0.5 0.5 0.5 0.8"/>
+      </material>
+    </visual>
+
+    <!-- center_goal_high -->
+    <visual>
+      <origin xyz="1.828 1.828 0.25" rpy="0 0 0.785398163"/>
+      <geometry>
+        <box size="0.56 0.125 0.125"/>
+      </geometry>
+      <material name="center_goal_high_mat">
+        <color rgba="0 0.3 1 0.3"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="1.828 1.828 0.25" rpy="0 0 0.785398163"/>
+      <geometry>
+        <box size="0.56 0.125 0.125"/>
+      </geometry>
+    </collision>
+
+    <!-- center_goal_low -->
+    <visual>
+      <origin xyz="1.828 1.828 0.075" rpy="0 0 -0.785398163"/>
+      <geometry>
+        <box size="0.56 0.125 0.125"/>
+      </geometry>
+      <material name="center_goal_low_mat">
+        <color rgba="0 0.3 1 0.3"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="1.828 1.828 0.075" rpy="0 0 -0.785398163"/>
+      <geometry>
+        <box size="0.56 0.125 0.125"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+</robot>
