@@ -8,9 +8,9 @@
   ros__parameters:
     particle_filter:
       # Initial cloud distribution
-      init_x_sigma: 0.1 #
-      init_y_sigma: 0.1 #
-      init_r_sigma: 0.20 #
+      init_x_sigma: 0.10 #
+      init_y_sigma: 0.10 #
+      init_r_sigma: 0.15 #
 
       # Number of LIDAR update cycles to force right after a pose reset
       # (/set_pf_pose), skipping the min_update_dist/angle gate so the cloud

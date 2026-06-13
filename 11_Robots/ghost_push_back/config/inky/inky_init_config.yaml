@@ -4,12 +4,12 @@
 competition_state_machine_node:
   ros__parameters:
     tank_robot_plugin:
-      is_red_alliance: true
+      is_red_alliance: false
 
       #normal auton init
       init_x_tiles: 1.0 # ignore
-      init_y_tiles: 1.0 # ignore
-      init_theta_degrees: 0.0
+      init_y_tiles: 0.75 # ignore
+      init_theta_degrees: 90.0
       # prog init
       # init_theta_degrees: 160.0
       # init_x_tiles: 0.5
@@ -18,5 +18,5 @@ competition_state_machine_node:
     # Behavior tree XML to load for autons, relative to the ghost_tank
     # package's share config dir. Resolved to an absolute bt_path in
     # inky.launch.py. Easy to swap per match without editing python.
-    bt_filename: "bt_tune_turn.xml"
-    bt_filename_interaction: "bt_tune_turn.xml"
+    bt_filename: "bt_isolation_inky.xml"
+    bt_filename_interaction: "bt_isolation_inky.xml"

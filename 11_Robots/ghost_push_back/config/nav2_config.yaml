@@ -66,7 +66,7 @@ global_costmap:
         map_topic: "/map"
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
+        enabled: False # TODO: URGENT
         observation_sources: scan
         scan:
           topic: /scan
@@ -120,7 +120,7 @@ controller_server:
       stateful: True
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.5          # was max_linear_vel
+      desired_linear_vel: 1.5          # was max_linear_vel
       # Smaller lookahead = tighter corner tracking (carrot closer to robot, less
       # corner-cutting). Too small -> weaving/oscillation on straights. Was 0.6.
       lookahead_dist: 0.30
@@ -131,7 +131,7 @@ controller_server:
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: false
       min_approach_linear_velocity: 0.05
-      approach_velocity_scaling_dist: 0.6
+      approach_velocity_scaling_dist: 0.3
       use_collision_detection: false
       max_allowed_time_to_collision_up_to_carrot: 1.0
       use_regulated_linear_velocity_scaling: true
@@ -141,13 +141,18 @@ controller_server:
       cost_scaling_dist: 0.3
       cost_scaling_gain: 1.0
       regulated_linear_scaling_min_radius: 1.2
-      regulated_linear_scaling_min_speed: 0.25
-      # false: SmacPlanner2D is a 2D planner so per-pose orientations are
-      # meaningless tangents; steer by lookahead geometry only and never spin to
-      # align to them (avoids the spurious ~180 deg rotate-in-place at path start).
-      # Final heading is still enforced by the goal_checker yaw_goal_tolerance.
-      use_rotate_to_heading: false
-      allow_reversing: true
+      regulated_linear_scaling_min_speed: 0.45
+      # true: REQUIRED for final heading. SmacPlanner2D stamps the last path pose
+      # with the commanded goal yaw (use_final_approach_orientation: false above),
+      # and RPP only rotates in place to that yaw -- via shouldRotateToGoalHeading,
+      # gated by distance < xy_goal_tolerance -- when this is true. The goal_checker
+      # merely *checks* yaw; it never produces rotation, so with this false the yaw
+      # tolerance can never be met and final heading is effectively ignored.
+      use_rotate_to_heading: true
+      allow_reversing: false
+      # Gates ONLY the mid-path spin-to-face-the-path (shouldRotateToPath), NOT the
+      # final-heading rotation. Keep near the 0.785 default; lower values make the
+      # robot stop and spin in place at every path start/corner.
       rotate_to_heading_min_angle: 0.785
       max_angular_accel: 3.0
 
