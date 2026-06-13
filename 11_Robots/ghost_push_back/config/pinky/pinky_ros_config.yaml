@@ -71,9 +71,9 @@ competition_state_machine_node:
         integral_activation_bound: 0.5
 
       arc_turn:
-        kp: 0.675
+        kp: 0.7
         ki: 0.0
-        kd: 0.025
+        kd: 0.002
         integral_limit: 0.75
         integral_activation_bound: 0.2
 
