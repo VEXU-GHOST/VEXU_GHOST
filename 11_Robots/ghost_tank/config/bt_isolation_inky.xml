@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4" main_tree_to_execute="main_tree">
+<root BTCPP_format="4" main_tree_to_execute="finally_works">
 
   <!-- Includes -->
-  <include path="worlds/bt_worlds_goal_rush.xml" />
+  <!-- <include path="worlds/bt_worlds_goal_rush.xml" /> -->
   <!-- DISABLED: these world subtrees use MoveToPoseBezier, removed in the worlds
        refactor (commit 5df03240). Re-include once they are ported to
        GenerateBezierPath + FollowPath.
@@ -13,6 +13,75 @@
   <include path="bt_neutral_stake.xml" />
   <include path="bt_aj_rings.xml" />
   <include path="bt_scissor.xml" /> -->
+
+  <!-- Drive the keypoint sequence. Each waypoint is planned with the nav2
+       planner_server (GeneratePlannerPath, tile/deg map convention) and driven
+       with the nav2 controller_server (FollowPathControllerServerPDFF). The two
+       MoveToPoint steps drive a fixed open-loop distance forward/back between
+       waypoints 3 and 4. NOTE: the last three waypoints had no heading given,
+       so they use 180 deg (the -x travel direction along y=2). -->
+  <BehaviorTree ID="finally_works">
+    <Sequence>
+      <Logging message="finally_works: starting keypoint sequence" />
+
+      <!-- (2.349, 0.975, 0) is the init/start pose, not driven. -->
+             <LittleWillCmd little_will_active="false"/>
+        <SwitcherCmd switcher_active="true"/>
+
+      <!-- Waypoint 1: (1.29, 1) @ 45 deg -->
+      <Logging message="finally_works: -> (1.29, 1, 225)" />
+      <GeneratePlannerPath end_x_tiles="1.29" end_y_tiles="1.0" end_theta_deg="180"
+        backwards="false" planner_id="GridBased" timeout_ms="3000" />
+      <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
+        controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="15000" />
+              <AutoSortCmd active="true"/>
+
+      <!-- Waypoint 2: (1.0, 1.5) @ 90 deg -->
+      <Logging message="finally_works: -> (1.0, 1.5, 270)" />
+      <GeneratePlannerPath end_x_tiles="1.0" end_y_tiles="1.5" end_theta_deg="90"
+        backwards="false" planner_id="GridBased" timeout_ms="3000" />
+      <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
+        controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="15000" />
+                <AutoSortCmd active="false"/>
+                      <WaitCmd seconds="0.2"
+        shutoff_motors="true"/>
+
+      <!-- Open-loop nudge: forward 0.5 tile, then back 0.5 tile -->
+      <Logging message="finally_works: MoveToPoint forward 0.5 tile" />
+      <MoveToPoint kp="1.6" kd="0.0" max_effort_percent="0.9" timeout_ms="3000"
+        backwards="false" distance_tiles="0.3" />
+
+                <SubTree ID="score" _autoremap="true"/>
+
+      <Logging message="finally_works: MoveToPoint backward 0.5 tile" />
+      <MoveToPoint kp="1.6" kd="0.0" max_effort_percent="0.9" timeout_ms="3000"
+        backwards="true" distance_tiles="0.3" />
+
+                <AutoSortCmd active="true"/>
+ 
+      <!-- Waypoint 5: (2.0, 2) @ 360 deg -->
+      <Logging message="finally_works: -> (2.0, 2, 360)" />
+      <GeneratePlannerPath end_x_tiles="2.0" end_y_tiles="2.0" end_theta_deg="0"
+        backwards="false" planner_id="GridBased" timeout_ms="3000" />
+      <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
+        controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="15000" />
+
+
+                <AutoSortCmd active="false"/>
+      <!-- Waypoint 6: (2.4, 2.4) @ 325 deg -->
+      <Logging message="finally_works: -> (2.4, 2.4, 325)" />
+      <GeneratePlannerPath end_x_tiles="2.4" end_y_tiles="2.4" end_theta_deg="45"
+        backwards="false" planner_id="GridBased" timeout_ms="3000" />
+      <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
+        controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="15000" />
+
+                <SubTree ID="score" _autoremap="true"/>
+
+      <Logging message="finally_works: sequence complete" />
+
+      <WaitCmd seconds="300.0"/>
+    </Sequence>
+  </BehaviorTree>
 
   <BehaviorTree ID="main_tree">
     <Sequence>
@@ -31,10 +100,15 @@
       <!-- Drive forward at 0.5 m/s for 1.0 s, then stop. Closed-loop on measured
            velocity; gains live in inky_ros_config.yaml (velocity_linear /
            velocity_angular). -->
-      <MoveVelocityPDFF x="0.6"
+      <!-- <MoveVelocityPDFF x="0.6"
         ang_z="0.0"
         timeout_ms="1000"/>
+      <WaitCmd seconds="3.0"/>
+<MoveVelocityPDFF x="0.0"
+        ang_z="1.57"
+        timeout_ms="1000"/>
 
+      <WaitCmd seconds="300.0"/> -->
     <!-- <MoveToPoint kp="1.6"
         kd="0.0"
         max_effort_percent="0.9"
@@ -54,30 +128,41 @@
               end_y_tiles="{nav_goal_y_tiles}"
               end_theta_deg="{nav_goal_theta_deg}"
               backwards="false" planner_id="GridBased" timeout_ms="2000" /> -->
+<!-- 
+<MoveVelocityPDFF x="0.0"
+        ang_z="0.4"
+        timeout_ms="1000"/>
 
-            <GeneratePlannerPath end_x_tiles="1"
+
+              <Logging message="kys kys kys1" />
+<MoveVelocityPDFF x="0.0"
+        ang_z="-1.4"
+        timeout_ms="1000"/>
+<MoveVelocityPDFF x="0.0"
+        ang_z="1.4"
+        timeout_ms="1000"/>
+<MoveVelocityPDFF x="0.0"
+        ang_z="-0.4"
+        timeout_ms="1000"/>
+      <WaitCmd seconds="3.0"/> -->
+            <!-- <GeneratePlannerPath end_x_tiles="4.5"
               end_y_tiles="1.5"
-              end_theta_deg="-90"
-              backwards="false" planner_id="GridBased" timeout_ms="2000" />
+              end_theta_deg="180"
+              backwards="false" planner_id="GridBased" timeout_ms="3000" />
 
             <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
               controller_id="FollowPath"
               goal_checker_id="goal_checker"
-              timeout_ms="10000"
-              p_linear="2"
-              d_linear="0.0"
-              ff_linear="0.30"
-              p_angular="2"
-              d_angular="0.0"
-              ff_angular="0.3"/>
+              timeout_ms="3000"/> -->
 
+              <Logging message="kys kys kys" />
             <!-- Hold a fixed velocity setpoint for a fixed time: drive forward
                  at 0.5 m/s for 1.0 s, then stop. Closed-loop on measured
                  velocity; gains live in inky_ros_config.yaml
                  (velocity_linear / velocity_angular). -->
-            <MoveVelocityPDFF x="0.5"
+            <!-- <MoveVelocityPDFF x="0.5"
               ang_z="0.0"
-              timeout_ms="1000"/>
+              timeout_ms="1000"/> -->
 
       <WaitCmd seconds="300.0"/>
               <!-- floor_linear="0.07"
