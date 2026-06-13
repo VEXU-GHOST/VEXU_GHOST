@@ -30,9 +30,6 @@ def generate_launch_description():
     # This contains parameters shared between both robots
     base_ros_config_file = os.path.join(ghost_push_back_base_dir, "config/base_ros_config.yaml")
 
-    # nav2 stack config (map_server, planner_server + global_costmap,
-    # controller_server + local_costmap), split out of base_ros_config.yaml.
-    nav2_config_file = os.path.join(ghost_push_back_base_dir, "config/nav2_config.yaml")
 
     #############################
     ### Base Node Definitions ###
@@ -67,45 +64,55 @@ def generate_launch_description():
         parameters=[{"robot_description": xacro.process_file(urdf_path).toxml()}],
     )
 
-    # nav2 map server (+ lifecycle manager) that serves the push back field on
-    # /map. Defined in ghost_localization alongside the map files.
-    map_server_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("ghost_localization"),
-                "launch",
-                "map_server.launch.py",
+    def field_setup(context, *args, **kwargs):
+        use_dev = LaunchConfiguration("use_dev_field").perform(context) == "true"
+        maps_dir = os.path.join(get_package_share_directory("ghost_localization"), "maps")
+        if use_dev:
+            nav2_cfg = os.path.join(ghost_push_back_base_dir, "config/nav2_config_dev.yaml")
+            map_yaml = os.path.join(maps_dir, "devFieldMapConfig.yaml")
+            goal_regions = os.path.join(
+                get_package_share_directory("push_back_cv"), "config", "goal_regions_dev.yaml"
             )
-        ),
-        launch_arguments={"base_params_file": nav2_config_file}.items(),
-    )
-
-    # nav2 planner server + its lifecycle manager. SmacPlanner2D settings and
-    # the global_costmap it plans over live in the planner_server/global_costmap
-    # blocks of nav2_config.yaml. planner_server is a lifecycle node, so the
-    # manager configures and activates it on startup.
-    planner_server = Node(
-        package="nav2_planner",
-        executable="planner_server",
-        name="planner_server",
-        output="screen",
-        parameters=[nav2_config_file],
-    )
-
-    # nav2 controller server (Regulated Pure Pursuit). controller_server +
-    # local_costmap settings live in nav2_config.yaml. cmd_vel is remapped to
-    # /nav2/cmd_vel so it does not collide with the existing /cmd_vel; ghost_tank's
-    # FollowPathControllerServer BT node subscribes there and relays to the drive.
-    # Requires ros-humble-nav2-controller and
-    # ros-humble-nav2-regulated-pure-pursuit-controller.
-    controller_server = Node(
-        package="nav2_controller",
-        executable="controller_server",
-        name="controller_server",
-        output="screen",
-        parameters=[nav2_config_file],
-        remappings=[("cmd_vel", "/nav2/cmd_vel")],
-    )
+        else:
+            nav2_cfg = os.path.join(ghost_push_back_base_dir, "config/nav2_config.yaml")
+            map_yaml = os.path.join(maps_dir, "pushBackMapConfig.yaml")
+            goal_regions = os.path.join(
+                get_package_share_directory("push_back_cv"), "config", "goal_regions.yaml"
+            )
+        return [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(
+                    get_package_share_directory("ghost_localization"),
+                    "launch", "map_server.launch.py",
+                )),
+                launch_arguments={
+                    "base_params_file": nav2_cfg,
+                    "yaml_filename": map_yaml,
+                }.items(),
+            ),
+            Node(
+                package="nav2_planner",
+                executable="planner_server",
+                name="planner_server",
+                output="screen",
+                parameters=[nav2_cfg],
+            ),
+            Node(
+                package="nav2_controller",
+                executable="controller_server",
+                name="controller_server",
+                output="screen",
+                parameters=[nav2_cfg],
+                remappings=[("cmd_vel", "/nav2/cmd_vel")],
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(
+                    get_package_share_directory("push_back_cv"),
+                    "launch", "push_back_cv.launch.py",
+                )),
+                launch_arguments={"goal_regions_file": goal_regions}.items(),
+            ),
+        ]
 
     # Single lifecycle manager that configures + activates both nav2 servers on
     # startup, in order (planner before controller).
@@ -171,19 +178,6 @@ def generate_launch_description():
         ]
     )
 
-    # Push-back CV perception pipeline (cv_detector_array -> block_map ->
-    # goal_reader), publishing /field/goals for the behavior tree. Consumes the
-    # RealSense color/aligned-depth/camera_info topics, so enable realsense_node
-    # (with depth + color) below for this to receive data.
-    push_back_cv_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("push_back_cv"),
-                "launch",
-                "push_back_cv.launch.py",
-            )
-        ),
-    )
 
     #######################
     ### Robot Overrides ###
@@ -219,9 +213,12 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource(
                     os.path.join(ghost_push_back_base_dir, "launch", robot_name, robot_name + ".launch.py")
                 ),
-                launch_arguments={'base_params_file': base_ros_config_file,
-                                  'init_config_file': init_config_file,
-                                  'v5_serial_port': v5_serial_port}.items()
+                launch_arguments={
+                    'base_params_file': base_ros_config_file,
+                    'init_config_file': init_config_file,
+                    'v5_serial_port': v5_serial_port,
+                    'use_dev_field': LaunchConfiguration("use_dev_field").perform(context),
+                }.items()
             )
 
             # RP2040 sensor host. ros_config has namespace; serial_port is the
@@ -272,17 +269,16 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument("robot_name", default_value="None"),
+        DeclareLaunchArgument("use_dev_field", default_value="false",
+                              description="Set to 'true' to use dev enclosure configs (8x12 ft, center goal only)."),
         robot_state_publisher,
-        map_server_launch,
-        planner_server,
-        controller_server,
         planner_lifecycle_manager,
         rplidar_node,
         realsense_node,
-        push_back_cv_launch,
         bag_recorder_service,
         inter_robot_comms_node,
         # tts_music_node,
-        OpaqueFunction(function = launch_setup),
+        OpaqueFunction(function=field_setup),
+        OpaqueFunction(function=launch_setup),
     ])
 

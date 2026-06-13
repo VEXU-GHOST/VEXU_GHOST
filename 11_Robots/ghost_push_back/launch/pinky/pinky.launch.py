@@ -26,7 +26,6 @@ def generate_launch_description():
 
     # Shared localization config (particle filter + robot_localization EKFs),
     # split out of base_ros_config.yaml.
-    localization_config_file = os.path.join(config_path, "localization_config.yaml")
 
     # This specifies robot control plugin yo load
     plugin_type = "ghost_tank::PinkyPlugin"
@@ -105,42 +104,51 @@ def generate_launch_description():
     # one per COLOR device in the sensor host config).
 
 
-    odom_ekf_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="odom_ekf_node",
-        output="screen",
-        parameters=[ros_config_file, base_params_file, localization_config_file],
-        remappings=[("odometry/filtered", "/odom_ekf/odometry")],
-    )
-
-    map_ekf_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="map_ekf_node",
-        output="screen",
-        parameters=[ros_config_file, base_params_file, localization_config_file],
-        remappings=[("odometry/filtered", "/map_ekf/odometry")],
-    )
-
-    ekf_pf_node = Node(
-        package="ghost_localization",
-        executable="ekf_pf_node",
-        name="ekf_pf_node",
-        output="screen",
-        parameters=[ros_config_file, base_params_file, localization_config_file],
-    )
+    def localization_setup(context, *args, **kwargs):
+        use_dev = LaunchConfiguration("use_dev_field").perform(context) == "true"
+        if use_dev:
+            loc_config = os.path.join(config_path, "localization_config_dev.yaml")
+            pf_extra = [{"particle_filter.map": os.path.join(
+                get_package_share_directory("ghost_localization"), "maps", "devFieldZeroLH.txt"
+            )}]
+        else:
+            loc_config = os.path.join(config_path, "localization_config.yaml")
+            pf_extra = []
+        return [
+            Node(
+                package="robot_localization",
+                executable="ekf_node",
+                name="odom_ekf_node",
+                output="screen",
+                parameters=[ros_config_file, base_params_file, loc_config],
+                remappings=[("odometry/filtered", "/odom_ekf/odometry")],
+            ),
+            Node(
+                package="robot_localization",
+                executable="ekf_node",
+                name="map_ekf_node",
+                output="screen",
+                parameters=[ros_config_file, base_params_file, loc_config],
+                remappings=[("odometry/filtered", "/map_ekf/odometry")],
+            ),
+            Node(
+                package="ghost_localization",
+                executable="ekf_pf_node",
+                name="ekf_pf_node",
+                output="screen",
+                parameters=[ros_config_file, base_params_file, loc_config] + pf_extra,
+            ),
+        ]
 
     return LaunchDescription([
         DeclareLaunchArgument('base_params_file'),
         DeclareLaunchArgument('init_config_file'),
         DeclareLaunchArgument('v5_serial_port', default_value='/dev/ttyACM1'),
+        DeclareLaunchArgument('use_dev_field', default_value='false'),
         serial_node,
         imu_filter_node,
-        odom_ekf_node,
-        ekf_pf_node,
-        map_ekf_node,
         competition_state_machine_node,
         # gpio_expander,
+        OpaqueFunction(function=localization_setup),
     ])
 

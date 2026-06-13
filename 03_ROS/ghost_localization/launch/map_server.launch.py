@@ -1,5 +1,6 @@
 import os
 
+from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
@@ -14,13 +15,14 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     base_params_file = LaunchConfiguration("base_params_file")
+    yaml_filename = LaunchConfiguration("yaml_filename")
 
     map_server = Node(
         package="nav2_map_server",
         executable="map_server",
         name="map_server",
         output="screen",
-        parameters=[base_params_file],
+        parameters=[base_params_file, {"yaml_filename": yaml_filename}],
     )
 
     map_server_lifecycle_manager = Node(
@@ -41,6 +43,14 @@ def generate_launch_description():
                     os.path.expanduser("~"), "VEXU_GHOST", "11_Robots",
                     "ghost_push_back", "config", "nav2_config.yaml",
                 ),
+            ),
+            DeclareLaunchArgument(
+                "yaml_filename",
+                default_value=os.path.join(
+                    get_package_share_directory("ghost_localization"),
+                    "maps", "pushBackMapConfig.yaml",
+                ),
+                description="Absolute path to the occupancy grid YAML passed to map_server.",
             ),
             map_server,
             map_server_lifecycle_manager,
