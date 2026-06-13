@@ -5,6 +5,8 @@
 #include "ghost_util/unit_conversion_utils.hpp"
 
 #include "rclcpp/rclcpp.hpp"
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include "tf2/LinearMath/Quaternion.h"
 
 
 namespace ghost_tank
@@ -34,6 +36,8 @@ private:
   std::shared_ptr<TankModel> tank_model_ptr_;
   std::chrono::time_point<std::chrono::system_clock> start_time_;
   BT::Blackboard::Ptr blackboard_;
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr expected_pose_pub_;
 
   bool first_loop_;
   double Kd{0.0};

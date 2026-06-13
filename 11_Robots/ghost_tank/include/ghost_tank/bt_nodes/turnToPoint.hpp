@@ -9,6 +9,7 @@
 #include "visualization_msgs/msg/marker.hpp"
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <std_msgs/msg/float64.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 
 #include "rclcpp/rclcpp.hpp"
 #include "tf2/LinearMath/Quaternion.h"
@@ -35,6 +36,8 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start_time_;
     BT::Blackboard::Ptr blackboard_;
     std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
+    std::shared_ptr<rclcpp::Node> node_ptr_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr expected_pose_pub_;
 
     double posX_m;
     double posY_m;

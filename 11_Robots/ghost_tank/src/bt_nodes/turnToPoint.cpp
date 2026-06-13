@@ -12,6 +12,10 @@ TurnToPoint::TurnToPoint(const std::string & name, const BT::NodeConfig & config
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "arc_turn_controller_ptr", m_arc_turn_controller_ptr);
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
+  if (node_ptr_) {
+    expected_pose_pub_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseStamped>("/expectedpose", 10);
+  }
 
   posX_m = BT_Util::get_input<double>(this, "posX_tiles") * ghost_util::TILES_TO_METERS;
   posY_m = BT_Util::get_input<double>(this, "posY_tiles") * ghost_util::TILES_TO_METERS;
@@ -51,6 +55,26 @@ BT::NodeStatus TurnToPoint::onStart()
   }
 
   m_arc_turn_controller_ptr->reset();
+
+  // Publish the target the controller is driving toward: the robot does not
+  // translate during a turn, so the expected pose keeps the current position
+  // and adopts the desired heading.
+  if (expected_pose_pub_) {
+    geometry_msgs::msg::PoseStamped expected_pose;
+    expected_pose.header.stamp = node_ptr_->get_clock()->now();
+    expected_pose.header.frame_id = "map";
+    expected_pose.pose.position.x = cur_x;
+    expected_pose.pose.position.y = cur_y;
+    expected_pose.pose.position.z = 0.0;
+    tf2::Quaternion q;
+    q.setRPY(0.0, 0.0, des_ang_rad);
+    expected_pose.pose.orientation.x = q.x();
+    expected_pose.pose.orientation.y = q.y();
+    expected_pose.pose.orientation.z = q.z();
+    expected_pose.pose.orientation.w = q.w();
+    expected_pose_pub_->publish(expected_pose);
+  }
+
   return BT::NodeStatus::RUNNING;
 }
 
