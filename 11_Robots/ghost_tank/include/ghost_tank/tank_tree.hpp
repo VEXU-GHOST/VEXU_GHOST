@@ -60,6 +60,7 @@
 #include "ghost_tank/bt_nodes/follow_path_controller_server.hpp"
 #include "ghost_tank/bt_nodes/arcturnToPoint.hpp"
 #include "ghost_tank/bt_nodes/moveToPoint.hpp"
+#include "ghost_tank/bt_nodes/actuallyMoveToPoint.hpp"
 #include "ghost_tank/bt_nodes/adjustSwitcher.hpp"
 #include "ghost_tank/bt_nodes/score_pos.hpp"
 #include "ghost_tank/bt_nodes/scoreBall.hpp"

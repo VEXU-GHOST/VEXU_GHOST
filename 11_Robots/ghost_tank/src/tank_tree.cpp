@@ -84,6 +84,7 @@ void TankTree::init_tree()
   factory.registerNodeType<FollowPathControllerServer>("FollowPathControllerServer");
   factory.registerNodeType<ArcturnToPoint>("ArcturnToPoint");
   factory.registerNodeType<MoveToPoint>("MoveToPoint");
+  factory.registerNodeType<ActuallyMoveToPoint>("ActuallyMoveToPoint");
   factory.registerNodeType<MoveScissor>("MoveScissor");
 
   tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);

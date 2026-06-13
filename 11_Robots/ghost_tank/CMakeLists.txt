@@ -200,6 +200,7 @@ set(NODES
   turnToPoint
   arcturnToPoint
   moveToPoint
+  actuallyMoveToPoint
   moveScissor
   generate_bezier_path
   generate_planner_path

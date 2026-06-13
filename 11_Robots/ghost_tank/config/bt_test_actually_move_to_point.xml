@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <!-- Test tree for ActuallyMoveToPoint: turns to face a point, then drives to it.
+       Tune kp/kd/max_effort_percent for the drive phase and
+       angle_exit_threshold_deg for the turn phase. timeout_ms bounds the whole
+       turn+drive action. -->
+  <BehaviorTree ID="main">
+    <Sequence>
+      <Logging message="starting ActuallyMoveToPoint test"/>
+
+      <!-- Turn toward (2.7, 3.3) then drive to it. -->
+      <ActuallyMoveToPoint posX_tiles="5.0"
+        posY_tiles="1.0"
+        backwards="false"
+        timeout_ms="5000"
+        angle_exit_threshold_deg="0.3"
+        kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.5"/>
+
+      <WaitCmd seconds="5.0"/>
+
+      <!-- Drive back to the origin, turning first. -->
+      <ActuallyMoveToPoint posX_tiles="0.0"
+        posY_tiles="0.0"
+        backwards="false"
+        timeout_ms="5000"
+        angle_exit_threshold_deg="2.0"
+        kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.5"/>
+
+      <Logging message="ActuallyMoveToPoint test done"/>
+      <WaitCmd seconds="200.0"
+        shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
