@@ -36,19 +36,23 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
+#include "ghost_tank/control/velocity_controller.hpp"
 
 namespace ghost_tank
 {
 
 // Closed-loop variant of FollowPathControllerServer. Identical plumbing -- ships
 // the planned path to the nav2 controller_server and relays the cmd_vel it
-// publishes -- but instead of an open-loop feedforward floor it runs a per-axis
-// PD controller on velocity error (commanded cmd_vel vs. the tank's measured
+// publishes -- but instead of an open-loop feedforward floor it runs the shared
+// VelocityController on velocity error (commanded cmd_vel vs. the tank's measured
 // world twist) plus a velocity feedforward term. Output is the normalized arcade
 // command sent to the drive.
 //
 // Per axis: cmd = ff * cmd_frac + p * (cmd_frac - meas_frac) + d * d/dt(err)
-// where *_frac is velocity normalized by the chassis max velocity.
+// where *_frac is velocity normalized by the chassis max velocity. Gains are NOT
+// node ports -- they come from the shared velocity_controller_ptr_, loaded once
+// from the robot config (velocity_linear / velocity_angular) in TankRobotPlugin,
+// exactly like MoveVelocityPDFF.
 //
 // Non-blocking: onStart() sends the action goal, onRunning() polls the
 // goal/result futures across ticks while continuously relaying cmd_vel.
@@ -78,6 +82,7 @@ private:
 
   std::shared_ptr<rclcpp::Node> node_ptr_;
   std::shared_ptr<TankModel> tank_model_ptr_;
+  std::shared_ptr<VelocityController> velocity_controller_ptr_;
   std::shared_ptr<nav_msgs::msg::Path> planned_path_ptr_;
   BT::Blackboard::Ptr blackboard_;
 
@@ -102,26 +107,10 @@ private:
   // Config read on each onStart().
   std::chrono::time_point<std::chrono::system_clock> start_time_;
   int timeout_ms_{0};
-  // Per-axis PD-on-velocity-error gains plus a velocity feedforward gain. All
-  // act on velocities normalized to a fraction of the chassis max velocity.
-  double p_linear_{0.0};
-  double d_linear_{0.0};
-  double ff_linear_{0.10};
-  double p_angular_{0.0};
-  double d_angular_{0.0};
-  double ff_angular_{0.19};
-  // Static-friction voltage floor: for any nonzero velocity command, the output
-  // magnitude is raised to at least this fraction so the drive can break loose
-  // (otherwise low commands stall and RPP deadlocks on measured vel ~0). Set to
-  // 0 to disable.
-  double floor_linear_{0.0};
-  double floor_angular_{0.0};
 
-  // Derivative state for the velocity-error D term, reset on each onStart().
-  double prev_lin_err_{0.0};
-  double prev_ang_err_{0.0};
+  // Previous-tick timestamp for the controller's D-term dt. The error-derivative
+  // history itself lives in velocity_controller_ptr_ and is cleared via reset().
   std::chrono::time_point<std::chrono::system_clock> prev_time_;
-  bool have_prev_{false};
 };
 
 } // namespace ghost_tank

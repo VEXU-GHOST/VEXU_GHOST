@@ -32,8 +32,14 @@ MoveVelocityPDFF::MoveVelocityPDFF(const std::string & name, const BT::NodeConfi
 : BT::StatefulActionNode(name, config)
 {
   blackboard_ = config.blackboard;
+  BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "velocity_controller_ptr", velocity_controller_ptr_);
+
+  if (node_ptr_) {
+    cmd_vel_pub_ptr_ = node_ptr_->create_publisher<geometry_msgs::msg::Twist>(
+      "/nav2/cmd_vel", 10);
+  }
 }
 
 BT::PortsList MoveVelocityPDFF::providedPorts()
@@ -85,7 +91,21 @@ BT::NodeStatus MoveVelocityPDFF::onRunning()
     lin_cmd_frac, lin_meas_frac, ang_cmd_frac, ang_meas_frac, dt);
   tank_model_ptr_->normalizeArcadeCommand(command);
   tank_model_ptr_->driveCommandArcade(command.x(), command.y());
+
+  // Also publish the raw velocity setpoint on /nav2/cmd_vel for downstream relay.
+  publishCmdVel();
   return BT::NodeStatus::RUNNING;
+}
+
+void MoveVelocityPDFF::publishCmdVel()
+{
+  if (!cmd_vel_pub_ptr_) {
+    return;
+  }
+  geometry_msgs::msg::Twist msg;
+  msg.linear.x = x_;
+  msg.angular.z = ang_z_;
+  cmd_vel_pub_ptr_->publish(msg);
 }
 
 void MoveVelocityPDFF::stopMotors()

@@ -37,6 +37,7 @@ FollowPathControllerServerPDFF::FollowPathControllerServerPDFF(
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
+  BT_Util::get_from_blackboard(blackboard_, "velocity_controller_ptr", velocity_controller_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "planned_path_ptr", planned_path_ptr_);
 
   if (node_ptr_) {
@@ -52,15 +53,9 @@ BT::PortsList FollowPathControllerServerPDFF::providedPorts()
     BT::InputPort<std::string>("cmd_vel_topic", "/nav2/cmd_vel", ""),
     BT::InputPort<std::string>("controller_id", "FollowPath", ""),
     BT::InputPort<std::string>("goal_checker_id", "goal_checker", ""),
-    BT::InputPort<int>("timeout_ms", 10000, ""),
-    BT::InputPort<double>("p_linear", 0.0, "proportional gain on linear velocity error"),
-    BT::InputPort<double>("d_linear", 0.0, "derivative gain on linear velocity error"),
-    BT::InputPort<double>("ff_linear", 0.10, "feedforward gain on commanded linear velocity"),
-    BT::InputPort<double>("p_angular", 0.0, "proportional gain on angular velocity error"),
-    BT::InputPort<double>("d_angular", 0.0, "derivative gain on angular velocity error"),
-    BT::InputPort<double>("ff_angular", 0.19, "feedforward gain on commanded angular velocity"),
-    BT::InputPort<double>("floor_linear", 0.0, "static-friction voltage floor, linear (0 disables)"),
-    BT::InputPort<double>("floor_angular", 0.0, "static-friction voltage floor, angular (0 disables)")
+    BT::InputPort<int>("timeout_ms", 10000, "")
+    // PD+FF gains and static feedforward (kS) are not ports: they come from the
+    // shared velocity_controller_ptr_ (robot config velocity_linear/_angular).
   };
 }
 
@@ -68,18 +63,11 @@ BT::NodeStatus FollowPathControllerServerPDFF::onStart()
 {
   goal_accepted_ = false;
   have_cmd_vel_ = false;
-  have_prev_ = false;
   goal_handle_.reset();
   start_time_ = std::chrono::system_clock::now();
+  prev_time_ = start_time_;
   timeout_ms_ = BT_Util::get_input<int>(this, "timeout_ms");
-  p_linear_ = BT_Util::get_input<double>(this, "p_linear");
-  d_linear_ = BT_Util::get_input<double>(this, "d_linear");
-  ff_linear_ = BT_Util::get_input<double>(this, "ff_linear");
-  p_angular_ = BT_Util::get_input<double>(this, "p_angular");
-  d_angular_ = BT_Util::get_input<double>(this, "d_angular");
-  ff_angular_ = BT_Util::get_input<double>(this, "ff_angular");
-  floor_linear_ = BT_Util::get_input<double>(this, "floor_linear");
-  floor_angular_ = BT_Util::get_input<double>(this, "floor_angular");
+  velocity_controller_ptr_->reset();
 
   // Lazily create the cmd_vel subscription now that the input port is available.
   if (!cmd_vel_sub_ && node_ptr_) {
@@ -97,6 +85,21 @@ BT::NodeStatus FollowPathControllerServerPDFF::onStart()
   if (!planned_path_ptr_ || planned_path_ptr_->poses.empty()) {
     RCLCPP_WARN(node_ptr_->get_logger(), "[FollowPathControllerServerPDFF] no planned path available");
     return BT::NodeStatus::FAILURE;
+  }
+
+  // Print the final heading the controller will try to settle on: the yaw of the
+  // last path pose. This is the goal yaw SmacPlanner2D stamped on the path and the
+  // angle RPP rotates in place to at the end (when use_rotate_to_heading is on).
+  // Logged here so we can see what "final heading" actually is when it misbehaves.
+  {
+    const auto & q = planned_path_ptr_->poses.back().pose.orientation;
+    double final_yaw = std::atan2(
+      2.0 * (q.w * q.z + q.x * q.y),
+      1.0 - 2.0 * (q.y * q.y + q.z * q.z));
+    RCLCPP_INFO(
+      node_ptr_->get_logger(),
+      "[FollowPathControllerServerPDFF] final heading (goal yaw) = %.3f rad (%.1f deg)",
+      final_yaw, final_yaw * 180.0 / M_PI);
   }
 
   publishPlannedPath(*planned_path_ptr_);
@@ -176,41 +179,15 @@ void FollowPathControllerServerPDFF::forwardLatestCmdVel()
   double ang_meas_frac = tank_model_ptr_->getWorldTwist().z() /
     tank_model_ptr_->getMaxBaseAngularVelocity();
 
-  // PD on velocity error + velocity feedforward, per axis.
-  double lin_err = lin_cmd_frac - lin_meas_frac;
-  double ang_err = ang_cmd_frac - ang_meas_frac;
-
-  // Derivative of error; zero on the first tick (no prior sample / dt yet).
+  // dt since the previous tick for the controller's D term. The shared
+  // VelocityController owns the PD+FF gains, error-derivative history, and the
+  // static feedforward (kS) (config velocity_linear/_angular), matching MoveVelocityPDFF.
   auto now = std::chrono::system_clock::now();
   double dt = std::chrono::duration<double>(now - prev_time_).count();
-  double lin_derr = 0.0;
-  double ang_derr = 0.0;
-  if (have_prev_ && dt > 1.0e-6) {
-    lin_derr = (lin_err - prev_lin_err_) / dt;
-    ang_derr = (ang_err - prev_ang_err_) / dt;
-  }
-  prev_lin_err_ = lin_err;
-  prev_ang_err_ = ang_err;
   prev_time_ = now;
-  have_prev_ = true;
 
-  double fwd = ff_linear_ * lin_cmd_frac + p_linear_ * lin_err + d_linear_ * lin_derr;
-  double ang = ff_angular_ * ang_cmd_frac + p_angular_ * ang_err + d_angular_ * ang_derr;
-
-  // Static-friction floor: if there is a velocity command on this axis but the
-  // PD+FF output is too weak to break loose, raise the output magnitude to the
-  // floor (keeping the output's own sign). A ~zero command leaves the output
-  // untouched so the drive can still brake. floor == 0 disables this.
-  const auto with_floor = [](double out, double cmd_frac, double floor) {
-    if (floor <= 0.0 || std::fabs(cmd_frac) < 1.0e-4 || std::fabs(out) >= floor) {
-      return out;
-    }
-    return std::copysign(floor, out != 0.0 ? out : cmd_frac);
-  };
-  fwd = with_floor(fwd, lin_cmd_frac, floor_linear_);
-  ang = with_floor(ang, ang_cmd_frac, floor_angular_);
-
-  Eigen::Vector2d command(fwd, ang);
+  Eigen::Vector2d command = velocity_controller_ptr_->calculateCommand(
+    lin_cmd_frac, lin_meas_frac, ang_cmd_frac, ang_meas_frac, dt);
   tank_model_ptr_->normalizeArcadeCommand(command);
   tank_model_ptr_->driveCommandArcade(command.x(), command.y());
 }

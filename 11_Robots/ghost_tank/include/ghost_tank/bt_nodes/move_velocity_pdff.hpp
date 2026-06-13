@@ -26,6 +26,8 @@
 #include <chrono>
 #include <memory>
 
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #include "behaviortree_cpp/behavior_tree.h"
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
@@ -38,8 +40,8 @@ namespace ghost_tank
 // Open-loop-in-time, closed-loop-in-velocity drive primitive: holds a fixed
 // chassis velocity setpoint -- linear x (m/s) and angular ang_z (rad/s) -- for
 // timeout_ms, then stops and returns SUCCESS. Velocity is tracked by the shared
-// VelocityController (PD on velocity error + feedforward + static-friction
-// floor); its gains live in the robot config (velocity_linear / velocity_angular)
+// VelocityController (PD on velocity error + velocity feedforward (kV) + static
+// feedforward (kS)); its gains live in the robot config (velocity_linear / velocity_angular)
 // and are loaded once in TankRobotPlugin, exactly like the arc_turn controller.
 // This node only supplies the setpoint and the duration.
 class MoveVelocityPDFF : public BT::StatefulActionNode
@@ -55,10 +57,17 @@ public:
 
 private:
   void stopMotors();
+  // Publishes the raw velocity setpoint (x_, ang_z_) as a Twist on /nav2/cmd_vel.
+  // Additive to the PDFF drive below -- purely for downstream relay/visualization.
+  void publishCmdVel();
 
+  std::shared_ptr<rclcpp::Node> node_ptr_;
   std::shared_ptr<TankModel> tank_model_ptr_;
   std::shared_ptr<VelocityController> velocity_controller_ptr_;
   BT::Blackboard::Ptr blackboard_;
+
+  // Publisher for the commanded velocity setpoint on /nav2/cmd_vel.
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_ptr_;
 
   std::chrono::time_point<std::chrono::system_clock> start_time_;
   std::chrono::time_point<std::chrono::system_clock> prev_time_;
