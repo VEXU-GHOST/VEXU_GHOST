@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- <root BTCPP_format="4" main_tree_to_execute="finally_works"> -->
 <root BTCPP_format="4" main_tree_to_execute="finally_works">
+    <include path="bt_scoring.xml"/>
 
   <!-- Includes -->
   <!-- <include path="worlds/bt_worlds_goal_rush.xml" /> -->
@@ -28,13 +30,20 @@
              <LittleWillCmd little_will_active="false"/>
         <SwitcherCmd switcher_active="true"/>
 
+      <!-- Waypoint 0: (2.349, 1.2) @ 180 deg
+      <Logging message="finally_works: -> (2.349, 1.2, 180)" />
+      <GeneratePlannerPath end_x_tiles="2.349" end_y_tiles="1.2" end_theta_deg="180"
+        backwards="false" planner_id="GridBased" timeout_ms="3000" />
+      <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
+        controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="15000" /> -->
+
+              <AutoSortCmd active="true"/>
       <!-- Waypoint 1: (1.29, 1) @ 45 deg -->
       <Logging message="finally_works: -> (1.29, 1, 225)" />
       <GeneratePlannerPath end_x_tiles="1.29" end_y_tiles="1.0" end_theta_deg="180"
         backwards="false" planner_id="GridBased" timeout_ms="3000" />
       <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
         controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="15000" />
-              <AutoSortCmd active="true"/>
 
       <!-- Waypoint 2: (1.0, 1.5) @ 90 deg -->
       <Logging message="finally_works: -> (1.0, 1.5, 270)" />
@@ -75,11 +84,53 @@
       <FollowPathControllerServerPDFF cmd_vel_topic="/nav2/cmd_vel"
         controller_id="FollowPath" goal_checker_id="goal_checker" timeout_ms="15000" />
 
+        <SwitcherCmd switcher_active="false"/>
+      <WaitCmd seconds="1.0"/>
                 <SubTree ID="score" _autoremap="true"/>
 
       <Logging message="finally_works: sequence complete" />
 
       <WaitCmd seconds="300.0"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Velocity-controller sweep: drive each setpoint through MoveVelocityPDFF for
+       a fixed time, stopping/settling between each. First sweeps linear x
+       (0.1, 0.5, 1.5 m/s) with ang_z=0, then angular ang_z (0.1, 0.4, 1.5 rad/s)
+       with x=0. Gains live in inky_ros_config.yaml (velocity_linear /
+       velocity_angular). -->
+  <BehaviorTree ID="velocity_sweep">
+    <Sequence>
+      <Logging message="velocity_sweep: starting" />
+
+      <!-- Linear sweep (ang_z = 0) -->
+      <!-- <Logging message="velocity_sweep: x=0.1" />
+      <MoveVelocityPDFF x="0.1" ang_z="0.0" timeout_ms="1000" />
+      <WaitCmd seconds="1.0" shutoff_motors="true" />
+
+      <Logging message="velocity_sweep: x=0.5" />
+      <MoveVelocityPDFF x="0.5" ang_z="0.0" timeout_ms="1000" />
+      <WaitCmd seconds="1.0" shutoff_motors="true" />
+
+      <Logging message="velocity_sweep: x=1.5" />
+      <MoveVelocityPDFF x="1.5" ang_z="0.0" timeout_ms="500" />
+      <WaitCmd seconds="1.0" shutoff_motors="true" /> -->
+
+      <!-- Angular sweep (x = 0) -->
+      <Logging message="velocity_sweep: ang_z=0.1" />
+      <MoveVelocityPDFF x="0.0" ang_z="0.1" timeout_ms="500" />
+      <WaitCmd seconds="1.0" shutoff_motors="true" />
+
+      <Logging message="velocity_sweep: ang_z=0.4" />
+      <MoveVelocityPDFF x="0.0" ang_z="0.4" timeout_ms="500" />
+      <WaitCmd seconds="1.0" shutoff_motors="true" />
+
+      <Logging message="velocity_sweep: ang_z=1.5" />
+      <MoveVelocityPDFF x="0.0" ang_z="1.5" timeout_ms="500" />
+      <WaitCmd seconds="1.0" shutoff_motors="true" />
+
+      <Logging message="velocity_sweep: complete" />
+      <WaitCmd seconds="300.0" shutoff_motors="true" />
     </Sequence>
   </BehaviorTree>
 
