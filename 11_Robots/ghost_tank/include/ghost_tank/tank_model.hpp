@@ -35,6 +35,7 @@
 #include <ghost_util/unit_conversion_utils.hpp>
 #include "math/line2d.h"
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #include <ghost_v5_interfaces/robot_hardware_interface.hpp>
 
 
@@ -224,6 +225,12 @@ protected:
 
   rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
     m_particle_filter_set_pose_publisher;
+
+  // Debug publisher for the normalized arcade command actually sent to the motors
+  // (linear.x = forward fraction, angular.z = angular fraction, both in [-1, 1]).
+  // Created lazily on first driveCommandArcade() call so every node that drives
+  // the chassis exposes its output without each node owning a publisher.
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_arcade_command_publisher;
 
   // Command Setpoints
   Eigen::Vector3d m_base_vel_cmd;

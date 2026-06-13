@@ -145,6 +145,20 @@ void TankModel::driveCommandArcade(double fwd_pct, double ang_pct)
 {
   ghost_util::clamp(fwd_pct, -1.0, 1.0);
   ghost_util::clamp(ang_pct, -1.0, 1.0);
+
+  // Lazily publish the arcade command actually sent to the motors so any drive
+  // primitive (BT node, teleop, etc.) can be inspected over a single topic.
+  if (!m_arcade_command_publisher && node_ptr_) {
+    m_arcade_command_publisher =
+      node_ptr_->create_publisher<geometry_msgs::msg::Twist>("tank/arcade_command", 10);
+  }
+  if (m_arcade_command_publisher) {
+    geometry_msgs::msg::Twist cmd_msg;
+    cmd_msg.linear.x = fwd_pct;
+    cmd_msg.angular.z = ang_pct;
+    m_arcade_command_publisher->publish(cmd_msg);
+  }
+
   double left_cmd = fwd_pct - ang_pct;
   double right_cmd = fwd_pct + ang_pct;
 

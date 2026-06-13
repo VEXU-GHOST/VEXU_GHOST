@@ -10,23 +10,27 @@ namespace ghost_tank
 {
 
 // Per-axis gains for the closed-loop velocity controller: PD on velocity error,
-// a velocity feedforward term, and a static-friction output floor.
+// a velocity feedforward term, and a static feedforward term.
 struct VelocityAxisConfig
 {
-  double p = 0.0;       // proportional gain on (normalized) velocity error
-  double d = 0.0;       // derivative gain on velocity error
-  double ff = 0.0;      // feedforward gain on the commanded velocity
-  double floor = 0.0;   // min output magnitude for a nonzero command (0 disables)
+  double p = 0.0;          // proportional gain on (normalized) velocity error
+  double d = 0.0;          // derivative gain on velocity error
+  double ff = 0.0;         // feedforward gain on the commanded velocity (kV)
+  double static_ff = 0.0;  // static feedforward magnitude (kS), added with the sign of the command to overcome static friction
 };
 
 // Closed-loop chassis velocity controller used by the velocity-tracking BT nodes
 // (MoveVelocityPDFF, FollowPathControllerServerPDFF). Mirrors TankPIDController:
 // wraps one ghost_control::PIDController per axis -- PD on velocity error, ki
-// unused -- and adds a velocity feedforward term plus a static-friction floor.
+// unused -- and adds a velocity feedforward term plus a static feedforward term.
 //
-// Per axis: cmd = ff * cmd_frac + p * (cmd_frac - meas_frac) + d * d/dt(err)
-// where *_frac is a velocity normalized to a fraction of the chassis max
-// velocity. Output is the (forward, angular) arcade command, pre-normalization.
+// Per axis: cmd = kS * sign(cmd_frac) + kV * cmd_frac + p * (cmd_frac - meas_frac)
+//                 + d * d/dt(err)
+// where kV is the velocity feedforward gain (ff), kS is the static feedforward
+// magnitude (static_ff), and *_frac is a velocity normalized to a fraction of the
+// chassis max velocity. The static feedforward is added to the command (not
+// clamped onto the output), so it does not create a relay/limit-cycle near the
+// setpoint. Output is the (forward, angular) arcade command, pre-normalization.
 class VelocityController
 {
 public:
@@ -69,28 +73,27 @@ public:
     prev_ang_err_ = ang_err;
     have_prev_ = true;
 
-    // PD on velocity error + velocity feedforward (passed as the additional term).
+    // PD on velocity error + velocity feedforward (kV) + static feedforward (kS),
+    // both passed as the additional term added to the PID output.
     double fwd = linear_controller_ptr_->calculateCommand(
-      lin_err, lin_derr, linear_cfg_.ff * lin_cmd_frac);
+      lin_err, lin_derr,
+      linear_cfg_.ff * lin_cmd_frac + staticFF(lin_cmd_frac, linear_cfg_.static_ff));
     double ang = angular_controller_ptr_->calculateCommand(
-      ang_err, ang_derr, angular_cfg_.ff * ang_cmd_frac);
-
-    fwd = withFloor(fwd, lin_cmd_frac, linear_cfg_.floor);
-    ang = withFloor(ang, ang_cmd_frac, angular_cfg_.floor);
+      ang_err, ang_derr,
+      angular_cfg_.ff * ang_cmd_frac + staticFF(ang_cmd_frac, angular_cfg_.static_ff));
 
     return Eigen::Vector2d(fwd, ang);
   }
 
 private:
-  // If there is a velocity command on this axis but the PD+FF output is too weak
-  // to break static friction, raise the output magnitude to the floor (keeping
-  // its sign). A ~zero command leaves the output untouched so the drive can brake.
-  static double withFloor(double out, double cmd_frac, double floor)
+  // Static feedforward: kS in the direction of the command, zero when there is
+  // effectively no command (so the drive can still brake to a stop). Unlike the
+  // old output floor this is added to the command, not clamped onto the output,
+  // so it does not create a relay/limit-cycle near the setpoint.
+  static double staticFF(double cmd_frac, double k_s)
   {
-    if (floor <= 0.0 || std::fabs(cmd_frac) < 1.0e-4 || std::fabs(out) >= floor) {
-      return out;
-    }
-    return std::copysign(floor, out != 0.0 ? out : cmd_frac);
+    if (k_s <= 0.0 || std::fabs(cmd_frac) < 1.0e-4) { return 0.0; }
+    return std::copysign(k_s, cmd_frac);
   }
 
   VelocityAxisConfig linear_cfg_;

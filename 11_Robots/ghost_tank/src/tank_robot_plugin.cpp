@@ -337,12 +337,12 @@ VelocityAxisConfig TankRobotPlugin::loadVelocityAxisConfig(const std::string & p
   node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".p", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".d", 0.0);
   node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".ff", 0.0);
-  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".floor", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".static_ff", 0.0);
 
   config.p = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".p").as_double();
   config.d = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".d").as_double();
   config.ff = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".ff").as_double();
-  config.floor = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".floor").as_double();
+  config.static_ff = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".static_ff").as_double();
 
   return config;
 }
@@ -389,8 +389,8 @@ void TankRobotPlugin::initTankModel()
   auto arc_turn_config = loadPIDConfig("arc_turn");
   m_arc_turn_controller_ptr = std::make_shared<PIDController>(arc_turn_config);
 
-  // Closed-loop chassis velocity controller (PD on velocity error + feedforward +
-  // static-friction floor), shared by the velocity-tracking BT nodes.
+  // Closed-loop chassis velocity controller (PD on velocity error + velocity
+  // feedforward (kV) + static feedforward (kS)), shared by the velocity-tracking BT nodes.
   auto velocity_linear_config = loadVelocityAxisConfig("velocity_linear");
   auto velocity_angular_config = loadVelocityAxisConfig("velocity_angular");
   m_velocity_controller_ptr = std::make_shared<VelocityController>(
