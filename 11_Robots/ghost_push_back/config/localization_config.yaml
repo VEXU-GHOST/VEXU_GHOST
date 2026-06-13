@@ -8,8 +8,8 @@
   ros__parameters:
     particle_filter:
       # Initial cloud distribution
-      init_x_sigma: 1.30 #
-      init_y_sigma: 1.30 #
+      init_x_sigma: 0.1 #
+      init_y_sigma: 0.1 #
       init_r_sigma: 0.20 #
 
       # Number of LIDAR update cycles to force right after a pose reset
@@ -17,14 +17,14 @@
       # converges immediately without driving. 0 disables.
       # Bumped for global init: the field-wide cloud needs more forced cycles to
       # collapse onto the true pose than a tight gaussian does.
-      initial_update_cycles: 10
+      initial_update_cycles: 1
 
       # Global (uniform) initialization. init_mode 0 = gaussian cloud around the
       # reset pose (init_*_sigma above); 1 = uniform x,y grid over the whole
       # field with a gaussian heading fan per cell, which converges onto the true
       # x,y during the forced cycles above, then collapses back to num_particles.
       # Heading must be known (it breaks the square field's rotational symmetry).
-      init_mode: 1
+      init_mode: 0
       # Grid spacing = init_spatial_tolerance_m / init_particles_per_tolerance.
       # Tolerance ~ sigma_observation (the LIDAR likelihood std). The particle
       # count is DERIVED from these; watch the "Global init: ... particles" log.
@@ -68,7 +68,7 @@ ekf_pf_node:
   ros__parameters:
     particle_filter:
       world_frame: "map"
-      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldZeroLH.txt"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
       
       # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
       # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
