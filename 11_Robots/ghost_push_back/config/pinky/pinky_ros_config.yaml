@@ -70,6 +70,13 @@ competition_state_machine_node:
         integral_limit: 0.35
         integral_activation_bound: 0.5
 
+      arc_turn:
+        kp: 0.675
+        ki: 0.0
+        kd: 0.025
+        integral_limit: 0.75
+        integral_activation_bound: 0.2
+
       # Auto-sort (TankRobotPlugin::autoSort / AutoSortCmd). Detect on the
       # mid_conveyor colour sensor -- the sorter_hood sensor is not plugged in on
       # pinky. The ball travels mid_conveyor -> sorter, so sort_delay is that
