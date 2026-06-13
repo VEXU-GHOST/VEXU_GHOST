@@ -102,6 +102,14 @@ controller_server:
   ros__parameters:
     use_sim_time: false
     controller_frequency: 20.0
+    # Velocity feedback for the controllers. nav2 gets the robot POSE from TF
+    # (map->base_link) but reads its measured velocity from this topic. Without it
+    # (default "odom", which nothing publishes here) curr_speed is always 0, so
+    # RPP's and the rotation shim's acceleration-limited rotate-to-heading stay
+    # pinned at max_angular_accel/controller_frequency (~0.1 rad/s) and never ramp.
+    # Use the continuous odom-frame EKF (body-frame twist). NOTE: its twist.angular.z
+    # must match the cmd_vel/turn sign convention or the accel clamp fights the ramp.
+    odom_topic: /odom_ekf/odometry
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
@@ -116,18 +124,42 @@ controller_server:
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.10
-      yaw_goal_tolerance: 0.10
+      yaw_goal_tolerance: 0.20
       stateful: True
+    # RotationShimController wraps RPP: when the robot's heading is more than
+    # angular_dist_threshold off the initial path direction, it rotates in place
+    # toward the path first, then hands off to the primary_controller (RPP) for the
+    # actual path following. Helps when the planner hands us a path that starts off
+    # to the side/behind. All the RPP params below live in this same namespace and
+    # are read by the primary controller it instantiates.
     FollowPath:
-      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 1.5          # was max_linear_vel
+      plugin: "nav2_rotation_shim_controller::RotationShimController"
+      primary_controller: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      # Rotate in place toward the path when heading error exceeds this (rad).
+      angular_dist_threshold: 0.785
+      # How far along the path to sample the heading we rotate toward (m).
+      forward_sampling_distance: 0.2
+      # Collision-check horizon for the in-place rotation (s).
+      simulate_ahead_time: 1.0
+      # Let the SHIM perform the final end-of-path rotation to the goal yaw once
+      # inside xy_goal_tolerance, instead of RPP's internal rotateToHeading. The
+      # shim closes heading on TF (correctly signed -> right direction, sharp stop)
+      # and only ramps the angular *speed*, so it's robust to the odom angular sign.
+      rotate_to_goal_heading: true
+      # Ramp the rotate-to-heading speed open-loop off the shim's own last command
+      # instead of measured odom velocity. Immune to the gyro/EKF angular.z sign,
+      # and avoids the accel clamp pinning at max_angular_accel/controller_freq when
+      # odom velocity reads ~0. (See odom_topic note on controller_server above.)
+      closed_loop: false
+      # --- primary controller (RPP) params, same namespace ---
+      desired_linear_vel: 0.5          # was max_linear_vel
       # Smaller lookahead = tighter corner tracking (carrot closer to robot, less
       # corner-cutting). Too small -> weaving/oscillation on straights. Was 0.6.
-      lookahead_dist: 0.30
+      lookahead_dist: 0.25
       min_lookahead_dist: 0.15
       max_lookahead_dist: 0.4
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 0.8
+      rotate_to_heading_angular_vel: 1.9
       transform_tolerance: 0.1
       use_velocity_scaled_lookahead_dist: false
       min_approach_linear_velocity: 0.05
@@ -140,8 +172,8 @@ controller_server:
       use_cost_regulated_linear_velocity_scaling: false
       cost_scaling_dist: 0.3
       cost_scaling_gain: 1.0
-      regulated_linear_scaling_min_radius: 1.2
-      regulated_linear_scaling_min_speed: 0.45
+      regulated_linear_scaling_min_radius: 0.75
+      regulated_linear_scaling_min_speed: 0.25
       # true: REQUIRED for final heading. SmacPlanner2D stamps the last path pose
       # with the commanded goal yaw (use_final_approach_orientation: false above),
       # and RPP only rotates in place to that yaw -- via shouldRotateToGoalHeading,

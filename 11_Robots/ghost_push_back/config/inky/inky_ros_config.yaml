@@ -87,18 +87,18 @@ competition_state_machine_node:
         integral_activation_bound: 0.2
 
       # Closed-loop chassis velocity controller (MoveVelocityPDFF): per-axis PD on
-      # velocity error + feedforward + static-friction floor. Gains act on
-      # velocities normalized to a fraction of the chassis max velocity.
+      # velocity error + velocity feedforward (kV) + static feedforward (kS). Gains
+      # act on velocities normalized to a fraction of the chassis max velocity.
       velocity_linear:
-        p: 2.0
+        p: 0.2
         d: 0.0
-        ff: 0.30
-        floor: 0.0
+        ff: 1.5
+        static_ff: 0.05
 
       velocity_angular:
-        p: 2.0
+        p: 0.0
         d: 0.0
-        ff: 0.30
-        floor: 0.0
+        ff: 0.7
+        static_ff: 0.10
 
       # init pose / alliance / auton BT live in inky/inky_init_config.yaml
