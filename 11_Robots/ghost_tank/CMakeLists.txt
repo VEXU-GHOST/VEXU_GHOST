@@ -197,6 +197,7 @@ set(NODES
   distanceThreshold
   boundaryCheck
   moveVoltage
+  move_velocity_pdff
   turnToPoint
   turnToHeading
   arcturnToPoint

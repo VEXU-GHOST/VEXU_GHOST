@@ -76,6 +76,7 @@ void TankTree::init_tree()
   factory.registerNodeType<DistanceThreshold>("DistanceThreshold");
   factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
   factory.registerNodeType<MoveVoltage>("MoveVoltage");
+  factory.registerNodeType<MoveVelocityPDFF>("MoveVelocityPDFF");
   factory.registerNodeType<TurnToPoint>("TurnToPoint");
   factory.registerNodeType<TurnToHeading>("TurnToHeading");
   factory.registerNodeType<GenerateBezierPath>("GenerateBezierPath");

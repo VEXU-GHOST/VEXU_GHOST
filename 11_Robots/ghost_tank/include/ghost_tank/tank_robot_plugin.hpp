@@ -47,6 +47,7 @@
 #include <ghost_tank/tank_tree.hpp>
 #include <ghost_tank/tank_odom.hpp>
 #include <ghost_tank/control/tank_pid_controller.hpp>
+#include <ghost_tank/control/velocity_controller.hpp>
 #include <ghost_tank/control/trajectory.hpp>
 
 #include <ghost_control/pid_controller.hpp>
@@ -79,6 +80,7 @@ protected:
   void initTankModel();
   void initAutonomy();
   ghost_control::PIDConfig loadPIDConfig(const std::string & param_prefix);
+  VelocityAxisConfig loadVelocityAxisConfig(const std::string & param_prefix);
 
   // onNewSensorData
   void updateConveyorPositionSensing();
@@ -239,6 +241,7 @@ protected:
   std::shared_ptr<ghost_control::PIDController> m_distance_settling_controller_ptr;
   std::shared_ptr<ghost_control::PIDController> m_steering_settling_controller_ptr;
   std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
+  std::shared_ptr<VelocityController> m_velocity_controller_ptr;
 
   // Autonomy
   std::string bt_path_;

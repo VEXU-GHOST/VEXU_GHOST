@@ -330,6 +330,23 @@ PIDConfig TankRobotPlugin::loadPIDConfig(const std::string & param_prefix)
   return config;
 }
 
+VelocityAxisConfig TankRobotPlugin::loadVelocityAxisConfig(const std::string & param_prefix)
+{
+  VelocityAxisConfig config;
+
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".p", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".d", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".ff", 0.0);
+  node_ptr_->declare_parameter("tank_robot_plugin." + param_prefix + ".floor", 0.0);
+
+  config.p = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".p").as_double();
+  config.d = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".d").as_double();
+  config.ff = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".ff").as_double();
+  config.floor = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".floor").as_double();
+
+  return config;
+}
+
 void TankRobotPlugin::initTankModel()
 {
   std::cout << "[TankRobotPlugin::initTankModel]" << std::endl;
@@ -371,6 +388,13 @@ void TankRobotPlugin::initTankModel()
 
   auto arc_turn_config = loadPIDConfig("arc_turn");
   m_arc_turn_controller_ptr = std::make_shared<PIDController>(arc_turn_config);
+
+  // Closed-loop chassis velocity controller (PD on velocity error + feedforward +
+  // static-friction floor), shared by the velocity-tracking BT nodes.
+  auto velocity_linear_config = loadVelocityAxisConfig("velocity_linear");
+  auto velocity_angular_config = loadVelocityAxisConfig("velocity_angular");
+  m_velocity_controller_ptr = std::make_shared<VelocityController>(
+    velocity_linear_config, velocity_angular_config);
 }
 
 void TankRobotPlugin::initAutonomy()
@@ -409,6 +433,7 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("steering_approach_controller_ptr", m_distance_settling_controller_ptr);
   bt_->set_variable("steering_settling_controller_ptr", m_steering_settling_controller_ptr);
   bt_->set_variable("arc_turn_controller_ptr", m_arc_turn_controller_ptr);
+  bt_->set_variable("velocity_controller_ptr", m_velocity_controller_ptr);
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
   bt_->set_variable("config_path", config_path);
@@ -475,8 +500,8 @@ void TankRobotPlugin::autonomous(double current_time)
   if (m_is_first_auton_loop) {
     m_is_first_auton_loop = false;
     playTTS("starting autonomous");
-    // m_odom_ptr->resetPose();
-    // resetWorldPose();
+    m_odom_ptr->resetPose();
+    resetWorldPose();
     if (m_interaction) {
       bt_->set_path(m_bt_path_interaction);
       resetBT();

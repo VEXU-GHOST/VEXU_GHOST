@@ -51,6 +51,7 @@
 #include "ghost_tank/bt_nodes/distanceThreshold.hpp"
 #include "ghost_tank/bt_nodes/boundaryCheck.hpp"
 #include "ghost_tank/bt_nodes/moveVoltage.hpp"
+#include "ghost_tank/bt_nodes/move_velocity_pdff.hpp"
 #include "ghost_tank/bt_nodes/moveScissor.hpp"
 #include "ghost_tank/bt_nodes/turnToPoint.hpp"
 #include "ghost_tank/bt_nodes/turnToHeading.hpp"
