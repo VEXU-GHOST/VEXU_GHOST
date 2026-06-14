@@ -35,6 +35,7 @@ private:
 
   std::shared_ptr<TankModel> tank_model_ptr_;
   std::chrono::time_point<std::chrono::system_clock> start_time_;
+  std::chrono::time_point<std::chrono::system_clock> drive_start_time_;
   BT::Blackboard::Ptr blackboard_;
   std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
   std::shared_ptr<rclcpp::Node> node_ptr_;
@@ -44,12 +45,16 @@ private:
 
   double posX_m;
   double posY_m;
-  int timeout_ms;
+  int turn_timeout_ms;
+  int move_timeout_ms;
   bool backwards;
 
   // turn phase
   double angle_exit_threshold_rad;
   double des_ang_rad;
+  int angle_settle_ms;
+  bool angle_settling_{false};
+  std::chrono::time_point<std::chrono::system_clock> angle_settle_start_;
 
   // drive phase
   double Kp{0.0};

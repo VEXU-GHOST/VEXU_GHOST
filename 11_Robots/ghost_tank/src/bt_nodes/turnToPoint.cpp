@@ -22,6 +22,7 @@ TurnToPoint::TurnToPoint(const std::string & name, const BT::NodeConfig & config
   timeout_ms = BT_Util::get_input<int>(this, "timeout_ms");
   backwards = BT_Util::get_input<bool>(this, "backwards");
   angle_exit_threshold_rad = BT_Util::get_input<double>(this, "angle_exit_threshold_deg", 5.0) * ghost_util::DEG_TO_RAD;
+  angle_settle_ms = BT_Util::get_input<int>(this, "angle_settle_ms", 0);
 }
 
 BT::PortsList TurnToPoint::providedPorts()
@@ -31,7 +32,8 @@ BT::PortsList TurnToPoint::providedPorts()
     BT::InputPort<double>("posY_tiles"),
     BT::InputPort<bool>("backwards"),
     BT::InputPort<int>("timeout_ms"),
-    BT::InputPort<double>("angle_exit_threshold_deg")
+    BT::InputPort<double>("angle_exit_threshold_deg"),
+    BT::InputPort<int>("angle_settle_ms")
   };
 }
 
@@ -55,6 +57,7 @@ BT::NodeStatus TurnToPoint::onStart()
   }
 
   m_arc_turn_controller_ptr->reset();
+  angle_settling_ = false;
 
   // Publish the target the controller is driving toward: the robot does not
   // translate during a turn, so the expected pose keeps the current position
@@ -81,7 +84,23 @@ BT::NodeStatus TurnToPoint::onStart()
 BT::NodeStatus TurnToPoint::onRunning()
 {
   double theta_err_rad = ghost_util::SmallestAngleDistRad(des_ang_rad, tank_model_ptr_->getWorldPose().z());
-  bool angle_satisfied = std::fabs(theta_err_rad) < angle_exit_threshold_rad;
+  bool angle_in_threshold = std::fabs(theta_err_rad) < angle_exit_threshold_rad;
+
+  // Require the heading to stay within threshold for angle_settle_ms before
+  // exiting, so a momentary pass-through on overshoot doesn't end the turn
+  // early. angle_settle_ms == 0 keeps the instantaneous behaviour.
+  bool angle_satisfied = false;
+  if (angle_in_threshold) {
+    if (!angle_settling_) {
+      angle_settling_ = true;
+      angle_settle_start_ = std::chrono::system_clock::now();
+    }
+    int settled_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now() - angle_settle_start_).count();
+    angle_satisfied = settled_ms >= angle_settle_ms;
+  } else {
+    angle_settling_ = false;
+  }
 
   int time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time_).count();
   if (angle_satisfied || time_elapsed > timeout_ms) {

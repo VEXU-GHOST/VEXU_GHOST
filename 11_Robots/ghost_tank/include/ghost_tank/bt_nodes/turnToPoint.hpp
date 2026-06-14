@@ -45,6 +45,9 @@ private:
     double angle_exit_threshold_rad;
     double des_ang_rad;
     bool backwards;
+    int angle_settle_ms;
+    bool angle_settling_{false};
+    std::chrono::time_point<std::chrono::system_clock> angle_settle_start_;
 };
 
 } // namespace ghost_tank

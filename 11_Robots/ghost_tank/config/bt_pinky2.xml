@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+  main_tree_to_execute="bt_pinky2"
+
+>
+  <include path="bt_scoring.xml"/>
+  <BehaviorTree ID="bt_pinky2"
+  >
+    <Sequence>
+      <!-- <MoveToPoint kp="1.6"
+        kd="0.0"
+        max_effort_percent="0.5"
+        timeout_ms="3000"
+        backwards="false"
+        distance_tiles="1.6"/>
+      <TurnToPoint posX_tiles="2.7"
+        posY_tiles="3.3"
+        timeout_ms="3000"
+        backwards="false"
+        angle_exit_threshold_deg=".5"/>
+      <MoveToPoint kp="1.6"
+        kd="0.0"
+        max_effort_percent="0.35"
+        timeout_ms="3000"
+        backwards="false"
+        distance_tiles="0.3"/>
+      <ScorePosCmd active="true"/>
+      <WaitCmd seconds="3.0"/>
+      <ScorePosCmd active="false"/> -->
+
+
+
+      <!-- ===== Colour sorting (auto-sort, digital port 0) =====
+      Enables colour-based sorting: the autonomous loop watches the
+      mid_conveyor colour sensor and fires the sorter solenoid to kick
+      out wrong-colour balls (opposite of color_target_red). Stays on
+      until AutoSortCmd active="false" below.
+      NOTE: this drives the same port-0 solenoid as SorterCmd, so don't
+      run a manual SorterCmd active="true" while auto-sort is on. -->
+      <LittleWillCmd little_will_active="false"/>
+        <SwitcherCmd switcher_active="true"/>
+      <!-- <MoveToPoint kp="2.5"
+      kd="1.0"
+      max_effort_percent="0.3"
+      timeout_ms="1000"
+      backwards="true"
+      distance_tiles="1.4" />
+      <WaitCmd seconds="0.5"
+      shutoff_motors="true"/> -->
+      <ActuallyMoveToPoint posX_tiles="3.0"
+        posY_tiles="2.0"
+        backwards="true"
+        turn_timeout_ms="1500"
+        move_timeout_ms="1500"
+        angle_exit_threshold_deg="3.0"
+                      angle_settle_ms="300"
+
+        kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.3"/>
+      <AutoSortCmd active="true"/>
+      <ActuallyMoveToPoint posX_tiles="4.3"
+        posY_tiles="2.0"
+        backwards="false"
+        turn_timeout_ms="1500"
+        move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0"
+                      angle_settle_ms="300"
+
+        kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.2"/>
+      
+        <AutoSortCmd active="false"/>
+      <WaitCmd seconds="0.2"
+        shutoff_motors="true"/>
+        
+              <AutoSortCmd active="true"/>
+<ActuallyMoveToPoint posX_tiles="5.0"
+        posY_tiles="1.0"
+        backwards="false"
+        turn_timeout_ms="1500"
+        move_timeout_ms="1500"
+        angle_exit_threshold_deg="3.0"
+                      angle_settle_ms="300"
+
+        kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.35"/>
+     
+        <AutoSortCmd active="false"/>
+        <WaitCmd seconds="0.2"
+        shutoff_motors="true"/>
+        <TurnToPoint posX_tiles="5"
+        posY_tiles="2"
+      timeout_ms="2500"
+      backwards="false"
+      angle_exit_threshold_deg=".55"
+              angle_settle_ms="500"
+/>
+      
+
+        
+        <!-- ===== Scoring subtree (defined in bt_scoring.xml) =====
+        Assumes the robot is already lined up at the goal. Move this
+        SubTree wherever scoring should happen in the sequence. -->
+        <SubTree ID="score" _autoremap="true"/>
+        
+      <!-- ===== Switcher (digital port 2) ===== -->
+      <!-- <SwitcherCmd switcher_active="true"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+      <SwitcherCmd switcher_active="false"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/> -->
+
+      <!-- ===== Little Will (digital port 7) ===== -->
+      <!-- <LittleWillCmd little_will_active="true"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/>
+      <LittleWillCmd little_will_active="false"/>
+      <WaitCmd seconds="2.0"
+        shutoff_motors="true"/> -->
+
+      <!-- Hold here so the tree doesn't loop/restart while observing -->
+      <!-- <WaitCmd seconds="200.0"
+        shutoff_motors="true"/> -->
+    </Sequence>
+  </BehaviorTree>
+</root>

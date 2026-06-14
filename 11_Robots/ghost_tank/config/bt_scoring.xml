@@ -40,12 +40,15 @@
       <!-- Run the scorer motor and the intake motor together. -->
       <ScoreBallCmd direction="1" />
       <OuttakeBallsCmd direction="1" />
-
+      <MoveToPoint kp="2.5"
+        kd="1.0"
+        max_effort_percent="0.1"
+        timeout_ms="5000"
+        backwards="false"
+        distance_tiles="1.0" />
       <!-- Dwell so the rollers actually move the ball(s) through. shutoff_motors
            only zeros the drivetrain, leaving the scorer + intake running. Tune
            the dwell time to your scoring speed. -->
-      <WaitCmd seconds="5.0"
-        shutoff_motors="true" />
 
       <!-- Stop the rollers. Remove these two lines if a downstream action should
            keep scoring. -->
