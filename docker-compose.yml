@@ -24,6 +24,9 @@
 
 services:
   vexu:
+    #osrf/ros:humble-desktop-jammy is amd64-only, so the build fails on Apple Silicon (arm64).
+    #Force amd64 so it runs under Rosetta/QEMU emulation, remove ts if the base image gets a native arm64 manifest
+    platform: linux/amd64
     build:
       context: .
       dockerfile: 12_Docker/Dockerfile
