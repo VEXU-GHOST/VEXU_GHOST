@@ -63,75 +63,76 @@ def generate_launch_description():
         arguments=[plugin_type, robot_name],
         # arguments=["--ros-args", "--log-level", "debug"]
     )
-
-    imu_filter_node = Node(
-        package="ghost_sensing",
-        executable="imu_filter_node",
-        name="imu_filter_node",
-        output="screen",
-        parameters=[ros_config_file, base_params_file],
-    )
-
+# Nodes removed in most current version,
+# When reintroduced and safe to use, uncomment below
+#
+#    imu_filter_node = Node(
+#        package="ghost_sensing",
+#        executable="imu_filter_node",
+#        name="imu_filter_node",
+#        output="screen",
+#        parameters=[ros_config_file, base_params_file],
+#    )
+#
     gpio_expander = Node(
-        package="ghost_io",
+        package="ghost_sensing",
         executable="gpio_expander",
         name="gpio_expander",
         output="screen",
         parameters=[ros_config_file, base_params_file],
     )
-
-    color_sensor_intake = Node(
-        package="ghost_sensing",
-        executable="tcs_color_sensor",
-        name="tcs_color_sensor_intake",
-        output="screen",
-        namespace="/sensors/color_sensors/intake",
-        parameters=[
-            ros_config_file, base_params_file
-            # address 0x29, not configurable on tcs
-       ],
-    )
-
-    color_classifier_intake = Node(
-        package="ghost_sensing",
-        executable="color_classifier",
-        name="color_classifier_0",
-        output="screen",
-        namespace="/sensors/color_sensors/intake",
-        parameters=[ros_config_file, base_params_file],
-    )
-
-    color_sensor_goal_rush_l = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush_l",
-        output="screen",
-        namespace="/sensors/color_sensors/goal_rush_l",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x69, # both address translator switches off so ^ 0x70
-        }],
-    )
-    color_sensor_goal_rush_r = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush_r",
-        output="screen",
-        namespace="/sensors/color_sensors/goal_rush_r",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x99, # one switch on idk which trial and error so ^ 0x40
-        }],
-    )
-    color_sensor_goal_clamp = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_clamp",
-        output="screen",
-        namespace="/sensors/color_sensors/goal_clamp",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x39, # one switch on idk which trial and error so ^ 0x40
-        }],
-    )
-
+#
+#    color_sensor_intake = Node(
+#        package="ghost_sensing",
+#        executable="tcs_color_sensor",
+#        name="tcs_color_sensor_intake",
+#        output="screen",
+#        namespace="/sensors/color_sensors/intake",
+#        parameters=[
+#            ros_config_file, base_params_file
+#            # address 0x29, not configurable on tcs
+#       ],
+#    )
+#
+#    color_classifier_intake = Node(
+#        package="ghost_sensing",
+#        executable="color_classifier",
+#        name="color_classifier_0",
+#        output="screen",
+ #       namespace="/sensors/color_sensors/intake",
+ #       parameters=[ros_config_file, base_params_file],
+ #   )
+#
+#    color_sensor_goal_rush_l = Node(
+#        package="ghost_sensing",
+#        executable="avago_color_sensor",
+#        name="avago_color_sensor_goal_rush_l",
+#        output="screen",
+ #       namespace="/sensors/color_sensors/goal_rush_l",
+#        parameters=[ros_config_file, base_params_file, {
+#            "address": 0x69, # both address translator switches off so ^ 0x70
+#        }],
+#    )
+#    color_sensor_goal_rush_r = Node(
+#        package="ghost_sensing",
+#        executable="avago_color_sensor",
+#        name="avago_color_sensor_goal_rush_r",
+#        output="screen",
+#        namespace="/sensors/color_sensors/goal_rush_r",
+#        parameters=[ros_config_file, base_params_file, {
+#            "address": 0x99, # one switch on idk which trial and error so ^ 0x40
+#        }],
+#    )
+#    color_sensor_goal_clamp = Node(
+#        package="ghost_sensing",
+#        executable="avago_color_sensor",
+#        name="avago_color_sensor_goal_clamp",
+#        output="screen",
+#        namespace="/sensors/color_sensors/goal_clamp",
+#        parameters=[ros_config_file, base_params_file, {
+#            "address": 0x39, # one switch on idk which trial and error so ^ 0x40
+#        }],
+#    )
 
     odom_ekf_node = Node(
         package="robot_localization",
