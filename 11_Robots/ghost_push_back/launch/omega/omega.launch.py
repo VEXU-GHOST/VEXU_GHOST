@@ -12,7 +12,7 @@ from launch.substitutions import Command, LaunchConfiguration
 def generate_launch_description():
     # Get base params from parent launch file and config path
     base_params_file = LaunchConfiguration("base_params_file")
-    config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_high_stakes", "config")
+    config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_push_back", "config")
     tank_config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_tank", "config")
 
     # This contains all the parameters for our ROS nodes
@@ -27,8 +27,8 @@ def generate_launch_description():
 
     # Get BT Path for autons
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
-    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_isolation.xml")
-    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_interaction.xml")
+    bt_path = os.path.join(ghost_tank_share_dir, "config", "bt_tune_turn.xml")
+    bt_path_interaction = os.path.join(ghost_tank_share_dir, "config", "bt_tune_turn.xml")
 
     ########################
     ### Node Definitions ###
@@ -101,26 +101,27 @@ def generate_launch_description():
         parameters=[ros_config_file, base_params_file],
     )
 
-    color_sensor_goal_rush_l = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush_l",
-        output="screen",
-        namespace="/sensors/color_sensors/goal_rush_l",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x69, # both address translator switches off so ^ 0x70
-        }],
-    )
-    color_sensor_goal_rush_r = Node(
-        package="ghost_sensing",
-        executable="avago_color_sensor",
-        name="avago_color_sensor_goal_rush_r",
-        output="screen",
-        namespace="/sensors/color_sensors/goal_rush_r",
-        parameters=[ros_config_file, base_params_file, {
-            "address": 0x99, # one switch on idk which trial and error so ^ 0x40
-        }],
-    )
+    # color_sensor_goal_rush_l = Node(
+    #     package="ghost_sensing",
+    #     executable="avago_color_sensor",
+    #     name="avago_color_sensor_goal_rush_l",
+    #     output="screen",
+    #     namespace="/sensors/color_sensors/goal_rush_l",
+    #     parameters=[ros_config_file, base_params_file, {
+    #         "address": 0x69, # both address translator switches off so ^ 0x70
+    #     }],
+    # )
+    # color_sensor_goal_rush_r = Node(
+    #     package="ghost_sensing",
+    #     executable="avago_color_sensor",
+    #     name="avago_color_sensor_goal_rush_r",
+    #     output="screen",
+    #     namespace="/sensors/color_sensors/goal_rush_r",
+    #     parameters=[ros_config_file, base_params_file, {
+    #         "address": 0x99, # one switch on idk which trial and error so ^ 0x40
+    #     }],
+    # )
+    
     color_sensor_goal_clamp = Node(
         package="ghost_sensing",
         executable="avago_color_sensor",
@@ -166,13 +167,13 @@ def generate_launch_description():
         odom_ekf_node,
         ekf_pf_node,
         map_ekf_node,
-        color_sensor_intake,
-        color_classifier_intake,
+        # color_sensor_intake,
+        # color_classifier_intake,
         # color_sensor_goal_rush_l,
         # color_sensor_goal_rush_r,
-        color_sensor_goal_clamp,
+        # color_sensor_goal_clamp,
 
         competition_state_machine_node,
-        gpio_expander,
+        # gpio_expander,
     ])
 

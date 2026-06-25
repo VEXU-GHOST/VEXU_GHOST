@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <cstdio>
 #include <ghost_util/angle_util.hpp>
 #include <ghost_util/unit_conversion_utils.hpp>
 #include <ghost_util/eigen_util.hpp>
@@ -20,6 +21,8 @@ TankOdometry::TankOdometry(int ticks_per_rotation, double wheel_radius_m, double
 
   m_wheelbase = wheelbase_m;
   m_cur_pos = {0, 0, 0};
+  fprintf(stderr, "[TankOdometry] Created: wheelbase=%.4f m_per_tick=%.6e\n", m_wheelbase, m_meters_per_tick);
+  fflush(stderr);
 }
 Eigen::Vector3d TankOdometry::update(
   long diff_l_wheel_pos,
@@ -30,6 +33,16 @@ Eigen::Vector3d TankOdometry::update(
 
   // now we have absolute distances travelled by each wheel
   double dtheta = (dr - dl) / m_wheelbase;
+
+  // // DEBUG: Print odom inputs for verification (throttled to every 50 updates)
+  // static int dbg_count = 0;
+  // if (++dbg_count % 50 == 0) {
+  //   printf("[Odom inputs] diff_l_ticks=%ld diff_r_ticks=%ld | dl=%.6f dr=%.6f m | "
+  //          "m_per_tick=%.6e wheelbase=%.4f m | dtheta=%.6f rad | yaw_before=%.4f rad\n",
+  //          diff_l_wheel_pos, diff_r_wheel_pos, dl, dr,
+  //          m_meters_per_tick, m_wheelbase, dtheta, m_cur_pos.z());
+  // }
+
   // we know the angle of the chassis
 
   Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();

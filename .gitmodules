@@ -1,15 +1,15 @@
 [submodule "01_Libraries/ghost_estimation/src/shared"]
 	path = 01_Libraries/ghost_estimation/src/shared
-	url = git@github.com:VEXU-GHOST/amrl_shared_lib.git
+	url = https://github.com/VEXU-GHOST/amrl_shared_lib.git
 
 [submodule "09_External/yaml-cpp"]
 	path = 09_External/yaml-cpp
-	url = git@github.com:VEXU-GHOST/yaml-cpp.git
+	url = https://github.com/VEXU-GHOST/yaml-cpp.git
 
 [submodule "09_External/plotjuggler"]
 	path = 09_External/plotjuggler
-	url = git@github.com:VEXU-GHOST/PlotJuggler.git
+	url = https://github.com/VEXU-GHOST/PlotJuggler.git
 
 [submodule "09_External/plotjuggler-ros-plugins"]
 	path = 09_External/plotjuggler-ros-plugins
-	url = git@github.com:VEXU-GHOST/plotjuggler-ros-plugins.git
+	url = https://github.com/VEXU-GHOST/plotjuggler-ros-plugins.git

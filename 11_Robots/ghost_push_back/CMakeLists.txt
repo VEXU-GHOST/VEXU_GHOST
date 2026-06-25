@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ghost_high_stakes)
+project(ghost_push_back)
 
 # Add Global CMake Config for Ghost Packages
 set(Ghost_DIR "$ENV{VEXU_HOME}/cmake")

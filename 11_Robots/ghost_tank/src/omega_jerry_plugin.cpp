@@ -62,7 +62,6 @@ void OmegaJerryPlugin::populateMotorNames()
     "drive_r5",
     "drive_r6",
     "drive_r7",
-    "drive_r8",
   };
   m_left_drive_motor_names = {
     "drive_l1",
@@ -72,7 +71,6 @@ void OmegaJerryPlugin::populateMotorNames()
     // "drive_l5",
     "drive_l6",
     "drive_l7",
-    "drive_l8",
   };
 
   m_all_drive_motor_names.insert(
@@ -204,99 +202,17 @@ void OmegaJerryPlugin::teleop(double current_time)
 
 bool OmegaJerryPlugin::updateNeutralStakeArmPosition(int arm_mode)
 {
-  std::vector<double> arm_mode_position_map{
-    m_neutral_stake_arm_rest_pos_deg,
-    m_neutral_stake_arm_loading_pos_deg,
-    m_neutral_stake_arm_score_neutral_pos_deg,
-    m_neutral_stake_arm_score_alliance_pos_deg,
-    m_neutral_stake_arm_down_pos_deg
-  };
-
-  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_1") / m_neutral_stake_arm_gear_ratio;
-  double power = 0.0;
-
-  // Ensure arm_mode is within valid bounds
-  m_arm_mode = std::max(0, std::min(static_cast<int>(arm_mode_position_map.size() - 1), arm_mode));
-
-  m_neutral_stake_arm_des_pos = arm_mode_position_map[m_arm_mode];
-
-  int32_t current_ma;
-  double position_error = (m_neutral_stake_arm_des_pos - curr_pos);
-  if (m_arm_mode == 0 && std::fabs(position_error) < 1) {
-    power = 0.0;
-    current_ma = 0;
-  } else {
-    current_ma = 2500;
-    power = m_neutral_stake_arm_kp * position_error;
-  }
-
-  // Don't exert positive power at upper limit
-  if (curr_pos > m_neutral_stake_arm_down_pos_deg) {
-    power = ghost_util::clamp(power, -1.0, 0.0);
-  }
-
-  // Don't exert negative power at lower limit
-  if (curr_pos < m_neutral_stake_arm_rest_pos_deg) {
-    power = ghost_util::clamp(power, 0.0, 1.0);
-  }
-
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);
-  rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", current_ma);
-  m_loop_current_limits.push_back(2 * current_ma);
-
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", power);
-  rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", power);
-
-  return std::fabs(position_error) < m_neutral_stake_arm_settled_threshold_deg;
+  // Neutral stake arm motors not present on this robot
+  (void)arm_mode;
+  return true;
 }
 
 void OmegaJerryPlugin::updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active)
 {
-  double curr_pos = rhi_ptr_->getMotorPosition("neutral_stake_1") / m_neutral_stake_arm_gear_ratio;
-  double power = 0.0;
-  int32_t current_ma = 0;
-
-  double position_error;
-  bool command_given = false;
-  if (active) {
-    // ---- Manual Control ----
-    if (down_btn) {
-      // Move forward (toward down)
-      position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
-      command_given = true;
-    } else if (up_btn) {
-      // Move backward (toward up)
-      position_error = (m_neutral_stake_arm_down_pos_deg - curr_pos);
-      command_given = true;
-    } else {
-      position_error = (m_neutral_stake_arm_loading_pos_deg - curr_pos);
-      if (abs(position_error) < 45.0) {
-        command_given = true;
-      }
-    }
-    current_ma = 2500;
-    power = m_neutral_stake_arm_kp * position_error;
-  } else {
-    position_error = (m_neutral_stake_arm_rest_pos_deg - curr_pos);
-    current_ma = 2500;
-    power = m_neutral_stake_arm_kp * position_error;
-    command_given = true;
-  }
-  // ---- Send Command ----
-  if (command_given) {
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", current_ma);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", current_ma);
-    m_loop_current_limits.push_back(2 * current_ma);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", power);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", power);
-  } else {
-    // Stop motor if no command needed
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_1", 0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("neutral_stake_2", 0);
-    m_loop_current_limits.push_back(0);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_1", 0.0);
-    rhi_ptr_->setMotorVoltageCommandPercent("neutral_stake_2", 0.0);
-  }
+  // Neutral stake arm motors not present on this robot
+  (void)up_btn;
+  (void)down_btn;
+  (void)active;
 }
 
 } // namespace ghost_tank

@@ -15,26 +15,18 @@ competition_state_machine_node:
     set_pf_pose_topic: "/set_pf_pose"
 
     tank_robot_plugin:
-      conveyor_num_links: 69.0
-      conveyor_sprocket_teeth: 12.0
-      conveyor_num_hooks: 3.0
+      # conveyor_num_links: 69.0
+      # conveyor_sprocket_teeth: 12.0
+      # conveyor_num_hooks: 3.0
 
-      conveyor_hook_align_threshold: 0.85
-      conveyor_hook_align_power: 0.5
+      # conveyor_hook_align_threshold: 0.85
+      # conveyor_hook_align_power: 0.5
 
-      conveyor_hook_throw_fraction: 0.5
-      conveyor_hook_throw_duration: 0.25
+      # conveyor_hook_throw_fraction: 0.5
+      # conveyor_hook_throw_duration: 0.25
 
       ring_score_timeout: 0.3
       ring_prewait_time: 0.05
-
-      neutral_stake_arm_kp: 0.03
-      neutral_stake_arm_gear_ratio: 3.0
-      neutral_stake_arm_rest_pos_deg: 0.0
-      neutral_stake_arm_loading_pos_deg: 35.0
-      neutral_stake_arm_score_neutral_pos_deg: 110.0
-      neutral_stake_arm_score_alliance_pos_deg: 170.0
-      neutral_stake_arm_down_pos_deg: 240.0
 
       drive_motor_ticks_per_rotation: 360.0
       drive_gear_ratio: 1.15 # 23/20
@@ -113,7 +105,7 @@ ekf_pf_node:
   ros__parameters:
     particle_filter:
       world_frame: "map"
-      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldZeroLH.txt"
+      map: "/home/ghost/VEXU_GHOST/03_ROS/ghost_localization/maps/VEXFieldsmallZeroLH.txt"
       
       # When you need to tune standard deviations, remember that 99% of values fall within 3 standard deviations
       # EX. Robot travels 1m. 99% of the time that will be accurate within 0.3m. sigma = 0.3/3 = 0.1
@@ -130,8 +122,8 @@ ekf_pf_node:
       sigma_observation: 0.2 # Prof recommends 0.15-0.2 based on sensor specs
 
       # Dont perform LIDAR updates unless we move a certain distance or angle.
-      min_update_dist: 0.05
-      min_update_angle: 10.0 
+      min_update_dist: 0.05 #0.05
+      min_update_angle: 10.0 #10.0 
       max_update_yaw_velocity: 1.0
       max_update_tilt_velocity: 0.2
 
