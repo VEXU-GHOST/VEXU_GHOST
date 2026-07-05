@@ -1,11 +1,11 @@
 import os
 import xacro
 import launch
-import launch_ros.actions import Node
+from launch_ros.actions import Node
 from launch.substitutions import Command, LaunchConfiguration
 
 def generate_launch_description():
-    # home_dir = os.path.expanduser("~")
+    home_dir = os.path.expanduser("~")
     # ghost_high_stakes_base_dir = os.path.join(
     #     home_dir, "VEXU_GHOST", "11_Robots", "ghost_high_stakes"
     # )

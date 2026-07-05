@@ -9,6 +9,19 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <build_depend>ghost_util</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>tf2</build_depend>
+
+  <build_export_depend>ament_cmake</build_export_depend>
+  <build_export_depend>ghost_util</build_export_depend>
+  <build_export_depend>pluginlib</build_export_depend>
+  <build_export_depend>rclcpp</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>tf2</build_export_depend>
+
   <depend>behaviortree_cpp</depend>
   <depend>behaviortree_ros2</depend>
   <depend>ghost_v5_interfaces</depend>

@@ -9,6 +9,11 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <build_depend>ament_cmake_gtest</build_depend>
+
+  <build_export_depend>ament_cmake</build_export_depend>
+  <build_export_depend>ament_cmake_gtest</build_export_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <depend>rclcpp</depend>
@@ -22,6 +27,7 @@
   <depend>yaml-cpp</depend>
 
   <exec_depend>realsense2_camera</exec_depend>
+  <exec_depend>rviz2</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

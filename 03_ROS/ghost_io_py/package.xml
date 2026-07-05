@@ -7,6 +7,10 @@
   <maintainer email="karmanyaah.git@malhotra.cc">karmanyaahm</maintainer>
   <license>TODO: License declaration</license>
 
+  <exec_depend>python3-setuptools</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
   <export>
     <build_type>ament_python</build_type>
   </export>

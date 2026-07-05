@@ -5,12 +5,15 @@ on:
   push:
     paths:
       - '.github/workflows/learn-hello.yml'   # Optional: only when this file changes
+  pull_request:
+    branches:
+      - dev/workflow_dev
 
 jobs:
-  hello:
+  inspect:
     runs-on: ubuntu-latest
     env:
-      VEXU_HOME: ${{github.workspace}}
+      VEXU_HOME: ${{ github.workspace }}
     steps:
       - name: Use HTTPS for GitHub submodule URLs
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
@@ -18,13 +21,32 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+      - name: Context vars
+        run: |
+          echo "Actor: $GITHUB_ACTOR"
+          echo "SHA: $GITHUB_SHA"
+          echo "Event: $GITHUB_EVENT_NAME"
       - name: Show repo and branch
         run: |
           echo "Repo: $GITHUB_REPOSITORY"
           echo "Ref: $GITHUB_REF"
           ls -la
           ls 09_External/plotjuggler
+
+  script-check:
+    needs: inspect
+    runs-on: ubuntu-latest
+    env:
+      VEXU_HOME: ${{ github.workspace }}
+    steps:
+      - name: Use HTTPS for GitHub submodule URLs
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - name: Script Test
         run: test -x "$VEXU_HOME/scripts/build.sh"
       - name: Syntax-check build script
+        if: success()
         run: bash -n "$VEXU_HOME/scripts/build.sh"

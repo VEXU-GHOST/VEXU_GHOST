@@ -36,5 +36,5 @@ This is the most important part!
 - [ ] Confirmed all tests pass on a clean build
 - [ ] Added reviewers in Github
 - [ ] Posted PR Summary to Discord PR's Channel
-- [ ] Ran uncrustify on any modified C++ files
-- [ ] Ran Colcon Lint for any modified CMakeLists.txt or Package.xml
+- [ ] colcon lint passes locally or in CI
+- [ ] Ran uncrustify on any modified C++ files (shared config: `.uncrustify.cfg`)

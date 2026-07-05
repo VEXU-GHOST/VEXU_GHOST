@@ -27,6 +27,7 @@
   <build_export_depend>visualization_msgs</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
   <build_export_depend>tf2_msgs</build_export_depend>
+  <build_export_depend>ghost_util</build_export_depend>
 
   <test_depend>ament_lint_auto </test_depend>
   <test_depend>ament_lint_common</test_depend>
