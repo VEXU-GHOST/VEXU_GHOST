@@ -23,8 +23,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      driver_tcs34725_interface.h
- * @brief     driver tcs34725 interface header file
+ * @file      linux_i2c_interface.h
+ * @brief     driver linux i2c interface header file
  * @version   2.0.0
  * @author    Shifeng Li
  * @date      2021-02-28
@@ -59,7 +59,7 @@
 namespace ghost_sensing
 {
 
-class tcs_i2c_interface
+class linux_i2c_interface
 {
 private:
   int gs_fd = -1;            /**< file descriptor */
@@ -67,7 +67,7 @@ private:
   rclcpp::Logger logger;
 
 public:
-  tcs_i2c_interface(std::string iFilename, rclcpp::Logger iLogger)
+  linux_i2c_interface(std::string iFilename, rclcpp::Logger iLogger)
   : filename(iFilename), logger(iLogger) {}
 /**
  * @brief  interface iic bus init

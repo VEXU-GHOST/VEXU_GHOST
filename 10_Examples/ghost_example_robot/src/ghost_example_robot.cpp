@@ -58,37 +58,104 @@ void GhostExampleRobot::autonomous(double current_time)
   std::cout << "Autonomous" << current_time << std::endl;
 }
 
+
+
+
 void GhostExampleRobot::teleop(double current_time)
 {
   static int loop_count = 0;
   if (loop_count++ % 100 == 0) {
     std::cout << "Teleop " << current_time << std::endl;
   }
-
+  // Get joystick data
   auto joy_data = rhi_ptr_->getMainJoystickData();
+  double left_vel = joy_data->left_y / 127.0;
+  double right_vel = joy_data->right_y / 127.0;
+  double right_velx = joy_data->right_x / 127.0;  // sets values of velocity from -1 to 1
+  static double distance = 0.0;
+  static double distance_before = 0.0;  // keeps track of how far the robot has moved.
+  const double threshold = 0.05;
+  bool istank = true; //tank controls vs arcade
+    left_vel = (std::fabs(left_vel) < threshold) ? 0.0 : left_vel;
+    right_vel = (std::fabs(right_vel) < threshold) ? 0.0 : right_vel;
+    right_velx = (std::fabs(right_velx) < threshold) ? 0.0 : right_velx;  // deadzone for joystick
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 2500.0);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 2500.0); //possible to move
+  if (std::fabs(distance) < 0.1){  // stops robot when reaches goal
+    distance -= rhi_ptr_->getMotorPosition("left_motor") - distance_before;
+    distance_before = rhi_ptr_->getMotorPosition("left_motor");
 
+}else{
+  if (istank) { // tank controls
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_vel);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_vel);  // sets motor power to joystick values
+  } else {  // arcade controls
+    right_velx/=2;
+    right_vel = left_vel - right_velx;  // determines the best velocity.
+    left_vel = left_vel + right_velx;
+    if (left_vel > 1.0){
+      double temp = left_vel - 1.0;   // keeps the velocity values between -1 and 1 by altering opposite wheel.
+      left_vel = 1.0;
+      right_vel -= temp;
+      }
+    if (left_vel < -1.0){
+      double temp = -left_vel - 1.0;
+      left_vel = -1.0;
+      right_vel += temp;
+      }
+      if (right_vel > 1.0){
+      double temp = right_vel - 1.0;
+      right_vel = 1.0;
+      left_vel -= temp;
+      }
+    if (right_vel < -1.0){
+      double temp = -right_vel - 1.0;
+      right_vel = -1.0;
+      left_vel += temp;
+      }
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_vel);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", right_vel);
+  }
   if (joy_data->btn_a) {
-    std::cout << "Button A!" << std::endl;
+    std::cout << "Button A!" << std::endl;  //tank control button
+    istank = true;
   } else if (joy_data->btn_b) {
-    std::cout << "Button B!" << std::endl;
+    std::cout << "Button B!" << std::endl;  //arcade control button
+    istank = false;    
   } else if (joy_data->btn_x) {
     std::cout << "Button X!" << std::endl;
   } else if (joy_data->btn_y) {
     std::cout << "Button Y!" << std::endl;
   } else if (joy_data->btn_u) {
     std::cout << "Button U!" << std::endl;
+    distance_before = rhi_ptr_->getMotorPosition("left_motor");
+    distance = 10.0 + distance_before; // moves robot forward 10 degrees from current position
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 1.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 1.0);
   } else if (joy_data->btn_d) {
     std::cout << "Button D!" << std::endl;
+    distance_before = rhi_ptr_->getMotorPosition("left_motor");
+    distance = distance_before - 10.0; // moves robot backward 10 degrees from current position
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", -1.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", -1.0);
   } else if (joy_data->btn_l) {
     std::cout << "Button L!" << std::endl;
+    distance_before = rhi_ptr_->getMotorPosition("left_motor");
+    distance = distance_before - 11.0; // turns robot 90 degrees left from current position
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", -1.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 1.0);
   } else if (joy_data->btn_r) {
     std::cout << "Button R!" << std::endl;
+    distance_before = rhi_ptr_->getMotorPosition("left_motor");
+    distance = distance_before + 11.0; // turns robot 90 degrees right from current position
+    rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 1.0);
+    rhi_ptr_->setMotorVoltageCommandPercent("right_motor", -1.0);
   } else if (joy_data->btn_l1) {
     std::cout << "Button L1!" << std::endl;
   } else if (joy_data->btn_l2) {
     std::cout << "Button L2!" << std::endl;
   }
-
+}
   // Print joystick data!
   if (joy_data->btn_r1) {
     // Left joystick up-down axis is "left_y", left-right axis is "left_x"

@@ -13,7 +13,7 @@ namespace ghost_sensing
  *         - 1 iic init failed
  * @note   none
  */
-uint8_t tcs_i2c_interface::init()
+uint8_t linux_i2c_interface::init()
 {
   //std::cout << "opening " << filename << std::endl;
   gs_fd = open(filename.c_str(), O_RDWR);
@@ -32,7 +32,7 @@ uint8_t tcs_i2c_interface::init()
  *         - 1 iic deinit failed
  * @note   none
  */
-uint8_t tcs_i2c_interface::deinit(void)
+uint8_t linux_i2c_interface::deinit(void)
 {
 
   if (close(gs_fd) < 0) {
@@ -54,7 +54,7 @@ uint8_t tcs_i2c_interface::deinit(void)
  *             - 1 read failed
  * @note       none
  */
-uint8_t tcs_i2c_interface::read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len)
+uint8_t linux_i2c_interface::read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len)
 {
   if (ioctl(gs_fd, I2C_SLAVE, addr) < 0) {
     perror("Failed to set I2C address");
@@ -86,7 +86,7 @@ uint8_t tcs_i2c_interface::read(uint8_t addr, uint8_t reg, uint8_t * buf, uint16
  *            - 1 write failed
  * @note      none
  */
-uint8_t tcs_i2c_interface::write(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len)
+uint8_t linux_i2c_interface::write(uint8_t addr, uint8_t reg, uint8_t * buf, uint16_t len)
 {
   if (ioctl(gs_fd, I2C_SLAVE, addr) < 0) {
     perror("Failed to set I2C address");
@@ -112,7 +112,7 @@ uint8_t tcs_i2c_interface::write(uint8_t addr, uint8_t reg, uint8_t * buf, uint1
  * @param[in] ms time
  * @note      none
  */
-void tcs_i2c_interface::delay_ms(uint32_t ms)
+void linux_i2c_interface::delay_ms(uint32_t ms)
 {
   usleep(1000 * ms);
 }
@@ -122,13 +122,13 @@ void tcs_i2c_interface::delay_ms(uint32_t ms)
  * @param[in] fmt format data
  * @note      none
  */
-void tcs_i2c_interface::debug_print(const char * const fmt, ...)
+void linux_i2c_interface::debug_print(const char * const fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
 
   // Create a new format string with the prefix.
-  std::string full_fmt = std::string("tcs34725_driver: ") + fmt;
+  std::string full_fmt = std::string("linux_i2c_interface: ") + fmt;
 
   // Define a fixed-size stack buffer.
   char buffer[256];
