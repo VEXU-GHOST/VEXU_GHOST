@@ -78,9 +78,9 @@ docker compose exec vexu bash -c 'bash <(git show HEAD:scripts/fix_line_endings.
 Prefer the host form when you have the choice: the container runs as root, so files it
 rewrites can come back root-owned on the host.
 
-It only rewrites tracked text files whose attributes ask for LF, so binaries and the
-`eol=crlf` Windows scripts are left alone. It is a no-op on a healthy checkout, and it
-produces no commit — those files are already LF in the index, so this just realigns the
+It runs `dos2unix` over tracked files only, so `.git/`, `build/`, `install/` and
+submodules are untouched, and dos2unix skips the binaries (the PROS `.a` firmware libs)
+on its own. It is a no-op on a healthy checkout, and it produces no commit — those files are already LF in the index, so this just realigns the
 worktree with it. Fresh clones need none of this.
 
 If `docker compose build` itself failed before you could get a shell, that is the same
