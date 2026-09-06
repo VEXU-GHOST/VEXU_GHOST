@@ -81,7 +81,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Ghost-provided .debs (CasADi, IPOPT, BT.CPP, …). Script's apt-get update is skipped here
 # because the build above already refreshed lists; runtime callers still run it.
 COPY 12_Docker/install_ghost_debs.sh /usr/local/share/vexu/install_ghost_debs.sh
-RUN chmod +x /usr/local/share/vexu/install_ghost_debs.sh && \
+# Strip CR before running: this script is COPY'd from the build context, so a CRLF
+# checkout (Windows clone predating .gitattributes' eol=lf) would otherwise fail the
+# image build here. The repo tree itself needs no such treatment -- it arrives at
+# runtime via the bind mount, not COPY; see scripts/fix_line_endings.sh for that.
+RUN sed -i 's/\r$//' /usr/local/share/vexu/install_ghost_debs.sh && \
+    chmod +x /usr/local/share/vexu/install_ghost_debs.sh && \
     mkdir -p /vexu && \
     VEXU_HOME=/vexu VEXU_SKIP_APT=1 bash /usr/local/share/vexu/install_ghost_debs.sh
 
@@ -108,6 +113,7 @@ RUN printf '%s\n' \
     'set -eo pipefail' \
     'exec bash /vexu/12_Docker/install_ghost_debs.sh "$@"' \
     > /usr/local/bin/vexu-install-ghost-debs.sh && \
+    sed -i 's/\r$//' /usr/local/bin/vexu-entrypoint.sh && \
     chmod +x /usr/local/bin/vexu-entrypoint.sh /usr/local/bin/vexu-install-ghost-debs.sh
 
 # `docker compose exec` bypasses the ENTRYPOINT, so exec'd shells never see the ROS env
