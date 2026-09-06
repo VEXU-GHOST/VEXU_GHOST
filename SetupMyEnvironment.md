@@ -61,6 +61,27 @@ git config --global user.name "Your Name"
 git config --global user.email "your_email@example.com"
 ```
 
+### 2.4) Line endings (Windows only)
+
+Leave `core.autocrlf` alone, or set it to `input`:
+
+```bash
+git config --global core.autocrlf input
+```
+
+The repo's `.gitattributes` pins every text file to LF on checkout, so a fresh clone is
+correct either way. This only matters because the Linux container bind-mounts your
+Windows worktree directly — CRLF scripts fail there with `$'\r': command not found`.
+
+If you cloned **before** that was pinned, fix the existing checkout once:
+
+```bash
+bash <(git show HEAD:scripts/fix_line_endings.sh)
+```
+
+(Run it from Git Bash / WSL, not PowerShell. See
+[12_Docker/README.md](12_Docker/README.md) for the full symptom list.)
+
 ## 3) Clone the repo and launch the dev container
 
 From PowerShell (Windows) or Terminal (macOS):

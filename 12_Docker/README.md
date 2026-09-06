@@ -45,6 +45,39 @@ If `docker compose build` fails when fetching `raw.githubusercontent.com`, Docke
 
 If it still fails, try on the host: `docker compose run --rm vexu getent hosts raw.githubusercontent.com`. No address means fix host/VPN/firewall or add DNS in Docker Desktop → Settings → Docker Engine.
 
+## Troubleshooting: `$'\r': command not found` / `bad interpreter`
+
+Symptoms, any of these:
+
+```
+./scripts/build.sh: line 2: $'\r': command not found
+bash: ./scripts/build.sh: /bin/bash^M: bad interpreter: No such file or directory
+```
+
+Your checkout has CRLF line endings — typically a Windows clone made before
+`.gitattributes` pinned `eol=lf`, with `core.autocrlf=true`. The worktree is what
+`docker-compose.yml` bind-mounts as `/vexu`, so the container sees the CRLF too.
+
+Fix the checkout once, on the **host**, from anywhere in the repo:
+
+```bash
+bash <(git show HEAD:scripts/fix_line_endings.sh)
+```
+
+Use that form rather than `bash scripts/fix_line_endings.sh`: on a CRLF checkout that
+script is itself CRLF and bash dies on its own first line. `git show` reads the blob
+from the object store, which is LF no matter what the worktree looks like.
+
+It only rewrites tracked text files whose attributes ask for LF, so binaries and the
+`eol=crlf` Windows scripts are left alone. It is a no-op on a healthy checkout, and it
+produces no commit — those files are already LF in the index, so this just realigns the
+worktree with it. Fresh clones need none of this.
+
+If `docker compose build` itself failed before you could get a shell, that is the same
+cause: the image `COPY`s `12_Docker/entrypoint.sh` and `install_ghost_debs.sh` from your
+checkout. The Dockerfile strips CR from both, so a rebuild after `git pull` will succeed
+regardless — but still run the script above to fix the tree colcon compiles.
+
 ## Build the workspace
 
 Inside an `exec`'d shell:
