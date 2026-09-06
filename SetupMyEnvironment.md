@@ -16,6 +16,10 @@ Start Docker Desktop once after installing. Verify:
 docker version
 docker compose version
 ```
+Restart your computer once.
+Docker will really want you to install WSL2 (Windows Subsystem for Linux) when you try opening it again. Make sure to do that, and try opening Docker once more.
+There shouldn't be any red text if you successfully set it up.
+At the bottom of the Docker window there should be a little >_ symbol; you can open a shell inside of Docker and run the above commands again to make sure everything looks good.
 
 ## 2) Install Git and configure SSH
 
