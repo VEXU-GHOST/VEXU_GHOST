@@ -10,7 +10,7 @@ Longer-term, if you want to do robotics software on a regular basis, a native Ub
 - **macOS:** <https://docs.docker.com/desktop/install/mac-install/>
   Works on Intel and Apple Silicon. On Apple Silicon the container reports `aarch64`; the stock build skips the Gazebo sim packages on that architecture.
 
-Start Docker Desktop once after installing. Verify:
+Start Docker Desktop once after installing and restart terminal. Verify:
 
 ```bash
 docker version
@@ -87,6 +87,7 @@ bash <(git show HEAD:scripts/fix_line_endings.sh)
 From PowerShell (Windows) or Terminal (macOS):
 
 ```bash
+wsl --install -d Ubuntu-22.04
 git clone git@github.com:VEXU-GHOST/VEXU_GHOST.git
 cd VEXU_GHOST
 git submodule update --init --recursive
