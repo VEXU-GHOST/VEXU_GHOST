@@ -29,6 +29,19 @@ fi
 printf 'fix_line_endings: converting %d file(s):\n' "${#files[@]}"
 printf '  %s\n' "${files[@]}"
 
+# Prefer dos2unix: it does its own binary sniffing, so a mistake in the selection
+# above can't corrupt a mesh. Install it if apt is around (Linux host, or inside the
+# container -- the image doesn't ship it). macOS and Git Bash have no apt, so those
+# fall through to sed, which is fine given the selection is already binary-safe.
+if ! command -v dos2unix >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1; then
+  SUDO=""
+  [ "$(id -u)" -ne 0 ] && SUDO="sudo"
+  echo "fix_line_endings: installing dos2unix..."
+  $SUDO apt-get update -qq \
+    && $SUDO apt-get install -y -qq --no-install-recommends dos2unix \
+    || echo "fix_line_endings: dos2unix install failed, falling back to sed." >&2
+fi
+
 if command -v dos2unix >/dev/null 2>&1; then
   printf '%s\0' "${files[@]}" | xargs -0 dos2unix -q
 else

@@ -68,6 +68,16 @@ Use that form rather than `bash scripts/fix_line_endings.sh`: on a CRLF checkout
 script is itself CRLF and bash dies on its own first line. `git show` reads the blob
 from the object store, which is LF no matter what the worktree looks like.
 
+It works from inside the container too, against the bind mount at `/vexu` — it resolves
+the repo root itself and `apt-get install`s `dos2unix`, which the image doesn't ship:
+
+```bash
+docker compose exec vexu bash -c 'bash <(git show HEAD:scripts/fix_line_endings.sh)'
+```
+
+Prefer the host form when you have the choice: the container runs as root, so files it
+rewrites can come back root-owned on the host.
+
 It only rewrites tracked text files whose attributes ask for LF, so binaries and the
 `eol=crlf` Windows scripts are left alone. It is a no-op on a healthy checkout, and it
 produces no commit — those files are already LF in the index, so this just realigns the
