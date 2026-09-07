@@ -10,7 +10,7 @@ Longer-term, if you want to do robotics software on a regular basis, a native Ub
 - **macOS:** <https://docs.docker.com/desktop/install/mac-install/>
   Works on Intel and Apple Silicon. On Apple Silicon the container reports `aarch64`; the stock build skips the Gazebo sim packages on that architecture.
 
-Start Docker Desktop once after installing. Verify:
+Start Docker Desktop once after installing. Make sure to restart terminal before running. Verify:
 
 ```bash
 docker version
@@ -21,12 +21,14 @@ docker compose version
 
 You need Git on the host — the container bind-mounts your host `~/.ssh` and `~/.gitconfig` read-only, so commits/pushes from inside the container use your host identity.
 
-- **Windows:** install [Git for Windows](https://git-scm.com/download/win). Use **PowerShell** for the SSH + clone steps below.
+- **Windows:** install Git with the following command in WSL:
+  ```bash
+  suda apt install sudo apt install git -y
 - **macOS:** Git comes with Xcode Command Line Tools (`xcode-select --install`) or via Homebrew (`brew install git`).
 
 ### 2.1) Generate an SSH key
 
-In PowerShell (Windows) or Terminal (macOS):
+In WSL or Terminal (macOS):
 
 ```bash
 ssh-keygen -t ed25519 -C "your_email@example.com"
