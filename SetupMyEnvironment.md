@@ -16,7 +16,7 @@ Start Docker Desktop once after installing. Verify:
 docker version
 docker compose version
 ```
-**Restart your computer once.**
+**Restart your computer once.** Then, open Docker Desktop.
 
 Docker will really want you to install WSL2 (Windows Subsystem for Linux) when you try opening it again. Make sure to do that, and try opening Docker once more.
 
@@ -38,6 +38,10 @@ From here on out, to open the Ubuntu shell you can enter the following command:
 wsl.exe -d Ubuntu-22.04
 ```
 The rest of the code from here on out should be done in this Ubuntu shell.
+
+***IMPORTANT***: Now, set up Docker to be integrated with WSL.
+
+Click the gear icon at the top right. Then, go to Resources. One of the tabs should be called WSL Integration; open it and check the box saying "Enable integration with my default WSL distro", and turn on the option for Ubuntu 22.04 under "Enable integration with additional distros:".
 
 ## 2) Install Git and configure SSH
 
