@@ -16,10 +16,28 @@ Start Docker Desktop once after installing. Verify:
 docker version
 docker compose version
 ```
-Restart your computer once.
+**Restart your computer once.**
+
 Docker will really want you to install WSL2 (Windows Subsystem for Linux) when you try opening it again. Make sure to do that, and try opening Docker once more.
-There shouldn't be any red text if you successfully set it up.
+
 At the bottom of the Docker window there should be a little >_ symbol; you can open a shell inside of Docker and run the above commands again to make sure everything looks good.
+
+
+If you **don't** get a message from Docker to install WSL, try this command in your Windows Powershell:
+
+```bash
+wsl --install -d Ubuntu-22.04
+```
+
+Follow whatever instructions the shell throws at you, including setting a username and password. Don't worry if you don't see any letters or asterisks show up on the shell when typing your password, that's just how Linux treats passwords and your password is indeed going through.
+
+After Ubuntu's done installing the shell should boot you into an Ubuntu shell (you'll know because it's colored blue and green, and it should show the username you set just now).
+
+From here on out, to open the Ubuntu shell you can enter the following command:
+```bash
+wsl.exe -d Ubuntu-22.04
+```
+The rest of the code from here on out should be done in this Ubuntu shell.
 
 ## 2) Install Git and configure SSH
 
@@ -30,7 +48,7 @@ You need Git on the host — the container bind-mounts your host `~/.ssh` and `~
 
 ### 2.1) Generate an SSH key
 
-In PowerShell (Windows) or Terminal (macOS):
+In your Ubuntu shell within PowerShell (Windows) or Terminal (macOS):
 
 ```bash
 ssh-keygen -t ed25519 -C "your_email@example.com"
@@ -88,7 +106,7 @@ bash <(git show HEAD:scripts/fix_line_endings.sh)
 
 ## 3) Clone the repo and launch the dev container
 
-From PowerShell (Windows) or Terminal (macOS):
+From your Ubuntu shell within PowerShell (Windows) or Terminal (macOS):
 
 ```bash
 git clone git@github.com:VEXU-GHOST/VEXU_GHOST.git
@@ -101,12 +119,14 @@ docker compose up -d              # start the dev container + noVNC
 docker compose exec vexu bash     # open a shell inside the container
 ```
 
-Inside the shell:
+Inside the new shell (it should say like, root# or something):
 
 ```bash
 ./scripts/build.sh                # compile the ROS 2 workspace
 ./scripts/launch_sim.sh           # start Gazebo
 ```
+
+If you're on macOS the launch_sim might throw some errors, in that case just move onto the next step (localhost on your browser) to see the simulation in question.
 
 ## 4) See the GUI (RViz, Gazebo)
 
