@@ -28,6 +28,12 @@ jobs:
       VEXU_HOME: ${{github.workspace}}
 
     steps:
+      - name: Update ROS 2 GPG key
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F42ED6FBAB17C654
+          sudo curl -sSL https://repo.ros2.org/ros.key
+          sudo apt-key add
+      
       - name: Prune System Packages
         run: sudo apt-get remove libunwind-14 libunwind-14-dev *dotnet* *aspnet* powershell *azure* firefox
 
