@@ -49,7 +49,7 @@ You need Git on the host — the container bind-mounts your host `~/.ssh` and `~
 
 - **Windows:** install Git with the following command in WSL:
   ```bash
-  suda apt install sudo apt install git -y
+  sudo apt install git -y
 - **macOS:** Git comes with Xcode Command Line Tools (`xcode-select --install`) or via Homebrew (`brew install git`).
 
 ### 2.1) Generate an SSH key
