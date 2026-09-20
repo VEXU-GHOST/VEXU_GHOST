@@ -9,8 +9,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
-    home_dir = os.path.expanduser("~")
-    pkg_dir = os.path.join(home_dir, "VEXU_GHOST", "10_Examples", "ghost_example_robot")
+    pkg_dir = get_package_share_directory("ghost_example_robot")
 
     # This contains all the parameters for our ROS nodes
     ros_config_file = os.path.join(pkg_dir, "config/example_ros_config.yaml")
