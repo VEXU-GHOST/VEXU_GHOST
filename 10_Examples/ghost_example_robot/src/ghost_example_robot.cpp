@@ -58,7 +58,7 @@ void GhostExampleRobot::initialize()
 void GhostExampleRobot::onNewSensorData()
 {
   // Optional, called before disabled/autonomous/teleop when new data arrives.
-  std::cout << "onNewSensorData" << std::endl;
+  // std::cout << "onNewSensorData" << std::endl;
 
   if (!odom_) return;
 
@@ -114,14 +114,21 @@ void GhostExampleRobot::onNewSensorData()
   odom_pub_->publish(msg);
 }
 
+void GhostExampleRobot::stopDrive(){
+  rhi_ptr_->setMotorVoltageCommandPercent("left_motor", 0.0);
+  rhi_ptr_->setMotorVoltageCommandPercent("right_motor", 0.0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("left_motor", 0);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("right_motor", 0);
+}
+
 void GhostExampleRobot::disabled()
 {
-  std::cout << "disabled" << std::endl;
+  stopDrive();
 }
 
 void GhostExampleRobot::autonomous(double current_time)
 {
-  std::cout << "Autonomous " << current_time << std::endl;
+  stopDrive();
 }
 
 void GhostExampleRobot::teleop(double current_time)
@@ -160,6 +167,14 @@ void GhostExampleRobot::teleop(double current_time)
   if (joy_data->btn_r1) {
     // Left joystick up-down axis is "left_y", left-right axis is "left_x"
     // Right joystick up-down axis is "right_y", left-right axis is "right_x"
+
+    constexpr double kInitialPowerScale = 0.15;
+
+    double left_wheel_power =
+      kInitialPowerScale * joy_data->left_y / 127.0;
+    double right_wheel_power =
+      kInitialPowerScale * joy_data->right_y / 127.0;
+
     std::cout << "Left X: " << joy_data->left_x << std::endl;
     std::cout << "Left Y: " << joy_data->left_y << std::endl;
     std::cout << "Right X: " << joy_data->right_x << std::endl;
@@ -170,9 +185,13 @@ void GhostExampleRobot::teleop(double current_time)
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double left_wheel_power = joy_data->left_y / 127.0;
-    double right_wheel_power = joy_data->right_y / 127.0;
+    constexpr double kInitialPowerScale = 0.15;
 
+    const double left_wheel_power =
+      kInitialPowerScale * joy_data->left_y / 127.0;
+    const double right_wheel_power =
+      kInitialPowerScale * joy_data->right_y / 127.0;
+      
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0
     // to -12000 <-> 12000 millivolts behind the scenes.
     rhi_ptr_->setMotorVoltageCommandPercent(
@@ -214,22 +233,7 @@ void GhostExampleRobot::teleop(double current_time)
 
     std::cout << std::endl;
   } else {
-    // Don't forget to turn motors off!
-    rhi_ptr_->setMotorVoltageCommandPercent(
-      "left_motor",
-      0.0);
-
-    rhi_ptr_->setMotorVoltageCommandPercent(
-      "right_motor",
-      0.0);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps(
-      "left_motor",
-      0.0);
-
-    rhi_ptr_->setMotorCurrentLimitMilliAmps(
-      "right_motor",
-      0.0);
+    stopDrive();
   }
 }
 

@@ -53,6 +53,7 @@ private:
   double left_remainder_ = 0.0;
   double right_remainder_ = 0.0;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+  void stopDrive();
 };
 
 } // namespace ghost_example_robot
