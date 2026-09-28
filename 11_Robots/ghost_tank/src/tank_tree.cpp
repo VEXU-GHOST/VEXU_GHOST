@@ -44,6 +44,7 @@ void TankTree::init_tree()
 
   // add all nodes here
   factory.registerNodeType<LoggingNode>("Logging");
+  factory.registerNodeType<LogVariables>("LogVariables");
   factory.registerNodeType<AutoDone>("AutoDone");
   factory.registerNodeType<AutonTimer>("AutonTimer");
   factory.registerNodeType<LoadPathFromCSV>("LoadPathFromCSV");
@@ -74,6 +75,7 @@ void TankTree::init_tree()
   factory.registerNodeType<GoalRushDetected>("GoalRushDetected");
   factory.registerNodeType<GoalDetected>("GoalDetected");
   factory.registerNodeType<DistanceThreshold>("DistanceThreshold");
+  factory.registerNodeType<GetClosestBlock>("GetClosestBlock");
   factory.registerNodeType<BoundaryCheck>("BoundaryCheck");
   factory.registerNodeType<MoveVoltage>("MoveVoltage");
   factory.registerNodeType<TurnToPoint>("TurnToPoint");

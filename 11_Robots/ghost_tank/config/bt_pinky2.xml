@@ -91,12 +91,12 @@
         <AutoSortCmd active="false"/>
         <WaitCmd seconds="0.2"
         shutoff_motors="true"/>
-        <TurnToPoint posX_tiles="5"
+        <TurnToPoint posX_tiles="4.95"
         posY_tiles="2"
       timeout_ms="2500"
       backwards="false"
-      angle_exit_threshold_deg=".55"
-              angle_settle_ms="500"
+      angle_exit_threshold_deg=".50"
+              angle_settle_ms="1000"
 />
       
 

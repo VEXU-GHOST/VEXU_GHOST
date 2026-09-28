@@ -25,6 +25,7 @@
 #include "behaviortree_cpp/bt_factory.h"
 
 #include "ghost_tank/bt_nodes/loggingNode.hpp"
+#include "ghost_tank/bt_nodes/logVariables.hpp"
 #include "ghost_tank/bt_nodes/autoDone.hpp"
 #include "ghost_tank/bt_nodes/autonTimer.hpp"
 #include "ghost_tank/bt_nodes/load_path_from_csv.hpp"
@@ -49,6 +50,7 @@
 #include "ghost_tank/bt_nodes/goalRushDetected.hpp"
 #include "ghost_tank/bt_nodes/goalDetected.hpp"
 #include "ghost_tank/bt_nodes/distanceThreshold.hpp"
+#include "ghost_tank/bt_nodes/get_closest_block.hpp"
 #include "ghost_tank/bt_nodes/boundaryCheck.hpp"
 #include "ghost_tank/bt_nodes/moveVoltage.hpp"
 #include "ghost_tank/bt_nodes/moveScissor.hpp"

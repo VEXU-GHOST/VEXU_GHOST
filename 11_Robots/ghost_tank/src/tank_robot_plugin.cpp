@@ -412,6 +412,9 @@ void TankRobotPlugin::initAutonomy()
   bt_->set_variable("trajectory_viz_pub", m_trajectory_viz_pub);
   bt_->set_variable("digital_io_port_map", digital_io_port_map);
   bt_->set_variable("config_path", config_path);
+  // Alliance colour, for CV/blackboard nodes that filter blocks by our colour
+  // (e.g. GetClosestBlock). Sourced from the tank_robot_plugin.is_red_alliance param.
+  bt_->set_variable<bool>("is_red_alliance", m_color_target_red);
   resetBT();
 }
 
