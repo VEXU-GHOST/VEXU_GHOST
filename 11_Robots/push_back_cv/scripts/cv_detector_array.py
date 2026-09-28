@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+import os
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CameraInfo
 from cv_perception.cv_common import (
-    YoloDetector, default_model_path,
+    YoloDetector, default_model_path, default_engine_path,
     image_msg_to_bgr8, image_msg_to_depth_u16, pixel_to_xyz,
 )
 from geometry_msgs.msg import PointStamped
@@ -39,7 +40,45 @@ class CvDetectorArray(Node):
         self.pub = self.create_publisher(CvDetectionArray, "/cv/detections", 10)
         self.marker_pub = self.create_publisher(MarkerArray, "/cv/markers", 10)
         self.marker_frame = "camera_link"
-        self.detector = YoloDetector(default_model_path(), "cpu", 0.5)
+
+        # Model + inference device. Defaults to the .pt on CPU (the current,
+        # known-working config). To use TensorRT on the Jetson/Orin once the env
+        # is ready, override via params, e.g.:
+        #   -p model_path:=<...>/6-12-26.engine -p device:=0
+        # NOTE: a .engine must be rebuilt ON THIS MACHINE (engines are locked to
+        # the GPU + TensorRT version), and GPU inference needs a torch/torchvision
+        # pair that matches -- see default_engine_path() in cv_common.py.
+        model_path = self.declare_parameter("model_path", default_model_path()).value
+        device = self.declare_parameter("device", "cpu").value
+        conf_threshold = self.declare_parameter("conf_threshold", 0.5).value
+
+        # Cap how often we actually run inference. The camera streams color frames
+        # far faster than YOLO needs to (or can) keep up with, so we process at most
+        # detection_rate_hz frames per second and skip the rest. <= 0 disables the
+        # cap (process every frame). Default 2 Hz to match the downstream CV cadence.
+        detection_rate_hz = self.declare_parameter("detection_rate_hz", 2.0).value
+        self.detect_period_s = (1.0 / detection_rate_hz) if detection_rate_hz > 0 else 0.0
+        self._last_process_time = None
+        # ultralytics wants an int GPU index ("0" -> 0); leave "cpu"/"cuda:0" as-is.
+        if isinstance(device, str) and device.isdigit():
+            device = int(device)
+        self.get_logger().info(
+            f"Loading detector: model={model_path} device={device} conf={conf_threshold}")
+        try:
+            self.detector = YoloDetector(model_path, device, conf_threshold)
+        except Exception as exc:
+            # A .engine is locked to the exact GPU + TensorRT version that built it,
+            # so a committed/copied engine won't deserialize here. Fall back to the
+            # .pt on the SAME device (still GPU-accelerated) so CV keeps working.
+            fallback = default_model_path()
+            if os.path.abspath(model_path) != os.path.abspath(fallback):
+                self.get_logger().error(
+                    f"Could not load '{model_path}' ({exc}); falling back to {fallback}. "
+                    "To use TensorRT, rebuild the engine ON THIS MACHINE: "
+                    "yolo export model=<.pt> format=engine device=0")
+                self.detector = YoloDetector(fallback, device, conf_threshold)
+            else:
+                raise
         self.map_frame = "map"
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -61,6 +100,14 @@ class CvDetectorArray(Node):
         Main loop trigger: each new color frame, try to find ball and publish XYZ.
         (Simple pattern: process when color updates; depth/info must already be cached.)
         """
+        # Rate-limit inference to detection_rate_hz: if the last processed frame was
+        # too recent, drop this one before the (expensive) decode + YOLO step.
+        now = self.get_clock().now()
+        if self.detect_period_s > 0.0 and self._last_process_time is not None:
+            if (now - self._last_process_time).nanoseconds * 1e-9 < self.detect_period_s:
+                return
+        self._last_process_time = now
+
         self.color_image = image_msg_to_bgr8(msg)
         self.color_frame_id = msg.header.frame_id
         self._process_frame()

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <!--
+    GetClosestBlock smoke test.
+
+    Ticks GetClosestBlock every control loop. The node subscribes to /field/blocks
+    (push_back_cv/FieldBlockArray, map frame) and, using the robot's current pose,
+    selects the nearest block of our alliance colour (the "is_red_alliance"
+    blackboard flag, set in tank_robot_plugin). On success it logs the chosen block
+    and writes its position onto the blackboard (block_x_tiles / block_y_tiles /
+    block_id / block_dist_tiles); on failure (no CV data, or nothing matches) the
+    Fallback logs a placeholder so the tree keeps re-evaluating.
+
+    Hardware-free test: with the stack (or just a node providing tank_model + the
+    "node_ptr"/"is_red_alliance" blackboard) running, publish a synthetic field:
+      ros2 topic pub -r 2 /field/blocks push_back_cv/msg/FieldBlockArray \
+        '{blocks: [
+           {id: 1, x: 0.5, y: 0.5, z: 0.0, is_red: true,  confidence: 0.9},
+           {id: 2, x: 2.0, y: 1.0, z: 0.0, is_red: true,  confidence: 0.9},
+           {id: 3, x: 0.3, y: 0.2, z: 0.0, is_red: false, confidence: 0.9}]}'
+    Expect a log line picking the nearest RED block (id 1 if the robot is near the
+    origin), ignoring the blue block.
+  -->
+  <BehaviorTree ID="test_closest_block">
+    <Fallback>
+      <Sequence>
+        <GetClosestBlock match_alliance="true"
+          max_range_tiles="-1.0"
+          max_age_s="-1.0"
+          block_x_tiles="{block_x_tiles}"
+          block_y_tiles="{block_y_tiles}"
+          block_id="{block_id}"
+          block_dist_tiles="{block_dist_tiles}"/>
+        <!-- Print the exact blackboard tile values that will later feed
+             ActuallyMoveToPoint, to cross-check against the node's own
+             map-meter log line and a hand calculation. -->
+        <LogVariables message="closest block (tiles)"
+          variables="block_id, block_x_tiles, block_y_tiles, block_dist_tiles"
+          rate_hz="2.0"/>
+      </Sequence>
+      <Logging message="no matching block yet"/>
+    </Fallback>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="GetClosestBlock"
+      editable="true">
+      <input_port name="match_alliance"/>
+      <input_port name="max_range_tiles"/>
+      <input_port name="max_age_s"/>
+      <output_port name="block_x_tiles"/>
+      <output_port name="block_y_tiles"/>
+      <output_port name="block_id"/>
+      <output_port name="block_dist_tiles"/>
+    </Action>
+    <Action ID="Logging"
+      editable="true">
+      <input_port name="message"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>
