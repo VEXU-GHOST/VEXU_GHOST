@@ -11,6 +11,8 @@ set(DEPENDENCIES
   rclcpp
   ghost_ros_interfaces
   pluginlib
+  ghost_tank
+  nav_msgs
   )
 
 # Iterates through the list and finds the packages!
@@ -57,6 +59,9 @@ ament_add_gtest(test_example_plugin test/test_example_plugin.cpp)
 ament_target_dependencies(test_example_plugin
   ${DEPENDENCIES}
 )
+target_link_libraries(ghost_example_robot
+  ghost_tank::tank_odom
+)
 target_link_libraries(test_example_plugin
   ghost_example_robot
   gtest
@@ -77,6 +82,7 @@ install(
 install(DIRECTORY
   config
   launch
+  urdf
   DESTINATION share/${PROJECT_NAME})
 
 pluginlib_export_plugin_description_file(ghost_ros_interfaces plugins.xml)

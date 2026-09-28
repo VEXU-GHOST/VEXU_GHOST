@@ -1,0 +1,59 @@
+/*
+ *   Copyright (c) 2024 Jake Wendling
+ *   All rights reserved.
+
+ *   Permission is hereby granted, free of charge, to any person obtaining a copy
+ *   of this software and associated documentation files (the "Software"), to deal
+ *   in the Software without restriction, including without limitation the rights
+ *   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *   copies of the Software, and to permit persons to whom the Software is
+ *   furnished to do so, subject to the following conditions:
+
+ *   The above copyright notice and this permission notice shall be included in all
+ *   copies or substantial portions of the Software.
+
+ *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *   SOFTWARE.
+ */
+
+#pragma once
+
+#include <string>
+#include "behaviortree_cpp/behavior_tree.h"
+#include "rclcpp/rclcpp.hpp"
+#include "ghost_tank/bt_nodes/bt_util.hpp"
+
+// SyncActionNode that prints the current value of a configurable list of
+// numeric blackboard variables. Names that don't exist (or aren't numbers)
+// are reported as missing instead of throwing, so it is always safe to tick.
+//
+// Example usage in a behavior tree XML:
+//   <LogVariables variables="auton_time_elapsed;block_x_tiles;block_y_tiles"/>
+//   <LogVariables message="state" variables="block_dist_tiles"/>
+class LogVariables : public BT::SyncActionNode
+{
+public:
+  // If your Node has ports, you must use this constructor signature
+  LogVariables(
+    const std::string & name, const BT::NodeConfig & config);
+
+  // It is mandatory to define this STATIC method.
+  static BT::PortsList providedPorts();
+
+  // Override the virtual function tick()
+  BT::NodeStatus tick() override;
+
+private:
+  BT::Blackboard::Ptr blackboard_;
+  std::shared_ptr<rclcpp::Node> node_ptr_;
+
+  // Throttle state for the optional rate_hz port: the tree ticks far faster than
+  // we want to sample, so we only emit a log line once per 1/rate_hz seconds.
+  rclcpp::Time last_log_time_;
+  bool have_logged_ = false;
+};

@@ -19,6 +19,7 @@ set(DEPENDENCIES
   nav2_msgs
   rclcpp_action
   ghost_msgs
+  push_back_cv
   visualization_msgs
   matplotlib_cpp
   PythonLibs
@@ -105,7 +106,7 @@ ament_target_dependencies(tank_robot_plugin
 ament_export_libraries(
   tank_robot_plugin
 )
-ament_export_targets(tank_robot_plugin HAS_LIBRARY_TARGET)
+
 install(
   TARGETS tank_robot_plugin
   EXPORT tank_robot_plugin
@@ -132,7 +133,7 @@ ament_target_dependencies(pinky_plugin
 ament_export_libraries(
   pinky_plugin
 )
-ament_export_targets(pinky_plugin HAS_LIBRARY_TARGET)
+
 install(
 TARGETS pinky_plugin
 EXPORT pinky_plugin
@@ -159,7 +160,7 @@ ament_target_dependencies(inky_plugin
 ament_export_libraries(
   inky_plugin
 )
-ament_export_targets(inky_plugin HAS_LIBRARY_TARGET)
+
 install(
 TARGETS inky_plugin
 EXPORT inky_plugin
@@ -172,6 +173,7 @@ INCLUDES DESTINATION include
 # bt node libraries
 set(NODES
   loggingNode
+  logVariables
   autoDone
   autonTimer
   biteCmd
@@ -195,6 +197,7 @@ set(NODES
   goalRushDetected
   goalDetected
   distanceThreshold
+  get_closest_block
   boundaryCheck
   moveVoltage
   turnToPoint
@@ -310,6 +313,9 @@ target_link_libraries(tank_tree
   ${FOLLOW_PATH_NODES}
 )
 ament_export_targets(tank_tree HAS_LIBRARY_TARGET)
+ament_export_targets(tank_robot_plugin HAS_LIBRARY_TARGET)
+ament_export_targets(pinky_plugin HAS_LIBRARY_TARGET)
+ament_export_targets(inky_plugin HAS_LIBRARY_TARGET)
 install(
   TARGETS tank_tree
   EXPORT tank_tree
@@ -346,6 +352,17 @@ ament_add_gtest(test_trajectory test/control/test_trajectory.cpp)
     gtest_main
   )
   target_include_directories(test_trajectory PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
+  $<INSTALL_INTERFACE:include>)
+
+ament_add_gtest(test_get_closest_block test/test_get_closest_block.cpp)
+  ament_target_dependencies(test_get_closest_block ${DEPENDENCIES})
+  target_link_libraries(test_get_closest_block
+    get_closest_block
+    gtest_main
+  )
+  target_include_directories(test_get_closest_block PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test/include>
   $<INSTALL_INTERFACE:include>)

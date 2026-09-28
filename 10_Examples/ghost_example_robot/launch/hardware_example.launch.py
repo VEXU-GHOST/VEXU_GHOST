@@ -26,6 +26,16 @@ def generate_launch_description():
     ########################
     ### Node Definitions ###
     ########################
+
+    urdf_path = os.path.join(pkg_dir, "urdf", "example_robot.urdf.xacro")
+    robot_state_publisher = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        name="robot_state_publisher",
+        output="screen",
+        parameters=[{"robot_description": xacro.process_file(urdf_path).toxml()}],
+    )
+
     serial_node = Node(
         package="ghost_ros_interfaces",
         executable="jetson_v5_serial_node",
@@ -50,9 +60,27 @@ def generate_launch_description():
         arguments=[plugin_type, robot_name],
     )
 
+    rplidar_node = Node(
+            package="rplidar_ros",
+            executable="rplidar_node",
+            name="rplidar_node",
+            parameters=[
+                {
+                    "channel_type": "serial",
+                    "serial_port": "/dev/ttyUSB0",
+                    "serial_baudrate": 256000,
+                    "frame_id": "lidar_link",
+                    "inverted": False,
+                    "angle_compensate": True,
+                }
+            ],
+    )
+
     return LaunchDescription(
         [
             serial_node,
             competition_state_machine_node,
+            rplidar_node,
+            robot_state_publisher
         ]
     )
