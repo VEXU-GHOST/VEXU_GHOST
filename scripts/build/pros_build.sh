@@ -1,5 +1,6 @@
 #!/bin/bash
 cd $VEXU_HOME
+source "$VEXU_HOME/scripts/robot_name.sh"
 if [[ $(pros --version) ]] 2> /dev/null; then
     echo
     echo -------------------------------------------------------

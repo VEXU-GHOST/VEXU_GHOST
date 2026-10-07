@@ -15,12 +15,10 @@ else
     echo "Running under systemd ($INVOCATION_ID), skipping kill"
 fi
 
-ROBOT_NAME="$(cat /etc/ghost/robot_name 2>/dev/null)"
-
 # log to stdout AND /var/log/syslog
 if [ -z "$ROBOT_NAME" ];
 then
-    echo "robot name is unset (/etc/ghost/robot_name)... exiting";
+    echo "robot name is unset ($ROBOT_NAME_FILE)... exiting";
     # ros2 launch ghost_push_back hardware.launch.py 2>&1 | tee /dev/tty |& logger;
 else echo "robot name is set to '$ROBOT_NAME'";
     ros2 launch ghost_push_back hardware.launch.py robot_name:=$ROBOT_NAME 2>&1 | tee /dev/tty |& logger;

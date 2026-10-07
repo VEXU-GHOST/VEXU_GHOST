@@ -1,5 +1,5 @@
-### Points to selected robot configuration for PROS compile ###
-selected_robot: EXAMPLE_ROBOT
+### Used for PROS compilation when ~/robot_name is not set (for example, on a dev machine) ###
+default_robot: EXAMPLE_ROBOT
 
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:
