@@ -1,3 +1,5 @@
+#define AUTON_SELECTOR_SCREEN_TEST 1
+
 #include "main.h"
 #include "pros/motors.h"
 
@@ -14,6 +16,7 @@
 #include "ghost_v5_interfaces/util/device_type_helpers.hpp"
 
 #include "ghost_v5/motor/v5_motor_interface.hpp"
+#include "ghost_v5/screen/auton_select.hpp"
 #include "ghost_v5/screen/screen_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
@@ -22,6 +25,7 @@ using namespace ghost_v5;
 using namespace ghost_v5_interfaces::devices;
 using namespace ghost_v5_interfaces::util;
 using namespace ghost_v5_interfaces;
+
 
 void calibrateIMU(std::shared_ptr<pros::Imu> imu_ptr)
 {
@@ -204,6 +208,15 @@ void ghost_main_loop()
  */
 void initialize()
 {
+
+  #if AUTON_SELECTOR_SCREEN_TEST
+    v5_globals::screen_interface_ptr = std::make_shared<ghost_v5::AutonSelector>();
+
+    while(true) {
+      pros::delay(20);
+    }
+  #else
+
   try {
     // Setup LCD Screen
     v5_globals::screen_interface_ptr = std::make_shared<ghost_v5::ScreenInterface>();
@@ -312,6 +325,7 @@ void initialize()
   } catch (std::exception & e) {
     exit_main_loop(e);
   }
+  #endif
 }
 
 /**
