@@ -21,7 +21,7 @@ namespace ghost_v5 {
         void onButtonClicked();
         void updateUi();
 
-        static void buttonEventCallback(lv_event_t* event);
+        static lv_res_t buttonEventCallback(lv_obj_t* button);
     };
 
 } // namespace ghost_v5
