@@ -6,15 +6,16 @@ set -x
 
 # Resolve through symlinks (e.g. /usr/local/bin/ghost) so paths point at the repo.
 DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+. "$DIR/robot_name.sh"
 
-# A machine is a robot once its name is written to /etc/ghost/robot_name (see the
+# A machine is a robot once its name is written to ~/robot_name (see the
 # set-robot-name command). If that's unset this isn't a robot, so only run, kill,
 # build, and set-robot-name are available.
-if [ ! -s /etc/ghost/robot_name ]; then
+if [ -z "$ROBOT_NAME" ]; then
     case "$1" in
         run|kill|build|clean|set-robot-name) ;;
         *)
-            echo "ghost $1: no robot name set (/etc/ghost/robot_name); only run/kill/build/clean/set-robot-name are available off-robot"
+            echo "ghost $1: no robot name set ($ROBOT_NAME_FILE); only run/kill/build/clean/set-robot-name are available off-robot"
             exit 1
             ;;
     esac
@@ -91,9 +92,9 @@ case "$1" in
             echo "Usage: ghost set-robot-name <name>"
             exit 1
         fi
-        echo "Setting robot name to '$2'"
-        sudo mkdir -p /etc/ghost
-        echo "$2" | sudo tee /etc/ghost/robot_name > /dev/null
+        ROBOT_NAME="$(printf '%s' "$2" | tr '[:lower:]' '[:upper:]')"
+        echo "Setting robot name to '$ROBOT_NAME'"
+        printf '%s\n' "$ROBOT_NAME" > "$ROBOT_NAME_FILE"
         ;;
     "log")
         echo "Showing ghost hardware logs"

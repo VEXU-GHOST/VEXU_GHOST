@@ -12,7 +12,7 @@
   automatically via multicast on the wired segment and need no config.
 
   Applied on the robot only, via FASTRTPS_DEFAULT_PROFILES_FILE in
-  scripts/setup_env.sh (guarded on /etc/ghost/robot_name). If the wired IP
+  scripts/setup_env.sh (guarded on ~/robot_name). If the wired IP
   changes, update it here and in configure-os.sh (ETH_IP).
 -->
 <dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
