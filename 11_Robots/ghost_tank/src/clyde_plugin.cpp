@@ -58,11 +58,11 @@ void ClydePlugin::populateMotorNames()
 {
   m_right_drive_motor_names = {
     "drive_r1",
-    "drive_r2",
+    // "drive_r2",  // port reused by lift/arm
     "drive_r3",
-    "drive_r4",
+    // "drive_r4",  // port reused by lift/arm
     "drive_r5",
-    "drive_r6",
+    // "drive_r6",  // port reused by lift/arm
     "drive_r7",
     // "drive_r8",
   };
@@ -72,11 +72,14 @@ void ClydePlugin::populateMotorNames()
     "drive_l3",
     "drive_l4",
     "drive_l5",
-    "drive_l6",
+    // "drive_l6",  // port reused by lift/arm
     "drive_l7",
     // "drive_l8",
   };
 
+  // The TankRobotPlugin constructor already filled this with the base motor list
+  // (including motors that don't exist on clyde), so start fresh.
+  m_all_drive_motor_names.clear();
   m_all_drive_motor_names.insert(
     m_all_drive_motor_names.end(),
     m_left_drive_motor_names.begin(),

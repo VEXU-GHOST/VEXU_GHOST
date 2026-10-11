@@ -21,18 +21,18 @@ port_configuration:
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
 
-        scorer_motor:
-            port: 6
+        lift1_motor:
+            port: 19
             type: MOTOR
             reversed: false
             config: intake_motor_config
-        intake_motor:
-            port: 15
+        lift2_motor:
+            port: 18
             type: MOTOR
             reversed: true
             config: intake_motor_config
-        ejector_motor:
-            port: 5
+        arm_motor:
+            port: 20
             type: MOTOR
             reversed: false
             config: intake_motor_config
@@ -61,11 +61,11 @@ port_configuration:
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_l6:
-            port: 13
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
+        # drive_l6:
+        #     port: 13
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
         drive_l7:
             port: 7
             type: MOTOR
@@ -81,31 +81,31 @@ port_configuration:
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_r2:
-            port: 20
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
+        # drive_r2:
+        #     port: 20
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
         drive_r3:
             port: 2
             type: MOTOR
             reversed: false
             config: drive_motor_config
-        drive_r4:
-            port: 19
-            type: MOTOR
-            reversed: false
-            config: drive_motor_config
+        # drive_r4:
+        #     port: 19
+        #     type: MOTOR
+        #     reversed: false
+        #     config: drive_motor_config
         drive_r5:
             port: 3
             type: MOTOR
             reversed: true
             config: drive_motor_config
-        drive_r6:
-            port: 18
-            type: MOTOR
-            reversed: true
-            config: drive_motor_config
+        # drive_r6:
+        #     port: 18
+        #     type: MOTOR
+        #     reversed: true
+        #     config: drive_motor_config
         drive_r7:
             port: 17
             type: MOTOR

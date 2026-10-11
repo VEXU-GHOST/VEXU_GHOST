@@ -78,12 +78,12 @@ competition_state_machine_node:
         integral_activation_bound: 0.2
 
       arm:
-        kp: 1.0
-        ki: 0.0000
-        kd: 1.0
-        integral_limit: 0.0
-        integral_activation_bound: 0.0
-      arm_stage_positions_deg: [0.0, 90.0, 180.0]
+        kp: 0.0010
+        ki: 0.008
+        kd: 0.0001
+        integral_limit: 0.5
+        integral_activation_bound: 250.0
+      arm_stage_positions_deg: [3.0, 720.0]
 
       lift:
         kp: 0.0

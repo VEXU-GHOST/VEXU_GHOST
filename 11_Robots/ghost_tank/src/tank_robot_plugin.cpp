@@ -74,7 +74,7 @@ void TankRobotPlugin::populateMotorNames()
     "drive_l3",
     "drive_l4",
     "drive_l5",
-    "drive_l6",
+    // "drive_l6",
     "drive_l7",
     // "drive_l8",
   };
