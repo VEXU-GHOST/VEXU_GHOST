@@ -2,9 +2,9 @@
 
 This guide explains how `03_ROS` fits into the robot software, how localization currently works, what RealSense support exists, and where AprilTag landmark localization could be added.
 
-**Review date: October 11, 2026.** This describes the source and configuration in the reviewed checkout. It is not a hardware validation report. The AprilTag design below is a proposal, not an implemented feature; no existing AprilTag detector or landmark-localization implementation was found during the review. Configuration and findings should be rechecked as the code changes.
+**Updated: October 11, 2026.** This describes the reviewed source and the subsequent local AprilTag MVP. The existing robot localization pipeline is described below; AprilTag field-pose conversion and EKF integration remain proposed work. Configuration and findings should be rechecked as the code changes.
 
-**Development update:** a [ROS 2 AprilTag detection launch and Windows/WSL guide](ghost_sensing/tools/apriltag_mvp/README.md) have since been added. They connect the upstream detector to RealSense images. The field-landmark conversion and EKF integration described below remain proposed work.
+**Development status:** the [ROS 2 AprilTag MVP guide](ghost_sensing/tools/apriltag_mvp/README.md) documents the working D435 camera/processing bring-up on Ubuntu 22.04 under Windows/WSL 2, installation, USB and permission fixes, and matching image/calibration QoS. Detection messages were observed and the operator reports valid stream data. A retained nonempty tag observation, measured pose accuracy, timing stability, and Jetson validation are still outstanding. See its [session record and deployment handoff](ghost_sensing/tools/apriltag_mvp/README.md#validation-status-and-session-record) for the tested package inventory and evidence limits. Robot startup and EKF inputs have not been changed by this MVP.
 
 ## Repository organization
 
@@ -129,6 +129,8 @@ The particle filter uses a [line-segment field map](ghost_localization/maps/VEXF
 
 RealSense integration exists, but camera startup is disabled in the main hardware launch.
 
+The current development camera is a **D435**. The standalone [AprilTag launch](ghost_sensing/launch/apriltag.launch.py) now runs RGB capture, rectification, and the upstream ROS detector independently of hardware startup. Its [camera configuration](ghost_sensing/config/apriltag_camera.yaml) disables depth/IMU streams and sets matching sensor-data QoS for color and calibration. These MVP settings are separate from the historical hardware settings below.
+
 | Support | Location and status |
 | --- | --- |
 | Camera driver launch | [`hardware.launch.py`](../11_Robots/ghost_override/launch/hardware.launch.py) constructs an inclusion of `realsense2_camera/rs_launch.py`. |
@@ -194,7 +196,7 @@ flowchart TD
 
 ### Detection
 
-A ROS 2 detector such as [`christianrauch/apriltag_ros`](https://github.com/christianrauch/apriltag_ros/blob/master/README.md) consumes rectified images and matching `CameraInfo`, publishes detection metadata, and publishes camera-relative tag transforms. It needs the tag family and physical tag size. Depth is not required for this pose-estimation path.
+The MVP uses [`christianrauch/apriltag_ros`](https://github.com/christianrauch/apriltag_ros/blob/master/README.md), with version 3.4.0 installed during local bring-up. It consumes rectified images and matching `CameraInfo`, publishes detection metadata, and publishes camera-relative tag transforms. It needs the tag family and physical tag size. Depth is not required for this pose-estimation path.
 
 Pin a Humble-compatible detector version and verify its interfaces. Do not assume that the detection-array message itself contains a ready-to-fuse robot pose. In the documented implementation, tag poses are published through TF.
 
@@ -276,7 +278,7 @@ For an initial test on Windows developer PCs, use the [ROS 2 D435 AprilTag MVP](
 5. Correct particle-filter covariance, then add the global EKF input and test LiDAR/tag disagreements.
 6. Record images, calibration, detections, TF, and odometry for repeatable tests covering motion, occlusion, dropout, and reacquisition. Verify clock behavior during replay.
 
-The first milestone is a **camera-only bring-up and tag-only field-pose demonstration**, using the actual RealSense model and measured landmark layout. Validate fused localization before allowing it to drive autonomous motion.
+Local camera/processing bring-up has been achieved. The immediate next milestone is a **saved nonempty tag observation, measured camera-relative pose check, and repeatable bag replay**. A tag-only field-pose demonstration then requires the new landmark conversion node and measured landmark layout. Validate fused localization before allowing it to drive autonomous motion.
 
 ## Suggested reading order
 

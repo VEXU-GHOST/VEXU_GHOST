@@ -12,6 +12,8 @@ The launch and configuration live in [`launch/apriltag.launch.py`](../../launch/
 
 This estimates tags relative to the camera, not the robot's field position. It does not start robot control or feed the EKF. The D435 uses RGB only here; it has no IMU. Camera mounting TF and surveyed field landmarks are needed later for robot localization.
 
+**Progress as of October 11, 2026:** the D435 streams in Ubuntu 22.04 on WSL 2, the ROS processing pipeline publishes detection messages, and the operator reports valid data in the monitoring terminal. Local camera/processing bring-up is working. A retained sample with a nonempty tag ID and a measured pose is still needed to document tag-identification and pose accuracy. This does not yet validate robot localization or Jetson deployment. See the [session record](#validation-status-and-session-record) for evidence and remaining work.
+
 ## Scope and deployment handoff
 
 This is an independently launched **local MVP**. It runs Linux ROS processes on the Windows computer through WSL 2; it is not a native Windows ROS installation. It approximates the Jetson's Ubuntu/Humble software interfaces, not its ARM CPU, JetPack drivers, USB behavior, or timing. No hardware launch or robot service is changed to start this detector.
@@ -23,7 +25,7 @@ The deployment team can reuse these reviewable artifacts:
 | [`packages-core.txt`](packages-core.txt) | ROS base, actual AprilTag node, image rectification, TF tools, and bag replay. |
 | [`packages-camera.txt`](packages-camera.txt) | Optional RealSense ROS packages and USB inspection tool. |
 | [`setup_dependencies.sh`](setup_dependencies.sh) | Installs/checks those manifests on Ubuntu 22.04 and enforces detector version >= 3.4.0. Defaults to a read-only check. |
-| [`apriltag.yaml`](../../config/apriltag.yaml) and [`apriltag.launch.py`](../../launch/apriltag.launch.py) | Shared detector settings and ROS wiring. |
+| [`apriltag.yaml`](../../config/apriltag.yaml), [`apriltag_camera.yaml`](../../config/apriltag_camera.yaml), and [`apriltag.launch.py`](../../launch/apriltag.launch.py) | Shared detector settings, persistent camera/QoS settings, and ROS wiring. |
 | `--versions` output and recorded bags | Evidence of exactly which selected packages and observations were tested. |
 
 The installer only installs Linux packages when explicitly run with `--install`. It does not configure ROS apt trust/sources, modify shell startup, provision a Jetson, build the robot workspace, create services, or start nodes. The ROS apt repository is a one-time prerequisite; follow the official setup below. Its normal apt confirmation shows the proposed package transaction.
@@ -166,6 +168,8 @@ For custom camera topics, set `start_camera:=false`, `image_topic`, and `camera_
 
 In a second sourced Ubuntu terminal:
 
+Open another PowerShell tab/window and run `wsl -d Ubuntu-22.04`, then `source /opt/ros/humble/setup.bash` inside Ubuntu. Leave the launch running in the first terminal. `wsl` is a Windows command; do not install the unrelated Linux package when Ubuntu reports that command is missing.
+
 ```bash
 ros2 node list
 ros2 topic hz /camera/camera/color/image_raw
@@ -185,7 +189,11 @@ Verify the camera frame from the image header if your driver uses different name
 
 For a live image, run `ros2 run rqt_image_view rqt_image_view` under WSLg and select `/camera/camera/color/image_rect`. This shows the image; upstream `apriltag_ros` does not supply the old custom bounding-box preview. RViz's TF display can show tag frames. Topic/TF checks work without a GUI.
 
-## 5. Share a ROS bag with teammates
+## Troubleshooting observed during bring-up
+
+### ROS shared-library import failure
+
+An `ImportError: librcl_action.so: cannot open shared object file` occurred after changing shells. Source `/opt/ros/humble/setup.bash` again in that Ubuntu terminal, including after `newgrp video`, before running ROS commands. This was an environment issue in this session; a recurring failure after sourcing needs further investigation. In multiline Bash commands, the continuation backslash must be the last character on the line, with no trailing spaces.
 
 ### Calibration QoS mismatch
 
@@ -204,7 +212,7 @@ Restart the detector afterward so the rectifier re-evaluates publisher QoS. Runt
 
 The separate RealSense `clock fit re-based` warning concerns timestamp mapping. It is not fixed by changing QoS. Verify monotonic timestamps and timing stability before treating this MVP as a localization-quality sensor.
 
-### Recording and replay
+## 5. Share a ROS bag with teammates
 
 Record the raw image and its synchronized calibration in a separate terminal:
 
@@ -240,12 +248,55 @@ ros2 launch ghost_sensing apriltag.launch.py tag_size:=0.10 start_camera:=false
 
 Let hardware startup own the camera when integrating with the robot. Add surveyed-landmark pose conversion and EKF fusion after validating detection and camera-relative pose. See the [ROS overview and roadmap](../../../README.md).
 
+Deployment handoff checklist:
+
+1. Record the Jetson model, JetPack/Ubuntu/kernel versions, camera firmware, and installed package versions. Verify target compatibility before running the Ubuntu 22.04 installer; the WSL result does not qualify the Jetson's camera backend or ARM64 packages.
+2. Establish native USB access and camera permissions on the Jetson. `usbipd` is only needed for Windows-to-WSL forwarding. Review historical kernel installation scripts before using them on the target.
+3. Build/install `ghost_sensing`, then test the installed launch above with one camera owner. Configure that camera's image and calibration QoS consistently; `start_camera:=false` does not apply this MVP's camera YAML to another node.
+4. Repeat the live-image, nonempty detection, camera-to-tag TF, measured-distance, timing, and bag-replay checks on the target. Save the tested commit and configuration with the evidence.
+5. Measure the robot camera mount and survey the tag layout. Implement timestamped landmark-to-robot pose conversion and validate it against known field positions before adding an EKF input.
+6. Address the localization review findings and test fusion, dropout, reacquisition, and motion before enabling autonomous use. The MVP has not enabled any robot launch, service, or EKF input.
+
 The earlier Python virtual environment and generated images remain ignored local artifacts and are not used by this ROS workflow.
 
-## Validation status
+## Validation status and session record
 
-The launch wiring was checked against Humble `image_proc` and `apriltag_ros` 3.4.0. Python syntax, package XML, and relative documentation links passed static checks. After installing Humble and granting the WSL user video-group access, the D435 streamed RGB. A live QoS mismatch was identified and corrected: image_proc 3.0.9 and apriltag_ros 3.4.0 then received matching calibration, and `/apriltag/detections` emitted a timestamped empty array. This validates live frame processing, not successful tag identification or pose accuracy. Persistent camera configuration was added to reproduce the runtime QoS correction. Timestamp stability still needs validation; previous synthetic OpenCV detector tests do not validate this ROS pipeline.
+### October 11, 2026: local WSL bring-up
 
-The dependency script passed Bash syntax validation and was run in read-only mode against the Windows-mounted checkout from WSL: Ubuntu 22.04 correctly reported missing ROS packages, help completed successfully, and Ubuntu 26.04 was rejected. The `--install` transaction has not been executed or validated on this workstation. These checks confirm that the repository does not need to be cloned into WSL to use the workflow.
+Environment: Windows host, Ubuntu **22.04.5 LTS** in WSL 2, x86_64, kernel `6.18.33.2-microsoft-standard-WSL2`, ROS 2 Humble, and a physical RealSense **D435**. The checkout was accessed through `/mnt/c/Users/manje/GHOST-VEX/VEXU-GHOST`; no second clone was required. This is a development-machine result, not a robot deployment test.
+
+| Stage | Observed result |
+| --- | --- |
+| Dependency installation | The operator installed the dependencies. `setup_dependencies.sh --check --camera` passed, and executable discovery listed `apriltag_node` and `rectify_node`. |
+| USB forwarding | `usbipd bind` and `usbipd attach --wsl` succeeded. The workstation used bus ID `3-3`; other machines must discover their own ID. |
+| Device permissions | `/dev/video*` access initially failed. Adding the Linux user to `video` and refreshing group membership resolved that obstacle. |
+| ROS environment | Re-sourcing Humble after changing shells resolved the shared-library import issue. Each terminal needs its own sourced environment. |
+| RGB capture | Driver logs showed RGB8, 640x480, requested 30 FPS, and `RealSense Node Is Up!`. Topic monitoring reported approximately 14.6–15.2 Hz during the observed interval; sustained 30 FPS was not demonstrated. |
+| Calibration/QoS | CameraInfo initially failed with `DURABILITY_QOS_POLICY`. Setting both color and calibration publishers to `SENSOR_DATA` resolved the observed mismatch. These settings are now in the camera YAML. |
+| Processing output | A directly inspected `/apriltag/detections` message had an acquisition timestamp, `camera_color_optical_frame`, and `detections: []`. The operator subsequently reported valid stream data. An empty array proves processing, but does not identify a tag. No nonempty detection sample or measured pose has been retained in this record. |
+| Timing | RealSense emitted `clock fit re-based` warnings; topic monitoring also showed a negative interval and jitter. Timestamp monotonicity, latency, and stability remain unqualified. |
+
+The installed versions below come from the operator's successful package check. They are a historical inventory, not a dependency lock or a statement that newer versions have been tested.
+
+| Package | Installed version |
+| --- | --- |
+| `ros-humble-ros-base` | `0.10.0-1jammy.20260908.101203` |
+| `ros-humble-apriltag-ros` | `3.4.0-1jammy.20260908.012018` |
+| `ros-humble-image-proc` | `3.0.9-1jammy.20260907.225649` |
+| `ros-humble-tf2-ros` | `0.25.23-1jammy.20260907.224752` |
+| `ros-humble-rosbag2` | `0.15.17-1jammy.20260908.100944` |
+| `ros-humble-realsense2-camera` | `4.58.4-1jammy.20260908.100350` |
+| `ros-humble-realsense2-description` | `4.58.4-1jammy.20260908.002050` |
+| `usbutils` | `1:014-1build1` |
+
+Earlier development checks covered launch Python syntax, package XML, relative documentation links, Bash syntax, and launch argument discovery under Humble. The installer correctly reported missing packages before installation and rejected Ubuntu 26.04. These checks complement the live result; earlier synthetic OpenCV tests are not evidence for this ROS detector.
+
+### Next development milestone: a reproducible tag observation
+
+Restart using the repository's configured launch to verify that the saved camera/QoS settings reproduce the working session without runtime parameter changes. Show a measured tag, retain a **nonempty** detection containing its expected ID, and check the corresponding camera-to-tag TF against a measured distance. Then record and replay a short bag using section 5. Replay and a clean restart have not been documented as completed here.
+
+With that recording, save the Git commit, package inventory, camera firmware, launch arguments, tag family/ID/measured size, sample detection and TF timestamps, measured versus estimated distance, and test lighting/range. The `0.10` tag size in commands is an example, not a recorded measurement from this session. `output/` is ignored: explicitly share evidence with the team or place a reviewed text report in version control; do not assume local recordings are included in the commit.
+
+After that milestone, implement and test field-pose conversion in `ghost_localization`. Camera-relative tag output alone does not establish robot field position, pose covariance, acceptable motion performance, or safe EKF fusion.
 
 References: [AprilTag ROS node](https://github.com/christianrauch/apriltag_ros), [Humble rectifier](https://github.com/ros-perception/image_pipeline/blob/humble/image_proc/src/rectify.cpp), [RealSense ROS wrapper](https://github.com/realsenseai/realsense-ros).
