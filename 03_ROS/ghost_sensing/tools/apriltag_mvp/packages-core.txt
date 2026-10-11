@@ -1,0 +1,6 @@
+# Ubuntu 22.04 / ROS 2 Humble: standalone detector and bag replay.
+ros-humble-ros-base
+ros-humble-apriltag-ros
+ros-humble-image-proc
+ros-humble-tf2-ros
+ros-humble-rosbag2

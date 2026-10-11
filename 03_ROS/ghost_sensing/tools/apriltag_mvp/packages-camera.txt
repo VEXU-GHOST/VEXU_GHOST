@@ -1,0 +1,4 @@
+# Optional live-camera support. SDK/USB backend must also work on the host.
+ros-humble-realsense2-camera
+ros-humble-realsense2-description
+usbutils

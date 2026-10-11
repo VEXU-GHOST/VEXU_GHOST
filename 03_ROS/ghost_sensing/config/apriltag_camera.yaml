@@ -1,0 +1,17 @@
+# Parameters for the upstream realsense2_camera_node (standard ROS YAML).
+/**:
+  ros__parameters:
+    camera_name: camera
+    enable_color: true
+    enable_depth: false
+    enable_infra: false
+    enable_infra1: false
+    enable_infra2: false
+    enable_gyro: false
+    enable_accel: false
+    publish_tf: true
+    use_sim_time: false
+    # Humble image_proc copies image QoS onto its CameraInfo subscription.
+    # Keep both streams volatile rather than relying on SYSTEM_DEFAULT.
+    color_qos: SENSOR_DATA
+    color_info_qos: SENSOR_DATA

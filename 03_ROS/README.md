@@ -4,6 +4,8 @@ This guide explains how `03_ROS` fits into the robot software, how localization 
 
 **Review date: October 11, 2026.** This describes the source and configuration in the reviewed checkout. It is not a hardware validation report. The AprilTag design below is a proposal, not an implemented feature; no existing AprilTag detector or landmark-localization implementation was found during the review. Configuration and findings should be rechecked as the code changes.
 
+**Development update:** a [ROS 2 AprilTag detection launch and Windows/WSL guide](ghost_sensing/tools/apriltag_mvp/README.md) have since been added. They connect the upstream detector to RealSense images. The field-landmark conversion and EKF integration described below remain proposed work.
+
 ## Repository organization
 
 | Folder | Responsibility |
@@ -264,6 +266,8 @@ This preserves absolute field position. Keep tags out of the local odometry EKF,
 The existing `push_back_cv` pipeline can share the camera streams, but is not required for AprilTag localization. The proposed integration does not require changing V5 firmware or the serial message protocol.
 
 ## Implementation and validation sequence
+
+For an initial test on Windows developer PCs, use the [ROS 2 D435 AprilTag MVP](ghost_sensing/tools/apriltag_mvp/README.md). It runs Humble in Ubuntu 22.04 under WSL 2, with the upstream RealSense driver, image rectification, and `apriltag_ros` detector. The same launch supports recorded camera topics and later Jetson use. It estimates camera-relative tag poses; field localization and EKF integration remain future work.
 
 1. Fix launch/dependency issues and verify RealSense images, calibration, and TF on the actual Jetson.
 2. Run AprilTag detection independently and measure detection range, latency, and motion blur.
