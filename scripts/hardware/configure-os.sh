@@ -31,7 +31,9 @@ ConnectionRetrySec=5
 PollIntervalMinSec=3
 PollIntervalMaxSec=25
 EOF
+sudo systemctl enable --now systemd-timesyncd.service
 sudo systemctl restart systemd-timesyncd.service
+
 
 # Expose this script as the 'ghost' command system-wide.
 sudo ln -sf "$GHOST" /usr/local/bin/ghost
@@ -59,33 +61,33 @@ sleep 5
 # that same upstream. This matters for captive portals: once the robot logs in
 # over WiFi, the NAT'd clients ride its authenticated session and resolve through
 # the portal's DNS too.
-ETH_CONNECTION="ghost-eth"
-ETH_IP="192.168.50.1/24"
-ETH_INTERFACE=""
-for iface in enP8p1s0 eno1; do
-	if ip link show "$iface" >/dev/null 2>&1; then
-		ETH_INTERFACE="$iface"
-		break
-	fi
-done
-if [ -n "$ETH_INTERFACE" ]; then
-	sudo nmcli dev set "$ETH_INTERFACE" managed yes 2>/dev/null || true
-	if nmcli con show "$ETH_CONNECTION" >/dev/null 2>&1; then
-		sudo nmcli con modify "$ETH_CONNECTION" \
-			connection.interface-name "$ETH_INTERFACE" \
-			connection.autoconnect yes connection.autoconnect-priority 10 \
-			ipv4.method shared ipv4.addresses "$ETH_IP" \
-			ipv4.never-default yes
-	else
-		sudo nmcli con add type ethernet ifname "$ETH_INTERFACE" con-name "$ETH_CONNECTION" \
-			connection.autoconnect yes connection.autoconnect-priority 10 \
-			ipv4.method shared ipv4.addresses "$ETH_IP" \
-			ipv4.never-default yes
-	fi
-	sudo nmcli con up "$ETH_CONNECTION" || echo "ghost-eth: cable not plugged in yet; profile will auto-activate later"
-else
-	echo "ghost-eth: no wired interface found (tried enP8p1s0, eno1); skipping wired ROS network"
-fi
+# ETH_CONNECTION="ghost-eth"
+# ETH_IP="192.168.50.1/24"
+# ETH_INTERFACE=""
+# for iface in enP8p1s0 eno1; do
+# 	if ip link show "$iface" >/dev/null 2>&1; then
+# 		ETH_INTERFACE="$iface"
+# 		break
+# 	fi
+# done
+# if [ -n "$ETH_INTERFACE" ]; then
+# 	sudo nmcli dev set "$ETH_INTERFACE" managed yes 2>/dev/null || true
+# 	if nmcli con show "$ETH_CONNECTION" >/dev/null 2>&1; then
+# 		sudo nmcli con modify "$ETH_CONNECTION" \
+# 			connection.interface-name "$ETH_INTERFACE" \
+# 			connection.autoconnect yes connection.autoconnect-priority 10 \
+# 			ipv4.method shared ipv4.addresses "$ETH_IP" \
+# 			ipv4.never-default yes
+# 	else
+# 		sudo nmcli con add type ethernet ifname "$ETH_INTERFACE" con-name "$ETH_CONNECTION" \
+# 			connection.autoconnect yes connection.autoconnect-priority 10 \
+# 			ipv4.method shared ipv4.addresses "$ETH_IP" \
+# 			ipv4.never-default yes
+# 	fi
+# 	sudo nmcli con up "$ETH_CONNECTION" || echo "ghost-eth: cable not plugged in yet; profile will auto-activate later"
+# else
+# 	echo "ghost-eth: no wired interface found (tried enP8p1s0, eno1); skipping wired ROS network"
+# fi
 
 #cd /tmp
 

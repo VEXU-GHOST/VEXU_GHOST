@@ -13,3 +13,9 @@
 [submodule "09_External/plotjuggler-ros-plugins"]
 	path = 09_External/plotjuggler-ros-plugins
 	url = https://github.com/VEXU-GHOST/plotjuggler-ros-plugins.git
+[submodule "09_External/pico-sdk"]
+	path = 09_External/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk.git
+[submodule "09_External/picotool"]
+	path = 09_External/picotool
+	url = https://github.com/raspberrypi/picotool.git
