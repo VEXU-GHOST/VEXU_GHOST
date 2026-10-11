@@ -233,6 +233,10 @@ void TankRobotPlugin::initEstimation()
   qos_profile.transient_local();
   m_reset_pf_pub = node_ptr_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(pf_pose_topic, qos_profile);
 
+  // Teleop drive style: false = tank (left_y / right_y), true = arcade (left_y forward, right_x turn).
+  node_ptr_->declare_parameter("tank_robot_plugin.arcade_drive", false);
+  m_arcade_drive = node_ptr_->get_parameter("tank_robot_plugin.arcade_drive").as_bool();
+
   node_ptr_->declare_parameter("tank_robot_plugin.use_backup_estimator", false);
   m_use_backup_estimator = node_ptr_->get_parameter("tank_robot_plugin.use_backup_estimator").as_bool();
 
@@ -1245,10 +1249,25 @@ void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data)
 {
   double left_pct = joy_data->left_y / 127.0;
   double right_pct = joy_data->right_y / 127.0;
-  m_tank_model_ptr->driveCommandTank(left_pct, right_pct);
+  bool joystick_idle = false;
+
+  if (m_arcade_drive) {
+    // Left stick Y drives forward/back, right stick X turns (right = clockwise).
+    // driveCommandArcade treats positive angular as counter-clockwise, so negate x.
+    constexpr double deadzone = 0.05;
+    double fwd_pct = left_pct;
+    double turn_pct = joy_data->right_x / 127.0;
+    fwd_pct = (std::fabs(fwd_pct) < deadzone) ? 0.0 : fwd_pct;
+    turn_pct = (std::fabs(turn_pct) < deadzone) ? 0.0 : turn_pct;
+    m_tank_model_ptr->driveCommandArcade(fwd_pct, -turn_pct);
+    joystick_idle = (fwd_pct == 0.0 && turn_pct == 0.0);
+  } else {
+    m_tank_model_ptr->driveCommandTank(left_pct, right_pct);
+    joystick_idle = (std::fabs(left_pct) < 0.05 && std::fabs(right_pct) < 0.05);
+  }
 
   int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
-  if (std::fabs(left_pct) < 0.05 && std::fabs(right_pct) < 0.05) {
+  if (joystick_idle) {
     drive_curr_lim = 0;
   }
 

@@ -146,3 +146,47 @@ sudo nmcli dev wifi connect "Velocity Wi-Fi" password "<wifi-password>"
 ```sh
 rviz2
 ```
+
+## Foxglove connection
+
+The competition hardware launch (`ghost_override`, used by both Clyde and Blinky) and the
+simulation launch (`ghost_sim_examples`) each start one Foxglove Bridge on port 8765. Do not
+start another bridge on that port alongside them. Native setup installs `ros-humble-foxglove-bridge`
+through `scripts/update_dependencies.sh`; the Docker image installs it with apt as well. Both
+launch packages also declare it as a runtime dependency for rosdep.
+
+Print the connection address with the repository CLI:
+
+```bash
+ghost foxglove-url            # ws://orinx.local:8765
+ghost foxglove-url localhost  # ws://localhost:8765 for local simulation
+```
+
+Off-robot, run `./scripts/ghost foxglove-url` directly. In Foxglove, select Open connection,
+choose Foxglove WebSocket, and paste the URL. The command only prints an address; it does not
+start the bridge or test connectivity. `orinx.local` must resolve to the robot computer, and your
+laptop must be able to reach its port 8765. A different hostname or IPv4 address can be passed as
+the optional host argument.
+
+For local simulation:
+
+```bash
+./scripts/launch_sim.sh
+# Headless alternative for diagnostics:
+./scripts/launch_sim.sh sim_gui:=false rviz:=false
+```
+
+Docker publishes port 8765 to the host; recreate the dev container after changing Compose
+configuration, and rebuild its image after dependency changes. ROS runs inside the container,
+while Foxglove can run on the host.
+
+A 3D panel can use `/robot_description`, `/tf`, and `/tf_static`; sensor panels require the
+corresponding sensor topics to be published.
+
+## Teleop drive style
+
+Clyde and Blinky default to tank drive (left stick Y = left side, right stick Y = right side).
+To switch to arcade drive (left stick Y = forward/back, right stick X = turn), set
+`arcade_drive: true` under `tank_robot_plugin` in
+`11_Robots/ghost_override/config/base_ros_config.yaml` (or a per-robot ros_config), then rebuild
+and relaunch.

@@ -12,3 +12,9 @@
 # Optional per-user overrides (gitignored).
 [ -f "${VEXU_HOME:-/vexu}/12_Docker/bashrc.local" ] && \
   source "${VEXU_HOME:-/vexu}/12_Docker/bashrc.local"
+
+# Make the repository's ghost CLI available without a system-wide install.
+case ":$PATH:" in
+    *":${VEXU_HOME:-/vexu}/scripts:"*) ;;
+    *) export PATH="$PATH:${VEXU_HOME:-/vexu}/scripts" ;;
+esac

@@ -64,6 +64,8 @@ competition_state_machine_node:
       des_pos_topic: "/des_pos"
       err_pos_topic: "/err_pos"
       use_backup_estimator: false
+      # Teleop drive style: false = tank (left_y / right_y), true = arcade (left_y forward, right_x turn)
+      arcade_drive: false
       sim_mode: false
 
 /**:

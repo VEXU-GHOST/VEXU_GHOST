@@ -117,6 +117,16 @@ def generate_launch_description():
         parameters=[{"autostart": True, "node_names": ["planner_server", "controller_server"]}],
     )
 
+    # Foxglove bridge: exposes ROS topics over WebSocket on port 8765 for the
+    # Foxglove app. Launched once here so both Clyde and Blinky get it.
+    foxglove_bridge = Node(
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        name="foxglove_bridge",
+        output="screen",
+        parameters=[{"address": "0.0.0.0", "port": 8765}],
+    )
+
     rplidar_node = Node(
         package="rplidar_ros",
         executable="rplidar_node",
@@ -281,6 +291,7 @@ def generate_launch_description():
         # realsense_node,
         # push_back_cv_launch,
         bag_recorder_service,
+        foxglove_bridge,
         inter_robot_comms_node,
         # tts_music_node,
         OpaqueFunction(function = launch_setup),

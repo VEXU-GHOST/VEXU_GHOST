@@ -31,6 +31,8 @@ services:
       context: .
       dockerfile: 12_Docker/Dockerfile
     container_name: vexu-ghost
+    ports:
+      - "8765:8765"
     # Many hosts give containers broken DNS; rosdep needs raw.githubusercontent.com.
     dns:
       - 8.8.8.8

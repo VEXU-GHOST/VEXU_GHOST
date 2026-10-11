@@ -66,6 +66,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-vcstool \
     apt-rdepends \
     ros-humble-xacro \
+    ros-humble-foxglove-bridge \
     sox \
     libsox-fmt-mp3 \
     qtwayland5 \

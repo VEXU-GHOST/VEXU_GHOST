@@ -10,6 +10,7 @@ from launch.actions import (
     OpaqueFunction,
 )
 from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
@@ -41,7 +42,7 @@ def launch_setup(context, *args, **kwargs):
         executable="robot_state_publisher",
         name="robot_state_publisher",
         output="screen",
-        parameters=[{"use_sim_time": False}, {"robot_description": doc}],
+        parameters=[{"use_sim_time": True}, {"robot_description": doc}],
     )
 
 
@@ -70,10 +71,20 @@ def generate_launch_description():
 
     # Launch RVIZ Display as primary GUI interface
     rviz_node = Node(
+        condition=IfCondition(LaunchConfiguration("rviz")),
         package="rviz2",
         executable="rviz2",
         name="rviz2",
         arguments=["-d", rviz_config_path],
+    )
+
+    # Foxglove bridge (WebSocket on port 8765)
+    foxglove_bridge = Node(
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        name="foxglove_bridge",
+        output="screen",
+        parameters=[{"address": "0.0.0.0", "port": 8765}],
     )
 
     return LaunchDescription(
@@ -82,8 +93,10 @@ def generate_launch_description():
             DeclareLaunchArgument(name="channel_id", default_value="1"),
             DeclareLaunchArgument("sim_gui", default_value="true"),
             DeclareLaunchArgument("verbose", default_value="true"),
-            # simulation,
+            DeclareLaunchArgument("rviz", default_value="true"),
+            simulation,
             rviz_node,
+            foxglove_bridge,
             OpaqueFunction(function=launch_setup),
         ]
     )

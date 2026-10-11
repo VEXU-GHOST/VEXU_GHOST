@@ -324,6 +324,7 @@ protected:
   double m_reset_pose_angle_rad;
 
   bool m_use_backup_estimator = false;
+  bool m_arcade_drive = false;
   bool m_reset_world_pose = false;
   bool m_descore_up{false};
   bool m_score_pos_up{false};

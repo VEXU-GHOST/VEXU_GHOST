@@ -12,9 +12,9 @@ DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 # build, and set-robot-name are available.
 if [ ! -s /etc/ghost/robot_name ]; then
     case "$1" in
-        run|kill|build|clean|pros-clean|set-robot-name) ;;
+        run|kill|build|clean|pros-clean|set-robot-name|foxglove-url) ;;
         *)
-            echo "ghost $1: no robot name set (/etc/ghost/robot_name); only run/kill/build/clean/pros-clean/set-robot-name are available off-robot"
+            echo "ghost $1: no robot name set (/etc/ghost/robot_name); only run/kill/build/clean/pros-clean/set-robot-name/foxglove-url are available off-robot"
             exit 1
             ;;
     esac
@@ -99,12 +99,24 @@ case "$1" in
         sudo mkdir -p /etc/ghost
         echo "$2" | sudo tee /etc/ghost/robot_name > /dev/null
         ;;
+    "foxglove-url")
+        # Print the Foxglove WebSocket address; the bridge itself is started by the ROS launch files.
+        # Usage: ghost foxglove-url [host]   (default host: orinx.local; use localhost for local simulation)
+        host="${2:-orinx.local}"
+        case "$host" in
+            ""|*[!a-zA-Z0-9.-]*|[!a-zA-Z0-9]*)
+                echo "Host must be a hostname or IPv4 address, without ws:// or a port." >&2
+                exit 2
+                ;;
+        esac
+        printf 'ws://%s:8765\n' "$host"
+        ;;
     "log")
         echo "Showing ghost hardware logs"
         exec journalctl -xe --user-unit ghost-hardware
         ;;
     *)
-        echo "Usage: ghost [run [--v5]/build [pkg...]/clean [pkg...]/pros-clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>/log]"
+        echo "Usage: ghost [run [--v5]/build [pkg...]/clean [pkg...]/pros-clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>/foxglove-url [host]/log]"
         ;;
 esac
 
