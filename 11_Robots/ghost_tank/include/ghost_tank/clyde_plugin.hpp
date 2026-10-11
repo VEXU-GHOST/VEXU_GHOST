@@ -49,12 +49,12 @@
 namespace ghost_tank
 {
 
-class PinkyPlugin : public ghost_tank::TankRobotPlugin
+class ClydePlugin : public ghost_tank::TankRobotPlugin
 {
 public:
   using JoyPtr = std::shared_ptr<ghost_v5_interfaces::devices::JoystickDeviceData>;
 
-  PinkyPlugin();
+  ClydePlugin();
 
   void initialize() override;
   void disabled() override;

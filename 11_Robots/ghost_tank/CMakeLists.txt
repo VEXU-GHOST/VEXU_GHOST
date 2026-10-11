@@ -115,54 +115,54 @@ install(
   INCLUDES DESTINATION include
 )
 
-add_library(pinky_plugin SHARED src/pinky_plugin.cpp)
-target_include_directories(pinky_plugin
+add_library(clyde_plugin SHARED src/clyde_plugin.cpp)
+target_include_directories(clyde_plugin
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-  target_link_libraries(pinky_plugin
+  target_link_libraries(clyde_plugin
     tank_model
     tank_odom
     tank_tree
     tank_robot_plugin
   )
-ament_target_dependencies(pinky_plugin
+ament_target_dependencies(clyde_plugin
   ${DEPENDENCIES}
 )
 ament_export_libraries(
-  pinky_plugin
+  clyde_plugin
 )
-ament_export_targets(pinky_plugin HAS_LIBRARY_TARGET)
+ament_export_targets(clyde_plugin HAS_LIBRARY_TARGET)
 install(
-TARGETS pinky_plugin
-EXPORT pinky_plugin
+TARGETS clyde_plugin
+EXPORT clyde_plugin
 LIBRARY DESTINATION lib
 ARCHIVE DESTINATION lib
 RUNTIME DESTINATION bin
 INCLUDES DESTINATION include
 )
 
-add_library(inky_plugin SHARED src/inky_plugin.cpp)
-target_include_directories(inky_plugin
+add_library(blinky_plugin SHARED src/blinky_plugin.cpp)
+target_include_directories(blinky_plugin
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-  target_link_libraries(inky_plugin
+  target_link_libraries(blinky_plugin
     tank_model
     tank_odom
     tank_tree
     tank_robot_plugin
   )
-ament_target_dependencies(inky_plugin
+ament_target_dependencies(blinky_plugin
   ${DEPENDENCIES}
 )
 ament_export_libraries(
-  inky_plugin
+  blinky_plugin
 )
-ament_export_targets(inky_plugin HAS_LIBRARY_TARGET)
+ament_export_targets(blinky_plugin HAS_LIBRARY_TARGET)
 install(
-TARGETS inky_plugin
-EXPORT inky_plugin
+TARGETS blinky_plugin
+EXPORT blinky_plugin
 LIBRARY DESTINATION lib
 ARCHIVE DESTINATION lib
 RUNTIME DESTINATION bin
@@ -213,6 +213,8 @@ set(NODES
   outtakeBalls
   match_loading
   descorer
+  arm_pos
+  lift_pos
 )
 
 foreach(NODE ${NODES})

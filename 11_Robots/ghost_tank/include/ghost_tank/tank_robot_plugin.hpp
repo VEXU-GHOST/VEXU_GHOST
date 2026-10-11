@@ -76,6 +76,8 @@ protected:
   void initROSComms();
   void initEstimation();
   void initIntake();
+  void initArm();
+  void initLift();
   void initTankModel();
   void initAutonomy();
   ghost_control::PIDConfig loadPIDConfig(const std::string & param_prefix);
@@ -111,6 +113,41 @@ protected:
 
   void updateIntakeFromJoystick(JoyPtr joy_data);
   void updateConveyorOnly(bool active);
+
+  void updateLift(bool R2, bool R1);
+  void updateLiftFromJoystick(JoyPtr joy_data);
+
+  /**
+   * @brief Drives the arm to one of three preset positions, cycled by L2.
+   *
+   * Each L2 press (edge-triggered) advances to the next stage (wrapping back
+   * to the first after the last), and a PID controller running on the
+   * arm_motor encoder holds the arm at that stage's target position every
+   * loop.
+   *
+   * @param l2_pressed current state of the L2 button
+   */
+  void updateArm(bool l2_pressed);
+  void updateArmFromJoystick(JoyPtr joy_data);
+
+  /**
+   * @brief Drives arm_motor to the given preset stage (0-2) and holds it
+   * there with the arm PID controller. Shared by teleop's L2 cycling
+   * (updateArm) and auton's ArmPosCmd BT node.
+   *
+   * @param stage index into m_arm_stage_positions_deg
+   */
+  void updateArmToStage(size_t stage);
+
+  /**
+   * @brief Drives lift1_motor/lift2_motor to the given preset stage (0-4)
+   * and holds it there with the lift PID controller. Used by auton's
+   * LiftPosCmd BT node; teleop still drives the lift with raw up/down power
+   * (updateLift).
+   *
+   * @param stage index into m_lift_stage_positions_deg
+   */
+  void updateLiftToStage(size_t stage);
   void toggleBite(bool signal);
 
   void updateDescore(bool open);
@@ -239,6 +276,13 @@ protected:
   std::shared_ptr<ghost_control::PIDController> m_distance_settling_controller_ptr;
   std::shared_ptr<ghost_control::PIDController> m_steering_settling_controller_ptr;
   std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
+
+  // Arm (3-stage PID position control on arm_motor, toggled with L2)
+  std::shared_ptr<ghost_control::PIDController> m_arm_controller_ptr;
+  std::vector<double> m_arm_stage_positions_deg{0.0, 0.0, 0.0};
+  size_t m_arm_stage{0};
+  std::shared_ptr<ghost_control::PIDController> m_lift_controller_ptr;
+  std::vector<double> m_lift_stage_positions_deg{0.0, 0.0, 0.0, 0.0, 0.0};
 
   // Autonomy
   std::string bt_path_;

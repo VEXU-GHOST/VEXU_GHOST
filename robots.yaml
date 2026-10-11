@@ -1,5 +1,5 @@
 ### Points to selected robot configuration for PROS compile ###
-selected_robot: PINKY
+selected_robot: CLYDE
 
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:
@@ -17,8 +17,8 @@ GHOST_24:
 GHOST_TANK:
   config_file: 11_Robots/ghost_override/config/robot_hardware_config_tank.yaml
 
-PINKY:
-  config_file: 11_Robots/ghost_override/config/pinky/pinky_hardware_config.yaml
+CLYDE:
+  config_file: 11_Robots/ghost_override/config/clyde/clyde_hardware_config.yaml
 
-INKY:
-  config_file: 11_Robots/ghost_override/config/inky/inky_hardware_config.yaml
+BLINKY:
+  config_file: 11_Robots/ghost_override/config/blinky/blinky_hardware_config.yaml

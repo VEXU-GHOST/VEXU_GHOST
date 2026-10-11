@@ -19,24 +19,24 @@ def generate_launch_description():
     tank_config_path = os.path.join(os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_tank", "config")
 
     # This contains all the parameters for our ROS nodes
-    ros_config_file = os.path.join(config_path, "pinky/pinky_ros_config.yaml")
+    ros_config_file = os.path.join(config_path, "blinky/blinky_ros_config.yaml")
 
     # This contains all the port and device info that gets compiled on to the V5 Brain
-    robot_config_yaml_path = os.path.join(config_path, "pinky/pinky_hardware_config.yaml")
+    robot_config_yaml_path = os.path.join(config_path, "blinky/blinky_hardware_config.yaml")
 
     # Shared localization config (particle filter + robot_localization EKFs),
     # split out of base_ros_config.yaml.
     localization_config_file = os.path.join(config_path, "localization_config.yaml")
 
     # This specifies robot control plugin yo load
-    plugin_type = "ghost_tank::PinkyPlugin"
-    robot_name = "PINKY"
+    plugin_type = "ghost_tank::BlinkyPlugin"
+    robot_name = "BLINKY"
 
     # Get BT Path for autons. The BT filenames live in this robot's init config
     # so they can be swapped per match without touching this launch file; we
     # resolve them to absolute paths under the ghost_tank share config dir here.
     ghost_tank_share_dir = get_package_share_directory("ghost_tank")
-    init_config_path = os.path.join(config_path, "pinky/pinky_init_config.yaml")
+    init_config_path = os.path.join(config_path, "blinky/blinky_init_config.yaml")
     with open(init_config_path, "r") as f:
         init_config = yaml.safe_load(f)
     csm_params = init_config["competition_state_machine_node"]["ros__parameters"]

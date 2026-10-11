@@ -1,9 +1,9 @@
-# Inter-robot comms radio (VEXlink). link_id MUST match inky's. One end transmits, one receives.
+# Inter-robot comms radio (VEXlink). link_id MUST match clyde's. One end transmits, one receives.
 # Set port to the V5 smart port wired to the radio; port 0 (or omitting this block) disables the relay.
 inter_robot_link:
     port: 16
     link_id: "ghost_override_link"
-    is_transmitter: true
+    is_transmitter: false
 
 port_configuration:
     digital_io:
@@ -174,4 +174,3 @@ port_configuration:
                 send_position_command: true
                 send_velocity_command: false
                 send_voltage_command: true
-

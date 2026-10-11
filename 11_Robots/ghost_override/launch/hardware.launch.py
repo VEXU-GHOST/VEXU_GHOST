@@ -191,7 +191,7 @@ def generate_launch_description():
 
     def launch_setup(context, *args, **kwargs): 
         robot_name = LaunchConfiguration("robot_name").perform(context)
-        name_options = ["pinky", "inky"]
+        name_options = ["clyde", "blinky"]
 
         if robot_name not in name_options:
             print()

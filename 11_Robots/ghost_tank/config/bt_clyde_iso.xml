@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
-  main_tree_to_execute="bt_pinky_iso"
+  main_tree_to_execute="bt_clyde_iso"
 
 >
   <include path="bt_scoring.xml"/>
-  <BehaviorTree ID="bt_pinky_iso"
+  <BehaviorTree ID="bt_clyde_iso"
   >
     <Sequence>
      

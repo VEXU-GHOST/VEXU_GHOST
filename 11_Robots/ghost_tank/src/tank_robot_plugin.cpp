@@ -74,7 +74,7 @@ void TankRobotPlugin::populateMotorNames()
     "drive_l3",
     "drive_l4",
     "drive_l5",
-    "drive_l6",
+    // "drive_l6",
     "drive_l7",
     // "drive_l8",
   };
@@ -110,6 +110,8 @@ void TankRobotPlugin::initialize()
   initROSComms();
   initEstimation();
   initIntake();
+  initArm();
+  initLift();
   initTankModel();
   initAutonomy();
   resetWorldPose();
@@ -170,7 +172,7 @@ void TankRobotPlugin::initROSComms()
   m_robot_color = node_ptr_->create_subscription<std_msgs::msg::String>("/sensors/color_sensors/intake/color", rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::colorCallback, this, _1));
 
   // Auto-sort colour source: a ball_color_classifier publishing BallColor. The
-  // sensor name differs per robot (pinky: sorter_hood, inky: intake), so the
+  // sensor name differs per robot (clyde: sorter_hood, blinky: intake), so the
   // topic is a parameter set in each robot's config.
   node_ptr_->declare_parameter("tank_robot_plugin.sort_color_topic", "/sensors/color/intake/class");
   std::string sort_color_topic = node_ptr_->get_parameter("tank_robot_plugin.sort_color_topic").as_string();
@@ -328,6 +330,34 @@ PIDConfig TankRobotPlugin::loadPIDConfig(const std::string & param_prefix)
   config.integral_activation_bound = node_ptr_->get_parameter("tank_robot_plugin." + param_prefix + ".integral_activation_bound").as_double();
 
   return config;
+}
+
+void TankRobotPlugin::initArm()
+{
+  std::cout << "[TankRobotPlugin::initArm]" << std::endl;
+
+  auto arm_pid_config = loadPIDConfig("arm");
+  m_arm_controller_ptr = std::make_shared<PIDController>(arm_pid_config);
+
+  // 3 preset arm stage positions (motor encoder degrees), cycled by L2 in
+  // updateArm(). Left at 0.0 for now -- tune via config yaml.
+  node_ptr_->declare_parameter(
+    "tank_robot_plugin.arm_stage_positions_deg", std::vector<double>{0.0, 0.0, 0.0});
+  m_arm_stage_positions_deg = node_ptr_->get_parameter(
+    "tank_robot_plugin.arm_stage_positions_deg").as_double_array();
+}
+
+void TankRobotPlugin::initLift()
+{
+  std::cout << "[TankRobotPlugin::initLift]" << std::endl;
+
+  auto lift_pid_config = loadPIDConfig("lift");
+  m_lift_controller_ptr = std::make_shared<PIDController>(lift_pid_config);
+  node_ptr_->declare_parameter(
+    "tank_robot_plugin.lift_stage_positions_deg",
+    std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0});
+  m_lift_stage_positions_deg = node_ptr_->get_parameter(
+    "tank_robot_plugin.lift_stage_positions_deg").as_double_array();
 }
 
 void TankRobotPlugin::initTankModel()
@@ -497,6 +527,8 @@ void TankRobotPlugin::autonomous(double current_time)
     bt_->set_variable<int>("switcher_direction", 0);
     bt_->set_variable<int>("outtake_direction", 0);
     bt_->set_variable<int>("score_ball_direction", 0);
+    bt_->set_variable<int>("arm_target_stage", -1);
+    bt_->set_variable<int>("lift_target_stage", -1);
     bt_->set_variable<bool>("auto_sort_active", false);
     m_sort_state = SortState::INTAKING;
   }
@@ -545,6 +577,30 @@ void TankRobotPlugin::autonomous(double current_time)
     rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
   }
+
+  // Apply arm/lift stage commands set by ArmPosCmd/LiftPosCmd BT nodes.
+  // -1 = no command (leave whatever was last commanded / teleop's control).
+  static int last_bt_arm_stage = -1;
+  int arm_target_stage = -1;
+  bt_->get_variable<int>("arm_target_stage", arm_target_stage);
+  if (arm_target_stage >= 0) {
+    if (arm_target_stage != last_bt_arm_stage) {
+      m_arm_controller_ptr->reset();
+    }
+    updateArmToStage(static_cast<size_t>(arm_target_stage));
+  }
+  last_bt_arm_stage = arm_target_stage;
+
+  static int last_bt_lift_stage = -1;
+  int lift_target_stage = -1;
+  bt_->get_variable<int>("lift_target_stage", lift_target_stage);
+  if (lift_target_stage >= 0) {
+    if (lift_target_stage != last_bt_lift_stage) {
+      m_lift_controller_ptr->reset();
+    }
+    updateLiftToStage(static_cast<size_t>(lift_target_stage));
+  }
+  last_bt_lift_stage = lift_target_stage;
 
   // Auto-sort (AutoSortCmd BT node). While active, take over the intake + sorter:
   // constantly intake and fire the sorter on a wrong-colour ball. Runs after the
@@ -688,14 +744,10 @@ void TankRobotPlugin::teleop(double current_time)
   }
   m_auto_sort_btn_pressed = joy_data->btn_r;
 
-  if (m_auto_sort_enabled) {
-    autoSort(current_time);
-  } else {
-    updateIntakeFromJoystick(joy_data);
-  }
+  updateLiftFromJoystick(joy_data);
+  updateArmFromJoystick(joy_data);
   updateDrivetrain(joy_data);
-  updateScorePos((!r2_held) && (joy_data->btn_l2));
-  updateMatchLoading(joy_data->btn_b);
+
   updateColorSwitcher(joy_data->btn_u);
 }
 
@@ -1021,12 +1073,89 @@ void TankRobotPlugin::updateIntake(bool R2, bool R1, bool L1, bool L2)
   rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
 }
 
+void TankRobotPlugin::updateLift(bool R2, bool R1)
+{
+  double lift_power = 0.0;
+
+  if (R1) {
+    lift_power = 1.0;
+  }
+  else if (R2) {
+    lift_power = -1.0;
+  }
+  else {
+    lift_power = 0.0;
+  }
+
+  rhi_ptr_->setMotorVoltageCommandPercent("lift1_motor", lift_power);
+  rhi_ptr_->setMotorVoltageCommandPercent("lift2_motor", lift_power);
+
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift1_motor", 2500);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift2_motor", 2500);
+}
+
+void TankRobotPlugin::updateArm(bool l2_pressed)
+{
+  // Edge-triggered: each L2 press advances to the next stage, wrapping back
+  // to the first after the last.
+  static bool last_l2_state = false;
+  if (l2_pressed && !last_l2_state) {
+    m_arm_stage = (m_arm_stage + 1) % m_arm_stage_positions_deg.size();
+    m_arm_controller_ptr->reset();
+  }
+  last_l2_state = l2_pressed;
+
+  updateArmToStage(m_arm_stage);
+}
+
+void TankRobotPlugin::updateArmToStage(size_t stage)
+{
+  double target_position_deg = m_arm_stage_positions_deg[stage];
+  double current_position_deg = rhi_ptr_->getMotorPosition("arm_motor");
+  double current_velocity_deg_per_sec = rhi_ptr_->getMotorVelocityRPM("arm_motor") * 6.0;
+
+  double error = target_position_deg - current_position_deg;
+  double error_deriv = -current_velocity_deg_per_sec;
+
+  double arm_power = ghost_util::clamp(m_arm_controller_ptr->calculateCommand(error, error_deriv), -1.0, 1.0);
+
+  rhi_ptr_->setMotorVoltageCommandPercent("arm_motor", arm_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("arm_motor", 2500);
+}
+
+void TankRobotPlugin::updateLiftToStage(size_t stage)
+{
+  double target_position_deg = m_lift_stage_positions_deg[stage];
+  double current_position_deg = rhi_ptr_->getMotorPosition("lift1_motor");
+  double current_velocity_deg_per_sec = rhi_ptr_->getMotorVelocityRPM("lift1_motor") * 6.0;
+
+  double error = target_position_deg - current_position_deg;
+  double error_deriv = -current_velocity_deg_per_sec;
+
+  double lift_power = ghost_util::clamp(m_lift_controller_ptr->calculateCommand(error, error_deriv), -1.0, 1.0);
+
+  rhi_ptr_->setMotorVoltageCommandPercent("lift1_motor", lift_power);
+  rhi_ptr_->setMotorVoltageCommandPercent("lift2_motor", lift_power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift1_motor", 2500);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("lift2_motor", 2500);
+}
+
 void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
 {
   // Pass R2 for intake, R1 for outtake
   updateIntake(joy_data->btn_r2, joy_data->btn_r1, joy_data->btn_l1, joy_data->btn_l2);
 }
 
+void TankRobotPlugin::updateLiftFromJoystick(JoyPtr joy_data)
+{
+  // Pass R2 for lift up, R1 for lift down
+  updateLift(joy_data->btn_r2, joy_data->btn_r1);
+}
+
+void TankRobotPlugin::updateArmFromJoystick(JoyPtr joy_data)
+{
+  updateArm(joy_data->btn_l2);
+}
 
 void TankRobotPlugin::updateMatchLoading(bool input)
 {

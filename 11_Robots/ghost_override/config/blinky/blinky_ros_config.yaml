@@ -86,4 +86,20 @@ competition_state_machine_node:
         integral_limit: 0.75
         integral_activation_bound: 0.2
 
-      # init pose / alliance / auton BT live in inky/inky_init_config.yaml
+      arm:
+        kp: 0.0
+        ki: 0.0
+        kd: 0.0
+        integral_limit: 0.0
+        integral_activation_bound: 0.0
+      arm_stage_positions_deg: [0.0, 0.0, 0.0]
+
+      lift:
+        kp: 0.0
+        ki: 0.0
+        kd: 0.0
+        integral_limit: 0.0
+        integral_activation_bound: 0.0
+      lift_stage_positions_deg: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+      # init pose / alliance / auton BT live in blinky/blinky_init_config.yaml
