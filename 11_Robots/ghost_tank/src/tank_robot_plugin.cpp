@@ -65,7 +65,7 @@ void TankRobotPlugin::populateMotorNames()
     "drive_r4",
     "drive_r5",
     "drive_r6",
-    "drive_r7",
+    // "drive_r7",
     // "drive_r8",
   };
   m_left_drive_motor_names = {
@@ -74,8 +74,8 @@ void TankRobotPlugin::populateMotorNames()
     "drive_l3",
     "drive_l4",
     "drive_l5",
-    // "drive_l6",
-    "drive_l7",
+    "drive_l6",
+    // "drive_l7",
     // "drive_l8",
   };
 
@@ -745,6 +745,7 @@ void TankRobotPlugin::teleop(double current_time)
   m_auto_sort_btn_pressed = joy_data->btn_r;
 
   updateLiftFromJoystick(joy_data);
+  updateToggleMechFromJoystick(joy_data);
   updateArmFromJoystick(joy_data);
   updateDrivetrain(joy_data);
 
@@ -1094,6 +1095,21 @@ void TankRobotPlugin::updateLift(bool R2, bool R1)
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift2_motor", 2500);
 }
 
+void TankRobotPlugin::updateToggleMech(bool A, bool B)
+{
+  double power = 0.0;
+
+  if (A) {
+    power = 1.0;
+  }
+  else if (B) {
+    power = -1.0;
+  }
+
+  rhi_ptr_->setMotorVoltageCommandPercent("toggle_mech_motor", power);
+  rhi_ptr_->setMotorCurrentLimitMilliAmps("toggle_mech_motor", 2500);
+}
+
 void TankRobotPlugin::updateArm(bool l2_pressed)
 {
   // Edge-triggered: each L2 press advances to the next stage, wrapping back
@@ -1150,6 +1166,12 @@ void TankRobotPlugin::updateLiftFromJoystick(JoyPtr joy_data)
 {
   // Pass R2 for lift up, R1 for lift down
   updateLift(joy_data->btn_r2, joy_data->btn_r1);
+}
+
+void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data)
+{
+  // A for one direction, B for the other
+  updateToggleMech(joy_data->btn_a, joy_data->btn_b);
 }
 
 void TankRobotPlugin::updateArmFromJoystick(JoyPtr joy_data)

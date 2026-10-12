@@ -117,6 +117,9 @@ protected:
   void updateLift(bool R2, bool R1);
   void updateLiftFromJoystick(JoyPtr joy_data);
 
+  void updateToggleMech(bool A, bool B);
+  void updateToggleMechFromJoystick(JoyPtr joy_data);
+
   /**
    * @brief Drives the arm to one of three preset positions, cycled by L2.
    *

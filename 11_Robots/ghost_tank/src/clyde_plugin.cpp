@@ -58,12 +58,12 @@ void ClydePlugin::populateMotorNames()
 {
   m_right_drive_motor_names = {
     "drive_r1",
-    // "drive_r2",  // port reused by lift/arm
+    "drive_r2",  // port reused by lift/arm
     "drive_r3",
-    // "drive_r4",  // port reused by lift/arm
+    "drive_r4",  // port reused by lift/arm
     "drive_r5",
-    // "drive_r6",  // port reused by lift/arm
-    "drive_r7",
+    "drive_r6",  // port reused by lift/arm
+    // "drive_r7",
     // "drive_r8",
   };
   m_left_drive_motor_names = {
@@ -72,8 +72,8 @@ void ClydePlugin::populateMotorNames()
     "drive_l3",
     "drive_l4",
     "drive_l5",
-    // "drive_l6",  // port reused by lift/arm
-    "drive_l7",
+    "drive_l6",  // port reused by lift/arm
+    // "drive_l7",
     // "drive_l8",
   };
 
