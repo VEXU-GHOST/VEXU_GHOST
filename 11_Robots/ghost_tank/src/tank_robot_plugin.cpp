@@ -1164,8 +1164,34 @@ void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
 
 void TankRobotPlugin::updateLiftFromJoystick(JoyPtr joy_data)
 {
-  // Pass R2 for lift up, R1 for lift down
-  updateLift(joy_data->btn_r2, joy_data->btn_r1);
+  // Edge-triggered: X steps up a stage, Y steps down a stage (clamped, no wrap).
+  static bool last_x_state = false;
+  static bool last_y_state = false;
+  bool x_pressed = joy_data->btn_x && !last_x_state;
+  bool y_pressed = joy_data->btn_y && !last_y_state;
+  last_x_state = joy_data->btn_x;
+  last_y_state = joy_data->btn_y;
+
+  if (x_pressed != y_pressed) {
+    if (x_pressed && m_lift_stage + 1 < m_lift_stage_positions_deg.size()) {
+      m_lift_stage++;
+    } else if (y_pressed && m_lift_stage > 0) {
+      m_lift_stage--;
+    }
+    m_lift_stage_active = true;
+    m_lift_controller_ptr->reset();
+  }
+
+  // Manual R1/R2 overrides stage control
+  if (joy_data->btn_r1 || joy_data->btn_r2) {
+    m_lift_stage_active = false;
+  }
+
+  if (m_lift_stage_active) {
+    updateLiftToStage(m_lift_stage);
+  } else {
+    updateLift(joy_data->btn_r2, joy_data->btn_r1);
+  }
 }
 
 void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data)
@@ -1266,8 +1292,8 @@ void TankRobotPlugin::updateMusic(double current_time, JoyPtr joy_data)
 void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data)
 {
   double left_pct = joy_data->left_y / 127.0;
-  double right_pct = joy_data->right_y / 127.0;
-  m_tank_model_ptr->driveCommandTank(left_pct, right_pct);
+  double right_pct = joy_data->right_x / 127.0;
+  m_tank_model_ptr->driveCommandArcade(left_pct, right_pct);
 
   int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
   if (std::fabs(left_pct) < 0.05 && std::fabs(right_pct) < 0.05) {

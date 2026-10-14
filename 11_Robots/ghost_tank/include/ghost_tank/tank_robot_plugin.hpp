@@ -286,6 +286,10 @@ protected:
   size_t m_arm_stage{0};
   std::shared_ptr<ghost_control::PIDController> m_lift_controller_ptr;
   std::vector<double> m_lift_stage_positions_deg{0.0, 0.0, 0.0, 0.0, 0.0};
+  // Teleop lift stage (X = up a stage, Y = down a stage). Stage control is only
+  // active after an X/Y press; manual R1/R2 overrides it until the next X/Y press.
+  size_t m_lift_stage{0};
+  bool m_lift_stage_active{false};
 
   // Autonomy
   std::string bt_path_;

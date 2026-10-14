@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+  main_tree_to_execute="bt_clyde_tuning"
+
+>
+  <!-- <include path="bt_scoring.xml"/> -->
+  <BehaviorTree ID="bt_clyde_tuning"
+  >
+    <Sequence>
+      <!-- <MoveToPoint kp="1.7"
+        kd="0.15"
+        max_effort_percent="0.8"
+        timeout_ms="3000"
+        backwards="false"
+        distance_tiles="1.0"/> -->
+      <TurnToPoint posX_tiles="0.0"
+        posY_tiles="1.0"
+        timeout_ms="3000"
+        backwards="false"
+        angle_exit_threshold_deg=".5"/>
+      <!-- <MoveToPoint kp="1.6"
+        kd="0.0"
+        max_effort_percent="0.35"
+        timeout_ms="3000"
+        backwards="false"
+        distance_tiles="0.3"/>
+      <ScorePosCmd active="true"/>
+      <WaitCmd seconds="3.0"/>
+      <ScorePosCmd active="false"/>  -->
+
+
+
+     
+    </Sequence>
+  </BehaviorTree>
+</root>
