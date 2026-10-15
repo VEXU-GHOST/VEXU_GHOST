@@ -88,7 +88,7 @@ the by-id lookup; other configs default to `/dev/ttyACM1`.
 | `RobotHardwareInterface` (RHI) | [01_Libraries/ghost_v5_interfaces](../../../01_Libraries/ghost_v5_interfaces) | Device list built from the YAML; serializes and deserializes each stream |
 | `JetsonV5SerialNode` | [03_ROS/ghost_ros_interfaces/src/serial/jetson_v5_serial_node.cpp](../../../03_ROS/ghost_ros_interfaces/src/serial/jetson_v5_serial_node.cpp) | ROS node: reads/writes serial, converts RHI ⇄ ROS messages |
 | `V5SerialNode` | [ghost_v5/serial/v5_serial_node.cpp](ghost_v5/serial/v5_serial_node.cpp) | PROS side: applies actuator commands, sends state |
-| `main.cpp` | [main.cpp](main.cpp) | Tasks: `reader_loop`, `ghost_main_loop`, `actuator_timeout_loop` |
+| `main.cpp` | [main.cpp](main.cpp) | PROS tasks `reader_loop`, `actuator_timeout_loop` and `screen_update_loop`, plus `ghost_main_loop()`, which is called from the competition-mode functions rather than from a task (section 5) |
 
 ### 1.3 Wire protocol
 
@@ -127,29 +127,46 @@ robot YAML**. A mismatch produces no valid messages; the Jetson logs
 
 ### 1.5 Failure handling
 
-**Jetson:** reconnects automatically.
+Two independent watchdogs, one on each end. Neither knows about the other.
+
+| End | Watchdog | Fires after | Action |
+|---|---|---|---|
+| Jetson | `serialTimeoutLoop` | 100 ms with no valid message | Closes the port and rebuilds the serial interface; `serialLoop` reopens it |
+| V5 Brain | `actuator_timeout_loop` | 50 ms with no actuator command (`cmd_timeout_ms`) | Zeroes every motor |
+
+**Jetson — reconnects automatically.** The port alternation below only does anything when the two configured
+names differ, which on the Override robots they do not (section 4.2).
 
 ```mermaid
 stateDiagram-v2
+    direction LR
     [*] --> Closed
-    Closed --> Open: open port OK
-    Closed --> Closed: open failed, swap to the other port name
-    Open --> Open: valid message received
-    Open --> Closed: no valid message for 100 ms
+    Closed --> Open: open succeeds
+    Open --> Closed: 100 ms with no<br/>valid message
+
+    note right of Closed
+        Retry every 10 ms, alternating
+        port_name / backup_port_name
+    end note
 ```
 
-**V5 Brain:** stops the motors on its own.
+**V5 Brain — fails safe on its own.**
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Running
-    Running --> Running: command received
-    Running --> Stopped: no command for 50 ms, zero all actuators
-    Stopped --> Running: command received
+    direction LR
+    [*] --> Driving
+    Driving --> Zeroed: 50 ms with no<br/>actuator command
+    Zeroed --> Driving: command arrives
+
+    note right of Zeroed
+        Motors held at zero until
+        commands resume
+    end note
 ```
 
-The V5 stop is the safety net if the Jetson or the cable drops out. (`serialTimeoutLoop` and `serialLoop` in the
-Jetson node; `actuator_timeout_loop` and `cmd_timeout_ms` on the Brain.)
+The V5 side is the safety net: if the Jetson, the cable or the ROS stack drops out, the Brain stops the robot
+without being told to.
 
 ### 1.6 Inter-robot slot
 
@@ -171,14 +188,18 @@ One YAML file per robot describes the hardware. Both devices read it, in differe
 [robots.yaml](../../../robots.yaml) lists the available robots and picks one for the PROS build:
 
 ```yaml
-selected_robot: PINKY
-PINKY:
-  config_file: 11_Robots/ghost_override/config/pinky/pinky_hardware_config.yaml
+selected_robot: MY_ROBOT
+MY_ROBOT:
+  config_file: 11_Robots/ghost_override/config/my_robot/my_robot_hardware_config.yaml
 ```
+
+Robot names change from season to season as designs change, so `robots.yaml` is the source of truth for which
+names exist. This document uses placeholders rather than naming the robots of any one year.
 
 ### 2.2 Structure of a robot YAML
 
-Example: [pinky_hardware_config.yaml](../../../11_Robots/ghost_override/config/pinky/pinky_hardware_config.yaml).
+One file per robot, under [11_Robots/ghost_override/config](../../../11_Robots/ghost_override/config) as
+`<robot>/<robot>_hardware_config.yaml`.
 
 ```yaml
 port_configuration:
@@ -234,8 +255,9 @@ There are two kinds of generated code, and they are easy to confuse.
 ### 3.1 V5: `robot_config.hpp` (generated C++)
 
 `generate_pros_header` ([generate_pros_header.cpp](../../../01_Libraries/ghost_v5_interfaces/src/util/generate_pros_header.cpp))
-turns the selected robot's YAML into [02_V5/ghost_pros/include/robot_config.hpp](../include/robot_config.hpp).
-The file is git-ignored and regenerated on every build; **do not edit it**.
+turns the selected robot's YAML into `02_V5/ghost_pros/include/robot_config.hpp`. That path is deliberately not
+a link: the file is git-ignored and regenerated on every build, so it exists only in your working tree after a
+build. **Do not edit it.**
 
 Steps:
 1. Read `selected_robot` and `config_file` from `robots.yaml` (needs `VEXU_HOME`).
@@ -273,7 +295,7 @@ updates symlinks, runs `build/ghost_v5_interfaces/generate_pros_header robots.ya
 `pros make`. Uploading uses [pros_upload.sh](../../../scripts/build/pros_upload.sh).
 
 ```bash
-# 1. Set selected_robot in robots.yaml (e.g. PINKY or INKY)
+# 1. Set selected_robot in robots.yaml to one of the robots listed in that file
 # 2. Build the ROS workspace first (this builds generate_pros_header)
 bash scripts/build/build.sh      # also builds and uploads the PROS project if `pros` is installed
 ```
@@ -282,15 +304,23 @@ Use the same robot YAML for the Jetson launch (`robot_config_yaml_path`).
 
 ### 4.2 Launch on the Jetson
 
-The robot launch files (for example `inky.launch.py`, `pinky.launch.py`) start `ghost_serial_node` with:
+Each robot has its own launch file under
+[11_Robots/ghost_override/launch](../../../11_Robots/ghost_override/launch) as `<robot>/<robot>.launch.py`,
+included by `hardware.launch.py`. Each starts `ghost_serial_node` with:
 
-| Parameter | Default | Meaning |
+| Parameter | Node default | Meaning |
 |---|---|---|
-| `port_name` / `backup_port_name` | `/dev/ttyACM1` / `/dev/ttyACM2` | Serial device to open (alternates on failure) |
+| `port_name` / `backup_port_name` | `/dev/ttyACM1` / `/dev/ttyACM2` | Serial device to open; `initSerial()` alternates between the two after a failed open |
 | `robot_config_yaml_path` | `""` | Robot YAML (must match the V5 build) |
 | `use_checksum` | `true` | Must match the V5 (the V5 hardcodes `true`) |
 | `read_msg_start_seq` / `write_msg_start_seq` | `sout` / `msg` | Must match the V5 |
 | `verbose` | `false` | Print raw bytes read |
+
+Those are the **node's own** defaults, and the port alternation described in section 1.5 is a no-op on the
+Override robots, because both names end up pointing at the same device: the per-robot launch file passes the
+by-id path resolved by `hardware.launch.py` as *both* `port_name` and `backup_port_name`, and
+`base_ros_config.yaml` sets both to `/dev/ttyACM1` as the fallback. Don't go hunting for a failover that never
+happens.
 
 ### 4.3 ROS interface
 
@@ -326,6 +356,15 @@ ros2 topic hz /v5/sensor_update       # messages arriving?
 - `updateActuatorCommands(buffer)`: deserializes into the RHI, applies motor modes and commands, sets current limits (smallest first), and drives digital outputs.
 - `writeV5StateUpdate()`: samples competition state, joysticks, motors, encoders, IMUs, and digital inputs into the RHI, then serializes and writes.
 
-`main.cpp` tasks: `reader_loop` (reads at `loop_frequency / 2`), `ghost_main_loop` (relay, state write, actuator
-update), `actuator_timeout_loop` (safety). More detail:
-[V5_Serial_Node_Notes.md](ghost_v5/serial/V5_Serial_Node_Notes.md).
+How [main.cpp](main.cpp) drives all this:
+
+| Function | How it runs | What it does |
+|---|---|---|
+| `reader_loop` | PROS task, started in `initialize()` | Calls `readV5ActuatorUpdate()`, then delays `loop_frequency / 2`. `loop_frequency` is a **period in milliseconds** (10), so that is a 5 ms delay: the reader deliberately runs at *twice* the main-loop rate, because it blocks waiting on serial and must stay ahead of the producer |
+| `actuator_timeout_loop` | PROS task, started in `initialize()` | Zeroes every actuator if no command has arrived for `cmd_timeout_ms` (50 ms) |
+| `screen_update_loop` | PROS task, started in `initialize()` | Drives the Brain's LCD |
+| `ghost_main_loop` | **Not a task.** Called from the body of `disabled()`, `competition_initialize()`, `autonomous()` and `opcontrol()`, each delaying `loop_frequency` (10 ms) | `relay_inter_robot_link()`, then `writeV5StateUpdate()`, then zeroes the motors if disabled, then `update_actuators()` |
+
+Because `ghost_main_loop` runs from the competition-mode functions rather than from its own task, the sensor
+update and the VEXlink relay run **only while one of those modes is active**, and they stop entirely if
+`v5_globals::run` is cleared by an exception (`exit_main_loop`).
