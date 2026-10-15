@@ -29,3 +29,17 @@ sound_effects
 
 # Auto-generated
 02_V5/ghost_pros/include/robot_config.hpp
+
+# These are symlinked from 02_V5/ghost_comms/pros_template (and thus duplicated)
+02_V5/ghost_comms/manager/common.mk
+02_V5/ghost_comms/manager/firmware
+02_V5/ghost_comms/manager/include/pros
+02_V5/ghost_comms/manager/include/liblvgl
+02_V5/ghost_comms/manager/include/api.h
+02_V5/ghost_comms/manager/include/vexlink_protocol.hpp
+02_V5/ghost_comms/worker/common.mk
+02_V5/ghost_comms/worker/firmware
+02_V5/ghost_comms/worker/include/pros
+02_V5/ghost_comms/worker/include/liblvgl
+02_V5/ghost_comms/worker/include/api.h
+02_V5/ghost_comms/worker/include/vexlink_protocol.hpp
