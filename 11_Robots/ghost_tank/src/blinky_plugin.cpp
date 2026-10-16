@@ -88,20 +88,20 @@ void BlinkyPlugin::populateMotorNames()
 
 void BlinkyPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["sorter"] = 0;
-  digital_io_port_map["descorer"] = 1;
-  digital_io_port_map["switcher"] = 2;
-  digital_io_port_map["left_blocker"] = 3;
-  digital_io_port_map["right_blocker"] = 4;
-  digital_io_port_map["little_will"] = 7;
-
+  digital_io_port_map["clamp"] = 0;
+  
   // climb / shooter / goal_rush solenoids do not physically exist on clyde,
   // but the autonomous() pneumatics block still references them. Without explicit
   // entries, operator[] would default-insert them at port 0 and clobber the sorter
   // every loop. Park them on bit 5 (F), an output with no mechanism assigned, so
   // their (always-false) writes are a harmless no-op and port 0 stays the sorter's.
+  digital_io_port_map["sorter"] = 5;
+  digital_io_port_map["descorer"] = 5;
+  digital_io_port_map["switcher"] = 5;
+  digital_io_port_map["left_blocker"] = 5;
+  digital_io_port_map["right_blocker"] = 5;
+  digital_io_port_map["little_will"] = 5;
   digital_io_port_map["bite"] = 5;
-  digital_io_port_map["clamp"] = 5;
   digital_io_port_map["climb"] = 5;
   digital_io_port_map["shooter"] = 5;
   digital_io_port_map["goal_rush_l"] = 5;

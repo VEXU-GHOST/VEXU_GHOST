@@ -151,6 +151,7 @@ protected:
    * @param stage index into m_lift_stage_positions_deg
    */
   void updateLiftToStage(size_t stage);
+  void updateLiftToPosition(double target_position_deg);
   void toggleBite(bool signal);
 
   void updateDescore(bool open);
@@ -290,6 +291,10 @@ protected:
   // active after an X/Y press; manual R1/R2 overrides it until the next X/Y press.
   size_t m_lift_stage{0};
   bool m_lift_stage_active{false};
+  // Manual mode: position captured when R1/R2 is released, held with the lift PID
+  // (move_voltage(0) on the V5 side does not engage HOLD brake mode).
+  bool m_lift_holding{false};
+  double m_lift_hold_deg{0.0};
 
   // Autonomy
   std::string bt_path_;

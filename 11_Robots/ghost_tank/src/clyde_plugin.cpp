@@ -106,7 +106,10 @@ void ClydePlugin::populateDigitalIONames()
   // every loop. Park them on bit 5 (F), an output with no mechanism assigned, so
   // their (always-false) writes are a harmless no-op and port 0 stays the sorter's.
   digital_io_port_map["bite"] = 5;
-  digital_io_port_map["clamp"] = 5;
+  digital_io_port_map["clamp"] = 0;  // port A
+  // TankRobotPlugin::updateColorSwitcher writes "color_sorter" every teleop loop
+  // and defaults to port 0, which would fight the clamp. Park it on F.
+  digital_io_port_map["color_sorter"] = 5;
   digital_io_port_map["climb"] = 5;
   digital_io_port_map["shooter"] = 5;
   digital_io_port_map["goal_rush_l"] = 5;
@@ -189,6 +192,53 @@ void ClydePlugin::teleop(double current_time)
 
   updateScissor(joy_data->btn_l1, joy_data->btn_l2, shift_r);
   updateT1Climb(joy_data->btn_r1, joy_data->btn_r2, shift_r);
+  updateClamp(joy_data->btn_l1, current_time);
+
+  // D-pad down: send the lift to 1000 deg. Hands the target to the teleop hold
+  // logic, so R1/R2/X/Y still override it.
+  static bool last_d_state = false;
+  if (joy_data->btn_d && !last_d_state) {
+    m_lift_hold_deg = 1000.0;
+    m_lift_holding = true;
+    m_lift_stage_active = false;
+    m_lift_controller_ptr->reset();
+  }
+  last_d_state = joy_data->btn_d;
+}
+
+void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
+{
+  const double drop_deg = 700.0;
+  const double min_deg = 400.0;
+  const double open_delay_s = 0.25;
+
+  // Edge-triggered: each L1 press toggles the clamp open/closed.
+  if (l1_pressed && !m_clamp_btn_pressed) {
+    m_clamp_closed = !m_clamp_closed;
+    m_clamp_open_time = -1.0;
+    std::cout << "[ClydePlugin::updateClamp] L1 pressed, clamp_closed = "
+              << m_clamp_closed << " (port " << digital_io_port_map["clamp"] << ")" << std::endl;
+
+    // On open: drop the lift 700 deg, but never below 400 deg, and delay the clamp
+    // opening so the lift starts moving first. Hands the target to the teleop hold
+    // logic, so R1/R2/X/Y still override it. At/below 400 deg: no drop, open immediately.
+    if (!m_clamp_closed) {
+      double current_deg = rhi_ptr_->getMotorPosition("lift1_motor");
+      if (current_deg > min_deg) {
+        m_lift_hold_deg = std::max(current_deg - drop_deg, min_deg);
+        m_lift_holding = true;
+        m_lift_stage_active = false;
+        m_lift_controller_ptr->reset();
+        m_clamp_open_time = current_time + open_delay_s;
+      }
+    }
+  }
+  m_clamp_btn_pressed = l1_pressed;
+
+  // Stay closed until the open delay has elapsed
+  bool clamp_output = m_clamp_closed ||
+    (m_clamp_open_time >= 0.0 && current_time < m_clamp_open_time);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], clamp_output);
 }
 
 void ClydePlugin::updateT1Climb(bool up, bool down, bool enabled)

@@ -26,7 +26,7 @@ BT::PortsList LiftPosCmd::providedPorts()
 {
   return {
     BT::InputPort<int>("stage", 0,
-      "Lift preset stage index (0-4) to drive to and hold"),
+      "Lift preset stage index (0-7) to drive to and hold"),
   };
 }
 
@@ -35,7 +35,7 @@ BT::NodeStatus LiftPosCmd::tick()
   int stage = BT_Util::get_input<int>(this, "stage");
 
   // Clamp to valid range
-  stage = std::clamp(stage, 0, 4);
+  stage = std::clamp(stage, 0, 7);
 
   BT_Util::put_in_blackboard(blackboard_, "lift_target_stage", stage);
 

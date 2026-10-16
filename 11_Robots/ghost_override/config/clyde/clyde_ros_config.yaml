@@ -83,7 +83,7 @@ competition_state_machine_node:
         kd: 0.000
         integral_limit: 0.5
         integral_activation_bound: 250.0
-      arm_stage_positions_deg: [20.0, 760.0]
+      arm_stage_positions_deg: [0.0, 1650.0]
 
       lift:
         kp: 0.003
@@ -91,7 +91,7 @@ competition_state_machine_node:
         kd: 0.000
         integral_limit: 0.0
         integral_activation_bound: 0.0
-      lift_stage_positions_deg: [400.0, 1100.0, 1700.0, 2400.0, 1400.0, 2100.0, 2700.0, 3400.0]
+      lift_stage_positions_deg: [400.0, 1000.0, 1700.0, 2400.0, 1400.0, 2100.0, 2700.0, 3400.0]
 
       # Auto-sort (TankRobotPlugin::autoSort / AutoSortCmd). Detect on the
       # mid_conveyor colour sensor -- the sorter_hood sensor is not plugged in on

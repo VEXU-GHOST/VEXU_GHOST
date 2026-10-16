@@ -4,6 +4,7 @@
 
 >
   <!-- <include path="bt_scoring.xml"/> -->
+  <include path="bt_score_lift_release.xml"/>
   <BehaviorTree ID="bt_clyde_tuning"
   >
     <Sequence>
@@ -13,11 +14,19 @@
         timeout_ms="3000"
         backwards="false"
         distance_tiles="1.0"/> -->
-      <TurnToPoint posX_tiles="0.0"
+      
+      <LiftPosCmd stage="0"/>
+      <WaitCmd seconds="3.0"/>
+      <ClampCmd clamp_closed="true"/>
+      <LiftPosCmd stage="3"/>
+      <WaitCmd seconds="2.0"/>
+      <SubTree ID="score_lift_release"
+        _autoremap="true"/>
+      <!-- <TurnToPoint posX_tiles="0.0"
         posY_tiles="1.0"
         timeout_ms="3000"
         backwards="false"
-        angle_exit_threshold_deg=".5"/>
+        angle_exit_threshold_deg=".5"/> -->
       <!-- <MoveToPoint kp="1.6"
         kd="0.0"
         max_effort_percent="0.35"

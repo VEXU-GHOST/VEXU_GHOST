@@ -1141,7 +1141,11 @@ void TankRobotPlugin::updateArmToStage(size_t stage)
 
 void TankRobotPlugin::updateLiftToStage(size_t stage)
 {
-  double target_position_deg = m_lift_stage_positions_deg[stage];
+  updateLiftToPosition(m_lift_stage_positions_deg[stage]);
+}
+
+void TankRobotPlugin::updateLiftToPosition(double target_position_deg)
+{
   double current_position_deg = rhi_ptr_->getMotorPosition("lift1_motor");
   double current_velocity_deg_per_sec = rhi_ptr_->getMotorVelocityRPM("lift1_motor") * 6.0;
 
@@ -1189,8 +1193,18 @@ void TankRobotPlugin::updateLiftFromJoystick(JoyPtr joy_data)
 
   if (m_lift_stage_active) {
     updateLiftToStage(m_lift_stage);
-  } else {
+    m_lift_holding = false;
+  } else if (joy_data->btn_r1 || joy_data->btn_r2) {
     updateLift(joy_data->btn_r2, joy_data->btn_r1);
+    m_lift_holding = false;
+  } else {
+    // No input: hold wherever the lift was released.
+    if (!m_lift_holding) {
+      m_lift_hold_deg = rhi_ptr_->getMotorPosition("lift1_motor");
+      m_lift_controller_ptr->reset();
+      m_lift_holding = true;
+    }
+    updateLiftToPosition(m_lift_hold_deg);
   }
 }
 

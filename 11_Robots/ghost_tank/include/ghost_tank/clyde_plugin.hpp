@@ -75,6 +75,12 @@ protected:
 
   void updateScissor(bool up, bool down, bool enabled);
   void updateT1Climb(bool up, bool down, bool enabled);
+  void updateClamp(bool l1_pressed, double current_time);
+
+  bool m_clamp_closed = false;
+  bool m_clamp_btn_pressed = false;
+  // Time at which a delayed clamp open takes effect (< 0 = no open pending)
+  double m_clamp_open_time = -1.0;
 
 };
 
