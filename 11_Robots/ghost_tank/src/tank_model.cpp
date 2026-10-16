@@ -140,13 +140,29 @@ void TankModel::normalizeArcadeCommand(Eigen::Vector2d & cmd)
   cmd *= scale;
 }
 
+template <typename T> constexpr T sgn(T value) { return value < 0 ? -1 : 1; }
+      
+float deadband = 1.028;
+float curveGain = 32.2;
+float minOutput = 27.7;
+
+
+float ExpoDriveCurve(float input) {
+  if (fabs(input) <= deadband) return 0;
+  const float g = fabs(input) - deadband;
+  const float g127 = 127 - deadband;
+  const float i = pow(curveGain, g - 127) * g * sgn(input);
+  const float i127 = pow(curveGain, g127 - 127) * g127;
+  return (127.0 - minOutput) / (127) * i * 127 / i127 + minOutput * sgn(input);
+}
 
 void TankModel::driveCommandArcade(double fwd_pct, double ang_pct)
 {
-  ghost_util::clamp(fwd_pct, -1.0, 1.0);
-  ghost_util::clamp(ang_pct, -1.0, 1.0);
-  double left_cmd = fwd_pct + ang_pct;
-  double right_cmd = fwd_pct - ang_pct;
+  fwd_pct = ghost_util::clamp(fwd_pct, -1.0, 1.0);
+  ang_pct = ghost_util::clamp(ang_pct, -1.0, 1.0);
+
+  double left_cmd = ghost_util::clamp(fwd_pct + ang_pct, -1.0, 1.0);
+  double right_cmd = ghost_util::clamp(fwd_pct - ang_pct, -1.0, 1.0);
 
   for (const auto motor_name: m_config.motor_list_left) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);

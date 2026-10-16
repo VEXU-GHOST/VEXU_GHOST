@@ -1305,12 +1305,13 @@ void TankRobotPlugin::updateMusic(double current_time, JoyPtr joy_data)
 
 void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data)
 {
-  double left_pct = joy_data->left_y / 127.0;
-  double right_pct = joy_data->right_x / 127.0;
-  m_tank_model_ptr->driveCommandArcade(left_pct, right_pct);
+  // Driver-only expo curve (applied here, not in TankModel, so auton commands stay linear)
+  double fwd_pct = ExpoDriveCurve(joy_data->left_y) / 127.0;
+  double turn_pct = ExpoDriveCurve(joy_data->right_x) / 127.0;
+  m_tank_model_ptr->driveCommandArcade(fwd_pct, turn_pct);
 
   int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
-  if (std::fabs(left_pct) < 0.05 && std::fabs(right_pct) < 0.05) {
+  if (std::fabs(fwd_pct) < 0.05 && std::fabs(turn_pct) < 0.05) {
     drive_curr_lim = 0;
   }
 
