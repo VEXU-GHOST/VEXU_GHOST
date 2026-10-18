@@ -20,8 +20,16 @@ ghost_sensor_host_serial_node:
 
 bag_recorder_service:
   ros__parameters:
-    disk_space_required_kb: 256000
-    disk_check_period_s: 10
+    # Record automatically; button messages cannot accidentally stop logging.
+    # Start/stop services remain available for deliberate manual control.
+    autostart: true
+    enable_button_control: false
+    # bag_directory defaults to $HOME/bags on the onboard computer.
+    disk_space_required_kb: 5242880  # 5 GiB reserve
+    disk_resume_margin_kb: 1048576   # resume with 6 GiB free
+    disk_check_period_s: 5
+    max_bag_size_bytes: 1073741824
+    max_bag_duration_s: 300
 
 tts_music_node:
   ros__parameters:

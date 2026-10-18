@@ -190,3 +190,68 @@ To switch to arcade drive (left stick Y = forward/back, right stick X = turn), s
 `arcade_drive: true` under `tank_robot_plugin` in
 `11_Robots/ghost_override/config/base_ros_config.yaml` (or a per-robot ros_config), then rebuild
 and relaunch.
+
+# Automatic on-device recording
+
+The existing C++ `bag_recorder_service` starts recording when the robot's
+`ghost_override` hardware launch runs. There is no separate Python supervisor
+or recording shell script. It inherits the robot's Humble/custom-message/DDS
+environment from `scripts/setup_env.sh`.
+
+Recordings are stored in `~/bags` (`/home/ghost/bags` on the Jetson). Every session
+has a UTC timestamp, process ID, and random suffix. It contains SQLite bag files
+and `metadata.yaml`; copy the entire session directory for later replay using
+the matching Ghost message definitions. Existing recordings are never deleted
+automatically. New bag files are split at approximately 1 GiB or five minutes.
+All discovered topics are recorded, including publishers that start later.
+Camera topics, when enabled, may consume substantial storage.
+
+Configure `bag_recorder_service.ros__parameters` in
+`11_Robots/ghost_override/config/base_ros_config.yaml`:
+
+- `autostart: true`: request recording automatically on startup.
+- `enable_button_control: false`: ignore physical button messages during
+  unattended recording. Set true to restore the existing button behavior.
+- `bag_directory`: optional absolute storage path; defaults to `$HOME/bags`.
+  The directory is private to the robot's account and administrators.
+- `disk_space_required_kb: 5242880`: stop below 5 GiB free on the recording disk.
+- `disk_resume_margin_kb: 1048576`: resume after free space reaches 6 GiB.
+- `disk_check_period_s: 5`: check the recorder and free space every five seconds.
+- `max_bag_size_bytes: 1073741824` and `max_bag_duration_s: 300`: file splitting.
+
+A failed recording process is reaped and retried after ten seconds, rounded up
+to the next check. One recorder node owns a directory at a time. Start/stop
+services remain available: a stop request pauses recording until another start
+request or node restart. Keep the existing competition `should_record: false`
+setting for uninterrupted logging, because a deliberate stop service call is
+still honored. The existing bag LED is updated while recording is active;
+it indicates a running recorder process, not verified message delivery.
+
+Low-space recording resumes automatically after data is offloaded. The reserve
+is sampled, not a hard quota; data arriving faster than the reserve allows can
+still fill the disk between checks. Sudden power loss can damage the active bag.
+
+After copying the updated source to the Jetson, build the affected packages:
+
+```bash
+cd ~/VEXU_GHOST
+source scripts/setup_env.sh
+colcon build --symlink-install --packages-select ghost_ros_interfaces ghost_override
+source install/setup.bash
+```
+
+Refresh the existing robot user service on the Jetson:
+
+```bash
+./scripts/ghost install
+systemctl --user daemon-reload
+systemctl --user restart ghost-hardware.service
+```
+
+The existing autologin setup starts user services. To start without a login
+session, enable lingering once with `sudo loginctl enable-linger ghost`.
+The hardware wrapper no longer depends on `/dev/tty`, and service shutdown allows
+time for the recorder to finish. `ghost restart`, `ghost stop`, and
+`ghost shutdown` use the graceful service path. `ghost kill` is still an emergency
+force-stop and can damage the current recording. Inspect logs with
+`journalctl --user -u ghost-hardware.service`.

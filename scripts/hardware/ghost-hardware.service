@@ -3,6 +3,10 @@ Description="Service description"
 
 [Service]
 Type=simple
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=75
 StandardOutput=journal
 Environment="HOME=/home/ghost"
 EnvironmentFile=/etc/environment

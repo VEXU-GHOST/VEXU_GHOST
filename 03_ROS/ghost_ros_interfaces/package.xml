@@ -21,6 +21,10 @@
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
 
+  <!-- The recorder launches the ROS CLI with SQLite storage. -->
+  <exec_depend>ros2bag</exec_depend>
+  <exec_depend>rosbag2_storage_default_plugins</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

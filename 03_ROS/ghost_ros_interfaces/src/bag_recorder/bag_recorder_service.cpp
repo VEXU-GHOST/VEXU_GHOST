@@ -21,193 +21,283 @@
  *   SOFTWARE.
  */
 
+#include <cerrno>
+#include <chrono>
+#include <csignal>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <fcntl.h>
+#include <filesystem>
+#include <iomanip>
+#include <random>
 #include <spawn.h>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <sys/wait.h>
+#include <thread>
+#include <unistd.h>
+#include <vector>
+
 #include "ghost_msgs/srv/start_recorder.hpp"
 #include "ghost_msgs/srv/stop_recorder.hpp"
-#include "std_msgs/msg/int64.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "unistd.h"
+#include "std_msgs/msg/int64.hpp"
 
+extern char ** environ;
 using ghost_msgs::srv::StartRecorder;
 using ghost_msgs::srv::StopRecorder;
+using Clock = std::chrono::steady_clock;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
 class BagRecorderNode : public rclcpp::Node
 {
 public:
-  BagRecorderNode()
-  : rclcpp::Node("bag_recorder_service")
+  BagRecorderNode() : Node("bag_recorder_service")
   {
-    declare_parameter<int64_t>("disk_space_required_kb", 250 * 1024);
-    declare_parameter<int>("disk_check_period_s", 10);
+    const char * home = std::getenv("HOME");
+    const auto directory = declare_parameter<std::string>(
+      "bag_directory", home ? std::string(home) + "/bags" : "");
+    min_free_kb_ = declare_parameter<int64_t>("disk_space_required_kb", 5 * 1024 * 1024);
+    resume_margin_kb_ = declare_parameter<int64_t>("disk_resume_margin_kb", 1024 * 1024);
+    const auto period = declare_parameter<int64_t>("disk_check_period_s", 5);
+    max_size_ = declare_parameter<int64_t>("max_bag_size_bytes", 1024 * 1024 * 1024);
+    max_duration_ = declare_parameter<int64_t>("max_bag_duration_s", 300);
+    requested_ = declare_parameter<bool>("autostart", false);
+    const bool buttons = declare_parameter<bool>("enable_button_control", true);
+    if (directory.empty() || min_free_kb_ < 0 || resume_margin_kb_ < 0 ||
+      period <= 0 || max_size_ <= 0 || max_duration_ <= 0)
+    {
+      throw std::invalid_argument("Invalid bag recorder directory, disk reserve, or timing parameters");
+    }
+    directory_ = std::filesystem::absolute(directory);
+    std::filesystem::create_directories(directory_);
+    if (chmod(directory_.c_str(), 0700) != 0) {
+      throw std::runtime_error("Cannot make bag directory private: " + std::string(strerror(errno)));
+    }
 
-    disk_space_required_ = get_parameter("disk_space_required_kb").as_int();
-    disk_check_period_ = std::chrono::seconds(get_parameter("disk_check_period_s").as_int());
+    start_service_ = create_service<StartRecorder>("bag_recorder/start",
+      [this](StartRecorder::Request::SharedPtr, StartRecorder::Response::SharedPtr) {
+        requested_ = true;
+        next_start_ = Clock::now();
+        MaintainRecorder();
+      });
+    stop_service_ = create_service<StopRecorder>("bag_recorder/stop",
+      [this](StopRecorder::Request::SharedPtr, StopRecorder::Response::SharedPtr) {
+        requested_ = false;
+        StopRecorderProcess();
+      });
+    led_ = create_publisher<std_msgs::msg::Int64>("/io/leds/bag", 10);
+    if (buttons) {
+      button_ = create_subscription<std_msgs::msg::Int64>("/io/buttons/bag", 10,
+        [this](std_msgs::msg::Int64::SharedPtr msg) {
+          if (msg->data == last_button_) {return;}
+          last_button_ = msg->data;
+          if (msg->data == 1) {
+            requested_ = true;
+            next_start_ = Clock::now();
+            MaintainRecorder();
+          } else if (msg->data == 0) {
+            requested_ = false;
+            StopRecorderProcess();
+          }
+        });
+    }
+    timer_ = create_wall_timer(std::chrono::seconds(period), [this]() {MaintainRecorder();});
 
-    this->start_service_ = this->create_service<StartRecorder>(
-      "bag_recorder/start",
-      std::bind(&BagRecorderNode::StartCallback, this, _1, _2));
-    this->stop_service_ = this->create_service<StopRecorder>(
-      "bag_recorder/stop",
-      std::bind(&BagRecorderNode::StopCallback, this, _1, _2));
-    disk_check_timer =
-      this->create_wall_timer(
-      disk_check_period_,
-      std::bind(&BagRecorderNode::EnforceFreeDiskSpace, this));
-
-    // Create subscription to /io/buttons/bag and publisher to /io/leds/bag
-    button_subscriber_ = this->create_subscription<std_msgs::msg::Int64>(
-      "/io/buttons/bag", 10,
-      std::bind(&BagRecorderNode::ButtonCallback, this, _1));
-    led_publisher_ = this->create_publisher<std_msgs::msg::Int64>("/io/leds/bag", 10);
-
-    std::string startup_string;
-    startup_string += "Service Created.\n";
-    startup_string += "\tDisk Space Required (KB):    " + std::to_string(disk_space_required_) +
-      "\n";
-    startup_string += "\tDisk Check Period (Seconds): " +
-      std::to_string(disk_check_period_.count());
-
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), startup_string.c_str());
+    // Hold a close-on-exec lock for this node's lifetime. It is not inherited
+    // by ros2, and prevents multiple recorder nodes sharing a data directory.
+    lock_fd_ = open((directory_ / ".recorder.lock").c_str(), O_CREAT | O_RDWR | O_CLOEXEC, 0600);
+    if (lock_fd_ < 0) {throw std::runtime_error("Cannot open recorder lock");}
+    if (flock(lock_fd_, LOCK_EX | LOCK_NB) != 0) {
+      close(lock_fd_);
+      lock_fd_ = -1;
+      throw std::runtime_error("Another recorder node already owns this bag directory");
+    }
+    RCLCPP_INFO(get_logger(), "Bag storage: %s; autostart: %s",
+      directory_.c_str(), requested_ ? "true" : "false");
+    // Start from the executor, after construction has completed successfully.
   }
 
-  void StartCallback(StartRecorder::Request::SharedPtr req, StartRecorder::Response::SharedPtr res);
-  void StopCallback(StopRecorder::Request::SharedPtr req, StopRecorder::Response::SharedPtr res);
-  void SpawnRecorderProcess();
-  void KillRecorderProcess();
-  void EnforceFreeDiskSpace();
-  void ButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
-  void PublishLedStatus(int64_t status);
+  ~BagRecorderNode() override
+  {
+    StopRecorderProcess();
+    if (lock_fd_ >= 0) {close(lock_fd_);}
+  }
 
 private:
+  void PublishStatus()
+  {
+    if (!rclcpp::ok()) {return;}
+    std_msgs::msg::Int64 status;
+    status.data = pid_ > 0 ? 1 : 0;
+    led_->publish(status);
+  }
+
+  bool ReapRecorder()
+  {
+    if (pid_ <= 0) {return true;}
+    int status = 0;
+    const pid_t result = waitpid(pid_, &status, WNOHANG);
+    if (result == 0 || (result < 0 && errno == EINTR)) {return false;}
+    if (result < 0 && errno != ECHILD) {
+      RCLCPP_ERROR(get_logger(), "waitpid failed: %s", strerror(errno));
+      return false;
+    }
+    if (result > 0) {
+      if (WIFEXITED(status)) {
+        RCLCPP_INFO(get_logger(), "Recorder exited with code %d", WEXITSTATUS(status));
+      } else if (WIFSIGNALED(status)) {
+        RCLCPP_WARN(get_logger(), "Recorder exited on signal %d", WTERMSIG(status));
+      }
+    }
+    pid_ = -1;
+    PublishStatus();
+    return true;
+  }
+
+  void StopRecorderProcess()
+  {
+    if (ReapRecorder()) {return;}
+    // Each child has its own process group. Never kill unrelated ROS nodes.
+    const std::pair<int, int> stages[] = {{SIGINT, 30}, {SIGTERM, 5}, {SIGKILL, 5}};
+    for (const auto & stage : stages) {
+      RCLCPP_INFO(get_logger(), "Stopping recorder (signal %d)", stage.first);
+      if (kill(-pid_, stage.first) != 0 && errno != ESRCH) {
+        RCLCPP_ERROR(get_logger(), "Cannot signal recorder: %s", strerror(errno));
+      }
+      const auto deadline = Clock::now() + std::chrono::seconds(stage.second);
+      do {
+        if (ReapRecorder()) {return;}
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      } while (Clock::now() < deadline);
+      RCLCPP_WARN(get_logger(), "Recorder stop timed out; escalating signal");
+    }
+  }
+
+  void SpawnRecorder()
+  {
+    const auto now = std::time(nullptr);
+    std::tm utc{};
+    gmtime_r(&now, &utc);
+    std::random_device random;
+    std::ostringstream name;
+    name << std::put_time(&utc, "%Y%m%dT%H%M%SZ") << "_" << getpid()
+         << "_" << std::hex << random() << random();
+    const auto output = (directory_ / name.str()).string();
+    std::vector<std::string> args = {"ros2", "bag", "record", "--all", "--output", output,
+      "--storage", "sqlite3", "--max-bag-size", std::to_string(max_size_),
+      "--max-bag-duration", std::to_string(max_duration_)};
+    std::vector<char *> argv;
+    for (auto & arg : args) {argv.push_back(arg.data());}
+    argv.push_back(nullptr);
+
+    // posix_spawn avoids executing C++/ROS code after fork in a multithreaded node.
+    posix_spawnattr_t attr;
+    posix_spawn_file_actions_t actions;
+    int result = posix_spawnattr_init(&attr);
+    if (result != 0) {throw std::runtime_error(strerror(result));}
+    result = posix_spawn_file_actions_init(&actions);
+    if (result != 0) {
+      posix_spawnattr_destroy(&attr);
+      throw std::runtime_error(strerror(result));
+    }
+    sigset_t defaults, mask;
+    sigemptyset(&defaults);
+    sigaddset(&defaults, SIGINT);
+    sigaddset(&defaults, SIGTERM);
+    sigemptyset(&mask);
+    result = posix_spawnattr_setflags(&attr,
+      POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK);
+    if (result == 0) {result = posix_spawnattr_setpgroup(&attr, 0);}
+    if (result == 0) {result = posix_spawnattr_setsigdefault(&attr, &defaults);}
+    if (result == 0) {result = posix_spawnattr_setsigmask(&attr, &mask);}
+    if (result == 0) {
+      result = posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0);
+    }
+    if (result == 0) {
+      result = posix_spawnp(&pid_, "ros2", &actions, &attr, argv.data(), environ);
+    }
+    posix_spawn_file_actions_destroy(&actions);
+    posix_spawnattr_destroy(&attr);
+    if (result != 0) {
+      pid_ = -1;
+      RCLCPP_ERROR(get_logger(), "Cannot start recorder: %s; retrying", strerror(result));
+      next_start_ = Clock::now() + std::chrono::seconds(10);
+      return;
+    }
+    RCLCPP_INFO(get_logger(), "Recording all discovered topics to %s", output.c_str());
+    PublishStatus();
+  }
+
+  void MaintainRecorder()
+  {
+    if (pid_ > 0 && ReapRecorder()) {
+      next_start_ = Clock::now() + std::chrono::seconds(10);
+    }
+    if (!requested_) {return;}
+    struct statvfs disk{};
+    if (statvfs(directory_.c_str(), &disk) != 0) {
+      RCLCPP_ERROR(get_logger(), "Cannot check bag filesystem: %s; stopping", strerror(errno));
+      StopRecorderProcess();
+      return;
+    }
+    const uint64_t free_kb = static_cast<uint64_t>(disk.f_bavail) * disk.f_frsize / 1024;
+    const auto reserve = static_cast<uint64_t>(min_free_kb_);
+    if (free_kb < reserve) {
+      if (!disk_blocked_) {
+        RCLCPP_WARN(get_logger(), "Low disk space; stopping recording and preserving existing bags");
+      }
+      disk_blocked_ = true;
+      StopRecorderProcess();
+      return;
+    }
+    if (disk_blocked_ && free_kb - reserve < static_cast<uint64_t>(resume_margin_kb_)) {return;}
+    disk_blocked_ = false;
+    if (pid_ <= 0 && Clock::now() >= next_start_) {
+      try {
+        SpawnRecorder();
+      } catch (const std::exception & error) {
+        RCLCPP_ERROR(get_logger(), "Cannot prepare recorder: %s", error.what());
+        next_start_ = Clock::now() + std::chrono::seconds(10);
+      }
+    }
+    PublishStatus();
+  }
+
+  std::filesystem::path directory_;
+  int64_t min_free_kb_, resume_margin_kb_, max_size_, max_duration_;
+  bool requested_ = false;
+  bool disk_blocked_ = false;
+  pid_t pid_ = -1;
+  int lock_fd_ = -1;
+  int64_t last_button_ = -1;
+  Clock::time_point next_start_ = Clock::now();
   rclcpp::Service<StartRecorder>::SharedPtr start_service_;
   rclcpp::Service<StopRecorder>::SharedPtr stop_service_;
-  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr button_subscriber_;
-  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr led_publisher_;
-
-
-  bool recording_ = false;
-  pid_t recorderPID_ = -1;
-  unsigned long disk_space_required_;
-  FILE * disk_check_output_;
-  std::chrono::seconds disk_check_period_;
-  rclcpp::TimerBase::SharedPtr disk_check_timer;
-  int64_t last_button_state_ = -1;  // Initialized to an invalid state
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr button_;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr led_;
+  rclcpp::TimerBase::SharedPtr timer_;
 };
-
-void BagRecorderNode::StartCallback(
-  StartRecorder::Request::SharedPtr req,
-  StartRecorder::Response::SharedPtr res)
-{
-  SpawnRecorderProcess();
-}
-
-void BagRecorderNode::StopCallback(
-  StopRecorder::Request::SharedPtr req,
-  StopRecorder::Response::SharedPtr res)
-{
-  KillRecorderProcess();
-}
-
-
-void BagRecorderNode::SpawnRecorderProcess()
-{
-  PublishLedStatus(1);  // Turn LED on
-  if (recording_) {
-    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Unable to start recorder; one already exists.");
-    return;
-  }
-
-  recording_ = true;
-  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Starting recorder.");
-
-  recorderPID_ = fork();
-  if (recorderPID_ == 0) {
-    execl(
-      "/bin/sh", "sh", "-c", "exec ros2 bag record -a -o ~/bags/$(date +%m_%d_%Y-%H_%M_%S)",
-      NULL);
-  }
-
-}
-
-void BagRecorderNode::KillRecorderProcess()
-{
-  if (!recording_) {
-    RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Unable to stop recorder; none exist.");
-    return;
-  }
-
-  recording_ = false;
-  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Stopping recorder.");
-
-  if (recorderPID_ == -1) {
-    RCLCPP_WARN(
-      rclcpp::get_logger(
-        "rclcpp"), "Recorder PID uninitialized! Unable to stop nonexistent process.");
-    return;
-  }
-
-  std::string cmd_string = "kill -s INT " + std::to_string(recorderPID_);
-  std::system(cmd_string.c_str());
-
-  PublishLedStatus(0);  // Turn LED on
-}
-
-void BagRecorderNode::EnforceFreeDiskSpace()
-{
-  if (!recording_) {
-    return;
-  }
-
-  RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "Checking disk space.");
-  disk_check_output_ = popen("df / -k --output=avail | grep -v \"Avail\"", "r");
-  unsigned long free_space;
-  fscanf(disk_check_output_, "%lu", &free_space);
-  fclose(disk_check_output_);
-
-  if (free_space < disk_space_required_) {
-    RCLCPP_WARN(
-      rclcpp::get_logger("rclcpp"),
-      "Not enough disk space to safely continue recording.");
-    KillRecorderProcess();
-  }
-}
-
-// Subscription callback for /io/buttons/bag
-void BagRecorderNode::ButtonCallback(const std_msgs::msg::Int64::SharedPtr msg)
-{
-  if (msg->data != last_button_state_) {
-    RCLCPP_INFO(this->get_logger(), "Button state changed from %ld to %ld", last_button_state_, msg->data);
-    
-    if (msg->data == 1) {
-      SpawnRecorderProcess();
-    } else if (msg->data == 0) {
-      KillRecorderProcess();
-    } else {
-      RCLCPP_WARN(this->get_logger(), "Received unknown button command: %ld", msg->data);
-    }
-    
-    // Update the last button state to the current value
-    last_button_state_ = msg->data;
-  }
-}
-
-// Helper function to publish LED status on /io/leds/bag
-void BagRecorderNode::PublishLedStatus(int64_t status)
-{
-  std_msgs::msg::Int64 led_msg;
-  led_msg.data = status;
-  led_publisher_->publish(led_msg);
-  RCLCPP_INFO(this->get_logger(), "Published LED status: %ld", led_msg.data);
-}
 
 int main(int argc, char ** argv)
 {
+  umask(0077);
   rclcpp::init(argc, argv);
-
-  std::shared_ptr<BagRecorderNode> node = std::make_shared<BagRecorderNode>();
-
-  rclcpp::spin(node);
+  int result = 0;
+  try {
+    auto node = std::make_shared<BagRecorderNode>();
+    rclcpp::spin(node);
+    // Destruction stops and reaps the child even after ROS shutdown.
+  } catch (const std::exception & error) {
+    RCLCPP_ERROR(rclcpp::get_logger("bag_recorder_service"), "%s", error.what());
+    result = 1;
+  }
   rclcpp::shutdown();
+  return result;
 }

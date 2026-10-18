@@ -6,6 +6,7 @@ from launch import LaunchDescription
 
 from ament_index_python import get_package_share_directory
 from launch_ros.actions import Node, SetRemap
+from launch_ros.substitutions import FindPackageShare
 from launch.actions import IncludeLaunchDescription, GroupAction, DeclareLaunchArgument, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
@@ -41,6 +42,10 @@ def generate_launch_description():
         package="ghost_ros_interfaces",
         executable="bag_recorder_service",
         output="screen",
+        respawn=True,
+        respawn_delay=10.0,
+        sigterm_timeout="45",
+        sigkill_timeout="15",
         parameters=[base_ros_config_file],
     )
 
