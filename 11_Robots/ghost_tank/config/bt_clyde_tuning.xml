@@ -15,13 +15,15 @@
         backwards="false"
         distance_tiles="1.0"/> -->
       
-      <LiftPosCmd stage="0"/>
+      <LiftPosCmd stage="1"/>
       <WaitCmd seconds="3.0"/>
       <ClampCmd clamp_closed="true"/>
-      <LiftPosCmd stage="3"/>
+      <WaitCmd seconds="1.0"/>
+      <LiftPosCmd stage="2"/>
       <WaitCmd seconds="2.0"/>
-      <SubTree ID="score_lift_release"
-        _autoremap="true"/>
+      <LiftPosCmd stage="1"/>
+      <ClampCmd clamp_closed="false"/>
+      <WaitCmd seconds="300000.0"/>
       <!-- <TurnToPoint posX_tiles="0.0"
         posY_tiles="1.0"
         timeout_ms="3000"

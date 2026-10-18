@@ -17,7 +17,7 @@ port_configuration:
         H: OUT
     devices:
         imu:
-            port: 5
+            port: 16
             type: INERTIAL_SENSOR
             config: inertial_sensor_config
 

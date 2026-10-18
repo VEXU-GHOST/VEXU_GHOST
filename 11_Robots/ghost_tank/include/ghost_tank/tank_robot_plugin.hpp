@@ -32,6 +32,7 @@
 #include <ghost_msgs/msg/ball_color.hpp>
 #include <ghost_msgs/msg/drivetrain_command.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
+#include <ghost_msgs/msg/toggle_color.hpp>
 #include <ghost_msgs/srv/start_recorder.hpp>
 #include <ghost_msgs/srv/stop_recorder.hpp>
 #include <chrono>
@@ -118,7 +119,14 @@ protected:
   void updateLiftFromJoystick(JoyPtr joy_data);
 
   void updateToggleMech(bool A, bool B);
-  void updateToggleMechFromJoystick(JoyPtr joy_data);
+
+  /**
+   * @brief A/B drive the toggle mech manually. An X press instead runs
+   * toggle_mech_motor until the toggle colour sensor reads our alliance colour
+   * (RED if m_color_target_red, else BLUE), or m_toggle_seek_timeout elapses.
+   * Pressing X again, or A/B, cancels the seek.
+   */
+  void updateToggleMechFromJoystick(JoyPtr joy_data, double current_time);
 
   /**
    * @brief Drives the arm to one of three preset positions, cycled by L2.
@@ -141,6 +149,7 @@ protected:
    * @param stage index into m_arm_stage_positions_deg
    */
   void updateArmToStage(size_t stage);
+  void updateArmToPosition(double target_position_deg, double max_power = 1.0);
 
   /**
    * @brief Drives lift1_motor/lift2_motor to the given preset stage (0-4)
@@ -151,7 +160,7 @@ protected:
    * @param stage index into m_lift_stage_positions_deg
    */
   void updateLiftToStage(size_t stage);
-  void updateLiftToPosition(double target_position_deg);
+  void updateLiftToPosition(double target_position_deg, double max_power = 1.0);
   void toggleBite(bool signal);
 
   void updateDescore(bool open);
@@ -250,6 +259,22 @@ protected:
   }
   uint8_t m_sort_color = ghost_msgs::msg::BallColor::NONE;
 
+  // Toggle mech: latest classified toggle colour (ghost_msgs::msg::ToggleColor
+  // enum: NONE=0, RED=1, BLUE=2, YELLOW=3) from the toggle colour sensor.
+  rclcpp::Subscription<ghost_msgs::msg::ToggleColor>::SharedPtr m_toggle_color_sub;
+  void toggleColorCallback(const ghost_msgs::msg::ToggleColor::SharedPtr msg)
+  {
+    m_toggle_color = msg->color;
+  }
+  uint8_t m_toggle_color = ghost_msgs::msg::ToggleColor::NONE;
+
+  // Toggle seek (X button, see updateToggleMechFromJoystick()).
+  bool m_toggle_seeking = false;
+  bool m_toggle_btn_pressed = false;    // edge-detect for X
+  double m_toggle_seek_start_time = 0.0;
+  double m_toggle_seek_power = 0.5;     // signed: flip to reverse the seek direction
+  double m_toggle_seek_timeout = 2.0;   // s before giving up on finding the colour
+
   // Auto-sort state machine (see autoSort()).
   enum class SortState { INTAKING, DELAY, FIRING, RETRACT_DELAY };
   SortState m_sort_state = SortState::INTAKING;
@@ -285,16 +310,29 @@ protected:
   std::shared_ptr<ghost_control::PIDController> m_arm_controller_ptr;
   std::vector<double> m_arm_stage_positions_deg{0.0, 0.0, 0.0};
   size_t m_arm_stage{0};
+  // One-off arm target (e.g. clyde's clamp-close raise). While set, teleop holds
+  // the arm at m_arm_custom_deg instead of the current stage; L2 clears it.
+  bool m_arm_custom_active{false};
+  double m_arm_custom_deg{0.0};
+  // Teleop arm power cap (e.g. 0.5 for clyde's clamp moves). Reset to 1.0 by L2.
+  double m_arm_max_power{1.0};
   std::shared_ptr<ghost_control::PIDController> m_lift_controller_ptr;
   std::vector<double> m_lift_stage_positions_deg{0.0, 0.0, 0.0, 0.0, 0.0};
-  // Teleop lift stage (X = up a stage, Y = down a stage). Stage control is only
-  // active after an X/Y press; manual R1/R2 overrides it until the next X/Y press.
-  size_t m_lift_stage{0};
-  bool m_lift_stage_active{false};
   // Manual mode: position captured when R1/R2 is released, held with the lift PID
   // (move_voltage(0) on the V5 side does not engage HOLD brake mode).
   bool m_lift_holding{false};
   double m_lift_hold_deg{0.0};
+  // Power cap while holding m_lift_hold_deg (e.g. 0.5 for the clamp-open drop).
+  // Reset to 1.0 whenever the driver takes over.
+  double m_lift_hold_max_power{1.0};
+  // Raw encoder readings captured on the first sensor update, so lift/arm read 0
+  // wherever they start (there is no encoder tare through the hardware interface).
+  double m_lift_zero_deg{0.0};
+  double m_arm_zero_deg{0.0};
+  // Set while auton runs; teleop uses it to send the lift/arm home once auton ends.
+  bool m_ran_auton{false};
+  double getLiftPositionDeg();
+  double getArmPositionDeg();
 
   // Autonomy
   std::string bt_path_;

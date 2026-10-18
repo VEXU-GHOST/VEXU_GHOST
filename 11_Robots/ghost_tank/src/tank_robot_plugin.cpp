@@ -178,6 +178,15 @@ void TankRobotPlugin::initROSComms()
   std::string sort_color_topic = node_ptr_->get_parameter("tank_robot_plugin.sort_color_topic").as_string();
   m_sort_color_sub = node_ptr_->create_subscription<ghost_msgs::msg::BallColor>(sort_color_topic, rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::sortColorCallback, this, _1));
 
+  // Toggle mech colour source: a toggle_color_classifier publishing ToggleColor.
+  node_ptr_->declare_parameter("tank_robot_plugin.toggle_color_topic", "/sensors/color/toggle_sensor/class");
+  std::string toggle_color_topic = node_ptr_->get_parameter("tank_robot_plugin.toggle_color_topic").as_string();
+  m_toggle_color_sub = node_ptr_->create_subscription<ghost_msgs::msg::ToggleColor>(toggle_color_topic, rclcpp::SensorDataQoS(), std::bind(&TankRobotPlugin::toggleColorCallback, this, _1));
+  node_ptr_->declare_parameter("tank_robot_plugin.toggle_seek_power", m_toggle_seek_power);
+  node_ptr_->declare_parameter("tank_robot_plugin.toggle_seek_timeout", m_toggle_seek_timeout);
+  m_toggle_seek_power = node_ptr_->get_parameter("tank_robot_plugin.toggle_seek_power").as_double();
+  m_toggle_seek_timeout = node_ptr_->get_parameter("tank_robot_plugin.toggle_seek_timeout").as_double();
+
   // Tank-Specific Publishers
   node_ptr_->declare_parameter("tank_robot_plugin.cmd_pose_topic", "/set_pose");
   std::string cmd_pose_topic = node_ptr_->get_parameter("tank_robot_plugin.cmd_pose_topic").as_string();
@@ -454,6 +463,13 @@ void TankRobotPlugin::onNewSensorData()
   if (first_loop) {
     playMusic("hello_there");
     resetWorldPose();
+    // Zero lift/arm at their starting positions (only on robots that have them)
+    if (rhi_ptr_->contains("lift1_motor")) {
+      m_lift_zero_deg = rhi_ptr_->getMotorPosition("lift1_motor");
+    }
+    if (rhi_ptr_->contains("arm_motor")) {
+      m_arm_zero_deg = rhi_ptr_->getMotorPosition("arm_motor");
+    }
     first_loop = false;
   }
 
@@ -502,6 +518,7 @@ void TankRobotPlugin::disabled()
 
 void TankRobotPlugin::autonomous(double current_time)
 {
+  m_ran_auton = true;
   if (m_is_first_auton_loop) {
     m_is_first_auton_loop = false;
     playTTS("starting autonomous");
@@ -548,35 +565,35 @@ void TankRobotPlugin::autonomous(double current_time)
 
   // Apply intake/outtake command set by OuttakeBallsCmd BT node.
   // direction: -1 = outtake, 0 = stop, 1 = intake
-  int outtake_direction = 0;
-  bt_->get_variable<int>("outtake_direction", outtake_direction);
-  if (outtake_direction != 0) {
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor",
-      static_cast<double>(outtake_direction));
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-  } else {
-    rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
-  }
+  // int outtake_direction = 0;
+  // bt_->get_variable<int>("outtake_direction", outtake_direction);
+  // if (outtake_direction != 0) {
+  //   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor",
+  //     static_cast<double>(outtake_direction));
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  // } else {
+  //   rhi_ptr_->setMotorVoltageCommandPercent("intake_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("intake_motor", 2500);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
+  // }
 
   // Apply scorer command set by ScoreBallCmd BT node.
   // direction: -1 = reverse, 0 = stop, 1 = score (scorer/top motor forward).
   // Drives the ejector too, mirroring teleop scoring (updateIntake), so the ball
   // travels all the way up the scoring path.
-  int score_ball_direction = 0;
-  bt_->get_variable<int>("score_ball_direction", score_ball_direction);
-  if (score_ball_direction != 0) {
-    double scorer_pct = static_cast<double>(score_ball_direction);
-    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", scorer_pct);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
-    rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", scorer_pct);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
-  } else {
-    rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
-  }
+  // int score_ball_direction = 0;
+  // bt_->get_variable<int>("score_ball_direction", score_ball_direction);
+  // if (score_ball_direction != 0) {
+  //   double scorer_pct = static_cast<double>(score_ball_direction);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", scorer_pct);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  //   rhi_ptr_->setMotorVoltageCommandPercent("ejector_motor", scorer_pct);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("ejector_motor", 2500);
+  // } else {
+  //   rhi_ptr_->setMotorVoltageCommandPercent("scorer_motor", 0.0);
+  //   rhi_ptr_->setMotorCurrentLimitMilliAmps("scorer_motor", 2500);
+  // }
 
   // Apply arm/lift stage commands set by ArmPosCmd/LiftPosCmd BT nodes.
   // -1 = no command (leave whatever was last commanded / teleop's control).
@@ -606,11 +623,11 @@ void TankRobotPlugin::autonomous(double current_time)
   // constantly intake and fire the sorter on a wrong-colour ball. Runs after the
   // outtake block so its intake command wins; sets "sorter_active" for the robot
   // plugin's pneumatics pass.
-  bool auto_sort_active = false;
-  bt_->get_variable<bool>("auto_sort_active", auto_sort_active);
-  if (auto_sort_active) {
-    autoSort(current_time);
-  }
+  // bool auto_sort_active = false;
+  // bt_->get_variable<bool>("auto_sort_active", auto_sort_active);
+  // if (auto_sort_active) {
+  //   autoSort(current_time);
+  // }
 
   // bool ring_detector_active = false;
   // bool want_red = m_color_target_red;
@@ -727,6 +744,20 @@ void TankRobotPlugin::teleop(double current_time)
     return;
   }
 
+  // First teleop loop after auton: send the lift and arm back to 0. Uses the
+  // teleop hold / arm stage logic, so driver input still overrides it.
+  if (m_ran_auton) {
+    m_ran_auton = false;
+    m_lift_hold_deg = 0.0;
+    m_lift_hold_max_power = 1.0;
+    m_lift_holding = true;
+    m_lift_controller_ptr->reset();
+    m_arm_stage = 0;  // arm_stage_positions_deg[0] = 0.0
+    m_arm_custom_active = false;
+    m_arm_max_power = 1.0;
+    m_arm_controller_ptr->reset();
+  }
+
   updateMusic(current_time, joy_data); //MUST RUN FIRST: pressing u takes over all right buttons
   toggleBagRecorder(joy_data);
 
@@ -745,7 +776,7 @@ void TankRobotPlugin::teleop(double current_time)
   m_auto_sort_btn_pressed = joy_data->btn_r;
 
   updateLiftFromJoystick(joy_data);
-  updateToggleMechFromJoystick(joy_data);
+  updateToggleMechFromJoystick(joy_data, current_time);
   updateArmFromJoystick(joy_data);
   updateDrivetrain(joy_data);
 
@@ -1117,26 +1148,43 @@ void TankRobotPlugin::updateArm(bool l2_pressed)
   static bool last_l2_state = false;
   if (l2_pressed && !last_l2_state) {
     m_arm_stage = (m_arm_stage + 1) % m_arm_stage_positions_deg.size();
+    m_arm_custom_active = false;
+    m_arm_max_power = 1.0;
     m_arm_controller_ptr->reset();
   }
   last_l2_state = l2_pressed;
 
-  updateArmToStage(m_arm_stage);
+  double target_deg = m_arm_custom_active ? m_arm_custom_deg : m_arm_stage_positions_deg[m_arm_stage];
+  updateArmToPosition(target_deg, m_arm_max_power);
 }
 
 void TankRobotPlugin::updateArmToStage(size_t stage)
 {
-  double target_position_deg = m_arm_stage_positions_deg[stage];
-  double current_position_deg = rhi_ptr_->getMotorPosition("arm_motor");
+  updateArmToPosition(m_arm_stage_positions_deg[stage]);
+}
+
+void TankRobotPlugin::updateArmToPosition(double target_position_deg, double max_power)
+{
+  double current_position_deg = getArmPositionDeg();
   double current_velocity_deg_per_sec = rhi_ptr_->getMotorVelocityRPM("arm_motor") * 6.0;
 
   double error = target_position_deg - current_position_deg;
   double error_deriv = -current_velocity_deg_per_sec;
 
-  double arm_power = ghost_util::clamp(m_arm_controller_ptr->calculateCommand(error, error_deriv), -1.0, 1.0);
+  double arm_power = ghost_util::clamp(m_arm_controller_ptr->calculateCommand(error, error_deriv), -max_power, max_power);
 
   rhi_ptr_->setMotorVoltageCommandPercent("arm_motor", arm_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("arm_motor", 2500);
+}
+
+double TankRobotPlugin::getLiftPositionDeg()
+{
+  return rhi_ptr_->getMotorPosition("lift1_motor") - m_lift_zero_deg;
+}
+
+double TankRobotPlugin::getArmPositionDeg()
+{
+  return rhi_ptr_->getMotorPosition("arm_motor") - m_arm_zero_deg;
 }
 
 void TankRobotPlugin::updateLiftToStage(size_t stage)
@@ -1144,15 +1192,15 @@ void TankRobotPlugin::updateLiftToStage(size_t stage)
   updateLiftToPosition(m_lift_stage_positions_deg[stage]);
 }
 
-void TankRobotPlugin::updateLiftToPosition(double target_position_deg)
+void TankRobotPlugin::updateLiftToPosition(double target_position_deg, double max_power)
 {
-  double current_position_deg = rhi_ptr_->getMotorPosition("lift1_motor");
+  double current_position_deg = getLiftPositionDeg();
   double current_velocity_deg_per_sec = rhi_ptr_->getMotorVelocityRPM("lift1_motor") * 6.0;
 
   double error = target_position_deg - current_position_deg;
   double error_deriv = -current_velocity_deg_per_sec;
 
-  double lift_power = ghost_util::clamp(m_lift_controller_ptr->calculateCommand(error, error_deriv), -1.0, 1.0);
+  double lift_power = ghost_util::clamp(m_lift_controller_ptr->calculateCommand(error, error_deriv), -max_power, max_power);
 
   rhi_ptr_->setMotorVoltageCommandPercent("lift1_motor", lift_power);
   rhi_ptr_->setMotorVoltageCommandPercent("lift2_motor", lift_power);
@@ -1168,50 +1216,54 @@ void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
 
 void TankRobotPlugin::updateLiftFromJoystick(JoyPtr joy_data)
 {
-  // Edge-triggered: X steps up a stage, Y steps down a stage (clamped, no wrap).
-  static bool last_x_state = false;
-  static bool last_y_state = false;
-  bool x_pressed = joy_data->btn_x && !last_x_state;
-  bool y_pressed = joy_data->btn_y && !last_y_state;
-  last_x_state = joy_data->btn_x;
-  last_y_state = joy_data->btn_y;
-
-  if (x_pressed != y_pressed) {
-    if (x_pressed && m_lift_stage + 1 < m_lift_stage_positions_deg.size()) {
-      m_lift_stage++;
-    } else if (y_pressed && m_lift_stage > 0) {
-      m_lift_stage--;
-    }
-    m_lift_stage_active = true;
-    m_lift_controller_ptr->reset();
-  }
-
-  // Manual R1/R2 overrides stage control
   if (joy_data->btn_r1 || joy_data->btn_r2) {
-    m_lift_stage_active = false;
-  }
-
-  if (m_lift_stage_active) {
-    updateLiftToStage(m_lift_stage);
-    m_lift_holding = false;
-  } else if (joy_data->btn_r1 || joy_data->btn_r2) {
     updateLift(joy_data->btn_r2, joy_data->btn_r1);
     m_lift_holding = false;
+    m_lift_hold_max_power = 1.0;
   } else {
     // No input: hold wherever the lift was released.
     if (!m_lift_holding) {
-      m_lift_hold_deg = rhi_ptr_->getMotorPosition("lift1_motor");
+      m_lift_hold_deg = getLiftPositionDeg();
       m_lift_controller_ptr->reset();
       m_lift_holding = true;
     }
-    updateLiftToPosition(m_lift_hold_deg);
+    updateLiftToPosition(m_lift_hold_deg, m_lift_hold_max_power);
   }
 }
 
-void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data)
+void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data, double current_time)
 {
-  // A for one direction, B for the other
-  updateToggleMech(joy_data->btn_a, joy_data->btn_b);
+  using ToggleColor = ghost_msgs::msg::ToggleColor;
+
+  // X (edge-triggered) starts a seek to our alliance colour, or cancels one.
+  if (joy_data->btn_x && !m_toggle_btn_pressed) {
+    m_toggle_seeking = !m_toggle_seeking;
+    m_toggle_seek_start_time = current_time;
+  }
+  m_toggle_btn_pressed = joy_data->btn_x;
+
+  // Manual A/B overrides the seek.
+  if (joy_data->btn_a || joy_data->btn_b) {
+    m_toggle_seeking = false;
+  }
+
+  if (m_toggle_seeking) {
+    const uint8_t target_color = m_color_target_red ? ToggleColor::RED : ToggleColor::BLUE;
+    if (m_toggle_color == target_color) {
+      m_toggle_seeking = false;
+    } else if (current_time - m_toggle_seek_start_time > m_toggle_seek_timeout) {
+      std::cout << "[TankRobotPlugin::updateToggleMechFromJoystick] toggle seek timed out" << std::endl;
+      m_toggle_seeking = false;
+    }
+  }
+
+  if (m_toggle_seeking) {
+    rhi_ptr_->setMotorVoltageCommandPercent("toggle_mech_motor", m_toggle_seek_power);
+    rhi_ptr_->setMotorCurrentLimitMilliAmps("toggle_mech_motor", 2500);
+  } else {
+    // A for one direction, B for the other
+    updateToggleMech(joy_data->btn_a, joy_data->btn_b);
+  }
 }
 
 void TankRobotPlugin::updateArmFromJoystick(JoyPtr joy_data)

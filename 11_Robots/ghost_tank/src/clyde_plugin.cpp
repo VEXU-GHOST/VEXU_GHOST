@@ -93,7 +93,8 @@ void ClydePlugin::populateMotorNames()
 
 void ClydePlugin::populateDigitalIONames()
 {
-  digital_io_port_map["sorter"] = 0;
+  // No sorter on clyde; parked on F so it doesn't fight the clamp on port A.
+  digital_io_port_map["sorter"] = 5;
   digital_io_port_map["descorer"] = 1;
   digital_io_port_map["switcher"] = 2;
   digital_io_port_map["left_blocker"] = 3;
@@ -124,6 +125,14 @@ void ClydePlugin::initialize()
 {
   std::cout << "ClydePlugin::initialize" << std::endl;
   TankRobotPlugin::initialize();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.auto_claw_topic", "/sensors/distance/auto_claw");
+  node_ptr_->declare_parameter("tank_robot_plugin.auto_claw_close_mm", m_auto_claw_close_mm);
+  std::string auto_claw_topic = node_ptr_->get_parameter("tank_robot_plugin.auto_claw_topic").as_string();
+  m_auto_claw_close_mm = node_ptr_->get_parameter("tank_robot_plugin.auto_claw_close_mm").as_double();
+  m_auto_claw_sub = node_ptr_->create_subscription<ghost_msgs::msg::DistanceSensorState>(
+    auto_claw_topic, rclcpp::SensorDataQoS(), std::bind(&ClydePlugin::autoClawCallback, this, _1));
+
   // TankRobotPlugin::initROSComms();
   // TankRobotPlugin::initEstimation();
   // TankRobotPlugin::initIntake();
@@ -134,6 +143,8 @@ void ClydePlugin::initialize()
 
 void ClydePlugin::disabled()
 {
+  // Don't let an L1 hold from before the disable close the clamp on re-enable
+  m_clamp_grabbing = false;
 }
 
 void ClydePlugin::autonomous(double current_time)
@@ -162,6 +173,7 @@ void ClydePlugin::autonomous(double current_time)
   }
 
   TankRobotPlugin::autonomous(current_time);
+  m_clamp_grabbing = false;
 
   // Update Pneumatics
   rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], (bt_->get_variable<bool>("climb_extended")));
@@ -194,14 +206,19 @@ void ClydePlugin::teleop(double current_time)
   updateT1Climb(joy_data->btn_r1, joy_data->btn_r2, shift_r);
   updateClamp(joy_data->btn_l1, current_time);
 
-  // D-pad down: send the lift to 1000 deg. Hands the target to the teleop hold
-  // logic, so R1/R2/X/Y still override it.
+  // D-pad down: send the lift to 800 deg. Hands the target to the teleop hold
+  // logic, so R1/R2 still override it.
   static bool last_d_state = false;
   if (joy_data->btn_d && !last_d_state) {
-    m_lift_hold_deg = 1000.0;
+    m_lift_hold_deg = 800.0;
+    m_lift_hold_max_power = 1.0;
     m_lift_holding = true;
-    m_lift_stage_active = false;
     m_lift_controller_ptr->reset();
+    // Arm back to its zero position (arm_stage_positions_deg[0] = 0.0)
+    m_arm_stage = 0;
+    m_arm_custom_active = false;
+    m_arm_max_power = 1.0;
+    m_arm_controller_ptr->reset();
   }
   last_d_state = joy_data->btn_d;
 }
@@ -209,31 +226,79 @@ void ClydePlugin::teleop(double current_time)
 void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
 {
   const double drop_deg = 700.0;
-  const double min_deg = 400.0;
+  const double min_deg = 850.0;
   const double open_delay_s = 0.25;
+  const double closed_arm_deg = 200.0;
 
-  // Edge-triggered: each L1 press toggles the clamp open/closed.
-  if (l1_pressed && !m_clamp_btn_pressed) {
-    m_clamp_closed = !m_clamp_closed;
+  const double clamp_arm_max_power = 0.5;  // half speed for the clamp arm moves
+
+  // On close (L1 or auto-close): raise the arm to closed_arm_deg. L2 / D-pad
+  // down still take the arm back to its stages. Stage reset to 0 so the next L2
+  // goes to stage 1.
+  auto raise_arm = [&]() {
+    m_arm_stage = 0;
+    m_arm_custom_deg = closed_arm_deg;
+    m_arm_custom_active = true;
+    m_arm_max_power = clamp_arm_max_power;
+    m_arm_controller_ptr->reset();
+  };
+
+  auto close_clamp = [&]() {
+    m_clamp_closed = true;
     m_clamp_open_time = -1.0;
-    std::cout << "[ClydePlugin::updateClamp] L1 pressed, clamp_closed = "
-              << m_clamp_closed << " (port " << digital_io_port_map["clamp"] << ")" << std::endl;
+    m_clamp_grabbing = false;
+    raise_arm();
+  };
 
-    // On open: drop the lift 700 deg, but never below 400 deg, and delay the clamp
-    // opening so the lift starts moving first. Hands the target to the teleop hold
-    // logic, so R1/R2/X/Y still override it. At/below 400 deg: no drop, open immediately.
+  // L1 press with the clamp closed opens it. L1 press with the clamp open starts a
+  // grab: while L1 is held the auto_claw sensor can close the clamp, and if it
+  // hasn't by the time L1 is released, the clamp closes on release.
+  if (l1_pressed && !m_clamp_btn_pressed) {
     if (!m_clamp_closed) {
-      double current_deg = rhi_ptr_->getMotorPosition("lift1_motor");
+      m_clamp_grabbing = true;
+      std::cout << "[ClydePlugin::updateClamp] L1 pressed, grabbing" << std::endl;
+    } else {
+      m_clamp_closed = false;
+      m_clamp_open_time = -1.0;
+      std::cout << "[ClydePlugin::updateClamp] L1 pressed, opening (port "
+                << digital_io_port_map["clamp"] << ")" << std::endl;
+
+      // On open: drop the lift 700 deg, but never below 400 deg, and delay the clamp
+      // opening so the lift starts moving first. Hands the target to the teleop hold
+      // logic, so R1/R2 still override it. At/below 400 deg: no drop, open immediately.
+      // Arm back to 0 (arm_stage_positions_deg[0]) unless it's up on a later stage.
+      bool arm_up = !m_arm_custom_active && m_arm_stage > 0;
+      if (!arm_up) {
+        m_arm_stage = 0;
+        m_arm_custom_active = false;
+        m_arm_max_power = clamp_arm_max_power;
+        m_arm_controller_ptr->reset();
+      }
+
+      double current_deg = getLiftPositionDeg();
       if (current_deg > min_deg) {
         m_lift_hold_deg = std::max(current_deg - drop_deg, min_deg);
+        m_lift_hold_max_power = 0.5;  // half speed on the way down
         m_lift_holding = true;
-        m_lift_stage_active = false;
         m_lift_controller_ptr->reset();
         m_clamp_open_time = current_time + open_delay_s;
       }
     }
   }
   m_clamp_btn_pressed = l1_pressed;
+
+  if (m_clamp_grabbing) {
+    // Auto-close from the auto_claw distance sensor. Readings older than 200 ms
+    // (sensor unplugged / host down) are ignored.
+    bool fresh = std::chrono::steady_clock::now() - m_auto_claw_msg_time < 200ms;
+    if (l1_pressed && fresh && m_auto_claw_valid && m_auto_claw_distance_mm < m_auto_claw_close_mm) {
+      close_clamp();
+      std::cout << "[ClydePlugin::updateClamp] auto-close at " << m_auto_claw_distance_mm << " mm" << std::endl;
+    } else if (!l1_pressed) {
+      close_clamp();
+      std::cout << "[ClydePlugin::updateClamp] L1 released, closing" << std::endl;
+    }
+  }
 
   // Stay closed until the open delay has elapsed
   bool clamp_output = m_clamp_closed ||

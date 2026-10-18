@@ -7,7 +7,8 @@
   <BehaviorTree ID="bt_clyde_iso"
   >
     <Sequence>
-     
+      <!-- Placeholder: a Sequence must have at least one child -->
+      <AlwaysSuccess/>
     </Sequence>
   </BehaviorTree>
 </root>
