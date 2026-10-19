@@ -176,6 +176,7 @@ set(NODES
   autonTimer
   biteCmd
   clampCmd
+  autoClawCmd
   climbCmd
   sorterCmd
   autoSortCmd
