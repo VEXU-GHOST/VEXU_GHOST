@@ -58,7 +58,7 @@ If you prefer a native install on Ubuntu 22.04 (no Docker), the old manual flow 
 
 ### Install ROS 2 Humble
 
-Follow: <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html>
+Follow: <https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html>
 
 ### Repo setup
 
