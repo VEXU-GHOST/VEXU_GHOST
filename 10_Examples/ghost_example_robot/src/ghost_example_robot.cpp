@@ -21,6 +21,8 @@
  *   SOFTWARE.
  */
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <ghost_example_robot/ghost_example_robot.hpp>
 #include <pluginlib/class_list_macros.hpp>
@@ -103,8 +105,22 @@ void GhostExampleRobot::teleop(double current_time)
   // While holding button R2, send motor commands based on joystick values
   if (joy_data->btn_r2) {
     // Joysticks go from -127 to 127, but motors take a value from -1.0 to 1.0.
-    double left_wheel_power = joy_data->left_y / 127.0;
-    double right_wheel_power = joy_data->right_y / 127.0;
+    double forward_vel = joy_data->left_y / 127.0;
+    double angular_vel = joy_data->right_x / 127.0;
+
+    // If the joystick is close to zero, we want to treat it as zero.
+    double threshold = 0.05;
+    forward_vel = (std::fabs(forward_vel) < threshold) ? 0.0 : forward_vel;
+    angular_vel = (std::fabs(angular_vel) < threshold) ? 0.0 : angular_vel;
+
+    // Pushing the left joystick forward should make the robot go forward,
+    // and pushing the right joystick to the right should make the robot turn right.
+    double left_wheel_power = forward_vel + angular_vel;
+    double right_wheel_power = forward_vel - angular_vel;
+
+    // Clamp the values to -1.0 to 1.0, just in case the joystick values are too high.
+    left_wheel_power = std::clamp(left_wheel_power, -1.0, 1.0);
+    right_wheel_power = std::clamp(right_wheel_power, -1.0, 1.0);
 
     // setMotorVoltageCommandPercent maps -1.0 <-> 1.0 to -12000 <-> 12000 milliVolts behind the scenes.
     rhi_ptr_->setMotorVoltageCommandPercent("left_motor", left_wheel_power);
