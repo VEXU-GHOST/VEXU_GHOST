@@ -61,7 +61,7 @@ void BlinkyPlugin::populateMotorNames()
     "drive_r4",
     "drive_r5",
     "drive_r6",
-    "drive_r7",
+    // "drive_r7",
     // "drive_r8",
   };
   m_left_drive_motor_names = {
@@ -71,7 +71,7 @@ void BlinkyPlugin::populateMotorNames()
     "drive_l4",
     "drive_l5",
     "drive_l6",
-    "drive_l7",
+    // "drive_l7",
     // "drive_l8",
   };
 
@@ -217,6 +217,22 @@ void BlinkyPlugin::teleop(double current_time)
   }
 
   updateNeutralStakeArmController(joy_data->btn_l1, joy_data->btn_l2, shift1); // Y-held mode
+
+  // D-pad down: send the lift to 750 deg. Hands the target to the teleop hold
+  // logic, so R1/R2 still override it.
+  static bool last_d_state = false;
+  if (joy_data->btn_d && !last_d_state) {
+    m_lift_hold_deg = 750.0;
+    m_lift_hold_max_power = 1.0;
+    m_lift_holding = true;
+    m_lift_controller_ptr->reset();
+    // Arm back to its zero position (arm_stage_positions_deg[0] = 0.0)
+    m_arm_stage = 0;
+    m_arm_custom_active = false;
+    m_arm_max_power = 1.0;
+    m_arm_controller_ptr->reset();
+  }
+  last_d_state = joy_data->btn_d;
 }
 
 bool BlinkyPlugin::updateNeutralStakeArmPosition(int arm_mode)
