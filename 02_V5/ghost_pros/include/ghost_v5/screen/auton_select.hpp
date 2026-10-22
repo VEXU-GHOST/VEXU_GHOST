@@ -121,7 +121,7 @@ namespace ghost_v5 {
             Auton::MOVEMENT
         };
 
-        int autons_last_ = 3;
+        static constexpr int autons_last_ = sizeof(autons_) / sizeof(autons_[0]) - 1;
         int autons_current_ = 0;
 
         lv_style_t style_auton_name_;
