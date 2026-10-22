@@ -16,8 +16,8 @@ GHOST_24:
 GHOST_TANK:
   config_file: 11_Robots/ghost_override/config/robot_hardware_config_tank.yaml
 
-CLYDE:
+clyde:
   config_file: 11_Robots/ghost_override/config/clyde/clyde_hardware_config.yaml
 
-BLINKY:
+blinky:
   config_file: 11_Robots/ghost_override/config/blinky/blinky_hardware_config.yaml
