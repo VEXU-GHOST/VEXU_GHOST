@@ -21,6 +21,7 @@
  *   SOFTWARE.
  */
 
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -46,17 +47,20 @@ int main(int argc, char * argv[])
   std::cout << "-------------------------------------------------------" << std::endl;
   std::cout << std::endl;
 
-  std::string selected_robot;
-  if (!loadYAMLParam(robots_yaml, "selected_robot", selected_robot, false)) {
-    throw std::runtime_error("Error: selected_robot not found!");
+  std::string robot_name;
+  const char * configured_robot_name = std::getenv("ROBOT_NAME");
+  if (configured_robot_name != nullptr && configured_robot_name[0] != '\0') {
+    robot_name = configured_robot_name;
+  } else if (!loadYAMLParam(robots_yaml, "default_robot", robot_name, false)) {
+    throw std::runtime_error("Error: ROBOT_NAME is unset and default_robot was not found!");
   }
 
   std::string config_file;
-  if (!loadYAMLParam(robots_yaml[selected_robot], "config_file", config_file, false)) {
+  if (!loadYAMLParam(robots_yaml[robot_name], "config_file", config_file, false)) {
     throw std::runtime_error("Error: config_file not found!");
   }
 
-  std::cout << "SELECTED_ROBOT: " << selected_robot << std::endl << std::endl;
+  std::cout << "ROBOT_NAME: " << robot_name << std::endl << std::endl;
 
   std::string input_filepath = std::string(getenv("VEXU_HOME")) + "/" + config_file;
   if (!std::filesystem::exists(std::filesystem::path(input_filepath))) {

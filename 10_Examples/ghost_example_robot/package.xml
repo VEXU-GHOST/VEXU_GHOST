@@ -13,6 +13,11 @@
   <depend>ghost_ros_interfaces</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>
+  <depend>ghost_tank</depend>
+  <depend>nav_msgs</depend>
+  <exec_depend>rplidar_ros</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

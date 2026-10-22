@@ -37,6 +37,10 @@
               end_y_tiles="{nav_goal_y_tiles}"
               end_theta_deg="{nav_goal_theta_deg}"
               backwards="false" planner_id="GridBased" timeout_ms="2000" />
+            <!-- end_x_tiles / end_y_tiles above are remapped from these
+                 blackboard keys, so log the keys to see the planner's goal. -->
+            <LogVariables message="planner goal"
+              variables="nav_goal_x_tiles, nav_goal_y_tiles" />
             <!-- Drive the planned path with the nav2 controller_server (RPP).
                  Tuning lives in the controller_server block of base_ros_config.yaml;
                  this node just ships the path and relays /nav2/cmd_vel to the drive. -->
@@ -65,6 +69,7 @@
 
         <Sequence>
           <Logging message="what" />
+          
 
           <WaitCmd seconds="0.35"
             shutoff_motors="false" />

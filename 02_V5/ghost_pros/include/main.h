@@ -24,7 +24,9 @@
 #include <map>
 
 #include "ghost_v5/globals/v5_globals.hpp"
+#if !AUTON_SELECTOR_SCREEN_TEST
 #include "robot_config.hpp"
+#endif
 
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"

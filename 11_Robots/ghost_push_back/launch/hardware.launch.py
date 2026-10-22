@@ -190,8 +190,8 @@ def generate_launch_description():
     #######################
 
     def launch_setup(context, *args, **kwargs): 
-        robot_name = LaunchConfiguration("robot_name").perform(context)
-        name_options = ["pinky", "inky"]
+        robot_name = LaunchConfiguration("robot_name").perform(context).upper()
+        name_options = ["PINKY", "INKY"]
 
         if robot_name not in name_options:
             print()
@@ -201,6 +201,7 @@ def generate_launch_description():
             return []
         else:
             print("Launching robot_name:", robot_name)
+            robot_config_dir = robot_name.lower()
 
             # Resolve serial devices by USB type via /dev/serial/by-id (standard
             # udev, no custom rules). The V5 brain exposes two interfaces; if02 is
@@ -213,11 +214,13 @@ def generate_launch_description():
             # competition state machine. Per-robot; threaded down to the
             # per-robot launch -> competition_state_machine_node.
             init_config_file = os.path.join(
-                ghost_push_back_base_dir, "config", robot_name, robot_name + "_init_config.yaml")
+                ghost_push_back_base_dir, "config", robot_config_dir,
+                robot_config_dir + "_init_config.yaml")
 
             robot_launch = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(ghost_push_back_base_dir, "launch", robot_name, robot_name + ".launch.py")
+                    os.path.join(ghost_push_back_base_dir, "launch", robot_config_dir,
+                                 robot_config_dir + ".launch.py")
                 ),
                 launch_arguments={'base_params_file': base_ros_config_file,
                                   'init_config_file': init_config_file,
@@ -228,9 +231,11 @@ def generate_launch_description():
             # auto-detected Pico path (overrides the base fallback). The device
             # map (what sensors, where) is the per-robot sensor host yaml.
             ros_config_file = os.path.join(
-                ghost_push_back_base_dir, "config", robot_name, robot_name + "_ros_config.yaml")
+                ghost_push_back_base_dir, "config", robot_config_dir,
+                robot_config_dir + "_ros_config.yaml")
             sensor_host_config = os.path.join(
-                ghost_push_back_base_dir, "config", robot_name, robot_name + "_sensor_host_config.yaml")
+                ghost_push_back_base_dir, "config", robot_config_dir,
+                robot_config_dir + "_sensor_host_config.yaml")
             sensor_host_node = Node(
                 package="ghost_ros_interfaces",
                 executable="jetson_sensor_host_serial_node",

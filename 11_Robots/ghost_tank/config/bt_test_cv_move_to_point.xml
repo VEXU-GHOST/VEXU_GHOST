@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <!--
+    CV move-to-point test (Chunk 2).
+
+    GetClosestBlock finds the nearest block of our alliance colour (from
+    /field/blocks, map frame) and writes its position to the blackboard as
+    block_x_tiles / block_y_tiles. ActuallyMoveToPoint then turns to face that
+    point and drives to it.
+
+    The plain <Sequence> captures the target ONCE: GetClosestBlock returns SUCCESS
+    on the tick a block is found, then ActuallyMoveToPoint runs to completion using
+    the position latched at that moment (it does not re-home onto a moving target).
+    If no block is visible yet, GetClosestBlock fails and the autonomous loop simply
+    re-ticks the tree until one appears.
+
+    !! THIS MOVES THE ROBOT. Test on blocks/stands first, keep max_effort_percent
+    low, and be ready to disable. Drive params copied from
+    bt_test_actually_move_to_point.xml.
+
+    Live CV is NOT required to test this: publish a synthetic field and the robot
+    will drive toward the nearest red block (see bt_test_closest_block.xml for the
+    exact ros2 topic pub command).
+  -->
+  <BehaviorTree ID="main">
+    <Sequence>
+      <Logging message="CV move-to-point: looking for closest block"/>
+
+      <!-- Latch the closest alliance-colour block's position onto the blackboard. -->
+      <GetClosestBlock match_alliance="true"
+        max_range_tiles="-1.0"
+        max_age_s="-1.0"
+        block_x_tiles="{block_x_tiles}"
+        block_y_tiles="{block_y_tiles}"
+        block_id="{block_id}"
+        block_dist_tiles="{block_dist_tiles}"/>
+
+      <Logging message="CV move-to-point: driving to latched block"/>
+
+      <!-- Turn toward the block, then drive to it. -->
+      <ActuallyMoveToPoint posX_tiles="{block_x_tiles}"
+        posY_tiles="{block_y_tiles}"
+        backwards="false"
+        turn_timeout_ms="2000"
+        move_timeout_ms="3000"
+        angle_exit_threshold_deg="2.0"
+        angle_settle_ms="150"
+        kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.5"/>
+
+      <Logging message="CV move-to-point: arrived"/>
+      <WaitCmd seconds="200.0"
+        shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="GetClosestBlock"
+      editable="true">
+      <input_port name="match_alliance"/>
+      <input_port name="max_range_tiles"/>
+      <input_port name="max_age_s"/>
+      <output_port name="block_x_tiles"/>
+      <output_port name="block_y_tiles"/>
+      <output_port name="block_id"/>
+      <output_port name="block_dist_tiles"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

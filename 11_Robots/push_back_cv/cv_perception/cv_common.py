@@ -12,6 +12,16 @@ def default_model_path() -> str:
     vexu_home = os.environ.get("VEXU_HOME", os.path.expanduser("~/VEXU_GHOST"))
     return os.path.join(vexu_home, "11_Robots", "push_back_cv", "models", "6-12-26.pt")
 
+def default_engine_path() -> str:
+    """TensorRT engine for the same model -- GPU inference on the Jetson/Orin.
+
+    A .engine is built for a specific TensorRT/JetPack version and GPU, so if this
+    file fails to load, re-export it on this machine with:
+        yolo export model=<the .pt> format=engine device=0
+    """
+    vexu_home = os.environ.get("VEXU_HOME", os.path.expanduser("~/VEXU_GHOST"))
+    return os.path.join(vexu_home, "11_Robots", "push_back_cv", "models", "6-12-26.engine")
+
 def _enable_ultralytics_imports() -> None:
     """Ultralytics pulls matplotlib at import time; inference does not need it."""
     if "matplotlib" not in sys.modules:
@@ -86,7 +96,7 @@ class RawDetection:
         return self.class_name == "red"
 
 class YoloDetector:
-    def __init__(self, model_path: str, device: str, conf_threshold: float):
+    def __init__(self, model_path: str, device, conf_threshold: float):
         if not os.path.isfile(model_path):
             raise FileNotFoundError(f"Model not found: {model_path}")
         _enable_ultralytics_imports()

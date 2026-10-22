@@ -23,9 +23,13 @@
 
 #pragma once
 
+#include <memory>
 #include <ghost_planners/robot_trajectory.hpp>
 #include <ghost_ros_interfaces/competition/v5_robot_base.hpp>
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
+#include <ghost_tank/tank_odom.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+
 
 namespace ghost_example_robot
 {
@@ -41,7 +45,15 @@ public:
   void teleop(double current_time) override;
   void onNewSensorData() override;
 
-protected:
+private:
+  std::unique_ptr<ghost_tank::TankOdometry> odom_;
+  bool encoder_baseline_set_ = false;
+  double previous_left_position_ = 0.0;
+  double previous_right_position_ = 0.0;
+  double left_remainder_ = 0.0;
+  double right_remainder_ = 0.0;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+  void stopDrive();
 };
 
 } // namespace ghost_example_robot

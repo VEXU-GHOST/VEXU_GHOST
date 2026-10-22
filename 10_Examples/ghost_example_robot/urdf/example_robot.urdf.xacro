@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<robot name="example_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<link name="base_link">
+    <visual name="base">
+      <origin xyz="0.04 0 0.08" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.24 0.16"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="0.4 0.4 0.4 1.0"/>
+      </material>
+    </visual>
+    <visual name="bounding_cube">
+      <origin xyz="0.04 0 0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.24 0.24 0.20"/>
+      </geometry>
+      <material name="ghost_cube">
+        <color rgba="0.2 0.6 1.0 0.12"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.04 0 0.08" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.24 0.16"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- RPLidar A1.
+       Laser center: 2 in forward of the back edge, 1.75 in in from the left
+       edge, laser plane 10.125 in off the ground.
+         x = -6 + 2   = -4 in    -> -0.1016 m
+         y = +7.5 - 1.75 = +5.75 in -> +0.14605 m
+         z = 10.125 in            -> +0.257175 m -->
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.038" length="0.04"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.05 0.05 0.05 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.038" length="0.04"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="base_link_to_lidar_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0.04 0.08 0.19" rpy="-0.0698132 0 0"/>
+  </joint>
+
+  </robot>
