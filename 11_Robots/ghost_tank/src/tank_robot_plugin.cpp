@@ -1268,7 +1268,8 @@ void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data, double curre
 
 void TankRobotPlugin::updateArmFromJoystick(JoyPtr joy_data)
 {
-  updateArm(joy_data->btn_l2);
+  // Arm only advances (goes up) while R1 or R2 is held.
+  updateArm(joy_data->btn_l2 && (joy_data->btn_r1 || joy_data->btn_r2));
 }
 
 void TankRobotPlugin::updateMatchLoading(bool input)

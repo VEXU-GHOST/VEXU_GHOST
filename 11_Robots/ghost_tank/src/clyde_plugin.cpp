@@ -206,11 +206,11 @@ void ClydePlugin::teleop(double current_time)
   updateT1Climb(joy_data->btn_r1, joy_data->btn_r2, shift_r);
   updateClamp(joy_data->btn_l1, current_time);
 
-  // D-pad down: send the lift to 800 deg. Hands the target to the teleop hold
+  // D-pad down: send the lift to 750 deg. Hands the target to the teleop hold
   // logic, so R1/R2 still override it.
   static bool last_d_state = false;
   if (joy_data->btn_d && !last_d_state) {
-    m_lift_hold_deg = 800.0;
+    m_lift_hold_deg = 750.0;
     m_lift_hold_max_power = 1.0;
     m_lift_holding = true;
     m_lift_controller_ptr->reset();
@@ -226,9 +226,9 @@ void ClydePlugin::teleop(double current_time)
 void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
 {
   const double drop_deg = 700.0;
-  const double min_deg = 850.0;
+  const double min_deg = 750.0;
   const double open_delay_s = 0.25;
-  const double closed_arm_deg = 200.0;
+  const double closed_arm_deg = 250.0;
 
   const double clamp_arm_max_power = 0.5;  // half speed for the clamp arm moves
 
@@ -256,12 +256,12 @@ void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
   if (l1_pressed && !m_clamp_btn_pressed) {
     if (!m_clamp_closed) {
       m_clamp_grabbing = true;
-      std::cout << "[ClydePlugin::updateClamp] L1 pressed, grabbing" << std::endl;
+      // std::cout << "[ClydePlugin::updateClamp] L1 pressed, grabbing" << std::endl;
     } else {
       m_clamp_closed = false;
       m_clamp_open_time = -1.0;
-      std::cout << "[ClydePlugin::updateClamp] L1 pressed, opening (port "
-                << digital_io_port_map["clamp"] << ")" << std::endl;
+      // std::cout << "[ClydePlugin::updateClamp] L1 pressed, opening (port "
+                // << digital_io_port_map["clamp"] << ")" << std::endl;
 
       // On open: drop the lift 700 deg, but never below 400 deg, and delay the clamp
       // opening so the lift starts moving first. Hands the target to the teleop hold
@@ -293,10 +293,10 @@ void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
     bool fresh = std::chrono::steady_clock::now() - m_auto_claw_msg_time < 200ms;
     if (l1_pressed && fresh && m_auto_claw_valid && m_auto_claw_distance_mm < m_auto_claw_close_mm) {
       close_clamp();
-      std::cout << "[ClydePlugin::updateClamp] auto-close at " << m_auto_claw_distance_mm << " mm" << std::endl;
+      // std::cout << "[ClydePlugin::updateClamp] auto-close at " << m_auto_claw_distance_mm << " mm" << std::endl;
     } else if (!l1_pressed) {
       close_clamp();
-      std::cout << "[ClydePlugin::updateClamp] L1 released, closing" << std::endl;
+      // std::cout << "[ClydePlugin::updateClamp] L1 released, closing" << std::endl;
     }
   }
 

@@ -87,19 +87,25 @@ competition_state_machine_node:
         integral_activation_bound: 0.2
 
       arm:
-        kp: 0.0
+        kp: 0.003
         ki: 0.0
-        kd: 0.0
-        integral_limit: 0.0
-        integral_activation_bound: 0.0
-      arm_stage_positions_deg: [0.0, 0.0, 0.0]
+        kd: 0.000
+        integral_limit: 0.5
+        integral_activation_bound: 250.0
+      arm_stage_positions_deg: [0.0, 1650.0]
 
       lift:
-        kp: 0.0
-        ki: 0.0
-        kd: 0.0
+        kp: 0.003
+        ki: 0.000
+        kd: 0.000
         integral_limit: 0.0
         integral_activation_bound: 0.0
-      lift_stage_positions_deg: [0.0, 0.0, 0.0, 0.0, 0.0]
+      lift_stage_positions_deg: [400.0, 800.0, 1800.0, 2500.0, 1600.0, 2300.0, 2900.0, 3500.0]
+
+      # Toggle seek (X in teleop): run toggle_mech_motor until the toggle sensor
+      # reads our alliance colour (is_red_alliance -> RED, else BLUE).
+      toggle_color_topic: "/sensors/color/toggle_sensor/class"
+      toggle_seek_power: 0.5     # signed; flip the sign to seek the other way
+      toggle_seek_timeout: 2.0   # s before giving up
 
       # init pose / alliance / auton BT live in blinky/blinky_init_config.yaml
