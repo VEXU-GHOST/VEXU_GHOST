@@ -167,6 +167,7 @@ namespace ghost_v5 {
         );
 
         lv_btn_set_style(button_auton_left_, LV_BTN_STYLE_REL, &style_gray_button_);
+        lv_btn_set_style(button_auton_left_, LV_BTN_STYLE_PR, &style_gray_button_);
 
         //Right Button
         button_auton_right_ = lv_btn_create(screen_, nullptr);
@@ -184,6 +185,7 @@ namespace ghost_v5 {
         );
 
         lv_btn_set_style(button_auton_right_, LV_BTN_STYLE_REL, &style_gray_button_);
+        lv_btn_set_style(button_auton_right_, LV_BTN_STYLE_PR, &style_gray_button_);
     }
 
     void AutonSelector::createDataPanel() {
@@ -438,8 +440,10 @@ namespace ghost_v5 {
 
         if (current_alliance_ == Alliance::RED) {
             lv_btn_set_style(button_alliance_, LV_BTN_STYLE_REL, &style_red_button_);
+            lv_btn_set_style(button_alliance_, LV_BTN_STYLE_PR, &style_red_button_);
         } else if (current_alliance_ == Alliance::BLUE) {
             lv_btn_set_style(button_alliance_, LV_BTN_STYLE_REL, &style_blue_button_);
+            lv_btn_set_style(button_alliance_, LV_BTN_STYLE_PR, &style_blue_button_);
         }
 
         if (autons_[autons_current_] == Auton::PINKY) {
