@@ -6,9 +6,9 @@ source /opt/ros/humble/setup.bash
 source $VEXU_HOME/install/setup.bash
 
 # Confine Fast DDS to the wired ROS network, but only on the robot (where the
-# whitelisted IP exists). Remotes sourcing this file have no /etc/ghost/robot_name,
+# whitelisted IP exists). Remotes sourcing this file have no $VEXU_HOME/robotname,
 # so they skip it and use default DDS discovery. See config/dds/eth_only.xml.
-if [ -f /etc/ghost/robot_name ] && [ -f "$VEXU_HOME/config/dds/eth_only.xml" ]; then
+if [ -f "$VEXU_HOME/robotname" ] && [ -f "$VEXU_HOME/config/dds/eth_only.xml" ]; then
     export FASTRTPS_DEFAULT_PROFILES_FILE="$VEXU_HOME/config/dds/eth_only.xml"
 fi
 

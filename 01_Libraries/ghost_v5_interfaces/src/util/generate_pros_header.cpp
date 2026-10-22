@@ -21,6 +21,8 @@
  *   SOFTWARE.
  */
 
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -46,9 +48,27 @@ int main(int argc, char * argv[])
   std::cout << "-------------------------------------------------------" << std::endl;
   std::cout << std::endl;
 
+  // Selected robot is local to this machine: $VEXU_HOME/robotname (default: example_robot)
   std::string selected_robot;
-  if (!loadYAMLParam(robots_yaml, "selected_robot", selected_robot, false)) {
-    throw std::runtime_error("Error: selected_robot not found!");
+  {
+    std::ifstream name_file(std::string(getenv("VEXU_HOME")) + "/robotname");
+    name_file >> selected_robot;
+  }
+  if (selected_robot.empty()) {
+    selected_robot = "example_robot";
+    std::cerr << "\033[1;31m"
+              << "########################################################################\n"
+              << "WARNING: NO ROBOT NAME SET in $VEXU_HOME/robotname! Defaulting to '"
+              << selected_robot << "'.\n"
+              << "########################################################################"
+              << "\033[0m" << std::endl;
+  }
+  // robots.yaml keys are upper case
+  std::transform(
+    selected_robot.begin(), selected_robot.end(), selected_robot.begin(),
+    [](unsigned char c) {return std::toupper(c);});
+  if (!robots_yaml[selected_robot]) {
+    throw std::runtime_error("Error: robot '" + selected_robot + "' not found in robots.yaml!");
   }
 
   std::string config_file;

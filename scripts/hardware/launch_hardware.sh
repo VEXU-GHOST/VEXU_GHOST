@@ -15,16 +15,21 @@ else
     echo "Running under systemd ($INVOCATION_ID), skipping kill"
 fi
 
-ROBOT_NAME="$(cat /etc/ghost/robot_name 2>/dev/null)"
+ROBOT_NAME="$(tr -d '[:space:]' < "$VEXU_HOME/robotname" 2>/dev/null | tr 'A-Z' 'a-z')"
+
+if [ -z "$ROBOT_NAME" ]; then
+    ROBOT_NAME="example_robot"
+    RED=$'\033[1;31m'; RESET=$'\033[0m'
+    MSG="WARNING: NO ROBOT NAME SET in $VEXU_HOME/robotname! Defaulting to '$ROBOT_NAME'. Run: ghost set-robot-name <name>"
+    echo "${RED}########################################################################${RESET}"
+    echo "${RED}${MSG}${RESET}"
+    echo "${RED}########################################################################${RESET}"
+    logger "$MSG"
+fi
 
 # log to stdout AND /var/log/syslog
-if [ -z "$ROBOT_NAME" ];
-then
-    echo "robot name is unset (/etc/ghost/robot_name)... exiting";
-    # ros2 launch ghost_override hardware.launch.py 2>&1 | tee /dev/tty |& logger;
-else echo "robot name is set to '$ROBOT_NAME'";
-    ros2 launch ghost_override hardware.launch.py robot_name:=$ROBOT_NAME 2>&1 | tee /dev/tty |& logger;
-fi
+echo "robot name is set to '$ROBOT_NAME'"
+ros2 launch ghost_override hardware.launch.py robot_name:=$ROBOT_NAME 2>&1 | tee /dev/tty |& logger
 
 logger "RUNNING ros2 launch ghost_override DONE"
 logger ${PIPESTATUS}

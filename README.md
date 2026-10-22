@@ -104,14 +104,14 @@ sudo usermod -a -G dialout $USER
 
 # The `ghost` command
 
-`scripts/ghost` is the single entry point for building the code and operating the robot. Most subcommands only work once the machine has been provisioned as a robot (a name written to `/etc/ghost/robot_name`); off-robot only `run`, `build`, `clean`, and `set-robot-name` are available.
+`scripts/ghost` is the single entry point for building the code and operating the robot. Most subcommands only work once the machine has been provisioned as a robot (a name written to `$VEXU_HOME/robotname`); off-robot only `run`, `build`, `clean`, and `set-robot-name` are available.
 
 ## Initial Jetson setup (before the `ghost` symlink exists)
 
 On a fresh Jetson the `ghost` shortcut isn't installed yet, so call the script by its path. From `~/VEXU_GHOST`:
 
 ```sh
-./scripts/ghost set-robot-name clyde   # name this robot (writes /etc/ghost/robot_name)
+./scripts/ghost set-robot-name clyde   # name this robot (writes $VEXU_HOME/robotname)
 ./scripts/ghost configure-os           # one-time OS setup; also runs install and creates the `ghost` symlink
 ```
 
@@ -129,7 +129,7 @@ After `configure-os`, the `ghost` command is available system-wide (symlinked in
 - `ghost shutdown` — stops the services and powers the robot off.
 - `ghost install` — links and enables the `ghost` systemd services.
 - `ghost configure-os` — runs the one-time Jetson OS setup (autologin, time sync, sudoers, `ghost` symlink) and `install`.
-- `ghost set-robot-name <name>` — provisions this machine as a robot by writing its name to `/etc/ghost/robot_name`.
+- `ghost set-robot-name <name>` — provisions this machine as a robot by writing its name to `$VEXU_HOME/robotname` (git-ignored, so it stays local to the machine). If unset, `example_robot` is used and a red warning is logged.
 
 # Networking
 
