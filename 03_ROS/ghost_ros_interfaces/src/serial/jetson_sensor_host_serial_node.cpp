@@ -25,15 +25,18 @@ constexpr uint16_t SYNC_READ_ID = 0x0001;   // id for one-time init reads
 constexpr uint16_t FIRST_DEVICE_ID = 0x0100;
 
 using steady = std::chrono::steady_clock;
-constexpr auto LOG_PERIOD = 1s;           // max one IN/OUT line per second per device
 constexpr auto HOST_SILENT_TIMEOUT = 2s;  // reads stream continuously, so silence = frozen host
 
 double secs(steady::duration d) { return std::chrono::duration<double>(d).count(); }
 
 // Status codes, PROTOCOL.md §5
-const char * const STATUS_MEANING[] = {"OK", "bad params rejected by host",
-  "I2C write NACK: sensor unplugged / wrong port or addr",
-  "I2C read NACK: loose cable / noise / sensor busy", "host read table full"};
+const char * const STATUS_MEANING[] = {"OK", "bad params",
+  "I2C write NACK: unplugged / wrong port or addr", "I2C read NACK: loose cable / noise",
+  "host read table full"};
+
+// STATUS reset reasons, PROTOCOL.md §3.5
+const char * const RESET_REASON[] = {"unknown", "power-on / brown-out (power loss)",
+  "RUN pin (reset button / noise on RUN)", "debugger", "watchdog (software reboot, e.g. flash)"};
 
 // Rotary DAC offset XOR'd onto a device's default address per switch position.
 const uint8_t DAC_OFFSET[16] = {
@@ -127,7 +130,6 @@ JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
   for (std::size_t i = 0; i < devices_.size(); i++) {
     SensorDevice & dev = devices_[i];
     dev.topic = topic_namespace_ + "/" + lower(dev.type) + "/" + dev.name;
-    dev.since = steady::now();
     if (dev.type == "COLOR") {
       dev.color_pub = create_publisher<ghost_msgs::msg::ColorSensorState>(
         dev.topic, rclcpp::SensorDataQoS());
@@ -261,12 +263,10 @@ void JetsonSensorHostSerialNode::sendReadRequest(const SensorDevice & dev)
 void JetsonSensorHostSerialNode::handleResult(
   SensorDevice & dev, const ReadResult & result)
 {
+  dev.last_status = result.status;   // failures are reported by logReadErrors()
   if (result.status != sensor_host::ST_OK) {
-    setUp(dev, false, "read error status=" + std::to_string(result.status) + " (" +
-      (result.status < 5 ? STATUS_MEANING[result.status] : "unknown") + ")");
     return;
   }
-  setUp(dev, true);
   if (dev.type == "COLOR") {
     publishColor(dev, result);
   } else if (dev.type == "DISTANCE") {
@@ -548,6 +548,7 @@ bool JetsonSensorHostSerialNode::connect()
   std::this_thread::sleep_for(300ms);
   tcflush(fd_, TCIOFLUSH);
   init_accumulator_ = sensor_host::FrameAccumulator();
+  logHostStatus();
   // Init every device on each connect: a host that reset has lost its read table.
   for (auto & dev : devices_) {
     bool ok = initDevice(dev);
@@ -568,6 +569,21 @@ bool JetsonSensorHostSerialNode::connect()
   return true;
 }
 
+// Log why the host last reset and how long it has been up. A short uptime on
+// reconnect means the host actually rebooted (not just the USB link).
+void JetsonSensorHostSerialNode::logHostStatus()
+{
+  std::vector<uint8_t> p;
+  writeFrame(sensor_host::encodeFrame(sensor_host::CMD_STATUS_REQUEST, {}));
+  if (!readResponse(sensor_host::CMD_STATUS, p, 200) || p.size() < 5) {
+    RCLCPP_WARN(get_logger(), "Sensor host sent no STATUS (firmware too old?)");
+    return;
+  }
+  uint32_t uptime_ms = p[1] | (p[2] << 8) | (p[3] << 16) | (uint32_t(p[4]) << 24);
+  RCLCPP_INFO(get_logger(), "Sensor host up %.1f s, last reset: %s", uptime_ms / 1000.0,
+    p[0] < 5 ? RESET_REASON[p[0]] : "unknown");
+}
+
 void JetsonSensorHostSerialNode::disconnect(const std::string & why)
 {
   link_up_ = false;   // stops the rearm timer writing before the fd goes away
@@ -579,30 +595,20 @@ void JetsonSensorHostSerialNode::disconnect(const std::string & why)
   link_since_ = now;
 }
 
-// Track a device's up/down state; log IN/OUT at most once per LOG_PERIOD.
-void JetsonSensorHostSerialNode::setUp(SensorDevice & dev, bool up, const std::string & reason)
+// One line listing every device whose last read failed.
+void JetsonSensorHostSerialNode::logReadErrors()
 {
-  auto now = steady::now();
-  if (up != dev.up) {
-    dev.prev = now - dev.since;
-    dev.since = now;
-    dev.up = up;
+  last_error_log_ = steady::now();
+  std::string msg;
+  for (const auto & dev : devices_) {
+    if (dev.last_status != sensor_host::ST_OK) {
+      msg += (msg.empty() ? "" : ", ") + dev.name + " status=" + std::to_string(dev.last_status) +
+        " (" + (dev.last_status < 5 ? STATUS_MEANING[dev.last_status] : "unknown") + ")";
+    }
   }
-  if (!up) {
-    dev.reason = reason;
+  if (!msg.empty()) {
+    RCLCPP_WARN(get_logger(), "Read errors: %s", msg.c_str());
   }
-  if (now - dev.last_log < LOG_PERIOD || (up && dev.logged_up)) {
-    return;
-  }
-  if (up) {
-    RCLCPP_INFO(get_logger(), "[IN] %s '%s' (was down %.1f s)",
-      dev.type.c_str(), dev.name.c_str(), secs(dev.prev));
-  } else {
-    RCLCPP_WARN(get_logger(), "[OUT] %s '%s' down %.1f s: %s",
-      dev.type.c_str(), dev.name.c_str(), secs(now - dev.since), dev.reason.c_str());
-  }
-  dev.logged_up = up;
-  dev.last_log = now;
 }
 
 void JetsonSensorHostSerialNode::readLoop()
@@ -618,6 +624,9 @@ void JetsonSensorHostSerialNode::readLoop()
     if (steady::now() - last_rx_ > HOST_SILENT_TIMEOUT) {
       disconnect("no data for 2 s (host frozen?)");
       continue;
+    }
+    if (steady::now() - last_error_log_ > 10s) {
+      logReadErrors();
     }
     pollfd pfd{fd_, POLLIN, 0};
     if (poll(&pfd, 1, 100) <= 0) {

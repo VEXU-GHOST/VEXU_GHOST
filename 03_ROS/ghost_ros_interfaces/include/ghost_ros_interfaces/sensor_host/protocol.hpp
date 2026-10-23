@@ -18,6 +18,8 @@ constexpr uint8_t CMD_ACK          = 0x01;
 constexpr uint8_t CMD_I2C_WRITE    = 0x10;
 constexpr uint8_t CMD_READ_REQUEST = 0x11;
 constexpr uint8_t CMD_READ_RESULT  = 0x12;
+constexpr uint8_t CMD_STATUS_REQUEST = 0x13;
+constexpr uint8_t CMD_STATUS         = 0x14;   // [reset_reason:1][uptime_ms:4]
 
 // Status codes
 constexpr uint8_t ST_OK          = 0;

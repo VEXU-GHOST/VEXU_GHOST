@@ -23,6 +23,7 @@ struct SensorDevice
   std::string name;
   std::string type;        // COLOR | DISTANCE | IMU | IO_EXPANDER
   std::string topic;
+  uint8_t last_status = 0;   // status of the last READ_RESULT (read thread only)
   uint8_t port = 0;
   uint8_t addr = 0;
   uint16_t read_id = 0;
@@ -33,13 +34,6 @@ struct SensorDevice
   int config1 = 0x0D;          // COLOR: ISL29125 CONFIG1
   int config2 = 0xBF;          // COLOR: ISL29125 CONFIG2
   int timing_budget_ms = 50;   // DISTANCE: VL53L4CD timing budget
-
-  // IN/OUT state (read thread only). `up` is live; `logged_up` is what was last
-  // printed, so a change inside the 1 Hz log limit still gets printed later.
-  bool up = false, logged_up = false;
-  std::string reason;
-  std::chrono::steady_clock::time_point since, last_log;
-  std::chrono::steady_clock::duration prev{};   // length of the previous state
 
   rclcpp::Publisher<ghost_msgs::msg::ColorSensorState>::SharedPtr color_pub;
   rclcpp::Publisher<ghost_msgs::msg::DistanceSensorState>::SharedPtr distance_pub;
@@ -61,10 +55,10 @@ private:
   bool openSerial();
   void writeFrame(const std::vector<uint8_t> & wire);
 
-  // Link lifecycle + per-device IN/OUT logging (read thread only)
+  // Link lifecycle (read thread only)
   bool connect();
+  void logHostStatus();
   void disconnect(const std::string & why);
-  void setUp(SensorDevice & dev, bool up, const std::string & reason = "");
 
   // Synchronous request/response helpers (one-time device init only).
   bool readResponse(uint8_t want_cmd, std::vector<uint8_t> & payload, int timeout_ms);
@@ -81,6 +75,7 @@ private:
   bool initDevice(SensorDevice & dev);
   void sendReadRequest(const SensorDevice & dev);
   void handleResult(SensorDevice & dev, const sensor_host::ReadResult & result);
+  void logReadErrors();
   void readLoop();
 
   // COLOR (ISL29125)
@@ -103,7 +98,7 @@ private:
   int fd_;
   std::atomic_bool running_;
   std::atomic_bool link_up_{false};
-  std::chrono::steady_clock::time_point last_rx_, link_since_;
+  std::chrono::steady_clock::time_point last_rx_, link_since_, last_error_log_;
   std::thread read_thread_;
   sensor_host::FrameAccumulator accumulator_;       // async streaming
   sensor_host::FrameAccumulator init_accumulator_;  // synchronous init
