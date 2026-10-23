@@ -112,4 +112,4 @@ sleep 5
 #sudo ./install-realsense-modules.sh
 
 # make sure you set the robot name with: ghost set-robot-name <name>
-# (writes /etc/ghost/robot_name; same name as needed in hardware.launch.py, ex: alpha)
+# (writes $VEXU_HOME/robotname; same name as needed in hardware.launch.py, ex: alpha)

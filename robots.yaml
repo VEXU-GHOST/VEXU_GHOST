@@ -1,5 +1,4 @@
-### Points to selected robot configuration for PROS compile ###
-selected_robot: CLYDE
+### The selected robot is read from $VEXU_HOME/robotname (default: example_robot) ###
 
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:
