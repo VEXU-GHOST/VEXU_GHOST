@@ -330,7 +330,7 @@ void ClydePlugin::teleop(double current_time)
 
   updateScissor(joy_data->btn_l1, joy_data->btn_l2, shift_r);
   updateT1Climb(joy_data->btn_r1, joy_data->btn_r2, shift_r);
-
+  updateDrivetrain(joy_data, "arcade");
   // D-pad down: send the lift to its second stage (lift_stage_positions_deg[1]),
   // open the clamp, and send the arm to 0.
   // Hands the lift target to the teleop hold logic, so R1/R2 still override it.

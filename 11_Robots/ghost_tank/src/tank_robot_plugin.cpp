@@ -779,7 +779,6 @@ void TankRobotPlugin::teleop(double current_time)
   updateLiftFromJoystick(joy_data);
   updateToggleMechFromJoystick(joy_data, current_time);
   updateArmFromJoystick(joy_data);
-  updateDrivetrain(joy_data);
 
   updateColorSwitcher(joy_data->btn_u);
 }
@@ -1374,13 +1373,18 @@ void TankRobotPlugin::updateMusic(double current_time, JoyPtr joy_data)
 }
 
 
-void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data)
+void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data, const std::string & control_type)
 {
   // Driver-only expo curve (applied here, not in TankModel, so auton commands stay linear)
   double fwd_pct = ExpoDriveCurve(joy_data->left_y) / 127.0;
-  double turn_pct = ExpoDriveCurve(joy_data->right_x) / 127.0;
-  m_tank_model_ptr->driveCommandArcade(fwd_pct, turn_pct);
-
+  double turn_pct = 0.0;  // arcade: turn command, tank: right side command
+  if (control_type == "tank") {
+    turn_pct = ExpoDriveCurve(joy_data->right_y) / 127.0;
+    m_tank_model_ptr->driveCommandTank(fwd_pct, turn_pct);
+  } else {
+    turn_pct = ExpoDriveCurve(joy_data->right_x) / 127.0;
+    m_tank_model_ptr->driveCommandArcade(fwd_pct, turn_pct);
+  }
   int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
   if (std::fabs(fwd_pct) < 0.05 && std::fabs(turn_pct) < 0.05) {
     drive_curr_lim = 0;
