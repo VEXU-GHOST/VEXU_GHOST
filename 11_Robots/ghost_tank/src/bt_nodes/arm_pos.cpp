@@ -26,7 +26,7 @@ BT::PortsList ArmPosCmd::providedPorts()
 {
   return {
     BT::InputPort<int>("stage", 0,
-      "Arm preset stage index (0-2) to drive to and hold"),
+      "Arm preset stage index (0-2) to drive to and hold (clyde: 0 low, 1 up, 2 clamped low)"),
   };
 }
 

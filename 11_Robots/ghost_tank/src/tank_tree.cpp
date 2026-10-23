@@ -89,6 +89,10 @@ void TankTree::init_tree()
   factory.registerNodeType<MoveToPoint>("MoveToPoint");
   factory.registerNodeType<ActuallyMoveToPoint>("ActuallyMoveToPoint");
   factory.registerNodeType<MoveScissor>("MoveScissor");
+  factory.registerNodeType<ToggleMechCmd>("ToggleMechCmd");
+  factory.registerNodeType<MatchloadCmd>("MatchloadCmd");
+  factory.registerNodeType<TurnToAngle>("TurnToAngle");
+  factory.registerNodeType<SwingToAngle>("SwingToAngle");
 
   tree_ = factory.createTreeFromFile(bt_path_, global_blackboard_);
   std::cout << "Tree created: " << bt_path_ << std::endl;

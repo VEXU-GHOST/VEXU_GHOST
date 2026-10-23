@@ -216,6 +216,10 @@ set(NODES
   descorer
   arm_pos
   lift_pos
+  toggleMechCmd
+  matchloadCmd
+  turnToAngle
+  swingToAngle
 )
 
 foreach(NODE ${NODES})

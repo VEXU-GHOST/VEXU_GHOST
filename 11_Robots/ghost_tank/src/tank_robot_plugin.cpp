@@ -21,6 +21,7 @@
  *   SOFTWARE.
  */
 
+#include <algorithm>
 #include <iostream>
 #include <cmath>
 #include <bits/stdc++.h>
@@ -1124,6 +1125,9 @@ void TankRobotPlugin::updateLift(bool R2, bool R1)
 
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift1_motor", 2500);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift2_motor", 2500);
+  // Reserve the lift's share of the V5 current budget (drive gets the remainder)
+  m_loop_current_limits.push_back(2500);
+  m_loop_current_limits.push_back(2500);
 }
 
 void TankRobotPlugin::updateToggleMech(bool A, bool B)
@@ -1139,6 +1143,7 @@ void TankRobotPlugin::updateToggleMech(bool A, bool B)
 
   rhi_ptr_->setMotorVoltageCommandPercent("toggle_mech_motor", power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("toggle_mech_motor", 2500);
+  m_loop_current_limits.push_back(2500);
 }
 
 void TankRobotPlugin::updateArm(bool l2_pressed)
@@ -1160,6 +1165,11 @@ void TankRobotPlugin::updateArm(bool l2_pressed)
 
 void TankRobotPlugin::updateArmToStage(size_t stage)
 {
+  // Robots may configure fewer stages than ArmPosCmd allows
+  if (m_arm_stage_positions_deg.empty()) {
+    return;
+  }
+  stage = std::min(stage, m_arm_stage_positions_deg.size() - 1);
   updateArmToPosition(m_arm_stage_positions_deg[stage]);
 }
 
@@ -1175,6 +1185,7 @@ void TankRobotPlugin::updateArmToPosition(double target_position_deg, double max
 
   rhi_ptr_->setMotorVoltageCommandPercent("arm_motor", arm_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("arm_motor", 2500);
+  m_loop_current_limits.push_back(2500);
 }
 
 double TankRobotPlugin::getLiftPositionDeg()
@@ -1189,7 +1200,10 @@ double TankRobotPlugin::getArmPositionDeg()
 
 void TankRobotPlugin::updateLiftToStage(size_t stage)
 {
-  updateLiftToPosition(m_lift_stage_positions_deg[stage]);
+  // Slow on the way down, same as the teleop clamp-open drop
+  double target_deg = m_lift_stage_positions_deg[stage];
+  double max_power = (target_deg < getLiftPositionDeg()) ? m_lift_down_max_power : 1.0;
+  updateLiftToPosition(target_deg, max_power);
 }
 
 void TankRobotPlugin::updateLiftToPosition(double target_position_deg, double max_power)
@@ -1206,6 +1220,9 @@ void TankRobotPlugin::updateLiftToPosition(double target_position_deg, double ma
   rhi_ptr_->setMotorVoltageCommandPercent("lift2_motor", lift_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift1_motor", 2500);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift2_motor", 2500);
+  // Reserve the lift's share of the V5 current budget (drive gets the remainder)
+  m_loop_current_limits.push_back(2500);
+  m_loop_current_limits.push_back(2500);
 }
 
 void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
@@ -1260,6 +1277,7 @@ void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data, double curre
   if (m_toggle_seeking) {
     rhi_ptr_->setMotorVoltageCommandPercent("toggle_mech_motor", m_toggle_seek_power);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("toggle_mech_motor", 2500);
+    m_loop_current_limits.push_back(2500);
   } else {
     // A for one direction, B for the other
     updateToggleMech(joy_data->btn_a, joy_data->btn_b);

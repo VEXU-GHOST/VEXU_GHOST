@@ -15,6 +15,9 @@ TurnToPoint::TurnToPoint(const std::string & name, const BT::NodeConfig & config
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   if (node_ptr_) {
     expected_pose_pub_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseStamped>("/expectedpose", 10);
+    target_pose_pub_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseStamped>("/target_pose", 10);
+    starting_pose_pub_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseStamped>("/starting_pose", 10);
+    turn_direction_pub_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseStamped>("/turn_direction", 10);
   }
 
   posX_m = BT_Util::get_input<double>(this, "posX_tiles") * ghost_util::TILES_TO_METERS;
@@ -62,23 +65,40 @@ BT::NodeStatus TurnToPoint::onStart()
   // Publish the target the controller is driving toward: the robot does not
   // translate during a turn, so the expected pose keeps the current position
   // and adopts the desired heading.
-  if (expected_pose_pub_) {
-    geometry_msgs::msg::PoseStamped expected_pose;
-    expected_pose.header.stamp = node_ptr_->get_clock()->now();
-    expected_pose.header.frame_id = "map";
-    expected_pose.pose.position.x = cur_x;
-    expected_pose.pose.position.y = cur_y;
-    expected_pose.pose.position.z = 0.0;
-    tf2::Quaternion q;
-    q.setRPY(0.0, 0.0, des_ang_rad);
-    expected_pose.pose.orientation.x = q.x();
-    expected_pose.pose.orientation.y = q.y();
-    expected_pose.pose.orientation.z = q.z();
-    expected_pose.pose.orientation.w = q.w();
-    expected_pose_pub_->publish(expected_pose);
-  }
+  publishPose(expected_pose_pub_, cur_x, cur_y, des_ang_rad);
+
+  // Starting pose is where the robot is now; target pose is the point being
+  // turned toward, oriented along the desired heading.
+  publishPose(starting_pose_pub_, cur_x, cur_y, tank_model_ptr_->getWorldPose().z());
+  publishPose(target_pose_pub_, posX_m, posY_m, des_ang_rad);
+
+  // Arrow from the robot pointing straight at the target point, ignoring the
+  // backwards flip, so the turn target is visible regardless of drive direction.
+  publishPose(turn_direction_pub_, cur_x, cur_y, std::atan2(posY_m - cur_y, posX_m - cur_x));
 
   return BT::NodeStatus::RUNNING;
+}
+
+void TurnToPoint::publishPose(
+  const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub,
+  double x, double y, double yaw)
+{
+  if (!pub) {
+    return;
+  }
+  geometry_msgs::msg::PoseStamped pose;
+  pose.header.stamp = node_ptr_->get_clock()->now();
+  pose.header.frame_id = "map";
+  pose.pose.position.x = x;
+  pose.pose.position.y = y;
+  pose.pose.position.z = 0.0;
+  tf2::Quaternion q;
+  q.setRPY(0.0, 0.0, yaw);
+  pose.pose.orientation.x = q.x();
+  pose.pose.orientation.y = q.y();
+  pose.pose.orientation.z = q.z();
+  pose.pose.orientation.w = q.w();
+  pub->publish(pose);
 }
 
 BT::NodeStatus TurnToPoint::onRunning()

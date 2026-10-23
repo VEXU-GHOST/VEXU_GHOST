@@ -140,20 +140,15 @@ void TankModel::normalizeArcadeCommand(Eigen::Vector2d & cmd)
   cmd *= scale;
 }
 
-template <typename T> constexpr T sgn(T value) { return value < 0 ? -1 : 1; }
-      
-float deadband = 1.028;
-float curveGain = 32.2;
-float minOutput = 27.7;
+float deadband = 1.028;  // Stick values below this (raw, 0-127) count as zero
+float curveGain = 4.0;   // 0 = linear, higher = finer control at low stick values (2-6 is typical)
 
-
+// Full stick still gives full power; the curve only softens the low end.
 float ExpoDriveCurve(float input) {
-  if (fabs(input) <= deadband) return 0;
-  const float g = fabs(input) - deadband;
-  const float g127 = 127 - deadband;
-  const float i = pow(curveGain, g - 127) * g * sgn(input);
-  const float i127 = pow(curveGain, g127 - 127) * g127;
-  return (127.0 - minOutput) / (127) * i * 127 / i127 + minOutput * sgn(input);
+  if (fabs(input) < deadband) return 0;
+  if (curveGain <= 0) return input;
+  const float lowEndGain = exp(-curveGain / 10.0);
+  return (lowEndGain + exp((fabs(input) - 127) / 12.7) * (1 - lowEndGain)) * input;
 }
 
 void TankModel::driveCommandArcade(double fwd_pct, double ang_pct)

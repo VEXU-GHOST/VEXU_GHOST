@@ -1,5 +1,5 @@
 ### Points to selected robot configuration for PROS compile ###
-selected_robot: BLINKY
+selected_robot: CLYDE
 
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:

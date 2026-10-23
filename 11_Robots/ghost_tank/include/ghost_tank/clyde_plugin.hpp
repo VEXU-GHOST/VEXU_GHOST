@@ -77,6 +77,38 @@ protected:
   void updateScissor(bool up, bool down, bool enabled);
   void updateT1Climb(bool up, bool down, bool enabled);
   void updateClamp(bool l1_pressed, double current_time);
+  void updateArmFromJoystick(JoyPtr joy_data) override;
+
+  // Arm low position while the clamp is closed (L2 toggles between this and
+  // arm_stage_positions_deg[1] instead of [0]). Loaded from
+  // arm_stage_positions_deg[2] when present.
+  double m_arm_clamped_low_deg = 200.0;
+  // Set when R1/R2 is pressed with the clamp closed, cleared when the clamp opens.
+  // Until then the arm's low position stays at 0.
+  bool m_arm_clamped_low_active = false;
+
+  // D-pad right macro: arm target while reaching for a goal (held via
+  // m_arm_custom_deg until the clamp closes, then the arm reverts to
+  // m_arm_macro_revert_deg, also via m_arm_custom_deg).
+  double m_arm_macro_extend_deg = 1650.0;
+  double m_arm_macro_revert_deg = 200.0;
+  // True while the arm is at the macro's extend target (false once it reverts)
+  bool m_arm_macro_extended = false;
+  // Power cap for the arm's revert after the clamp closes on the macro
+  const double m_arm_macro_revert_max_power = 0.3;
+  // How far the lift rises (from where it is) as the macro arm reverts
+  const double m_lift_macro_raise_deg = 150.0;
+
+  // Auton version of the d-pad right macro, toggled by the MatchloadCmd BT node.
+  void updateMatchloadAuton();
+  // Clamp is open from MatchloadCmd and waiting to close (sensor / toggle off)
+  bool m_matchload_grabbing = false;
+  // When the current grab started, for the matchload_timeout_s auto-close
+  std::chrono::steady_clock::time_point m_matchload_start_time{};
+  // Macro owns the arm (m_arm_custom_deg) until an ArmPosCmd takes over
+  bool m_matchload_arm_active = false;
+  // Macro owns the lift (m_lift_hold_deg) after the revert until a LiftPosCmd takes over
+  bool m_matchload_lift_active = false;
 
   bool m_clamp_closed = false;
   bool m_clamp_btn_pressed = false;
