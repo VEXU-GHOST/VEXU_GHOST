@@ -108,4 +108,13 @@ competition_state_machine_node:
       toggle_seek_power: 0.5     # signed; flip the sign to seek the other way
       toggle_seek_timeout: 2.0   # s before giving up
 
+      sorter_io_port: 5  # no sorter on blinky; port 0 (A) is the clamp
+
+      # Auto-claw (teleop): while L1 is held with the clamp open, close the clamp
+      # when the auto_claw distance sensor reads below auto_claw_close_mm. If it
+      # hasn't closed by the time L1 is released (or no sensor is plugged in),
+      # it closes on release.
+      auto_claw_topic: "/sensors/distance/auto_claw"
+      auto_claw_close_mm: 85.0
+
       # init pose / alliance / auton BT live in blinky/blinky_init_config.yaml

@@ -463,14 +463,25 @@ void TankRobotPlugin::onNewSensorData()
   if (first_loop) {
     playMusic("hello_there");
     resetWorldPose();
-    // Zero lift/arm at their starting positions (only on robots that have them)
-    if (rhi_ptr_->contains("lift1_motor")) {
-      m_lift_zero_deg = rhi_ptr_->getMotorPosition("lift1_motor");
-    }
-    if (rhi_ptr_->contains("arm_motor")) {
-      m_arm_zero_deg = rhi_ptr_->getMotorPosition("arm_motor");
-    }
     first_loop = false;
+  }
+
+  // Zero lift/arm at their starting positions (only on robots that have them).
+  // Waits for a finite reading: PROS reports inf for a motor it can't read, and
+  // an inf zero would make every later lift/arm position NaN.
+  if (!m_lift_zeroed && rhi_ptr_->contains("lift1_motor")) {
+    double pos = rhi_ptr_->getMotorPosition("lift1_motor");
+    if (std::isfinite(pos)) {
+      m_lift_zero_deg = pos;
+      m_lift_zeroed = true;
+    }
+  }
+  if (!m_arm_zeroed && rhi_ptr_->contains("arm_motor")) {
+    double pos = rhi_ptr_->getMotorPosition("arm_motor");
+    if (std::isfinite(pos)) {
+      m_arm_zero_deg = pos;
+      m_arm_zeroed = true;
+    }
   }
 
   // Clear current limits at start of loop
@@ -1172,6 +1183,11 @@ void TankRobotPlugin::updateArmToPosition(double target_position_deg, double max
   double error_deriv = -current_velocity_deg_per_sec;
 
   double arm_power = ghost_util::clamp(m_arm_controller_ptr->calculateCommand(error, error_deriv), -max_power, max_power);
+  // ghost_util::clamp turns NaN into -max_power, so stop instead on a bad reading.
+  if (!m_arm_zeroed || !std::isfinite(error) || !std::isfinite(error_deriv)) {
+    arm_power = 0.0;
+    m_arm_controller_ptr->reset();
+  }
 
   rhi_ptr_->setMotorVoltageCommandPercent("arm_motor", arm_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("arm_motor", 2500);
@@ -1201,6 +1217,11 @@ void TankRobotPlugin::updateLiftToPosition(double target_position_deg, double ma
   double error_deriv = -current_velocity_deg_per_sec;
 
   double lift_power = ghost_util::clamp(m_lift_controller_ptr->calculateCommand(error, error_deriv), -max_power, max_power);
+  // ghost_util::clamp turns NaN into -max_power, so stop instead on a bad reading.
+  if (!m_lift_zeroed || !std::isfinite(error) || !std::isfinite(error_deriv)) {
+    lift_power = 0.0;
+    m_lift_controller_ptr->reset();
+  }
 
   rhi_ptr_->setMotorVoltageCommandPercent("lift1_motor", lift_power);
   rhi_ptr_->setMotorVoltageCommandPercent("lift2_motor", lift_power);
@@ -1222,7 +1243,8 @@ void TankRobotPlugin::updateLiftFromJoystick(JoyPtr joy_data)
     m_lift_hold_max_power = 1.0;
   } else {
     // No input: hold wherever the lift was released.
-    if (!m_lift_holding) {
+    // Only latch a finite hold target; otherwise retry next loop.
+    if (!m_lift_holding && std::isfinite(getLiftPositionDeg())) {
       m_lift_hold_deg = getLiftPositionDeg();
       m_lift_controller_ptr->reset();
       m_lift_holding = true;
@@ -1268,8 +1290,8 @@ void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data, double curre
 
 void TankRobotPlugin::updateArmFromJoystick(JoyPtr joy_data)
 {
-  // Arm only advances (goes up) while R1 or R2 is held.
-  updateArm(joy_data->btn_l2 && (joy_data->btn_r1 || joy_data->btn_r2));
+  // Each L2 press swaps the arm to its next stage (arm_stage_positions_deg).
+  updateArm(joy_data->btn_l2);
 }
 
 void TankRobotPlugin::updateMatchLoading(bool input)

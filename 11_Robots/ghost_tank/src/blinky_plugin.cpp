@@ -36,6 +36,7 @@
 using ghost_planners::RobotTrajectory;
 using ghost_ros_interfaces::msg_helpers::fromROSMsg;
 using std::placeholders::_1;
+using namespace std::chrono_literals;
 
 using ghost_v5_interfaces::devices::JoystickDeviceData;
 
@@ -88,8 +89,11 @@ void BlinkyPlugin::populateMotorNames()
 
 void BlinkyPlugin::populateDigitalIONames()
 {
-  digital_io_port_map["clamp"] = 0;
-  
+  digital_io_port_map["clamp"] = 0;  // port A
+  // TankRobotPlugin::updateColorSwitcher writes "color_sorter" every teleop loop
+  // and defaults to port 0, which would fight the clamp. Park it on F.
+  digital_io_port_map["color_sorter"] = 5;
+
   // climb / shooter / goal_rush solenoids do not physically exist on clyde,
   // but the autonomous() pneumatics block still references them. Without explicit
   // entries, operator[] would default-insert them at port 0 and clobber the sorter
@@ -116,6 +120,14 @@ void BlinkyPlugin::initialize()
 {
   std::cout << "BlinkyPlugin::initialize" << std::endl;
   TankRobotPlugin::initialize();
+
+  node_ptr_->declare_parameter("tank_robot_plugin.auto_claw_topic", "/sensors/distance/auto_claw");
+  node_ptr_->declare_parameter("tank_robot_plugin.auto_claw_close_mm", m_auto_claw_close_mm);
+  std::string auto_claw_topic = node_ptr_->get_parameter("tank_robot_plugin.auto_claw_topic").as_string();
+  m_auto_claw_close_mm = node_ptr_->get_parameter("tank_robot_plugin.auto_claw_close_mm").as_double();
+  m_auto_claw_sub = node_ptr_->create_subscription<ghost_msgs::msg::DistanceSensorState>(
+    auto_claw_topic, rclcpp::SensorDataQoS(), std::bind(&BlinkyPlugin::autoClawCallback, this, _1));
+
   // TankRobotPlugin::initROSComms();
   // TankRobotPlugin::initEstimation();
   // TankRobotPlugin::initIntake();
@@ -154,6 +166,8 @@ void BlinkyPlugin::initNeutralStakeArm()
 
 void BlinkyPlugin::disabled()
 {
+  // Don't let an L1 hold from before the disable close the clamp on re-enable
+  m_clamp_grabbing = false;
 }
 
 void BlinkyPlugin::autonomous(double current_time)
@@ -181,6 +195,7 @@ void BlinkyPlugin::autonomous(double current_time)
   }
 
   TankRobotPlugin::autonomous(current_time);
+  m_clamp_grabbing = false;
 
   int neutral_stake_pos = 0;
   if (bt_->get_variable<int>("neutral_stake_pos", neutral_stake_pos)) {
@@ -189,7 +204,7 @@ void BlinkyPlugin::autonomous(double current_time)
   }
 
   // Update Pneumatics
-  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<int>("clamp_closed"));
+  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], bt_->get_variable<bool>("clamp_closed"));
   if (m_mirrored) {
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_l"], bt_->get_variable<int>("goal_rush_r_down") || bt_->get_variable<int>("goal_rush_down"));
     rhi_ptr_->setDigitalOut(digital_io_port_map["goal_rush_r"], bt_->get_variable<int>("goal_rush_l_down"));
@@ -217,6 +232,7 @@ void BlinkyPlugin::teleop(double current_time)
   }
 
   updateNeutralStakeArmController(joy_data->btn_l1, joy_data->btn_l2, shift1); // Y-held mode
+  updateClamp(joy_data->btn_l1, current_time);
 
   // D-pad down: send the lift to 750 deg. Hands the target to the teleop hold
   // logic, so R1/R2 still override it.
@@ -233,6 +249,89 @@ void BlinkyPlugin::teleop(double current_time)
     m_arm_controller_ptr->reset();
   }
   last_d_state = joy_data->btn_d;
+}
+
+void BlinkyPlugin::updateClamp(bool l1_pressed, double current_time)
+{
+  const double drop_deg = 700.0;
+  const double min_deg = 750.0;
+  const double open_delay_s = 0.25;
+  const double closed_arm_deg = 250.0;
+
+  const double clamp_arm_max_power = 0.5;  // half speed for the clamp arm moves
+
+  // On close (L1 or auto-close): raise the arm to closed_arm_deg. L2 / D-pad
+  // down still take the arm back to its stages. Stage reset to 0 so the next L2
+  // goes to stage 1.
+  auto raise_arm = [&]() {
+    m_arm_stage = 0;
+    m_arm_custom_deg = closed_arm_deg;
+    m_arm_custom_active = true;
+    m_arm_max_power = clamp_arm_max_power;
+    m_arm_controller_ptr->reset();
+  };
+
+  auto close_clamp = [&]() {
+    m_clamp_closed = true;
+    m_clamp_open_time = -1.0;
+    m_clamp_grabbing = false;
+    raise_arm();
+  };
+
+  // L1 press with the clamp closed opens it. L1 press with the clamp open starts a
+  // grab: while L1 is held the auto_claw sensor can close the clamp, and if it
+  // hasn't by the time L1 is released, the clamp closes on release.
+  if (l1_pressed && !m_clamp_btn_pressed) {
+    if (!m_clamp_closed) {
+      m_clamp_grabbing = true;
+      // std::cout << "[BlinkyPlugin::updateClamp] L1 pressed, grabbing" << std::endl;
+    } else {
+      m_clamp_closed = false;
+      m_clamp_open_time = -1.0;
+      // std::cout << "[BlinkyPlugin::updateClamp] L1 pressed, opening (port "
+                // << digital_io_port_map["clamp"] << ")" << std::endl;
+
+      // On open: drop the lift 700 deg, but never below 400 deg, and delay the clamp
+      // opening so the lift starts moving first. Hands the target to the teleop hold
+      // logic, so R1/R2 still override it. At/below 400 deg: no drop, open immediately.
+      // Arm back to 0 (arm_stage_positions_deg[0]) unless it's up on a later stage.
+      bool arm_up = !m_arm_custom_active && m_arm_stage > 0;
+      if (!arm_up) {
+        m_arm_stage = 0;
+        m_arm_custom_active = false;
+        m_arm_max_power = clamp_arm_max_power;
+        m_arm_controller_ptr->reset();
+      }
+
+      double current_deg = getLiftPositionDeg();
+      if (current_deg > min_deg) {
+        m_lift_hold_deg = std::max(current_deg - drop_deg, min_deg);
+        m_lift_hold_max_power = 0.5;  // half speed on the way down
+        m_lift_holding = true;
+        m_lift_controller_ptr->reset();
+        m_clamp_open_time = current_time + open_delay_s;
+      }
+    }
+  }
+  m_clamp_btn_pressed = l1_pressed;
+
+  if (m_clamp_grabbing) {
+    // Auto-close from the auto_claw distance sensor. Readings older than 200 ms
+    // (sensor unplugged / host down) are ignored.
+    bool fresh = std::chrono::steady_clock::now() - m_auto_claw_msg_time < 200ms;
+    if (l1_pressed && fresh && m_auto_claw_valid && m_auto_claw_distance_mm < m_auto_claw_close_mm) {
+      close_clamp();
+      // std::cout << "[BlinkyPlugin::updateClamp] auto-close at " << m_auto_claw_distance_mm << " mm" << std::endl;
+    } else if (!l1_pressed) {
+      close_clamp();
+      // std::cout << "[BlinkyPlugin::updateClamp] L1 released, closing" << std::endl;
+    }
+  }
+
+  // Stay closed until the open delay has elapsed
+  bool clamp_output = m_clamp_closed ||
+    (m_clamp_open_time >= 0.0 && current_time < m_clamp_open_time);
+  rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], clamp_output);
 }
 
 bool BlinkyPlugin::updateNeutralStakeArmPosition(int arm_mode)

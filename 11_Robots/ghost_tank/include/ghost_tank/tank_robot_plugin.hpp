@@ -329,6 +329,9 @@ protected:
   // wherever they start (there is no encoder tare through the hardware interface).
   double m_lift_zero_deg{0.0};
   double m_arm_zero_deg{0.0};
+  // Set once a finite zero reading has been captured.
+  bool m_lift_zeroed{false};
+  bool m_arm_zeroed{false};
   // Set while auton runs; teleop uses it to send the lift/arm home once auton ends.
   bool m_ran_auton{false};
   double getLiftPositionDeg();

@@ -125,7 +125,7 @@ void BagRecorderNode::SpawnRecorderProcess()
   recorderPID_ = fork();
   if (recorderPID_ == 0) {
     execl(
-      "/bin/sh", "sh", "-c", "exec ros2 bag record -a -o ~/bags/$(date +%m_%d_%Y-%H_%M_%S)",
+      "/bin/sh", "sh", "-c", "R=$(cat $VEXU_HOME/robotname 2>/dev/null || echo unknown_robot); D=$(date +%m_%d_%Y); N=1; while [ -e ~/bags/${R}_${D}_${N} ]; do N=$((N+1)); done; exec ros2 bag record -a -o ~/bags/${R}_${D}_${N}",
       NULL);
   }
 
