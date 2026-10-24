@@ -44,7 +44,7 @@ skip=(
     plotjuggler_ros
     librealsense2
     picotool
-    pico-sdk
+    pico_sdk
 )
 
 # Build ignores simulator packages on embedded devices
