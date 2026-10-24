@@ -140,6 +140,7 @@ void BagRecorderNode::SpawnRecorderProcess()
   if (recorderPID_ == 0) {
     // One unsplit MCAP file with uncompressed chunks (fastwrite): file-mode compression
     // only starts after SIGINT closes it.
+    // this is where the bag files are recorded, compressed, and stored as mcap 
     execl(
       "/bin/sh", "sh", "-c",
       "R=$(cat \"$VEXU_HOME/robotname\" 2>/dev/null || echo unknown_robot); "
