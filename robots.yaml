@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-### Points to selected robot configuration for PROS compile 
-### The selected robot is read from $VEXU_HOME/robotname (default: example_robot) ###
->>>>>>> ca2d012f8fe5eb3b98fbc95229a3618ee4755c96
-
 ### Lists available robot configurations ###
 TEST_HARDWARE_CONFIG:
   config_file: 01_Libraries/ghost_v5_interfaces/test/config/example_robot_2.yaml
