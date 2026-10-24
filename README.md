@@ -104,14 +104,14 @@ sudo usermod -a -G dialout $USER
 
 # The `ghost` command
 
-`scripts/ghost` is the single entry point for building the code and operating the robot. Most subcommands only work once the machine has been provisioned as a robot (a name written to `/etc/ghost/robot_name`); off-robot only `run`, `build`, `clean`, and `set-robot-name` are available.
+`scripts/ghost` is the single entry point for building the code and operating the robot. Most subcommands only work once the machine has been provisioned as a robot (a name written to `$VEXU_HOME/robotname`); off-robot only `run`, `build`, `clean`, and `set-robot-name` are available.
 
 ## Initial Jetson setup (before the `ghost` symlink exists)
 
 On a fresh Jetson the `ghost` shortcut isn't installed yet, so call the script by its path. From `~/VEXU_GHOST`:
 
 ```sh
-./scripts/ghost set-robot-name clyde   # name this robot (writes /etc/ghost/robot_name)
+./scripts/ghost set-robot-name clyde   # name this robot (writes $VEXU_HOME/robotname)
 ./scripts/ghost configure-os           # one-time OS setup; also runs install and creates the `ghost` symlink
 ```
 
@@ -129,7 +129,47 @@ After `configure-os`, the `ghost` command is available system-wide (symlinked in
 - `ghost shutdown` — stops the services and powers the robot off.
 - `ghost install` — links and enables the `ghost` systemd services.
 - `ghost configure-os` — runs the one-time Jetson OS setup (autologin, time sync, sudoers, `ghost` symlink) and `install`.
-- `ghost set-robot-name <name>` — provisions this machine as a robot by writing its name to `/etc/ghost/robot_name`.
+- `ghost set-robot-name <name>` — provisions this machine as a robot by writing its name to `$VEXU_HOME/robotname` (git-ignored, so it stays local to the machine). If unset, `example_robot` is used and a red warning is logged.
+
+# Match bag recording
+
+With `should_record: true`, recording starts when autonomous begins, continues
+through the autonomous/driver pause and driver control, and stops on the
+driver-control-to-disabled transition. Bags are saved in
+`~/bags/<robot>_<MM_DD_YYYY>_<number>/`.
+
+The recorder writes all topics it normally discovers to one uncompressed MCAP (`fastwrite` preset)
+file during the match. After stop, ROS 2 closes that file and compresses it
+losslessly with Zstd using one worker (`--compression-mode file
+--compression-format zstd --compression-threads 1`). File splitting is disabled
+so compression does not start during a match. This preserves recorded messages
+and their timestamps without reducing sensor resolution or sample rates.
+
+On stop, recorder threads are lowered to CPU nice level 10 for background
+finalization. Another match can start recording at normal priority while an
+older bag finishes. The bag LED turns off when recording stops; compression may
+still be running. Wait for the completion log before powering off or copying the
+bag. Allow free space for both the original and compressed file during this step.
+ROS removes the original after successful compression; the final bag contains
+`metadata.yaml` and a `.mcap.zstd` file. If compression fails, inspect recorder
+logs and keep any remaining original file.
+
+Install the runtime dependencies on the Jetson and playback computer (also
+declared in `ghost_ros_interfaces/package.xml`):
+
+```sh
+sudo apt install ros-humble-ros2bag ros-humble-rosbag2-transport \
+  ros-humble-rosbag2-storage-default-plugins ros-humble-rosbag2-storage-mcap \
+  ros-humble-rosbag2-compression-zstd
+```
+
+After rebuilding `ghost_ros_interfaces` and starting the updated robot stack,
+new matches use this behavior; existing bags are not changed. Replay a completed
+bag using `ros2 bag play ~/bags/<bag-directory>` and view the replayed topics in
+RViz. PlotJuggler can open the bag's `metadata.yaml` with its ROS 2 bag loader
+when the compression plugin and custom message packages are available.
+File-level compression requires decompressing the file for playback, so allow
+space and startup time on the visualization computer.
 
 # Networking
 

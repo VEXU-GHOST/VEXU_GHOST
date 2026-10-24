@@ -71,27 +71,27 @@ competition_state_machine_node:
         integral_activation_bound: 0.5
 
       arc_turn:
-        kp: 0.7
+        kp: 0.4
         ki: 0.0
-        kd: 0.002
+        kd: 0.2
         integral_limit: 0.75
         integral_activation_bound: 0.2
 
       arm:
-        kp: 0.0010
-        ki: 0.008
-        kd: 0.0001
+        kp: 0.003
+        ki: 0.0
+        kd: 0.000
         integral_limit: 0.5
         integral_activation_bound: 250.0
-      arm_stage_positions_deg: [3.0, 720.0]
+      arm_stage_positions_deg: [0.0, 1650.0]
 
       lift:
-        kp: 0.0
-        ki: 0.0
-        kd: 0.0
+        kp: 0.003
+        ki: 0.000
+        kd: 0.000
         integral_limit: 0.0
         integral_activation_bound: 0.0
-      lift_stage_positions_deg: [0.0, 0.0, 0.0, 0.0, 0.0]
+      lift_stage_positions_deg: [400.0, 800.0, 1800.0, 2500.0, 1600.0, 2300.0, 2900.0, 3500.0]
 
       # Auto-sort (TankRobotPlugin::autoSort / AutoSortCmd). Detect on the
       # mid_conveyor colour sensor -- the sorter_hood sensor is not plugged in on
@@ -101,6 +101,18 @@ competition_state_machine_node:
       # digital-out port 0.
       sort_color_topic: "/sensors/color/mid_conveyor/class"
       sort_delay: 0.05           # s for a ball to travel sensor -> sorter
-      sorter_io_port: 0
+      sorter_io_port: 5  # no sorter on clyde; port 0 (A) is the clamp
+
+      # Toggle seek (X in teleop): run toggle_mech_motor until the toggle sensor
+      # reads our alliance colour (is_red_alliance -> RED, else BLUE).
+      toggle_color_topic: "/sensors/color/toggle_sensor/class"
+      toggle_seek_power: 0.5     # signed; flip the sign to seek the other way
+      toggle_seek_timeout: 2.0   # s before giving up
+
+      # Auto-claw (teleop): while L1 is held with the clamp open, close the clamp
+      # when the auto_claw distance sensor reads below auto_claw_close_mm. If it
+      # hasn't closed by the time L1 is released, it closes on release.
+      auto_claw_topic: "/sensors/distance/auto_claw"
+      auto_claw_close_mm: 85.0
 
       # init pose / alliance / auton BT live in clyde/clyde_init_config.yaml

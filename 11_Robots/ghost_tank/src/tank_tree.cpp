@@ -49,6 +49,7 @@ void TankTree::init_tree()
   factory.registerNodeType<LoadPathFromCSV>("LoadPathFromCSV");
   factory.registerNodeType<BiteCmd>("BiteCmd");
   factory.registerNodeType<ClampCmd>("ClampCmd");
+  factory.registerNodeType<AutoClawCmd>("AutoClawCmd");
   factory.registerNodeType<ClimbCmd>("ClimbCmd");
   factory.registerNodeType<DescorerCmd>("DescorerCmd");
   factory.registerNodeType<AdjustSwitcherCmd>("AdjustSwitcherCmd");

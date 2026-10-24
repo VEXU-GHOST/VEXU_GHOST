@@ -21,7 +21,14 @@
  *   SOFTWARE.
  */
 
-#include <spawn.h>
+#include <cerrno>
+#include <csignal>
+#include <cstdlib>
+#include <cstring>
+#include <dirent.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <vector>
 #include "ghost_msgs/srv/start_recorder.hpp"
 #include "ghost_msgs/srv/stop_recorder.hpp"
 #include "std_msgs/msg/int64.hpp"
@@ -55,6 +62,8 @@ public:
       this->create_wall_timer(
       disk_check_period_,
       std::bind(&BagRecorderNode::EnforceFreeDiskSpace, this));
+    process_check_timer_ = this->create_wall_timer(
+      std::chrono::seconds(1), std::bind(&BagRecorderNode::CheckRecorderProcesses, this));
 
     // Create subscription to /io/buttons/bag and publisher to /io/leds/bag
     button_subscriber_ = this->create_subscription<std_msgs::msg::Int64>(
@@ -76,6 +85,8 @@ public:
   void StopCallback(StopRecorder::Request::SharedPtr req, StopRecorder::Response::SharedPtr res);
   void SpawnRecorderProcess();
   void KillRecorderProcess();
+  void CheckRecorderProcesses();
+  void LowerRecorderPriority(pid_t pid);
   void EnforceFreeDiskSpace();
   void ButtonCallback(const std_msgs::msg::Int64::SharedPtr msg);
   void PublishLedStatus(int64_t status);
@@ -89,6 +100,8 @@ private:
 
   bool recording_ = false;
   pid_t recorderPID_ = -1;
+  std::vector<pid_t> finalizing_pids_;
+  rclcpp::TimerBase::SharedPtr process_check_timer_;
   unsigned long disk_space_required_;
   FILE * disk_check_output_;
   std::chrono::seconds disk_check_period_;
@@ -113,22 +126,37 @@ void BagRecorderNode::StopCallback(
 
 void BagRecorderNode::SpawnRecorderProcess()
 {
-  PublishLedStatus(1);  // Turn LED on
+  CheckRecorderProcesses();
   if (recording_) {
     RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Unable to start recorder; one already exists.");
     return;
   }
 
-  recording_ = true;
-  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Starting recorder.");
-
   recorderPID_ = fork();
+  if (recorderPID_ < 0) {
+    RCLCPP_ERROR(get_logger(), "Unable to start recorder: %s", std::strerror(errno));
+    return;
+  }
   if (recorderPID_ == 0) {
+    // One unsplit MCAP file with uncompressed chunks (fastwrite): file-mode compression
+    // only starts after SIGINT closes it.
+    // this is where the bag files are recorded, compressed, and stored as mcap 
     execl(
-      "/bin/sh", "sh", "-c", "exec ros2 bag record -a -o ~/bags/$(date +%m_%d_%Y-%H_%M_%S)",
+      "/bin/sh", "sh", "-c",
+      "R=$(cat \"$VEXU_HOME/robotname\" 2>/dev/null || echo unknown_robot); "
+      "D=$(date +%m_%d_%Y); N=1; "
+      "while [ -e \"$HOME/bags/${R}_${D}_${N}\" ]; do N=$((N+1)); done; "
+      "exec ros2 bag record -a --storage mcap --storage-preset-profile fastwrite "
+      "--max-bag-size 0 --max-bag-duration 0 "
+      "--compression-mode file --compression-format zstd --compression-threads 1 "
+      "-o \"$HOME/bags/${R}_${D}_${N}\"",
       NULL);
+    _exit(127);
   }
 
+  recording_ = true;
+  PublishLedStatus(1);
+  RCLCPP_INFO(get_logger(), "Recording uncompressed; lossless Zstd compression will run after stop.");
 }
 
 void BagRecorderNode::KillRecorderProcess()
@@ -138,9 +166,6 @@ void BagRecorderNode::KillRecorderProcess()
     return;
   }
 
-  recording_ = false;
-  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Stopping recorder.");
-
   if (recorderPID_ == -1) {
     RCLCPP_WARN(
       rclcpp::get_logger(
@@ -148,10 +173,71 @@ void BagRecorderNode::KillRecorderProcess()
     return;
   }
 
-  std::string cmd_string = "kill -s INT " + std::to_string(recorderPID_);
-  std::system(cmd_string.c_str());
+  // Compression workers already exist in Humble. Lower every thread, not just the
+  // main thread, before SIGINT starts finalization. New match recorders retain normal priority.
+  LowerRecorderPriority(recorderPID_);
+  if (kill(recorderPID_, SIGINT) != 0) {
+    RCLCPP_ERROR(get_logger(), "Unable to stop recorder: %s", std::strerror(errno));
+    return;
+  }
 
-  PublishLedStatus(0);  // Turn LED on
+  finalizing_pids_.push_back(recorderPID_);
+  recorderPID_ = -1;
+  recording_ = false;
+  RCLCPP_INFO(get_logger(), "Recording stopped; finalizing and compressing the bag in the background.");
+
+  PublishLedStatus(0);
+}
+
+void BagRecorderNode::LowerRecorderPriority(pid_t pid)
+{
+  const std::string task_path = "/proc/" + std::to_string(pid) + "/task";
+  DIR * tasks = opendir(task_path.c_str());
+  if (!tasks) {
+    RCLCPP_WARN(get_logger(), "Could not lower compression priority: %s", std::strerror(errno));
+    return;
+  }
+
+  while (const auto * entry = readdir(tasks)) {
+    char * end = nullptr;
+    const long tid = std::strtol(entry->d_name, &end, 10);
+    if (tid <= 0 || *end != '\0') {
+      continue;
+    }
+    errno = 0;
+    const int priority = getpriority(PRIO_PROCESS, tid);
+    if (errno == 0 && priority < 10 && setpriority(PRIO_PROCESS, tid, 10) != 0 &&
+      errno != ESRCH)
+    {
+      RCLCPP_WARN(get_logger(), "Could not lower compression thread priority: %s", std::strerror(errno));
+    }
+  }
+  closedir(tasks);
+}
+
+void BagRecorderNode::CheckRecorderProcesses()
+{
+  int status = 0;
+  if (recording_ && waitpid(recorderPID_, &status, WNOHANG) == recorderPID_) {
+    RCLCPP_ERROR(get_logger(), "Recorder exited before a stop request (wait status %d).", status);
+    recorderPID_ = -1;
+    recording_ = false;
+    PublishLedStatus(0);
+  }
+
+  for (auto it = finalizing_pids_.begin(); it != finalizing_pids_.end();) {
+    const pid_t result = waitpid(*it, &status, WNOHANG);
+    if (result == 0 || (result < 0 && errno == EINTR)) {
+      ++it;
+      continue;
+    }
+    if (result > 0 && WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+      RCLCPP_INFO(get_logger(), "Bag finalization/compression process %d finished.", *it);
+    } else {
+      RCLCPP_ERROR(get_logger(), "Bag finalization/compression process %d failed; inspect its bag and logs.", *it);
+    }
+    it = finalizing_pids_.erase(it);
+  }
 }
 
 void BagRecorderNode::EnforceFreeDiskSpace()

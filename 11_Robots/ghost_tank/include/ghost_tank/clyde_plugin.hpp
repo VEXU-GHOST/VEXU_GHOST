@@ -29,6 +29,7 @@
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <ghost_msgs/msg/distance_sensor_state.hpp>
 #include <ghost_msgs/msg/drivetrain_command.hpp>
 #include <ghost_msgs/msg/robot_trajectory.hpp>
 #include <ghost_msgs/srv/start_recorder.hpp>
@@ -75,6 +76,28 @@ protected:
 
   void updateScissor(bool up, bool down, bool enabled);
   void updateT1Climb(bool up, bool down, bool enabled);
+  void updateClamp(bool l1_pressed, double current_time);
+
+  bool m_clamp_closed = false;
+  bool m_clamp_btn_pressed = false;
+  // Time at which a delayed clamp open takes effect (< 0 = no open pending)
+  double m_clamp_open_time = -1.0;
+  // L1 was pressed with the clamp open and is still held, waiting to close
+  bool m_clamp_grabbing = false;
+
+  // Auto-close: while grabbing (L1 held), the clamp closes when the auto_claw
+  // distance sensor reads below m_auto_claw_close_mm.
+  rclcpp::Subscription<ghost_msgs::msg::DistanceSensorState>::SharedPtr m_auto_claw_sub;
+  void autoClawCallback(const ghost_msgs::msg::DistanceSensorState::SharedPtr msg)
+  {
+    m_auto_claw_distance_mm = msg->distance_mm;
+    m_auto_claw_valid = (msg->range_status == 0);
+    m_auto_claw_msg_time = std::chrono::steady_clock::now();
+  }
+  uint16_t m_auto_claw_distance_mm = 0;
+  bool m_auto_claw_valid = false;
+  std::chrono::steady_clock::time_point m_auto_claw_msg_time{};
+  double m_auto_claw_close_mm = 75.0;
 
 };
 

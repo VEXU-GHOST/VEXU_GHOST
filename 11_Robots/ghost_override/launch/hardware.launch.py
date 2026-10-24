@@ -264,6 +264,12 @@ def generate_launch_description():
             # values in base_ros_config (/** section); a COLOR device may set its
             # own red_rb / blue_rb / red_min_level / blue_min_level inline to
             # override them per sensor.
+            #
+            # A COLOR device with `classifier: toggle` instead gets a
+            # toggle_color_classifier (red / blue / yellow / none, publishes
+            # ToggleColor). It does not use the shared ball defaults: its
+            # thresholds come only from the device entry (or the node's
+            # built-in placeholders).
             classifier_nodes = []
             try:
                 with open(sensor_host_config) as f:
@@ -271,6 +277,19 @@ def generate_launch_description():
                 for dev_name, dev in devices.items():
                     if str(dev.get("type", "")).upper() == "COLOR":
                         overrides = {"input_topic": f"/sensors/color/{dev_name}"}
+                        if str(dev.get("classifier", "ball")).lower() == "toggle":
+                            for key in ("red_rb", "blue_rb", "yellow_rb", "yellow_gb",
+                                        "red_min_level", "blue_min_level", "yellow_min_level"):
+                                if key in dev:
+                                    overrides[key] = dev[key]
+                            classifier_nodes.append(Node(
+                                package="ghost_sensing",
+                                executable="toggle_color_classifier",
+                                name=f"{dev_name}_toggle_classifier",
+                                output="screen",
+                                parameters=[overrides],
+                            ))
+                            continue
                         for key in ("red_rb", "blue_rb", "red_min_level", "blue_min_level"):
                             if key in dev:
                                 overrides[key] = dev[key]

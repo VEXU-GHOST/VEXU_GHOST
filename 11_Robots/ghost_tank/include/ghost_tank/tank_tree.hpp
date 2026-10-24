@@ -30,6 +30,7 @@
 #include "ghost_tank/bt_nodes/load_path_from_csv.hpp"
 #include "ghost_tank/bt_nodes/biteCmd.hpp"
 #include "ghost_tank/bt_nodes/clampCmd.hpp"
+#include "ghost_tank/bt_nodes/autoClawCmd.hpp"
 #include "ghost_tank/bt_nodes/climbCmd.hpp"
 #include "ghost_tank/bt_nodes/sorterCmd.hpp"
 #include "ghost_tank/bt_nodes/autoSortCmd.hpp"
