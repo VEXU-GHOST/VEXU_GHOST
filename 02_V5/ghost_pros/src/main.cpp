@@ -6,6 +6,8 @@
 #endif
 
 #include "main.h"
+
+#include <cmath>
 #include "pros/motors.h"
 
 #include <algorithm>
@@ -190,6 +192,13 @@ void ghost_main_loop()
     }
 
     update_actuators();
+
+    // Show the robot pose from the coprocessor on the screen minimap (NaN hides it)
+    auto & rhi = v5_globals::robot_hardware_interface_ptr;
+    if (rhi->isRobotPoseEnabled() && v5_globals::auton_selector_ptr) {
+      auto pose = rhi->getRobotPose();
+      v5_globals::auton_selector_ptr->setRobotPose(pose.x, pose.y, pose.yaw);
+    }
   } catch (std::exception & e) {
     exit_main_loop(e);
   }
@@ -247,6 +256,11 @@ void screen_test_loop()
         tel.drive.right_rpm = 98;
         tel.drive.max_temp_c = 30 + tick % 20;
         v5_globals::auton_selector_ptr->setTelemetry(tel);
+
+        // Drive counterclockwise around the field center, nose along the direction of travel.
+        const float t = tick * 0.2f;
+        v5_globals::auton_selector_ptr->setRobotPose(
+          1.83f + std::cos(t), 1.83f + std::sin(t), t + 1.5708f);
       }
     }
 

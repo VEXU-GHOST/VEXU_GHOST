@@ -33,6 +33,7 @@
 #include "yaml-cpp/yaml.h"
 
 #include <algorithm>
+#include <cmath>
 
 using ghost_v5_interfaces::util::loadRobotConfigFromYAML;
 using namespace ghost_util;
@@ -432,6 +433,61 @@ TEST_F(RobotHardwareInterfaceTestFixture, testInterRobotRxSerializesV5ToCoproces
   coprocessor.deserialize(serial_data);
 
   EXPECT_EQ(coprocessor.getInterRobotRx(), rx);
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testRobotPoseDisabledByDefault) {
+  RobotHardwareInterface coprocessor(device_config_map_ptr_single_joy_,
+    hardware_type_e::COPROCESSOR);
+  EXPECT_FALSE(coprocessor.isRobotPoseEnabled());
+
+  // Enabling the robot pose adds exactly x, y, yaw to the actuator command only.
+  auto pose_config_map = device_config_map_ptr_single_joy_->clone();
+  pose_config_map->robot_pose_config = RobotPoseConfig{true, "base_link", "map"};
+  RobotHardwareInterface coprocessor_pose(pose_config_map, hardware_type_e::COPROCESSOR);
+  EXPECT_TRUE(coprocessor_pose.isRobotPoseEnabled());
+  EXPECT_EQ(
+    coprocessor_pose.getActuatorCommandMsgLength(),
+    coprocessor.getActuatorCommandMsgLength() + 12);
+  EXPECT_EQ(coprocessor_pose.getSensorUpdateMsgLength(), coprocessor.getSensorUpdateMsgLength());
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testRobotPoseSerializesCoprocessorToV5) {
+  auto pose_config_map = device_config_map_ptr_single_joy_->clone();
+  pose_config_map->robot_pose_config = RobotPoseConfig{true, "base_link", "map"};
+  RobotHardwareInterface coprocessor(pose_config_map, hardware_type_e::COPROCESSOR);
+  RobotHardwareInterface v5_brain(pose_config_map, hardware_type_e::V5_BRAIN);
+
+  // Defaults to invalid (NaN)
+  EXPECT_TRUE(std::isnan(v5_brain.getRobotPose().x));
+
+  RobotHardwareInterface::RobotPose pose{getRandomFloat(), getRandomFloat(), getRandomFloat()};
+  coprocessor.setRobotPose(pose);
+  v5_brain.deserialize(coprocessor.serialize());
+
+  EXPECT_EQ(v5_brain.getRobotPose().x, pose.x);
+  EXPECT_EQ(v5_brain.getRobotPose().y, pose.y);
+  EXPECT_EQ(v5_brain.getRobotPose().yaw, pose.yaw);
+
+  // Invalid pose round-trips as NaN
+  coprocessor.setRobotPose(RobotHardwareInterface::RobotPose{});
+  v5_brain.deserialize(coprocessor.serialize());
+  EXPECT_TRUE(std::isnan(v5_brain.getRobotPose().x));
+  EXPECT_TRUE(std::isnan(v5_brain.getRobotPose().y));
+  EXPECT_TRUE(std::isnan(v5_brain.getRobotPose().yaw));
+}
+
+TEST_F(RobotHardwareInterfaceTestFixture, testLoadRobotPoseConfigFromYAML) {
+  EXPECT_FALSE(device_config_map_ptr_single_joy_->robot_pose_config.enabled);
+
+  config_yaml_["robot_pose"]["enabled"] = true;
+  config_yaml_["robot_pose"]["source_frame"] = "base_link";
+  config_yaml_["robot_pose"]["target_frame"] = "map";
+  auto config_map = loadRobotConfigFromYAML(config_yaml_, false);
+  EXPECT_EQ(config_map->robot_pose_config, (RobotPoseConfig{true, "base_link", "map"}));
+
+  // Enabled without frames is a config error
+  config_yaml_["robot_pose"].remove("target_frame");
+  EXPECT_THROW(loadRobotConfigFromYAML(config_yaml_, false), std::runtime_error);
 }
 
 TEST_F(RobotHardwareInterfaceTestFixture, testMotorStateGetters) {

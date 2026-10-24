@@ -21,6 +21,11 @@
  *   SOFTWARE.
  */
 
+#include <cmath>
+
+#include <tf2/exceptions.h>
+#include <tf2/time.h>
+
 #include <ghost_ros_interfaces/msg_helpers/msg_helpers.hpp>
 #include <ghost_ros_interfaces/serial/jetson_v5_serial_node.hpp>
 #include <ghost_v5_interfaces/util/device_config_factory_utils.hpp>
@@ -111,6 +116,16 @@ JetsonV5SerialNode::JetsonV5SerialNode()
     "comms/self",
     rclcpp::SensorDataQoS(),
     std::bind(&JetsonV5SerialNode::interRobotSelfCallback, this, _1));
+
+  // Robot Pose: send the configured TF to the V5 Brain with each actuator command.
+  if (rhi_ptr_->isRobotPoseEnabled()) {
+    robot_pose_config_ = device_config_map->robot_pose_config;
+    RCLCPP_INFO(
+      get_logger(), "Robot Pose: sending %s -> %s", robot_pose_config_.source_frame.c_str(),
+      robot_pose_config_.target_frame.c_str());
+    tf_buffer_ = std::make_unique<tf2_ros::Buffer>(get_clock());
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+  }
 
   // Start Serial Thread
   serial_thread_ = std::thread(&JetsonV5SerialNode::serialLoop, this);
@@ -213,10 +228,31 @@ void JetsonV5SerialNode::actuatorCommandCallback(
   }
 
   fromROSMsg(*rhi_ptr_, *msg);
+  if (rhi_ptr_->isRobotPoseEnabled()) {
+    updateRobotPose();
+  }
 
   auto msg_buffer = rhi_ptr_->serialize();
 
   serial_base_interface_->writeMsgToSerial(msg_buffer.data(), actuator_command_msg_len_);
+}
+
+void JetsonV5SerialNode::updateRobotPose()
+{
+  RobotHardwareInterface::RobotPose pose{};  // NaN (invalid) unless the lookup succeeds
+  try {
+    auto tf = tf_buffer_->lookupTransform(
+      robot_pose_config_.target_frame, robot_pose_config_.source_frame, tf2::TimePointZero);
+    const auto & q = tf.transform.rotation;
+    pose.x = tf.transform.translation.x;
+    pose.y = tf.transform.translation.y;
+    pose.yaw = std::atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z));
+  } catch (const tf2::TransformException & ex) {
+    RCLCPP_WARN_THROTTLE(
+      get_logger(), *get_clock(), 2000, "No %s -> %s transform (%s); sending invalid robot pose.",
+      robot_pose_config_.source_frame.c_str(), robot_pose_config_.target_frame.c_str(), ex.what());
+  }
+  rhi_ptr_->setRobotPose(pose);
 }
 
 void JetsonV5SerialNode::interRobotSelfCallback(

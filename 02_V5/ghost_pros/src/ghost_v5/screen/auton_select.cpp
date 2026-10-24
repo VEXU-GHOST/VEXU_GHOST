@@ -27,6 +27,13 @@ namespace ghost_v5 {
         addToPrintQueue(msg);
     }
 
+    void AutonSelector::setRobotPose(float x_m, float y_m, float yaw_rad) {
+        std::unique_lock<pros::Mutex> lock(pose_lock_);
+        pose_x_m_ = x_m;
+        pose_y_m_ = y_m;
+        pose_yaw_rad_ = yaw_rad;
+    }
+
     void AutonSelector::setTelemetry(const Telemetry& telemetry) {
         std::unique_lock<pros::Mutex> lock(telemetry_lock_);
         telemetry_ = telemetry;
@@ -43,6 +50,7 @@ namespace ghost_v5 {
         self->updateHeartbeat();
         self->updateStatus();
         self->updateDataPanel();
+        self->updateMinimap();
     }
 
     AutonSelector::Alliance AutonSelector::getCurrentAlliance() {
@@ -543,17 +551,54 @@ namespace ghost_v5 {
         lv_cont_set_layout(minimap_, LV_LAYOUT_OFF);
         lv_cont_set_style(minimap_, &style_minimap_);
 
-        //Robot
+        //Robot (hidden until a valid pose arrives)
         lv_style_copy(&style_robot_, &lv_style_plain);
-        style_robot_.body.main_color = LV_COLOR_HEX(0x7F00FF);
-        style_robot_.body.grad_color = LV_COLOR_HEX(0x7F00FF);
-        style_robot_.body.border.width = 0;
-        style_robot_.body.radius = 2;
+        style_robot_.line.color = LV_COLOR_HEX(0x7F00FF);
+        style_robot_.line.width = 3;
+        style_robot_.line.rounded = 0;
 
-        robot_ = lv_obj_create(minimap_, nullptr);
-        lv_obj_set_size(robot_, 20, 20);
-        lv_obj_set_pos(robot_, 74, 74);
-        lv_obj_set_style(robot_, &style_robot_);
+        robot_ = lv_line_create(minimap_, nullptr);
+        lv_line_set_auto_size(robot_, false);
+        lv_obj_set_size(robot_, minimap_size_, minimap_size_);
+        lv_obj_set_pos(robot_, 0, 0);
+        lv_line_set_style(robot_, &style_robot_);
+        lv_obj_set_hidden(robot_, true);
+    }
+
+    void AutonSelector::updateMinimap() {
+        // Redraw at 10 Hz
+        if (pros::millis() - last_minimap_draw_ < 100) {
+            return;
+        }
+        last_minimap_draw_ = pros::millis();
+
+        float x, y, yaw;
+        {
+            std::unique_lock<pros::Mutex> lock(pose_lock_);
+            x = pose_x_m_;
+            y = pose_y_m_;
+            yaw = pose_yaw_rad_;
+        }
+        if (std::isnan(x) || std::isnan(y) || std::isnan(yaw)) {
+            lv_obj_set_hidden(robot_, true);
+            return;
+        }
+
+        // Square outline, then a triangle off the front face. Robot frame, px, +fwd/+left.
+        static constexpr float shape[7][2] = {
+            {10, 10}, {-10, 10}, {-10, -10}, {10, -10}, {10, 10}, {18, 0}, {10, -10}};
+
+        const float c = std::cos(yaw);
+        const float s = std::sin(yaw);
+        for (int i = 0; i < 7; i++) {
+            // Robot frame -> field (m) -> minimap px (field +x is screen up, +y is screen left)
+            const float fx = x + (shape[i][0] * c - shape[i][1] * s) / px_per_m_;
+            const float fy = y + (shape[i][0] * s + shape[i][1] * c) / px_per_m_;
+            robot_points_[i].x = std::lround(minimap_size_ - fy * px_per_m_);
+            robot_points_[i].y = std::lround(minimap_size_ - fx * px_per_m_);
+        }
+        lv_line_set_points(robot_, robot_points_, 7);
+        lv_obj_set_hidden(robot_, false);
     }
 
     void AutonSelector::updateUi() {

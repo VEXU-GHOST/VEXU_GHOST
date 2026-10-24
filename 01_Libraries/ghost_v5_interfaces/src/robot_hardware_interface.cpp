@@ -22,6 +22,8 @@
  */
 
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 
 #include "ghost_util/math_util.hpp"
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
@@ -86,6 +88,11 @@ RobotHardwareInterface::RobotHardwareInterface(
   // (coprocessor -> V5), the inbound payload (rx) rides the sensor update (V5 -> coprocessor).
   sensor_update_msg_length_ += inter_robot::OTHER_ROBOT_PACKET_SIZE;
   actuator_command_msg_length_ += inter_robot::OTHER_ROBOT_PACKET_SIZE;
+
+  // Robot Pose (x, y, yaw floats) rides the actuator command (coprocessor -> V5) when enabled.
+  if (isRobotPoseEnabled()) {
+    actuator_command_msg_length_ += 3 * sizeof(float);
+  }
 }
 
 std::vector<unsigned char> RobotHardwareInterface::serialize() const
@@ -113,6 +120,13 @@ std::vector<unsigned char> RobotHardwareInterface::serialize() const
   const auto & inter_robot_slot =
     (hardware_type_ == hardware_type_e::V5_BRAIN) ? inter_robot_rx_ : inter_robot_tx_;
   serial_data.insert(serial_data.end(), inter_robot_slot.begin(), inter_robot_slot.end());
+
+  // Robot Pose (coprocessor -> V5 only)
+  if ((hardware_type_ == hardware_type_e::COPROCESSOR) && isRobotPoseEnabled()) {
+    const float pose_data[3] = {robot_pose_.x, robot_pose_.y, robot_pose_.yaw};
+    const auto * pose_bytes = reinterpret_cast<const unsigned char *>(pose_data);
+    serial_data.insert(serial_data.end(), pose_bytes, pose_bytes + sizeof(pose_data));
+  }
 
   // Error Checking
   int expected_size = 0;
@@ -195,6 +209,14 @@ int RobotHardwareInterface::deserialize(const std::vector<unsigned char> & msg)
     inter_robot_slot.begin());
   byte_offset += inter_robot::OTHER_ROBOT_PACKET_SIZE;
 
+  // Robot Pose (coprocessor -> V5 only)
+  if ((hardware_type_ == hardware_type_e::V5_BRAIN) && isRobotPoseEnabled()) {
+    float pose_data[3];
+    memcpy(pose_data, msg.data() + byte_offset, sizeof(pose_data));
+    robot_pose_ = RobotPose{pose_data[0], pose_data[1], pose_data[2]};
+    byte_offset += sizeof(pose_data);
+  }
+
   return byte_offset;
 }
 
@@ -209,6 +231,12 @@ bool RobotHardwareInterface::isDataEqual(const RobotHardwareInterface & rhs) con
   // Inter-Robot Comms
   eq &= (inter_robot_tx_ == rhs.inter_robot_tx_);
   eq &= (inter_robot_rx_ == rhs.inter_robot_rx_);
+
+  // Robot Pose (NaN == NaN, since NaN means invalid)
+  auto float_eq = [](float a, float b) {return (a == b) || (std::isnan(a) && std::isnan(b));};
+  eq &= float_eq(robot_pose_.x, rhs.robot_pose_.x);
+  eq &= float_eq(robot_pose_.y, rhs.robot_pose_.y);
+  eq &= float_eq(robot_pose_.yaw, rhs.robot_pose_.yaw);
 
   // Serialization
   eq &= (msg_id_ == rhs.msg_id_);

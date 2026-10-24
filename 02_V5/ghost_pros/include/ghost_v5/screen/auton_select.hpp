@@ -2,6 +2,7 @@
 #define GHOST_V5_SCREEN_AUTON_SELECTOR_HPP_
 
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 #include <deque>
 #include <mutex>
@@ -51,6 +52,10 @@ namespace ghost_v5 {
         // Copies a complete snapshot under a mutex. Does not call LVGL.
         // Caller supplies each page's validity and source age in milliseconds.
         void setTelemetry(const Telemetry& telemetry);
+
+        // Robot pose in the map frame (meters, radians CCW+), drawn on the minimap. NaN hides the
+        // robot. Does not call LVGL.
+        void setRobotPose(float x_m, float y_m, float yaw_rad);
 
         Alliance getCurrentAlliance();
         Auton getCurrentAuton();
@@ -112,14 +117,25 @@ namespace ghost_v5 {
         void onButtonAutonLeftClicked();
         void onButtonAutonRightClicked();
 
-        //Minimap
+        //Minimap. 6x6 tile field, origin bottom right, +x up the screen, +y left.
+        static constexpr int minimap_size_ = 168;
+        static constexpr float px_per_m_ = minimap_size_ / (6 * 0.6096f);
+
         lv_style_t style_minimap_;
         lv_style_t style_robot_;
 
         lv_obj_t* minimap_ = nullptr;
         lv_obj_t* robot_ = nullptr;
+        lv_point_t robot_points_[7];  // lv_line keeps a pointer to these
+
+        float pose_x_m_ = NAN;
+        float pose_y_m_ = NAN;
+        float pose_yaw_rad_ = NAN;
+        pros::Mutex pose_lock_;
+        uint32_t last_minimap_draw_ = 0;
 
         void createMinimap();
+        void updateMinimap();
 
         //Data Panel
 
