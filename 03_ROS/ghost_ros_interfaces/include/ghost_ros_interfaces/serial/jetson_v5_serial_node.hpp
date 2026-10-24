@@ -28,6 +28,8 @@
 #include <yaml-cpp/yaml.h>
 
 #include <std_msgs/msg/bool.hpp>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 
 #include <ghost_msgs/msg/other_robot.hpp>
 #include <ghost_msgs/msg/v5_actuator_command.hpp>
@@ -57,6 +59,9 @@ private:
   // actuator-command serialization carries it to the V5 brain (which relays it over VEXlink).
   void interRobotSelfCallback(const ghost_msgs::msg::OtherRobot::SharedPtr msg);
 
+  // Looks up the configured TF and caches it as the robot pose (NaN if unavailable).
+  void updateRobotPose();
+
   // Background thread for processing serial data and maintaining serial connection
   void serialLoop();
 
@@ -80,6 +85,11 @@ private:
   rclcpp::Subscription<ghost_msgs::msg::OtherRobot>::SharedPtr inter_robot_self_sub_;
   rclcpp::Publisher<ghost_msgs::msg::OtherRobot>::SharedPtr inter_robot_peer_pub_;
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr inter_robot_link_connected_pub_;
+
+  // Robot Pose (only created if robot_pose is enabled in the robot hardware config)
+  ghost_v5_interfaces::devices::RobotPoseConfig robot_pose_config_;
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   // Serial Interface
   std::shared_ptr<ghost_serial::JetsonSerialBase> serial_base_interface_;

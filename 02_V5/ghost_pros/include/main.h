@@ -100,6 +100,7 @@ uint32_t last_inter_robot_link_tx = 0;
 
 // Screen Interface
 std::shared_ptr<ghost_v5::ScreenInterface> screen_interface_ptr;
+std::shared_ptr<ghost_v5::AutonSelector> auton_selector_ptr;
 
 }// namespace v5_globals
 

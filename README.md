@@ -121,6 +121,7 @@ After `configure-os`, the `ghost` command is available system-wide (symlinked in
 
 - `ghost run` — stops anything running and launches the hardware stack in the current terminal (foreground).
 - `ghost build [pkg...]` — builds the workspace; pass package names to build only those (and their dependencies).
+- `ghost build --pros` — builds and uploads only the V5 PROS project.
 - `ghost clean` — removes the `build/`, `install/`, and `log/` directories.
 - `ghost start` — starts the `ghost` systemd services in the background.
 - `ghost restart` — restarts the `ghost` systemd services.

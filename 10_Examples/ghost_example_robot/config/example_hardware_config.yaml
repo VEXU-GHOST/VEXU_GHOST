@@ -1,3 +1,10 @@
+# Robot pose sent to the V5 Brain (optional, disabled if omitted). The coprocessor looks up the
+# transform of source_frame in target_frame and sends x, y, yaw (NaN if unavailable).
+robot_pose:
+  enabled: true
+  source_frame: base_link
+  target_frame: map
+
 port_configuration:
   digital_io:
     A: IN

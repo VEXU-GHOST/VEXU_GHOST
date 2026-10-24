@@ -620,6 +620,8 @@ void TankRobotPlugin::autonomous(double current_time)
   }
   last_bt_lift_stage = lift_target_stage;
 
+  applyAutonDriveCurrentBudget();
+
   // Auto-sort (AutoSortCmd BT node). While active, take over the intake + sorter:
   // constantly intake and fire the sorter on a wrong-colour ball. Runs after the
   // outtake block so its intake command wins; sets "sorter_active" for the robot
@@ -1390,6 +1392,18 @@ void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data, const std::string & cont
     drive_curr_lim = 0;
   }
 
+  for (const auto & name : m_all_drive_motor_names) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
+  }
+}
+
+void TankRobotPlugin::applyAutonDriveCurrentBudget()
+{
+  // Nothing reserved this loop: leave the BT drive nodes' limits alone
+  if (m_loop_current_limits.empty()) {
+    return;
+  }
+  int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
   for (const auto & name : m_all_drive_motor_names) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
   }
