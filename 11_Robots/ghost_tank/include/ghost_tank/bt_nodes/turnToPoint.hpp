@@ -38,6 +38,13 @@ private:
     std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
     std::shared_ptr<rclcpp::Node> node_ptr_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr expected_pose_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr target_pose_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr starting_pose_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr turn_direction_pub_;
+
+    void publishPose(
+      const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr & pub,
+      double x, double y, double yaw);
 
     double posX_m;
     double posY_m;

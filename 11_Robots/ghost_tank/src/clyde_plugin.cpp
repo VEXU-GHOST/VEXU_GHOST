@@ -133,6 +133,17 @@ void ClydePlugin::initialize()
   m_auto_claw_sub = node_ptr_->create_subscription<ghost_msgs::msg::DistanceSensorState>(
     auto_claw_topic, rclcpp::SensorDataQoS(), std::bind(&ClydePlugin::autoClawCallback, this, _1));
 
+  // Clamped low arm position comes from arm_stage_positions_deg[2] so the teleop
+  // clamp macro and ArmPosCmd stage="2" stay in sync.
+  if (m_arm_stage_positions_deg.size() > 2) {
+    m_arm_clamped_low_deg = m_arm_stage_positions_deg[2];
+  }
+
+  node_ptr_->declare_parameter("tank_robot_plugin.arm_macro_extend_deg", m_arm_macro_extend_deg);
+  m_arm_macro_extend_deg = node_ptr_->get_parameter("tank_robot_plugin.arm_macro_extend_deg").as_double();
+  node_ptr_->declare_parameter("tank_robot_plugin.arm_macro_revert_deg", m_arm_macro_revert_deg);
+  m_arm_macro_revert_deg = node_ptr_->get_parameter("tank_robot_plugin.arm_macro_revert_deg").as_double();
+
   // TankRobotPlugin::initROSComms();
   // TankRobotPlugin::initEstimation();
   // TankRobotPlugin::initIntake();
@@ -170,10 +181,23 @@ void ClydePlugin::autonomous(double current_time)
     bt_->set_variable<bool>("left_blocker_active", false);
     bt_->set_variable<bool>("right_blocker_active", false);
     bt_->set_variable<bool>("little_will_active", false);
+    bt_->set_variable<int>("matchload_cmd", -1);
+    bt_->set_variable<bool>("matchload_auto_close", true);
+    bt_->set_variable<double>("matchload_timeout_s", 0.0);
+    m_matchload_grabbing = false;
+    m_matchload_arm_active = false;
+    m_matchload_lift_active = false;
   }
 
   TankRobotPlugin::autonomous(current_time);
+  updateMatchloadAuton();
+  // Again, now that the matchload macro may have reserved lift / arm current
+  applyAutonDriveCurrentBudget();
   m_clamp_grabbing = false;
+  // Mirror the BT clamp state into the teleop state so the clamp stays where
+  // auton left it when driver control takes over.
+  m_clamp_closed = bt_->get_variable<bool>("clamp_closed");
+  m_clamp_open_time = -1.0;
 
   // Update Pneumatics
   rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], (bt_->get_variable<bool>("climb_extended")));
@@ -194,6 +218,105 @@ void ClydePlugin::autonomous(double current_time)
   rhi_ptr_->setDigitalOut(digital_io_port_map["little_will"], bt_->get_variable<bool>("little_will_active"));
 }
 
+void ClydePlugin::updateMatchloadAuton()
+{
+  // Requests from the MatchloadCmd BT node: 1 = on, 0 = off, -1 = none.
+  // MatchloadCmd has already opened the clamp and released the arm and lift
+  // (arm_target_stage = lift_target_stage = -1) on the blackboard, so the macro
+  // owns both until an ArmPosCmd / LiftPosCmd posts a stage.
+  int matchload_cmd = -1;
+  bt_->get_variable<int>("matchload_cmd", matchload_cmd);
+  if (matchload_cmd >= 0) {
+    bt_->set_variable<int>("matchload_cmd", -1);
+  }
+
+  if (matchload_cmd == 1) {
+    m_matchload_grabbing = true;
+    m_matchload_start_time = std::chrono::steady_clock::now();
+    m_matchload_arm_active = true;
+    m_arm_macro_extended = true;
+    m_arm_custom_deg = m_arm_macro_extend_deg;
+    m_arm_max_power = 1.0;
+    m_arm_controller_ptr->reset();
+
+    // Lift to its zero position, slow on the way down like LiftPosCmd
+    m_matchload_lift_active = true;
+    m_lift_hold_deg = m_lift_stage_positions_deg[0];
+    m_lift_hold_max_power =
+      (m_lift_hold_deg < getLiftPositionDeg()) ? m_lift_down_max_power : 1.0;
+    m_lift_controller_ptr->reset();
+  }
+
+  // ArmPosCmd / LiftPosCmd (stage >= 0) take over from the macro. Checked before
+  // the revert below so a LiftPosCmd / ArmPosCmd ticked on the same loop as the
+  // clamp close (e.g. ClampCmd -> LiftPosCmd -> ArmPosCmd) wins over the revert.
+  int arm_target_stage = -1;
+  bt_->get_variable<int>("arm_target_stage", arm_target_stage);
+  if (arm_target_stage >= 0) {
+    m_matchload_arm_active = false;
+  }
+  int lift_target_stage = -1;
+  bt_->get_variable<int>("lift_target_stage", lift_target_stage);
+  if (lift_target_stage >= 0) {
+    m_matchload_lift_active = false;
+  }
+
+  bool clamp_closed = bt_->get_variable<bool>("clamp_closed");
+
+  // While on, the auto_claw sensor closes the clamp (teleop: L1 held); toggling
+  // off closes it if it is still open (teleop: L1 released). A nonzero
+  // matchload_timeout_s also closes it that long after the grab started, in the
+  // background while the tree keeps running.
+  if (m_matchload_grabbing && !clamp_closed) {
+    bool auto_close = true;
+    bt_->get_variable<bool>("matchload_auto_close", auto_close);
+    double timeout_s = 0.0;
+    bt_->get_variable<double>("matchload_timeout_s", timeout_s);
+    auto now = std::chrono::steady_clock::now();
+    bool fresh = now - m_auto_claw_msg_time < 200ms;
+    bool sensor_close = auto_close && fresh && m_auto_claw_valid &&
+      m_auto_claw_distance_mm < m_auto_claw_close_mm;
+    bool timed_out = timeout_s > 0.0 &&
+      std::chrono::duration<double>(now - m_matchload_start_time).count() > timeout_s;
+    if (timed_out) {
+      std::cout << "[MatchloadCmd] timed out, closing" << std::endl;
+    }
+    if (sensor_close || timed_out || matchload_cmd == 0) {
+      clamp_closed = true;
+      bt_->set_variable<bool>("clamp_closed", true);
+    }
+  }
+  if (clamp_closed || matchload_cmd == 0) {
+    m_matchload_grabbing = false;
+  }
+
+  // Any clamp close with the arm still extended (sensor, toggle off, ClampCmd,
+  // AutoClawCmd) reverts the arm and raises the lift, same as teleop updateClamp.
+  // Each half only applies if the macro still owns that mechanism.
+  if (clamp_closed && m_arm_macro_extended &&
+    (m_matchload_arm_active || m_matchload_lift_active))
+  {
+    m_arm_macro_extended = false;
+    if (m_matchload_arm_active) {
+      m_arm_custom_deg = m_arm_macro_revert_deg;
+      m_arm_max_power = m_arm_macro_revert_max_power;
+      m_arm_controller_ptr->reset();
+    }
+    if (m_matchload_lift_active) {
+      m_lift_hold_deg = getLiftPositionDeg() + m_lift_macro_raise_deg;
+      m_lift_hold_max_power = 1.0;
+      m_lift_controller_ptr->reset();
+    }
+  }
+
+  if (m_matchload_arm_active) {
+    updateArmToPosition(m_arm_custom_deg, m_arm_max_power);
+  }
+  if (m_matchload_lift_active) {
+    updateLiftToPosition(m_lift_hold_deg, m_lift_hold_max_power);
+  }
+}
+
 void ClydePlugin::teleop(double current_time)
 {
   auto joy_data = rhi_ptr_->getMainJoystickData();
@@ -201,26 +324,62 @@ void ClydePlugin::teleop(double current_time)
   bool shift_l = joy_data->btn_d;
 
   TankRobotPlugin::teleop(current_time);
+  // Driver-triggered auton ran this loop; don't let the teleop clamp/mech logic
+  // overwrite what autonomous() just wrote.
+  if (m_running_auton) {
+    return;
+  }
 
   updateScissor(joy_data->btn_l1, joy_data->btn_l2, shift_r);
   updateT1Climb(joy_data->btn_r1, joy_data->btn_r2, shift_r);
-  updateClamp(joy_data->btn_l1, current_time);
-
-  // D-pad down: send the lift to 750 deg. Hands the target to the teleop hold
-  // logic, so R1/R2 still override it.
+  updateDrivetrain(joy_data, "arcade");
+  // D-pad down: send the lift to its second stage (lift_stage_positions_deg[1]),
+  // open the clamp, and send the arm to 0.
+  // Hands the lift target to the teleop hold logic, so R1/R2 still override it.
+  // Runs before updateClamp so the clamp opens this loop.
   static bool last_d_state = false;
   if (joy_data->btn_d && !last_d_state) {
-    m_lift_hold_deg = 750.0;
+    m_lift_hold_deg = m_lift_stage_positions_deg[1];
     m_lift_hold_max_power = 1.0;
     m_lift_holding = true;
     m_lift_controller_ptr->reset();
-    // Arm back to its zero position (arm_stage_positions_deg[0] = 0.0)
+    // Open the clamp immediately (cancels any pending delayed open / grab)
+    m_clamp_closed = false;
+    m_clamp_open_time = -1.0;
+    m_clamp_grabbing = false;
+    // Arm back to 0 (stage 0 with the clamp open = arm_stage_positions_deg[0])
     m_arm_stage = 0;
     m_arm_custom_active = false;
     m_arm_max_power = 1.0;
     m_arm_controller_ptr->reset();
   }
   last_d_state = joy_data->btn_d;
+
+  // D-pad right: send the lift to its zero position (lift_stage_positions_deg[0]),
+  // open the clamp, and extend the arm to m_arm_macro_extend_deg. The arm holds
+  // there until the clamp closes, then reverts to m_arm_macro_revert_deg while the
+  // lift rises m_lift_macro_raise_deg (see updateClamp). R1/R2 and L2 still
+  // override the lift / arm.
+  // (btn_r also toggles auto-sort in TankRobotPlugin::teleop, which is unused on clyde.)
+  static bool last_r_state = false;
+  if (joy_data->btn_r && !last_r_state) {
+    m_lift_hold_deg = m_lift_stage_positions_deg[0];
+    m_lift_hold_max_power = 1.0;
+    m_lift_holding = true;
+    m_lift_controller_ptr->reset();
+    // Open the clamp immediately (cancels any pending delayed open / grab)
+    m_clamp_closed = false;
+    m_clamp_open_time = -1.0;
+    m_clamp_grabbing = false;
+    m_arm_macro_extended = true;
+    m_arm_custom_deg = m_arm_macro_extend_deg;
+    m_arm_custom_active = true;
+    m_arm_max_power = 1.0;
+    m_arm_controller_ptr->reset();
+  }
+  last_r_state = joy_data->btn_r;
+
+  updateClamp(joy_data->btn_l1, current_time);
 }
 
 void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
@@ -228,26 +387,30 @@ void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
   const double drop_deg = 700.0;
   const double min_deg = 750.0;
   const double open_delay_s = 0.25;
-  const double closed_arm_deg = 250.0;
 
   const double clamp_arm_max_power = 0.5;  // half speed for the clamp arm moves
 
-  // On close (L1 or auto-close): raise the arm to closed_arm_deg. L2 / D-pad
-  // down still take the arm back to its stages. Stage reset to 0 so the next L2
-  // goes to stage 1.
-  auto raise_arm = [&]() {
-    m_arm_stage = 0;
-    m_arm_custom_deg = closed_arm_deg;
-    m_arm_custom_active = true;
-    m_arm_max_power = clamp_arm_max_power;
-    m_arm_controller_ptr->reset();
-  };
-
+  // Closing doesn't move the arm; it goes to m_arm_clamped_low_deg once the lift
+  // moves (see updateArmFromJoystick). The exception is the d-pad right macro:
+  // if the arm is still extended from it, closing sends the arm to
+  // m_arm_macro_revert_deg and holds it there (L2 / R1 / R2 / opening the clamp
+  // take over from it), and raises the lift m_lift_macro_raise_deg via the
+  // teleop hold logic, so R1/R2 still override it.
   auto close_clamp = [&]() {
     m_clamp_closed = true;
     m_clamp_open_time = -1.0;
     m_clamp_grabbing = false;
-    raise_arm();
+    if (m_arm_custom_active && m_arm_macro_extended) {
+      m_arm_macro_extended = false;
+      m_arm_custom_deg = m_arm_macro_revert_deg;
+      m_arm_max_power = m_arm_macro_revert_max_power;
+      m_arm_controller_ptr->reset();
+
+      m_lift_hold_deg = getLiftPositionDeg() + m_lift_macro_raise_deg;
+      m_lift_hold_max_power = 1.0;
+      m_lift_holding = true;
+      m_lift_controller_ptr->reset();
+    }
   };
 
   // L1 press with the clamp closed opens it. L1 press with the clamp open starts a
@@ -266,11 +429,14 @@ void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
       // On open: drop the lift 700 deg, but never below 400 deg, and delay the clamp
       // opening so the lift starts moving first. Hands the target to the teleop hold
       // logic, so R1/R2 still override it. At/below 400 deg: no drop, open immediately.
-      // Arm back to 0 (arm_stage_positions_deg[0]) unless it's up on a later stage.
-      bool arm_up = !m_arm_custom_active && m_arm_stage > 0;
-      if (!arm_up) {
-        m_arm_stage = 0;
+      // If the arm is at its low position it drops from m_arm_clamped_low_deg back
+      // to 0 (arm_stage_positions_deg[0]) at half speed; an arm that's up stays up.
+      // An arm holding the macro's revert position counts as low and drops too.
+      if (m_arm_custom_active && !m_arm_macro_extended) {
         m_arm_custom_active = false;
+        m_arm_stage = 0;
+      }
+      if (m_arm_stage == 0) {
         m_arm_max_power = clamp_arm_max_power;
         m_arm_controller_ptr->reset();
       }
@@ -278,7 +444,7 @@ void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
       double current_deg = getLiftPositionDeg();
       if (current_deg > min_deg) {
         m_lift_hold_deg = std::max(current_deg - drop_deg, min_deg);
-        m_lift_hold_max_power = 0.5;  // half speed on the way down
+        m_lift_hold_max_power = m_lift_down_max_power;  // slow on the way down
         m_lift_holding = true;
         m_lift_controller_ptr->reset();
         m_clamp_open_time = current_time + open_delay_s;
@@ -304,6 +470,47 @@ void ClydePlugin::updateClamp(bool l1_pressed, double current_time)
   bool clamp_output = m_clamp_closed ||
     (m_clamp_open_time >= 0.0 && current_time < m_clamp_open_time);
   rhi_ptr_->setDigitalOut(digital_io_port_map["clamp"], clamp_output);
+}
+
+void ClydePlugin::updateArmFromJoystick(JoyPtr joy_data)
+{
+  const double lift_arm_max_power = 0.5;  // half speed for the lift-triggered move
+
+  // Each L2 press toggles the arm between low (stage 0) and up (stage 1, 1650 deg).
+  static bool last_l2_state = false;
+  if (joy_data->btn_l2 && !last_l2_state) {
+    m_arm_stage = (m_arm_stage == 0) ? 1 : 0;
+    m_arm_custom_active = false;
+    m_arm_max_power = 1.0;
+    m_arm_controller_ptr->reset();
+  }
+  last_l2_state = joy_data->btn_l2;
+
+  // Opening the clamp drops the arm's low position back to 0
+  if (!m_clamp_closed) {
+    m_arm_clamped_low_active = false;
+  }
+
+  // When the lift starts moving (R1/R2) with the clamp closed, send the arm to its
+  // low position (m_arm_clamped_low_deg). Edge-triggered so L2 still works mid-move.
+  static bool last_lift_moving_clamped = false;
+  bool lift_moving_clamped = m_clamp_closed && (joy_data->btn_r1 || joy_data->btn_r2);
+  if (lift_moving_clamped && !last_lift_moving_clamped) {
+    m_arm_clamped_low_active = true;
+    m_arm_stage = 0;
+    m_arm_custom_active = false;
+    m_arm_max_power = lift_arm_max_power;
+    m_arm_controller_ptr->reset();
+  }
+  last_lift_moving_clamped = lift_moving_clamped;
+
+  // Low position is m_arm_clamped_low_deg once R1/R2 was pressed with the clamp
+  // closed, otherwise 0 (closing the clamp alone doesn't move the arm). The d-pad
+  // right macro's extension (m_arm_custom_active) overrides both.
+  double low_deg = m_arm_clamped_low_active ? m_arm_clamped_low_deg : m_arm_stage_positions_deg[0];
+  double target_deg = m_arm_custom_active ? m_arm_custom_deg :
+    (m_arm_stage == 0) ? low_deg : m_arm_stage_positions_deg[1];
+  updateArmToPosition(target_deg, m_arm_max_power);
 }
 
 void ClydePlugin::updateT1Climb(bool up, bool down, bool enabled)

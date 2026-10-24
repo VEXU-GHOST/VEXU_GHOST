@@ -75,31 +75,11 @@ protected:
   // void initTankModel();
   // void initAutonomy();
   
+  void updateClamp(bool l1_pressed, double current_time);
+  void updateArmFromJoystick(JoyPtr joy_data) override;
+
   bool updateNeutralStakeArmPosition(int arm_mode);
   void updateNeutralStakeArmController(bool up_btn, bool down_btn, bool active);
-  void updateClamp(bool l1_pressed, double current_time);
-
-  bool m_clamp_closed = false;
-  bool m_clamp_btn_pressed = false;
-  // Time at which a delayed clamp open takes effect (< 0 = no open pending)
-  double m_clamp_open_time = -1.0;
-  // L1 was pressed with the clamp open and is still held, waiting to close
-  bool m_clamp_grabbing = false;
-
-  // Auto-close: while grabbing (L1 held), the clamp closes when the auto_claw
-  // distance sensor reads below m_auto_claw_close_mm. With no sensor plugged in
-  // the readings are never fresh, so the clamp just closes on L1 release.
-  rclcpp::Subscription<ghost_msgs::msg::DistanceSensorState>::SharedPtr m_auto_claw_sub;
-  void autoClawCallback(const ghost_msgs::msg::DistanceSensorState::SharedPtr msg)
-  {
-    m_auto_claw_distance_mm = msg->distance_mm;
-    m_auto_claw_valid = (msg->range_status == 0);
-    m_auto_claw_msg_time = std::chrono::steady_clock::now();
-  }
-  uint16_t m_auto_claw_distance_mm = 0;
-  bool m_auto_claw_valid = false;
-  std::chrono::steady_clock::time_point m_auto_claw_msg_time{};
-  double m_auto_claw_close_mm = 75.0;
 
   // Neutral Stake Arm
   double m_neutral_stake_arm_kp{0.0};
@@ -113,6 +93,58 @@ protected:
   double m_neutral_stake_arm_settled_threshold_deg{0.0};
   double m_neutral_stake_arm_des_pos{0.0};
   int m_arm_mode{0};
+
+  // Arm low position while the clamp is closed (L2 toggles between this and
+  // arm_stage_positions_deg[1] instead of [0]). Loaded from
+  // arm_stage_positions_deg[2] when present.
+  double m_arm_clamped_low_deg = 200.0;
+  // Set when R1/R2 is pressed with the clamp closed, cleared when the clamp opens.
+  // Until then the arm's low position stays at 0.
+  bool m_arm_clamped_low_active = false;
+
+  // D-pad right macro: arm target while reaching for a goal (held via
+  // m_arm_custom_deg until the clamp closes, then the arm reverts to
+  // m_arm_macro_revert_deg, also via m_arm_custom_deg).
+  double m_arm_macro_extend_deg = 1650.0;
+  double m_arm_macro_revert_deg = 200.0;
+  // True while the arm is at the macro's extend target (false once it reverts)
+  bool m_arm_macro_extended = false;
+  // Power cap for the arm's revert after the clamp closes on the macro
+  const double m_arm_macro_revert_max_power = 0.3;
+  // How far the lift rises (from where it is) as the macro arm reverts
+  const double m_lift_macro_raise_deg = 150.0;
+
+  // Auton version of the d-pad right macro, toggled by the MatchloadCmd BT node.
+  void updateMatchloadAuton();
+  // Clamp is open from MatchloadCmd and waiting to close (sensor / toggle off)
+  bool m_matchload_grabbing = false;
+  // When the current grab started, for the matchload_timeout_s auto-close
+  std::chrono::steady_clock::time_point m_matchload_start_time{};
+  // Macro owns the arm (m_arm_custom_deg) until an ArmPosCmd takes over
+  bool m_matchload_arm_active = false;
+  // Macro owns the lift (m_lift_hold_deg) after the revert until a LiftPosCmd takes over
+  bool m_matchload_lift_active = false;
+
+  bool m_clamp_closed = false;
+  bool m_clamp_btn_pressed = false;
+  // Time at which a delayed clamp open takes effect (< 0 = no open pending)
+  double m_clamp_open_time = -1.0;
+  // L1 was pressed with the clamp open and is still held, waiting to close
+  bool m_clamp_grabbing = false;
+
+  // Auto-close: while grabbing (L1 held), the clamp closes when the auto_claw
+  // distance sensor reads below m_auto_claw_close_mm.
+  rclcpp::Subscription<ghost_msgs::msg::DistanceSensorState>::SharedPtr m_auto_claw_sub;
+  void autoClawCallback(const ghost_msgs::msg::DistanceSensorState::SharedPtr msg)
+  {
+    m_auto_claw_distance_mm = msg->distance_mm;
+    m_auto_claw_valid = (msg->range_status == 0);
+    m_auto_claw_msg_time = std::chrono::steady_clock::now();
+  }
+  uint16_t m_auto_claw_distance_mm = 0;
+  bool m_auto_claw_valid = false;
+  std::chrono::steady_clock::time_point m_auto_claw_msg_time{};
+  double m_auto_claw_close_mm = 75.0;
 
 };
 

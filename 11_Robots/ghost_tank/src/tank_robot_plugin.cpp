@@ -21,6 +21,7 @@
  *   SOFTWARE.
  */
 
+#include <algorithm>
 #include <iostream>
 #include <cmath>
 #include <bits/stdc++.h>
@@ -463,25 +464,14 @@ void TankRobotPlugin::onNewSensorData()
   if (first_loop) {
     playMusic("hello_there");
     resetWorldPose();
+    // Zero lift/arm at their starting positions (only on robots that have them)
+    if (rhi_ptr_->contains("lift1_motor")) {
+      m_lift_zero_deg = rhi_ptr_->getMotorPosition("lift1_motor");
+    }
+    if (rhi_ptr_->contains("arm_motor")) {
+      m_arm_zero_deg = rhi_ptr_->getMotorPosition("arm_motor");
+    }
     first_loop = false;
-  }
-
-  // Zero lift/arm at their starting positions (only on robots that have them).
-  // Waits for a finite reading: PROS reports inf for a motor it can't read, and
-  // an inf zero would make every later lift/arm position NaN.
-  if (!m_lift_zeroed && rhi_ptr_->contains("lift1_motor")) {
-    double pos = rhi_ptr_->getMotorPosition("lift1_motor");
-    if (std::isfinite(pos)) {
-      m_lift_zero_deg = pos;
-      m_lift_zeroed = true;
-    }
-  }
-  if (!m_arm_zeroed && rhi_ptr_->contains("arm_motor")) {
-    double pos = rhi_ptr_->getMotorPosition("arm_motor");
-    if (std::isfinite(pos)) {
-      m_arm_zero_deg = pos;
-      m_arm_zeroed = true;
-    }
   }
 
   // Clear current limits at start of loop
@@ -629,6 +619,8 @@ void TankRobotPlugin::autonomous(double current_time)
     updateLiftToStage(static_cast<size_t>(lift_target_stage));
   }
   last_bt_lift_stage = lift_target_stage;
+
+  applyAutonDriveCurrentBudget();
 
   // Auto-sort (AutoSortCmd BT node). While active, take over the intake + sorter:
   // constantly intake and fire the sorter on a wrong-colour ball. Runs after the
@@ -789,7 +781,6 @@ void TankRobotPlugin::teleop(double current_time)
   updateLiftFromJoystick(joy_data);
   updateToggleMechFromJoystick(joy_data, current_time);
   updateArmFromJoystick(joy_data);
-  updateDrivetrain(joy_data);
 
   updateColorSwitcher(joy_data->btn_u);
 }
@@ -1135,6 +1126,9 @@ void TankRobotPlugin::updateLift(bool R2, bool R1)
 
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift1_motor", 2500);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift2_motor", 2500);
+  // Reserve the lift's share of the V5 current budget (drive gets the remainder)
+  m_loop_current_limits.push_back(2500);
+  m_loop_current_limits.push_back(2500);
 }
 
 void TankRobotPlugin::updateToggleMech(bool A, bool B)
@@ -1150,6 +1144,7 @@ void TankRobotPlugin::updateToggleMech(bool A, bool B)
 
   rhi_ptr_->setMotorVoltageCommandPercent("toggle_mech_motor", power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("toggle_mech_motor", 2500);
+  m_loop_current_limits.push_back(2500);
 }
 
 void TankRobotPlugin::updateArm(bool l2_pressed)
@@ -1171,6 +1166,11 @@ void TankRobotPlugin::updateArm(bool l2_pressed)
 
 void TankRobotPlugin::updateArmToStage(size_t stage)
 {
+  // Robots may configure fewer stages than ArmPosCmd allows
+  if (m_arm_stage_positions_deg.empty()) {
+    return;
+  }
+  stage = std::min(stage, m_arm_stage_positions_deg.size() - 1);
   updateArmToPosition(m_arm_stage_positions_deg[stage]);
 }
 
@@ -1183,14 +1183,10 @@ void TankRobotPlugin::updateArmToPosition(double target_position_deg, double max
   double error_deriv = -current_velocity_deg_per_sec;
 
   double arm_power = ghost_util::clamp(m_arm_controller_ptr->calculateCommand(error, error_deriv), -max_power, max_power);
-  // ghost_util::clamp turns NaN into -max_power, so stop instead on a bad reading.
-  if (!m_arm_zeroed || !std::isfinite(error) || !std::isfinite(error_deriv)) {
-    arm_power = 0.0;
-    m_arm_controller_ptr->reset();
-  }
 
   rhi_ptr_->setMotorVoltageCommandPercent("arm_motor", arm_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("arm_motor", 2500);
+  m_loop_current_limits.push_back(2500);
 }
 
 double TankRobotPlugin::getLiftPositionDeg()
@@ -1205,7 +1201,10 @@ double TankRobotPlugin::getArmPositionDeg()
 
 void TankRobotPlugin::updateLiftToStage(size_t stage)
 {
-  updateLiftToPosition(m_lift_stage_positions_deg[stage]);
+  // Slow on the way down, same as the teleop clamp-open drop
+  double target_deg = m_lift_stage_positions_deg[stage];
+  double max_power = (target_deg < getLiftPositionDeg()) ? m_lift_down_max_power : 1.0;
+  updateLiftToPosition(target_deg, max_power);
 }
 
 void TankRobotPlugin::updateLiftToPosition(double target_position_deg, double max_power)
@@ -1217,16 +1216,14 @@ void TankRobotPlugin::updateLiftToPosition(double target_position_deg, double ma
   double error_deriv = -current_velocity_deg_per_sec;
 
   double lift_power = ghost_util::clamp(m_lift_controller_ptr->calculateCommand(error, error_deriv), -max_power, max_power);
-  // ghost_util::clamp turns NaN into -max_power, so stop instead on a bad reading.
-  if (!m_lift_zeroed || !std::isfinite(error) || !std::isfinite(error_deriv)) {
-    lift_power = 0.0;
-    m_lift_controller_ptr->reset();
-  }
 
   rhi_ptr_->setMotorVoltageCommandPercent("lift1_motor", lift_power);
   rhi_ptr_->setMotorVoltageCommandPercent("lift2_motor", lift_power);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift1_motor", 2500);
   rhi_ptr_->setMotorCurrentLimitMilliAmps("lift2_motor", 2500);
+  // Reserve the lift's share of the V5 current budget (drive gets the remainder)
+  m_loop_current_limits.push_back(2500);
+  m_loop_current_limits.push_back(2500);
 }
 
 void TankRobotPlugin::updateIntakeFromJoystick(JoyPtr joy_data)
@@ -1243,8 +1240,7 @@ void TankRobotPlugin::updateLiftFromJoystick(JoyPtr joy_data)
     m_lift_hold_max_power = 1.0;
   } else {
     // No input: hold wherever the lift was released.
-    // Only latch a finite hold target; otherwise retry next loop.
-    if (!m_lift_holding && std::isfinite(getLiftPositionDeg())) {
+    if (!m_lift_holding) {
       m_lift_hold_deg = getLiftPositionDeg();
       m_lift_controller_ptr->reset();
       m_lift_holding = true;
@@ -1282,6 +1278,7 @@ void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data, double curre
   if (m_toggle_seeking) {
     rhi_ptr_->setMotorVoltageCommandPercent("toggle_mech_motor", m_toggle_seek_power);
     rhi_ptr_->setMotorCurrentLimitMilliAmps("toggle_mech_motor", 2500);
+    m_loop_current_limits.push_back(2500);
   } else {
     // A for one direction, B for the other
     updateToggleMech(joy_data->btn_a, joy_data->btn_b);
@@ -1290,8 +1287,8 @@ void TankRobotPlugin::updateToggleMechFromJoystick(JoyPtr joy_data, double curre
 
 void TankRobotPlugin::updateArmFromJoystick(JoyPtr joy_data)
 {
-  // Each L2 press swaps the arm to its next stage (arm_stage_positions_deg).
-  updateArm(joy_data->btn_l2);
+  // Arm only advances (goes up) while R1 or R2 is held.
+  updateArm(joy_data->btn_l2 && (joy_data->btn_r1 || joy_data->btn_r2));
 }
 
 void TankRobotPlugin::updateMatchLoading(bool input)
@@ -1378,18 +1375,35 @@ void TankRobotPlugin::updateMusic(double current_time, JoyPtr joy_data)
 }
 
 
-void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data)
+void TankRobotPlugin::updateDrivetrain(JoyPtr joy_data, const std::string & control_type)
 {
   // Driver-only expo curve (applied here, not in TankModel, so auton commands stay linear)
   double fwd_pct = ExpoDriveCurve(joy_data->left_y) / 127.0;
-  double turn_pct = ExpoDriveCurve(joy_data->right_x) / 127.0;
-  m_tank_model_ptr->driveCommandArcade(fwd_pct, turn_pct);
-
+  double turn_pct = 0.0;  // arcade: turn command, tank: right side command
+  if (control_type == "tank") {
+    turn_pct = ExpoDriveCurve(joy_data->right_y) / 127.0;
+    m_tank_model_ptr->driveCommandTank(fwd_pct, turn_pct);
+  } else {
+    turn_pct = ExpoDriveCurve(joy_data->right_x) / 127.0;
+    m_tank_model_ptr->driveCommandArcade(fwd_pct, turn_pct);
+  }
   int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
   if (std::fabs(fwd_pct) < 0.05 && std::fabs(turn_pct) < 0.05) {
     drive_curr_lim = 0;
   }
 
+  for (const auto & name : m_all_drive_motor_names) {
+    rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
+  }
+}
+
+void TankRobotPlugin::applyAutonDriveCurrentBudget()
+{
+  // Nothing reserved this loop: leave the BT drive nodes' limits alone
+  if (m_loop_current_limits.empty()) {
+    return;
+  }
+  int32_t drive_curr_lim = static_cast<int32_t>(ghost_control::v5_current_limiting::getRemainingCurrentDistributed(m_loop_current_limits, m_num_motors));
   for (const auto & name : m_all_drive_motor_names) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(name, drive_curr_lim);
   }

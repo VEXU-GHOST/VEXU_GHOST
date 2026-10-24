@@ -70,6 +70,11 @@ namespace util
  *              model:
  *                  ...
  *
+ * robot_pose:                  (optional, disabled if omitted)
+ *      enabled: true/false
+ *      source_frame: base_link
+ *      target_frame: map
+ *
  * @param node
  * @param verbose
  * @return devices::DeviceConfigMap

@@ -139,7 +139,7 @@ protected:
    * @param l2_pressed current state of the L2 button
    */
   void updateArm(bool l2_pressed);
-  void updateArmFromJoystick(JoyPtr joy_data);
+  virtual void updateArmFromJoystick(JoyPtr joy_data);
 
   /**
    * @brief Drives arm_motor to the given preset stage (0-2) and holds it
@@ -191,7 +191,15 @@ protected:
 
   void updateMusic(double current_time, JoyPtr joy_data);
 
-  void updateDrivetrain(JoyPtr joy_data);
+  // control_type: "arcade" (left_y = forward, right_x = turn) or "tank" (left_y / right_y = sides)
+  void updateDrivetrain(JoyPtr joy_data, const std::string & control_type);
+
+  // Auton: give the drive motors whatever V5 current is left after this loop's
+  // reservations (lift / arm / toggle), like updateDrivetrain does in teleop.
+  // Without it the BT drive nodes request 2500 mA on every drive motor and the
+  // brain throttles all motors, so the lift can't raise a goal. Call after all
+  // mechanism updates for the loop.
+  void applyAutonDriveCurrentBudget();
 
   void resetBT();
 
@@ -325,13 +333,13 @@ protected:
   // Power cap while holding m_lift_hold_deg (e.g. 0.5 for the clamp-open drop).
   // Reset to 1.0 whenever the driver takes over.
   double m_lift_hold_max_power{1.0};
+  // Power cap when the lift is moving down (teleop clamp-open drop and auton
+  // LiftPosCmd moves to a lower stage)
+  double m_lift_down_max_power{0.334};
   // Raw encoder readings captured on the first sensor update, so lift/arm read 0
   // wherever they start (there is no encoder tare through the hardware interface).
   double m_lift_zero_deg{0.0};
   double m_arm_zero_deg{0.0};
-  // Set once a finite zero reading has been captured.
-  bool m_lift_zeroed{false};
-  bool m_arm_zeroed{false};
   // Set while auton runs; teleop uses it to send the lift/arm home once auton ends.
   bool m_ran_auton{false};
   double getLiftPositionDeg();

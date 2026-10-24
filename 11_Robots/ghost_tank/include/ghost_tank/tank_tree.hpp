@@ -70,6 +70,10 @@
 #include "ghost_tank/bt_nodes/outtakeBalls.hpp"
 #include "ghost_tank/bt_nodes/match_loading.hpp"
 #include "ghost_tank/bt_nodes/descorer.hpp"
+#include "ghost_tank/bt_nodes/toggleMechCmd.hpp"
+#include "ghost_tank/bt_nodes/matchloadCmd.hpp"
+#include "ghost_tank/bt_nodes/turnToAngle.hpp"
+#include "ghost_tank/bt_nodes/swingToAngle.hpp"
 
 #include "ghost_tank/bt_nodes/bt_util.hpp"
 

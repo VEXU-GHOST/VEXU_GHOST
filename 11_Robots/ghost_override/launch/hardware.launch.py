@@ -32,7 +32,9 @@ def generate_launch_description():
 
     # nav2 stack config (map_server, planner_server + global_costmap,
     # controller_server + local_costmap), split out of base_ros_config.yaml.
-    nav2_config_file = os.path.join(ghost_override_base_dir, "config/nav2_config.yaml")
+    # Lives in ghost_tank (moved there in 641c56df), not ghost_override.
+    nav2_config_file = os.path.join(
+        os.path.expanduser("~"), "VEXU_GHOST", "11_Robots", "ghost_tank", "config", "nav2_config.yaml")
 
     #############################
     ### Base Node Definitions ###
