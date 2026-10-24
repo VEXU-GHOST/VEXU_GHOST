@@ -133,12 +133,25 @@ After `configure-os`, the `ghost` command is available system-wide (symlinked in
 
 # Match bag recording
 
-With `should_record: true`, recording starts when autonomous begins, continues
-through the autonomous/driver pause and driver control, and stops on the
-driver-control-to-disabled transition. Bags are saved in
-`~/bags/<robot>_<MM_DD_YYYY>_<number>/`.
+With `should_record: true`, a bag is recorded for autonomous (it stops when
+autonomous ends) and a second bag for driver control (it starts when driver
+control begins after an autonomous period and stops on the
+driver-control-to-disabled transition). The break between them is not recorded,
+and driver control without a preceding autonomous period is not recorded. Bags are saved in
+`~/bags/<robot>_<MM_DD_YYYY>_<number>_1` for autonomous and `..._<number>_2` for driver
+control (for example `blinky_10_23_2026_3_1` and `blinky_10_23_2026_3_2`). The number is
+the next unused recording number for that robot and day, shared by both halves.
+Manual recordings (bag button, `start_bag_recorder_client`) are saved as
+`~/bags/<robot>_<MM_DD_YYYY>_<number>`.
 
-The recorder writes all topics it normally discovers to one uncompressed MCAP (`fastwrite` preset)
+No bag or match video is started when the Jetson has less than 20 GB free
+(`min_free_disk_gb_to_start` for bags, `min_free_disk_gb` for the camera node).
+A recording that is already running is not cut off by this check.
+
+Camera topics (`/cv/*` and `/camera/*`) are not recorded in bags. Match video is saved
+separately by `cv_camera_node` in `~/match_videos`.
+
+The recorder writes all other topics it normally discovers to one uncompressed MCAP (`fastwrite` preset)
 file during the match. After stop, ROS 2 closes that file and compresses it
 losslessly with Zstd using one worker (`--compression-mode file
 --compression-format zstd --compression-threads 1`). File splitting is disabled

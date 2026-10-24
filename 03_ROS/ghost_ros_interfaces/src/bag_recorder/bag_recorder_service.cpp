@@ -25,6 +25,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <dirent.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
@@ -48,8 +49,12 @@ public:
   {
     declare_parameter<int64_t>("disk_space_required_kb", 250 * 1024);
     declare_parameter<int>("disk_check_period_s", 10);
+    // A new recording is refused when the disk has less free space than this.
+    declare_parameter<double>("min_free_disk_gb_to_start", 20.0);
 
     disk_space_required_ = get_parameter("disk_space_required_kb").as_int();
+    min_free_to_start_bytes_ = static_cast<std::uintmax_t>(
+      get_parameter("min_free_disk_gb_to_start").as_double() * 1024.0 * 1024.0 * 1024.0);
     disk_check_period_ = std::chrono::seconds(get_parameter("disk_check_period_s").as_int());
 
     this->start_service_ = this->create_service<StartRecorder>(
@@ -83,7 +88,7 @@ public:
 
   void StartCallback(StartRecorder::Request::SharedPtr req, StartRecorder::Response::SharedPtr res);
   void StopCallback(StopRecorder::Request::SharedPtr req, StopRecorder::Response::SharedPtr res);
-  void SpawnRecorderProcess();
+  void SpawnRecorderProcess(const std::string & phase = "");
   void KillRecorderProcess();
   void CheckRecorderProcesses();
   void LowerRecorderPriority(pid_t pid);
@@ -103,6 +108,7 @@ private:
   std::vector<pid_t> finalizing_pids_;
   rclcpp::TimerBase::SharedPtr process_check_timer_;
   unsigned long disk_space_required_;
+  std::uintmax_t min_free_to_start_bytes_;
   FILE * disk_check_output_;
   std::chrono::seconds disk_check_period_;
   rclcpp::TimerBase::SharedPtr disk_check_timer;
@@ -113,7 +119,7 @@ void BagRecorderNode::StartCallback(
   StartRecorder::Request::SharedPtr req,
   StartRecorder::Response::SharedPtr res)
 {
-  SpawnRecorderProcess();
+  SpawnRecorderProcess(req->phase);
 }
 
 void BagRecorderNode::StopCallback(
@@ -124,13 +130,52 @@ void BagRecorderNode::StopCallback(
 }
 
 
-void BagRecorderNode::SpawnRecorderProcess()
+void BagRecorderNode::SpawnRecorderProcess(const std::string & phase)
 {
   CheckRecorderProcesses();
   if (recording_) {
     RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Unable to start recorder; one already exists.");
     return;
   }
+
+  // Bags are written under $HOME, so check the disk that holds it. If the free space cannot be
+  // read, record anyway rather than lose the match.
+  std::error_code space_error;
+  const char * home = std::getenv("HOME");
+  const auto space = std::filesystem::space(home ? home : "/", space_error);
+  if (!space_error && space.available < min_free_to_start_bytes_) {
+    RCLCPP_WARN(
+      get_logger(), "Not recording: %.1f GB free, need at least %.0f GB.",
+      space.available / (1024.0 * 1024.0 * 1024.0),
+      min_free_to_start_bytes_ / (1024.0 * 1024.0 * 1024.0));
+    return;
+  }
+
+  // Bags are named <robot>_<MM_DD_YYYY>_<N>, where N is the next unused recording number.
+  // An auton bag takes the next N and adds _1, the driver bag reuses the latest auton N and
+  // adds _2, and a manual bag is just <N>. phase is only compared to the literals below, so
+  // it is never pasted into the shell command.
+  std::string name_bag = "B=\"$HOME/bags\"; mkdir -p \"$B\"; D=$(date +%m_%d_%Y); ";
+  const std::string next_free =
+    "N=1; while [ -e \"$B/${R}_${D}_${N}\" ] || [ -e \"$B/${R}_${D}_${N}_1\" ]; do N=$((N+1)); done; ";
+  if (phase == "auton") {
+    name_bag += next_free + "O=\"$B/${R}_${D}_${N}_1\"; ";
+  } else if (phase == "driver") {
+    name_bag +=
+      "N=$(ls \"$B\" | sed -n \"s/^${R}_${D}_\\([0-9]*\\)_1$/\\1/p\" | sort -n | tail -1); "
+      "N=${N:-1}; S=2; "
+      "while [ -e \"$B/${R}_${D}_${N}_${S}\" ]; do S=$((S+1)); done; "
+      "O=\"$B/${R}_${D}_${N}_${S}\"; ";
+  } else {
+    name_bag += next_free + "O=\"$B/${R}_${D}_${N}\"; ";
+  }
+  const std::string command =
+    "R=$(cat \"$VEXU_HOME/robotname\" 2>/dev/null || echo unknown_robot); " + name_bag +
+    // Camera data is recorded separately as video by cv_camera_node, so keep it out of the bag.
+    "exec ros2 bag record -a -x '^/(cv|camera)/.*' --storage mcap --storage-preset-profile fastwrite "
+    "--max-bag-size 0 --max-bag-duration 0 "
+    "--compression-mode file --compression-format zstd --compression-threads 1 "
+    "-o \"$O\"";
 
   recorderPID_ = fork();
   if (recorderPID_ < 0) {
@@ -141,16 +186,7 @@ void BagRecorderNode::SpawnRecorderProcess()
     // One unsplit MCAP file with uncompressed chunks (fastwrite): file-mode compression
     // only starts after SIGINT closes it.
     // this is where the bag files are recorded, compressed, and stored as mcap 
-    execl(
-      "/bin/sh", "sh", "-c",
-      "R=$(cat \"$VEXU_HOME/robotname\" 2>/dev/null || echo unknown_robot); "
-      "D=$(date +%m_%d_%Y); N=1; "
-      "while [ -e \"$HOME/bags/${R}_${D}_${N}\" ]; do N=$((N+1)); done; "
-      "exec ros2 bag record -a --storage mcap --storage-preset-profile fastwrite "
-      "--max-bag-size 0 --max-bag-duration 0 "
-      "--compression-mode file --compression-format zstd --compression-threads 1 "
-      "-o \"$HOME/bags/${R}_${D}_${N}\"",
-      NULL);
+    execl("/bin/sh", "sh", "-c", command.c_str(), NULL);
     _exit(127);
   }
 

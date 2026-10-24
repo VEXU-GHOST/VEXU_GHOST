@@ -1,1 +1,3 @@
+# "auton" or "driver" names the bag <robot>_<date>_<N>_1 or _2; empty is a manual recording.
+string phase
 ---

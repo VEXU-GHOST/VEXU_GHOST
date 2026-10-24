@@ -1083,14 +1083,15 @@ class CvCameraNode(Node):
         self.declare_parameter("video_dir", os.path.expanduser("~/match_videos"))
         # Detection is off by default. Videos still record without the model.
         self.declare_parameter("run_model", False)
-        # Record automatically while the V5 reports autonomous or driver control.
+        # Record a match automatically: start when autonomous begins, stop when
+        # driver control ends (same rule as the bag recorder).
         self.declare_parameter("auto_record", True)
-        # Disabled gaps shorter than this (auton -> driver) stay in one video.
-        self.declare_parameter("match_end_grace_sec", 5.0)
+        # Do not start any recording when the disk has less free space than this.
+        self.declare_parameter("min_free_disk_gb", 20.0)
 
         self.run_model = bool(self.get_parameter("run_model").value)
         self.auto_record = bool(self.get_parameter("auto_record").value)
-        self.match_end_grace_sec = float(self.get_parameter("match_end_grace_sec").value)
+        self.min_free_disk_gb = float(self.get_parameter("min_free_disk_gb").value)
         self.api_key = load_api_key() if self.run_model else ""
         self.api_url = API_URL
         self.camera_device = int(self.get_parameter("camera_device").value)
@@ -1106,8 +1107,8 @@ class CvCameraNode(Node):
         self.label_pub = self.create_publisher(String, "/cv/detection_labels", 10)
         self.create_subscription(Bool, "/cv/record", self._on_record_cmd, 10)
         self._match_active = False
-        self._was_disabled = True
-        self._disabled_since = None
+        self._match_in_progress = False  # set when auton starts, cleared when driver control ends
+        self._comp_state = "teleop"  # same starting state the bag recorder trigger uses
         if self.auto_record:
             self.create_subscription(
                 V5SensorUpdate,
@@ -1573,12 +1574,15 @@ class CvCameraNode(Node):
             if leftover > 0:
                 time.sleep(leftover)
 
-    def _disk_summary(self) -> str:
+    def _disk_free_bytes(self) -> int:
         folder = self.video_dir if os.path.isdir(self.video_dir) else os.path.dirname(self.video_dir) or "/"
-        usage = shutil.disk_usage(folder if os.path.isdir(folder) else "/")
-        free_gb = usage.free / (1024 ** 3)
+        return shutil.disk_usage(folder if os.path.isdir(folder) else "/").free
+
+    def _disk_summary(self) -> str:
+        free = self._disk_free_bytes()
+        free_gb = free / (1024 ** 3)
         # 4 Mb/s H.264 is about 60 MB for a two-minute match.
-        matches = int(usage.free / (60 * 1024 * 1024))
+        matches = int(free / (60 * 1024 * 1024))
         return f"{free_gb:.1f} GB free, about {matches} two-minute matches."
 
     def record_status(self) -> str:
@@ -1608,35 +1612,58 @@ class CvCameraNode(Node):
             self.get_logger().info(self.stop_recording())
 
     def _on_sensor_update(self, msg: V5SensorUpdate):
-        if msg.competition_status.is_disabled:
-            self._was_disabled = True
-            if self._disabled_since is None:
-                self._disabled_since = time.monotonic()
+        status = msg.competition_status
+        if status.is_disabled:
+            state = "disabled"
+        elif status.is_autonomous:
+            state = "autonomous"
         else:
-            self._disabled_since = None
-            # Only arm on disabled -> enabled so a manual stop is not undone mid-match.
-            if self._was_disabled:
-                self._was_disabled = False
-                self._match_active = True
+            state = "teleop"
+        last, self._comp_state = self._comp_state, state
+
+        if state == "autonomous" and last != "autonomous":
+            self._match_in_progress = True
+            self._arm_match_video("auton")
+        elif state == "teleop" and last == "disabled" and self._match_in_progress:
+            self._arm_match_video("driver")
+        elif state == "disabled" and last in ("autonomous", "teleop"):
+            # Auton and driver control each get their own video; the break is not recorded.
+            self.get_logger().info(f"Stopped. {self.stop_recording()}")
+            if last == "teleop":
+                self._match_in_progress = False
+
+    def _camera_connected(self) -> bool:
+        camera = self.camera
+        return camera is not None and camera.isOpened()
+
+    def _record_blocker(self) -> str | None:
+        """Why recording must not start right now, or None if it can."""
+        if not self._camera_connected():
+            return "No camera connected."
+        if self._disk_free_bytes() < self.min_free_disk_gb * (1024 ** 3):
+            return f"Under {self.min_free_disk_gb:.0f} GB free. {self._disk_summary()}"
+        return None
+
+    def _arm_match_video(self, phase: str):
+        blocker = self._record_blocker()
+        if blocker:
+            self.get_logger().warning(f"Not recording {phase} video. {blocker}")
+        else:
+            self._match_active = True
 
     def _auto_record_tick(self):
-        """Record from the start of auton/driver until the V5 stays disabled."""
-        if self._match_active:
-            if (
-                self._disabled_since is not None
-                and time.monotonic() - self._disabled_since >= self.match_end_grace_sec
-            ):
-                self._match_active = False
-                self.get_logger().info(f"Match ended. {self.stop_recording()}")
-                return
-            if self._jpeg_writer is None:
-                # Retries each tick if the camera was not ready at match start.
-                self.start_recording()
+        """Retry if starting the match video failed on the first try."""
+        if self._match_active and self._jpeg_writer is None:
+            self.start_recording()
 
     def start_recording(self) -> str:
         with self._record_lock:
             if self._jpeg_writer is not None:
                 return f"Already recording {self._record_path}"
+            blocker = self._record_blocker()
+            if blocker:
+                self._record_error = blocker
+                return blocker
             with self._latest_lock:
                 jpeg = self._latest_jpeg
             if not jpeg:
