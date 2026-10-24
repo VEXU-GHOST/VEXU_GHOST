@@ -181,8 +181,9 @@ def generate_launch_description():
         output="screen",
         parameters=[{
             "camera_device": 0,
-            "frame_width": 1280,
-            "frame_height": 720,
+            "frame_width": 1920,
+            "frame_height": 1080,
+            "frame_fps": 60,
             "show_window": False,
         }],
     )
