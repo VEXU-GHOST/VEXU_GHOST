@@ -191,6 +191,8 @@ void ClydePlugin::autonomous(double current_time)
 
   TankRobotPlugin::autonomous(current_time);
   updateMatchloadAuton();
+  // Again, now that the matchload macro may have reserved lift / arm current
+  applyAutonDriveCurrentBudget();
   m_clamp_grabbing = false;
   // Mirror the BT clamp state into the teleop state so the clamp stays where
   // auton left it when driver control takes over.

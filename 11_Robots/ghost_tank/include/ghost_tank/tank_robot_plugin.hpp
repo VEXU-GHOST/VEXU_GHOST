@@ -194,6 +194,13 @@ protected:
   // control_type: "arcade" (left_y = forward, right_x = turn) or "tank" (left_y / right_y = sides)
   void updateDrivetrain(JoyPtr joy_data, const std::string & control_type);
 
+  // Auton: give the drive motors whatever V5 current is left after this loop's
+  // reservations (lift / arm / toggle), like updateDrivetrain does in teleop.
+  // Without it the BT drive nodes request 2500 mA on every drive motor and the
+  // brain throttles all motors, so the lift can't raise a goal. Call after all
+  // mechanism updates for the loop.
+  void applyAutonDriveCurrentBudget();
+
   void resetBT();
 
   // Output
