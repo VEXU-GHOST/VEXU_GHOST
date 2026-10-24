@@ -149,6 +149,7 @@ private:
 
   std::atomic_bool configured_ = false;
   bool should_record_ = false;
+  bool m_match_in_progress_ = false;  // set when auton starts, cleared when driver control ends
   robot_state_e last_comp_state_ = robot_state_e::TELEOP;
   robot_state_e curr_comp_state_ = robot_state_e::TELEOP;
   rclcpp::Subscription<ghost_msgs::msg::V5SensorUpdate>::SharedPtr sensor_update_sub_;

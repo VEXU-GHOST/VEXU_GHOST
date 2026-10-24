@@ -173,6 +173,23 @@ def generate_launch_description():
         ]
     )
 
+    # Roboflow detector on the camera attached to the Jetson (V4L2, default
+    # /dev/video0). Publishes annotated frames on /cv/annotated_image. Needs
+    # ROBOFLOW_API_KEY or /etc/ghost/roboflow_api_key, plus network access.
+    cv_camera_node = Node(
+        package="push_back_cv",
+        executable="cv_camera_node.py",
+        name="cv_camera",
+        output="screen",
+        parameters=[{
+            "camera_device": 0,
+            "frame_width": 1920,
+            "frame_height": 1080,
+            "frame_fps": 60,
+            "show_window": False,
+        }],
+    )
+
     # Push-back CV perception pipeline (cv_detector_array -> block_map ->
     # goal_reader), publishing /field/goals for the behavior tree. Consumes the
     # RealSense color/aligned-depth/camera_info topics, so enable realsense_node
@@ -299,6 +316,7 @@ def generate_launch_description():
         controller_server,
         planner_lifecycle_manager,
         rplidar_node,
+        cv_camera_node,
         # realsense_node,
         # push_back_cv_launch,
         bag_recorder_service,
