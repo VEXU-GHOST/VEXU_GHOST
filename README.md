@@ -138,7 +138,7 @@ through the autonomous/driver pause and driver control, and stops on the
 driver-control-to-disabled transition. Bags are saved in
 `~/bags/<robot>_<MM_DD_YYYY>_<number>/`.
 
-The recorder writes all topics it normally discovers to one uncompressed SQLite
+The recorder writes all topics it normally discovers to one uncompressed MCAP (`fastwrite` preset)
 file during the match. After stop, ROS 2 closes that file and compresses it
 losslessly with Zstd using one worker (`--compression-mode file
 --compression-format zstd --compression-threads 1`). File splitting is disabled
@@ -151,7 +151,7 @@ older bag finishes. The bag LED turns off when recording stops; compression may
 still be running. Wait for the completion log before powering off or copying the
 bag. Allow free space for both the original and compressed file during this step.
 ROS removes the original after successful compression; the final bag contains
-`metadata.yaml` and a `.db3.zstd` file. If compression fails, inspect recorder
+`metadata.yaml` and a `.mcap.zstd` file. If compression fails, inspect recorder
 logs and keep any remaining original file.
 
 Install the runtime dependencies on the Jetson and playback computer (also
@@ -159,7 +159,8 @@ declared in `ghost_ros_interfaces/package.xml`):
 
 ```sh
 sudo apt install ros-humble-ros2bag ros-humble-rosbag2-transport \
-  ros-humble-rosbag2-storage-default-plugins ros-humble-rosbag2-compression-zstd
+  ros-humble-rosbag2-storage-default-plugins ros-humble-rosbag2-storage-mcap \
+  ros-humble-rosbag2-compression-zstd
 ```
 
 After rebuilding `ghost_ros_interfaces` and starting the updated robot stack,

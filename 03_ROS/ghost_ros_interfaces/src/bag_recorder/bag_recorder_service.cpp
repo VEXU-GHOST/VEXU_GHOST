@@ -138,13 +138,14 @@ void BagRecorderNode::SpawnRecorderProcess()
     return;
   }
   if (recorderPID_ == 0) {
-    // One unsplit SQLite file: file-mode compression only starts after SIGINT closes it.
+    // One unsplit MCAP file with uncompressed chunks (fastwrite): file-mode compression
+    // only starts after SIGINT closes it.
     execl(
       "/bin/sh", "sh", "-c",
       "R=$(cat \"$VEXU_HOME/robotname\" 2>/dev/null || echo unknown_robot); "
       "D=$(date +%m_%d_%Y); N=1; "
       "while [ -e \"$HOME/bags/${R}_${D}_${N}\" ]; do N=$((N+1)); done; "
-      "exec ros2 bag record -a --storage sqlite3 "
+      "exec ros2 bag record -a --storage mcap --storage-preset-profile fastwrite "
       "--max-bag-size 0 --max-bag-duration 0 "
       "--compression-mode file --compression-format zstd --compression-threads 1 "
       "-o \"$HOME/bags/${R}_${D}_${N}\"",
