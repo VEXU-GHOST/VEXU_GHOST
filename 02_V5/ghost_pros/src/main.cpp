@@ -1,4 +1,8 @@
-#define AUTON_SELECTOR_SCREEN_TEST 1
+// Screen-only test build: shows the auton selector GUI and skips robot init.
+// Enable with EXTRA_CXXFLAGS += -DAUTON_SELECTOR_SCREEN_TEST=1 in the Makefile.
+#ifndef AUTON_SELECTOR_SCREEN_TEST
+#define AUTON_SELECTOR_SCREEN_TEST 0
+#endif
 
 #include "main.h"
 #include "pros/motors.h"
