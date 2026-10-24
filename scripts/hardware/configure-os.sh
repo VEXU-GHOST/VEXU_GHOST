@@ -23,6 +23,9 @@ sudo systemctl restart serial-getty@ttyTCU0.service
 sudo systemctl disable --now gdm3
 echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/nopasswd-$USER
 
+# /dev/video* is group video, mode 660. Needed for the Jetson camera detector.
+sudo usermod -aG video "$USER" || echo "warning: could not add $USER to the video group"
+
 # Tighten NTP time sync via a drop-in (60- prefix = local admin range).
 sudo mkdir -p /etc/systemd/timesyncd.conf.d
 sudo tee /etc/systemd/timesyncd.conf.d/60-ghost.conf <<EOF > /dev/null

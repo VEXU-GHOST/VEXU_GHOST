@@ -41,6 +41,7 @@ install(
   PROGRAMS
     scripts/cv_detector_array.py
     scripts/block_map_node.py
+    scripts/cv_camera_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
