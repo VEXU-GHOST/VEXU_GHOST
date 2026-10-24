@@ -156,6 +156,20 @@ std::shared_ptr<DeviceConfigMap> loadRobotConfigFromYAML(YAML::Node node, bool v
 
     device_config_map_ptr->addDeviceConfig(device_config_base_ptr);
   }
+
+  // Load robot pose (optional, disabled if the block is missing)
+  if (node["robot_pose"]) {
+    auto & pose_config = device_config_map_ptr->robot_pose_config;
+    loadYAMLParam(node["robot_pose"], "enabled", pose_config.enabled, verbose);
+    if (pose_config.enabled &&
+      (!loadYAMLParam(node["robot_pose"], "source_frame", pose_config.source_frame, verbose) ||
+      !loadYAMLParam(node["robot_pose"], "target_frame", pose_config.target_frame, verbose)))
+    {
+      throw std::runtime_error(
+              "[loadRobotConfigFromYAML] Error: robot_pose is enabled but source_frame or "
+              "target_frame is missing.");
+    }
+  }
   return device_config_map_ptr;
 }
 
@@ -333,6 +347,11 @@ void generateCodeFromRobotConfig(
       std::cout << "[WARNING] Device " + val->name + " has unsupported device type. Skipping.";
     }
   }
+
+  const auto & pose_config = config_ptr->robot_pose_config;
+  output_file << "\trobot_config->robot_pose_config.enabled = " + BOOL_STRING_MAP.at(pose_config.enabled) + ";\n";
+  output_file << "\trobot_config->robot_pose_config.source_frame = \"" + pose_config.source_frame + "\";\n";
+  output_file << "\trobot_config->robot_pose_config.target_frame = \"" + pose_config.target_frame + "\";\n";
 
   /* *INDENT-ON* */
   output_file << "\treturn robot_config;\n";

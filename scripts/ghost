@@ -105,7 +105,7 @@ case "$1" in
         exec journalctl -xe --user-unit ghost-hardware
         ;;
     *)
-        echo "Usage: ghost [run [--v5]/build [pkg...]/clean [pkg...]/pros-clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>/log]"
+        echo "Usage: ghost [run [--v5]/build [--pros|pkg...]/clean [pkg...]/pros-clean/start/restart/stop/kill/shutdown/install/configure-os/set-robot-name <name>/log]"
         ;;
 esac
 

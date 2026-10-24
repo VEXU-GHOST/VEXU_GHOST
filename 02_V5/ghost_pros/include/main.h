@@ -24,7 +24,9 @@
 #include <map>
 
 #include "ghost_v5/globals/v5_globals.hpp"
+#if !AUTON_SELECTOR_SCREEN_TEST
 #include "robot_config.hpp"
+#endif
 
 #include "ghost_v5/motor/v5_motor_interface.hpp"
 #include "ghost_v5_interfaces/devices/device_config_map.hpp"
@@ -98,6 +100,7 @@ uint32_t last_inter_robot_link_tx = 0;
 
 // Screen Interface
 std::shared_ptr<ghost_v5::ScreenInterface> screen_interface_ptr;
+std::shared_ptr<ghost_v5::AutonSelector> auton_selector_ptr;
 
 }// namespace v5_globals
 
