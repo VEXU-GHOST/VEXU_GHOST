@@ -4,6 +4,8 @@
 if [ "$1" == "-h" ];
 then
     echo "Builds the ROS workspace, then the V5 PROS project and the RP2040 sensor host firmware."
+    echo "  --pros     build and upload only the V5 PROS project (needs a prior ROS build for generate_pros_header)"
+    echo "  pkg...     build only these ROS packages (and their dependencies)"
     exit 0
 fi
 
@@ -18,6 +20,13 @@ $VEXU_HOME/scripts/ghost stop
 
 # Assumes repository is in base directory
 cd $VEXU_HOME
+
+# --pros: only build and upload the V5 PROS project.
+if [ "$1" == "--pros" ];
+then
+    bash scripts/build/pros_upload.sh
+    exit $?
+fi
 
 # If package names are given, build only those (and their dependencies) and exit.
 if [ "$#" -gt 0 ];
