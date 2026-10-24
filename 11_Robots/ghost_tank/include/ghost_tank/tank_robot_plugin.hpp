@@ -191,7 +191,8 @@ protected:
 
   void updateMusic(double current_time, JoyPtr joy_data);
 
-  void updateDrivetrain(JoyPtr joy_data);
+  // control_type: "arcade" (left_y = forward, right_x = turn) or "tank" (left_y / right_y = sides)
+  void updateDrivetrain(JoyPtr joy_data, const std::string & control_type);
 
   void resetBT();
 

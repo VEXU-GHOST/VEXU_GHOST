@@ -52,37 +52,37 @@ competition_state_machine_node:
     #   neutral_stake_arm_settled_threshold_deg: 15.0
 
       distance_approach:
-        kp: 0.0
-        ki: 1.0
-        kd: 0.4
-        integral_limit: 0.3
-        integral_activation_bound: 0.75
+        kp: 2.0
+        ki: 0.0
+        kd: 0.2
+        integral_limit: 0.0
+        integral_activation_bound: 0.0
 
       steering_approach:
-        kp: 0.0
+        kp: 2.0
         ki: 0.0
-        kd: 0.15
+        kd: 0.2
         integral_limit: 0.0
         integral_activation_bound: 0.0
 
       distance_settling:
-        kp: 0.2
+        kp: 0.0
         ki: 0.0
-        kd: 0.1
-        integral_limit: 0.5
-        integral_activation_bound: 1.0
+        kd: 0.0
+        integral_limit: 0.0
+        integral_activation_bound: 0.0
 
       steering_settling:
-        kp: 0.4
-        ki: 0.0
-        kd: 0.3
-        integral_limit: 0.5
-        integral_activation_bound: 10.0
+        kp: 1.0
+        ki: 3.0
+        kd: 0.1
+        integral_limit: 0.35
+        integral_activation_bound: 0.5
 
       arc_turn:
-        kp: 0.75
+        kp: -0.67
         ki: 0.0
-        kd: 0.01
+        kd: 0.03
         integral_limit: 0.75
         integral_activation_bound: 0.2
 
@@ -92,7 +92,13 @@ competition_state_machine_node:
         kd: 0.000
         integral_limit: 0.5
         integral_activation_bound: 250.0
-      arm_stage_positions_deg: [0.0, 1650.0]
+      # [low, up, clamped low]. Stage 2 is where the arm goes when the lift moves
+      # with the clamp closed (teleop clamp macro); ArmPosCmd stage="2" matches it.
+      arm_stage_positions_deg: [0.0, 1650.0, 220.0]
+      # D-pad right macro: lift to lift_stage_positions_deg[0], open clamp, arm to
+      # arm_macro_extend_deg. On clamp close the arm returns to arm_macro_revert_deg.
+      arm_macro_extend_deg: 300.0
+      arm_macro_revert_deg: 50.0
 
       lift:
         kp: 0.003
@@ -100,12 +106,26 @@ competition_state_machine_node:
         kd: 0.000
         integral_limit: 0.0
         integral_activation_bound: 0.0
-      lift_stage_positions_deg: [400.0, 800.0, 1800.0, 2500.0, 1600.0, 2300.0, 2900.0, 3500.0]
+      lift_stage_positions_deg: [200.0, 500.0, 1000.0, 1700.0, 1000.0, 1700.0, 2400.0, 3100.0]
+
+      # Auto-sort (TankRobotPlugin::autoSort / AutoSortCmd). Detect on the
+      # mid_conveyor colour sensor. sort_delay is the ball travel time from the
+      # sensor to the sorter (used both before extending and before retracting).
+      # There is no sorter on blinky, so sorter_io_port is parked on F below.
+      sort_color_topic: "/sensors/color/mid_conveyor/class"
+      sort_delay: 0.05           # s for a ball to travel sensor -> sorter
+      sorter_io_port: 5  # parked on F so it doesn't fight the clamp on port 0 (A)
 
       # Toggle seek (X in teleop): run toggle_mech_motor until the toggle sensor
       # reads our alliance colour (is_red_alliance -> RED, else BLUE).
       toggle_color_topic: "/sensors/color/toggle_sensor/class"
       toggle_seek_power: 0.5     # signed; flip the sign to seek the other way
       toggle_seek_timeout: 2.0   # s before giving up
+
+      # Auto-claw (teleop): while L1 is held with the clamp open, close the clamp
+      # when the auto_claw distance sensor reads below auto_claw_close_mm. If it
+      # hasn't closed by the time L1 is released, it closes on release.
+      auto_claw_topic: "/sensors/distance/auto_claw"
+      auto_claw_close_mm: 85.0
 
       # init pose / alliance / auton BT live in blinky/blinky_init_config.yaml
