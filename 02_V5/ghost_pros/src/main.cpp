@@ -1,5 +1,6 @@
-// Screen-only test build: shows the auton selector GUI and skips robot init.
-// Enable with EXTRA_CXXFLAGS += -DAUTON_SELECTOR_SCREEN_TEST=1 in the Makefile.
+// Screen build options (add to EXTRA_CXXFLAGS in the Makefile):
+//   -DAUTON_SELECTOR_SCREEN_TEST=1  screen-only test: skips robot init and runs a scripted
+//                                   demo of the GUI (log, heartbeat, status, telemetry, error).
 #ifndef AUTON_SELECTOR_SCREEN_TEST
 #define AUTON_SELECTOR_SCREEN_TEST 0
 #endif
@@ -23,6 +24,8 @@
 #include "ghost_v5/screen/auton_select.hpp"
 #include "ghost_v5/screen/screen_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
+
+#include <stdexcept>
 
 using ghost_v5_interfaces::devices::hardware_type_e::V5_BRAIN;
 using namespace ghost_v5;
@@ -50,7 +53,7 @@ void calibrateIMU(std::shared_ptr<pros::Imu> imu_ptr)
     // indicate error
     pros::c::controller_rumble(pros::E_CONTROLLER_MASTER, "---");
     v5_globals::screen_interface_ptr->addToPrintQueue(
-      "IMU failed to calibrate! Attempt #{}",
+      "IMU failed to calibrate! Attempt #",
       attempt);
     attempt++;
   }
@@ -66,12 +69,10 @@ void exit_main_loop(const std::exception & e)
 {
   v5_globals::run = false;
 
-  // Clear current screen data
-  v5_globals::screen_interface_ptr->reset();
-
-  // Update screen with error data
-  v5_globals::screen_interface_ptr->setTitle("ERROR");
-  v5_globals::screen_interface_ptr->addToPrintQueue(e.what());
+  // Screen may not exist yet if its own construction threw
+  if (v5_globals::screen_interface_ptr) {
+    v5_globals::screen_interface_ptr->showError(e.what());
+  }
 }
 
 void zero_actuators()
@@ -97,16 +98,6 @@ void update_actuators()
   }
 
   actuator_lock.unlock();
-}
-
-void screen_update_loop()
-{
-  uint32_t loop_time = pros::millis();
-  auto refresh_rate = v5_globals::screen_interface_ptr->getRefreshRateMilliseconds();
-  while (true) {
-    v5_globals::screen_interface_ptr->updateScreen();
-    pros::c::task_delay_until(&loop_time, refresh_rate);
-  }
 }
 
 void actuator_timeout_loop()
@@ -210,21 +201,76 @@ void ghost_main_loop()
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+void create_screen()
+{
+  // The GUI draws from its own LVGL task; no screen update thread needed.
+  v5_globals::auton_selector_ptr = std::make_shared<ghost_v5::AutonSelector>();
+  v5_globals::screen_interface_ptr = v5_globals::auton_selector_ptr;
+}
+
+#if AUTON_SELECTOR_SCREEN_TEST
+// Exercises every screen feature on a bare brain, no robot hardware needed.
+void screen_test_loop()
+{
+  auto screen = v5_globals::screen_interface_ptr;
+  screen->setTitle("INIT");
+  screen->addToPrintQueue("Screen test started");
+
+  const uint32_t start = pros::millis();
+  uint32_t last_tick = start;
+  int tick = 0;
+  bool errored = false;
+
+  while (true) {
+    const uint32_t t = pros::millis() - start;
+
+    // Heartbeat: "connected" for 3 s, then "disconnected" for 3 s.
+    if ((t / 3000) % 2 == 0) {
+      screen->updateLastConnectionTime();
+    }
+
+    if (t > 5000) {
+      screen->setTitle("OK");
+    }
+
+    if (pros::millis() - last_tick >= 500) {
+      last_tick = pros::millis();
+      tick++;
+      if (tick % 4 == 0) {
+        screen->addToPrintQueue("tick ", tick);
+      }
+
+      if (v5_globals::auton_selector_ptr) {
+        ghost_v5::AutonSelector::Telemetry tel;
+        tel.drive.valid = true;
+        tel.drive.left_rpm = 100;
+        tel.drive.right_rpm = 98;
+        tel.drive.max_temp_c = 30 + tick % 20;
+        v5_globals::auton_selector_ptr->setTelemetry(tel);
+      }
+    }
+
+    if (!errored && t > 30000) {
+      errored = true;
+      exit_main_loop(std::runtime_error("test exception from screen test"));
+    }
+
+    pros::delay(20);
+  }
+}
+#endif
+
 void initialize()
 {
 
   #if AUTON_SELECTOR_SCREEN_TEST
-    v5_globals::screen_interface_ptr = std::make_shared<ghost_v5::AutonSelector>();
-
-    while(true) {
-      pros::delay(20);
-    }
+    create_screen();
+    screen_test_loop();
   #else
 
   try {
     // Setup LCD Screen
-    v5_globals::screen_interface_ptr = std::make_shared<ghost_v5::ScreenInterface>();
-    pros::Task screen_output_thread(screen_update_loop, "screen_update_thread");
+    create_screen();
 
     // Get Robot Device Configuration from compile-time generated file
     v5_globals::robot_device_config_map_ptr.reset(getRobotConfig());
