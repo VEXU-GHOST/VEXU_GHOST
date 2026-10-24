@@ -19,6 +19,7 @@
 
   <exec_depend>rosidl_default_runtime</exec_depend>
   <exec_depend>rclpy</exec_depend>
+  <exec_depend>ghost_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>visualization_msgs</exec_depend>

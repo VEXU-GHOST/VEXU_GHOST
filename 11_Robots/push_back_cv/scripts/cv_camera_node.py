@@ -44,8 +44,10 @@ except ModuleNotFoundError as error:
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool, String
+from ghost_msgs.msg import V5SensorUpdate
 
 # Roboflow object-detection model. Versionless id uses the deployed version.
 MODEL_ID = "ras-yolo/vex-override-w4dvt-4-yolo26m-t1"
@@ -1079,8 +1081,17 @@ class CvCameraNode(Node):
         self.declare_parameter("show_window", False)
         self.declare_parameter("live_port", 8080)
         self.declare_parameter("video_dir", os.path.expanduser("~/match_videos"))
+        # Detection is off by default. Videos still record without the model.
+        self.declare_parameter("run_model", False)
+        # Record automatically while the V5 reports autonomous or driver control.
+        self.declare_parameter("auto_record", True)
+        # Disabled gaps shorter than this (auton -> driver) stay in one video.
+        self.declare_parameter("match_end_grace_sec", 5.0)
 
-        self.api_key = load_api_key()
+        self.run_model = bool(self.get_parameter("run_model").value)
+        self.auto_record = bool(self.get_parameter("auto_record").value)
+        self.match_end_grace_sec = float(self.get_parameter("match_end_grace_sec").value)
+        self.api_key = load_api_key() if self.run_model else ""
         self.api_url = API_URL
         self.camera_device = int(self.get_parameter("camera_device").value)
         self.frame_width = int(self.get_parameter("frame_width").value)
@@ -1094,6 +1105,17 @@ class CvCameraNode(Node):
         self.image_pub = self.create_publisher(Image, "/cv/annotated_image", 10)
         self.label_pub = self.create_publisher(String, "/cv/detection_labels", 10)
         self.create_subscription(Bool, "/cv/record", self._on_record_cmd, 10)
+        self._match_active = False
+        self._was_disabled = True
+        self._disabled_since = None
+        if self.auto_record:
+            self.create_subscription(
+                V5SensorUpdate,
+                "/v5/sensor_update",
+                self._on_sensor_update,
+                qos_profile_sensor_data,
+            )
+            self.create_timer(0.5, self._auto_record_tick)
         self.frames = queue.Queue(maxsize=1)
         self.results = queue.Queue(maxsize=1)
         self.stopped = threading.Event()
@@ -1128,8 +1150,10 @@ class CvCameraNode(Node):
         if self.live_server is not None:
             self.live_server.node = self
 
-        self.worker = threading.Thread(target=self._infer_latest_frames, daemon=True)
-        self.worker.start()
+        self.worker = None
+        if self.run_model:
+            self.worker = threading.Thread(target=self._infer_latest_frames, daemon=True)
+            self.worker.start()
         self.capture_thread = threading.Thread(target=self._capture_loop, daemon=True)
         self.capture_thread.start()
         self.create_timer(1.0 / 15.0, self._on_preview)
@@ -1147,9 +1171,10 @@ class CvCameraNode(Node):
                 f"Live view: http://{host_ip}:{self.live_port}  "
                 f"Videos: {self.video_dir}"
             )
+        model_note = f"model {MODEL_ID}" if self.run_model else "model off"
         self.get_logger().info(
-            f"VEX camera model {MODEL_ID} on device {self.camera_device}. "
-            f"{self._disk_summary()}"
+            f"VEX camera ({model_note}, auto record {'on' if self.auto_record else 'off'}) "
+            f"on device {self.camera_device}. {self._disk_summary()}"
         )
 
     def _note_camera_frame(self):
@@ -1582,6 +1607,32 @@ class CvCameraNode(Node):
         else:
             self.get_logger().info(self.stop_recording())
 
+    def _on_sensor_update(self, msg: V5SensorUpdate):
+        if msg.competition_status.is_disabled:
+            self._was_disabled = True
+            if self._disabled_since is None:
+                self._disabled_since = time.monotonic()
+        else:
+            self._disabled_since = None
+            # Only arm on disabled -> enabled so a manual stop is not undone mid-match.
+            if self._was_disabled:
+                self._was_disabled = False
+                self._match_active = True
+
+    def _auto_record_tick(self):
+        """Record from the start of auton/driver until the V5 stays disabled."""
+        if self._match_active:
+            if (
+                self._disabled_since is not None
+                and time.monotonic() - self._disabled_since >= self.match_end_grace_sec
+            ):
+                self._match_active = False
+                self.get_logger().info(f"Match ended. {self.stop_recording()}")
+                return
+            if self._jpeg_writer is None:
+                # Retries each tick if the camera was not ready at match start.
+                self.start_recording()
+
     def start_recording(self) -> str:
         with self._record_lock:
             if self._jpeg_writer is not None:
@@ -1611,6 +1662,7 @@ class CvCameraNode(Node):
         return message
 
     def stop_recording(self) -> str:
+        self._match_active = False
         with self._record_lock:
             writer = self._jpeg_writer
             path = self._record_path
@@ -1666,7 +1718,7 @@ class CvCameraNode(Node):
         # inference never competes with 90 fps camera capture.
         tick = getattr(self, "_preview_tick", 0) + 1
         self._preview_tick = tick
-        if tick % 5 == 0:
+        if self.run_model and tick % 5 == 0:
             put_latest(self.frames, frame)
         try:
             data, error = self.results.get_nowait()
@@ -1731,7 +1783,7 @@ class CvCameraNode(Node):
         if self.camera is not None:
             self.camera.release()
         cv2.destroyAllWindows()
-        if self.worker.is_alive():
+        if self.worker is not None and self.worker.is_alive():
             self.worker.join(timeout=1.0)
         super().destroy_node()
 
