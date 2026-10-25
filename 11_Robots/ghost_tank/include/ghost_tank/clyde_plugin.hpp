@@ -73,9 +73,6 @@ protected:
   // void initIntake();
   // void initTankModel();
   // void initAutonomy();
-
-  void updateScissor(bool up, bool down, bool enabled);
-  void updateT1Climb(bool up, bool down, bool enabled);
   void updateClamp(bool l1_pressed, double current_time);
   void updateArmFromJoystick(JoyPtr joy_data) override;
 

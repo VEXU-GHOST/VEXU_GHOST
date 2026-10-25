@@ -162,15 +162,9 @@ protected:
   void updateLiftToStage(size_t stage);
   void updateLiftToPosition(double target_position_deg, double max_power = 1.0);
   void toggleBite(bool signal);
-
-  void updateDescore(bool open);
   void updateMatchLoading(bool input); 
-  void updateScorePos(bool input); 
-  void updateColorSwitcher(bool input); 
 
   void updateGoalRush(bool left_rush, bool right_rush, bool enabled);
-
-  void ringDetector(bool active, double current_time, bool want_red, bool store_ring);
 
   /**
    * @brief Constantly intakes and auto-sorts out the wrong-colour ball.
@@ -187,7 +181,6 @@ protected:
    *
    * @param current_time loop time in seconds (same clock teleop/auton receives)
    */
-  void autoSort(double current_time);
 
   void updateMusic(double current_time, JoyPtr joy_data);
 

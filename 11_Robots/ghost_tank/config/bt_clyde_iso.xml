@@ -3,7 +3,6 @@
   main_tree_to_execute="bt_clyde_iso"
 
 >
-  <include path="bt_scoring.xml"/>
   <BehaviorTree ID="bt_clyde_iso"
   >
     <Sequence>

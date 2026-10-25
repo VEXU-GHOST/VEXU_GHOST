@@ -225,7 +225,7 @@
 
       <WaitCmd seconds="1.0" shutoff_motors="true" />
 
-      <MoveToPoint
+      <MoveForward
         kp="2.5"
         kd="0.0"
         max_effort_percent="-1.0"
@@ -234,7 +234,7 @@
 
       <WaitCmd seconds="0.5" shutoff_motors="true" />
 
-      <MoveToPoint
+      <MoveForward
         kp="2.5"
         kd="0.0"
         max_effort_percent="1.0"
@@ -242,7 +242,7 @@
         xy_exit_threshold_tiles="0.125" />
 
 
-      <MoveToPoint
+      <MoveForward
         kp="2.5"
         kd="0.0"
         max_effort_percent="-1.0"
@@ -251,7 +251,7 @@
 
       <WaitCmd seconds="0.5" shutoff_motors="true" />
 
-      <MoveToPoint
+      <MoveForward
         kp="2.5"
         kd="0.0"
         max_effort_percent="1.0"
@@ -288,7 +288,7 @@
         use_theta="true"
         backwards="true" />
 
-      <MoveToPoint
+      <MoveForward
         kp="2.5"
         kd="0.0"
         max_effort_percent="-1.0"
@@ -297,7 +297,7 @@
 
       <ClampCmd clamp_closed="false" />
 
-      <MoveToPoint
+      <MoveForward
         kp="2.5"
         kd="0.0"
         max_effort_percent="1.0"

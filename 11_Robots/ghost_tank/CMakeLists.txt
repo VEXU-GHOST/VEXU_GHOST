@@ -174,46 +174,26 @@ set(NODES
   loggingNode
   autoDone
   autonTimer
-  biteCmd
   clampCmd
   autoClawCmd
-  climbCmd
-  sorterCmd
-  autoSortCmd
-  switcherCmd
-  leftBlockerCmd
-  rightBlockerCmd
-  littleWillCmd
   shutoffNode
   intakeCmd
-  isHanging
-  goalRushCmd
   setMirrored
   conveyorCmd
   waitCmd
-  neutralStakeCmd
   setColorTarget
-  goalRushDetected
-  goalDetected
   distanceThreshold
   boundaryCheck
   moveVoltage
   turnToPoint
   arcturnToPoint
+  moveForward
   moveToPoint
-  actuallyMoveToPoint
-  moveScissor
   generate_bezier_path
   generate_planner_path
   follow_path_controller_server
   goal_pose_listener
   load_path_from_csv
-  adjustSwitcher
-  score_pos
-  scoreBall
-  outtakeBalls
-  match_loading
-  descorer
   arm_pos
   lift_pos
   toggleMechCmd

@@ -330,8 +330,6 @@ void ClydePlugin::teleop(double current_time)
     return;
   }
 
-  updateScissor(joy_data->btn_l1, joy_data->btn_l2, shift_r);
-  updateT1Climb(joy_data->btn_r1, joy_data->btn_r2, shift_r);
   updateDrivetrain(joy_data, "arcade");
   // D-pad down: send the lift to its second stage (lift_stage_positions_deg[1]),
   // open the clamp, and send the arm to 0.
@@ -512,45 +510,6 @@ void ClydePlugin::updateArmFromJoystick(JoyPtr joy_data)
     (m_arm_stage == 0) ? low_deg : m_arm_stage_positions_deg[1];
   updateArmToPosition(target_deg, m_arm_max_power);
 }
-
-void ClydePlugin::updateT1Climb(bool up, bool down, bool enabled)
-{
-  return;
-  if (enabled) {
-    if (up) {
-      rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], true);
-    } else if (down) {
-      rhi_ptr_->setDigitalOut(digital_io_port_map["climb"], false);
-    }
-  }
-}
-
-
-void ClydePlugin::updateScissor(bool up, bool down, bool enabled)
-{
-  return;
-  rhi_ptr_->setDigitalOut(digital_io_port_map["shooter"], false);
-  if (enabled) {
-    if (up && down) {
-      rhi_ptr_->setDigitalOut(digital_io_port_map["shooter"], true);
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
-      rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
-    } else if (up) {
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
-      rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 1.0);
-    } else if (down) {
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 2500);
-      rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", -1.0);
-    } else {
-      rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
-      rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
-    }
-  } else {
-    rhi_ptr_->setMotorCurrentLimitMilliAmps("scissor_motor", 0);
-    rhi_ptr_->setMotorVoltageCommandPercent("scissor_motor", 0.0);
-  }
-}
-
 } // namespace ghost_tank
 
 PLUGINLIB_EXPORT_CLASS(ghost_tank::ClydePlugin, ghost_ros_interfaces::V5RobotBase)
