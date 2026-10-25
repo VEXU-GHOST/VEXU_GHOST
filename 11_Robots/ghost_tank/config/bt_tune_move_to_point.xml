@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MoveToPoint tuning / repeatability tests.
+
+     Select it with bt_filename in the robot's init config, then change
+     main_tree_to_execute below to pick a test:
+       tune_square_stop    4-leg square with a full stop after every leg
+       tune_square_chain   same square, legs chained (chain="true")
+       tune_out_and_back   one line, out and back x3: mark the start spot on
+                           the floor and compare where it ends each lap
+
+     Place the robot at about (3.0, 3.0) tiles facing +x before enabling.
+     Each node's tuning knobs are kp, kd, max_effort_percent, the timeouts,
+     heading_kp/heading_kd and (chained) chain_min_effort_percent. Edit them
+     per node, or find/replace across the file to change every leg at once.
+
+     When a run looks off, check these in order:
+       1. Did a move end on its timeout? Raise move_timeout_ms until it stops
+          ending on the timer, then tune kp/kd.
+       2. Heading wobble while driving: lower heading_kp or add heading_kd.
+       3. Stopping short or overshooting: adjust kd (more damping) and, when
+          chained, chain_min_effort_percent. -->
+<root BTCPP_format="4"
+  main_tree_to_execute="tune_square_stop">
+
+  <BehaviorTree ID="tune_square_stop">
+    <Sequence>
+      <WaitCmd seconds="1.0" shutoff_motors="true"/>
+
+      <MoveToPoint posX_tiles="4.0" posY_tiles="3.0" backwards="false"
+        turn_timeout_ms="1500" move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+        kp="1.6" kd="0.5" max_effort_percent="0.5"
+        heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"/>
+      <WaitCmd seconds="0.5" shutoff_motors="true"/>
+
+      <MoveToPoint posX_tiles="4.0" posY_tiles="4.0" backwards="false"
+        turn_timeout_ms="1500" move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+        kp="1.6" kd="0.5" max_effort_percent="0.5"
+        heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"/>
+      <WaitCmd seconds="0.5" shutoff_motors="true"/>
+
+      <MoveToPoint posX_tiles="3.0" posY_tiles="4.0" backwards="false"
+        turn_timeout_ms="1500" move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+        kp="1.6" kd="0.5" max_effort_percent="0.5"
+        heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"/>
+      <WaitCmd seconds="0.5" shutoff_motors="true"/>
+
+      <MoveToPoint posX_tiles="3.0" posY_tiles="3.0" backwards="false"
+        turn_timeout_ms="1500" move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+        kp="1.6" kd="0.5" max_effort_percent="0.5"
+        heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"/>
+
+      <WaitCmd seconds="300000.0" shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Chained: every leg but the last keeps moving through its point. The last
+       leg stops normally. Corners need a turn, so the robot still pauses there;
+       chaining only blends legs that are roughly in a line (see out-and-back
+       below for a straight example). -->
+  <BehaviorTree ID="tune_square_chain">
+    <Sequence>
+      <WaitCmd seconds="1.0" shutoff_motors="true"/>
+
+      <MoveToPoint posX_tiles="4.0" posY_tiles="3.0" backwards="false"
+        turn_timeout_ms="1500" move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+        kp="1.6" kd="0.5" max_effort_percent="0.5"
+        heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"
+        chain="true" chain_min_effort_percent="0.2"/>
+
+      <MoveToPoint posX_tiles="4.0" posY_tiles="4.0" backwards="false"
+        turn_timeout_ms="1500" move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+        kp="1.6" kd="0.5" max_effort_percent="0.5"
+        heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"
+        chain="true" chain_min_effort_percent="0.2"/>
+
+      <MoveToPoint posX_tiles="3.0" posY_tiles="4.0" backwards="false"
+        turn_timeout_ms="1500" move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+        kp="1.6" kd="0.5" max_effort_percent="0.5"
+        heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"
+        chain="true" chain_min_effort_percent="0.2"/>
+
+      <MoveToPoint posX_tiles="3.0" posY_tiles="3.0" backwards="false"
+        turn_timeout_ms="1500" move_timeout_ms="2000"
+        angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+        kp="1.6" kd="0.5" max_effort_percent="0.5"
+        heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"/>
+
+      <WaitCmd seconds="300000.0" shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Repeatability: mark where the robot starts, run it, and measure how far
+       the final stop is from the mark. Three laps shows the spread. The first
+       leg of each lap drives forward, the second reverses (backwards="true"). -->
+  <BehaviorTree ID="tune_out_and_back">
+    <Sequence>
+      <WaitCmd seconds="1.0" shutoff_motors="true"/>
+
+      <Repeat num_cycles="3">
+        <Sequence>
+          <MoveToPoint posX_tiles="4.5" posY_tiles="3.0" backwards="false"
+            turn_timeout_ms="1500" move_timeout_ms="2500"
+            angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+            kp="1.6" kd="0.5" max_effort_percent="0.5"
+            heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"/>
+          <WaitCmd seconds="0.5" shutoff_motors="true"/>
+
+          <MoveToPoint posX_tiles="3.0" posY_tiles="3.0" backwards="true"
+            turn_timeout_ms="1500" move_timeout_ms="2500"
+            angle_exit_threshold_deg="3.0" angle_settle_ms="200"
+            kp="1.6" kd="0.5" max_effort_percent="0.5"
+            heading_hold_cutoff_m="0.2" heading_kp="0.5" heading_kd="0.0"/>
+          <WaitCmd seconds="0.5" shutoff_motors="true"/>
+        </Sequence>
+      </Repeat>
+
+      <WaitCmd seconds="300000.0" shutoff_motors="true"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
