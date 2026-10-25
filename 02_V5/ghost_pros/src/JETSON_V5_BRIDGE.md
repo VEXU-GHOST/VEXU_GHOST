@@ -1,7 +1,5 @@
 # NVIDIA Jetson ↔ V5 Brain Communication
 
-> **Status:** draft for review. Items marked **(unverified)** have not been confirmed on hardware.
-
 This document describes the serial bridge between the NVIDIA Jetson (ROS 2) and the V5 Brain (PROS),
 how the robot YAML configuration drives it, and how to use it. Robot-to-robot messaging over VEXlink, which
 rides on this bridge, is documented separately in [INTER_ROBOT_COMMS.md](INTER_ROBOT_COMMS.md).
@@ -13,13 +11,13 @@ rides on this bridge, is documented separately in [INTER_ROBOT_COMMS.md](INTER_R
 - **Brain → Jetson:** sensor and joystick data.
 - A small fixed slot in each message also carries bytes for the other robot ([INTER_ROBOT_COMMS.md](INTER_ROBOT_COMMS.md)).
 - Both sides build their message layout from the **same robot YAML**, so they always agree on sizes.
-- You normally never touch the serial code. You read and write values through the `RobotHardwareInterface` (RHI) or ROS topics.
+- Normally never touch the serial code. Read and write values through the `RobotHardwareInterface` (RHI) or ROS topics.
 
 ## Simple example
 
 ### Drive a motor from robot code
 
-In your robot plugin, set a motor through the RHI. The bridge carries it to the Brain and back.
+In a robot plugin, set a motor through the RHI. The bridge carries it to the Brain and back.
 This is the pattern from [ghost_example_robot.cpp](../../../10_Examples/ghost_example_robot/src/ghost_example_robot.cpp):
 
 ```cpp
