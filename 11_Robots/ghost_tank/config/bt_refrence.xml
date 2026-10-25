@@ -188,7 +188,11 @@
              kp, kd, max_effort_percent                    required (drive phase)
              backwards                 code default = false
              angle_exit_threshold_deg  code default = 5.0
-             angle_settle_ms           code default = 0 -->
+             angle_settle_ms           code default = 0
+             heading_hold_cutoff_m     code default = 0.2 (heading hold off inside this distance)
+             heading_kp, heading_kd    optional; drive-phase heading gains, else uses the turn PID
+             chain                     code default = false (keep min speed, don't stop at the end)
+             chain_min_effort_percent  code default = 0.2 (only used when chain=true) -->
       <MoveToPoint posX_tiles="4.0"
         posY_tiles="5.0"
         backwards="false"

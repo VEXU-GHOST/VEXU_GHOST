@@ -15,7 +15,11 @@ namespace ghost_tank
 {
 
 // Takes input for a desired point, first turns to face that point, then drives
-// straight to it. Combines TurnToPoint and MoveForward into a single node.
+// to it. Combines TurnToPoint and MoveForward into a single node. The drive phase
+// uses the remaining distance (scaled by cos of the heading error) and holds
+// heading toward the target until within heading_hold_cutoff_m. With chain=true
+// the node keeps a minimum drive speed and doesn't stop at the end, so the next
+// motion can start from the momentum.
 class MoveToPoint : public BT::StatefulActionNode
 {
 
@@ -68,6 +72,15 @@ private:
   double Kd{0.0};
   double distance_m{0.0};
   Eigen::Vector2d start_position_;
+  Eigen::Vector2d travel_dir_{Eigen::Vector2d::Zero()};
+  double heading_hold_cutoff_m{0.2};
+  bool heading_hold_active_{false};
+  std::shared_ptr<ghost_control::PIDController> heading_controller_ptr_;
+
+  // chaining
+  bool chain_{false};
+  double chain_min_effort_percent_{0.2};
+  bool turned_{false};
 };
 
 } // namespace ghost_tank
