@@ -38,8 +38,8 @@ private:
   void move();
 
   std::shared_ptr<TankModel> tank_model_ptr_;
-  std::chrono::time_point<std::chrono::system_clock> start_time_;
-  std::chrono::time_point<std::chrono::system_clock> drive_start_time_;
+  std::chrono::time_point<std::chrono::steady_clock> start_time_;
+  std::chrono::time_point<std::chrono::steady_clock> drive_start_time_;
   BT::Blackboard::Ptr blackboard_;
   std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
   std::shared_ptr<rclcpp::Node> node_ptr_;
@@ -65,7 +65,7 @@ private:
   double des_ang_rad;
   int angle_settle_ms;
   bool angle_settling_{false};
-  std::chrono::time_point<std::chrono::system_clock> angle_settle_start_;
+  std::chrono::time_point<std::chrono::steady_clock> angle_settle_start_;
 
   // drive phase
   double Kp{0.0};
@@ -81,6 +81,15 @@ private:
   bool chain_{false};
   double chain_min_effort_percent_{0.2};
   bool turned_{false};
+
+  // drive exit
+  double max_effort_percent_{0.0};
+  double settle_dist_m_{0.03};
+  double settle_speed_mps_{0.05};
+  double ang_vel_exit_threshold_radps_{0.35};
+
+  // Stops the drive (unless chaining), logs how the move ended, returns SUCCESS.
+  BT::NodeStatus finishMove(const char * reason);
 };
 
 } // namespace ghost_tank

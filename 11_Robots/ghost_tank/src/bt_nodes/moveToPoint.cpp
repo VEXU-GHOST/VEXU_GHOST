@@ -38,7 +38,10 @@ BT::PortsList MoveToPoint::providedPorts()
     BT::InputPort<double>("heading_kp"),
     BT::InputPort<double>("heading_kd"),
     BT::InputPort<bool>("chain"),
-    BT::InputPort<double>("chain_min_effort_percent")
+    BT::InputPort<double>("chain_min_effort_percent"),
+    BT::InputPort<double>("settle_dist_m"),
+    BT::InputPort<double>("settle_speed_mps"),
+    BT::InputPort<double>("ang_vel_exit_threshold_dps")
   };
 }
 
@@ -52,6 +55,13 @@ BT::NodeStatus MoveToPoint::onStart()
   angle_exit_threshold_rad = BT_Util::get_input<double>(this, "angle_exit_threshold_deg", 5.0) * ghost_util::DEG_TO_RAD;
   angle_settle_ms = BT_Util::get_input<int>(this, "angle_settle_ms", 0);
   heading_hold_cutoff_m = BT_Util::get_input<double>(this, "heading_hold_cutoff_m", 0.2);
+  max_effort_percent_ = BT_Util::get_input<double>(this, "max_effort_percent");
+  Kp = BT_Util::get_input<double>(this, "kp");
+  Kd = BT_Util::get_input<double>(this, "kd");
+  settle_dist_m_ = BT_Util::get_input<double>(this, "settle_dist_m", 0.03);
+  settle_speed_mps_ = BT_Util::get_input<double>(this, "settle_speed_mps", 0.05);
+  ang_vel_exit_threshold_radps_ =
+    BT_Util::get_input<double>(this, "ang_vel_exit_threshold_dps", 20.0) * ghost_util::DEG_TO_RAD;
   chain_ = BT_Util::get_input<bool>(this, "chain", false);
   chain_min_effort_percent_ = BT_Util::get_input<double>(this, "chain_min_effort_percent", 0.2);
 
@@ -76,7 +86,7 @@ BT::NodeStatus MoveToPoint::onStart()
   double cur_x = tank_model_ptr_->getWorldPose().x();
   double cur_y = tank_model_ptr_->getWorldPose().y();
 
-  start_time_ = std::chrono::system_clock::now();
+  start_time_ = std::chrono::steady_clock::now();
   des_ang_rad = std::atan2(posY_m - cur_y, posX_m - cur_x);
   if (backwards) {
     des_ang_rad = ghost_util::FlipAnglePI(des_ang_rad);
@@ -106,7 +116,10 @@ BT::NodeStatus MoveToPoint::onRunning()
 {
   if (phase_ == Phase::TURNING) {
     double theta_err_rad = ghost_util::SmallestAngleDistRad(des_ang_rad, tank_model_ptr_->getWorldPose().z());
-    bool angle_in_threshold = std::fabs(theta_err_rad) < angle_exit_threshold_rad;
+    // Also require the robot to have stopped rotating, so we don't hand off to
+    // the drive phase while still swinging through the target heading.
+    bool angle_in_threshold = std::fabs(theta_err_rad) < angle_exit_threshold_rad &&
+      std::fabs(tank_model_ptr_->getWorldTwist().z()) < ang_vel_exit_threshold_radps_;
 
     // Require the heading to stay within threshold for angle_settle_ms before
     // committing to the drive phase, so a momentary pass-through on overshoot
@@ -116,22 +129,27 @@ BT::NodeStatus MoveToPoint::onRunning()
     if (angle_in_threshold) {
       if (!angle_settling_) {
         angle_settling_ = true;
-        angle_settle_start_ = std::chrono::system_clock::now();
+        angle_settle_start_ = std::chrono::steady_clock::now();
       }
       int settled_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now() - angle_settle_start_).count();
+        std::chrono::steady_clock::now() - angle_settle_start_).count();
       angle_satisfied = settled_ms >= angle_settle_ms;
     } else {
       angle_settling_ = false;
     }
 
     int turn_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::system_clock::now() - start_time_).count();
+      std::chrono::steady_clock::now() - start_time_).count();
     bool turn_timed_out = turn_elapsed > turn_timeout_ms;
 
     // Transition to the drive phase once aimed, or once the turn times out
     // (drive anyway from the best heading we managed to reach).
     if (angle_satisfied || turn_timed_out) {
+      if (turn_timed_out && !angle_satisfied) {
+        RCLCPP_WARN(
+          node_ptr_->get_logger(), "MoveToPoint: turn timed out after %d ms, heading error %.1f deg",
+          turn_elapsed, theta_err_rad / ghost_util::DEG_TO_RAD);
+      }
       // Done turning: capture the drive start position and the distance to the
       // target, then publish the position target for the drive phase.
       // Only brake if we actually turned; when already aimed (e.g. chained from a
@@ -146,7 +164,7 @@ BT::NodeStatus MoveToPoint::onRunning()
       heading_hold_active_ = true;
       heading_controller_ptr_->reset();
       phase_ = Phase::DRIVING;
-      drive_start_time_ = std::chrono::system_clock::now();
+      drive_start_time_ = std::chrono::steady_clock::now();
 
       publishPose(expected_pose_pub_, posX_m, posY_m, des_ang_rad);
       return BT::NodeStatus::RUNNING;
@@ -163,29 +181,56 @@ BT::NodeStatus MoveToPoint::onRunning()
   // travel direction, so drift off the path can't make it overshoot or stop short.
   Eigen::Vector2d current_position_ = tank_model_ptr_->getWorldPose().head<2>();
   Eigen::Vector2d remaining = Eigen::Vector2d(posX_m, posY_m) - current_position_;
-  bool xy_satisfied = remaining.dot(travel_dir_) <= 0.0;
+  bool crossed_line = remaining.dot(travel_dir_) <= 0.0;
+
+  // The P term fades to zero near the target, so a robot that stalls just short
+  // of the exit line would otherwise wait out the whole timeout.
+  bool settled = remaining.norm() < settle_dist_m_ &&
+    tank_model_ptr_->getWorldTwist().head<2>().norm() < settle_speed_mps_;
 
   int drive_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-    std::chrono::system_clock::now() - drive_start_time_).count();
-  if (xy_satisfied || drive_elapsed > move_timeout_ms) {
-    // When chaining, leave the last command running; the next node overwrites it
-    // on its first tick so the robot flows through the point without stopping.
-    if (!chain_) {
-      tank_model_ptr_->driveCommandArcade(0.0, 0.0);
-    }
-    return BT::NodeStatus::SUCCESS;
+    std::chrono::steady_clock::now() - drive_start_time_).count();
+  if (crossed_line) {
+    return finishMove("crossed exit line");
+  }
+  if (settled) {
+    return finishMove("settled");
+  }
+  if (drive_elapsed > move_timeout_ms) {
+    return finishMove("TIMEOUT");
   }
 
   move();
   return BT::NodeStatus::RUNNING;
 }
 
+BT::NodeStatus MoveToPoint::finishMove(const char * reason)
+{
+  Eigen::Vector2d to_target = Eigen::Vector2d(posX_m, posY_m) - tank_model_ptr_->getWorldPose().head<2>();
+  double bearing_rad = std::atan2(to_target.y(), to_target.x());
+  if (backwards) {
+    bearing_rad = ghost_util::FlipAnglePI(bearing_rad);
+  }
+  double heading_err_rad = ghost_util::SmallestAngleDistRad(bearing_rad, tank_model_ptr_->getWorldPose().z());
+  int drive_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+    std::chrono::steady_clock::now() - drive_start_time_).count();
+
+  RCLCPP_INFO(
+    node_ptr_->get_logger(),
+    "MoveToPoint: done (%s) after %d ms, dist to target %.3f m (along path %.3f m), heading error %.1f deg",
+    reason, drive_elapsed, to_target.norm(), to_target.dot(travel_dir_),
+    heading_err_rad / ghost_util::DEG_TO_RAD);
+
+  // When chaining, leave the last command running; the next node overwrites it
+  // on its first tick so the robot flows through the point without stopping.
+  if (!chain_) {
+    tank_model_ptr_->driveCommandArcade(0.0, 0.0);
+  }
+  return BT::NodeStatus::SUCCESS;
+}
+
 void MoveToPoint::move()
 {
-  double max_effort_percent = BT_Util::get_input<double>(this, "max_effort_percent");
-  Kp = BT_Util::get_input<double>(this, "kp");
-  Kd = BT_Util::get_input<double>(this, "kd");
-
   Eigen::Vector2d current_position_ = tank_model_ptr_->getWorldPose().head<2>();
   Eigen::Vector2d to_target = Eigen::Vector2d(posX_m, posY_m) - current_position_;
   double dist_err = to_target.norm();
@@ -206,7 +251,7 @@ void MoveToPoint::move()
   if (chain_) {
     fwd_cmd = std::max(fwd_cmd, chain_min_effort_percent_);
   }
-  fwd_cmd = ghost_util::clamp(fwd_cmd, -max_effort_percent, max_effort_percent);
+  fwd_cmd = ghost_util::clamp(fwd_cmd, -max_effort_percent_, max_effort_percent_);
 
   // Heading hold, latched off near the target where the bearing becomes noisy
   // and the robot should just coast in.
@@ -217,8 +262,14 @@ void MoveToPoint::move()
   if (heading_hold_active_) {
     turn_cmd = heading_controller_ptr_->calculateCommand(
       heading_err_rad, -tank_model_ptr_->getWorldTwist().z());
-    turn_cmd = ghost_util::clamp(turn_cmd, -max_effort_percent, max_effort_percent);
+    turn_cmd = ghost_util::clamp(turn_cmd, -max_effort_percent_, max_effort_percent_);
   }
+
+  // driveCommandArcade clamps each wheel separately, which distorts the steering
+  // ratio when fwd + turn exceeds full output. Scale both down together instead.
+  double normalizer = 1.0 / std::max(1.0, std::fabs(fwd_cmd) + std::fabs(turn_cmd));
+  fwd_cmd *= normalizer;
+  turn_cmd *= normalizer;
 
   if (backwards) {
     fwd_cmd *= -1.0;
