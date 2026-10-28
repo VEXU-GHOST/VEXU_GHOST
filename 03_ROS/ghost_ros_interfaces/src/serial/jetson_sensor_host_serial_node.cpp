@@ -1,6 +1,7 @@
 #include "ghost_ros_interfaces/serial/jetson_sensor_host_serial_node.hpp"
 
 #include <fcntl.h>
+#include <poll.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -22,6 +23,20 @@ namespace
 {
 constexpr uint16_t SYNC_READ_ID = 0x0001;   // id for one-time init reads
 constexpr uint16_t FIRST_DEVICE_ID = 0x0100;
+
+using steady = std::chrono::steady_clock;
+constexpr auto HOST_SILENT_TIMEOUT = 2s;  // reads stream continuously, so silence = frozen host
+
+double secs(steady::duration d) { return std::chrono::duration<double>(d).count(); }
+
+// Status codes, PROTOCOL.md §5
+const char * const STATUS_MEANING[] = {"OK", "bad params",
+  "I2C write NACK: unplugged / wrong port or addr", "I2C read NACK: loose cable / noise",
+  "host read table full"};
+
+// STATUS reset reasons, PROTOCOL.md §3.5
+const char * const RESET_REASON[] = {"unknown", "power-on / brown-out (power loss)",
+  "RUN pin (reset button / noise on RUN)", "debugger", "watchdog (software reboot, e.g. flash)"};
 
 // Rotary DAC offset XOR'd onto a device's default address per switch position.
 const uint8_t DAC_OFFSET[16] = {
@@ -111,41 +126,25 @@ JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
     return;
   }
 
-  if (!openSerial()) {
-    RCLCPP_ERROR(get_logger(), "Failed to open serial port %s", serial_port_.c_str());
-    return;
-  }
-  RCLCPP_INFO(get_logger(), "Opened %s; %zu device(s)", serial_port_.c_str(), devices_.size());
-
-  // Let the USB CDC connection settle; the first bytes after open can be dropped.
-  std::this_thread::sleep_for(300ms);
-  tcflush(fd_, TCIOFLUSH);
-
-  // ---- One-time synchronous init + publisher per device --------------------
+  // ---- Publisher per device ------------------------------------------------
   for (std::size_t i = 0; i < devices_.size(); i++) {
     SensorDevice & dev = devices_[i];
-    std::string topic = topic_namespace_ + "/" + lower(dev.type) + "/" + dev.name;
+    dev.topic = topic_namespace_ + "/" + lower(dev.type) + "/" + dev.name;
     if (dev.type == "COLOR") {
       dev.color_pub = create_publisher<ghost_msgs::msg::ColorSensorState>(
-        topic, rclcpp::SensorDataQoS());
+        dev.topic, rclcpp::SensorDataQoS());
     } else if (dev.type == "DISTANCE") {
       dev.distance_pub = create_publisher<ghost_msgs::msg::DistanceSensorState>(
-        topic, rclcpp::SensorDataQoS());
+        dev.topic, rclcpp::SensorDataQoS());
     }
-    bool ok = initDevice(dev);
-    RCLCPP_INFO(get_logger(), "%s '%s' port=%d addr=0x%02x -> %s : init %s",
-      dev.type.c_str(), dev.name.c_str(), dev.port, dev.addr, topic.c_str(),
-      ok ? "OK" : "FAILED");
     id_to_device_[dev.read_id] = i;
   }
-  tcflush(fd_, TCIOFLUSH);
 
-  // ---- Start autonomous recurring reads, stream results --------------------
+  // ---- Read thread connects, inits devices, streams results, reconnects -----
+  link_since_ = steady::now();
   running_ = true;
   read_thread_ = std::thread(&JetsonSensorHostSerialNode::readLoop, this);
-  for (const auto & dev : devices_) {
-    sendReadRequest(dev);
-  }
+
   // Re-arm the finite recurring reads before the shortest-lived one expires.
   uint32_t rearm_ms = 2000;
   for (const auto & dev : devices_) {
@@ -155,6 +154,7 @@ JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
   rearm_timer_ = create_wall_timer(
     std::chrono::milliseconds(rearm_ms),
     [this]() {
+      if (!link_up_) return;
       for (const auto & dev : devices_) sendReadRequest(dev);
     });
 }
@@ -261,11 +261,10 @@ void JetsonSensorHostSerialNode::sendReadRequest(const SensorDevice & dev)
 }
 
 void JetsonSensorHostSerialNode::handleResult(
-  const SensorDevice & dev, const ReadResult & result)
+  SensorDevice & dev, const ReadResult & result)
 {
+  dev.last_status = result.status;   // failures are reported by logReadErrors()
   if (result.status != sensor_host::ST_OK) {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-      "%s '%s' read error status=%d", dev.type.c_str(), dev.name.c_str(), result.status);
     return;
   }
   if (dev.type == "COLOR") {
@@ -306,7 +305,8 @@ void JetsonSensorHostSerialNode::writeFrame(const std::vector<uint8_t> & wire)
   if (fd_ >= 0) {
     ssize_t n = ::write(fd_, wire.data(), wire.size());
     if (n != static_cast<ssize_t>(wire.size())) {
-      RCLCPP_WARN(get_logger(), "Short serial write (%zd/%zu)", n, wire.size());
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Short serial write (%zd/%zu)",
+        n, wire.size());
     }
   }
 }
@@ -537,16 +537,108 @@ void JetsonSensorHostSerialNode::publishDistance(
   dev.distance_pub->publish(msg);
 }
 
-// ---- Streaming read loop --------------------------------------------------
+// ---- Link + streaming read loop -------------------------------------------
+
+bool JetsonSensorHostSerialNode::connect()
+{
+  if (!openSerial()) {
+    return false;
+  }
+  // Let the USB CDC connection settle; the first bytes after open can be dropped.
+  std::this_thread::sleep_for(300ms);
+  tcflush(fd_, TCIOFLUSH);
+  init_accumulator_ = sensor_host::FrameAccumulator();
+  logHostStatus();
+  // Init every device on each connect: a host that reset has lost its read table.
+  for (auto & dev : devices_) {
+    bool ok = initDevice(dev);
+    RCLCPP_INFO(get_logger(), "%s '%s' port=%d addr=0x%02x -> %s : init %s",
+      dev.type.c_str(), dev.name.c_str(), dev.port, dev.addr, dev.topic.c_str(),
+      ok ? "OK" : "FAILED");
+  }
+  tcflush(fd_, TCIOFLUSH);
+  accumulator_ = sensor_host::FrameAccumulator();
+  for (const auto & dev : devices_) {
+    sendReadRequest(dev);
+  }
+  last_rx_ = steady::now();
+  RCLCPP_INFO(get_logger(), "[IN] sensor host link %s (was down %.1f s)",
+    serial_port_.c_str(), secs(last_rx_ - link_since_));
+  link_since_ = last_rx_;
+  link_up_ = true;
+  return true;
+}
+
+// Log why the host last reset and how long it has been up. A short uptime on
+// reconnect means the host actually rebooted (not just the USB link).
+void JetsonSensorHostSerialNode::logHostStatus()
+{
+  std::vector<uint8_t> p;
+  writeFrame(sensor_host::encodeFrame(sensor_host::CMD_STATUS_REQUEST, {}));
+  if (!readResponse(sensor_host::CMD_STATUS, p, 200) || p.size() < 5) {
+    RCLCPP_WARN(get_logger(), "Sensor host sent no STATUS (firmware too old?)");
+    return;
+  }
+  uint32_t uptime_ms = p[1] | (p[2] << 8) | (p[3] << 16) | (uint32_t(p[4]) << 24);
+  RCLCPP_INFO(get_logger(), "Sensor host up %.1f s, last reset: %s", uptime_ms / 1000.0,
+    p[0] < 5 ? RESET_REASON[p[0]] : "unknown");
+}
+
+void JetsonSensorHostSerialNode::disconnect(const std::string & why)
+{
+  link_up_ = false;   // stops the rearm timer writing before the fd goes away
+  close(fd_);
+  fd_ = -1;
+  auto now = steady::now();
+  RCLCPP_ERROR(get_logger(), "[OUT] sensor host link: %s (was up %.1f s); reconnecting",
+    why.c_str(), secs(now - link_since_));
+  link_since_ = now;
+}
+
+// One line listing every device whose last read failed.
+void JetsonSensorHostSerialNode::logReadErrors()
+{
+  last_error_log_ = steady::now();
+  std::string msg;
+  for (const auto & dev : devices_) {
+    if (dev.last_status != sensor_host::ST_OK) {
+      msg += (msg.empty() ? "" : ", ") + dev.name + " status=" + std::to_string(dev.last_status) +
+        " (" + (dev.last_status < 5 ? STATUS_MEANING[dev.last_status] : "unknown") + ")";
+    }
+  }
+  if (!msg.empty()) {
+    RCLCPP_WARN(get_logger(), "Read errors: %s", msg.c_str());
+  }
+}
 
 void JetsonSensorHostSerialNode::readLoop()
 {
   uint8_t buf[256];
   while (running_) {
-    ssize_t n = ::read(fd_, buf, sizeof(buf));
-    if (n <= 0) {
+    if (!link_up_ && !connect()) {
+      RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+        "[OUT] sensor host link: cannot open %s; retrying", serial_port_.c_str());
+      std::this_thread::sleep_for(1s);
       continue;
     }
+    if (steady::now() - last_rx_ > HOST_SILENT_TIMEOUT) {
+      disconnect("no data for 2 s (host frozen?)");
+      continue;
+    }
+    if (steady::now() - last_error_log_ > 10s) {
+      logReadErrors();
+    }
+    pollfd pfd{fd_, POLLIN, 0};
+    if (poll(&pfd, 1, 100) <= 0) {
+      continue;
+    }
+    ssize_t n = ::read(fd_, buf, sizeof(buf));
+    if (n <= 0) {
+      // Readable but empty: the host dropped off USB (reset or unplugged).
+      disconnect("port hung up (host reset or unplugged)");
+      continue;
+    }
+    last_rx_ = steady::now();
     for (auto & frame : accumulator_.feed(buf, static_cast<std::size_t>(n))) {
       if (frame.cmd != sensor_host::CMD_READ_RESULT) {
         continue;

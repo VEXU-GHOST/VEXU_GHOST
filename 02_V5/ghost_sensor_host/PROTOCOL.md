@@ -56,6 +56,8 @@ checksum, and drops the frame silently on any mismatch.
 | 0x10 | `I2C_WRITE`      | ROS → host     | one-shot write to a device       |
 | 0x11 | `READ_REQUEST`   | ROS → host     | start / override / cancel a read |
 | 0x12 | `READ_RESULT`    | host → ROS     | one result of a read request     |
+| 0x13 | `STATUS_REQUEST` | ROS → host     | ask for reset reason + uptime    |
+| 0x14 | `STATUS`         | host → ROS     | reply to `STATUS_REQUEST`        |
 
 ROS sends one command at a time and waits for its `ACK` before sending the next.
 `READ_RESULT` messages arrive asynchronously, tagged by id.
@@ -129,6 +131,21 @@ invalid). Up to `MAX_ACTIVE_READS` = 16 reads may run concurrently.
 - `seq` — iteration index, `0 .. count-1` (free-running for `count = 0`).
 - `status` — `0` = OK; non-zero = I2C error, `data_len` then `0`.
 - `data` — the bytes read (`data_len == read_len` on success).
+
+### 3.5 `STATUS_REQUEST` (0x13) / `STATUS` (0x14)
+
+`STATUS_REQUEST` has an empty payload. The host replies with `STATUS`:
+
+```
+[ reset_reason : 1 ][ uptime_ms : 4 ]
+```
+
+- `reset_reason` — why the RP2040 last reset: `0` unknown, `1` power-on /
+  brown-out (power loss), `2` RUN pin, `3` debugger, `4` watchdog (software
+  reboot, e.g. a picotool flash).
+- `uptime_ms` — milliseconds since boot.
+
+ROS asks on every connect, so each host reboot gets logged with its cause.
 
 ## 4. Port and address mapping
 

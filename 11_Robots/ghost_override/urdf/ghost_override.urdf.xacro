@@ -54,10 +54,11 @@
   </link>
 
   <!-- RPLidar A1.
-       Laser center: 2 in forward of the back edge, 1.75 in in from the left
-       edge, laser plane 10.125 in off the ground.
+       Laser center: 4 in behind and 5 in right of base_link (2 in forward of
+       the back edge, 2.5 in in from the right edge), laser plane 10.125 in
+       off the ground.
          x = -6 + 2   = -4 in    -> -0.1016 m
-         y = +7.5 - 1.75 = +5.75 in -> +0.14605 m
+         y = -7.5 + 2.5 = -5 in  -> -0.127 m
          z = 10.125 in            -> +0.257175 m -->
   <link name="lidar_link">
     <visual>
@@ -78,7 +79,7 @@
   <joint name="base_link_to_lidar_link" type="fixed">
     <parent link="base_link"/>
     <child link="lidar_link"/>
-    <origin xyz="-0.1016 0.14605 0.257175" rpy="0 0 0"/>
+    <origin xyz="-0.1016 -0.127 0.257175" rpy="0 0 0"/>
   </joint>
 
   <!-- RealSense camera (D435-sized collision/visual box: 90 mm wide x 25 mm tall
