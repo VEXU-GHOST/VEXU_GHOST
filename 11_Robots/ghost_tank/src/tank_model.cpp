@@ -140,13 +140,24 @@ void TankModel::normalizeArcadeCommand(Eigen::Vector2d & cmd)
   cmd *= scale;
 }
 
+float deadband = 1.028;  // Stick values below this (raw, 0-127) count as zero
+float curveGain = 4.0;   // 0 = linear, higher = finer control at low stick values (2-6 is typical)
+
+// Full stick still gives full power; the curve only softens the low end.
+float ExpoDriveCurve(float input) {
+  if (fabs(input) < deadband) return 0;
+  if (curveGain <= 0) return input;
+  const float lowEndGain = exp(-curveGain / 10.0);
+  return (lowEndGain + exp((fabs(input) - 127) / 12.7) * (1 - lowEndGain)) * input;
+}
 
 void TankModel::driveCommandArcade(double fwd_pct, double ang_pct)
 {
-  ghost_util::clamp(fwd_pct, -1.0, 1.0);
-  ghost_util::clamp(ang_pct, -1.0, 1.0);
-  double left_cmd = fwd_pct - ang_pct;
-  double right_cmd = fwd_pct + ang_pct;
+  fwd_pct = ghost_util::clamp(fwd_pct, -1.0, 1.0);
+  ang_pct = ghost_util::clamp(ang_pct, -1.0, 1.0);
+
+  double left_cmd = ghost_util::clamp(fwd_pct + ang_pct, -1.0, 1.0);
+  double right_cmd = ghost_util::clamp(fwd_pct - ang_pct, -1.0, 1.0);
 
   for (const auto motor_name: m_config.motor_list_left) {
     rhi_ptr_->setMotorCurrentLimitMilliAmps(motor_name, 2500);

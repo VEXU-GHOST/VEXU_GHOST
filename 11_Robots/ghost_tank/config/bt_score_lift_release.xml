@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <!--
+    Lift-release scoring subtree.
+    Reads the current lift stage from the "lift_target_stage" blackboard entry
+    (last stage commanded by LiftPosCmd), then:
+      1. Sets the arm based on the CURRENT stage: stages 0-3 -> lower (arm stage 0),
+         stages 4+ -> upper (arm stage 1).
+      2. Drops the lift one stage (stage - 1). Does nothing at stage 0 or if no
+         lift stage has been commanded yet (-1).
+      3. Releases the clamp.
+
+    The decrement ladder is in ascending order on purpose: once a child lowers
+    the stage to N-1, only the earlier (already-evaluated) child matches N-1, so
+    the lift only steps down once.
+  -->
+  <BehaviorTree ID="score_lift_release">
+    <Sequence>
+      <Logging message="Starting lift-release scoring subtree" />
+
+      <!-- Arm position from the stage we are in before stepping down. -->
+      <ArmPosCmd stage="0" _if="lift_target_stage &gt;= 0 &amp;&amp; lift_target_stage &lt;= 3" />
+      <ArmPosCmd stage="1" _if="lift_target_stage &gt;= 4" />
+
+      <!-- Step the lift down one stage. -->
+      <LiftPosCmd stage="0" _if="lift_target_stage == 1" />
+      <LiftPosCmd stage="1" _if="lift_target_stage == 2" />
+      <LiftPosCmd stage="2" _if="lift_target_stage == 3" />
+      <LiftPosCmd stage="3" _if="lift_target_stage == 4" />
+      <LiftPosCmd stage="4" _if="lift_target_stage == 5" />
+      <LiftPosCmd stage="5" _if="lift_target_stage == 6" />
+      <LiftPosCmd stage="6" _if="lift_target_stage == 7" />
+
+      <!-- Give the lift time to come down before letting go. Tune as needed. -->
+      <WaitCmd seconds="0.5"
+        shutoff_motors="true" />
+
+      <ClampCmd clamp_closed="false" />
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Standalone wrapper for testing the subtree on its own. -->
+
+  <!-- Description of Node Models (used by Groot) -->
+  
+
+</root>

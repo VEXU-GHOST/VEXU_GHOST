@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  bt_refrence.xml - one usage example for every BT node registered in tank_tree.cpp.
+
+  This file is documentation. Its main tree is a no-op so it is safe to load, but the
+  example trees below are NOT meant to be run as written (values are illustrative).
+  To use a node, copy its line into a real tree.
+
+  HOW TO READ THE PORT NOTES
+    required        no default anywhere - leaving it out throws a "missing required input"
+                    error when the node ticks.
+    default = X     the port declares X in providedPorts(), so omitting it gives X.
+    code default=X  not declared on the port, but the node's code falls back to X.
+  Units: distances in tiles (1 tile = 0.6096 m), angles in degrees, timeouts in
+  ms (*_ms) or seconds (*_s / "seconds"). Field heading: 0 = +x, 90 = +y, CCW positive.
+  When the "mirrored" blackboard flag is set (see SetMirrored) the path / turn nodes
+  mirror their targets automatically.
+-->
+<root BTCPP_format="4"
+  main_tree_to_execute="main">
+
+  <BehaviorTree ID="main">
+    <Sequence>
+      <Logging message="bt_refrence loaded - this tree does nothing"/>
+    </Sequence>
+  </BehaviorTree>
+
+
+  <!-- ======================================================================= -->
+  <!-- Flow control / utility                                                  -->
+  <!-- ======================================================================= -->
+  <BehaviorTree ID="ref_utility">
+    <Sequence>
+      <!-- Logging: prints a message. message: required. -->
+      <Logging message="hello"/>
+
+      <!-- WaitCmd: waits on auton time. seconds: required. shutoff_motors: code default=false
+           (true = hold the drivetrain at 0 while waiting). -->
+      <WaitCmd seconds="1.0" shutoff_motors="true"/>
+
+      <!-- ShutoffNode: stops the drivetrain (arcade 0,0). No ports. -->
+      <ShutoffNode/>
+
+      <!-- AutoDone: always returns FAILURE. No ports. Useful as a "never finishes" leaf. -->
+      <AutoDone/>
+
+      <!-- AutonTimer (decorator, one child): runs the child, but returns FAILURE once total
+           auton time exceeds `seconds`. seconds: required. -->
+      <AutonTimer seconds="14.5">
+        <Logging message="runs only while auton time is under 14.5s"/>
+      </AutonTimer>
+
+      <!-- BoundaryCheck (decorator, one child): returns FAILURE (and halts the child) if the
+           robot's world pose leaves the box. All four ports required. -->
+      <BoundaryCheck x_lower_bound_tiles="0.5"
+        y_lower_bound_tiles="0.5"
+        x_upper_bound_tiles="5.5"
+        y_upper_bound_tiles="5.5">
+        <Logging message="runs only while inside the box"/>
+      </BoundaryCheck>
+
+      <!-- DistanceThreshold (condition): SUCCESS when the named distance sensor reads
+           min_mm..max_mm inclusive, FAILURE otherwise or if there is no valid reading.
+           sensor_name, min_mm, max_mm: all required. -->
+      <DistanceThreshold sensor_name="left" min_mm="0.0" max_mm="150.0"/>
+
+      <!-- SetMirrored: mirrored = og_mirrored XOR input. Pass "true" to flip the side the
+           driver selected, "false" to keep it. mirrored: required. -->
+      <SetMirrored mirrored="false"/>
+
+      <!-- SetColorTarget: sets the "target_red" blackboard flag. target_red: required. -->
+      <SetColorTarget target_red="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+
+  <!-- ======================================================================= -->
+  <!-- Mechanisms                                                              -->
+  <!-- ======================================================================= -->
+  <BehaviorTree ID="ref_mechanisms">
+    <Sequence>
+      <!-- ClampCmd: close / open the clamp. clamp_closed: required. -->
+      <ClampCmd clamp_closed="true"/>
+
+      <!-- AutoClawCmd: close the clamp when the distance sensor reads below close_mm, or
+           after timeout_s anyway. All three ports have defaults, so `<AutoClawCmd/>` is valid.
+             sensor_name  default = "auto_claw"
+             close_mm     default = 75.0
+             timeout_s    default = 3.0 -->
+      <AutoClawCmd sensor_name="auto_claw" close_mm="75.0" timeout_s="3.0"/>
+
+      <!-- LiftPosCmd: drive to and hold a lift preset (0-7).
+             stage  default = 0 -->
+      <LiftPosCmd stage="2"/>
+
+      <!-- ArmPosCmd: drive to and hold an arm preset (0-2; clyde: 0 low, 1 up, 2 clamped low).
+             stage  default = 0 -->
+      <ArmPosCmd stage="1"/>
+
+      <!-- MatchloadCmd: matchload macro.
+             active      default = true   (true = lift down, clamp open, arm extended;
+                                           false = close the clamp, arm reverts)
+             auto_close  default = true   (close the clamp when the auto_claw sensor triggers)
+             timeout_s   default = 0.0    (close the clamp this long after the grab started;
+                                           0 = never) -->
+      <MatchloadCmd active="true" auto_close="true" timeout_s="3.0"/>
+
+      <!-- ToggleMechCmd: spin the toggle mechanism motor, then finish.
+             rotations  default = 1.0  (negative = reverse) -->
+      <ToggleMechCmd rotations="5.0"/>
+
+      <!-- IntakeCmd: sets the intake blackboard flags (consumed by the robot plugin).
+             auto           required
+             ground_intake  required
+             store_ring     default = false -->
+      <IntakeCmd auto="false" ground_intake="true" store_ring="false"/>
+
+      <!-- ConveyorCmd: fwd: required. -->
+      <ConveyorCmd fwd="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+
+  <!-- ======================================================================= -->
+  <!-- Simple drive / turn                                                     -->
+  <!-- ======================================================================= -->
+  <BehaviorTree ID="ref_drive_turn">
+    <Sequence>
+      <!-- MoveVoltage: open-loop drive for a fixed time. All required.
+             forward_effort, angular_effort (-1..1), timeout_ms -->
+      <MoveVoltage forward_effort="0.5" angular_effort="0.0" timeout_ms="500"/>
+
+      <!-- MoveForward: drive straight with a PD loop.
+             kp                  required
+             kd                  required
+             max_effort_percent  required (0-1)
+             timeout_ms          required
+             backwards           code default = false
+             distance_tiles      code default = 0.1 -->
+      <MoveForward kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.35"
+        timeout_ms="1000"
+        backwards="false"
+        distance_tiles="0.75"/>
+
+      <!-- TurnToAngle: turn to an absolute field heading.
+             angle_deg                 required
+             timeout_ms                default = 1500
+             angle_exit_threshold_deg  default = 3.0
+             angle_settle_ms           default = 0
+             max_effort_percent        default = 1.0  (0-1) -->
+      <TurnToAngle angle_deg="90.0"
+        timeout_ms="1500"
+        angle_exit_threshold_deg="3.0"
+        angle_settle_ms="0"
+        max_effort_percent="1.0"/>
+
+      <!-- SwingToAngle: like TurnToAngle but one side stays still.
+             angle_deg                 required
+             locked_side               default = "left"  ("left" or "right"; anything else = left)
+             timeout_ms                default = 1500
+             angle_exit_threshold_deg  default = 3.0
+             angle_settle_ms           default = 0
+             max_effort_percent        default = 1.0 -->
+      <SwingToAngle angle_deg="45.0"
+        locked_side="right"
+        timeout_ms="1500"
+        angle_exit_threshold_deg="3.0"
+        angle_settle_ms="0"
+        max_effort_percent="1.0"/>
+
+      <!-- TurnToPoint: turn to face a field point.
+             posX_tiles, posY_tiles, timeout_ms  required
+             backwards                 required (face away from the point)
+             angle_exit_threshold_deg  code default = 5.0
+             angle_settle_ms           code default = 0 -->
+      <TurnToPoint posX_tiles="3.0"
+        posY_tiles="3.0"
+        backwards="false"
+        timeout_ms="1000"
+        angle_exit_threshold_deg="5.0"
+        angle_settle_ms="0"/>
+
+      <!-- MoveToPoint: turn to face a point, then drive to it.
+             posX_tiles, posY_tiles                        required
+             turn_timeout_ms, move_timeout_ms              required
+             kp, kd, max_effort_percent                    required (drive phase)
+             backwards                 code default = false
+             angle_exit_threshold_deg  code default = 5.0
+             angle_settle_ms           code default = 0 -->
+      <MoveToPoint posX_tiles="4.0"
+        posY_tiles="5.0"
+        backwards="false"
+        turn_timeout_ms="700"
+        move_timeout_ms="1000"
+        angle_exit_threshold_deg="3.0"
+        angle_settle_ms="0"
+        kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.8"/>
+
+      <!-- ArcturnToPoint: arc toward a point. All required.
+             posX_tiles, posY_tiles, timeout_ms, angle_exit_threshold_deg,
+             ang_vel_exit_threshold_dps, face_backwards, drive_backwards -->
+      <ArcturnToPoint posX_tiles="3.0"
+        posY_tiles="3.0"
+        timeout_ms="1500"
+        angle_exit_threshold_deg="5.0"
+        ang_vel_exit_threshold_dps="30.0"
+        face_backwards="false"
+        drive_backwards="false"/>
+    </Sequence>
+  </BehaviorTree>
+
+
+  <!-- ======================================================================= -->
+  <!-- Path generation + following                                             -->
+  <!-- A Generate*/Load* node must run first to create the path that a        -->
+  <!-- FollowPath* node then follows.                                          -->
+  <!-- ======================================================================= -->
+  <BehaviorTree ID="ref_paths">
+    <Sequence>
+      <!-- LoadPathFromCSV: load a path from a CSV file.
+             file_path  required
+             backwards  code default = false -->
+      <LoadPathFromCSV file_path="paths/example.csv" backwards="false"/>
+
+      <!-- GenerateBezierPath: build a bezier path from the current pose to a target.
+             end_x_tiles, end_y_tiles, end_theta_deg, lead_tiles  required
+             backwards   default = false
+             type        default = "CUBIC_BEZIER"
+             num_points  default = 250 -->
+      <GenerateBezierPath end_x_tiles="4.0"
+        end_y_tiles="4.0"
+        end_theta_deg="90.0"
+        lead_tiles="0.5"
+        backwards="false"
+        type="CUBIC_BEZIER"
+        num_points="250"/>
+
+      <!-- GeneratePlannerPath: ask the nav2 planner for a path.
+             end_x_tiles, end_y_tiles, end_theta_deg  required
+             backwards    default = false
+             planner_id   default = "GridBased"
+             timeout_ms   default = 2000 -->
+      <GeneratePlannerPath end_x_tiles="4.0"
+        end_y_tiles="4.0"
+        end_theta_deg="90.0"
+        backwards="false"
+        planner_id="GridBased"
+        timeout_ms="2000"/>
+
+      <!-- GoalPoseListener: waits (RUNNING) for a pose on /goal_pose, then writes it to the
+           output ports. Output ports (assign to blackboard entries with {name}):
+             goal_x_tiles, goal_y_tiles, goal_theta_deg
+           Feed them straight into GeneratePlannerPath. -->
+      <GoalPoseListener goal_x_tiles="{gx}" goal_y_tiles="{gy}" goal_theta_deg="{gt}"/>
+      <GeneratePlannerPath end_x_tiles="{gx}" end_y_tiles="{gy}" end_theta_deg="{gt}"/>
+
+      <!-- FollowPathPurePursuit: follow the current path with pure pursuit.
+           Base ports (shared with FollowPath):
+             xy_exit_threshold_tiles, angle_exit_threshold_deg,
+             xy_settling_radius_tiles, max_speed_linear_percent,
+             max_speed_angular_percent, timeout_ms, use_theta       required
+             lin_vel_exit_threshold_tps   default = 1000.0
+             ang_vel_exit_threshold_dps   default = 1000.0
+           Pure pursuit ports (all required):
+             k_lookahead, min_pursuit_radius_tiles, deceleration_start_distance_tiles,
+             deceleration_exponent, min_approach_velocity_tps -->
+      <FollowPathPurePursuit xy_exit_threshold_tiles="0.05"
+        angle_exit_threshold_deg="5.0"
+        lin_vel_exit_threshold_tps="1000.0"
+        ang_vel_exit_threshold_dps="1000.0"
+        xy_settling_radius_tiles="0.2"
+        max_speed_linear_percent="0.8"
+        max_speed_angular_percent="0.8"
+        timeout_ms="5000"
+        use_theta="true"
+        k_lookahead="0.5"
+        min_pursuit_radius_tiles="0.3"
+        deceleration_start_distance_tiles="1.0"
+        deceleration_exponent="1.0"
+        min_approach_velocity_tps="0.3"/>
+
+      <!-- FollowPathControllerServer: follow the planned path through the nav2 controller.
+             cmd_vel_topic    default = "/nav2/cmd_vel"
+             controller_id    default = "FollowPath"
+             goal_checker_id  default = "goal_checker"
+             timeout_ms       default = 10000
+             kff_linear       default = 0.12  (static-friction voltage floor, linear)
+             kff_angular      default = 0.20  (static-friction voltage floor, angular)
+           Every port has a default, so `<FollowPathControllerServer/>` is valid. -->
+      <FollowPathControllerServer cmd_vel_topic="/nav2/cmd_vel"
+        controller_id="FollowPath"
+        goal_checker_id="goal_checker"
+        timeout_ms="10000"
+        kff_linear="0.12"
+        kff_angular="0.20"/>
+    </Sequence>
+  </BehaviorTree>
+
+
+  <!-- ======================================================================= -->
+  <!-- Node models (used by Groot)                                             -->
+  <!-- ======================================================================= -->
+  <TreeNodesModel>
+    <Decorator ID="AutonTimer" editable="true">
+      <input_port name="seconds"/>
+    </Decorator>
+    <Decorator ID="BoundaryCheck" editable="true">
+      <input_port name="x_lower_bound_tiles"/>
+      <input_port name="y_lower_bound_tiles"/>
+      <input_port name="x_upper_bound_tiles"/>
+      <input_port name="y_upper_bound_tiles"/>
+    </Decorator>
+    <Action ID="Logging" editable="true">
+      <input_port name="message"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>
