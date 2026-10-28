@@ -22,6 +22,7 @@ bag_recorder_service:
   ros__parameters:
     disk_space_required_kb: 256000
     disk_check_period_s: 10
+    min_free_disk_gb_to_start: 20.0  # no new bag below this much free space
 
 tts_music_node:
   ros__parameters:
@@ -72,7 +73,7 @@ competition_state_machine_node:
       trajectory_topic: "/motion_planner/trajectory"
     
     use_sim_time: false
-    should_record: false
+    should_record: true
     system_i2c_bus_path: "/dev/i2c-7"
     # Ball colour classifier thresholds (ghost_sensing/ball_color_classifier).
     # Classified from the raw R/B ratio (green ignored). These are the DEFAULTS

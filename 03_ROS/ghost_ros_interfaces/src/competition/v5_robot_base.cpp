@@ -156,9 +156,11 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
     // DISABLED -> AUTONOMOUS
     start_time_ = std::chrono::system_clock::now();
     m_is_first_auton_loop = true;
+    m_match_in_progress_ = true;
     if (should_record_) {
       // start bag recording
       auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+      req->phase = "auton";
       m_start_recorder_client->async_send_request(req);
     }
   }
@@ -169,11 +171,22 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
     // AUTONOMOUS -> DISABLED
     m_is_first_auton_loop = true;
     m_interaction = true;
+    if (should_record_) {
+      // stop bag recording for the break between auton and driver control
+      auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
+      m_stop_recorder_client->async_send_request(req);
+    }
   }
 
   if ((curr_comp_state_ == robot_state_e::TELEOP) && (last_comp_state_ != robot_state_e::TELEOP)) {
     // DISABLED/AUTONOMOUS -> TELEOP
     start_time_ = std::chrono::system_clock::now();
+    if (should_record_ && m_match_in_progress_ && (last_comp_state_ == robot_state_e::DISABLED)) {
+      // start a second bag for driver control
+      auto req = std::make_shared<ghost_msgs::srv::StartRecorder::Request>();
+      req->phase = "driver";
+      m_start_recorder_client->async_send_request(req);
+    }
   }
 
   if ((curr_comp_state_ == robot_state_e::DISABLED) &&
@@ -181,6 +194,7 @@ void V5RobotBase::updateCompetitionState(bool is_disabled, bool is_autonomous)
   {
     // TELEOP->DISABLE
     start_time_ = std::chrono::system_clock::now();
+    m_match_in_progress_ = false;
     if (should_record_) {
       // stop bag recording
       auto req = std::make_shared<ghost_msgs::srv::StopRecorder::Request>();
