@@ -15,6 +15,15 @@
 #define CMD_I2C_WRITE      0x10u   // ROS -> host : [port:1][addr:1][data:N]
 #define CMD_READ_REQUEST   0x11u   // ROS -> host : see PROTOCOL.md
 #define CMD_READ_RESULT    0x12u   // host -> ROS : [id:2][seq:2][status:1][data_len:1][data:N]
+#define CMD_STATUS_REQUEST 0x13u   // ROS -> host : (empty)
+#define CMD_STATUS         0x14u   // host -> ROS : [reset_reason:1][uptime_ms:4]
+
+// Reset reasons (STATUS)
+#define RESET_UNKNOWN      0u
+#define RESET_POWER        1u      // power-on / brown-out
+#define RESET_RUN_PIN      2u
+#define RESET_DEBUGGER     3u
+#define RESET_WATCHDOG     4u      // software reboot, e.g. picotool flash
 
 #define COMMS_MAX_PAYLOAD  512u
 

@@ -71,6 +71,22 @@ install(TARGETS
   ball_color_classifier
   DESTINATION lib/${PROJECT_NAME})
 
+# Toggle Colour Classifier — consumes ghost_msgs/ColorSensorState from the
+# sensor host and republishes a ghost_msgs/ToggleColor on <input_topic>/class.
+add_executable(toggle_color_classifier
+  src/toggle_color_classifier.cpp
+)
+ament_target_dependencies(toggle_color_classifier
+  ${DEPENDENCIES}
+)
+target_include_directories(toggle_color_classifier
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+install(TARGETS
+  toggle_color_classifier
+  DESTINATION lib/${PROJECT_NAME})
+
 #################
 #### Install ####
 #################

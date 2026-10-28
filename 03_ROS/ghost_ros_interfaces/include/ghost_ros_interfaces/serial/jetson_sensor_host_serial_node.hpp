@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -21,6 +22,8 @@ struct SensorDevice
 {
   std::string name;
   std::string type;        // COLOR | DISTANCE | IMU | IO_EXPANDER
+  std::string topic;
+  uint8_t last_status = 0;   // status of the last READ_RESULT (read thread only)
   uint8_t port = 0;
   uint8_t addr = 0;
   uint16_t read_id = 0;
@@ -40,6 +43,8 @@ struct SensorDevice
 // device map (loaded from a yaml-cpp file): each device is initialised once with
 // a synchronous handshake, then left running as an autonomous recurring read on
 // the host, and published on /<namespace>/<type>/<name>.
+// The read thread owns the link and reconnects + re-inits if the host drops
+// off USB or goes silent.
 class JetsonSensorHostSerialNode : public rclcpp::Node
 {
 public:
@@ -49,6 +54,11 @@ public:
 private:
   bool openSerial();
   void writeFrame(const std::vector<uint8_t> & wire);
+
+  // Link lifecycle (read thread only)
+  bool connect();
+  void logHostStatus();
+  void disconnect(const std::string & why);
 
   // Synchronous request/response helpers (one-time device init only).
   bool readResponse(uint8_t want_cmd, std::vector<uint8_t> & payload, int timeout_ms);
@@ -64,7 +74,8 @@ private:
   bool loadDevices(const std::string & path);
   bool initDevice(SensorDevice & dev);
   void sendReadRequest(const SensorDevice & dev);
-  void handleResult(const SensorDevice & dev, const sensor_host::ReadResult & result);
+  void handleResult(SensorDevice & dev, const sensor_host::ReadResult & result);
+  void logReadErrors();
   void readLoop();
 
   // COLOR (ISL29125)
@@ -86,6 +97,8 @@ private:
 
   int fd_;
   std::atomic_bool running_;
+  std::atomic_bool link_up_{false};
+  std::chrono::steady_clock::time_point last_rx_, link_since_, last_error_log_;
   std::thread read_thread_;
   sensor_host::FrameAccumulator accumulator_;       // async streaming
   sensor_host::FrameAccumulator init_accumulator_;  // synchronous init

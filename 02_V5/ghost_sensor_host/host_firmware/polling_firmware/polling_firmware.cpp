@@ -14,6 +14,8 @@
 
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "hardware/structs/vreg_and_chip_reset.h"
+#include "hardware/structs/watchdog.h"
 
 #include "polling_firmware.h"     // pin map, I2C_FREQ_HZ
 #include "comms.h"
@@ -171,11 +173,32 @@ static void handle_read_request(const uint8_t *p, uint16_t len)
   send_ack(CMD_READ_REQUEST, ST_OK);
 }
 
+// Why the chip last reset. Check the watchdog first: its reason bits are zeroed
+// by any hardware reset, while a watchdog reboot leaves chip_reset stale.
+static uint8_t reset_reason()
+{
+  if (watchdog_hw->reason) return RESET_WATCHDOG;
+  uint32_t r = vreg_and_chip_reset_hw->chip_reset;
+  if (r & VREG_AND_CHIP_RESET_CHIP_RESET_HAD_PSM_RESTART_BITS) return RESET_DEBUGGER;
+  if (r & VREG_AND_CHIP_RESET_CHIP_RESET_HAD_RUN_BITS) return RESET_RUN_PIN;
+  if (r & VREG_AND_CHIP_RESET_CHIP_RESET_HAD_POR_BITS) return RESET_POWER;
+  return RESET_UNKNOWN;
+}
+
+// STATUS: [reset_reason:1][uptime_ms:4]
+static void handle_status_request()
+{
+  uint32_t up = now_ms();
+  uint8_t p[5] = {reset_reason(), uint8_t(up), uint8_t(up >> 8), uint8_t(up >> 16), uint8_t(up >> 24)};
+  comms_send(CMD_STATUS, p, sizeof(p));
+}
+
 static void dispatch(uint8_t cmd, const uint8_t *payload, uint16_t len)
 {
   switch (cmd) {
-    case CMD_I2C_WRITE:    handle_i2c_write(payload, len);    break;
-    case CMD_READ_REQUEST: handle_read_request(payload, len); break;
+    case CMD_I2C_WRITE:      handle_i2c_write(payload, len);    break;
+    case CMD_READ_REQUEST:   handle_read_request(payload, len); break;
+    case CMD_STATUS_REQUEST: handle_status_request();           break;
     default: /* unknown — ignore */ break;
   }
 }
