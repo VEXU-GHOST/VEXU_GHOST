@@ -229,4 +229,12 @@ protected:
   Eigen::Vector3d m_base_vel_cmd;
 };
 
+/**
+ * @brief Exponential drive curve for driver joystick input.
+ *
+ * @param input joystick value (-127 to 127)
+ * @return curved output (-127 to 127)
+ */
+float ExpoDriveCurve(float input);
+
 } // namespace ghost_tank

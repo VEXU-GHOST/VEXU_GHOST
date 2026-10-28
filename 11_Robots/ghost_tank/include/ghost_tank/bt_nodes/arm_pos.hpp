@@ -17,8 +17,9 @@
 namespace ghost_tank {
 
 /**
- * ArmPosCmd - Sets the arm's target preset stage (0-2), matching the 3 stages
- * driver control cycles through with L2. TankRobotPlugin reads
+ * ArmPosCmd - Sets the arm's target preset stage (0-2), indexing
+ * arm_stage_positions_deg. On clyde: 0 = low, 1 = up, 2 = clamped low (the
+ * position the clamp macro moves the arm to). TankRobotPlugin reads
  * "arm_target_stage" off the blackboard and drives arm_motor to that stage's
  * position with the same PID controller teleop uses.
  */
