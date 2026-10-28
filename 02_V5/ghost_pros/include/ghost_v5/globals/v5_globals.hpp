@@ -33,6 +33,7 @@
 #include "ghost_v5_interfaces/robot_hardware_interface.hpp"
 
 #include "ghost_v5/motor/v5_motor_interface.hpp"
+#include "ghost_v5/screen/auton_select.hpp"
 #include "ghost_v5/screen/screen_interface.hpp"
 #include "ghost_v5/serial/v5_serial_node.hpp"
 
@@ -70,6 +71,9 @@ extern std::shared_ptr<ghost_v5::V5SerialNode> serial_node_ptr;
 
 // Screen Interface
 extern std::shared_ptr<ghost_v5::ScreenInterface> screen_interface_ptr;
+
+// Touchscreen GUI (same object as screen_interface_ptr).
+extern std::shared_ptr<ghost_v5::AutonSelector> auton_selector_ptr;
 
 } // namespace v5_globals
 

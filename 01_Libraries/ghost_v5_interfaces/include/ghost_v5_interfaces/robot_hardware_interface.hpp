@@ -35,6 +35,8 @@
 #include "ghost_v5_interfaces/devices/rotation_sensor_device_interface.hpp"
 #include "ghost_v5_interfaces/inter_robot/other_robot_packet.hpp"
 
+#include <limits>
+
 
 #if GHOST_DEVICE == GHOST_JETSON
         #define CROSSPLATFORM_MUTEX_T std::mutex
@@ -412,6 +414,37 @@ public:
     inter_robot_rx_ = bytes;
   }
 
+  //////////////////////////////////////////////////////////////
+  ///////////////////////// Robot Pose /////////////////////////
+  //////////////////////////////////////////////////////////////
+  // Robot pose (from TF on the coprocessor) sent to the V5 Brain on the actuator-command stream.
+  // Only part of the msg when robot_pose_config.enabled is set. NaN values mean the pose is invalid
+  // (e.g. the transform was unavailable).
+
+  struct RobotPose
+  {
+    float x = std::numeric_limits<float>::quiet_NaN();   // m
+    float y = std::numeric_limits<float>::quiet_NaN();   // m
+    float yaw = std::numeric_limits<float>::quiet_NaN(); // rad, CCW+
+  };
+
+  bool isRobotPoseEnabled() const
+  {
+    return robot_config_ptr_->robot_pose_config.enabled;
+  }
+
+  RobotPose getRobotPose() const
+  {
+    std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+    return robot_pose_;
+  }
+
+  void setRobotPose(const RobotPose & pose)
+  {
+    std::unique_lock<CROSSPLATFORM_MUTEX_T> update_lock(update_mutex_);
+    robot_pose_ = pose;
+  }
+
   /////////////////////////////////////////////////////////////
   /////////////////////// Serialization ///////////////////////
   /////////////////////////////////////////////////////////////
@@ -492,6 +525,9 @@ private:
   inter_robot::OtherRobotBytes inter_robot_rx_{};
   // VEXlink radio connection status, reported V5 Brain -> coprocessor alongside competition state.
   bool inter_robot_link_connected_ = false;
+
+  // Robot Pose (coprocessor -> V5, only serialized if enabled)
+  RobotPose robot_pose_{};
 
   // Serialization
   int msg_id_ = 0;
