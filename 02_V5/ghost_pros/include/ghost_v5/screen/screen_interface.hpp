@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <deque>
 #include <sstream>
 #include <string>
@@ -33,9 +34,16 @@
 
 namespace ghost_v5 {
 
+/**
+ * @brief Render-agnostic screen interface.
+ *
+ * Holds the print queue, title, and last ROS connection time. Methods here are safe
+ * to call from any task and never draw; AutonSelector decides how and when to render.
+ */
 class ScreenInterface {
 public:
-	ScreenInterface();
+	ScreenInterface() = default;
+	virtual ~ScreenInterface() = default;
 
 	/**
 	 * @brief Concatenates arbitrary arguments into single string and adds to queue
@@ -51,43 +59,43 @@ public:
 		print_queue_.emplace_back(oss.str());
 
 		// Ensure queue keeps only latest screen worth of data
-		while(print_queue_.size() > MAX_ROWS - 1){
+		while(print_queue_.size() > MAX_QUEUE_SIZE){
 			print_queue_.pop_front();
 		}
 	}
 
-	void reset();
+	virtual void reset();
 
-	void updateScreen();
+	virtual void setTitle(const std::string& title);
+
+	/**
+	 * @brief Puts the screen into an error state. Default matches the old behavior:
+	 * clear, set title to ERROR, and print the message.
+	 */
+	virtual void showError(const std::string& msg);
 
 	void updateLastConnectionTime();
 
-	void setTitle(const std::string& title);
-
-	int getRefreshRateMilliseconds(){
-		return REFRESH_RATE_MS;
-	}
-
 	static std::vector<std::string> wrapStringToLineLength(std::string str, int line_len);
 
-private:
+protected:
 	void clearPrintQueue();
 
-	std::string title_string_;
+	std::string getTitle();
+
+	// Swaps out and returns all queued messages.
+	std::deque<std::string> takePrintQueue();
+
 	pros::Mutex print_queue_lock_;
 	std::deque<std::string> print_queue_;
-	std::vector<std::string> screen_buffer_;
-	uint32_t last_update_time_ = 0;
-	uint32_t last_connection_time_ = 0;
-	int curr_row_ = 2;
 
-	// V5 Screen Params
-	const int MAX_ROWS = 11;
-	const int LINE_PIX_HEIGHT = 20;
-	const int SCREEN_PIX_WIDTH = 480;
-	const int SCREEN_PIX_HEIGHT = 240;
-	const int SCREEN_WIDTH_CHAR_LIM = 48;
-	const int REFRESH_RATE_MS = 10;
+	pros::Mutex title_lock_;
+	std::string title_string_ = "STATUS";
+
+	// Written by the serial reader task, read by the render task.
+	std::atomic<uint32_t> last_connection_time_{0};
+
+	static constexpr std::size_t MAX_QUEUE_SIZE = 10;
 };
 
 } // namespace ghost_v5

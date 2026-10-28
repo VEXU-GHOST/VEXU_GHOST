@@ -24,6 +24,7 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 #include "ghost_v5_interfaces/devices/device_interfaces.hpp"
 
 
@@ -32,6 +33,22 @@ namespace ghost_v5_interfaces
 
 namespace devices
 {
+
+// Robot pose (from TF) sent coprocessor -> V5 on the actuator-command stream. It is not a port
+// device, so it lives beside the devices rather than in the map. Disabled by default; when enabled
+// the coprocessor looks up target_frame <- source_frame (e.g. map <- base_link) and sends x, y, yaw.
+struct RobotPoseConfig
+{
+  bool enabled = false;
+  std::string source_frame = "";
+  std::string target_frame = "";
+
+  bool operator==(const RobotPoseConfig & rhs) const
+  {
+    return (enabled == rhs.enabled) && (source_frame == rhs.source_frame) &&
+           (target_frame == rhs.target_frame);
+  }
+};
 
 class DeviceConfigMap
 {
@@ -44,6 +61,7 @@ public:
     for (const auto & [key, val] : device_configs_) {
       cloned_config_map_ptr->addDeviceConfig(val->clone()->as<DeviceConfig>());
     }
+    cloned_config_map_ptr->robot_pose_config = robot_pose_config;
     return cloned_config_map_ptr;
   }
 
@@ -106,6 +124,7 @@ public:
   bool operator==(const DeviceConfigMap & rhs) const
   {
     bool result = (size() == rhs.size());
+    result &= (robot_pose_config == rhs.robot_pose_config);
     for (const auto & [key, val] : device_configs_) {
       if (rhs.contains(key)) {
         result &= ((*val) == *(rhs.getDeviceConfig(key)));
@@ -115,6 +134,8 @@ public:
     }
     return result;
   }
+
+  RobotPoseConfig robot_pose_config;
 
 private:
   std::unordered_map<std::string, std::shared_ptr<const DeviceConfig>> device_configs_;
