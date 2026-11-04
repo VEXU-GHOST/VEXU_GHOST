@@ -80,6 +80,36 @@ constexpr uint8_t GREEN_DATA_L = 0x09;
 constexpr uint8_t COLOR_DATA_LEN = 6;
 }  // namespace isl29125
 
+//ICM20602 gyro (8-bit registers)
+
+namespace icm20602
+{
+
+constexpr uint8_t ICM20602_WHO_AM_I_REG = 0x75;
+constexpr uint8_t ICM20602_WHO_AM_I_VALUE = 0x12;
+
+
+constexpr uint8_t ICM20602_ACCEL_XOUT_H_REG = 0x3B;
+constexpr uint8_t ICM20602_ACCEL_XOUT_L_REG = 0x3C;
+constexpr uint8_t ICM20602_ACCEL_YOUT_H_REG = 0x3D;
+constexpr uint8_t ICM20602_ACCEL_YOUT_L_REG = 0x3E;
+constexpr uint8_t ICM20602_ACCEL_ZOUT_H_REG = 0x3F;
+constexpr uint8_t ICM20602_ACCEL_ZOUT_L_REG = 0x40;
+constexpr uint8_t ICM20602_TEMP_OUT_H_REG = 0x41;
+constexpr uint8_t ICM20602_TEMP_OUT_L_REG = 0x42;
+constexpr uint8_t ICM20602_GYRO_XOUT_H_REG = 0x43;
+constexpr uint8_t ICM20602_GYRO_XOUT_L_REG = 0x44;
+constexpr uint8_t ICM20602_GYRO_YOUT_H_REG = 0x45;
+constexpr uint8_t ICM20602_GYRO_YOUT_L_REG = 0x46;
+constexpr uint8_t ICM20602_GYRO_ZOUT_H_REG = 0x47;
+constexpr uint8_t ICM20602_GYRO_ZOUT_L_REG = 0x48;
+
+constexpr uint8_t ICM20602_PWR_MGMT_1_REG = 0x6B;
+constexpr uint8_t RESULT_BLOCK_LEN = 14;
+
+
+}
+
 // VL53L4CD distance sensor (16-bit registers, big-endian). Mirrors the ST API.
 namespace vl53
 {
@@ -135,6 +165,9 @@ JetsonSensorHostSerialNode::JetsonSensorHostSerialNode()
         dev.topic, rclcpp::SensorDataQoS());
     } else if (dev.type == "DISTANCE") {
       dev.distance_pub = create_publisher<ghost_msgs::msg::DistanceSensorState>(
+        dev.topic, rclcpp::SensorDataQoS());
+    } else if (dev.type == "IMU") {
+      dev.imu_pub = create_publisher<ghost_msgs::msg::ImuState>(
         dev.topic, rclcpp::SensorDataQoS());
     }
     id_to_device_[dev.read_id] = i;
@@ -241,6 +274,7 @@ bool JetsonSensorHostSerialNode::initDevice(SensorDevice & dev)
 {
   if (dev.type == "COLOR") return initColor(dev);
   if (dev.type == "DISTANCE") return vl53l4cdInit(dev);
+  if (dev.type == "IMU") return ICM20602Init(dev);
   RCLCPP_WARN(get_logger(), "type '%s' not implemented yet (no streaming)", dev.type.c_str());
   return false;
 }
@@ -257,6 +291,10 @@ void JetsonSensorHostSerialNode::sendReadRequest(const SensorDevice & dev)
       vl53::RESULT_BLOCK_LEN,
       {uint8_t(vl53::RESULT_RANGE_STATUS >> 8), uint8_t(vl53::RESULT_RANGE_STATUS & 0xFF)},
       {uint8_t(vl53::SYSTEM_INTERRUPT_CLEAR >> 8), uint8_t(vl53::SYSTEM_INTERRUPT_CLEAR & 0xFF), 0x01}));
+  } else if (dev.type == "IMU") {
+    writeFrame(sensor_host::buildReadRequest(
+      dev.read_id, dev.port, dev.addr, dev.interval_ms, dev.read_count,
+      icm20602::RESULT_BLOCK_LEN, {icm20602::ICM20602_ACCEL_XOUT_H_REG}));
   }
 }
 
@@ -271,6 +309,8 @@ void JetsonSensorHostSerialNode::handleResult(
     publishColor(dev, result);
   } else if (dev.type == "DISTANCE") {
     publishDistance(dev, result);
+  } else if (dev.type == "IMU") {
+    publishIMUData(dev, result);
   }
 }
 
@@ -535,6 +575,46 @@ void JetsonSensorHostSerialNode::publishDistance(
   msg.signal_rate_kcps = d.signal_rate_kcps;
   msg.ambient_rate_kcps = d.ambient_rate_kcps;
   dev.distance_pub->publish(msg);
+}
+
+// ---- IMU (ICM20602) -------------------------------------------------------
+
+bool JetsonSensorHostSerialNode::ICM20602Init(const SensorDevice & dev) {
+
+  bool ok = true;
+  std::vector<uint8_t> val = {0};
+
+  syncRead(dev.port, dev.addr, {icm20602::ICM20602_WHO_AM_I_REG}, 1, val);
+
+  if(val[0] != icm20602::ICM20602_WHO_AM_I_VALUE) {
+    return false;
+  }
+
+  ok &= syncWrite(dev.port, dev.addr, {icm20602::ICM20602_PWR_MGMT_1_REG, 0x01});
+  return ok;
+
+}
+
+void JetsonSensorHostSerialNode::publishIMUData(
+  const SensorDevice & dev, const ReadResult & result)
+{
+  sensor_host::IMUResult imu;
+  if (!sensor_host::decodeICM20602Result(result.data, imu)) {
+    return;
+  }
+
+  ghost_msgs::msg::ImuState msg;
+  msg.name = dev.name;
+  msg.acc_x = imu.acc_x;
+  msg.acc_y = imu.acc_y;
+  msg.acc_z = imu.acc_z;
+
+  msg.gyro_x = imu.gyro_x;
+  msg.gyro_y = imu.gyro_y;
+  msg.gyro_z = imu.gyro_z;
+  msg.temperature = imu.temperature;
+
+  dev.imu_pub->publish(msg);
 }
 
 // ---- Link + streaming read loop -------------------------------------------

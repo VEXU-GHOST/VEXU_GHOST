@@ -11,6 +11,7 @@
 
 #include <ghost_msgs/msg/color_sensor_state.hpp>
 #include <ghost_msgs/msg/distance_sensor_state.hpp>
+#include <ghost_msgs/msg/imu_state.hpp>
 
 #include "ghost_ros_interfaces/sensor_host/protocol.hpp"
 
@@ -37,6 +38,7 @@ struct SensorDevice
 
   rclcpp::Publisher<ghost_msgs::msg::ColorSensorState>::SharedPtr color_pub;
   rclcpp::Publisher<ghost_msgs::msg::DistanceSensorState>::SharedPtr distance_pub;
+  rclcpp::Publisher<ghost_msgs::msg::ImuState>::SharedPtr imu_pub;
 };
 
 // Drives the sensor host (a generic I2C bridge) over USB serial. Configured by a
@@ -87,6 +89,12 @@ private:
   bool vl53l4cdWaitDataReady(uint8_t port, uint8_t addr);
   bool vl53l4cdSetRangeTiming(uint8_t port, uint8_t addr, uint32_t timing_budget_ms);
   void publishDistance(const SensorDevice & dev, const sensor_host::ReadResult & result);
+
+  // IMU (ICM20602)
+
+  bool ICM20602Init(const SensorDevice & dev);
+  void publishIMUData(const SensorDevice & dev, const sensor_host::ReadResult & result);
+
 
   // Parameters
   std::string serial_port_;

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace ghost_ros_interfaces::sensor_host
@@ -90,10 +91,25 @@ struct DistanceResult
   uint32_t signal_rate_kcps;
   uint32_t ambient_rate_kcps;
 };
+
+
+
+struct IMUResult
+{
+  std::string name;
+  uint16_t acc_x = 0;
+  uint16_t acc_y = 0;
+  uint16_t acc_z = 0;
+  uint16_t gyro_x = 0;
+  uint16_t gyro_y = 0;
+  uint16_t gyro_z = 0;
+  uint16_t temperature = 0;
+};
 // Decodes a 15-byte block read starting at RESULT__RANGE_STATUS (0x0089), the
 // big-endian result registers 0x0089..0x0097 (range_status, spad, signal,
 // ambient, sigma, distance). Mirrors the ST driver's GetResult().
 bool decodeVl53l4cdResult(const std::vector<uint8_t> & data, DistanceResult & out);
+bool decodeICM20602Result(const std::vector<uint8_t> & data, IMUResult & out);
 
 // ---- Streaming frame accumulator -----------------------------------------
 struct Frame

@@ -1,9 +1,9 @@
 string name
 
-float32 acc_x
-float32 acc_y
-float32 acc_z
-float32 gyro_x
-float32 gyro_y
-float32 gyro_z
-float32 temperature
+uint16 acc_x
+uint16 acc_y
+uint16 acc_z
+uint16 gyro_x
+uint16 gyro_y
+uint16 gyro_z
+uint16 temperature

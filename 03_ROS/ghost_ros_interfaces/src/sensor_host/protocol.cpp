@@ -197,6 +197,26 @@ bool decodeVl53l4cdResult(const std::vector<uint8_t> & data, DistanceResult & ou
   return true;
 }
 
+bool decodeICM20602Result(const std::vector<uint8_t> & data, IMUResult & out) {
+  // Registers 0x3B..0x48: acceleration, temperature, then gyroscope (big-endian).
+  if (data.size() < 14) {
+    return false;
+  }
+
+  out.acc_x = static_cast<uint16_t>(data[1] | (data[0] << 8));
+  out.acc_y = static_cast<uint16_t>(data[3] | (data[2] << 8));
+  out.acc_z = static_cast<uint16_t>(data[5] | (data[4] << 8));
+  out.temperature = static_cast<uint16_t>(data[7] | (data[6] << 8));
+
+  out.gyro_x = static_cast<uint16_t>(data[9] | (data[8] << 8));
+  out.gyro_y = static_cast<uint16_t>(data[11] | (data[10] << 8));
+  out.gyro_z = static_cast<uint16_t>(data[13] | (data[12] << 8));
+
+  return true;
+
+}
+
+
 std::vector<Frame> FrameAccumulator::feed(const uint8_t * data, std::size_t n)
 {
   std::vector<Frame> frames;
