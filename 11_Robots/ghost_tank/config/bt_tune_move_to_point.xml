@@ -21,7 +21,7 @@
 
      Every move logs how it ended: "crossed exit line", "settled" or "TIMEOUT",
      plus the final distance and heading error. Turn timeouts log a warning.
-     New optional ports: settle_dist_m (0.03), settle_speed_mps (0.05),
+     New optional ports: settle_dist_tiles (0.05), settle_speed_tiles_per_s (0.08),
      ang_vel_exit_threshold_dps (20, turn exit).
 
      When a run looks off, check these in order:

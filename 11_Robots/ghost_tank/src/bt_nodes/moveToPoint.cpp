@@ -39,8 +39,8 @@ BT::PortsList MoveToPoint::providedPorts()
     BT::InputPort<double>("heading_kd"),
     BT::InputPort<bool>("chain"),
     BT::InputPort<double>("chain_min_effort_percent"),
-    BT::InputPort<double>("settle_dist_m"),
-    BT::InputPort<double>("settle_speed_mps"),
+    BT::InputPort<double>("settle_dist_tiles"),
+    BT::InputPort<double>("settle_speed_tiles_per_s"),
     BT::InputPort<double>("ang_vel_exit_threshold_dps")
   };
 }
@@ -58,8 +58,8 @@ BT::NodeStatus MoveToPoint::onStart()
   max_effort_percent_ = BT_Util::get_input<double>(this, "max_effort_percent");
   Kp = BT_Util::get_input<double>(this, "kp");
   Kd = BT_Util::get_input<double>(this, "kd");
-  settle_dist_m_ = BT_Util::get_input<double>(this, "settle_dist_m", 0.03);
-  settle_speed_mps_ = BT_Util::get_input<double>(this, "settle_speed_mps", 0.05);
+  settle_dist_m_ = BT_Util::get_input<double>(this, "settle_dist_tiles", 0.05) * ghost_util::TILES_TO_METERS;
+  settle_speed_mps_ = BT_Util::get_input<double>(this, "settle_speed_tiles_per_s", 0.08) * ghost_util::TILES_TO_METERS;
   ang_vel_exit_threshold_radps_ =
     BT_Util::get_input<double>(this, "ang_vel_exit_threshold_dps", 20.0) * ghost_util::DEG_TO_RAD;
   chain_ = BT_Util::get_input<bool>(this, "chain", false);
