@@ -38,9 +38,9 @@ LoggingNode::LoggingNode(
 // It is mandatory to define this STATIC method.
 BT::PortsList LoggingNode::providedPorts()
 {
-  // This action has a single input port called "message"
   return {
-    BT::InputPort<std::string>("message")
+    BT::InputPort<std::string>("message"),
+    BT::InputPort<bool>("current_heading", false, "append the current world heading in degrees")
   };
 }
 
@@ -49,8 +49,18 @@ BT::NodeStatus LoggingNode::tick()
 {
   std::string msg = BT_Util::get_input<std::string>(this, "message");
 
-  // use the method value() to extract the valid message.
-  RCLCPP_INFO(node_ptr_->get_logger(), msg.c_str());
+  if (BT_Util::get_input<bool>(this, "current_heading", false)) {
+    std::shared_ptr<ghost_tank::TankModel> tank_model;
+    if (!BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model) || !tank_model) {
+      RCLCPP_ERROR(node_ptr_->get_logger(), "Logging: tank_model_ptr is unavailable");
+      return BT::NodeStatus::FAILURE;
+    }
+    RCLCPP_INFO(
+      node_ptr_->get_logger(), "%s: %.2f deg",
+      msg.c_str(), tank_model->getWorldAngleDeg());
+  } else {
+    RCLCPP_INFO(node_ptr_->get_logger(), "%s", msg.c_str());
+  }
   // std::this_thread::sleep_for(std::chrono::milliseconds(100));
   return BT::NodeStatus::SUCCESS;
 }

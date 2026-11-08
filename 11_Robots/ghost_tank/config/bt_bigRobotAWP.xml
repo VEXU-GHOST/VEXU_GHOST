@@ -9,14 +9,23 @@
   >
     <Sequence>
     <ClampCmd clamp_closed="true"/>
-    <ToggleMechCmd rotations="5.0"/>
-    <LiftPosCmd stage="2"/>
-    <MoveForward kp="1.6"
+    <!-- <ToggleMechCmd rotations="5.0"/> -->
+    <!-- <LiftPosCmd stage="2"/> -->
+    <!-- <MoveForward kp="1.6"
         kd="0.5"
         max_effort_percent="0.35"
         timeout_ms="1000"
         backwards="true"
-        distance_tiles="0.75"/>
+        distance_tiles="0.75"/> -->
+    <TurnToAngle angle_deg="180.0"
+        timeout_ms="1500"
+        angle_exit_threshold_deg="3.0"
+        angle_settle_ms="300"
+        max_effort_percent="0.8"/>
+    <Logging message="Heading after TurnToAngle 180"
+        current_heading="true"/>
+    <WaitCmd seconds="300000"/>
+
     <!-- <AutoClawCmd/> -->
     <LiftPosCmd stage="2"/>
     <ArmPosCmd stage="2"/>

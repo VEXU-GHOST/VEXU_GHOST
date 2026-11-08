@@ -204,6 +204,13 @@ def generate_launch_description():
         ),
     )
 
+    # Foxglove websocket bridge so Foxglove Studio can connect at ws://<jetson-ip>:8765.
+    foxglove_bridge = Node(
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        parameters=[{"port": 8765}],
+    )
+
     #######################
     ### Robot Overrides ###
     #######################
@@ -321,6 +328,7 @@ def generate_launch_description():
         # push_back_cv_launch,
         bag_recorder_service,
         inter_robot_comms_node,
+        foxglove_bridge,
         # tts_music_node,
         OpaqueFunction(function = launch_setup),
     ])
