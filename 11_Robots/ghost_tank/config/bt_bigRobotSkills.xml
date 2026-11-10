@@ -33,8 +33,22 @@
       <ArmPosCmd stage="0"/> 
       <WaitCmd seconds="0.3"/>
       <ClampCmd clamp_closed="false"/>
+      <!-- move to wall pin -->
+      <MoveForward kp="1.6"
+        kd="0.5"
+        max_effort_percent="0.35"
+        timeout_ms="1000"
+        backwards="true"
+        distance_tiles="0.75"/>
+        <SwingToAngle angle_deg="200.0"
+        locked_side="right"
+        timeout_ms="1500"
+        angle_exit_threshold_deg="3.0"
+        angle_settle_ms="0"
+        max_effort_percent="1.0"/>
+      <ClampCmd clamp_closed="true"/>
       <!-- move to the match loader -->
-      <MoveToPoint posX_tiles="0.5"
+      <!-- <MoveToPoint posX_tiles="0.5"
         posY_tiles="3.8"
         backwards="true"
         turn_timeout_ms="0"
@@ -82,7 +96,12 @@
         settle_dist_tiles="0.05"
         settle_speed_tiles_per_s="0.08"
         chain="false"
-        chain_min_effort_percent="0.3"/>
+        chain_min_effort_percent="0.3"/> -->
+
+
+      <WaitCmd seconds="300000000.0"/>
+
+        <!-- end -->
       <!-- move back to goal -->
     <!-- <MoveToPoint posX_tiles="1.3"
         posY_tiles="4.5"
