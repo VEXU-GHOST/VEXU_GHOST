@@ -12,6 +12,7 @@ MoveToPoint::MoveToPoint(const std::string & name, const BT::NodeConfig & config
   blackboard_ = config.blackboard;
   BT_Util::get_from_blackboard(blackboard_, "tank_model_ptr", tank_model_ptr_);
   BT_Util::get_from_blackboard(blackboard_, "arc_turn_controller_ptr", m_arc_turn_controller_ptr);
+  BT_Util::get_from_blackboard(blackboard_, "distance_approach_controller_ptr", m_distance_approach_controller_ptr);
   BT_Util::get_from_blackboard(blackboard_, "node_ptr", node_ptr_);
   if (node_ptr_) {
     expected_pose_pub_ = node_ptr_->create_publisher<geometry_msgs::msg::PoseStamped>("/expectedpose", 10);
@@ -31,8 +32,6 @@ BT::PortsList MoveToPoint::providedPorts()
     BT::InputPort<int>("move_timeout_ms"),
     BT::InputPort<double>("angle_exit_threshold_deg"),
     BT::InputPort<int>("angle_settle_ms"),
-    BT::InputPort<double>("kp"),
-    BT::InputPort<double>("kd"),
     BT::InputPort<double>("max_effort_percent"),
     BT::InputPort<double>("heading_hold_cutoff_m"),
     BT::InputPort<double>("heading_kp"),
@@ -56,8 +55,6 @@ BT::NodeStatus MoveToPoint::onStart()
   angle_settle_ms = BT_Util::get_input<int>(this, "angle_settle_ms", 0);
   heading_hold_cutoff_m = BT_Util::get_input<double>(this, "heading_hold_cutoff_m", 0.2);
   max_effort_percent_ = BT_Util::get_input<double>(this, "max_effort_percent");
-  Kp = BT_Util::get_input<double>(this, "kp");
-  Kd = BT_Util::get_input<double>(this, "kd");
   settle_dist_m_ = BT_Util::get_input<double>(this, "settle_dist_tiles", 0.05) * ghost_util::TILES_TO_METERS;
   settle_speed_mps_ = BT_Util::get_input<double>(this, "settle_speed_tiles_per_s", 0.08) * ghost_util::TILES_TO_METERS;
   ang_vel_exit_threshold_radps_ =
@@ -93,6 +90,7 @@ BT::NodeStatus MoveToPoint::onStart()
   }
 
   m_arc_turn_controller_ptr->reset();
+  m_distance_approach_controller_ptr->reset();
   phase_ = Phase::TURNING;
   angle_settling_ = false;
 
@@ -244,7 +242,9 @@ void MoveToPoint::move()
 
   // Project the drive command onto the line to the target: a large heading error
   // slows the forward command so the robot turns before it drives hard.
-  double fwd_cmd = dist_err * Kp - (tank_model_ptr_->getWorldTwist().head<2>().norm()) * Kd;
+  // Distance gains come from the shared distance_approach PID in ros_config.
+  double fwd_cmd = m_distance_approach_controller_ptr->calculateCommand(
+    dist_err, -tank_model_ptr_->getWorldTwist().head<2>().norm());
   fwd_cmd *= std::max(0.0, std::cos(heading_err_rad));
   // When chaining, keep a minimum speed so the robot reaches the exit line with
   // momentum instead of decelerating to a stop short of it.

@@ -27,8 +27,6 @@
         move_timeout_ms="700"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.3"/>
     <LiftPosCmd stage="0"/>
     <WaitCmd seconds="0.5"/>
@@ -41,8 +39,6 @@
         move_timeout_ms="500"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.5"/>
     <!-- Async: lift down, clamp open, arm extended, and the tree moves on right
          away. The ClampCmd below closes the clamp, which reverts the arm and
@@ -56,8 +52,6 @@
         move_timeout_ms="700"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.30"/>
     <SwingToAngle angle_deg="295"
       timeout_ms="400"
@@ -79,8 +73,6 @@
         move_timeout_ms="700"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.3"/>
     <LiftPosCmd stage="0"/>
     <WaitCmd seconds="0.25"/>
@@ -101,8 +93,6 @@
         move_timeout_ms="1200"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.8"/>
     <MatchloadCmd active="false"
         auto_close="true"/>
@@ -116,8 +106,6 @@
         move_timeout_ms="1800"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.8"/>
       <LiftPosCmd stage="0"/>
       <WaitCmd seconds="0.5"/>
@@ -135,8 +123,6 @@
         move_timeout_ms="800"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.8"/>
     <MoveToPoint posX_tiles="0.55"
         posY_tiles="5.7"
@@ -145,8 +131,6 @@
         move_timeout_ms="1000"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.8"/>
     <MatchloadCmd active="true"
         auto_close="true"/>
@@ -158,8 +142,6 @@
         move_timeout_ms="1000"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.4"/>
       <ClampCmd clamp_closed="true"/>
       <TurnToAngle angle_deg="270"
@@ -181,8 +163,6 @@
         move_timeout_ms="1200"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.5"/>
       <LiftPosCmd stage="0"/>
       <WaitCmd seconds="0.5"/>
@@ -194,8 +174,6 @@
         move_timeout_ms="1000"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.8"/>
     <MatchloadCmd active="true"
         auto_close="true"/>
@@ -206,8 +184,6 @@
         move_timeout_ms="1000"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.4"/>
       <ClampCmd clamp_closed="true"/>
       <TurnToAngle angle_deg="270"
@@ -229,8 +205,6 @@
         move_timeout_ms="1200"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.5"/>
       <LiftPosCmd stage="0"/>
       <WaitCmd seconds="0.5"/>
@@ -248,8 +222,6 @@
         move_timeout_ms="1200"
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="300"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.8"/>
     <!-- <AutoClawCmd close_mm="75" 
         timeout_s="3" 

@@ -42,6 +42,7 @@ private:
   std::chrono::time_point<std::chrono::steady_clock> drive_start_time_;
   BT::Blackboard::Ptr blackboard_;
   std::shared_ptr<ghost_control::PIDController> m_arc_turn_controller_ptr;
+  std::shared_ptr<ghost_control::PIDController> m_distance_approach_controller_ptr;
   std::shared_ptr<rclcpp::Node> node_ptr_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr expected_pose_pub_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr target_pose_pub_;
@@ -68,8 +69,6 @@ private:
   std::chrono::time_point<std::chrono::steady_clock> angle_settle_start_;
 
   // drive phase
-  double Kp{0.0};
-  double Kd{0.0};
   double distance_m{0.0};
   Eigen::Vector2d start_position_;
   Eigen::Vector2d travel_dir_{Eigen::Vector2d::Zero()};

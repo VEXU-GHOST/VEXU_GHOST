@@ -183,14 +183,16 @@
         angle_settle_ms="0"/>
 
       <!-- MoveToPoint: turn in place to face a point, then drive to it.
-           Drive phase: forward command = kp * remaining distance - kd * speed,
-           scaled by cos(heading error), with a heading hold toward the target.
+           Drive phase: forward command comes from the shared distance_approach PID in
+           ros_config (error = remaining distance, derivative = -speed), scaled by
+           cos(heading error), with a heading hold toward the target. There are no
+           kp/kd attributes: tune distance_approach in the robot's ros_config.
            Every move logs how it ended (crossed exit line / settled / TIMEOUT).
 
            Required
              posX_tiles, posY_tiles
              turn_timeout_ms, move_timeout_ms
-             kp, kd, max_effort_percent        drive phase gains, effort limit 0..1
+             max_effort_percent                drive phase effort limit 0..1
 
            Optional (code default in brackets)
              backwards                     [false]  face away from the point and reverse into it
@@ -222,8 +224,6 @@
         angle_exit_threshold_deg="3.0"
         angle_settle_ms="200"
         ang_vel_exit_threshold_dps="20.0"
-        kp="1.6"
-        kd="0.5"
         max_effort_percent="0.8"
         heading_hold_cutoff_m="0.2"
         heading_kp="-0.5"
