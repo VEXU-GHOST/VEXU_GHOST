@@ -45,7 +45,7 @@ fi
 
 if [ "$arch" == 'aarch64' ];
 then
-    colcon build --symlink-install --packages-skip ${skip[@]} ghost_sim ghost_sim_examples ghost_viz plotjuggler plotjuggler_ros --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
+    colcon build --symlink-install --packages-skip ${skip[@]} ghost_sim ghost_sim_examples ghost_cv_sim ghost_viz plotjuggler plotjuggler_ros --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || exit -1
 fi
 
 # PROS needs the ARM toolchain and usually a USB V5; the image has pros-cli but not gcc-arm-none-eabi.

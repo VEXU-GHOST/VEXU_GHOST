@@ -1,0 +1,33 @@
+# Default parameters. Override on the command line, e.g.
+#   ros2 launch ghost_cv_sim cv_sim.launch.py mode:=random backend:=color_blob
+# or live:  ros2 param set /camera_scanner mode sweep
+cv_detector:
+  ros__parameters:
+    confidence_threshold: 0.25
+    max_fps: 0.0
+    # model_id: ras-yolo/vex-override-w4dvt-4-yolo26m-t1   # roboflow (default in code)
+
+cv_evaluator:
+  ros__parameters:
+    iou_threshold: 0.5
+    min_box_px: 10          # smaller boxes are "don't care", not misses
+    min_in_image: 0.6       # objects <60% in frame are "don't care"
+    max_occluded: 0.4       # objects >40% hidden behind others are "don't care"
+    max_range: 6.0
+    web_port: 8090          # 0 = off
+
+camera_scanner:
+  ros__parameters:
+    height: 0.35            # roughly where your robot's camera sits (m)
+    station_grid: 3         # step/sweep: 3x3 grid of standing positions
+    yaw_step_deg: 45.0      # step: one view per 45 degrees of turn
+    pitches_deg: [20.0]     # step: look-down angles to cycle through
+    aim_prob: 0.7           # random: fraction of views aimed at an object
+    sweep_speed: 0.25
+    sweep_yaw_rate_deg: 30.0
+
+scene_manager:
+  ros__parameters:
+    field_half: 1.83        # 12 ft field
+    edge_margin: 0.15
+    color_jitter: 0.04

@@ -58,6 +58,9 @@ services:
     # devices:
     #   - /dev/dri:/dev/dri
     working_dir: /vexu
+    # CV test simulator live results page (ghost_cv_sim): http://localhost:8090
+    ports:
+      - "8090:8090"
     # Long-lived container: idle until you `docker compose exec vexu bash`.
     command: ["sleep", "infinity"]
     # Needed for gdb/lldb inside the container.
@@ -85,6 +88,8 @@ services:
       # when DISPLAY points at a host X server that does provide GLX.
       LIBGL_ALWAYS_SOFTWARE: "${LIBGL_ALWAYS_SOFTWARE:-1}"
       IS_SANDBOX: 1 # For claude code
+      # Roboflow key for the CV test simulator's hosted-model backend (set it in your host shell).
+      ROBOFLOW_API_KEY: "${ROBOFLOW_API_KEY:-}"
     networks:
       - x11
     # Host networking works on Linux only; omit for macOS/Windows Docker Desktop.

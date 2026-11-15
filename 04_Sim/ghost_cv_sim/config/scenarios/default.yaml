@@ -1,0 +1,9 @@
+# Random scene: [min, max] objects of each type, placed without overlap inside the field.
+# Re-rolled for every scene (and reproducible with seed:=<n>).
+counts:
+  RedBluePin: [2, 5]
+  BlueYellowPin: [2, 5]
+  RedYellowPin: [2, 5]
+  YellowPin: [2, 5]
+  Cup: [4, 10]
+min_gap: 0.02      # metres between objects

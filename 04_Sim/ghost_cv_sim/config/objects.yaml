@@ -1,0 +1,59 @@
+# Object catalog: what can be spawned on the field and how it is scored.
+#
+# !! PLACEHOLDERS !!  The shapes, sizes and colours below are rough guesses for the VEX V5RC
+# 2026-27 "Override" pins and cups -- the public docs give no dimensions. Replace them with
+# real numbers from the game manual / CAD. For a pixel-faithful look, use a mesh (see the
+# commented example at the bottom): the closer the render is to your training images, the
+# more meaningful the score.
+#
+# `class_name` MUST match the class label your model outputs, because detections are only
+# scored as correct when the class matches (or run with class_agnostic:=true to ignore it).
+# Not sure what your model calls things? Launch with backend:=roboflow and read the labels
+# on http://localhost:8090, then edit class_name here.
+#
+# shape: cylinder | frustum | box | mesh      (all units metres, base of the object sits at z=0)
+#   cylinder: radius, height
+#   frustum:  radius_bottom, radius_top, height          (cups)
+#   box:      size [x, y, z], color
+#   mesh:     uri, scale, size [x, y, z]   (size = bounding box used for ground truth)
+# colour:  color: [r, g, b]  or  bands: [[fraction, [r, g, b]], ...]  (bottom -> top)
+objects:
+  RedBluePin:
+    class_name: RedBluePin
+    shape: cylinder
+    radius: 0.030
+    height: 0.140
+    bands: [[0.5, [0.80, 0.10, 0.10]], [0.5, [0.10, 0.25, 0.85]]]
+  BlueYellowPin:
+    class_name: BlueYellowPin
+    shape: cylinder
+    radius: 0.030
+    height: 0.140
+    bands: [[0.5, [0.10, 0.25, 0.85]], [0.5, [0.95, 0.80, 0.10]]]
+  RedYellowPin:
+    class_name: RedYellowPin
+    shape: cylinder
+    radius: 0.030
+    height: 0.140
+    bands: [[0.5, [0.80, 0.10, 0.10]], [0.5, [0.95, 0.80, 0.10]]]
+  YellowPin:
+    class_name: YellowPin
+    shape: cylinder
+    radius: 0.030
+    height: 0.140
+    color: [0.95, 0.80, 0.10]
+  Cup:
+    class_name: Cup
+    shape: frustum
+    radius_bottom: 0.030
+    radius_top: 0.045
+    height: 0.090
+    color: [0.90, 0.90, 0.90]
+
+  # Example of using your own CAD mesh (uncomment and edit):
+  # MyPin:
+  #   class_name: MyPin
+  #   shape: mesh
+  #   uri: file:///vexu/04_Sim/ghost_cv_sim/meshes/pin.dae
+  #   scale: [1, 1, 1]
+  #   size: [0.06, 0.06, 0.14]

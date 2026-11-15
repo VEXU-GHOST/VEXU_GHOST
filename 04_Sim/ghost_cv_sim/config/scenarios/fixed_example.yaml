@@ -1,0 +1,9 @@
+# Hand-placed scene (field centre is 0,0; x forward, y left, metres, yaw in radians).
+# Use this for regression tests: the same scene every run.
+objects:
+  - {type: RedBluePin,   x: 0.60, y:  0.00}
+  - {type: BlueYellowPin, x: 0.60, y:  0.40, yaw: 1.0}
+  - {type: RedYellowPin, x: 0.60, y: -0.40}
+  - {type: YellowPin,    x: 1.20, y:  0.00}
+  - {type: Cup,          x: 1.00, y:  0.30}
+  - {type: Cup,          x: 1.00, y: -0.30}

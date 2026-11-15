@@ -1,0 +1,8 @@
+# Stress test: lots of objects, tight spacing -> occlusion and confusion.
+counts:
+  RedBluePin: [8, 12]
+  BlueYellowPin: [8, 12]
+  RedYellowPin: [8, 12]
+  YellowPin: [8, 12]
+  Cup: [15, 25]
+min_gap: 0.005
