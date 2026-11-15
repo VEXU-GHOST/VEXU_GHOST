@@ -17,23 +17,40 @@ from launch_ros.actions import Node
 # Opaque Function hack to allow for better CLI arg parsing
 def launch_setup(context, *args, **kwargs):
     ghost_sim_share_dir = get_package_share_directory("ghost_sim")
-    filename = "test_tank_init.xacro"
+    ghost_viz_share_dir = get_package_share_directory("ghost_visualization_assets")
+    filename = "baby_jerry_sim.urdf.xacro" # Updated to your new RealSense wrapper!
 
-    # Load XACRO and process to urdf then to text
+    # 1. Load Baby Jerry Wrapper XACRO
     xacro_path = os.path.join(ghost_sim_share_dir, "urdf", filename)
     xml = xacro.process_file(xacro_path)
     doc = xml.toprettyxml(indent="  ")
 
-    spawn_entity_args = (
-        "-x 0.3 -y 0.4 -z 1.0 -R 0.0 -P 0.0 -Y 1.5708 -entity ghost1 -topic robot_description"
+    spawn_robot_args = (
+        "-x 0.0 -y 0.0 -z 0.1 -R 0.0 -P 0.0 -Y 0.0 -entity baby_jerry -topic robot_description"
     ).split()
 
-    # Node to spawn robot model in Gazebo
+    # Node to spawn Baby Jerry in Gazebo
     gazebo_ros = Node(
         package="gazebo_ros",
         executable="spawn_entity.py",
         output="screen",
-        arguments=spawn_entity_args,
+        arguments=spawn_robot_args,
+        parameters=[{"use_sim_time": True}],
+    )
+
+    # 2. Load and spawn the competition field assembly URDF
+    field_urdf_path = os.path.join(
+        ghost_viz_share_dir, "field_assembly", "urdf", "field_assembly.urdf"
+    )
+    spawn_field_args = (
+        f"-file {field_urdf_path} -entity field_assembly -x 0.0 -y 0.0 -z 0.0"
+    ).split()
+
+    spawn_field = Node(
+        package="gazebo_ros",
+        executable="spawn_entity.py",
+        output="screen",
+        arguments=spawn_field_args,
         parameters=[{"use_sim_time": True}],
     )
 
@@ -47,7 +64,7 @@ def launch_setup(context, *args, **kwargs):
         remappings=[("/sensors/wheel_odom", "/odom")],
     )
 
-    # Joystick (Only launched if joystick CLI arg is set to True)
+    # Joystick
     joy_launch_description = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(ghost_sim_share_dir, "launch", "joystick.launch.py")
@@ -58,7 +75,7 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
 
-    return [gazebo_ros, robot_state_publisher, joy_launch_description]
+    return [spawn_field, gazebo_ros, robot_state_publisher, joy_launch_description]
 
 
 def generate_launch_description():
